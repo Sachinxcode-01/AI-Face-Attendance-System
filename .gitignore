@@ -1,4 +1,15 @@
+# Passwords and Environments
+.env
 venv/
+
+# Python Cache
 __pycache__/
-Intruders/
+*.pyc
 *.pkl
+
+# Heavy Media and Logs
+dataset/
+Intruders/
+Attendance_Logs/
+Reports/
+Master_Summary.csv

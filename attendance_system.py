@@ -9,13 +9,17 @@ import threading
 import smtplib
 from email.message import EmailMessage
 import pyttsx3
+
 from insightface.app import FaceAnalysis
+from dotenv import load_dotenv  
+load_dotenv()
+
 
 # ==========================================
 # CONFIGURATION
 # ==========================================
 SENDER_EMAIL = "saxhin0708@gmail.com"
-SENDER_PASSWORD = "ikxp qdtd ufgg pbpk"   
+SENDER_PASSWORD = os.getenv("EMAIL_PASSWORD")   
 TEACHER_EMAIL = "saxhin0708@gmail.com" #updates of  Attendance Of Todays 
 SECURITY_EMAIL = "saxhin0708@gmail.com"   # Email to alert about intruders
 
@@ -25,6 +29,17 @@ class SmartAttendanceSystem:
         self.attendance_file = "attendance.csv"
         self.student_details_file = "students.csv"
         self.intruder_folder = "Intruders"
+        
+        # --- NEW: Attendance Folder & Dynamic Files ---
+        self.attendance_folder = "Attendance_Logs"
+        if not os.path.exists(self.attendance_folder):
+            os.makedirs(self.attendance_folder)
+            
+        # Creates a unique file for every session like: Attendance_2026-02-18_10-30-00.csv
+        self.session_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.attendance_file = f"{self.attendance_folder}/Attendance_{self.session_time}.csv"
+        self.summary_file = f"{self.attendance_folder}/Master_Summary.csv"
+        
         
         # Settings
         self.confidence_threshold = 0.6  # Higher threshold for Security
@@ -59,22 +74,61 @@ class SmartAttendanceSystem:
             os.makedirs(self.intruder_folder)
 
     def load_student_details(self):
-        if not os.path.exists(self.student_details_file):
-            print(f"[ERROR] '{self.student_details_file}' not found!")
-            exit()
-        try:
-            df = pd.read_csv(self.student_details_file, dtype=str)
-            df.columns = [c.strip() for c in df.columns]
-            for index, row in df.iterrows():
-                roll = row['Roll No'].strip()
-                self.student_db[roll] = {
-                    'name': row['Name'],
-                    'email': row['Email']
-                }
-            print(f"[INFO] Loaded {len(self.student_db)} students.")
-        except Exception as e:
-            print(f"[ERROR] Reading CSV failed: {e}")
-            exit()
+        # 1. First, load whatever is already inside students.csv
+        if os.path.exists(self.student_details_file):
+            try:
+                df = pd.read_csv(self.student_details_file, dtype=str)
+                df.columns = [c.strip() for c in df.columns]
+                for index, row in df.iterrows():
+                    roll = str(row['Roll No']).strip()
+                    self.student_db[roll] = {
+                        'name': str(row['Name']).strip(),
+                        'email': str(row['Email']).strip() if 'Email' in row else "no_email@college.edu"
+                    }
+            except Exception as e:
+                print(f"[ERROR] Reading CSV failed: {e}")
+
+        # 2. Now, scan the 'dataset' folder to find any MISSING students
+        dataset_path = "dataset"
+        new_students_data = []
+
+        if os.path.exists(dataset_path):
+            for folder_name in os.listdir(dataset_path):
+                folder_path = os.path.join(dataset_path, folder_name)
+                
+                # Check if it's a folder formatted like "Name_RollNo"
+                if os.path.isdir(folder_path) and '_' in folder_name:
+                    try:
+                        parts = folder_name.rsplit('_', 1) 
+                        name = parts[0].replace('_', ' ')
+                        roll = parts[1].strip()
+                        
+                        # If this student is in the dataset but NOT in the CSV file yet
+                        if roll not in self.student_db:
+                            placeholder_email = "update_email@college.edu"
+                            
+                            # Add to running memory
+                            self.student_db[roll] = {
+                                'name': name,
+                                'email': placeholder_email
+                            }
+                            
+                            # Prepare to add them to the physical CSV file
+                            new_students_data.append({
+                                'Roll No': roll,
+                                'Name': name,
+                                'Email': placeholder_email
+                            })
+                    except Exception as e:
+                        print(f"[WARN] Could not parse folder '{folder_name}': {e}")
+        
+        # 3. Automatically update the students.csv file with the new people!
+        if new_students_data:
+            df_new = pd.DataFrame(new_students_data)
+            df_new.to_csv(self.student_details_file, mode='a', header=not os.path.exists(self.student_details_file), index=False)
+            print(f"[INFO] 📝 Auto-added {len(new_students_data)} missing students from 'dataset' to '{self.student_details_file}'.")
+            
+        print(f"[INFO] Loaded {len(self.student_db)} students total.")
 
     def load_encodings(self):
         if os.path.exists(self.encodings_path):
@@ -125,11 +179,28 @@ class SmartAttendanceSystem:
         def _send_email_with_photo():
             if not SENDER_PASSWORD: return
             
+            formatted_time = datetime.now().strftime('%Y-%m-%d %I:%M:%S %p')
+            
             msg = EmailMessage()
-            msg['Subject'] = f"🚨 INTRUDER ALERT: {timestamp}"
+            msg['Subject'] = f"🛡️ [SECURITY NOTICE] Unregistered Individual Detected"
             msg['From'] = SENDER_EMAIL
             msg['To'] = SECURITY_EMAIL
-            msg.set_content(f"SECURITY ALERT!\n\nAn unknown person was detected at {datetime.now()}.\n\nSee the attached photo of the intruder.")
+            
+            # --- PRO CLASSY EMAIL BODY ---
+            body = (
+                "SECURITY NOTIFICATION\n"
+                "========================================\n\n"
+                "Dear Administrator,\n\n"
+                "The SmartFace AI Attendance System has detected an unregistered individual in the primary scanning area.\n\n"
+                f"🕒 Date & Time: {formatted_time}\n"
+                "📍 Location: Main Camera Feed\n\n"
+                "For your security and administrative review, a high-resolution snapshot of the unrecognized person has been attached to this email. "
+                "Please review the image to determine if security action is required, or if this is a new student who needs to be registered in the dataset.\n\n"
+                "System Status: Active & Monitoring.\n\n"
+                "Best regards,\n"
+                "SmartFace AI Security Engine"
+            )
+            msg.set_content(body)
 
             # --- ATTACHMENT LOGIC ---
             try:
@@ -145,7 +216,7 @@ class SmartAttendanceSystem:
                 server.login(SENDER_EMAIL, SENDER_PASSWORD)
                 server.send_message(msg)
                 server.quit()
-                print(f"[EMAIL SENT] 📸 Photo sent to Admin successfully.")
+                print(f"[EMAIL SENT] 🛡️ Security Notice sent to Admin successfully.")
                 
             except Exception as e:
                 print(f"[EMAIL ERROR] Could not send photo: {e}")
@@ -166,22 +237,33 @@ class SmartAttendanceSystem:
             server.quit()
         except: pass
 
-    def send_teacher_report(self, present_list, absent_list):
-        if not TEACHER_EMAIL: return
-        today_str = datetime.now().strftime("%Y-%m-%d")
-        body = f"Daily Report ({today_str}):\nPresent: {len(present_list)}\nAbsent: {len(absent_list)}"
+    def send_admin_report(self, present_list, absent_list, filepath):
+        if not TEACHER_EMAIL or not SENDER_PASSWORD: return
+        today_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         msg = EmailMessage()
-        msg.set_content(body)
-        msg['Subject'] = f"Attendance Report: {today_str}"
+        msg['Subject'] = f"✅ Attendance Log: {today_str}"
         msg['From'] = SENDER_EMAIL
         msg['To'] = TEACHER_EMAIL
+        
+        body = f"Session Ended: {today_str}\n\nTotal Present: {len(present_list)}\nTotal Absent: {len(absent_list)}\n\nPlease find the detailed attendance sheet attached for this session."
+        msg.set_content(body)
+        
+        # --- NEW: ATTACH THE CSV FILE ---
         try:
+            with open(filepath, 'rb') as f:
+                file_data = f.read()
+                file_name = os.path.basename(filepath)
+            
+            msg.add_attachment(file_data, maintype='text', subtype='csv', filename=file_name)
+            
             server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
             server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.send_message(msg)
             server.quit()
-            print(f"[REPORT SENT] 📄 Daily Summary sent.")
-        except: pass
+            print(f"[REPORT SENT] 📧 Email with CSV Attachment sent to Admin.")
+        except Exception as e:
+            print(f"[EMAIL ERROR] Failed to send report: {e}")
 
     def process_absentees(self):
         print("\n[INFO] SESSION ENDED. GENERATING REPORTS...")
@@ -189,24 +271,62 @@ class SmartAttendanceSystem:
         present_rolls = self.present_students
         absent_rolls = all_rolls - present_rolls
         
-        self.send_teacher_report(present_rolls, absent_rolls)
-
-        if not absent_rolls: return
-
+        # 1. ADD ABSENTEES TO THE CSV FIRST (So they are included in the email attachment)
         absent_data = []
         for roll in absent_rolls:
             details = self.student_db.get(roll)
             if details:
                 absent_data.append({
                     'Roll No': roll, 'Name': details['name'], 'Status': 'Absent', 
-                    'Date': datetime.now().strftime("%Y-%m-%d"), 'Time': 'END', 'Accuracy': 'N/A'
+                    'Date': datetime.now().strftime("%Y-%m-%d"), 'Time': 'END', 'Accuracy': '0%'
                 })
-                threading.Thread(target=self.send_absent_email, args=(roll, details)).start()
-
+        
         if absent_data:
-            df = pd.DataFrame(absent_data)
-            df.to_csv(self.attendance_file, mode='a', header=False, index=False)
+            df_absent = pd.DataFrame(absent_data)
+            df_absent.to_csv(self.attendance_file, mode='a', header=not os.path.exists(self.attendance_file), index=False)
 
+        # 2. CALCULATE OVERALL STATS
+        total_present = len(present_rolls)
+        total_absent = len(absent_rolls)
+        
+        try:
+            if os.path.exists(self.attendance_file):
+                df_today = pd.read_csv(self.attendance_file)
+                # Only average accuracy for present students
+                present_df = df_today[df_today['Status'] == 'Present']
+                if not present_df.empty:
+                    accuracies = present_df['Accuracy'].astype(str).str.replace('%', '').astype(float)
+                    avg_accuracy = f"{accuracies.mean():.2f}%"
+                else:
+                    avg_accuracy = "0%"
+            else:
+                avg_accuracy = "0%"
+        except Exception as e:
+            print(f"[WARN] Could not calc accuracy: {e}")
+            avg_accuracy = "N/A"
+
+        # 3. SAVE TO MASTER SUMMARY FILE
+        if not os.path.exists(self.summary_file):
+            df_summary = pd.DataFrame(columns=['Sr.No', 'Date', 'Time', 'Total Present', 'Total Absent', 'Overall Accuracy'])
+            sr_no = 1
+        else:
+            df_summary = pd.read_csv(self.summary_file)
+            sr_no = df_summary['Sr.No'].iloc[-1] + 1 if not df_summary.empty else 1
+
+        new_summary = pd.DataFrame([{
+            'Sr.No': sr_no,
+            'Date': datetime.now().strftime("%Y-%m-%d"),
+            'Time': datetime.now().strftime("%H:%M:%S"),
+            'Total Present': total_present,
+            'Total Absent': total_absent,
+            'Overall Accuracy': avg_accuracy
+        }])
+
+        new_summary.to_csv(self.summary_file, mode='a', header=not os.path.exists(self.summary_file), index=False)
+        print(f"[INFO] 📊 Session logged to '{self.attendance_file}'")
+
+        # 4. SEND EMAIL WITH ATTACHMENT
+        self.send_admin_report(present_rolls, absent_rolls, self.attendance_file)
     def mark_present(self, roll, ai_name, score):
         csv_name = self.student_db.get(roll, {}).get('name', ai_name)
         today = datetime.now().strftime("%Y-%m-%d")
@@ -307,7 +427,7 @@ class SmartAttendanceSystem:
                 else:
                     cv2.putText(frame, f"{name} {score}", (bbox[0], bbox[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-            cv2.imshow('RTX 3050 Security', frame)
+            cv2.imshow('Smart Attendance System By Face Recognition Done by AI', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 self.process_absentees()
                 break
