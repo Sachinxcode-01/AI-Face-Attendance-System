@@ -6,6 +6,8 @@ from fpdf import FPDF
 import smtplib
 from email.message import EmailMessage
 from dotenv import load_dotenv
+import ai_analyst
+
 
 # Suppress pandas warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -119,7 +121,26 @@ def export_to_pdf(student_df, name, roll, total, present, absent, pct, monthly_s
         pdf.set_text_color(50, 50, 50)
         fill = not fill
 
+    # AI Insight Section
+    pdf.ln(10)
+    pdf.set_font('Arial', 'B', 16)
+    pdf.set_text_color(10, 25, 47)
+    pdf.cell(0, 10, '🤖 AI PERFORMANCE INSIGHT', 0, 1, 'L')
+    
+    pdf.set_font('Arial', 'I', 11)
+    pdf.set_text_color(70, 70, 70)
+    
+    # Get insight from Gemini
+    try:
+        insight_text = ai_analyst.get_student_report_insight(name, student_df)
+    except:
+        insight_text = "AI insight currently unavailable. Please ensure consistency in your attendance."
+        
+    pdf.multi_cell(0, 8, insight_text)
+    pdf.ln(5)
+
     filename = f"Reports/{roll}_{name.replace(' ', '_')}_Report.pdf"
+
     pdf.output(filename)
     return filename
 

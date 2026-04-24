@@ -1,3 +1,4 @@
+import onnxruntime
 import cv2
 import numpy as np
 import pandas as pd
@@ -12,6 +13,8 @@ import pyttsx3
 
 from insightface.app import FaceAnalysis
 from dotenv import load_dotenv  
+import ai_analyst
+
 load_dotenv()
 
 
@@ -342,8 +345,15 @@ class SmartAttendanceSystem:
             new_entry.to_csv(self.attendance_file, mode='a', header=False, index=False)
             self.present_students.add(roll)
             if roll not in self.spoken_ids:
-                self.speak(f"Welcome {csv_name}")
+                # Try AI Greeting, Fallback to basic
+                try:
+                    greeting = ai_analyst.get_greeting(csv_name)
+                except:
+                    greeting = f"Welcome {csv_name}"
+                
+                self.speak(greeting)
                 self.spoken_ids.add(roll)
+
 
     def cosine_similarity(self, emb1, emb2):
         return np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))
@@ -394,6 +404,20 @@ class SmartAttendanceSystem:
                             self.mark_present(roll, name, best_sim)
                             display_score = min(99, int((best_sim + 0.2) * 100))
                             score_text = f"{display_score}%"
+                            
+                            # --- FEATURE 5: SELF-LEARNING (Auto-Update) ---
+                            # Save high-confidence captures to improve model robustness over time
+                            if best_sim >= 0.85 and frame_count % 100 == 0:
+                                folder_name = f"{str(name).strip()}_{str(roll).strip()}"
+                                save_path = os.path.join("dataset", folder_name)
+                                if os.path.exists(save_path):
+                                    bbox = face.bbox.astype(int)
+                                    # Ensure bbox is within frame boundaries
+                                    y1, y2, x1, x2 = max(0, bbox[1]), min(frame.shape[0], bbox[3]), max(0, bbox[0]), min(frame.shape[1], bbox[2])
+                                    face_img = frame[y1:y2, x1:x2]
+                                    if face_img.size > 0:
+                                        img_name = f"auto_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+                                        cv2.imwrite(os.path.join(save_path, img_name), face_img)
                         else:
                             # Flag that we found an intruder
                             has_unknown = True

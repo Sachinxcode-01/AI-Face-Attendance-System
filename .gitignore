@@ -1,15 +1,32 @@
-# Passwords and Environments
-.env
-venv/
-
-# Python Cache
+# Python
 __pycache__/
-*.pyc
-*.pkl
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
 
-# Heavy Media and Logs
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Sensitive Files - DO NOT UPLOAD
+.env
+face_encodings_arcface.pkl
+
+# Large Data / Media
 dataset/
 Intruders/
-Attendance_Logs/
 Reports/
-Master_Summary.csv
+Attendance_Logs/
+
+# System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
