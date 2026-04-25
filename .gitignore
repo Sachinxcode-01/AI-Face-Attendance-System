@@ -15,6 +15,7 @@ env/
 # Sensitive Files - DO NOT UPLOAD
 .env
 face_encodings_arcface.pkl
+.streamlit/secrets.toml
 
 # Large Data / Media
 dataset/
