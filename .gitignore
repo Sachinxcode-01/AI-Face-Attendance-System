@@ -16,6 +16,8 @@ env/
 .env
 face_encodings_arcface.pkl
 .streamlit/secrets.toml
+credentials.json
+credentials*.json
 
 # Large Data / Media
 dataset/

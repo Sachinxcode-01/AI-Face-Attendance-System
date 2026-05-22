@@ -1,4 +1,4 @@
-# 🛡️ SmartFace AI Attendance & Security Engine
+# 🛡️ SmartAttendance - AI AI Attendance & Security Engine
 
 An enterprise-grade, fully automated face-recognition attendance system built with Python and Deep Learning. Powered by **InsightFace (ArcFace)** for high-accuracy GPU-accelerated facial recognition, this system completely automates classroom attendance, generates premium PDF reports, and features an active security engine to detect unregistered individuals.
 
@@ -21,7 +21,7 @@ An enterprise-grade, fully automated face-recognition attendance system built wi
 Below is the complete architectural layout of the project and the specific role of every file and directory:
 
 ```text
-SmartFace-attendance/
+SmartAttendance - AI-attendance/
 │
 ├── dataset/                    # 📁 RAW DATA: Training images organized by Name_RollNo (e.g., Sachin_25CS094). The system learns identities directly from these folder names.
 ├── Attendance_Logs/            # 📁 LOGS: Contains dynamically generated session logs (e.g., Attendance_2026-02-18_10-30.csv) and the continuous Master_Summary.csv.

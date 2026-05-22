@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "153684832501",
+    "project_id": "smartface-ai-d81e1",
+    "storage_bucket": "smartface-ai-d81e1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153684832501:android:ce0b3309bc5a49b34715bc",
+        "android_client_info": {
+          "package_name": "com.smartface.smartface_attendance"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "153684832501-dlk5etjhjk73f88647bs32er9tl6ti1h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.smartface.smartface_attendance",
+            "certificate_hash": "3f09d386d4a9a8b8db6dd3f7da697a6814ede3cb"
+          }
+        },
+        {
+          "client_id": "153684832501-4mikvqi78kam3j1tcmnab7gp1o3e7mnt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCV283-FL6oXL7y1OS3pCAxgJike3IBvGM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "153684832501-4mikvqi78kam3j1tcmnab7gp1o3e7mnt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

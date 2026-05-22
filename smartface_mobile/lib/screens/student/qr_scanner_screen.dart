@@ -1,0 +1,164 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
+import '../../services/api_service.dart';
+
+class QRScannerScreen extends StatefulWidget {
+  const QRScannerScreen({super.key});
+
+  @override
+  State<QRScannerScreen> createState() => _QRScannerScreenState();
+}
+
+class _QRScannerScreenState extends State<QRScannerScreen> {
+  bool _isScanning = true;
+
+  void _onDetect(BarcodeCapture capture) {
+    if (!_isScanning) return;
+    
+    final List<Barcode> barcodes = capture.barcodes;
+    if (barcodes.isNotEmpty) {
+      final String? code = barcodes.first.rawValue;
+      if (code != null) {
+        setState(() => _isScanning = false);
+        _handleAttendance(code);
+      }
+    }
+  }
+
+  Future<void> _handleAttendance(String qrData) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFFFD700))),
+    );
+
+    try {
+      final decoded = jsonDecode(qrData);
+      final sessionId = decoded['session_id'];
+      final token = decoded['token'];
+
+      final args = ModalRoute.of(context)?.settings.arguments as Map?;
+      final studentEmail = args?['email'] ?? 'student@smartface.elite';
+
+      final result = await ApiService.markAttendance(studentEmail, sessionId, token);
+
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+
+      bool success = result.containsKey('message');
+      String message = success ? 'Your attendance has been verified and logged.' : (result['detail'] ?? 'Verification failed');
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1A1F38),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Icon(success ? Icons.check_circle : Icons.error, color: success ? Colors.greenAccent : Colors.redAccent),
+              const SizedBox(width: 10),
+              Text(success ? 'VALIDATED' : 'FAILED', style: const TextStyle(color: Colors.white)),
+            ],
+          ),
+          content: Text(message, style: const TextStyle(color: Colors.white70)),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                if (success) {
+                  Navigator.pop(context); // Go back to dashboard
+                } else {
+                  setState(() => _isScanning = true); // Resume scanning
+                }
+              },
+              child: const Text('DISMISS', style: TextStyle(color: Color(0xFFFFD700))),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid QR Code Format')));
+      setState(() => _isScanning = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          MobileScanner(
+            onDetect: _onDetect,
+          ),
+          
+          // Overlay
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.5),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 250,
+                      height: 250,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFFFFD700), width: 2),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Stack(
+                        children: [
+                          // Scanning animation line
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              height: 2,
+                              color: const Color(0xFFFFD700),
+                            ).animate(onPlay: (c) => c.repeat())
+                             .moveY(begin: 0, end: 250, duration: 2.seconds, curve: Curves.easeInOut),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    Text(
+                      'ALIGN WITH TEACHER\'S QR',
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFFFFD700),
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(duration: 2.seconds),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          
+          // Back button
+          Positioned(
+            top: 50,
+            left: 20,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
