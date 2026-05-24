@@ -13,15 +13,19 @@ class NotificationService {
   static String? get fcmToken => _fcmToken;
 
   // ─── WebSocket real-time stream ───────────────────────────────────
-  static const String _wsBaseUrl = 'ws://10.81.236.48:8000';
+  static const String _wsBaseUrl = 'ws://10.27.210.48:8000';
   WebSocketChannel? _channel;
   final _streamController = StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get stream => _streamController.stream;
 
-  void connect({String path = '/ws/notifications'}) {
+  void connect({String path = '/ws/notifications', String? token}) {
     try {
-      _channel = WebSocketChannel.connect(Uri.parse('$_wsBaseUrl$path'));
+      final wsPath = (token != null && token.isNotEmpty)
+          ? '$path?token=$token'
+          : path;
+      debugPrint('[WS] connecting to $_wsBaseUrl$wsPath');
+      _channel = WebSocketChannel.connect(Uri.parse('$_wsBaseUrl$wsPath'));
       _channel!.stream.listen(
         (data) {
           try {
@@ -32,7 +36,7 @@ class NotificationService {
         onError: (e) => debugPrint('[WS] error: $e'),
         onDone: () => debugPrint('[WS] disconnected'),
       );
-      debugPrint('[WS] connected to $path');
+      debugPrint('[WS] connected to $wsPath');
     } catch (e) {
       debugPrint('[WS] connect failed: $e');
     }

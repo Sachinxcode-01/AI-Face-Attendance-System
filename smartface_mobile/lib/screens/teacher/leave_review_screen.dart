@@ -64,7 +64,7 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-        title: Text('Leave Approval', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text('Leave Approval', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
       ),
       body: _isLoading
@@ -92,7 +92,7 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
         children: [
           Icon(Icons.done_all_rounded, color: Colors.greenAccent.withValues(alpha: 0.5), size: 64),
           const SizedBox(height: 16),
-          Text('All caught up!', style: GoogleFonts.outfit(fontSize: 18, color: Colors.white54)),
+          Text('All caught up!', style: GoogleFonts.inter(fontSize: 18, color: Colors.white54)),
           const Text('No pending leave requests.', style: TextStyle(color: Colors.white24, fontSize: 12)),
         ],
       ),

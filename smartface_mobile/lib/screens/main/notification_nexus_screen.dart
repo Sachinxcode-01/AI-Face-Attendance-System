@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants.dart';
 import '../../core/app_state.dart';
 import '../../core/session_manager.dart';
 import '../../services/api_service.dart';
@@ -65,10 +66,10 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
   }
 
   void _setupWebSocket() {
-    _notificationService.connect();
+    final session = context.read<SessionManager>();
+    _notificationService.connect(token: session.token);
     _subscription = _notificationService.stream.listen((data) {
       if (!mounted) return;
-      final session = context.read<SessionManager>();
       final appState = context.read<AppState>();
       
       final targetUser = data['user_id'];
@@ -149,7 +150,7 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0A0E21), Color(0xFF1D2671)],
+          colors: [AppColors.bgDeep, AppColors.bgDark],
         ),
         image: DecorationImage(
           image: const NetworkImage(
@@ -167,7 +168,7 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
         appBar: AppBar(
           title: Text(
             'Notification Nexus',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -177,7 +178,7 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
                 onPressed: _clearAll,
                 icon: const Icon(
                   Icons.done_all_rounded,
-                  color: Color(0xFFFFD700),
+                  color: AppColors.gold,
                 ),
                 tooltip: 'Clear all',
               ),
@@ -235,7 +236,7 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
           const SizedBox(height: 16),
           Text(
             'Silence is Golden',
-            style: GoogleFonts.outfit(fontSize: 18, color: Colors.white54),
+            style: GoogleFonts.inter(fontSize: 18, color: Colors.white54),
           ),
           const Text(
             'No new alerts at the moment.',
@@ -273,7 +274,7 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
         priorityColor = Colors.greenAccent;
         break;
       case 'High':
-        priorityColor = const Color(0xFFFFD700);
+        priorityColor = AppColors.gold;
         break;
       default:
         priorityColor = Colors.blueAccent;
@@ -349,7 +350,7 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFD700),
+                      backgroundColor: AppColors.gold,
                       foregroundColor: Colors.black,
                       minimumSize: const Size(double.infinity, 36),
                       shape: RoundedRectangleBorder(

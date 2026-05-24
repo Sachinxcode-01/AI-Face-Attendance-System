@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import '../../services/api_service.dart';
+import '../../core/constants.dart';
 
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({super.key});
@@ -56,16 +57,34 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFF1A1F38),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: AppColors.bgModal,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(color: AppColors.gold.withValues(alpha: 0.15), width: 1.5),
+          ),
           title: Row(
             children: [
-              Icon(success ? Icons.check_circle : Icons.error, color: success ? Colors.greenAccent : Colors.redAccent),
-              const SizedBox(width: 10),
-              Text(success ? 'VALIDATED' : 'FAILED', style: const TextStyle(color: Colors.white)),
+              Icon(
+                success ? Icons.check_circle_rounded : Icons.error_outline_rounded, 
+                color: success ? AppColors.success : AppColors.error,
+                size: 26,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                success ? 'VALIDATED ✓' : 'VERIFICATION FAILED', 
+                style: GoogleFonts.inter(
+                  color: Colors.white, 
+                  fontWeight: FontWeight.bold, 
+                  fontSize: 16,
+                  letterSpacing: 0.5,
+                ),
+              ),
             ],
           ),
-          content: Text(message, style: const TextStyle(color: Colors.white70)),
+          content: Text(
+            message, 
+            style: GoogleFonts.inter(color: Colors.white70, fontSize: 13, height: 1.4),
+          ),
           actions: [
             TextButton(
               onPressed: () {
@@ -76,7 +95,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   setState(() => _isScanning = true); // Resume scanning
                 }
               },
-              child: const Text('DISMISS', style: TextStyle(color: Color(0xFFFFD700))),
+              child: Text(
+                'DISMISS', 
+                style: GoogleFonts.inter(color: AppColors.gold, fontWeight: FontWeight.bold, letterSpacing: 1),
+              ),
             ),
           ],
         ),
@@ -114,19 +136,41 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                       width: 250,
                       height: 250,
                       decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFFFD700), width: 2),
+                        border: Border.all(color: AppColors.gold.withValues(alpha: 0.6), width: 2),
                         borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.gold.withValues(alpha: 0.08),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          )
+                        ],
                       ),
                       child: Stack(
                         children: [
-                          // Scanning animation line
+                          // Glowing Laser Scanning animation line
                           Positioned(
                             top: 0,
                             left: 0,
                             right: 0,
                             child: Container(
-                              height: 2,
-                              color: const Color(0xFFFFD700),
+                              height: 4,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.gold.withValues(alpha: 0.0),
+                                    AppColors.gold,
+                                    AppColors.gold.withValues(alpha: 0.0),
+                                  ],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.gold.withValues(alpha: 0.6),
+                                    blurRadius: 10,
+                                    spreadRadius: 1.5,
+                                  )
+                                ],
+                              ),
                             ).animate(onPlay: (c) => c.repeat())
                              .moveY(begin: 0, end: 250, duration: 2.seconds, curve: Curves.easeInOut),
                           ),
@@ -136,8 +180,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                     const SizedBox(height: 40),
                     Text(
                       'ALIGN WITH TEACHER\'S QR',
-                      style: GoogleFonts.outfit(
-                        color: const Color(0xFFFFD700),
+                      style: GoogleFonts.inter(
+                        color: AppColors.gold,
                         letterSpacing: 2,
                         fontWeight: FontWeight.bold,
                       ),

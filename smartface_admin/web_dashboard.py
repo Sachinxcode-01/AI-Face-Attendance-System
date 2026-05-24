@@ -90,24 +90,211 @@ def nexa_speak(text: str):
 st.set_page_config(page_title="SmartAttendance - AI Admin", page_icon="🛡️", layout="wide")
 
 # ══════════════════════════════════════════════════════════════════════════
+# GLOBAL DESIGN SYSTEM (GLASSMORPHISM OVERLAY)
+# ══════════════════════════════════════════════════════════════════════════
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+    
+    /* Apply font hierarchy globally */
+    html, body, [class*="css"], [class*="st-"] {
+        font-family: 'Inter', sans-serif !important;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Outfit', sans-serif !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.5px !important;
+    }
+    
+    /* Primary Background & Canvas styling */
+    .stApp {
+        background: radial-gradient(circle at top, #0A0F24 0%, #02040A 100%) !important;
+        color: #E2E8F0 !important;
+    }
+    
+    /* Premium Frosted Glassmorphism Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: rgba(6, 10, 26, 0.95) !important;
+        border-right: 1px solid rgba(255, 183, 3, 0.12) !important;
+        backdrop-filter: blur(16px) !important;
+    }
+    
+    /* Sidebar text details */
+    [data-testid="stSidebar"] .stMarkdown p {
+        color: #94A3B8 !important;
+    }
+    
+    /* Custom premium card system */
+    .sf-card {
+        background: rgba(14, 21, 40, 0.4) !important;
+        border: 1px solid rgba(255, 183, 3, 0.12) !important;
+        border-radius: 20px !important;
+        padding: 24px !important;
+        box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4) !important;
+        backdrop-filter: blur(12px) !important;
+        transition: all 0.3s ease-in-out !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .sf-card:hover {
+        transform: translateY(-4px) !important;
+        border-color: rgba(255, 183, 3, 0.4) !important;
+        box-shadow: 0 16px 45px 0 rgba(255, 183, 3, 0.08) !important;
+    }
+    
+    /* Customized Horizontal Tabs */
+    button[data-baseweb="tab"] {
+        background-color: transparent !important;
+        color: rgba(255, 255, 255, 0.45) !important;
+        border-bottom: 2px solid transparent !important;
+        font-family: 'Outfit', sans-serif !important;
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.5px !important;
+        transition: all 0.25s ease !important;
+        padding: 10px 20px !important;
+    }
+    
+    button[data-baseweb="tab"]:hover {
+        color: rgba(255, 183, 3, 0.8) !important;
+    }
+    
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: #FFB703 !important;
+        border-bottom-color: #FFB703 !important;
+        text-shadow: 0 0 10px rgba(255, 183, 3, 0.25) !important;
+    }
+    
+    /* Premium Tactical Action Buttons */
+    .stButton > button {
+        background: linear-gradient(135deg, #FFB703 0%, #D48C00 100%) !important;
+        color: #02040A !important;
+        font-family: 'Outfit', sans-serif !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px !important;
+        border-radius: 12px !important;
+        border: none !important;
+        padding: 10px 24px !important;
+        transition: all 0.25s ease !important;
+        box-shadow: 0 4px 15px rgba(255, 183, 3, 0.2) !important;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(255, 183, 3, 0.35) !important;
+        color: #000000 !important;
+    }
+    
+    /* Outlined/Secondary Sidebar Buttons */
+    [data-testid="stSidebar"] .stButton > button {
+        background: transparent !important;
+        color: #FFB703 !important;
+        border: 1.5px solid rgba(255, 183, 3, 0.4) !important;
+        box-shadow: none !important;
+        border-radius: 12px !important;
+    }
+    
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background: rgba(255, 183, 3, 0.08) !important;
+        border-color: #FFB703 !important;
+    }
+    
+    /* Glowing Input Fields */
+    div[data-baseweb="input"] {
+        background-color: rgba(0, 0, 0, 0.25) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 12px !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    div[data-baseweb="input"]:focus-within {
+        border-color: #FFB703 !important;
+        box-shadow: 0 0 10px rgba(255, 183, 3, 0.2) !important;
+    }
+    
+    input {
+        color: #FFFFFF !important;
+    }
+    
+    /* File Uploader area styling */
+    [data-testid="stFileUploader"] {
+        background-color: rgba(255, 255, 255, 0.02) !important;
+        border: 1.5px dashed rgba(255, 183, 3, 0.2) !important;
+        border-radius: 16px !important;
+        padding: 20px !important;
+    }
+    
+    /* Pulse Green Operational Indicator Animation */
+    .pulse-dot {
+        width: 10px;
+        height: 10px;
+        background-color: #10B981;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: pulse-green 2s infinite;
+        vertical-align: middle;
+        margin-right: 8px;
+    }
+    
+    @keyframes pulse-green {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+        }
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ══════════════════════════════════════════════════════════════════════════
+def make_kpi_card(title: str, value: str, icon: str, border_color: str = "rgba(255, 183, 3, 0.15)"):
+    return f"""
+    <div class="sf-card" style="
+        border: 1px solid {border_color} !important;
+        text-align: center;
+        margin-bottom: 15px;
+    ">
+        <div style="font-size: 2.2rem; margin-bottom: 8px;">{icon}</div>
+        <div style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{title}</div>
+        <div style="color: #FFFFFF; font-size: 1.75rem; font-weight: 700; margin-top: 5px; text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);">{value}</div>
+    </div>
+    """
+
+# ══════════════════════════════════════════════════════════════════════════
 # LOGIN
 # ══════════════════════════════════════════════════════════════════════════
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 
 if not st.session_state["logged_in"]:
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([1, 1.8, 1])
     with col2:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.title("🔒 System Secure Login")
-        st.markdown("Enter the Master Admin Password to access the SmartAttendance - AI Control Center.")
-        password_attempt = st.text_input("Admin Password", type="password")
-        if st.button("Login", use_container_width=True):
-            if password_attempt == ADMIN_PASSWORD:
-                st.session_state["logged_in"] = True
-                st.rerun()
-            else:
-                st.error("❌ Access Denied: Incorrect Password")
+        st.markdown("""
+        <div class="sf-card" style="text-align: center; margin-bottom: -10px;">
+            <div style="font-size: 3rem; margin-bottom: 10px;">🛡️</div>
+            <h2 style="color: #FFB703; margin: 0 0 5px 0;">Master Control Center</h2>
+            <p style="color: #94A3B8; margin: 0; font-size: 0.95rem;">SmartFace Attendance Biometric Suite</p>
+        </div>
+        """, unsafe_allow_html=True)
+        with st.form("admin_login_form"):
+            password_attempt = st.text_input("Enter Admin Credentials", type="password", placeholder="Master Password")
+            submit = st.form_submit_button("Authenticate Secure System ⚡", use_container_width=True)
+            if submit:
+                if password_attempt == ADMIN_PASSWORD:
+                    st.session_state["logged_in"] = True
+                    st.rerun()
+                else:
+                    st.error("❌ Access Denied: Incorrect Master Password")
     st.stop()
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -186,8 +373,18 @@ def load_attendance_data():
 # ══════════════════════════════════════════════════════════════════════════
 # MAIN HEADER
 # ══════════════════════════════════════════════════════════════════════════
-st.title("🛡️ SmartAttendance - AI AI Admin Control Center")
-st.markdown("Monitor live attendance, manage system scripts, and control security directly from the web.")
+st.markdown("""
+<div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 183, 3, 0.15); padding-bottom: 20px; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+    <div>
+        <h1 style="margin: 0; color: #FFFFFF; font-size: 2.3rem; text-shadow: 0 0 20px rgba(255, 183, 3, 0.1);">🛡️ SmartAttendance</h1>
+        <p style="margin: 5px 0 0 0; color: #94A3B8; font-size: 1rem;">Next-Gen Biometric Security Suite & Admin Control Center</p>
+    </div>
+    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); padding: 8px 16px; border-radius: 50px; display: flex; align-items: center;">
+        <span class="pulse-dot"></span>
+        <span style="color: #10B981; font-weight: 600; font-size: 0.85rem; font-family: 'Outfit', sans-serif; letter-spacing: 0.5px;">SYSTEM OPERATIONAL</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📊 Analytics & Profiles",
@@ -241,10 +438,12 @@ with tab1:
         overall_pct   = (total_present / total_logs) * 100  if total_logs > 0 else 0
 
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Total Records",    total_logs)
-        c2.metric("✅ Total Present", total_present)
-        c3.metric("❌ Total Absent",  total_absent)
-        c4.metric("📈 Attendance %",  f"{overall_pct:.1f}%")
+        c1.markdown(make_kpi_card("Total Logs", str(total_logs), "🗃️"), unsafe_allow_html=True)
+        c2.markdown(make_kpi_card("Total Present", str(total_present), "✅", "rgba(16, 185, 129, 0.25)"), unsafe_allow_html=True)
+        c3.markdown(make_kpi_card("Total Absent", str(total_absent), "❌", "rgba(239, 68, 68, 0.25)"), unsafe_allow_html=True)
+        
+        status_pct_color = "rgba(16, 185, 129, 0.25)" if overall_pct >= 75 else ("rgba(255, 183, 3, 0.25)" if overall_pct >= 50 else "rgba(239, 68, 68, 0.25)")
+        c4.markdown(make_kpi_card("Attendance Rate", f"{overall_pct:.1f}%", "📈", status_pct_color), unsafe_allow_html=True)
         st.markdown("---")
 
         if total_logs == 0:
@@ -290,7 +489,13 @@ with tab1:
                 sc.columns = ["Status", "Count"]
                 fig = px.pie(sc, names="Status", values="Count", hole=0.4,
                              color="Status",
-                             color_discrete_map={"Present": "#00C851", "Absent": "#ff4444"})
+                             color_discrete_map={"Present": "#10B981", "Absent": "#EF4444"})
+                fig.update_layout(
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#E2E8F0", family="Outfit, Inter, sans-serif"),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                )
                 st.plotly_chart(fig, use_container_width=True)
 
                 # Heatmap
@@ -305,10 +510,15 @@ with tab1:
                     fig_hm = px.density_heatmap(
                         pivot, x="Hour", y="Day", z="Records",
                         category_orders={"Day": day_order},
-                        color_continuous_scale="Magma",
+                        color_continuous_scale=[[0.0, "#0A0F24"], [0.5, "#FFB703"], [1.0, "#EF4444"]],
                         title="System Activity Heatmap",
                     )
-                    fig_hm.update_layout(xaxis=dict(tickmode="linear", tick0=0, dtick=1))
+                    fig_hm.update_layout(
+                        xaxis=dict(tickmode="linear", tick0=0, dtick=1),
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        font=dict(color="#E2E8F0", family="Outfit, Inter, sans-serif")
+                    )
                     st.plotly_chart(fig_hm, use_container_width=True)
                     st.info("💡 Darkest areas = peak attendance times.")
                 except Exception:
@@ -345,11 +555,11 @@ with tab1:
                 s_pct     = (s_present / s_total) * 100 if s_total > 0 else 0
 
                 sc1, sc2, sc3 = st.columns(3)
-                sc1.info(f"Attended: **{s_present}/{s_total}**")
-                sc2.warning(f"Missed: **{s_total - s_present}**")
-                if   s_pct >= 75: sc3.success(f"Rate: **{s_pct:.1f}%**")
-                elif s_pct >= 50: sc3.warning(f"Rate: **{s_pct:.1f}%**")
-                else:             sc3.error(f"Rate: **{s_pct:.1f}%**")
+                sc1.markdown(make_kpi_card("Classes Attended", f"{s_present}/{s_total}", "📅", "rgba(16, 185, 129, 0.25)"), unsafe_allow_html=True)
+                sc2.markdown(make_kpi_card("Classes Missed", f"{s_total - s_present}", "❌", "rgba(239, 68, 68, 0.25)"), unsafe_allow_html=True)
+                
+                status_color = "rgba(16, 185, 129, 0.25)" if s_pct >= 75 else ("rgba(255, 183, 3, 0.25)" if s_pct >= 50 else "rgba(239, 68, 68, 0.25)")
+                sc3.markdown(make_kpi_card("Attendance Rate", f"{s_pct:.1f}%", "📈", status_color), unsafe_allow_html=True)
 
                 st.markdown("---")
                 if _TTS_AVAILABLE:
@@ -366,7 +576,12 @@ with tab1:
                 s_stat.columns = ["Status","Count"]
                 if not s_stat.empty:
                     fig = px.bar(s_stat, x="Status", y="Count", color="Status",
-                                 color_discrete_map={"Present":"#00C851","Absent":"#ff4444"})
+                                 color_discrete_map={"Present":"#10B981","Absent":"#EF4444"})
+                    fig.update_layout(
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        font=dict(color="#E2E8F0", family="Outfit, Inter, sans-serif")
+                    )
                     st.plotly_chart(fig, use_container_width=True)
 
             st.markdown("#### Detailed Log")

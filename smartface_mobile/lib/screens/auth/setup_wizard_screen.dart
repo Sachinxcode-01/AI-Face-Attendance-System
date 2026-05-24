@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:camera/camera.dart';
 import 'dart:math';
+import '../../core/constants.dart';
 import '../../services/api_service.dart';
 
 class SetupWizardScreen extends StatefulWidget {
@@ -105,7 +106,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: AppColors.bgDark,
       body: SafeArea(
         child: Column(
           children: [
@@ -143,7 +144,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             children: [
               Text(
                 'PROFILE SETUP',
-                style: GoogleFonts.outfit(color: const Color(0xFFFFD700), letterSpacing: 2, fontSize: 12, fontWeight: FontWeight.bold),
+                style: GoogleFonts.inter(color: AppColors.gold, letterSpacing: 2, fontSize: 12, fontWeight: FontWeight.bold),
               ),
               Text(
                 '${_currentPage + 1} / $_totalPages',
@@ -158,7 +159,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               value: (_currentPage + 1) / _totalPages,
               minHeight: 6,
               backgroundColor: Colors.white10,
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
             ),
           ),
         ],
@@ -173,7 +174,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text(title, style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
           Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 16)),
           const SizedBox(height: 40),
           ...children,
@@ -193,10 +194,10 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             width: 200,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFFFFD700).withValues(alpha: 0.05),
-              border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.2)),
+              color: AppColors.gold.withValues(alpha: 0.05),
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.2)),
             ),
-            child: const Icon(Icons.rocket_launch_outlined, size: 80, color: Color(0xFFFFD700)),
+            child: const Icon(Icons.rocket_launch_outlined, size: 80, color: AppColors.gold),
           ).animate().scale(duration: 1.seconds, curve: Curves.elasticOut),
         ),
       ],
@@ -250,7 +251,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     width: 220,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.5), width: 2),
+                      border: Border.all(color: AppColors.gold.withValues(alpha: 0.5), width: 2),
                     ),
                   ).animate(onPlay: (c) => c.repeat()).rotate(duration: 3.seconds),
                   
@@ -262,7 +263,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                       color: Colors.black,
                       child: _isCameraInitialized
                           ? CameraPreview(_cameraController!)
-                          : const Center(child: CircularProgressIndicator(color: Color(0xFFFFD700))),
+                          : const Center(child: CircularProgressIndicator(color: AppColors.gold)),
                     ),
                   ),
                 ],
@@ -270,7 +271,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               const SizedBox(height: 30),
               Text(
                 'POSITION YOUR FACE IN THE CIRCLE',
-                style: GoogleFonts.outfit(fontSize: 10, letterSpacing: 2, color: const Color(0xFFFFD700), fontWeight: FontWeight.bold),
+                style: GoogleFonts.inter(fontSize: 10, letterSpacing: 2, color: AppColors.gold, fontWeight: FontWeight.bold),
               ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(duration: 2.seconds),
               const SizedBox(height: 20),
               ElevatedButton.icon(
@@ -281,7 +282,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                   
                   // Simulate Scanning
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Processing Biometric Signatures...'), backgroundColor: Color(0xFFFFD700), duration: Duration(seconds: 2)),
+                    const SnackBar(content: Text('Processing Biometric Signatures...'), backgroundColor: AppColors.gold, duration: Duration(seconds: 2)),
                   );
                   
                   await Future.delayed(const Duration(seconds: 2));
@@ -354,7 +355,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white38),
-        prefixIcon: Icon(icon, color: const Color(0xFFFFD700)),
+        prefixIcon: Icon(icon, color: AppColors.gold),
         filled: true,
         fillColor: Colors.white.withValues(alpha: 0.05),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
@@ -369,7 +370,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(20)),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFFFFD700)),
+          Icon(icon, color: AppColors.gold),
           const SizedBox(width: 15),
           Expanded(
             child: Column(
@@ -380,7 +381,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               ],
             ),
           ),
-          Switch(value: active, onChanged: (v) {}, activeThumbColor: const Color(0xFFFFD700)),
+          Switch(value: active, onChanged: (v) {}, activeThumbColor: AppColors.gold),
         ],
       ),
     );
@@ -391,7 +392,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFFD700) : Colors.white.withValues(alpha: 0.05),
+          color: isSelected ? AppColors.gold : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -422,7 +423,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             onPressed: _nextPage,
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-              backgroundColor: const Color(0xFFFFD700),
+              backgroundColor: AppColors.gold,
               foregroundColor: Colors.black,
             ),
             child: Text(_currentPage == _totalPages - 1 ? 'GET STARTED' : 'CONTINUE'),

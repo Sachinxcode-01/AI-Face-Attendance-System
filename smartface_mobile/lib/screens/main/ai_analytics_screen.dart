@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/constants.dart';
 
 class AIAnalyticsScreen extends StatelessWidget {
   const AIAnalyticsScreen({super.key});
@@ -12,7 +13,7 @@ class AIAnalyticsScreen extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0A0E21), Color(0xFF1D2671)],
+          colors: [AppColors.bgDeep, AppColors.bgDark],
         ),
         image: DecorationImage(
           image: const NetworkImage(
@@ -30,7 +31,7 @@ class AIAnalyticsScreen extends StatelessWidget {
         appBar: AppBar(
           title: Text(
             'Neural Analytics',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -44,10 +45,10 @@ class AIAnalyticsScreen extends StatelessWidget {
               const SizedBox(height: 30),
               Text(
                 'INSTITUTIONAL PERFORMANCE',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 12,
                   letterSpacing: 2,
-                  color: const Color(0xFFFFD700),
+                  color: AppColors.gold,
                 ),
               ),
               const SizedBox(height: 20),
@@ -82,10 +83,10 @@ class AIAnalyticsScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFD700).withValues(alpha: 0.1),
+        color: AppColors.gold.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+          color: AppColors.gold.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -93,12 +94,12 @@ class AIAnalyticsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.psychology_outlined, color: Color(0xFFFFD700)),
+              const Icon(Icons.psychology_outlined, color: AppColors.gold),
               const SizedBox(width: 10),
               Text(
                 'AI PREDICTION',
-                style: GoogleFonts.outfit(
-                  color: const Color(0xFFFFD700),
+                style: GoogleFonts.inter(
+                  color: AppColors.gold,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
                 ),
@@ -141,7 +142,7 @@ class AIAnalyticsScreen extends StatelessWidget {
         children: [
           Text(
             title,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               color: Colors.white,
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -167,7 +168,7 @@ class AIAnalyticsScreen extends StatelessWidget {
                           gradient: const LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                            colors: [AppColors.gold, Color(0xFFFFA500)],
                           ),
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(6),
@@ -194,7 +195,7 @@ class AIAnalyticsScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     days[index],
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: Colors.white54,
                       fontSize: 10,
                     ),
@@ -276,7 +277,7 @@ class AIAnalyticsScreen extends StatelessWidget {
           LinearProgressIndicator(
             value: value,
             backgroundColor: Colors.white10,
-            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
           ),
         ],
       ),

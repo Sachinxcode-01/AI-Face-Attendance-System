@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, status, WebSocket, WebSocketDisconnect, File, UploadFile
+from fastapi import FastAPI, HTTPException, Depends, status, WebSocket, WebSocketDisconnect, File, UploadFile, Header, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
@@ -12,7 +12,7 @@ from models import (
     UserCreate, UserResponse, Token, SessionCreate, SessionStart, 
     AttendanceRecord, AttendanceMark, LeaveRequest, LeaveApplication, 
     Notification, OTPRequest, OTPVerification, AIQuery, ProfileUpdate,
-    BiometricRequest, IntruderAlert, GoogleLoginRequest
+    BiometricRequest, IntruderAlert, GoogleLoginRequest, FaceAttendanceMark
 )
 from auth_service import AuthService
 from database import db, users_collection, sessions_collection, attendance_collection
@@ -48,26 +48,51 @@ os.makedirs(AVATARS_DIR, exist_ok=True)
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: list[WebSocket] = []
+        # Map user_id (email) to a list of active WebSocket connections
+        self.active_connections: dict[str, list[WebSocket]] = {}
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, user_id: str):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        if user_id not in self.active_connections:
+            self.active_connections[user_id] = []
+        self.active_connections[user_id].append(websocket)
 
-    def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
+    def disconnect(self, websocket: WebSocket, user_id: str):
+        if user_id in self.active_connections:
+            if websocket in self.active_connections[user_id]:
+                self.active_connections[user_id].remove(websocket)
+            if not self.active_connections[user_id]:
+                del self.active_connections[user_id]
 
-    async def broadcast(self, message: dict):
+    async def send_personal_message(self, message: dict, user_id: str):
+        if user_id not in self.active_connections:
+            return
         dead_connections = []
-        for connection in self.active_connections:
+        for connection in self.active_connections[user_id]:
             try:
                 await connection.send_json(message)
             except Exception:
                 dead_connections.append(connection)
-        # Clean up disconnected clients
         for dead in dead_connections:
-            self.active_connections.remove(dead)
+            self.active_connections[user_id].remove(dead)
+        if not self.active_connections[user_id]:
+            del self.active_connections[user_id]
+
+    async def broadcast(self, message: dict):
+        dead_connections = []
+        for user_id, connections in list(self.active_connections.items()):
+            for connection in connections:
+                try:
+                    await connection.send_json(message)
+                except Exception:
+                    dead_connections.append((user_id, connection))
+        # Clean up dead connections
+        for user_id, dead in dead_connections:
+            if user_id in self.active_connections:
+                if dead in self.active_connections[user_id]:
+                    self.active_connections[user_id].remove(dead)
+                if not self.active_connections[user_id]:
+                    del self.active_connections[user_id]
 
 manager = ConnectionManager()
 
@@ -80,6 +105,8 @@ class RateLimiter:
         self._hits: dict[str, list[float]] = {}
 
     def is_allowed(self, key: str) -> bool:
+        if APP_ENV == "development":
+            return True
         now = time.time()
         window_start = now - self.period
         hits = self._hits.get(key, [])
@@ -125,8 +152,8 @@ async def create_notification(user_id: str, title: str, message: str, type: str,
         notif["id"] = str(result.inserted_id)
         if "_id" in notif:
             del notif["_id"]
-        # Broadcast real-time message via websocket
-        await manager.broadcast(notif)
+        # Send real-time message to target student/user via websocket
+        await manager.send_personal_message(notif, user_id)
     except Exception as e:
         print(f"create_notification error: {e}")
 
@@ -235,7 +262,7 @@ async def mark_notifications_read(
     return {"message": "Notifications marked as read"}
 
 @app.post("/auth/register", response_model=UserResponse)
-async def register(user: UserCreate):
+async def register(user: UserCreate, background_tasks: BackgroundTasks):
     # Rate limit: max 3 registrations per 5 minutes per email
     if not register_limiter.is_allowed(user.email):
         retry_after = register_limiter.remaining_seconds(user.email)
@@ -257,12 +284,12 @@ async def register(user: UserCreate):
     user_dict["id"] = str(result.inserted_id)
     
     # Send Welcome Email
-    await EmailService.send_registration_success(user.email, user.full_name)
+    background_tasks.add_task(EmailService.send_registration_success, user.email, user.full_name)
     
     return user_dict
 
 @app.post("/auth/login-otp/send")
-async def send_login_otp(request: OTPRequest):
+async def send_login_otp(request: OTPRequest, background_tasks: BackgroundTasks):
     email = request.email
     # Rate limit: max 3 OTP sends per minute per email
     if not otp_send_limiter.is_allowed(email):
@@ -285,7 +312,10 @@ async def send_login_otp(request: OTPRequest):
         upsert=True
     )
     
-    await EmailService.send_otp(email, otp)
+    logger.info(f"Generated OTP for {email}: {otp}")
+    print(f"Generated OTP for {email}: {otp}")
+    
+    background_tasks.add_task(EmailService.send_otp, email, otp)
     return {"message": "OTP sent successfully"}
 
 @app.post("/auth/login-otp/verify", response_model=Token)
@@ -360,7 +390,7 @@ async def google_login(request: GoogleLoginRequest):
     }
 
 @app.post("/auth/forgot-password")
-async def forgot_password(email_data: dict):
+async def forgot_password(email_data: dict, background_tasks: BackgroundTasks):
     email = email_data.get("email")
     user = await users_collection.find_one({"email": email})
     if not user:
@@ -374,11 +404,15 @@ async def forgot_password(email_data: dict):
         {"$set": {"otp": otp, "expiry": expiry, "type": "password_reset"}},
         upsert=True
     )
-    await EmailService.send_otp(email, otp)
+    
+    logger.info(f"Generated Password Reset OTP for {email}: {otp}")
+    print(f"Generated Password Reset OTP for {email}: {otp}")
+    
+    background_tasks.add_task(EmailService.send_otp, email, otp)
     return {"message": "OTP sent to email"}
 
 @app.post("/security/intruder-alert")
-async def intruder_alert(data: IntruderAlert):
+async def intruder_alert(data: IntruderAlert, background_tasks: BackgroundTasks):
     location = data.location or data.camera_id or "Unknown Location"
     alert_type = data.type or "intruder"
     timestamp = datetime.utcnow()
@@ -402,7 +436,8 @@ async def intruder_alert(data: IntruderAlert):
     )
     
     # Send email to admin
-    await EmailService.send_intruder_alert(
+    background_tasks.add_task(
+        EmailService.send_intruder_alert,
         "saxhin0708@gmail.com",
         timestamp.strftime('%Y-%m-%d %H:%M:%S'),
         location
@@ -656,6 +691,64 @@ async def mark_attendance(request: AttendanceMark):
         
     return {"status": "success", "message": "Attendance marked successfully"}
 
+@app.post("/attendance/mark/face")
+async def mark_face_attendance(request: FaceAttendanceMark, token: str = Header(...)):
+    expected_token = os.getenv("FACE_SCANNER_TOKEN", "secure_face_scanner_default_key_123")
+    if token != expected_token:
+        raise HTTPException(status_code=401, detail="Unauthorized face scanner token")
+
+    # Find the active session
+    session = await db.sessions.find_one({"is_active": True})
+    if not session:
+        raise HTTPException(status_code=400, detail="No active attendance session found")
+
+    # Check for duplicate
+    existing = await db.attendance.find_one({
+        "student_email": request.student_email,
+        "session_id": str(session["_id"])
+    })
+    if existing:
+        return {"status": "success", "message": "Attendance already marked for this session"}
+
+    timestamp = datetime.utcnow()
+    record_dict = {
+        "student_email": request.student_email,
+        "session_id": str(session["_id"]),
+        "timestamp": timestamp,
+        "status": "Present",
+        "verified_by": "face",
+        "confidence": request.confidence
+    }
+    
+    await db.attendance.insert_one(record_dict)
+    
+    # Broadcast to Teacher/Live Monitor
+    await manager.broadcast({
+        "type": "attendance_update",
+        "student_email": request.student_email,
+        "session_id": str(session["_id"]),
+        "status": "Present",
+        "timestamp": timestamp.isoformat(),
+        "verified_by": "face",
+        "confidence": request.confidence
+    })
+    
+    # Sync to GSheets
+    try:
+        if SHEET_URL:
+            user = await users_collection.find_one({"email": request.student_email})
+            gsheets.add_record(SHEET_URL, "Attendance", [
+                user["full_name"] if user else request.student_email,
+                request.student_email,
+                session["subject"],
+                timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                "Present"
+            ])
+    except Exception as e:
+        print(f"GSheets Sync Error (Face Scanner): {e}")
+        
+    return {"status": "success", "message": "Face attendance marked successfully"}
+
 # Leave Management Endpoints
 @app.post("/leave/apply")
 async def apply_leave(leave: LeaveApplication):
@@ -691,7 +784,7 @@ async def get_pending_leaves():
     return leaves
 
 @app.patch("/leave/action")
-async def leave_action(data: dict):
+async def leave_action(data: dict, background_tasks: BackgroundTasks):
     leave_id = data.get("leave_id")
     status = data.get("status") # Approved, Rejected
     remarks = data.get("remarks")
@@ -704,7 +797,7 @@ async def leave_action(data: dict):
     leave = await db.leaves.find_one({"_id": ObjectId(leave_id)})
     if leave:
         # Send email
-        await EmailService.send_leave_status_update(leave["user_id"], status, remarks)
+        background_tasks.add_task(EmailService.send_leave_status_update, leave["user_id"], status, remarks)
         # Save notification for the student
         await create_notification(
             leave["user_id"],
@@ -727,13 +820,26 @@ async def get_notifications(email: str):
     return notifications
 
 @app.websocket("/ws/notifications")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
+async def websocket_endpoint(websocket: WebSocket, token: str = None):
+    if not token:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Token missing")
+        return
+    payload = AuthService.decode_token(token)
+    if not payload:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token")
+        return
+    
+    email = payload.get("sub")
+    if not email:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid payload")
+        return
+
+    await manager.connect(websocket, email)
     try:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        manager.disconnect(websocket, email)
 
 async def get_streak(student_id: str):
     # Get attendance logs for the student sorted by date

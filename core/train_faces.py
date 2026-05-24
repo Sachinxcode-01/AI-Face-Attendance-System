@@ -5,11 +5,15 @@ import pickle                       # Used to save/load trained data
 from insightface.app import FaceAnalysis   # ArcFace face detection & embedding model
 
 # ================= CONFIG =================
-DATASET_DIR = "dataset" 
+# Resolve paths relative to the project root directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+
+DATASET_DIR = os.path.join(DATA_DIR, "dataset") 
 #This  Folder containing subfolfers student.
 # Each student folder contains multiple face images
 
-OUTPUT_FILE = "face_encodings_arcface.pkl"
+OUTPUT_FILE = os.path.join(DATA_DIR, "face_encodings_arcface.pkl")
 # This file will store all trained face embeddings (brain of system)
 
 # ==========================================

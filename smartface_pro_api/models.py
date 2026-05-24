@@ -97,3 +97,7 @@ class Notification(BaseModel):
     type: str # attendance, leave, security, announcement
     is_read: bool = False
     created_at: datetime = datetime.utcnow()
+
+class FaceAttendanceMark(BaseModel):
+    student_email: str
+    confidence: float

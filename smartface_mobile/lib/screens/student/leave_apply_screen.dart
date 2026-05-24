@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
 import '../../services/api_service.dart';
+import '../../core/constants.dart';
+import '../../core/theme_controller.dart';
 
 class LeaveApplyScreen extends StatefulWidget {
   const LeaveApplyScreen({super.key});
@@ -26,9 +29,9 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.dark(
-              primary: const Color(0xFFFFD700),
+              primary: AppColors.gold,
               onPrimary: Colors.black,
-              surface: const Color(0xFF1A1F38),
+              surface: AppColors.bgModal,
               onSurface: Colors.white,
             ),
           ),
@@ -108,21 +111,20 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeCtrl = context.watch<ThemeController>();
+    final isDark = themeCtrl.isDark;
+
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0A0E21), Color(0xFF1D2671)],
-        ),
+        color: isDark ? AppColors.bgDark : AppColors.bgLight,
         image: DecorationImage(
           image: const NetworkImage(
             'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            Colors.black.withValues(alpha: 0.15),
-            BlendMode.dstATop,
+            isDark ? Colors.black.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.85),
+            isDark ? BlendMode.dstATop : BlendMode.srcOver,
           ),
         ),
       ),
@@ -131,10 +133,17 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
         appBar: AppBar(
           title: Text(
             'Apply for Leave',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : AppColors.bgDark,
+            ),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_ios, color: isDark ? Colors.white : AppColors.bgDark),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -166,10 +175,10 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
       children: [
         Text(
           'REQUEST ABSENCE',
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             fontSize: 12,
             letterSpacing: 2,
-            color: const Color(0xFFFFD700),
+            color: AppColors.gold,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -193,11 +202,11 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.15)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today, color: Color(0xFFFFD700)),
+            const Icon(Icons.calendar_today, color: AppColors.gold),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -256,7 +265,7 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(color: Color(0xFFFFD700)),
+          borderSide: const BorderSide(color: AppColors.gold, width: 1.5),
         ),
       ),
       validator: (value) =>
@@ -311,7 +320,7 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
             onPressed: () {},
             child: const Text(
               'ATTACH',
-              style: TextStyle(color: Color(0xFFFFD700)),
+              style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -326,10 +335,13 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
         onPressed: _isSubmitting ? null : _submitApplication,
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 18),
-          backgroundColor: const Color(0xFFFFD700),
+          backgroundColor: AppColors.gold,
+          foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
+          elevation: 5,
+          shadowColor: AppColors.gold.withValues(alpha: 0.25),
         ),
         child: _isSubmitting
             ? const CircularProgressIndicator(color: Colors.black)

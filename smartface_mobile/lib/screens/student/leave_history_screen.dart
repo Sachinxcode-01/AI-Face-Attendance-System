@@ -94,7 +94,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
         appBar: AppBar(
           title: Text(
             'Leave Records',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -149,7 +149,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
           const SizedBox(height: 16),
           Text(
             'No leave records found',
-            style: GoogleFonts.outfit(fontSize: 18, color: Colors.white54),
+            style: GoogleFonts.inter(fontSize: 18, color: Colors.white54),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -192,7 +192,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
           const SizedBox(height: 16),
           Text(
             leave['reason'] ?? 'No reason provided',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.white,

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants.dart';
 import '../../core/theme_controller.dart';
 import '../../services/api_service.dart';
 
@@ -109,9 +110,9 @@ class _ProfileScreenState extends State<ProfileScreen>
       builder: (_) => Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: const Color(0xFF0F1532),
+          color: AppColors.bgModal,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.3)),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -126,7 +127,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             const SizedBox(height: 20),
             Text(
               'Update Profile Photo',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -135,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             const SizedBox(height: 6),
             Text(
               'JPEG, PNG or WEBP · Max 5 MB',
-              style: GoogleFonts.outfit(fontSize: 12, color: Colors.white38),
+              style: GoogleFonts.inter(fontSize: 12, color: Colors.white38),
             ),
             const SizedBox(height: 24),
             Row(
@@ -180,17 +181,17 @@ class _ProfileScreenState extends State<ProfileScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFD700).withValues(alpha: 0.07),
+          color: AppColors.gold.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.25)),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.25)),
         ),
         child: Column(
           children: [
-            Icon(icon, color: const Color(0xFFFFD700), size: 32),
+            Icon(icon, color: AppColors.gold, size: 32),
             const SizedBox(height: 8),
             Text(
               label,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
@@ -269,7 +270,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       content: Row(children: [
         const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
         const SizedBox(width: 10),
-        Expanded(child: Text(msg, style: GoogleFonts.outfit())),
+        Expanded(child: Text(msg, style: GoogleFonts.inter())),
       ]),
       backgroundColor: const Color(0xFF1A8F5E),
       behavior: SnackBarBehavior.floating,
@@ -282,7 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       content: Row(children: [
         const Icon(Icons.error_outline, color: Colors.white, size: 18),
         const SizedBox(width: 10),
-        Expanded(child: Text(msg, style: GoogleFonts.outfit())),
+        Expanded(child: Text(msg, style: GoogleFonts.inter())),
       ]),
       backgroundColor: Colors.redAccent.shade700,
       behavior: SnackBarBehavior.floating,
@@ -309,10 +310,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           child: Container(
             height: MediaQuery.of(context).size.height * 0.78,
             decoration: const BoxDecoration(
-              color: Color(0xFF0F1532),
+              color: AppColors.bgModal,
               borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
               border: Border(
-                top: BorderSide(color: Color(0xFFFFD700), width: 1.5),
+                top: BorderSide(color: AppColors.gold, width: 1.5),
               ),
             ),
             child: ClipRRect(
@@ -322,9 +323,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                 appBar: AppBar(
                   title: Text(
                     'Update Profile Details',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFFFFD700),
+                      color: AppColors.gold,
                     ),
                   ),
                   backgroundColor: Colors.transparent,
@@ -358,7 +359,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         height: 55,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFD700),
+                            backgroundColor: AppColors.gold,
                             foregroundColor: Colors.black,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -386,7 +387,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               if (!mounted) return;
                               ScaffoldMessenger.of(this.context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Profile synced successfully!', style: GoogleFonts.outfit()),
+                                  content: Text('Profile synced successfully!', style: GoogleFonts.inter()),
                                   backgroundColor: const Color(0xFF1A8F5E),
                                 ),
                               );
@@ -401,7 +402,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           },
                           child: Text(
                             'SAVE CHANGES',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.5,
                             ),
@@ -427,7 +428,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-        prefixIcon: Icon(icon, color: const Color(0xFFFFD700), size: 20),
+        prefixIcon: Icon(icon, color: AppColors.gold, size: 20),
         filled: true,
         fillColor: Colors.white.withValues(alpha: 0.03),
         enabledBorder: OutlineInputBorder(
@@ -436,7 +437,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1),
+          borderSide: const BorderSide(color: AppColors.gold, width: 1),
         ),
       ),
     );
@@ -488,7 +489,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         BoxShadow(
                           color: (_isDragOver
                                   ? Colors.cyanAccent
-                                  : const Color(0xFFFFD700))
+                                  : AppColors.gold)
                               .withValues(
                                   alpha: _isUploading
                                       ? 0.15 + 0.25 * _pulseController.value
@@ -509,7 +510,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       border: Border.all(
                         color: _isDragOver
                             ? Colors.cyanAccent
-                            : const Color(0xFFFFD700),
+                            : AppColors.gold,
                         width: _isDragOver ? 3 : 2,
                       ),
                     ),
@@ -526,15 +527,15 @@ class _ProfileScreenState extends State<ProfileScreen>
                   // Avatar circle
                   CircleAvatar(
                     radius: 68,
-                    backgroundColor: const Color(0xFF0F1532),
+                    backgroundColor: AppColors.bgModal,
                     backgroundImage: avatarImage,
                     child: avatarImage == null
                         ? Text(
                             initials.isNotEmpty ? initials : 'AI',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontSize: 34,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFFFFD700),
+                              color: AppColors.gold,
                               letterSpacing: 1.5,
                             ),
                           )
@@ -559,7 +560,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               strokeWidth: 2.5,
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 Color.lerp(
-                                  const Color(0xFFFFD700),
+                                  AppColors.gold,
                                   Colors.cyanAccent,
                                   _pulseController.value,
                                 )!,
@@ -569,7 +570,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           const SizedBox(height: 6),
                           Text(
                             'Uploading…',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               fontSize: 10,
                               color: Colors.white70,
                               fontWeight: FontWeight.w600,
@@ -589,11 +590,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                         decoration: BoxDecoration(
                           color: _isDragOver
                               ? Colors.cyanAccent
-                              : const Color(0xFFFFD700),
+                              : AppColors.gold,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                              color: AppColors.gold.withValues(alpha: 0.4),
                               blurRadius: 10,
                               spreadRadius: 1,
                             ),
@@ -636,8 +637,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF0A0E21),
-            Color(0xFF1D2671),
+            AppColors.bgDeep,
+            AppColors.bgDark,
           ],
         ),
         image: DecorationImage(
@@ -655,7 +656,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         appBar: AppBar(
           title: Text(
             'My Profile',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -667,14 +668,14 @@ class _ProfileScreenState extends State<ProfileScreen>
             if (!_isLoading)
               IconButton(
                 onPressed: _showEditProfileSheet,
-                icon: const Icon(Icons.edit_outlined, color: Color(0xFFFFD700)),
+                icon: const Icon(Icons.edit_outlined, color: AppColors.gold),
               ),
           ],
         ),
         body: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
                 ),
               )
             : SingleChildScrollView(
@@ -697,7 +698,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       duration: const Duration(milliseconds: 300),
                       child: Text(
                         'Tap or drag an image to update photo',
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.inter(
                           fontSize: 11,
                           color: Colors.white30,
                           letterSpacing: 0.3,
@@ -710,7 +711,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     // ── Name & Department ─────────────────────────────
                     Text(
                       _profileData['full_name'] ?? 'User',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -722,7 +723,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       _profileData['department'] != null && _profileData['college'] != null
                           ? '${_profileData['department']} • ${_profileData['college']}'
                           : 'SmartFace Academic Student',
-                      style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13),
+                      style: GoogleFonts.inter(color: Colors.white54, fontSize: 13),
                       textAlign: TextAlign.center,
                     ).animate().fadeIn(delay: 300.ms),
 
@@ -753,12 +754,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFD700).withValues(alpha: 0.08),
+                              color: AppColors.gold.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
                               isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
-                              color: const Color(0xFFFFD700),
+                              color: AppColors.gold,
                               size: 22,
                             ),
                           ),
@@ -769,7 +770,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               children: [
                                 Text(
                                   'THEME SYSTEM',
-                                  style: GoogleFonts.outfit(
+                                  style: GoogleFonts.inter(
                                     color: Colors.white38,
                                     fontSize: 10,
                                     letterSpacing: 1,
@@ -789,7 +790,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ),
                           Switch.adaptive(
                             value: isDark,
-                            activeTrackColor: const Color(0xFFFFD700),
+                            activeTrackColor: AppColors.gold,
                             activeThumbColor: Colors.black,
                             onChanged: (_) => themeCtrl.toggle(),
                           ),
@@ -808,7 +809,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         icon: const Icon(Icons.logout_rounded, size: 20),
                         label: Text(
                           'LOGOUT SESSION',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.inter(
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.5,
                           ),
@@ -846,10 +847,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFD700).withValues(alpha: 0.08),
+              color: AppColors.gold.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: const Color(0xFFFFD700), size: 22),
+            child: Icon(icon, color: AppColors.gold, size: 22),
           ),
           const SizedBox(width: 18),
           Expanded(
@@ -858,7 +859,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               children: [
                 Text(
                   label.toUpperCase(),
-                  style: GoogleFonts.outfit(color: Colors.white38, fontSize: 10, letterSpacing: 1),
+                  style: GoogleFonts.inter(color: Colors.white38, fontSize: 10, letterSpacing: 1),
                 ),
                 const SizedBox(height: 4),
                 Text(

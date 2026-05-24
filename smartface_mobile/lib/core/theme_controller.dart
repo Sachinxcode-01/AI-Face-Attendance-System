@@ -63,18 +63,18 @@ class ThemeController extends ChangeNotifier {
           primary: AppColors.gold,
           secondary: AppColors.indigo,
           surface: AppColors.bgSurface,
-          onPrimary: Colors.black,
+          onPrimary: AppColors.bgDark,
           onSurface: Colors.white,
           error: AppColors.errorLight,
         ),
-        textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).apply(
+        textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).apply(
           bodyColor: Colors.white,
           displayColor: AppColors.gold,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.gold,
-            foregroundColor: Colors.black,
+            foregroundColor: AppColors.bgDark,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
             padding: const EdgeInsets.symmetric(vertical: 16),
             elevation: 8,
@@ -92,7 +92,7 @@ class ThemeController extends ChangeNotifier {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: AppColors.white06,
-          labelStyle: GoogleFonts.outfit(color: AppColors.white38, fontSize: 13),
+          labelStyle: GoogleFonts.inter(color: AppColors.white38, fontSize: 13),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
             borderSide: const BorderSide(color: AppColors.white12),
@@ -118,13 +118,16 @@ class ThemeController extends ChangeNotifier {
         cardTheme: CardThemeData(
           color: AppColors.bgCard,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            side: const BorderSide(color: AppColors.white06, width: 1),
+          ),
         ),
         dividerTheme: const DividerThemeData(color: AppColors.white12),
         snackBarTheme: SnackBarThemeData(
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          contentTextStyle: GoogleFonts.outfit(color: Colors.white),
+          contentTextStyle: GoogleFonts.inter(color: Colors.white),
         ),
       );
 
@@ -141,7 +144,7 @@ class ThemeController extends ChangeNotifier {
           onSurface: Color(0xFF1A1F38),
           error: AppColors.error,
         ),
-        textTheme: GoogleFonts.outfitTextTheme(ThemeData.light().textTheme).apply(
+        textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme).apply(
           bodyColor: const Color(0xFF1A1F38),
           displayColor: AppColors.indigo,
         ),
@@ -157,7 +160,7 @@ class ThemeController extends ChangeNotifier {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
-          labelStyle: GoogleFonts.outfit(color: const Color(0xFF9E9E9E), fontSize: 13),
+          labelStyle: GoogleFonts.inter(color: const Color(0xFF9E9E9E), fontSize: 13),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
             borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
@@ -190,7 +193,7 @@ class ThemeController extends ChangeNotifier {
         snackBarTheme: SnackBarThemeData(
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          contentTextStyle: GoogleFonts.outfit(color: Colors.white),
+          contentTextStyle: GoogleFonts.inter(color: Colors.white),
         ),
       );
 

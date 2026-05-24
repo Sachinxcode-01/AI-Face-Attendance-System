@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants.dart';
+import '../../core/session_manager.dart';
 import '../../services/api_service.dart';
 import '../../widgets/toast_system.dart';
 
@@ -16,6 +20,7 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
+  final _auth = FirebaseAuth.instance;
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
@@ -160,6 +165,63 @@ class _RegisterScreenState extends State<RegisterScreen>
     }
   }
 
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn(
+        serverClientId: '153684832501-4mikvqi78kam3j1tcmnab7gp1o3e7mnt.apps.googleusercontent.com',
+      ).signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      
+      if (userCredential.user != null) {
+        final email = userCredential.user!.email ?? '';
+        final name = userCredential.user!.displayName ?? 'User';
+        
+        final result = await ApiService.googleLogin(email, name, _selectedRole);
+        
+        if (result.containsKey('access_token')) {
+          if (!mounted) return;
+          final session = context.read<SessionManager>();
+          await session.saveSession(
+            token: result['access_token'],
+            email: email,
+            role: result['role'],
+          );
+          if (!mounted) return;
+          final bool biometricRegistered = result['biometric_registered'] ?? false;
+          final String targetRoute = biometricRegistered ? '/dashboard' : '/setup';
+          Navigator.pushReplacementNamed(
+            context, 
+            targetRoute,
+            arguments: {
+              'role': result['role'], 
+              'token': result['access_token'], 
+              'email': email
+            },
+          );
+        } else {
+          throw Exception(result['detail'] ?? 'Google Login failed on server');
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.show(context, message: 'Google Sign-In failed: $e', type: ToastType.error);
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -211,7 +273,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                     // Header
                     Text(
                       'Join the Elite',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         fontSize: 38,
                         fontWeight: FontWeight.bold,
                         color: AppColors.gold,
@@ -219,7 +281,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                     ).animate().fadeIn().slideX(begin: -0.1),
                     Text(
                       'Create your institutional account',
-                      style: GoogleFonts.outfit(fontSize: 15, color: Colors.white38),
+                      style: GoogleFonts.inter(fontSize: 15, color: Colors.white38),
                     ).animate().fadeIn(delay: 150.ms),
 
                     const SizedBox(height: 36),
@@ -295,7 +357,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                           const SizedBox(width: 12),
                           Text(
                             _passStrengthLabel,
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.inter(
                               color: _passStrengthColor,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -325,7 +387,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                     // ── Role selector ───────────────────────────────────
                     Text(
                       'I AM A',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.inter(
                         color: Colors.white38,
                         fontSize: 11,
                         letterSpacing: 1.5,
@@ -370,7 +432,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                   const SizedBox(width: 8),
                                   Text(
                                     role,
-                                    style: GoogleFonts.outfit(
+                                    style: GoogleFonts.inter(
                                       color: isSelected ? Colors.black : Colors.white70,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
@@ -411,7 +473,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                               )
                             : Text(
                                 'CREATE ACCOUNT',
-                                style: GoogleFonts.outfit(
+                                style: GoogleFonts.inter(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
                                   letterSpacing: 1.5,
@@ -419,6 +481,70 @@ class _RegisterScreenState extends State<RegisterScreen>
                               ),
                       ),
                     ).animate().scale(delay: 500.ms).fadeIn(delay: 500.ms),
+
+                    const SizedBox(height: 20),
+
+                    // OR divider
+                    Row(
+                      children: [
+                        const Expanded(child: Divider(color: Colors.white12, thickness: 1)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'OR CONTINUE WITH',
+                            style: GoogleFonts.inter(color: Colors.white38, fontSize: 11, letterSpacing: 1),
+                          ),
+                        ),
+                        const Expanded(child: Divider(color: Colors.white12, thickness: 1)),
+                      ],
+                    ).animate().fadeIn(delay: 550.ms),
+
+                    const SizedBox(height: 20),
+
+                    // Google Sign-In button with customized G icon branding
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: _isLoading ? null : _signInWithGoogle,
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.white12),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Custom hand-drawn High-fidelity colored Google G icon using pure Flutter widgets!
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                'G',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 15,
+                                  color: const Color(0xFF4285F4),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Sign Up with Google',
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 580.ms),
 
                     const SizedBox(height: 24),
 
@@ -428,12 +554,12 @@ class _RegisterScreenState extends State<RegisterScreen>
                         onTap: () => Navigator.pop(context),
                         child: RichText(
                           text: TextSpan(
-                            style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13),
+                            style: GoogleFonts.inter(color: Colors.white38, fontSize: 13),
                             children: const [
                               TextSpan(text: 'Already have an account? '),
                               TextSpan(
                                 text: 'Sign In',
-                                style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold),
+                                style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -457,7 +583,7 @@ class _RegisterScreenState extends State<RegisterScreen>
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         label.toUpperCase(),
-        style: GoogleFonts.outfit(
+        style: GoogleFonts.inter(
           color: Colors.white38,
           fontSize: 10,
           letterSpacing: 1.5,
@@ -480,58 +606,73 @@ class _RegisterScreenState extends State<RegisterScreen>
     TextInputType? keyboardType,
   }) {
     final hasError = errorText != null && errorText.isNotEmpty;
-    final borderColor = hasError
-        ? AppColors.error
-        : isValid
-            ? AppColors.success
-            : Colors.white.withValues(alpha: 0.08);
 
     return Focus(
       onFocusChange: (hasFocus) {
         if (!hasFocus && onFocusLost != null) onFocusLost();
       },
-      child: TextField(
-        controller: controller,
-        obscureText: isPassword && !showPass,
-        keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.white, fontSize: 15),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.2), fontSize: 13),
-          prefixIcon: Icon(icon, color: AppColors.gold, size: 20),
-          suffixIcon: isPassword
-              ? IconButton(
-                  icon: Icon(
-                    showPass ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                    color: Colors.white38,
-                    size: 20,
-                  ),
-                  onPressed: onTogglePass,
-                )
-              : isValid
-                  ? const Icon(Icons.check_circle_outline, color: AppColors.successLight, size: 20)
-                  : null,
-          filled: true,
-          fillColor: Colors.white.withValues(alpha: 0.04),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: borderColor, width: 1),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: borderColor, width: 1),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(
-              color: hasError ? AppColors.error : AppColors.indigo,
-              width: 1.5,
+      child: Builder(
+        builder: (context) {
+          final isFocused = Focus.of(context).hasFocus;
+          final borderCol = hasError
+              ? AppColors.error
+              : isFocused
+                  ? AppColors.gold
+                  : isValid
+                      ? AppColors.success
+                      : Colors.white.withValues(alpha: 0.08);
+
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: borderCol,
+                width: isFocused ? 1.5 : 1.0,
+              ),
+              boxShadow: isFocused
+                  ? [
+                      BoxShadow(
+                        color: AppColors.gold.withValues(alpha: 0.06),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      )
+                    ]
+                  : [],
             ),
-          ),
-          errorText: errorText,
-          errorStyle: GoogleFonts.outfit(color: AppColors.errorLight, fontSize: 11),
-        ),
+            child: TextField(
+              controller: controller,
+              obscureText: isPassword && !showPass,
+              keyboardType: keyboardType,
+              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.2), fontSize: 13),
+                prefixIcon: Icon(icon, color: isFocused ? AppColors.gold : Colors.white38, size: 20),
+                suffixIcon: isPassword
+                    ? IconButton(
+                        icon: Icon(
+                          showPass ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          color: Colors.white38,
+                          size: 20,
+                        ),
+                        onPressed: onTogglePass,
+                      )
+                    : isValid
+                        ? const Icon(Icons.check_circle_outline, color: AppColors.successLight, size: 20)
+                        : null,
+                filled: true,
+                fillColor: Colors.black.withValues(alpha: 0.15),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                errorText: errorText,
+                errorStyle: GoogleFonts.inter(color: AppColors.errorLight, fontSize: 11),
+              ),
+            ),
+          );
+        }
       ),
     );
   }
@@ -574,7 +715,7 @@ class _RegisterScreenState extends State<RegisterScreen>
               const SizedBox(width: 5),
               Text(
                 label,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 11,
                   color: met ? AppColors.successLight : Colors.white38,
                 ),

@@ -30,7 +30,7 @@ class TeacherStatsScreen extends StatelessWidget {
         appBar: AppBar(
           title: Text(
             'Session Analytics',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -44,7 +44,7 @@ class TeacherStatsScreen extends StatelessWidget {
               const SizedBox(height: 30),
               Text(
                 'ATTENDANCE TRENDS',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 12,
                   letterSpacing: 2,
                   color: const Color(0xFFFFD700),
@@ -55,7 +55,7 @@ class TeacherStatsScreen extends StatelessWidget {
               const SizedBox(height: 30),
               Text(
                 'TOP ENGAGEMENT CLASSES',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 12,
                   letterSpacing: 2,
                   color: const Color(0xFFFFD700),
@@ -169,7 +169,7 @@ class TeacherStatsScreen extends StatelessWidget {
             children: [
               Text(
                 'Attendance Rates',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   color: Colors.white,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -197,7 +197,7 @@ class TeacherStatsScreen extends StatelessWidget {
                 children: [
                   Text(
                     '${percentages[index]}%',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: Colors.white70,
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
@@ -238,7 +238,7 @@ class TeacherStatsScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     sessions[index],
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       color: Colors.white38,
                       fontSize: 10,
                     ),

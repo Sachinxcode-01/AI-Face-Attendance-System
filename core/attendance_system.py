@@ -16,6 +16,7 @@ import time
 from insightface.app import FaceAnalysis
 from dotenv import load_dotenv  
 import ai_analyst
+import requests
 
 load_dotenv()
 
@@ -72,20 +73,27 @@ SECURITY_EMAIL = "saxhin0708@gmail.com"   # Email to alert about intruders
 
 class SmartAttendanceSystem:
     def __init__(self):
-        self.encodings_path = "face_encodings_arcface.pkl"
-        self.attendance_file = "attendance.csv"
-        self.student_details_file = "students.csv"
-        self.intruder_folder = "Intruders"
+        # API Sync configuration
+        self.api_url = os.getenv("API_URL", "http://localhost:8000")
+        self.scanner_token = os.getenv("FACE_SCANNER_TOKEN", "secure_face_scanner_default_key_123")
+
+        # Resolve paths relative to the project root directory
+        self.base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.data_dir = os.path.join(self.base_dir, "data")
+
+        self.encodings_path = os.path.join(self.data_dir, "face_encodings_arcface.pkl")
+        self.student_details_file = os.path.join(self.data_dir, "students.csv")
+        self.intruder_folder = os.path.join(self.data_dir, "Intruders")
         
         # --- NEW: Attendance Folder & Dynamic Files ---
-        self.attendance_folder = "Attendance_Logs"
+        self.attendance_folder = os.path.join(self.data_dir, "Attendance_Logs")
         if not os.path.exists(self.attendance_folder):
             os.makedirs(self.attendance_folder)
             
         # Creates a unique file for every session like: Attendance_2026-02-18_10-30-00.csv
         self.session_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        self.attendance_file = f"{self.attendance_folder}/Attendance_{self.session_time}.csv"
-        self.summary_file = f"{self.attendance_folder}/Master_Summary.csv"
+        self.attendance_file = os.path.join(self.attendance_folder, f"Attendance_{self.session_time}.csv")
+        self.summary_file = os.path.join(self.attendance_folder, "Master_Summary.csv")
         
         
         # Settings
@@ -151,7 +159,7 @@ class SmartAttendanceSystem:
                 print(f"[ERROR] Reading CSV failed: {e}")
 
         # 2. Now, scan the 'dataset' folder to find any MISSING students
-        dataset_path = "dataset"
+        dataset_path = os.path.join(self.data_dir, "dataset")
         new_students_data = []
 
         if os.path.exists(dataset_path):
@@ -406,7 +414,9 @@ class SmartAttendanceSystem:
         # 4. SEND EMAIL WITH ATTACHMENT
         self.send_admin_report(present_rolls, absent_rolls, self.attendance_file)
     def mark_present(self, roll, ai_name, score):
-        csv_name = self.student_db.get(roll, {}).get('name', ai_name)
+        student_info = self.student_db.get(roll, {})
+        csv_name = student_info.get('name', ai_name)
+        email = student_info.get('email')
         today = datetime.now().strftime("%Y-%m-%d")
         
         if roll not in self.present_students:
@@ -420,6 +430,29 @@ class SmartAttendanceSystem:
             new_entry.to_csv(self.attendance_file, mode='a', header=False, index=False)
             self.present_students.add(roll)
             
+            # --- NON-BLOCKING API SYNC BRIDGE ---
+            if email:
+                def sync_to_mongodb():
+                    try:
+                        url = f"{self.api_url}/attendance/mark/face"
+                        headers = {
+                            "token": self.scanner_token,
+                            "Content-Type": "application/json"
+                        }
+                        payload = {
+                            "student_email": email,
+                            "confidence": float(score)
+                        }
+                        response = requests.post(url, json=payload, headers=headers, timeout=5)
+                        if response.status_code == 200:
+                            print(f"[API SYNC] Sync successful for {email} (Roll: {roll})")
+                        else:
+                            print(f"[API SYNC ERROR] Failed to sync {email}: {response.status_code} - {response.text}")
+                    except Exception as err:
+                        print(f"[API SYNC ERROR] Connection failed: {err}")
+                
+                threading.Thread(target=sync_to_mongodb, daemon=True).start()
+
             if roll not in self.spoken_ids:
                 # --- ASYNC GREETING ---
                 def handle_greeting():
@@ -435,6 +468,81 @@ class SmartAttendanceSystem:
 
     def cosine_similarity(self, emb1, emb2):
         return np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))
+
+    def draw_hud(self, frame, fps):
+        h, w, _ = frame.shape
+        
+        # 1. Semi-transparent header background (top bar: 0 to 45)
+        overlay = frame.copy()
+        cv2.rectangle(overlay, (0, 0), (w, 45), (10, 6, 2), cv2.FILLED)  # Space navy BGR (2, 6, 10)
+        
+        # 2. Semi-transparent footer background (bottom bar: h-35 to h)
+        cv2.rectangle(overlay, (0, h - 35), (w, h), (10, 6, 2), cv2.FILLED)
+        
+        # Alpha blend overlays
+        cv2.addWeighted(overlay, 0.75, frame, 0.25, 0, frame)
+        
+        # 3. Top HUD Details
+        # Branded Title
+        cv2.putText(frame, "SMARTFACE SECURITY HUD - SCANNING ACTIVE", (15, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (3, 183, 255), 2, cv2.LINE_AA) # Gold BGR (3, 183, 255)
+        
+        # System Time
+        time_str = datetime.now().strftime("%Y-%m-%d  %I:%M:%S %p")
+        cv2.putText(frame, time_str, (w - 240, 27), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1, cv2.LINE_AA)
+        
+        # Decorative divider lines
+        cv2.line(frame, (0, 45), (w, 45), (3, 183, 255), 1)
+        cv2.line(frame, (0, h - 35), (w, h - 35), (3, 183, 255), 1)
+        
+        # 4. Bottom Telemetry details
+        # GPU Acceleration status
+        gpu_color = (118, 230, 0) if self.using_gpu else (80, 80, 240)  # Cyber green vs cyber coral BGR
+        cv2.circle(frame, (20, h - 17), 4, gpu_color, cv2.FILLED)
+        cv2.putText(frame, f"ENGINE: InsightFace AI (buffalo_l) | ACCELERATOR: {'CUDA (GPU)' if self.using_gpu else 'CPU Mode'}", (35, h - 13), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA)
+        
+        # FPS Status
+        cv2.putText(frame, f"SCAN RATE: {fps:.1f} FPS", (w - 180, h - 13), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA)
+
+    def draw_face_target(self, frame, bbox, name, color, score):
+        x1, y1, x2, y2 = bbox
+        
+        # 1. Custom High-tech corner brackets
+        length = 18
+        thickness = 2
+        
+        # Top Left Corners
+        cv2.line(frame, (x1, y1), (x1 + length, y1), color, thickness)
+        cv2.line(frame, (x1, y1), (x1, y1 + length), color, thickness)
+        
+        # Top Right Corners
+        cv2.line(frame, (x2, y1), (x2 - length, y1), color, thickness)
+        cv2.line(frame, (x2, y1), (x2, y1 + length), color, thickness)
+        
+        # Bottom Left Corners
+        cv2.line(frame, (x1, y2), (x1 + length, y2), color, thickness)
+        cv2.line(frame, (x1, y2), (x1, y2 - length), color, thickness)
+        
+        # Bottom Right Corners
+        cv2.line(frame, (x2, y2), (x2 - length, y2), color, thickness)
+        cv2.line(frame, (x2, y2), (x2, y2 - length), color, thickness)
+        
+        # 2. Dotted box frame overlay for high-tech HUD look
+        overlay = frame.copy()
+        cv2.rectangle(overlay, (x1, y1), (x2, y2), color, 1)
+        cv2.addWeighted(overlay, 0.2, frame, 0.8, 0, frame)
+        
+        # 3. Transparent Title Banner above target Face
+        banner_height = 24
+        cv2.rectangle(overlay, (x1, y1 - banner_height - 4), (x2, y1 - 4), (10, 6, 2), cv2.FILLED)
+        cv2.addWeighted(overlay, 0.75, frame, 0.25, 0, frame)
+        cv2.rectangle(frame, (x1, y1 - banner_height - 4), (x2, y1 - 4), color, 1)
+        
+        # Target details text
+        if name == "Unknown":
+            cv2.putText(frame, "WARNING: INTRUDER DETECTED", (x1 + 6, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (80, 80, 240), 1, cv2.LINE_AA)
+        else:
+            display_text = f"{name.upper()}  {score}"
+            cv2.putText(frame, display_text, (x1 + 6, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (255, 255, 255), 1, cv2.LINE_AA)
 
     def run(self):
         print("[INFO] Starting Security Camera... Press 'q' to End Session.")
@@ -501,7 +609,7 @@ class SmartAttendanceSystem:
                             # --- FEATURE 5: SELF-LEARNING (Auto-Update) ---
                             if best_sim >= 0.85 and frame_count % 100 == 0:
                                 folder_name = f"{str(name).strip()}_{str(roll).strip()}"
-                                save_path = os.path.join("dataset", folder_name)
+                                save_path = os.path.join(self.data_dir, "dataset", folder_name)
                                 if os.path.exists(save_path):
                                     bbox = face.bbox.astype(int)
                                     y1, y2, x1, x2 = max(0, bbox[1]), min(frame.shape[0], bbox[3]), max(0, bbox[0]), min(frame.shape[1], bbox[2])
@@ -532,17 +640,16 @@ class SmartAttendanceSystem:
                     # print(f"Detection error: {e}")
                     pass
 
-            # --- PHASE 2: DRAWING ---
+            # --- PHASE 2: DRAWING BIOMETRIC HUD ---
             for (bbox, name, color, score) in current_faces:
-                cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
-                if name == "Unknown":
-                    cv2.putText(frame, "WARNING: INTRUDER", (bbox[0], bbox[1]-30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-                else:
-                    cv2.putText(frame, f"{name} {score}", (bbox[0], bbox[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                # Convert standard BGR colors for a unified premium aesthetic
+                # Standard green: (0, 255, 0) -> cyber neon green (118, 230, 0)
+                # Standard red: (0, 0, 255) -> cyber coral red (80, 80, 240)
+                hud_color = (118, 230, 0) if color == (0, 255, 0) else (80, 80, 240)
+                self.draw_face_target(frame, bbox, name, hud_color, score)
 
-            # Show FPS and GPU status
-            cv2.putText(frame, f"FPS: {fps:.1f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
-            cv2.putText(frame, f"GPU: {'ACTIVE' if self.using_gpu else 'INACTIVE'}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0) if self.using_gpu else (0, 0, 255), 2)
+            # Draw the global high-tech diagnostic HUD overlay
+            self.draw_hud(frame, fps)
 
             cv2.imshow('Smart Attendance System By Face Recognition Done by AI', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):

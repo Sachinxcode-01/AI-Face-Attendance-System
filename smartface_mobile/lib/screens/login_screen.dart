@@ -1,12 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
+import '../core/constants.dart';
 import '../core/session_manager.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -186,28 +186,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
                     
                     Text(
-                      'SmartAttendance-AI',
+                      'SmartAttendance-\nAI',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
-                        fontSize: 34,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                        color: const Color(0xFFFFD700),
+                      style: GoogleFonts.inter(
+                        fontSize: 38,
+                        height: 1.15,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        color: AppColors.gold,
                         shadows: [
-                          const Shadow(color: Colors.black45, offset: Offset(0, 4), blurRadius: 10),
+                          const Shadow(color: Colors.black54, offset: Offset(0, 4), blurRadius: 12),
+                          Shadow(color: AppColors.gold.withOpacity(0.3), blurRadius: 20),
                         ],
                       ),
                     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.15, end: 0, duration: 400.ms),
                     
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
 
                     Text(
                       'PREMIUM BIOMETRIC INTELLIGENCE',
-                      style: GoogleFonts.outfit(
-                        fontSize: 11,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
                         color: Colors.white38,
-                        letterSpacing: 3,
-                        fontWeight: FontWeight.w600,
+                        letterSpacing: 3.5,
+                        fontWeight: FontWeight.w800,
                       ),
                     ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
                     
@@ -274,7 +276,7 @@ class _LoginScreenState extends State<LoginScreen> {
             height: 280,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFFFFD700).withValues(alpha: 0.12),
+              color: AppColors.gold.withValues(alpha: 0.12),
             ),
           ).animate(onPlay: (c) => c.repeat(reverse: true))
            .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.25, 1.25), duration: 5.seconds, curve: Curves.easeInOut)
@@ -333,12 +335,12 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ).animate(onPlay: (c) => c.repeat(reverse: true))
-         .shimmer(duration: 5.seconds, color: const Color(0xFFFFD700).withValues(alpha: 0.2)),
+         .shimmer(duration: 5.seconds, color: AppColors.gold.withValues(alpha: 0.2)),
       ],
     );
   }
 
-  // 2. Beautiful holographic 3D Logo HUD
+  // 2. Beautiful holographic 3D Logo HUD with cybernetic overlays
   Widget _buildAnimatedLogoHUD() {
     return Center(
       child: Stack(
@@ -346,59 +348,116 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           // Cyber golden radar wave
           Container(
-            height: 155,
-            width: 155,
+            height: 185,
+            width: 185,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFFFFD700).withValues(alpha: 0.15), 
+                color: AppColors.gold.withOpacity(0.12), 
                 width: 1.5
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFFD700).withValues(alpha: 0.06),
-                  blurRadius: 35,
-                  spreadRadius: 8,
-                )
-              ],
             ),
           ).animate(onPlay: (c) => c.repeat())
-           .shimmer(duration: 2000.ms, color: const Color(0xFFFFD700).withValues(alpha: 0.25))
-           .scale(begin: const Offset(0.92, 0.92), end: const Offset(1.08, 1.08), curve: Curves.easeInOut, duration: 1200.ms),
-          
-          // Rotating tracking points
+           .scale(begin: const Offset(0.85, 0.85), end: const Offset(1.15, 1.15), curve: Curves.easeInOut, duration: 2500.ms)
+           .fadeOut(duration: 2500.ms),
+
+          // Outer thin tech ring
           Container(
-            height: 135,
-            width: 135,
+            height: 165,
+            width: 165,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFFFFD700).withValues(alpha: 0.35),
+                color: AppColors.gold.withOpacity(0.18),
+                width: 1,
+              ),
+            ),
+          ),
+
+          // Holographic text indicators matching visual layout
+          Positioned(
+            left: -42,
+            child: Opacity(
+              opacity: 0.35,
+              child: Text(
+                'BIOMETRIC\nAUTHENTICATION',
+                style: GoogleFonts.robotoMono(
+                  fontSize: 7.5,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white38,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            right: -32,
+            child: Opacity(
+              opacity: 0.35,
+              child: Text(
+                'USER RECOGNIZED\nPOINTS: 284',
+                style: GoogleFonts.robotoMono(
+                  fontSize: 7.5,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white38,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ),
+          
+          // Concentric rotating tracking point rings
+          Container(
+            height: 145,
+            width: 145,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.gold.withOpacity(0.3),
                 width: 1,
                 strokeAlign: BorderSide.strokeAlignOutside
               ),
             ),
           ).animate(onPlay: (c) => c.repeat())
-           .rotate(duration: 8.seconds),
+           .rotate(duration: 12.seconds),
+
+          // Rotating dashed circular HUD indicator
+          Container(
+            height: 130,
+            width: 130,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withOpacity(0.06),
+                width: 1,
+              ),
+            ),
+          ),
 
           // Central luxury Logo Shield
           Hero(
             tag: 'logo',
             child: Container(
-              height: 110,
-              width: 110,
+              height: 105,
+              width: 105,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: const Color(0xFF030510),
                 border: Border.all(
-                  color: const Color(0xFFFFD700).withValues(alpha: 0.6),
-                  width: 2.0,
+                  color: AppColors.gold,
+                  width: 2.5,
                 ),
                 boxShadow: [
                   BoxShadow(
+                    color: AppColors.gold.withOpacity(0.25),
+                    blurRadius: 15,
+                    spreadRadius: 1,
+                  ),
+                  const BoxShadow(
                     color: Colors.black54,
-                    blurRadius: 12,
-                    offset: const Offset(0, 8),
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
                   )
                 ],
                 image: const DecorationImage(
@@ -408,7 +467,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ).animate(onPlay: (c) => c.repeat(reverse: true))
-           .moveY(begin: -4, end: 4, duration: 1200.ms, curve: Curves.easeInOut)
+           .moveY(begin: -4, end: 4, duration: 1500.ms, curve: Curves.easeInOut)
            .custom(
              builder: (context, value, child) => Transform(
                transform: Matrix4.identity()
@@ -423,173 +482,202 @@ class _LoginScreenState extends State<LoginScreen> {
     ).animate().fadeIn(duration: 500.ms).scale(curve: Curves.easeOutBack);
   }
 
-  // 3. Sliding Premium Roles selection
+  // 3. Sliding Premium Roles selection with animated ambient glow capsule
   Widget _buildPremiumRoleSelector() {
+    final roles = ['Student', 'Teacher', 'Admin'];
+    final selectedIndex = roles.indexOf(selectedRole);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      height: 60,
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        color: Colors.white.withOpacity(0.02),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
       ),
-      child: Row(
-        children: ['Student', 'Teacher', 'Admin'].map((role) {
-          bool isSelected = selectedRole == role;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                setState(() => selectedRole = role);
-              },
-              child: AnimatedContainer(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final tabWidth = constraints.maxWidth / 3;
+          return Stack(
+            children: [
+              // Beautiful animated soft gold glowing bubble behind the selected tab
+              AnimatedPositioned(
                 duration: const Duration(milliseconds: 250),
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                decoration: BoxDecoration(
-                  gradient: isSelected
-                      ? const LinearGradient(
-                          colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : null,
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: const Color(0xFFFFD700).withValues(alpha: 0.25),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          )
-                        ]
-                      : null,
-                ),
-                child: Text(
-                  role,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
-                    color: isSelected ? Colors.black : Colors.white60,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    fontSize: 14,
-                    letterSpacing: 0.5,
+                curve: Curves.easeInOut,
+                left: selectedIndex * tabWidth,
+                top: 0,
+                bottom: 0,
+                width: tabWidth,
+                child: Container(
+                  margin: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(26),
+                    gradient: const LinearGradient(
+                      colors: [AppColors.gold, Color(0xFFFF9E00)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.gold.withOpacity(0.4),
+                        blurRadius: 15,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
+              // The tabs themselves
+              Row(
+                children: roles.map((role) {
+                  final isSelected = selectedRole == role;
+                  return Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        setState(() => selectedRole = role);
+                      },
+                      child: Center(
+                        child: Text(
+                          role,
+                          style: GoogleFonts.inter(
+                            color: isSelected ? Colors.black : Colors.white60,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                            fontSize: 15,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           );
-        }).toList(),
+        }
       ),
     );
   }
 
-  // 4. Glassmorphic Form Access Panel
+  // 4. Glassmorphic Form Access Panel matching pixel-perfect spacing
   Widget _buildGlassmorphicFormCard() {
     return Container(
-      padding: const EdgeInsets.all(26),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: const Color(0xFF070B1A).withOpacity(0.65),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withOpacity(0.04), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
+            color: Colors.black.withOpacity(0.55),
             blurRadius: 30,
             offset: const Offset(0, 15),
-          )
+          ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Column(
+      child: Column(
+        children: [
+          if (!_otpSent) ...[
+            _buildTextField(
+              controller: _emailController,
+              hint: 'Institutional Email',
+              icon: Icons.alternate_email_rounded,
+            ),
+            const SizedBox(height: 20),
+            _buildButton(
+              text: 'REQUEST SECURE OTP',
+              onPressed: _sendOtp,
+            ),
+          ] else ...[
+            Text(
+              'Verification Code Sent to',
+              style: GoogleFonts.inter(color: Colors.white38, fontSize: 12),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _emailController.text,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+            ).animate().fadeIn(),
+            const SizedBox(height: 20),
+            _buildTextField(
+              controller: _otpController,
+              hint: 'Enter 6-Digit OTP',
+              icon: Icons.security_rounded,
+              isOtp: true,
+            ),
+            const SizedBox(height: 20),
+            _buildButton(
+              text: 'AUTHENTICATE & ENTER',
+              onPressed: _verifyOtp,
+            ),
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () => setState(() => _otpSent = false),
+              child: Text(
+                'Use different email address',
+                style: GoogleFonts.inter(
+                  color: AppColors.gold.withOpacity(0.7), 
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ],
+          
+          const SizedBox(height: 24),
+          
+          Row(
             children: [
-              if (!_otpSent) ...[
-                _buildTextField(
-                  controller: _emailController,
-                  hint: 'Institutional Email',
-                  icon: Icons.alternate_email_rounded,
-                ),
-                const SizedBox(height: 22),
-                _buildButton(
-                  text: 'REQUEST SECURE OTP',
-                  onPressed: _sendOtp,
-                ),
-              ] else ...[
-                Text(
-                  'Verification Code Sent to',
-                  style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  _emailController.text,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                ).animate().fadeIn(),
-                const SizedBox(height: 22),
-                _buildTextField(
-                  controller: _otpController,
-                  hint: 'Enter 6-Digit OTP',
-                  icon: Icons.security_rounded,
-                  isOtp: true,
-                ),
-                const SizedBox(height: 22),
-                _buildButton(
-                  text: 'AUTHENTICATE & ENTER',
-                  onPressed: _verifyOtp,
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => setState(() => _otpSent = false),
-                  child: Text(
-                    'Use different email address',
-                    style: GoogleFonts.outfit(
-                      color: const Color(0xFFFFD700).withValues(alpha: 0.6), 
-                      fontSize: 12,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-              ],
-              
-              const SizedBox(height: 20),
-              
-              const Row(
-                children: [
-                  Expanded(child: Divider(color: Colors.white10, height: 1)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 14),
-                    child: Text(
-                      'OR AUTHORIZE SECURELY', 
-                      style: TextStyle(color: Colors.white24, fontSize: 9, letterSpacing: 1.5, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Expanded(child: Divider(color: Colors.white10, height: 1)),
-                ],
-              ),
-              
-              const SizedBox(height: 20),
-              
-              // Google secondary login
-              SizedBox(
-                width: double.infinity,
-                height: 58,
-                child: OutlinedButton.icon(
-                  onPressed: _signInWithGoogle,
-                  icon: const FaIcon(FontAwesomeIcons.google, size: 16),
-                  label: Text(
-                    'Continue with Google',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14, letterSpacing: 0.5),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white70,
-                    side: const BorderSide(color: Colors.white10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              Expanded(child: Divider(color: Colors.white.withOpacity(0.06), height: 1)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Text(
+                  'OR AUTHORIZE SECURELY', 
+                  style: GoogleFonts.inter(
+                    color: Colors.white24, 
+                    fontSize: 10, 
+                    letterSpacing: 1.5, 
+                    fontWeight: FontWeight.w800
                   ),
                 ),
               ),
+              Expanded(child: Divider(color: Colors.white.withOpacity(0.06), height: 1)),
             ],
           ),
-        ),
+          
+          const SizedBox(height: 24),
+          
+          // Google secondary login
+          SizedBox(
+            width: double.infinity,
+            height: 62,
+            child: OutlinedButton(
+              onPressed: _signInWithGoogle,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: BorderSide(color: Colors.white.withOpacity(0.08), width: 1.2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const GoogleGLogo(size: 22),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Continue with Google',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 15, 
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -608,15 +696,15 @@ class _LoginScreenState extends State<LoginScreen> {
           return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isFocused ? const Color(0xFFFFD700) : Colors.white.withValues(alpha: 0.08),
+                color: isFocused ? AppColors.gold : Colors.white.withOpacity(0.08),
                 width: isFocused ? 1.5 : 1.0,
               ),
               boxShadow: isFocused
                   ? [
                       BoxShadow(
-                        color: const Color(0xFFFFD700).withValues(alpha: 0.08),
+                        color: AppColors.gold.withOpacity(0.08),
                         blurRadius: 10,
                         spreadRadius: 1,
                       )
@@ -626,18 +714,22 @@ class _LoginScreenState extends State<LoginScreen> {
             child: TextField(
               controller: controller,
               keyboardType: isOtp ? TextInputType.number : TextInputType.emailAddress,
-              style: GoogleFonts.outfit(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
+              style: GoogleFonts.inter(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
               textAlign: isOtp ? TextAlign.center : TextAlign.start,
               decoration: InputDecoration(
                 prefixIcon: isOtp 
                     ? null 
-                    : Icon(icon, color: isFocused ? const Color(0xFFFFD700) : Colors.white38, size: 20),
+                    : Padding(
+                        padding: const EdgeInsets.only(left: 18.0, right: 14.0),
+                        child: Icon(icon, color: isFocused ? AppColors.gold : Colors.white38, size: 22),
+                      ),
+                prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
                 hintText: hint,
-                hintStyle: GoogleFonts.outfit(color: Colors.white24, fontSize: 14),
+                hintStyle: GoogleFonts.inter(color: Colors.white38, fontSize: 16),
                 filled: true,
-                fillColor: Colors.black.withValues(alpha: 0.15),
+                fillColor: Colors.white.withOpacity(0.02),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
               ),
             ),
           );
@@ -646,55 +738,66 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // 6. Premium tactile golden key action button
+  // 6. Premium tactile golden key action button with rich 3D gold shadow glow
   Widget _buildButton({required String text, required VoidCallback onPressed}) {
     return Container(
       width: double.infinity,
-      height: 58,
+      height: 62,
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFFD700).withValues(alpha: 0.2),
-            blurRadius: 15,
-            spreadRadius: 1,
-            offset: const Offset(0, 5),
+            color: AppColors.gold.withOpacity(0.35),
+            blurRadius: 20,
+            spreadRadius: 2,
+            offset: const Offset(0, 6),
           )
         ],
       ),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFFD700),
+          backgroundColor: const Color(0xFFFFB300),
           foregroundColor: Colors.black,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
         child: Text(
           text,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 13),
+          style: GoogleFonts.inter(fontWeight: FontWeight.w900, letterSpacing: 2.0, fontSize: 15, color: Colors.black),
         ),
       ),
     );
   }
 
-  // 7. Footer navigation
+  // 7. Footer navigation with customized link
   Widget _buildFooterNavigator() {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        Text(
-          'New to SmartAttendance?', 
-          style: GoogleFonts.outfit(color: Colors.white30, fontSize: 14),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pushNamed(context, '/register'),
-          child: Text(
-            'JOIN NOW', 
-            style: GoogleFonts.outfit(color: const Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 14)
+    return Container(
+      padding: const EdgeInsets.only(top: 10, bottom: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'New to SmartAttendance? ',
+            style: GoogleFonts.inter(
+              color: Colors.white30, 
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-      ],
+          GestureDetector(
+            onTap: () => Navigator.pushNamed(context, '/register'),
+            child: Text(
+              'JOIN NOW',
+              style: GoogleFonts.inter(
+                color: AppColors.gold,
+                fontWeight: FontWeight.w900,
+                fontSize: 15,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -731,14 +834,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFFFFD700).withValues(alpha: 0.0),
-                      const Color(0xFFFFD700),
-                      const Color(0xFFFFD700).withValues(alpha: 0.0),
+                      AppColors.gold.withValues(alpha: 0.0),
+                      AppColors.gold,
+                      AppColors.gold.withValues(alpha: 0.0),
                     ],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFFD700).withValues(alpha: 0.7),
+                      color: AppColors.gold.withValues(alpha: 0.7),
                       blurRadius: 18,
                       spreadRadius: 2.5,
                     )
@@ -763,7 +866,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                            color: AppColors.gold.withValues(alpha: 0.4),
                             width: 1.5,
                           ),
                         ),
@@ -777,7 +880,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: const Color(0xFFFFD700).withValues(alpha: 0.2),
+                            color: AppColors.gold.withValues(alpha: 0.2),
                             width: 6,
                             strokeAlign: BorderSide.strokeAlignOutside,
                           ),
@@ -791,7 +894,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         height: 140,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: const Color(0xFFFFD700).withValues(alpha: 0.04),
+                          color: AppColors.gold.withValues(alpha: 0.04),
                         ),
                       ).animate(onPlay: (c) => c.repeat())
                        .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.25, 1.25), curve: Curves.easeOut, duration: 1500.ms)
@@ -800,7 +903,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Biometric core scanning icon
                       const Icon(
                         Icons.fingerprint_rounded,
-                        color: Color(0xFFFFD700),
+                        color: AppColors.gold,
                         size: 60,
                       ).animate(onPlay: (c) => c.repeat(reverse: true))
                        .scale(begin: const Offset(0.92, 0.92), end: const Offset(1.08, 1.08), duration: 1000.ms)
@@ -827,8 +930,8 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Text(
           'AUTHENTICATING SECURE PROTOCOL',
-          style: GoogleFonts.outfit(
-            color: const Color(0xFFFFD700),
+          style: GoogleFonts.inter(
+            color: AppColors.gold,
             fontSize: 16,
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
@@ -875,4 +978,91 @@ class _LoginScreenState extends State<LoginScreen> {
       index++;
     }
   }
+}
+
+// ─────────────────────────────────────────────
+//  HIGH-FIDELITY DRAWN GOOGLE BRANDING WIDGETS
+// ─────────────────────────────────────────────
+
+class GoogleGLogo extends StatelessWidget {
+  final double size;
+  const GoogleGLogo({super.key, this.size = 22});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      padding: EdgeInsets.all(size * 0.15),
+      child: CustomPaint(
+        size: Size(size * 0.7, size * 0.7),
+        painter: const GoogleLogoPainter(),
+      ),
+    );
+  }
+}
+
+class GoogleLogoPainter extends CustomPainter {
+  const GoogleLogoPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double w = size.width;
+    final double r = w / 2;
+    final center = Offset(r, r);
+    
+    // Thickness of the logo relative to size
+    final double thickness = w * 0.22;
+    final Rect rect = Rect.fromCircle(center: center, radius: r - thickness / 2);
+    
+    // Paints for four color segments
+    final paintRed = Paint()
+      ..color = const Color(0xFFEA4335)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..strokeCap = StrokeCap.butt;
+      
+    final paintYellow = Paint()
+      ..color = const Color(0xFFFBBC05)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..strokeCap = StrokeCap.butt;
+      
+    final paintGreen = Paint()
+      ..color = const Color(0xFF34A853)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..strokeCap = StrokeCap.butt;
+      
+    final paintBlue = Paint()
+      ..color = const Color(0xFF4285F4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..strokeCap = StrokeCap.butt;
+
+    // Arcs matching Google's G segments
+    // Red covers top segment
+    canvas.drawArc(rect, 3.927, 1.57, false, paintRed);
+    // Yellow covers left segment
+    canvas.drawArc(rect, 2.356, 1.57, false, paintYellow);
+    // Green covers bottom segment
+    canvas.drawArc(rect, 0.785, 1.57, false, paintGreen);
+    // Blue covers right segment
+    canvas.drawArc(rect, -0.785, 1.57, false, paintBlue);
+    
+    // Draw the horizontal bar matching the blue color
+    final barPaint = Paint()
+      ..color = const Color(0xFF4285F4)
+      ..style = PaintingStyle.fill;
+    
+    final Rect barRect = Rect.fromLTRB(r, r - thickness / 2, w, r + thickness / 2);
+    canvas.drawRect(barRect, barPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

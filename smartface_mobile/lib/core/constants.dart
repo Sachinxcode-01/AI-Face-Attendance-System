@@ -5,34 +5,34 @@ import 'package:google_fonts/google_fonts.dart';
 //  COLOR PALETTE
 // ─────────────────────────────────────────────
 class AppColors {
-  // Gold accent
-  static const gold = Color(0xFFFFD700);
-  static const goldLight = Color(0xFFFFE55C);
-  static const goldDark = Color(0xFFB8960C);
+  // Gold accent (Royal Gold)
+  static const gold = Color(0xFFFFB703); // Vibrant premium gold
+  static const goldLight = Color(0xFFFFD166); // Frosted gold
+  static const goldDark = Color(0xFFD48C00); // Amber dark gold
 
-  // Dark backgrounds
-  static const bgDeep = Color(0xFF07090F);
-  static const bgDark = Color(0xFF0A0E21);
-  static const bgCard = Color(0xFF111528);
-  static const bgSurface = Color(0xFF1A1F38);
-  static const bgModal = Color(0xFF0F1532);
+  // Dark backgrounds (Midnight Navy, Deep Steel, etc.)
+  static const bgDeep = Color(0xFF02040A); // Deep cosmic black
+  static const bgDark = Color(0xFF080C1E); // Rich dark space navy
+  static const bgCard = Color(0xFF0E1528); // Frosted card back
+  static const bgSurface = Color(0xFF172038); // High contrast surface navy
+  static const bgModal = Color(0xFF090D1A); // Clean modal black
 
-  // Indigo accents
-  static const indigo = Color(0xFF1D2671);
-  static const indigoLight = Color(0xFF3949AB);
+  // Indigo accents / Deep steel accent
+  static const indigo = Color(0xFF1E3A8A); // Royal premium navy
+  static const indigoLight = Color(0xFF2563EB); // High fidelity cobalt
 
   // Light backgrounds
-  static const bgLight = Color(0xFFF5F7FF);
-  static const bgCardLight = Color(0xFFFFFFFF);
-  static const bgSurfaceLight = Color(0xFFEEF0FF);
+  static const bgLight = Color(0xFFF8FAFC); // Clean neutral slate light
+  static const bgCardLight = Color(0xFFFFFFFF); // Clean white card
+  static const bgSurfaceLight = Color(0xFFF1F5F9); // Light slate container
 
   // Semantic
-  static const success = Color(0xFF1A8F5E);
-  static const successLight = Color(0xFF00C57A);
-  static const error = Color(0xFFCF3030);
-  static const errorLight = Color(0xFFFF5252);
-  static const warning = Color(0xFFF57C00);
-  static const info = Color(0xFF0277BD);
+  static const success = Color(0xFF10B981); // Emerald Green
+  static const successLight = Color(0xFF34D399); // Soft emerald green
+  static const error = Color(0xFFEF4444); // Coral Red
+  static const errorLight = Color(0xFFF87171); // Soft coral red
+  static const warning = Color(0xFFF59E0B); // Amber warning
+  static const info = Color(0xFF3B82F6); // Modern Blue
 
   // Neutrals
   static const white = Colors.white;
@@ -42,8 +42,8 @@ class AppColors {
   static const white06 = Color(0x0FFFFFFF);
 
   // Cyan accent for scan animations
-  static const cyan = Color(0xFF00FFFF);
-  static const cyanGlow = Color(0x3300FFFF);
+  static const cyan = Color(0xFF06B6D4); // Cyber Cyan
+  static const cyanGlow = Color(0x3306B6D4);
 }
 
 // ─────────────────────────────────────────────
@@ -53,25 +53,31 @@ class AppGradients {
   static const darkBg = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [AppColors.bgDark, AppColors.indigo],
+    colors: [AppColors.bgDeep, AppColors.bgDark, Color(0xFF111827)],
   );
 
   static const gold = LinearGradient(
     colors: [AppColors.goldLight, AppColors.gold, AppColors.goldDark],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 
   static const cardGlass = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0x14FFFFFF), Color(0x05FFFFFF)],
+    colors: [Color(0x24FFFFFF), Color(0x05FFFFFF)],
   );
 
   static const successGlow = LinearGradient(
     colors: [AppColors.success, AppColors.successLight],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 
   static const errorGlow = LinearGradient(
     colors: [AppColors.error, AppColors.errorLight],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 }
 
@@ -80,7 +86,7 @@ class AppGradients {
 // ─────────────────────────────────────────────
 class AppText {
   static TextStyle display({Color? color, FontWeight? weight}) =>
-      GoogleFonts.outfit(
+      GoogleFonts.inter(
         fontSize: 32,
         fontWeight: weight ?? FontWeight.bold,
         color: color ?? AppColors.white,
@@ -88,35 +94,35 @@ class AppText {
       );
 
   static TextStyle heading({Color? color, FontWeight? weight}) =>
-      GoogleFonts.outfit(
+      GoogleFonts.inter(
         fontSize: 22,
         fontWeight: weight ?? FontWeight.bold,
         color: color ?? AppColors.white,
       );
 
   static TextStyle subheading({Color? color, FontWeight? weight}) =>
-      GoogleFonts.outfit(
+      GoogleFonts.inter(
         fontSize: 16,
         fontWeight: weight ?? FontWeight.w600,
         color: color ?? AppColors.white70,
       );
 
   static TextStyle body({Color? color, FontWeight? weight}) =>
-      GoogleFonts.outfit(
+      GoogleFonts.inter(
         fontSize: 14,
         fontWeight: weight ?? FontWeight.normal,
         color: color ?? AppColors.white70,
       );
 
   static TextStyle caption({Color? color}) =>
-      GoogleFonts.outfit(
+      GoogleFonts.inter(
         fontSize: 11,
         color: color ?? AppColors.white38,
         letterSpacing: 0.4,
       );
 
   static TextStyle label({Color? color}) =>
-      GoogleFonts.outfit(
+      GoogleFonts.inter(
         fontSize: 10,
         fontWeight: FontWeight.w600,
         letterSpacing: 1.2,
@@ -124,7 +130,7 @@ class AppText {
       );
 
   static TextStyle button({Color? color}) =>
-      GoogleFonts.outfit(
+      GoogleFonts.inter(
         fontSize: 15,
         fontWeight: FontWeight.bold,
         letterSpacing: 1.0,

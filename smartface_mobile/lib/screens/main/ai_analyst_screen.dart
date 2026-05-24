@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/constants.dart';
 import '../../services/api_service.dart';
 
 class AIAnalystScreen extends StatefulWidget {
@@ -61,8 +62,8 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF0A0E21),
-            Color(0xFF1D2671),
+            AppColors.bgDeep,
+            AppColors.bgDark,
           ],
         ),
         image: DecorationImage(
@@ -80,14 +81,14 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
         title: Row(
           children: [
             const CircleAvatar(
-              backgroundColor: Color(0xFFFFD700),
+              backgroundColor: AppColors.gold,
               child: Icon(Icons.psychology, color: Colors.black),
             ),
             const SizedBox(width: 15),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('AI Analyst', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('AI Analyst', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold)),
                 const Text('Neural Engine Online', style: TextStyle(fontSize: 10, color: Colors.greenAccent)),
               ],
             ),
@@ -131,7 +132,7 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
         padding: const EdgeInsets.all(16),
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
         decoration: BoxDecoration(
-          color: isMe ? const Color(0xFFFFD700) : Colors.white.withValues(alpha: 0.05),
+          color: isMe ? AppColors.gold : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(20),
             topRight: const Radius.circular(20),
@@ -173,7 +174,7 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
           ),
           const SizedBox(width: 10),
           CircleAvatar(
-            backgroundColor: const Color(0xFFFFD700),
+            backgroundColor: AppColors.gold,
             child: IconButton(
               icon: const Icon(Icons.send, color: Colors.black),
               onPressed: _sendMessage,

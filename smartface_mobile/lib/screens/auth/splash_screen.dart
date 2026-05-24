@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants.dart';
 import '../../core/session_manager.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -13,10 +15,32 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  String _bootMessage = 'BOOT SEQUENCE STARTED...';
+  int _bootIndex = 0;
+  late Timer _bootTimer;
+  final List<String> _bootChecks = [
+    'INITIALIZING SECURE AI SUITE...',
+    'PARSING BIOMETRIC MATRIX...',
+    'ESTABLISHING ENCRYPTED API HANDSHAKE...',
+    'DECRYPTING HARDWARE SIGNATURE...',
+    'READY FOR SECURE ATTENDANCE FLOW ✓',
+  ];
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 4), () {
+    _bootTimer = Timer.periodic(const Duration(milliseconds: 150), (timer) {
+      if (mounted && _bootIndex < _bootChecks.length) {
+        setState(() {
+          _bootMessage = _bootChecks[_bootIndex];
+          _bootIndex++;
+        });
+      } else {
+        timer.cancel();
+      }
+    });
+
+    Future.delayed(const Duration(milliseconds: 1000), () {
       if (mounted) {
         final session = context.read<SessionManager>();
         if (session.isLoggedIn) {
@@ -26,6 +50,12 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _bootTimer.cancel();
+    super.dispose();
   }
 
   @override
@@ -55,12 +85,12 @@ class _SplashScreenState extends State<SplashScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: const Color(0xFFFFD700).withValues(alpha: 0.15), 
+                            color: AppColors.gold.withValues(alpha: 0.15), 
                             width: 1.5
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFFFD700).withValues(alpha: 0.08),
+                              color: AppColors.gold.withValues(alpha: 0.08),
                               blurRadius: 40,
                               spreadRadius: 6,
                             ),
@@ -76,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: const Color(0xFFFFD700).withValues(alpha: 0.35), 
+                            color: AppColors.gold.withValues(alpha: 0.35), 
                             width: 1.5
                           ),
                         ),
@@ -92,9 +122,9 @@ class _SplashScreenState extends State<SplashScreen> {
                           padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFF030510),
+                            color: AppColors.bgDeep,
                             border: Border.all(
-                              color: const Color(0xFFFFD700).withValues(alpha: 0.6),
+                              color: AppColors.gold.withValues(alpha: 0.6),
                               width: 2.0,
                             ),
                             boxShadow: [
@@ -120,14 +150,14 @@ class _SplashScreenState extends State<SplashScreen> {
                 // --- BRAND TEXT ---
                 Text(
                   'SMARTFACE ELITE',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 34,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 7,
-                    color: const Color(0xFFFFD700),
+                    color: AppColors.gold,
                     shadows: [
                       Shadow(
-                        color: const Color(0xFFFFD700).withValues(alpha: 0.4), 
+                        color: AppColors.gold.withValues(alpha: 0.4), 
                         blurRadius: 18,
                         offset: const Offset(0, 2),
                       ),
@@ -139,7 +169,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 
                 Text(
                   'PRECISION ATTENDANCE AI',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 11,
                     color: Colors.white38,
                     letterSpacing: 4,
@@ -167,21 +197,21 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget _buildAmbientGlowBackground() {
     return Stack(
       children: [
-        // Base dark space canvas
+        // Base dark space canvas (Midnight Navy background)
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color(0xFF040613),
-                Color(0xFF0C1033),
+                AppColors.bgDeep,
+                AppColors.bgDark,
               ],
             ),
           ),
         ),
         
-        // Floating Mesh Gold
+        // Floating Mesh Gold (Royal Gold glow)
         Positioned(
           top: -80,
           left: -40,
@@ -190,14 +220,14 @@ class _SplashScreenState extends State<SplashScreen> {
             height: 280,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFFFFD700).withValues(alpha: 0.12),
+              color: AppColors.gold.withValues(alpha: 0.12),
             ),
           ).animate(onPlay: (c) => c.repeat(reverse: true))
            .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.25, 1.25), duration: 5.seconds, curve: Curves.easeInOut)
            .move(begin: const Offset(0, 0), end: const Offset(20, 30), duration: 5.seconds, curve: Curves.easeInOut),
         ),
 
-        // Floating Mesh Indigo
+        // Floating Mesh Indigo (Deep Steel glow)
         Positioned(
           bottom: -100,
           right: -80,
@@ -206,7 +236,7 @@ class _SplashScreenState extends State<SplashScreen> {
             height: 380,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF1D2671).withValues(alpha: 0.28),
+              color: AppColors.bgSurface.withValues(alpha: 0.28),
             ),
           ).animate(onPlay: (c) => c.repeat(reverse: true))
            .scale(begin: const Offset(1.15, 1.15), end: const Offset(0.85, 0.85), duration: 7.seconds, curve: Curves.easeInOut)
@@ -233,7 +263,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
           ),
         ).animate(onPlay: (c) => c.repeat(reverse: true))
-         .shimmer(duration: 5.seconds, color: const Color(0xFFFFD700).withValues(alpha: 0.25)),
+         .shimmer(duration: 5.seconds, color: AppColors.gold.withValues(alpha: 0.25)),
       ],
     );
   }
@@ -247,32 +277,37 @@ class _SplashScreenState extends State<SplashScreen> {
           children: List.generate(3, (index) {
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 5),
-              height: 7,
-              width: 7,
+              height: 6,
+              width: 6,
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color(0xFFFFD700),
+                color: AppColors.gold,
                 boxShadow: [
-                  BoxShadow(color: Color(0xFFFFD700), blurRadius: 8, spreadRadius: 1),
+                  BoxShadow(color: AppColors.gold, blurRadius: 8, spreadRadius: 1),
                 ],
               ),
             ).animate(onPlay: (controller) => controller.repeat())
-             .scale(delay: (index * 180).ms, duration: 600.ms, begin: const Offset(0.4, 0.4), end: const Offset(1.4, 1.4))
-             .fadeIn(delay: (index * 180).ms, duration: 600.ms)
+             .scale(delay: (index * 150).ms, duration: 500.ms, begin: const Offset(0.4, 0.4), end: const Offset(1.4, 1.4))
+             .fadeIn(delay: (index * 150).ms, duration: 500.ms)
              .then()
-             .fadeOut(duration: 600.ms);
+             .fadeOut(duration: 500.ms);
           }),
         ),
-        const SizedBox(height: 18),
-        Text(
-          'INITIALIZING NEURAL PIPELINE...',
-          style: GoogleFonts.robotoMono(
-            color: Colors.white30, 
-            fontSize: 10, 
-            letterSpacing: 2, 
-            fontWeight: FontWeight.bold
+        const SizedBox(height: 16),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: Text(
+            _bootMessage,
+            key: ValueKey<String>(_bootMessage),
+            textAlign: TextAlign.center,
+            style: GoogleFonts.robotoMono(
+              color: Colors.white38, 
+              fontSize: 10, 
+              letterSpacing: 1.5, 
+              fontWeight: FontWeight.bold
+            ),
           ),
-        ).animate().shimmer(duration: 2.seconds),
+        ),
       ],
     );
   }

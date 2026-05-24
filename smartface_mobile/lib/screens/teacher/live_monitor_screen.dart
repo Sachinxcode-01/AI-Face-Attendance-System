@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../core/constants.dart';
+import '../../core/session_manager.dart';
 import '../../services/notification_service.dart';
 import 'dart:async';
 
@@ -23,7 +26,8 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
   @override
   void initState() {
     super.initState();
-    _notificationService.connect();
+    final session = Provider.of<SessionManager>(context, listen: false);
+    _notificationService.connect(token: session.token);
     _subscription = _notificationService.stream.listen((data) {
       if (data['type'] == 'attendance_update') {
         setState(() {
@@ -59,8 +63,8 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF0A0E21),
-            Color(0xFF1D2671),
+            AppColors.bgDeep,
+            AppColors.bgDark,
           ],
         ),
         image: DecorationImage(
@@ -75,7 +79,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-        title: Text('Live Monitor', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text('Live Monitor', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         actions: [
           _buildIntruderBadge(),
@@ -93,7 +97,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
             if (_recentCheckins.isNotEmpty) ...[
               Text(
                 'LIVE CHECK-INS',
-                style: GoogleFonts.outfit(fontSize: 12, letterSpacing: 2, color: Colors.greenAccent),
+                style: GoogleFonts.inter(fontSize: 12, letterSpacing: 2, color: Colors.greenAccent),
               ),
               const SizedBox(height: 15),
               ..._recentCheckins.map((checkin) => _buildCheckinItem(checkin)),
@@ -166,7 +170,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
               children: [
                 const Icon(Icons.videocam_off_outlined, color: Colors.white24, size: 48),
                 const SizedBox(height: 10),
-                Text('LIVE FEED ENCRYPTED', style: GoogleFonts.outfit(color: Colors.white24, fontSize: 12, letterSpacing: 2)),
+                Text('LIVE FEED ENCRYPTED', style: GoogleFonts.inter(color: Colors.white24, fontSize: 12, letterSpacing: 2)),
               ],
             ),
           ),
@@ -204,7 +208,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
       children: [
         Expanded(child: _buildMiniStat('Students Present', '$_presentCount', Icons.people_outline, Colors.greenAccent)),
         const SizedBox(width: 15),
-        Expanded(child: _buildMiniStat('AI Detected', '$_aiDetectedCount', Icons.face_retouching_natural, const Color(0xFFFFD700))),
+        Expanded(child: _buildMiniStat('AI Detected', '$_aiDetectedCount', Icons.face_retouching_natural, AppColors.gold)),
       ],
     );
   }
@@ -244,9 +248,9 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
           children: [
             Text(
               'AI ABSENTEE DETECTION',
-              style: GoogleFonts.outfit(fontSize: 12, letterSpacing: 2, color: const Color(0xFFFFD700)),
+              style: GoogleFonts.inter(fontSize: 12, letterSpacing: 2, color: AppColors.gold),
             ),
-            const Icon(Icons.auto_awesome, color: Color(0xFFFFD700), size: 16),
+            const Icon(Icons.auto_awesome, color: AppColors.gold, size: 16),
           ],
         ),
         const SizedBox(height: 20),

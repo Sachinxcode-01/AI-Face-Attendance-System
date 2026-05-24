@@ -92,7 +92,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                 children: [
                   Text(
                     'SESSION ACTIVE',
-                    style: GoogleFonts.outfit(color: Colors.greenAccent, letterSpacing: 3, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.inter(color: Colors.greenAccent, letterSpacing: 3, fontWeight: FontWeight.bold),
                   ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 2.seconds),
             const SizedBox(height: 40),
             
@@ -132,7 +132,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                 ),
                 Text(
                   '$_secondsRemaining',
-                  style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ],
             ),

@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://10.81.236.48:8000';
+  static const String baseUrl = 'http://10.15.149.48:8000';
 
 
   // ─── Health check ─────────────────────────────────────────────────

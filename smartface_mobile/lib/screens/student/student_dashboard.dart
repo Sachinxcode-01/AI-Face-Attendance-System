@@ -35,7 +35,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     final session = Provider.of<SessionManager>(context, listen: false);
     final appState = Provider.of<AppState>(context, listen: false);
 
-    _notificationService.connect();
+    _notificationService.connect(token: session.token);
     _notifSubscription = _notificationService.stream.listen((data) {
       if (data['type'] == 'session_alert') {
         if (mounted) {
@@ -136,7 +136,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             const SizedBox(width: 10),
             Text(
               'Live Session Alert',
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+              style: GoogleFonts.inter(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -213,7 +213,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         appBar: AppBar(
           title: Text(
             'Student Nexus',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : AppColors.bgDark,
             ),
@@ -295,7 +295,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               const SizedBox(height: 30),
               Text(
                 'MY PROGRESS',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 12,
                   letterSpacing: 2,
                   color: isDark ? AppColors.gold : AppColors.indigo,
@@ -392,10 +392,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: const Color(0xFFFFD700).withValues(alpha: 0.1),
+          color: AppColors.gold.withValues(alpha: 0.15),
         ),
       ),
       child: Row(
@@ -416,7 +416,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFFFFD700).withValues(alpha: 0.05),
+                        color: AppColors.gold.withValues(alpha: 0.05),
                         width: 1.5,
                       ),
                     ),
@@ -431,8 +431,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFFD700).withValues(alpha: 0.1 * value),
-                          blurRadius: 12,
+                          color: AppColors.gold.withValues(alpha: 0.15 * value),
+                          blurRadius: 14,
                           spreadRadius: 1,
                         ),
                       ],
@@ -440,14 +440,14 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     child: CircularProgressIndicator(
                       value: value,
                       backgroundColor: Colors.white.withValues(alpha: 0.06),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
                       strokeWidth: 7,
                       strokeCap: StrokeCap.round,
                     ),
                   ),
                   Text(
                     pctText,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -473,7 +473,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 Text(
                   _standing,
                   style: const TextStyle(
-                    color: Color(0xFFFFD700),
+                    color: AppColors.gold,
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
                   ),
@@ -481,7 +481,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 const SizedBox(height: 5),
                 Text(
                   _rank,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     color: Colors.white54,
                     fontSize: 12,
                   ),
@@ -500,7 +500,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFFFFD700).withValues(alpha: 0.2),
+            AppColors.gold.withValues(alpha: 0.15),
             Colors.transparent,
           ],
           begin: Alignment.topLeft,
@@ -508,7 +508,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         ),
         borderRadius: BorderRadius.circular(25),
         border: Border.all(
-          color: const Color(0xFFFFD700).withValues(alpha: 0.2),
+          color: AppColors.gold.withValues(alpha: 0.15),
         ),
       ),
       child: Row(
@@ -526,7 +526,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             children: [
               Text(
                 '$_streak DAY STREAK',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                   color: Colors.white,
@@ -552,6 +552,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -579,7 +580,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               value: value,
               backgroundColor: Colors.white10,
               valueColor: AlwaysStoppedAnimation<Color>(
-                value < 0.75 ? Colors.redAccent : const Color(0xFFFFD700),
+                value < 0.75 ? AppColors.error : AppColors.gold,
               ),
               minHeight: 4,
             ),

@@ -70,7 +70,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         appBar: AppBar(
           title: Text(
             'Live Session QR',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -81,7 +81,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
             children: [
               Text(
                 'STUDENT ATTENDANCE SCAN',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   color: const Color(0xFFFFD700),
                   letterSpacing: 2,
                   fontWeight: FontWeight.bold,
