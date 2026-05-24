@@ -29,6 +29,7 @@ import 'screens/teacher/leave_review_screen.dart';
 import 'screens/teacher/live_monitor_screen.dart';
 import 'screens/teacher/teacher_stats_screen.dart';
 import 'screens/main/notification_nexus_screen.dart';
+import 'screens/teacher/train_faces_screen.dart';
 
 /// FCM background message handler (must be top-level)
 @pragma('vm:entry-point')
@@ -109,6 +110,7 @@ class SmartAttendanceApp extends StatelessWidget {
         '/live-monitor': (_) => const LiveMonitorScreen(),
         '/teacher-stats': (_) => const TeacherStatsScreen(),
         '/notifications': (_) => const NotificationNexusScreen(),
+        '/train-faces': (_) => const TrainFacesScreen(),
       },
     );
   }

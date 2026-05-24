@@ -174,6 +174,54 @@ class ApiService {
     }
   }
 
+  static Future<List<dynamic>> getStudents(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/auth/students'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getStudents error: $e');
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> uploadStudentFace(String email, File imageFile, String token) async {
+    try {
+      final uri = Uri.parse('$baseUrl/auth/upload-student-face?student_email=$email');
+      final request = http.MultipartRequest('POST', uri)
+        ..headers['Authorization'] = 'Bearer $token'
+        ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'detail': 'Upload failed: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> triggerTrainFaces(String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/train-faces'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'detail': 'Connection failed'};
+    }
+  }
+
   static Future<Map<String, dynamic>> askAI(String email, String query) async {
     try {
       final response = await http.post(

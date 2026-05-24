@@ -25,6 +25,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.ai_analyst import chat_with_data
 from core.ai_analyst_groq import ai_analyst as groq_analyst
+from core.train_faces import run_training
 import pandas as pd
 import json
 from middleware import RequestIDMiddleware, RequestLoggingMiddleware, SecurityHeadersMiddleware
@@ -575,6 +576,59 @@ async def register_biometric(request: BiometricRequest, current_user: str = Depe
         {"$set": {"biometric_registered": True}}
     )
     return {"message": "Biometric registration successful"}
+
+@app.get("/auth/students")
+async def list_students(current_user: str = Depends(AuthService.get_current_user)):
+    cursor = users_collection.find({"role": "student"})
+    students = await cursor.to_list(length=1000)
+    result = []
+    for s in students:
+        result.append({
+            "email": s.get("email"),
+            "full_name": s.get("full_name"),
+            "student_id": s.get("student_id") or "000"
+        })
+    return result
+
+@app.post("/auth/upload-student-face")
+async def upload_student_face(
+    student_email: str,
+    file: UploadFile = File(...),
+    current_user: str = Depends(AuthService.get_current_user)
+):
+    student = await users_collection.find_one({"email": student_email})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+        
+    name = student.get("full_name", "Student")
+    roll_no = student.get("student_id") or "000"
+    
+    # Sanitize name
+    safe_name = name.replace(" ", "_")
+    folder_name = f"{safe_name}_{roll_no}"
+    
+    dataset_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'dataset', folder_name))
+    os.makedirs(dataset_dir, exist_ok=True)
+    
+    # Save the file (ensure it has an image extension)
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in {".jpg", ".jpeg", ".png"}:
+        raise HTTPException(status_code=400, detail="Only JPEG or PNG images are allowed")
+        
+    save_path = os.path.join(dataset_dir, file.filename)
+    contents = await file.read()
+    with open(save_path, "wb") as f:
+        f.write(contents)
+        
+    return {"message": f"Successfully uploaded {file.filename} for {name}."}
+
+@app.post("/auth/train-faces")
+async def train_faces_endpoint(
+    background_tasks: BackgroundTasks,
+    current_user: str = Depends(AuthService.get_current_user)
+):
+    background_tasks.add_task(run_training)
+    return {"message": "AI face recognition model training initiated in the background."}
 
 @app.post("/sessions/start")
 async def start_session(session_data: SessionStart):

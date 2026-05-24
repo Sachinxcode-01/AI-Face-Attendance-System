@@ -273,10 +273,10 @@ class TeacherDashboard extends StatelessWidget {
         ),
         _buildGridAction(
           context,
-          Icons.file_download_outlined,
-          'Export',
-          'PDF/Excel',
-          null,
+          Icons.face_retouching_natural_outlined,
+          'Train AI Faces',
+          'Upload & train model',
+          '/train-faces',
         ),
       ],
     );
