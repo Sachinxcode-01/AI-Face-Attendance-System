@@ -19,9 +19,12 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _otpController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _auth = FirebaseAuth.instance;
   bool _isLoading = false;
   bool _otpSent = false;
+  bool _usePassword = true;
+  bool _showPassword = false;
 
   String selectedRole = 'Student';
 
@@ -47,8 +50,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (userCredential.user != null) {
         final email = userCredential.user!.email ?? '';
         final name = userCredential.user!.displayName ?? 'User';
+        final photoUrl = userCredential.user!.photoURL;
         
-        final result = await ApiService.googleLogin(email, name, selectedRole);
+        final result = await ApiService.googleLogin(email, name, selectedRole, avatarUrl: photoUrl);
         
         if (result.containsKey('access_token')) {
           if (!mounted) return;
@@ -78,6 +82,54 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Google Sign-In failed: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _signInWithPassword() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter email and password')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final result = await ApiService.loginWithPassword(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      if (result.containsKey('access_token')) {
+        if (!mounted) return;
+        final session = context.read<SessionManager>();
+        await session.saveSession(
+          token: result['access_token'],
+          email: _emailController.text.trim(),
+          role: result['role'],
+        );
+        if (!mounted) return;
+        final bool biometricRegistered = result['biometric_registered'] ?? false;
+        final String targetRoute = biometricRegistered ? '/dashboard' : '/setup';
+        Navigator.pushReplacementNamed(
+          context, 
+          targetRoute,
+          arguments: {
+            'role': result['role'], 
+            'token': result['access_token'], 
+            'email': _emailController.text.trim()
+          },
+        );
+      } else {
+        throw Exception(result['detail'] ?? 'Login failed');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed: ${e.toString().replaceAll("Exception: ", "")}')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -196,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: AppColors.gold,
                         shadows: [
                           const Shadow(color: Colors.black54, offset: Offset(0, 4), blurRadius: 12),
-                          Shadow(color: AppColors.gold.withOpacity(0.3), blurRadius: 20),
+                          Shadow(color: AppColors.gold.withValues(alpha: 0.3), blurRadius: 20),
                         ],
                       ),
                     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.15, end: 0, duration: 400.ms),
@@ -353,7 +405,7 @@ class _LoginScreenState extends State<LoginScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.gold.withOpacity(0.12), 
+                color: AppColors.gold.withValues(alpha: 0.12), 
                 width: 1.5
               ),
             ),
@@ -368,7 +420,7 @@ class _LoginScreenState extends State<LoginScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.gold.withOpacity(0.18),
+                color: AppColors.gold.withValues(alpha: 0.18),
                 width: 1,
               ),
             ),
@@ -414,7 +466,7 @@ class _LoginScreenState extends State<LoginScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.gold.withOpacity(0.3),
+                color: AppColors.gold.withValues(alpha: 0.3),
                 width: 1,
                 strokeAlign: BorderSide.strokeAlignOutside
               ),
@@ -429,7 +481,7 @@ class _LoginScreenState extends State<LoginScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.white.withOpacity(0.06),
+                color: Colors.white.withValues(alpha: 0.06),
                 width: 1,
               ),
             ),
@@ -450,7 +502,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.gold.withOpacity(0.25),
+                    color: AppColors.gold.withValues(alpha: 0.25),
                     blurRadius: 15,
                     spreadRadius: 1,
                   ),
@@ -490,9 +542,9 @@ class _LoginScreenState extends State<LoginScreen> {
       height: 60,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -518,7 +570,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.gold.withOpacity(0.4),
+                        color: AppColors.gold.withValues(alpha: 0.4),
                         blurRadius: 15,
                         spreadRadius: 2,
                         offset: const Offset(0, 2),
@@ -564,12 +616,12 @@ class _LoginScreenState extends State<LoginScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
       decoration: BoxDecoration(
-        color: const Color(0xFF070B1A).withOpacity(0.65),
+        color: const Color(0xFF070B1A).withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.04), width: 1.2),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.04), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.55),
+            color: Colors.black.withValues(alpha: 0.55),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
@@ -577,7 +629,50 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       child: Column(
         children: [
-          if (!_otpSent) ...[
+          if (_usePassword) ...[
+            _buildTextField(
+              controller: _emailController,
+              hint: 'Institutional Email',
+              icon: Icons.alternate_email_rounded,
+            ),
+            const SizedBox(height: 20),
+            _buildTextField(
+              controller: _passwordController,
+              hint: 'Password',
+              icon: Icons.lock_outline_rounded,
+              isPassword: true,
+              obscureText: !_showPassword,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  color: Colors.white38,
+                  size: 20,
+                ),
+                onPressed: () => setState(() => _showPassword = !_showPassword),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildButton(
+              text: 'SIGN IN',
+              onPressed: _signInWithPassword,
+            ),
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () => setState(() {
+                _usePassword = false;
+                _otpSent = false;
+              }),
+              child: Text(
+                'Sign In with OTP instead',
+                style: GoogleFonts.inter(
+                  color: AppColors.gold.withValues(alpha: 0.7), 
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ] else if (!_otpSent) ...[
             _buildTextField(
               controller: _emailController,
               hint: 'Institutional Email',
@@ -587,6 +682,19 @@ class _LoginScreenState extends State<LoginScreen> {
             _buildButton(
               text: 'REQUEST SECURE OTP',
               onPressed: _sendOtp,
+            ),
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () => setState(() => _usePassword = true),
+              child: Text(
+                'Sign In with Password instead',
+                style: GoogleFonts.inter(
+                  color: AppColors.gold.withValues(alpha: 0.7), 
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
             ),
           ] else ...[
             Text(
@@ -617,7 +725,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Text(
                 'Use different email address',
                 style: GoogleFonts.inter(
-                  color: AppColors.gold.withOpacity(0.7), 
+                  color: AppColors.gold.withValues(alpha: 0.7), 
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   decoration: TextDecoration.underline,
@@ -630,7 +738,7 @@ class _LoginScreenState extends State<LoginScreen> {
           
           Row(
             children: [
-              Expanded(child: Divider(color: Colors.white.withOpacity(0.06), height: 1)),
+              Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.06), height: 1)),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Text(
@@ -643,7 +751,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              Expanded(child: Divider(color: Colors.white.withOpacity(0.06), height: 1)),
+              Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.06), height: 1)),
             ],
           ),
           
@@ -657,7 +765,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: _signInWithGoogle,
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white,
-                side: BorderSide(color: Colors.white.withOpacity(0.08), width: 1.2),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1.2),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
               child: Row(
@@ -688,6 +796,9 @@ class _LoginScreenState extends State<LoginScreen> {
     required String hint,
     required IconData icon,
     bool isOtp = false,
+    bool isPassword = false,
+    bool obscureText = false,
+    Widget? suffixIcon,
   }) {
     return Focus(
       child: Builder(
@@ -698,13 +809,13 @@ class _LoginScreenState extends State<LoginScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isFocused ? AppColors.gold : Colors.white.withOpacity(0.08),
+                color: isFocused ? AppColors.gold : Colors.white.withValues(alpha: 0.08),
                 width: isFocused ? 1.5 : 1.0,
               ),
               boxShadow: isFocused
                   ? [
                       BoxShadow(
-                        color: AppColors.gold.withOpacity(0.08),
+                        color: AppColors.gold.withValues(alpha: 0.08),
                         blurRadius: 10,
                         spreadRadius: 1,
                       )
@@ -713,7 +824,12 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             child: TextField(
               controller: controller,
-              keyboardType: isOtp ? TextInputType.number : TextInputType.emailAddress,
+              keyboardType: isOtp
+                  ? TextInputType.number
+                  : isPassword
+                      ? TextInputType.visiblePassword
+                      : TextInputType.emailAddress,
+              obscureText: obscureText,
               style: GoogleFonts.inter(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
               textAlign: isOtp ? TextAlign.center : TextAlign.start,
               decoration: InputDecoration(
@@ -724,10 +840,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Icon(icon, color: isFocused ? AppColors.gold : Colors.white38, size: 22),
                       ),
                 prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                suffixIcon: suffixIcon,
                 hintText: hint,
                 hintStyle: GoogleFonts.inter(color: Colors.white38, fontSize: 16),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.02),
+                fillColor: Colors.white.withValues(alpha: 0.02),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
               ),
@@ -746,7 +863,7 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: AppColors.gold.withOpacity(0.35),
+            color: AppColors.gold.withValues(alpha: 0.35),
             blurRadius: 20,
             spreadRadius: 2,
             offset: const Offset(0, 6),
@@ -801,7 +918,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // 8. Cybernetic Scanner loading overlay
+  // 8. Professional Glassmorphic loading overlay
   Widget _buildBiometricScannerLoading() {
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 300),
@@ -809,174 +926,64 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Container(
         width: double.infinity,
         height: double.infinity,
-        color: Colors.black.withValues(alpha: 0.88),
-        child: Stack(
-          children: [
-            // Ambient grid scan backdrop
-            Opacity(
-              opacity: 0.12,
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/ai_face_grid.png'),
-                    fit: BoxFit.cover,
-                  ),
+        color: Colors.black.withValues(alpha: 0.75),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 36),
+              decoration: BoxDecoration(
+                color: const Color(0xFF070B1A).withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: AppColors.gold.withValues(alpha: 0.25),
+                  width: 1.5,
                 ),
-              ),
-            ),
-            
-            // Neon vertical laser sweeping scanning sweep bar
-            Positioned(
-              left: 0,
-              right: 0,
-              child: Container(
-                height: 4,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.gold.withValues(alpha: 0.0),
-                      AppColors.gold,
-                      AppColors.gold.withValues(alpha: 0.0),
-                    ],
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.gold.withValues(alpha: 0.1),
+                    blurRadius: 30,
+                    spreadRadius: 2,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.gold.withValues(alpha: 0.7),
-                      blurRadius: 18,
-                      spreadRadius: 2.5,
-                    )
-                  ],
-                ),
+                ],
               ),
-            ).animate(onPlay: (c) => c.repeat(reverse: true))
-             .moveY(begin: 0, end: MediaQuery.of(context).size.height, duration: 2400.ms, curve: Curves.easeInOut),
-
-            // Target central HUD scanner rings
-            Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Golden tech scanning ring outer (rotating clockwise)
-                      Container(
-                        width: 190,
-                        height: 190,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.gold.withValues(alpha: 0.4),
-                            width: 1.5,
-                          ),
-                        ),
-                      ).animate(onPlay: (c) => c.repeat())
-                       .rotate(duration: 4.seconds),
-
-                      // Holographic segmented scanner ring (rotating counter-clockwise)
-                      Container(
-                        width: 165,
-                        height: 165,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.gold.withValues(alpha: 0.2),
-                            width: 6,
-                            strokeAlign: BorderSide.strokeAlignOutside,
-                          ),
-                        ),
-                      ).animate(onPlay: (c) => c.repeat())
-                       .rotate(duration: 5.seconds, begin: 1, end: 0),
-
-                      // Ambient scanner pulse ring
-                      Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.gold.withValues(alpha: 0.04),
-                        ),
-                      ).animate(onPlay: (c) => c.repeat())
-                       .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.25, 1.25), curve: Curves.easeOut, duration: 1500.ms)
-                       .fadeOut(duration: 1500.ms),
-
-                      // Biometric core scanning icon
-                      const Icon(
-                        Icons.fingerprint_rounded,
-                        color: AppColors.gold,
-                        size: 60,
-                      ).animate(onPlay: (c) => c.repeat(reverse: true))
-                       .scale(begin: const Offset(0.92, 0.92), end: const Offset(1.08, 1.08), duration: 1000.ms)
-                       .shimmer(duration: 2000.ms),
-                    ],
+                  const SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 4,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
+                    ),
                   ),
-                  
-                  const SizedBox(height: 45),
-                  
-                  // Interactive scanner diagnostic logs
-                  _buildScanningTextLogs(),
+                  const SizedBox(height: 24),
+                  Text(
+                    'AUTHENTICATING',
+                    style: GoogleFonts.inter(
+                      color: AppColors.gold,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Establishing secure session...',
+                    style: GoogleFonts.inter(
+                      color: Colors.white38,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
-  }
-
-  // Scanning logger showing system logs
-  Widget _buildScanningTextLogs() {
-    return Column(
-      children: [
-        Text(
-          'AUTHENTICATING SECURE PROTOCOL',
-          style: GoogleFonts.inter(
-            color: AppColors.gold,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-          ),
-        ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1600.ms),
-        const SizedBox(height: 14),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-          ),
-          child: StreamBuilder<String>(
-            stream: _scanningLogStream(),
-            builder: (context, snapshot) {
-              return Text(
-                snapshot.data ?? '[SYS] ESTABLISHING QUANTUM LINK...',
-                style: GoogleFonts.robotoMono(
-                  color: Colors.white54,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Stream<String> _scanningLogStream() async* {
-    final logs = [
-      '[SYS] ESTABLISHING SECURE GATEWAY...',
-      '[SEC] INITIATING JWT AUTHENTICATOR...',
-      '[BIO] DECRYPTING BIOMETRIC EMBEDDINGS...',
-      '[KEY] HANDSHAKE VERIFICATION SYNC...',
-      '[SYS] ACCESS TOKEN COMPILATION OK.',
-    ];
-    int index = 0;
-    while (true) {
-      yield logs[index % logs.length];
-      await Future.delayed(const Duration(milliseconds: 1000));
-      index++;
-    }
   }
 }
 

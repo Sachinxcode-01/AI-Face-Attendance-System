@@ -495,64 +495,158 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Widget _buildStreakCard() {
+    // Determine active badges
+    final hasIronBadge = _streak >= 5;
+    final hasConsistencyBadge = _streak >= 10;
+    final hasEliteBadge = _overallPercentage >= 0.80;
+    final hasChampBadge = _overallPercentage >= 0.90;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.gold.withValues(alpha: 0.15),
-            Colors.transparent,
+            AppColors.gold.withValues(alpha: 0.18),
+            Colors.black.withValues(alpha: 0.2),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(25),
         border: Border.all(
-          color: AppColors.gold.withValues(alpha: 0.15),
+          color: AppColors.gold.withValues(alpha: 0.3),
+          width: 1.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.gold.withValues(alpha: 0.08),
+            blurRadius: 20,
+            spreadRadius: 1,
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-                Icons.local_fire_department_rounded,
-                color: Colors.orangeAccent,
-                size: 40,
-              )
-              .animate(onPlay: (controller) => controller.repeat())
-              .shimmer(duration: 2000.ms),
-          const SizedBox(width: 15),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Text(
-                '$_streak DAY STREAK',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
+              const Icon(
+                    Icons.local_fire_department_rounded,
+                    color: Colors.orangeAccent,
+                    size: 40,
+                  )
+                  .animate(onPlay: (controller) => controller.repeat())
+                  .shimmer(duration: 2000.ms)
+                  .scale(begin: const Offset(1, 1), end: const Offset(1.15, 1.15), duration: 1.seconds, curve: Curves.easeInOut),
+              const SizedBox(width: 15),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$_streak DAY STREAK',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  Text(
+                    _streak > 0 ? 'Your consistency is legendary!' : 'Check in to start your streak!',
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                ],
               ),
-              Text(
-                _streak > 0 ? 'Your consistency is legendary!' : 'Check in to start your streak!',
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
-              ),
+              const Spacer(),
+              const Text('🔥', style: TextStyle(fontSize: 24)),
             ],
           ),
-          const Spacer(),
-          const Text('🔥', style: TextStyle(fontSize: 24)),
+          const SizedBox(height: 18),
+          const Divider(color: Colors.white10, height: 1),
+          const SizedBox(height: 14),
+          Text(
+            'MILESTONE BADGES',
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: AppColors.gold.withValues(alpha: 0.6),
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
+                _buildBadgeItem('Iron Streak', Icons.bolt, hasIronBadge, Colors.blueAccent),
+                const SizedBox(width: 10),
+                _buildBadgeItem('Consistency', Icons.workspace_premium, hasConsistencyBadge, Colors.deepOrangeAccent),
+                const SizedBox(width: 10),
+                _buildBadgeItem('Elite Status', Icons.insights, hasEliteBadge, AppColors.gold),
+                const SizedBox(width: 10),
+                _buildBadgeItem('Champ', Icons.emoji_events, hasChampBadge, Colors.greenAccent),
+              ],
+            ),
+          ),
         ],
       ),
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1);
   }
 
+  Widget _buildBadgeItem(String label, IconData icon, bool unlocked, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: unlocked ? color.withValues(alpha: 0.12) : Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: unlocked ? color.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.06),
+          width: unlocked ? 1.5 : 1,
+        ),
+        boxShadow: unlocked
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                )
+              ]
+            : [],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: unlocked ? color : Colors.white24,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              color: unlocked ? Colors.white : Colors.white24,
+              fontWeight: unlocked ? FontWeight.bold : FontWeight.normal,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    ).animate(target: unlocked ? 1 : 0).shimmer(delay: 500.ms, duration: 1500.ms);
+  }
+
   Widget _buildSubjectProgress(String subject, double value, String sub) {
+    final isWarning = value < 0.75;
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+        border: Border.all(
+          color: isWarning ? AppColors.error.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.04),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -569,20 +663,45 @@ class _StudentDashboardState extends State<StudentDashboard> {
               ),
               Text(
                 sub,
-                style: const TextStyle(color: Colors.white38, fontSize: 10),
+                style: TextStyle(
+                  color: isWarning ? AppColors.errorLight : Colors.white38,
+                  fontSize: 10,
+                  fontWeight: isWarning ? FontWeight.bold : FontWeight.normal,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(5),
-            child: LinearProgressIndicator(
-              value: value,
-              backgroundColor: Colors.white10,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                value < 0.75 ? AppColors.error : AppColors.gold,
-              ),
-              minHeight: 4,
+            child: Stack(
+              children: [
+                LinearProgressIndicator(
+                  value: value,
+                  backgroundColor: Colors.white10,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    isWarning ? AppColors.error : AppColors.gold,
+                  ),
+                  minHeight: 5,
+                ),
+                // Glowing Shimmer effect overlay
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.white.withValues(alpha: 0.15),
+                          Colors.transparent,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                  ).animate(onPlay: (c) => c.repeat())
+                   .shimmer(duration: 2000.ms),
+                ),
+              ],
             ),
           ),
         ],

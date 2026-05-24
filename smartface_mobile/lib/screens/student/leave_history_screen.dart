@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+import '../../core/session_manager.dart';
 import '../../services/api_service.dart';
 import 'dart:developer' as developer;
 
@@ -21,8 +23,9 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_args == null) {
+      final session = Provider.of<SessionManager>(context, listen: false);
       _args = ModalRoute.of(context)?.settings.arguments as Map?;
-      _studentEmail = _args?['email'] ?? 'student@example.com';
+      _studentEmail = _args?['email'] ?? session.email ?? 'student@example.com';
       _fetchLeaves();
     }
   }

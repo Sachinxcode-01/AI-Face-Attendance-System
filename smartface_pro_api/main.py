@@ -12,7 +12,8 @@ from models import (
     UserCreate, UserResponse, Token, SessionCreate, SessionStart, 
     AttendanceRecord, AttendanceMark, LeaveRequest, LeaveApplication, 
     Notification, OTPRequest, OTPVerification, AIQuery, ProfileUpdate,
-    BiometricRequest, IntruderAlert, GoogleLoginRequest, FaceAttendanceMark
+    BiometricRequest, IntruderAlert, GoogleLoginRequest, FaceAttendanceMark,
+    PasswordLoginRequest
 )
 from auth_service import AuthService
 from database import db, users_collection, sessions_collection, attendance_collection
@@ -377,6 +378,31 @@ async def google_login(request: GoogleLoginRequest):
         role = user.get("role", "student")
         biometric_registered = user.get("biometric_registered", False)
         
+    token_expire = timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 1440)))
+    access_token = AuthService.create_access_token(
+        data={"sub": request.email, "role": role},
+        expires_delta=token_expire
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "role": role,
+        "biometric_registered": biometric_registered
+    }
+
+@app.post("/auth/login-password", response_model=Token)
+async def login_password(request: PasswordLoginRequest):
+    user = await users_collection.find_one({"email": request.email})
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    if "password" not in user or not AuthService.verify_password(request.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    role = user.get("role", "student")
+    biometric_registered = user.get("biometric_registered", False)
+    
     token_expire = timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 1440)))
     access_token = AuthService.create_access_token(
         data={"sub": request.email, "role": role},

@@ -149,9 +149,45 @@ class _RegisterScreenState extends State<RegisterScreen>
         AppToast.show(
           context,
           title: 'Welcome aboard! 🎉',
-          message: 'Account created. A welcome email has been sent.',
+          message: 'Account created. Signing in...',
           type: ToastType.success,
         );
+        
+        try {
+          final loginResult = await ApiService.loginWithPassword(
+            _emailCtrl.text.trim(),
+            _passCtrl.text.trim(),
+          );
+
+          if (!mounted) return;
+
+          if (loginResult.containsKey('access_token')) {
+            final session = context.read<SessionManager>();
+            await session.saveSession(
+              token: loginResult['access_token'],
+              email: _emailCtrl.text.trim(),
+              role: loginResult['role'],
+            );
+            if (!mounted) return;
+            final bool biometricRegistered = loginResult['biometric_registered'] ?? false;
+            final String targetRoute = biometricRegistered ? '/dashboard' : '/setup';
+            
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              targetRoute,
+              (route) => false,
+              arguments: {
+                'role': loginResult['role'],
+                'token': loginResult['access_token'],
+                'email': _emailCtrl.text.trim(),
+              },
+            );
+            return;
+          }
+        } catch (e) {
+          debugPrint('Auto-login failed: $e');
+        }
+
         await Future.delayed(800.ms);
         if (mounted) Navigator.pop(context);
       } else {
@@ -187,8 +223,9 @@ class _RegisterScreenState extends State<RegisterScreen>
       if (userCredential.user != null) {
         final email = userCredential.user!.email ?? '';
         final name = userCredential.user!.displayName ?? 'User';
+        final photoUrl = userCredential.user!.photoURL;
         
-        final result = await ApiService.googleLogin(email, name, _selectedRole);
+        final result = await ApiService.googleLogin(email, name, _selectedRole, avatarUrl: photoUrl);
         
         if (result.containsKey('access_token')) {
           if (!mounted) return;

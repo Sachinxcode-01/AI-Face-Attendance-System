@@ -4,6 +4,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
+import 'package:provider/provider.dart';
+import '../../core/session_manager.dart';
 import '../../services/api_service.dart';
 import '../../core/constants.dart';
 
@@ -42,8 +44,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       final sessionId = decoded['session_id'];
       final token = decoded['token'];
 
+      final session = context.read<SessionManager>();
       final args = ModalRoute.of(context)?.settings.arguments as Map?;
-      final studentEmail = args?['email'] ?? 'student@smartface.elite';
+      final studentEmail = args?['email'] ?? session.email ?? 'student@smartface.elite';
 
       final result = await ApiService.markAttendance(studentEmail, sessionId, token);
 

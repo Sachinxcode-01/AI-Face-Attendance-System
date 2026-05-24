@@ -6,6 +6,7 @@ import '../../core/constants.dart';
 import '../../core/session_manager.dart';
 import '../../services/notification_service.dart';
 import 'dart:async';
+import 'dart:math' as math;
 
 class LiveMonitorScreen extends StatefulWidget {
   const LiveMonitorScreen({super.key});
@@ -96,12 +97,16 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
             const SizedBox(height: 30),
             if (_recentCheckins.isNotEmpty) ...[
               Text(
-                'LIVE CHECK-INS',
+                'LIVE CHECK-INS (REAL-TIME)',
                 style: GoogleFonts.inter(fontSize: 12, letterSpacing: 2, color: Colors.greenAccent),
               ),
               const SizedBox(height: 15),
-              ..._recentCheckins.map((checkin) => _buildCheckinItem(checkin)),
-              const SizedBox(height: 20),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: _recentCheckins.map((checkin) => _buildCheckinItem(checkin)).toList(),
+              ),
+              const SizedBox(height: 25),
             ],
             _buildAbsenteeList(),
           ],
@@ -112,23 +117,119 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
   }
 
   Widget _buildCheckinItem(Map<String, String> checkin) {
+    final double cardWidth = (MediaQuery.of(context).size.width - 52) / 2;
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      width: cardWidth,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.greenAccent.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.1)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: Colors.greenAccent, size: 16),
-          const SizedBox(width: 12),
-          Expanded(child: Text(checkin['email']!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-          Text(checkin['time']!, style: const TextStyle(color: Colors.white24, fontSize: 10)),
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.greenAccent.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.greenAccent.withValues(alpha: 0.08),
+            blurRadius: 15,
+            spreadRadius: 1,
+          ),
         ],
       ),
-    ).animate().slideX(begin: -0.1).fadeIn();
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              // Avatar base
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: Colors.greenAccent.withValues(alpha: 0.1),
+                child: const Icon(
+                  Icons.person,
+                  color: Colors.greenAccent,
+                  size: 28,
+                ),
+              ),
+              // Scanner ring animation
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.greenAccent.withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
+                  ),
+                ).animate(onPlay: (c) => c.repeat(reverse: true))
+                 .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.1, 1.1), duration: 1.seconds),
+              ),
+              // Biometric floating points around the avatar
+              ...List.generate(4, (index) {
+                final angles = [0.0, 1.57, 3.14, 4.71];
+                final double distance = 36.0;
+                final double dx = distance * math.cos(angles[index]);
+                final double dy = distance * math.sin(angles[index]);
+                return Transform.translate(
+                  offset: Offset(dx, dy),
+                  child: Container(
+                    width: 5,
+                    height: 5,
+                    decoration: const BoxDecoration(
+                      color: Colors.greenAccent,
+                      shape: BoxShape.circle,
+                    ),
+                  ).animate(onPlay: (c) => c.repeat(reverse: true))
+                   .scale(begin: const Offset(0.5, 0.5), end: const Offset(1.5, 1.5), duration: 600.ms + (index * 150).ms)
+                   .fadeIn(duration: 300.ms),
+                );
+              }),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            checkin['email']!.split('@').first.toUpperCase(),
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: Colors.white,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.greenAccent.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.verified_user_outlined,
+                  color: Colors.greenAccent,
+                  size: 10,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Recognized ✓',
+                  style: GoogleFonts.inter(
+                    color: Colors.greenAccent,
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate()
+     .slideY(begin: 0.1, duration: 400.ms, curve: Curves.easeOutBack)
+     .fadeIn(duration: 400.ms)
+     .shimmer(color: Colors.greenAccent.withValues(alpha: 0.3), duration: 1.seconds);
   }
 
   Widget _buildIntruderBadge() {
@@ -206,14 +307,14 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
   Widget _buildStatsRow() {
     return Row(
       children: [
-        Expanded(child: _buildMiniStat('Students Present', '$_presentCount', Icons.people_outline, Colors.greenAccent)),
+        Expanded(child: _buildMiniStat('Students Present', _presentCount, Icons.people_outline, Colors.greenAccent)),
         const SizedBox(width: 15),
-        Expanded(child: _buildMiniStat('AI Detected', '$_aiDetectedCount', Icons.face_retouching_natural, AppColors.gold)),
+        Expanded(child: _buildMiniStat('AI Detected', _aiDetectedCount, Icons.face_retouching_natural, AppColors.gold)),
       ],
     );
   }
 
-  Widget _buildMiniStat(String label, String value, IconData icon, Color color) {
+  Widget _buildMiniStat(String label, int value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -226,7 +327,10 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
         children: [
           Icon(icon, color: color, size: 20),
           const SizedBox(height: 12),
-          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          RollingNumberTicker(
+            value: value,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
           Text(label, style: const TextStyle(color: Colors.white38, fontSize: 12)),
         ],
       ),
@@ -305,5 +409,40 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
       case 'Medium': return Colors.orangeAccent;
       default: return Colors.blueAccent;
     }
+  }
+}
+
+class RollingNumberTicker extends StatelessWidget {
+  final int value;
+  final TextStyle style;
+
+  const RollingNumberTicker({
+    super.key,
+    required this.value,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 350),
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0.0, 0.4),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutBack)),
+          child: FadeTransition(
+            opacity: animation,
+            child: child,
+          ),
+        );
+      },
+      child: Text(
+        '$value',
+        key: ValueKey<int>(value),
+        style: style,
+      ),
+    );
   }
 }

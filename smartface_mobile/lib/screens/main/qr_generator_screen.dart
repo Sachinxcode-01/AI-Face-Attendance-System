@@ -4,6 +4,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../core/session_manager.dart';
 import '../../services/api_service.dart';
 
 class QRGeneratorScreen extends StatefulWidget {
@@ -27,8 +29,9 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   }
 
   Future<void> _initSession() async {
+    final session = context.read<SessionManager>();
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    final teacherEmail = args?['email'] ?? 'teacher@smartface.elite';
+    final teacherEmail = args?['email'] ?? session.email ?? 'teacher@smartface.elite';
     final subject = args?['subject'] ?? 'Advanced AI';
 
     final result = await ApiService.startSession(teacherEmail, subject);

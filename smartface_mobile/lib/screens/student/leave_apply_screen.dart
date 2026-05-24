@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import '../../core/session_manager.dart';
 import '../../services/api_service.dart';
 import '../../core/constants.dart';
 import '../../core/theme_controller.dart';
@@ -51,8 +52,9 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
     if (_formKey.currentState!.validate() && _startDate != null) {
       setState(() => _isSubmitting = true);
 
+      final session = context.read<SessionManager>();
       final args = ModalRoute.of(context)?.settings.arguments as Map?;
-      final email = args?['email'] ?? 'student@example.com';
+      final email = args?['email'] ?? session.email ?? 'student@example.com';
 
       final leaveData = {
         'user_id': email,

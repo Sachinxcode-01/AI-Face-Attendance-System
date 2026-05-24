@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://10.15.149.48:8000';
+  static const String baseUrl = 'http://10.210.101.48:8000';
 
 
   // ─── Health check ─────────────────────────────────────────────────
@@ -46,7 +46,20 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> googleLogin(String email, String name, String role) async {
+  static Future<Map<String, dynamic>> loginWithPassword(String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/login-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'detail': 'Connection failed'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> googleLogin(String email, String name, String role, {String? avatarUrl}) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/google'),
@@ -55,6 +68,7 @@ class ApiService {
           'email': email,
           'name': name,
           'role': role,
+          'avatar_url': avatarUrl,
         }),
       );
       return jsonDecode(response.body);
@@ -115,12 +129,12 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> resetPassword(String email, String newPassword) async {
+  static Future<Map<String, dynamic>> resetPassword(String email, String otp, String newPassword) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/reset-password'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'new_password': newPassword}),
+        body: jsonEncode({'email': email, 'otp': otp, 'new_password': newPassword}),
       );
       return jsonDecode(response.body);
     } catch (e) {

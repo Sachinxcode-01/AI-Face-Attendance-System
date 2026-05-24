@@ -9,6 +9,10 @@ class OTPVerification(BaseModel):
     email: str
     otp: str
 
+class PasswordLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
 class AIQuery(BaseModel):
     email: str
     query: str

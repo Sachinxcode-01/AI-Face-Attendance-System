@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../../core/session_manager.dart';
 import '../../core/constants.dart';
 import '../../core/theme_controller.dart';
 import '../../services/api_service.dart';
@@ -61,9 +62,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _fetchProfile() async {
+    final session = context.read<SessionManager>();
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    final token = args?['token'] ?? '';
-    final email = args?['email'] ?? '';
+    final token = args?['token'] ?? session.token ?? '';
+    final email = args?['email'] ?? session.email ?? '';
 
     if (token.isEmpty) {
       setState(() {
@@ -204,8 +206,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _pickImage(ImageSource source) async {
+    final session = context.read<SessionManager>();
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    final token = args?['token'] ?? '';
+    final token = args?['token'] ?? session.token ?? '';
 
     try {
       final XFile? picked = await _picker.pickImage(
@@ -292,13 +295,28 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _showEditProfileSheet() {
+    final isTeacher = (_profileData['role'] ?? '').toString().toLowerCase() == 'teacher';
+
     final nameCtrl = TextEditingController(text: _profileData['full_name'] ?? '');
     final phoneCtrl = TextEditingController(text: _profileData['phone'] ?? '');
     final dobCtrl = TextEditingController(text: _profileData['dob'] ?? '');
-    final collegeCtrl = TextEditingController(text: _profileData['college'] ?? '');
-    final deptCtrl = TextEditingController(text: _profileData['department'] ?? '');
-    final semCtrl = TextEditingController(text: _profileData['semester'] ?? '');
-    final idCtrl = TextEditingController(text: _profileData['student_id'] ?? '');
+    final genderCtrl = TextEditingController(text: _profileData['gender'] ?? '');
+    final addressCtrl = TextEditingController(text: _profileData['address'] ?? '');
+    final langCtrl = TextEditingController(text: _profileData['language_preference'] ?? 'English');
+
+    // Student fields
+    final usnCtrl = TextEditingController(text: _profileData['usn'] ?? _profileData['student_id'] ?? '');
+    final courseCtrl = TextEditingController(text: _profileData['course'] ?? '');
+    final sectionCtrl = TextEditingController(text: _profileData['section'] ?? '');
+    final rollNoCtrl = TextEditingController(text: _profileData['roll_number'] ?? '');
+    final parentCtrl = TextEditingController(text: _profileData['parent_details'] ?? '');
+
+    // Teacher fields
+    final employeeIdCtrl = TextEditingController(text: _profileData['employee_id'] ?? '');
+    final designationCtrl = TextEditingController(text: _profileData['designation'] ?? '');
+    final specializationCtrl = TextEditingController(text: _profileData['specialization'] ?? '');
+    final qualificationCtrl = TextEditingController(text: _profileData['qualification'] ?? '');
+    final experienceCtrl = TextEditingController(text: _profileData['experience'] ?? '');
 
     showModalBottomSheet(
       context: context,
@@ -344,15 +362,97 @@ class _ProfileScreenState extends State<ProfileScreen>
                       const SizedBox(height: 15),
                       _buildModalTextField('Phone Number', Icons.phone_android_outlined, phoneCtrl),
                       const SizedBox(height: 15),
-                      _buildModalTextField('Date of Birth', Icons.calendar_today_outlined, dobCtrl),
+                      _buildModalTextField(
+                        'Date of Birth', 
+                        Icons.calendar_today_outlined, 
+                        dobCtrl,
+                        onTap: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime(2005),
+                            firstDate: DateTime(1900),
+                            lastDate: DateTime.now(),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.dark(
+                                    primary: AppColors.gold,
+                                    onPrimary: Colors.black,
+                                    surface: AppColors.bgModal,
+                                    onSurface: Colors.white,
+                                  ),
+                                  dialogTheme: const DialogThemeData(
+                                    backgroundColor: AppColors.bgDark,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (picked != null) {
+                            final day = picked.day.toString().padLeft(2, '0');
+                            final month = picked.month.toString().padLeft(2, '0');
+                            final year = picked.year;
+                            dobCtrl.text = "$day/$month/$year";
+                          }
+                        },
+                      ),
                       const SizedBox(height: 15),
-                      _buildModalTextField('College/Institution', Icons.school_outlined, collegeCtrl),
+                      _buildModalTextField('Gender', Icons.wc_outlined, genderCtrl),
                       const SizedBox(height: 15),
-                      _buildModalTextField('Department', Icons.account_tree_outlined, deptCtrl),
+                      _buildModalTextField('Address', Icons.home_outlined, addressCtrl),
                       const SizedBox(height: 15),
-                      _buildModalTextField('Current Semester', Icons.menu_book_outlined, semCtrl),
+                      DropdownButtonFormField<String>(
+                        initialValue: ['English', 'Kannada'].contains(langCtrl.text) ? langCtrl.text : 'English',
+                        dropdownColor: AppColors.bgModal,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          labelText: 'Language Preference',
+                          labelStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                          prefixIcon: const Icon(Icons.language_outlined, color: AppColors.gold, size: 20),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.03),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: Colors.white12),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppColors.gold, width: 1),
+                          ),
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'English', child: Text('English')),
+                          DropdownMenuItem(value: 'Kannada', child: Text('Kannada')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) {
+                            langCtrl.text = val;
+                          }
+                        },
+                      ),
                       const SizedBox(height: 15),
-                      _buildModalTextField('Student ID / Registration ID', Icons.badge_outlined, idCtrl),
+                      if (isTeacher) ...[
+                        _buildModalTextField('Employee ID', Icons.badge_outlined, employeeIdCtrl),
+                        const SizedBox(height: 15),
+                        _buildModalTextField('Designation', Icons.work_outline, designationCtrl),
+                        const SizedBox(height: 15),
+                        _buildModalTextField('Subject Specialization', Icons.menu_book_outlined, specializationCtrl),
+                        const SizedBox(height: 15),
+                        _buildModalTextField('Qualification', Icons.school_outlined, qualificationCtrl),
+                        const SizedBox(height: 15),
+                        _buildModalTextField('Years of Experience', Icons.timeline_outlined, experienceCtrl),
+                      ] else ...[
+                        _buildModalTextField('Student ID / USN', Icons.badge_outlined, usnCtrl),
+                        const SizedBox(height: 15),
+                        _buildModalTextField('Class / Course', Icons.school_outlined, courseCtrl),
+                        const SizedBox(height: 15),
+                        _buildModalTextField('Section', Icons.grid_view_outlined, sectionCtrl),
+                        const SizedBox(height: 15),
+                        _buildModalTextField('Roll Number', Icons.format_list_numbered_outlined, rollNoCtrl),
+                        const SizedBox(height: 15),
+                        _buildModalTextField('Parent / Guardian Details', Icons.family_restroom_outlined, parentCtrl),
+                      ],
                       const SizedBox(height: 35),
                       SizedBox(
                         width: double.infinity,
@@ -367,16 +467,34 @@ class _ProfileScreenState extends State<ProfileScreen>
                             elevation: 5,
                           ),
                           onPressed: () async {
+                            final session = this.context.read<SessionManager>();
                             final args = ModalRoute.of(this.context)?.settings.arguments as Map?;
-                            final token = args?['token'] ?? '';
-                            final updatedData = {
+                            final token = args?['token'] ?? session.token ?? '';
+                            final updatedData = isTeacher ? {
                               'full_name': nameCtrl.text.trim(),
                               'phone': phoneCtrl.text.trim(),
                               'dob': dobCtrl.text.trim(),
-                              'college': collegeCtrl.text.trim(),
-                              'department': deptCtrl.text.trim(),
-                              'semester': semCtrl.text.trim(),
-                              'student_id': idCtrl.text.trim(),
+                              'gender': genderCtrl.text.trim(),
+                              'address': addressCtrl.text.trim(),
+                              'language_preference': langCtrl.text.trim(),
+                              'employee_id': employeeIdCtrl.text.trim(),
+                              'designation': designationCtrl.text.trim(),
+                              'specialization': specializationCtrl.text.trim(),
+                              'qualification': qualificationCtrl.text.trim(),
+                              'experience': experienceCtrl.text.trim(),
+                            } : {
+                              'full_name': nameCtrl.text.trim(),
+                              'phone': phoneCtrl.text.trim(),
+                              'dob': dobCtrl.text.trim(),
+                              'gender': genderCtrl.text.trim(),
+                              'address': addressCtrl.text.trim(),
+                              'language_preference': langCtrl.text.trim(),
+                              'usn': usnCtrl.text.trim(),
+                              'student_id': usnCtrl.text.trim(),
+                              'course': courseCtrl.text.trim(),
+                              'section': sectionCtrl.text.trim(),
+                              'roll_number': rollNoCtrl.text.trim(),
+                              'parent_details': parentCtrl.text.trim(),
                             };
                             Navigator.pop(context);
                             setState(() => _isLoading = true);
@@ -421,9 +539,11 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildModalTextField(String label, IconData icon, TextEditingController controller) {
+  Widget _buildModalTextField(String label, IconData icon, TextEditingController controller, {VoidCallback? onTap}) {
     return TextField(
       controller: controller,
+      readOnly: onTap != null,
+      onTap: onTap,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
@@ -455,7 +575,9 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (hasLocalPreview) {
       avatarImage = FileImage(_localAvatarFile!);
     } else if (hasNetworkAvatar) {
-      final fullUrl = '${ApiService.baseUrl}$networkAvatarUrl?v=${DateTime.now().millisecondsSinceEpoch}';
+      final fullUrl = networkAvatarUrl.startsWith('http')
+          ? networkAvatarUrl
+          : '${ApiService.baseUrl}$networkAvatarUrl?v=${DateTime.now().millisecondsSinceEpoch}';
       avatarImage = NetworkImage(fullUrl);
     }
 
@@ -622,6 +744,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget build(BuildContext context) {
     final themeCtrl = context.watch<ThemeController>();
     final isDark = themeCtrl.isDark;
+    final isTeacher = (_profileData['role'] ?? '').toString().toLowerCase() == 'teacher';
     final initials = (_profileData['full_name'] ?? 'U')
         .toString()
         .trim()
@@ -720,9 +843,13 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                     const SizedBox(height: 5),
                     Text(
-                      _profileData['department'] != null && _profileData['college'] != null
-                          ? '${_profileData['department']} • ${_profileData['college']}'
-                          : 'SmartFace Academic Student',
+                      isTeacher
+                          ? '${_profileData['designation'] ?? 'Faculty'} • ${_profileData['specialization'] ?? 'Academic'}'
+                          : (_profileData['course'] != null
+                              ? '${_profileData['course']} • Section ${_profileData['section'] ?? 'A'}'
+                              : (_profileData['department'] != null && _profileData['college'] != null
+                                  ? '${_profileData['department']} • ${_profileData['college']}'
+                                  : 'SmartFace Academic Student')),
                       style: GoogleFonts.inter(color: Colors.white54, fontSize: 13),
                       textAlign: TextAlign.center,
                     ).animate().fadeIn(delay: 300.ms),
@@ -730,15 +857,135 @@ class _ProfileScreenState extends State<ProfileScreen>
                     const SizedBox(height: 35),
 
                     // ── Profile Fields ────────────────────────────────
-                    _buildProfileCard(Icons.badge_outlined, 'Student ID', _profileData['student_id'] ?? 'N/A', 1),
-                    _buildProfileCard(Icons.email_outlined, 'Institutional Email', _profileData['email'] ?? 'N/A', 2),
-                    _buildProfileCard(Icons.phone_outlined, 'Phone Number', _profileData['phone'] ?? 'N/A', 3),
-                    _buildProfileCard(Icons.calendar_today_outlined, 'Date of Birth', _profileData['dob'] ?? 'N/A', 4),
-                    _buildProfileCard(Icons.school_outlined, 'Institution', _profileData['college'] ?? 'N/A', 5),
-                    _buildProfileCard(Icons.account_tree_outlined, 'Department', _profileData['department'] ?? 'N/A', 6),
-                    _buildProfileCard(Icons.layers_outlined, 'Semester / Year', _profileData['semester'] ?? 'N/A', 7),
+                    if (isTeacher) ...[
+                      _buildProfileCard(Icons.badge_outlined, 'Employee ID', _profileData['employee_id'] ?? 'N/A', 1),
+                      _buildProfileCard(Icons.email_outlined, 'Institutional Email', _profileData['email'] ?? 'N/A', 2),
+                      _buildProfileCard(Icons.phone_outlined, 'Phone Number', _profileData['phone'] ?? 'N/A', 3),
+                      _buildProfileCard(Icons.work_outline, 'Designation', _profileData['designation'] ?? 'N/A', 4),
+                      _buildProfileCard(Icons.menu_book_outlined, 'Subject Specialization', _profileData['specialization'] ?? 'N/A', 5),
+                      _buildProfileCard(Icons.school_outlined, 'Qualification', _profileData['qualification'] ?? 'N/A', 6),
+                      _buildProfileCard(Icons.timeline_outlined, 'Years of Experience', _profileData['experience'] ?? 'N/A', 7),
+                      _buildProfileCard(Icons.wc_outlined, 'Gender', _profileData['gender'] ?? 'N/A', 8),
+                      _buildProfileCard(Icons.calendar_today_outlined, 'Date of Birth', _profileData['dob'] ?? 'N/A', 9),
+                      _buildProfileCard(Icons.home_outlined, 'Address', _profileData['address'] ?? 'N/A', 10),
+                      _buildProfileCard(Icons.language_outlined, 'Language Preference', _profileData['language_preference'] ?? 'English', 11),
+                    ] else ...[
+                      _buildProfileCard(Icons.badge_outlined, 'Student ID / USN', _profileData['usn'] ?? _profileData['student_id'] ?? 'N/A', 1),
+                      _buildProfileCard(Icons.email_outlined, 'Institutional Email', _profileData['email'] ?? 'N/A', 2),
+                      _buildProfileCard(Icons.phone_outlined, 'Phone Number', _profileData['phone'] ?? 'N/A', 3),
+                      _buildProfileCard(Icons.school_outlined, 'Class / Course', _profileData['course'] ?? _profileData['college'] ?? 'N/A', 4),
+                      _buildProfileCard(Icons.grid_view_outlined, 'Section', _profileData['section'] ?? _profileData['department'] ?? 'N/A', 5),
+                      _buildProfileCard(Icons.format_list_numbered_outlined, 'Roll Number', _profileData['roll_number'] ?? _profileData['semester'] ?? 'N/A', 6),
+                      _buildProfileCard(Icons.wc_outlined, 'Gender', _profileData['gender'] ?? 'N/A', 7),
+                      _buildProfileCard(Icons.calendar_today_outlined, 'Date of Birth', _profileData['dob'] ?? 'N/A', 8),
+                      _buildProfileCard(Icons.home_outlined, 'Address', _profileData['address'] ?? 'N/A', 9),
+                      _buildProfileCard(Icons.family_restroom_outlined, 'Parent / Guardian Details', _profileData['parent_details'] ?? 'N/A', 10),
+                      _buildProfileCard(Icons.language_outlined, 'Language Preference', _profileData['language_preference'] ?? 'English', 11),
+                    ],
 
                     const SizedBox(height: 24),
+
+                    // ── Security & Biometrics ─────────────────────────
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 15),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.03),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.blueAccent.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.shield_outlined,
+                                  color: Colors.blueAccent,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 18),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'SECURITY & BIOMETRICS',
+                                      style: GoogleFonts.inter(
+                                        color: Colors.white38,
+                                        fontSize: 10,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      (_profileData['biometric_registered'] ?? false)
+                                          ? 'Biometric ID Active ✓'
+                                          : 'Biometric ID Inactive ⚠',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () async {
+                                    final session = context.read<SessionManager>();
+                                    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+                                    final token = args?['token'] ?? session.token ?? '';
+                                    final email = args?['email'] ?? session.email ?? '';
+                                    if (token.isEmpty) {
+                                      _showSuccessSnack('Demo Mode: Face registered successfully.');
+                                      return;
+                                    }
+                                    setState(() => _isLoading = true);
+                                    try {
+                                      await ApiService.registerBiometric(email, token);
+                                      if (!mounted) return;
+                                      _showSuccessSnack('Biometrics synced successfully!');
+                                      _fetchProfile();
+                                    } catch (e) {
+                                      if (!mounted) return;
+                                      setState(() => _isLoading = false);
+                                      _showErrorSnack('Failed to register biometrics: $e');
+                                    }
+                                  },
+                                  icon: const Icon(Icons.face_unlock_outlined, size: 16),
+                                  label: Text(
+                                    (_profileData['biometric_registered'] ?? false)
+                                        ? 'RE-REGISTER FACE'
+                                        : 'REGISTER FACE',
+                                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.gold,
+                                    side: const BorderSide(color: AppColors.gold, width: 1.5),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ).animate().fadeIn(delay: 750.ms).slideX(begin: 0.05),
 
                     // ── App Customization ─────────────────────────────
                     Container(

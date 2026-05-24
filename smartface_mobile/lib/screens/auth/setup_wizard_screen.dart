@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:camera/camera.dart';
 import 'dart:math';
+import 'package:provider/provider.dart';
+import '../../core/session_manager.dart';
 import '../../core/constants.dart';
 import '../../services/api_service.dart';
 
@@ -29,9 +31,41 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   final _deptController = TextEditingController();
   final _semController = TextEditingController();
   final _idController = TextEditingController();
+
+  // Student Form Controllers
+  final _usnController = TextEditingController();
+  final _courseController = TextEditingController();
+  final _sectionController = TextEditingController();
+  final _rollNoController = TextEditingController();
+  final _parentController = TextEditingController();
+  String _selectedLang = 'English';
+
+  // Teacher/Common Form Controllers
+  final _employeeIdController = TextEditingController();
+  final _designationController = TextEditingController();
+  final _specializationController = TextEditingController();
+  final _qualificationController = TextEditingController();
+  final _experienceController = TextEditingController();
+  final _genderController = TextEditingController();
+  final _addressController = TextEditingController();
+
   String selectedTheme = 'Dark';
   bool cameraPermission = false;
   bool locationPermission = false;
+
+  String _role = 'student';
+  String _email = '';
+  String _token = '';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final session = Provider.of<SessionManager>(context, listen: false);
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    _role = (args?['role'] ?? session.role ?? 'student').toString().toLowerCase();
+    _email = args?['email'] ?? session.email ?? '';
+    _token = args?['token'] ?? session.token ?? '';
+  }
 
   @override
   void initState() {
@@ -57,11 +91,62 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   }
 
   @override
-  @override
   void dispose() {
     _cameraController?.dispose();
     _pageController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    _dobController.dispose();
+    _collegeController.dispose();
+    _deptController.dispose();
+    _semController.dispose();
+    _idController.dispose();
+    _usnController.dispose();
+    _courseController.dispose();
+    _sectionController.dispose();
+    _rollNoController.dispose();
+    _parentController.dispose();
+    _employeeIdController.dispose();
+    _designationController.dispose();
+    _specializationController.dispose();
+    _qualificationController.dispose();
+    _experienceController.dispose();
+    _genderController.dispose();
+    _addressController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2005),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.gold,
+              onPrimary: Colors.black,
+              surface: AppColors.bgModal,
+              onSurface: Colors.white,
+            ),
+            dialogTheme: const DialogThemeData(
+              backgroundColor: AppColors.bgDark,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        final day = picked.day.toString().padLeft(2, '0');
+        final month = picked.month.toString().padLeft(2, '0');
+        final year = picked.year;
+        _dobController.text = "$day/$month/$year";
+      });
+    }
   }
 
   void _nextPage() async {
@@ -73,32 +158,46 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   }
 
   Future<void> _handleComplete() async {
-    final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    final email = args?['email'] ?? 'test@student.com';
-    final role = args?['role'] ?? 'student';
-    final token = args?['token'] ?? '';
-    
-    final profileData = {
-      'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'User',
+    final profileData = _role == 'teacher' ? {
+      'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'Teacher',
+      'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '1234567890',
+      'dob': _dobController.text.isNotEmpty ? _dobController.text : '1980-01-01',
+      'employee_id': _employeeIdController.text.isNotEmpty ? _employeeIdController.text : 'EMP-${1000 + Random().nextInt(9000)}',
+      'designation': _designationController.text.isNotEmpty ? _designationController.text : 'Professor',
+      'specialization': _specializationController.text.isNotEmpty ? _specializationController.text : 'Computer Science',
+      'qualification': _qualificationController.text.isNotEmpty ? _qualificationController.text : 'Ph.D.',
+      'experience': _experienceController.text.isNotEmpty ? _experienceController.text : '5',
+      'gender': _genderController.text.isNotEmpty ? _genderController.text : 'Other',
+      'address': _addressController.text.isNotEmpty ? _addressController.text : 'Campus Address',
+    } : {
+      'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'Student',
       'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '1234567890',
       'dob': _dobController.text.isNotEmpty ? _dobController.text : '2002-01-01',
+      'gender': _genderController.text.isNotEmpty ? _genderController.text : 'Other',
+      'address': _addressController.text.isNotEmpty ? _addressController.text : 'Home Address',
+      'language_preference': _selectedLang,
+      'usn': _usnController.text.isNotEmpty ? _usnController.text : 'USN-${1000 + Random().nextInt(9000)}',
+      'student_id': _usnController.text.isNotEmpty ? _usnController.text : 'USN-${1000 + Random().nextInt(9000)}',
+      'course': _courseController.text.isNotEmpty ? _courseController.text : 'B.E.',
+      'section': _sectionController.text.isNotEmpty ? _sectionController.text : 'A',
+      'roll_number': _rollNoController.text.isNotEmpty ? _rollNoController.text : '1',
+      'parent_details': _parentController.text.isNotEmpty ? _parentController.text : 'Guardian Contact',
       'college': _collegeController.text.isNotEmpty ? _collegeController.text : 'SmartFace University',
       'department': _deptController.text.isNotEmpty ? _deptController.text : 'CSE',
       'semester': _semController.text.isNotEmpty ? _semController.text : 'Semester 6',
-      'student_id': _idController.text.isNotEmpty ? _idController.text : 'SF-${DateTime.now().year}-${1000 + Random().nextInt(9000)}',
     };
 
     // Sync to MongoDB
-    if (token.isNotEmpty) {
-      await ApiService.updateProfile(profileData, token);
-      await ApiService.registerBiometric(email, token);
+    if (_token.isNotEmpty) {
+      await ApiService.updateProfile(profileData, _token);
+      await ApiService.registerBiometric(_email, _token);
     }
     
     if (mounted) {
       Navigator.pushReplacementNamed(
         context, 
         '/dashboard',
-        arguments: {'email': email, 'role': role, 'token': token},
+        arguments: {'email': _email, 'role': _role, 'token': _token},
       );
     }
   }
@@ -119,7 +218,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 children: [
                   _buildWelcomeCard(),
                   _buildPersonalCard(),
-                  _buildCollegeCard(),
+                  _role == 'teacher' ? _buildProfessionalCard() : _buildCollegeCard(),
                   _buildFaceRegistrationCard(),
                   _buildPermissionsCard(),
                   _buildThemeCard(),
@@ -170,15 +269,19 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   Widget _buildCardBase({required String title, required String subtitle, required List<Widget> children}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
-          Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 16)),
-          const SizedBox(height: 40),
-          ...children,
-        ],
+      child: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 16)),
+              const SizedBox(height: 40),
+              ...children,
+            ],
+          ),
+        ),
       ),
     ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1);
   }
@@ -213,7 +316,117 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         const SizedBox(height: 20),
         _buildInputField('Phone Number', Icons.phone_android_outlined, _phoneController),
         const SizedBox(height: 20),
-        _buildInputField('Date of Birth', Icons.calendar_today_outlined, _dobController),
+        _buildInputField(
+          'Date of Birth', 
+          Icons.calendar_today_outlined, 
+          _dobController,
+          onTap: () => _selectDate(context),
+        ),
+        const SizedBox(height: 20),
+        _buildInputField('Gender', Icons.wc_outlined, _genderController),
+        const SizedBox(height: 20),
+        _buildInputField('Address', Icons.home_outlined, _addressController),
+        const SizedBox(height: 20),
+        _buildLanguageSelector(),
+      ],
+    );
+  }
+
+  Widget _buildLanguageSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'LANGUAGE PREFERENCE',
+          style: GoogleFonts.inter(
+            color: Colors.white38,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.5,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _selectedLang = 'English'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  decoration: BoxDecoration(
+                    color: _selectedLang == 'English'
+                        ? AppColors.gold
+                        : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _selectedLang == 'English'
+                          ? AppColors.gold
+                          : Colors.transparent,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'English',
+                      style: GoogleFonts.inter(
+                        color: _selectedLang == 'English' ? Colors.black : Colors.white70,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _selectedLang = 'Kannada'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  decoration: BoxDecoration(
+                    color: _selectedLang == 'Kannada'
+                        ? AppColors.gold
+                        : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _selectedLang == 'Kannada'
+                          ? AppColors.gold
+                          : Colors.transparent,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'ಕನ್ನಡ (Kannada)',
+                      style: GoogleFonts.inter(
+                        color: _selectedLang == 'Kannada' ? Colors.black : Colors.white70,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfessionalCard() {
+    return _buildCardBase(
+      title: 'Professional Info',
+      subtitle: 'Specify your academic background.',
+      children: [
+        _buildInputField('Employee ID', Icons.badge_outlined, _employeeIdController),
+        const SizedBox(height: 20),
+        _buildInputField('Designation', Icons.work_outline, _designationController),
+        const SizedBox(height: 20),
+        _buildInputField('Subject Specialization', Icons.menu_book_outlined, _specializationController),
+        const SizedBox(height: 20),
+        _buildInputField('Qualification', Icons.school_outlined, _qualificationController),
+        const SizedBox(height: 20),
+        _buildInputField('Years of Experience', Icons.timeline_outlined, _experienceController),
       ],
     );
   }
@@ -223,13 +436,15 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       title: 'Campus Details',
       subtitle: 'Connect with your institution.',
       children: [
-        _buildInputField('Search College', Icons.search, _collegeController),
+        _buildInputField('Student ID / USN', Icons.badge_outlined, _usnController),
         const SizedBox(height: 20),
-        _buildInputField('Department', Icons.account_tree_outlined, _deptController),
+        _buildInputField('Class / Course', Icons.school_outlined, _courseController),
         const SizedBox(height: 20),
-        _buildInputField('Current Year/Sem', Icons.school_outlined, _semController),
+        _buildInputField('Section', Icons.grid_view_outlined, _sectionController),
         const SizedBox(height: 20),
-        _buildInputField('Student ID', Icons.badge_outlined, _idController),
+        _buildInputField('Roll Number', Icons.format_list_numbered_outlined, _rollNoController),
+        const SizedBox(height: 20),
+        _buildInputField('Parent / Guardian Details', Icons.family_restroom_outlined, _parentController),
       ],
     );
   }
@@ -348,9 +563,11 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     );
   }
 
-  Widget _buildInputField(String label, IconData icon, TextEditingController controller) {
+  Widget _buildInputField(String label, IconData icon, TextEditingController controller, {VoidCallback? onTap}) {
     return TextField(
       controller: controller,
+      readOnly: onTap != null,
+      onTap: onTap,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,

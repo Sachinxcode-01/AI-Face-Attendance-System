@@ -200,16 +200,39 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
                       return Dismissible(
                             key: Key(notifId),
                             onDismissed: (direction) => _dismissNotification(notifId),
+                            direction: DismissDirection.endToStart,
                             background: Container(
                               alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 30),
                               decoration: BoxDecoration(
-                                color: Colors.redAccent.withValues(alpha: 0.1),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.redAccent.withValues(alpha: 0.25),
+                                  ],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
                                 borderRadius: BorderRadius.circular(25),
                               ),
-                              child: const Icon(
-                                Icons.delete_sweep_rounded,
-                                color: Colors.redAccent,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Dismissing...  ',
+                                    style: GoogleFonts.inter(
+                                      color: Colors.redAccent,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.delete_sweep_rounded,
+                                    color: Colors.redAccent,
+                                    size: 26,
+                                  ).animate(onPlay: (c) => c.repeat()).shake(duration: 1.seconds),
+                                ],
                               ),
                             ),
                             child: _buildNotificationCard(notification),
@@ -366,11 +389,86 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
                     ),
                   ),
                 ],
+                if (type == 'leave_request') ...[
+                  const SizedBox(height: 15),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _handleLeaveAction(notification, 'Rejected'),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.redAccent, width: 1.2),
+                            foregroundColor: Colors.redAccent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'DENY',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => _handleLeaveAction(notification, 'Approved'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.greenAccent,
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'APPROVE',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _handleLeaveAction(Map<String, dynamic> notification, String status) async {
+    final leaveId = notification['leave_id'] ?? notification['id'] ?? '';
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+    );
+
+    try {
+      final res = await ApiService.actionLeave(leaveId, status, 'Actioned from Notification Nexus');
+      if (mounted) Navigator.pop(context);
+
+      if (res['detail'] == 'Connection failed') {
+        if (mounted) {
+          AppToast.show(context, message: 'Failed to connect to server', type: ToastType.error);
+        }
+      } else {
+        if (mounted) {
+          AppToast.show(
+            context,
+            message: 'Leave request $status successfully!',
+            type: ToastType.success,
+          );
+          _dismissNotification(notification['id'] ?? '');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        AppToast.show(context, message: 'Error processing action: $e', type: ToastType.error);
+      }
+    }
   }
 }

@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import '../../core/session_manager.dart';
 import '../../core/constants.dart';
 import '../../services/api_service.dart';
 
@@ -32,8 +34,9 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
   }
 
   Future<void> _fetchStudents() async {
+    final session = context.read<SessionManager>();
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    final token = args?['token'] ?? '';
+    final token = args?['token'] ?? session.token ?? '';
     
     final list = await ApiService.getStudents(token);
     if (mounted) {
@@ -80,8 +83,9 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
     }
 
     setState(() => _isUploading = true);
+    final session = context.read<SessionManager>();
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    final token = args?['token'] ?? '';
+    final token = args?['token'] ?? session.token ?? '';
     
     final res = await ApiService.uploadStudentFace(
       _selectedStudent!['email'], 
@@ -110,8 +114,9 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
 
   Future<void> _startTraining() async {
     setState(() => _isTraining = true);
+    final session = context.read<SessionManager>();
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    final token = args?['token'] ?? '';
+    final token = args?['token'] ?? session.token ?? '';
     
     final res = await ApiService.triggerTrainFaces(token);
     

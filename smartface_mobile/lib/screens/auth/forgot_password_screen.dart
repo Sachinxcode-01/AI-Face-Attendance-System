@@ -116,7 +116,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
 
     setState(() => _loading = true);
     // Step 1: verify OTP (reuse login-otp/verify endpoint logic via forgotPassword flow)
-    final res = await ApiService.resetPassword(_emailForReset, newPass);
+    final res = await ApiService.resetPassword(_emailForReset, _otpValue, newPass);
     if (!mounted) return;
     setState(() => _loading = false);
 

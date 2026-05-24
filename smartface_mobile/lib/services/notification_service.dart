@@ -13,7 +13,7 @@ class NotificationService {
   static String? get fcmToken => _fcmToken;
 
   // ─── WebSocket real-time stream ───────────────────────────────────
-  static const String _wsBaseUrl = 'ws://10.27.210.48:8000';
+  static const String _wsBaseUrl = 'ws://10.210.101.48:8000';
   WebSocketChannel? _channel;
   final _streamController = StreamController<Map<String, dynamic>>.broadcast();
 
