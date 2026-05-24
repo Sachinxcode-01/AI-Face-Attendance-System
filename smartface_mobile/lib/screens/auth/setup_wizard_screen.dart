@@ -285,7 +285,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     const SnackBar(content: Text('Processing Biometric Signatures...'), backgroundColor: AppColors.gold, duration: Duration(seconds: 2)),
                   );
                   
-                  await Future.delayed(const Duration(seconds: 2));
+                  await Future.delayed(const Duration(milliseconds: 400));
                   
                   final result = await ApiService.registerBiometric(email, token);
                   
