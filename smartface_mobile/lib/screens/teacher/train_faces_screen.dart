@@ -17,7 +17,7 @@ class TrainFacesScreen extends StatefulWidget {
 class _TrainFacesScreenState extends State<TrainFacesScreen> {
   final ImagePicker _picker = ImagePicker();
   XFile? _imageFile;
-  
+
   List<Map<String, dynamic>> _students = [];
   Map<String, dynamic>? _selectedStudent;
   bool _isLoadingStudents = true;
@@ -37,11 +37,13 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
     final session = context.read<SessionManager>();
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
     final token = args?['token'] ?? session.token ?? '';
-    
+
     final list = await ApiService.getStudents(token);
     if (mounted) {
       setState(() {
-        _students = list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _students = list
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
         _isLoadingStudents = false;
       });
     }
@@ -63,7 +65,10 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to grab image: $e'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text('Failed to grab image: $e'),
+          backgroundColor: AppColors.error,
+        ),
       );
     }
   }
@@ -71,13 +76,19 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
   Future<void> _uploadFace() async {
     if (_selectedStudent == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a student first'), backgroundColor: AppColors.error),
+        const SnackBar(
+          content: Text('Please select a student first'),
+          backgroundColor: AppColors.error,
+        ),
       );
       return;
     }
     if (_imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please capture or select a face photo'), backgroundColor: AppColors.error),
+        const SnackBar(
+          content: Text('Please capture or select a face photo'),
+          backgroundColor: AppColors.error,
+        ),
       );
       return;
     }
@@ -86,18 +97,21 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
     final session = context.read<SessionManager>();
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
     final token = args?['token'] ?? session.token ?? '';
-    
+
     final res = await ApiService.uploadStudentFace(
-      _selectedStudent!['email'], 
-      File(_imageFile!.path), 
-      token
+      _selectedStudent!['email'],
+      File(_imageFile!.path),
+      token,
     );
-    
+
     if (mounted) {
       setState(() => _isUploading = false);
       if (res.containsKey('message')) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['message']), backgroundColor: AppColors.success),
+          SnackBar(
+            content: Text(res['message']),
+            backgroundColor: AppColors.success,
+          ),
         );
         setState(() {
           _imageFile = null;
@@ -106,7 +120,10 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['detail'] ?? 'Upload failed'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text(res['detail'] ?? 'Upload failed'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -117,9 +134,9 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
     final session = context.read<SessionManager>();
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
     final token = args?['token'] ?? session.token ?? '';
-    
+
     final res = await ApiService.triggerTrainFaces(token);
-    
+
     if (mounted) {
       setState(() => _isTraining = false);
       if (res.containsKey('message')) {
@@ -129,30 +146,53 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
             backgroundColor: AppColors.bgModal,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
-              side: BorderSide(color: AppColors.gold.withValues(alpha: 0.15), width: 1.5),
+              side: BorderSide(
+                color: AppColors.gold.withValues(alpha: 0.15),
+                width: 1.5,
+              ),
             ),
             title: const Row(
               children: [
                 Icon(Icons.bolt_rounded, color: AppColors.gold, size: 28),
                 SizedBox(width: 12),
-                Text('AI TRAINING STARTED', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  'AI TRAINING STARTED',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ],
             ),
             content: const Text(
               'The face recognition neural network is now training in the background. It will recompile the student face embeddings automatically without blocking server routes.',
-              style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                height: 1.4,
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('DISMISS', style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'DISMISS',
+                  style: TextStyle(
+                    color: AppColors.gold,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['detail'] ?? 'Failed to initiate training'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text(res['detail'] ?? 'Failed to initiate training'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -165,7 +205,10 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
       appBar: AppBar(
         title: Text(
           'Train AI Faces',
-          style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -175,7 +218,9 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
         ),
       ),
       body: _isLoadingStudents
-          ? const Center(child: CircularProgressIndicator(color: AppColors.gold))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.gold),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -191,18 +236,23 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
                     ),
                   ),
                   const SizedBox(height: 15),
-                  
+
                   // Search Autocomplete Card
                   _buildGlassCard(
                     child: Autocomplete<Map<String, dynamic>>(
-                      displayStringForOption: (Map<String, dynamic> option) => "${option['full_name']} (${option['student_id']})",
+                      displayStringForOption: (Map<String, dynamic> option) =>
+                          "${option['full_name']} (${option['student_id']})",
                       optionsBuilder: (TextEditingValue textEditingValue) {
                         if (textEditingValue.text.isEmpty) {
                           return const Iterable<Map<String, dynamic>>.empty();
                         }
                         return _students.where((student) {
-                          final name = student['full_name'].toString().toLowerCase();
-                          final id = student['student_id'].toString().toLowerCase();
+                          final name = student['full_name']
+                              .toString()
+                              .toLowerCase();
+                          final id = student['student_id']
+                              .toString()
+                              .toLowerCase();
                           final search = textEditingValue.text.toLowerCase();
                           return name.contains(search) || id.contains(search);
                         });
@@ -212,29 +262,50 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
                           _selectedStudent = selection;
                         });
                       },
-                      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                        // Store the controller reference to clear it later
-                        if (_autocompleteController.text.isEmpty && controller.text.isNotEmpty) {
-                          _autocompleteController.text = controller.text;
-                        }
-                        return TextField(
-                          controller: controller,
-                          focusNode: focusNode,
-                          style: const TextStyle(color: Colors.white, fontSize: 14),
-                          decoration: InputDecoration(
-                            labelText: 'Select Student',
-                            labelStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                            prefixIcon: const Icon(Icons.person_search_outlined, color: AppColors.gold, size: 20),
-                            suffixIcon: _selectedStudent != null 
-                                ? const Icon(Icons.check_circle_outline, color: AppColors.success, size: 20)
-                                : null,
-                            filled: true,
-                            fillColor: Colors.black.withValues(alpha: 0.15),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                            contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        );
-                      },
+                      fieldViewBuilder:
+                          (context, controller, focusNode, onFieldSubmitted) {
+                            // Store the controller reference to clear it later
+                            if (_autocompleteController.text.isEmpty &&
+                                controller.text.isNotEmpty) {
+                              _autocompleteController.text = controller.text;
+                            }
+                            return TextField(
+                              controller: controller,
+                              focusNode: focusNode,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: 'Select Student',
+                                labelStyle: const TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 13,
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.person_search_outlined,
+                                  color: AppColors.gold,
+                                  size: 20,
+                                ),
+                                suffixIcon: _selectedStudent != null
+                                    ? const Icon(
+                                        Icons.check_circle_outline,
+                                        color: AppColors.success,
+                                        size: 20,
+                                      )
+                                    : null,
+                                filled: true,
+                                fillColor: Colors.black.withValues(alpha: 0.15),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide.none,
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                              ),
+                            );
+                          },
                     ),
                   ),
                   const SizedBox(height: 25),
@@ -262,7 +333,9 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
                               color: Colors.black26,
                               borderRadius: BorderRadius.circular(24),
                               border: Border.all(
-                                color: _imageFile != null ? AppColors.gold : Colors.white10,
+                                color: _imageFile != null
+                                    ? AppColors.gold
+                                    : Colors.white10,
                                 width: 1.5,
                               ),
                               image: _imageFile != null
@@ -287,27 +360,54 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: () => _pickImage(ImageSource.camera),
-                                icon: const Icon(Icons.camera_alt_outlined, size: 18),
-                                label: const Text('CAMERA', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                icon: const Icon(
+                                  Icons.camera_alt_outlined,
+                                  size: 18,
+                                ),
+                                label: const Text(
+                                  'CAMERA',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: Colors.white,
                                   side: const BorderSide(color: Colors.white12),
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                 ),
                               ),
                             ),
                             const SizedBox(width: 15),
                             Expanded(
                               child: OutlinedButton.icon(
-                                onPressed: () => _pickImage(ImageSource.gallery),
-                                icon: const Icon(Icons.photo_library_outlined, size: 18),
-                                label: const Text('GALLERY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                onPressed: () =>
+                                    _pickImage(ImageSource.gallery),
+                                icon: const Icon(
+                                  Icons.photo_library_outlined,
+                                  size: 18,
+                                ),
+                                label: const Text(
+                                  'GALLERY',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: Colors.white,
                                   side: const BorderSide(color: Colors.white12),
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                 ),
                               ),
                             ),
@@ -323,49 +423,72 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
                     width: double.infinity,
                     height: 58,
                     child: ElevatedButton.icon(
-                      onPressed: (_isUploading || _isTraining) ? null : _uploadFace,
+                      onPressed: (_isUploading || _isTraining)
+                          ? null
+                          : _uploadFace,
                       icon: _isUploading
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.black,
+                              ),
                             )
                           : const Icon(Icons.cloud_upload_outlined),
                       label: Text(
                         _isUploading ? 'UPLOADING...' : 'UPLOAD FACE PHOTO',
-                        style: GoogleFonts.inter(fontWeight: FontWeight.bold, letterSpacing: 1),
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.gold,
                         foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         elevation: 4,
                       ),
                     ),
                   ),
                   const SizedBox(height: 15),
-                  
+
                   // Train button
                   SizedBox(
                     width: double.infinity,
                     height: 58,
                     child: OutlinedButton.icon(
-                      onPressed: (_isUploading || _isTraining) ? null : _startTraining,
+                      onPressed: (_isUploading || _isTraining)
+                          ? null
+                          : _startTraining,
                       icon: _isTraining
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.gold,
+                              ),
                             )
                           : const Icon(Icons.bolt_rounded),
                       label: Text(
                         _isTraining ? 'TRAINING...' : 'RE-TRAIN NEURAL ENGINE',
-                        style: GoogleFonts.inter(fontWeight: FontWeight.bold, letterSpacing: 1),
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.gold,
-                        side: const BorderSide(color: AppColors.gold, width: 1.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        side: const BorderSide(
+                          color: AppColors.gold,
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
                     ),
                   ),
@@ -381,7 +504,10 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF0F152B).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.04), width: 1.2),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.04),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),

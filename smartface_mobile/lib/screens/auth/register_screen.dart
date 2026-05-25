@@ -118,15 +118,27 @@ class _RegisterScreenState extends State<RegisterScreen>
       return;
     }
     if (_passCtrl.text.isEmpty) {
-      AppToast.show(context, message: 'Password cannot be empty', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Password cannot be empty',
+        type: ToastType.warning,
+      );
       return;
     }
     if (_passStrength < 0.5) {
-      AppToast.show(context, message: 'Password too weak — please choose a stronger one', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Password too weak — please choose a stronger one',
+        type: ToastType.warning,
+      );
       return;
     }
     if (_passCtrl.text != _confirmPassCtrl.text) {
-      AppToast.show(context, message: 'Passwords do not match', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'Passwords do not match',
+        type: ToastType.error,
+      );
       HapticFeedback.vibrate();
       return;
     }
@@ -152,7 +164,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           message: 'Account created. Signing in...',
           type: ToastType.success,
         );
-        
+
         try {
           final loginResult = await ApiService.loginWithPassword(
             _emailCtrl.text.trim(),
@@ -169,9 +181,12 @@ class _RegisterScreenState extends State<RegisterScreen>
               role: loginResult['role'],
             );
             if (!mounted) return;
-            final bool biometricRegistered = loginResult['biometric_registered'] ?? false;
-            final String targetRoute = biometricRegistered ? '/dashboard' : '/setup';
-            
+            final bool biometricRegistered =
+                loginResult['biometric_registered'] ?? false;
+            final String targetRoute = biometricRegistered
+                ? '/dashboard'
+                : '/setup';
+
             Navigator.pushNamedAndRemoveUntil(
               context,
               targetRoute,
@@ -195,7 +210,11 @@ class _RegisterScreenState extends State<RegisterScreen>
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'Error: ${e.toString().replaceAll("Exception: ", "")}', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'Error: ${e.toString().replaceAll("Exception: ", "")}',
+        type: ToastType.error,
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -205,28 +224,37 @@ class _RegisterScreenState extends State<RegisterScreen>
     setState(() => _isLoading = true);
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn(
-        serverClientId: '153684832501-4mikvqi78kam3j1tcmnab7gp1o3e7mnt.apps.googleusercontent.com',
+        serverClientId:
+            '153684832501-4mikvqi78kam3j1tcmnab7gp1o3e7mnt.apps.googleusercontent.com',
       ).signIn();
       if (googleUser == null) {
         setState(() => _isLoading = false);
         return;
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-      
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
       if (userCredential.user != null) {
         final email = userCredential.user!.email ?? '';
         final name = userCredential.user!.displayName ?? 'User';
         final photoUrl = userCredential.user!.photoURL;
-        
-        final result = await ApiService.googleLogin(email, name, _selectedRole, avatarUrl: photoUrl);
-        
+
+        final result = await ApiService.googleLogin(
+          email,
+          name,
+          _selectedRole,
+          avatarUrl: photoUrl,
+        );
+
         if (result.containsKey('access_token')) {
           if (!mounted) return;
           final session = context.read<SessionManager>();
@@ -236,15 +264,18 @@ class _RegisterScreenState extends State<RegisterScreen>
             role: result['role'],
           );
           if (!mounted) return;
-          final bool biometricRegistered = result['biometric_registered'] ?? false;
-          final String targetRoute = biometricRegistered ? '/dashboard' : '/setup';
+          final bool biometricRegistered =
+              result['biometric_registered'] ?? false;
+          final String targetRoute = biometricRegistered
+              ? '/dashboard'
+              : '/setup';
           Navigator.pushReplacementNamed(
-            context, 
+            context,
             targetRoute,
             arguments: {
-              'role': result['role'], 
-              'token': result['access_token'], 
-              'email': email
+              'role': result['role'],
+              'token': result['access_token'],
+              'email': email,
             },
           );
         } else {
@@ -253,7 +284,11 @@ class _RegisterScreenState extends State<RegisterScreen>
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'Google Sign-In failed: $e', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'Google Sign-In failed: $e',
+        type: ToastType.error,
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -302,7 +337,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                     // Back button
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white70),
+                      icon: const Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.white70,
+                      ),
                       padding: EdgeInsets.zero,
                     ),
                     const SizedBox(height: 12),
@@ -318,7 +356,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                     ).animate().fadeIn().slideX(begin: -0.1),
                     Text(
                       'Create your institutional account',
-                      style: GoogleFonts.inter(fontSize: 15, color: Colors.white38),
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        color: Colors.white38,
+                      ),
                     ).animate().fadeIn(delay: 150.ms),
 
                     const SizedBox(height: 36),
@@ -335,7 +376,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                           _nameValid = _nameCtrl.text.trim().length >= 2;
                         });
                       },
-                      errorText: _nameTouched && !_nameValid ? 'Enter a valid full name' : null,
+                      errorText: _nameTouched && !_nameValid
+                          ? 'Enter a valid full name'
+                          : null,
                       isValid: _nameTouched && _nameValid,
                     ).animate().fadeIn(delay: 200.ms).slideX(begin: 0.05),
 
@@ -354,7 +397,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                           _emailValid = _isValidEmail(_emailCtrl.text.trim());
                         });
                       },
-                      errorText: _emailTouched && !_emailValid ? 'Enter a valid email address' : null,
+                      errorText: _emailTouched && !_emailValid
+                          ? 'Enter a valid email address'
+                          : null,
                       isValid: _emailTouched && _emailValid,
                     ).animate().fadeIn(delay: 250.ms).slideX(begin: 0.05),
 
@@ -368,7 +413,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                       icon: Icons.lock_outline,
                       isPassword: true,
                       showPass: _showPass,
-                      onTogglePass: () => setState(() => _showPass = !_showPass),
+                      onTogglePass: () =>
+                          setState(() => _showPass = !_showPass),
                     ).animate().fadeIn(delay: 300.ms).slideX(begin: 0.05),
 
                     // Strength bar
@@ -382,12 +428,15 @@ class _RegisterScreenState extends State<RegisterScreen>
                               child: TweenAnimationBuilder<double>(
                                 tween: Tween(begin: 0, end: _passStrength),
                                 duration: 300.ms,
-                                builder: (ctx, val, _) => LinearProgressIndicator(
-                                  value: val,
-                                  minHeight: 5,
-                                  backgroundColor: Colors.white12,
-                                  valueColor: AlwaysStoppedAnimation<Color>(_passStrengthColor),
-                                ),
+                                builder: (ctx, val, _) =>
+                                    LinearProgressIndicator(
+                                      value: val,
+                                      minHeight: 5,
+                                      backgroundColor: Colors.white12,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        _passStrengthColor,
+                                      ),
+                                    ),
                               ),
                             ),
                           ),
@@ -416,7 +465,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                       icon: Icons.lock_outline,
                       isPassword: true,
                       showPass: _showConfirmPass,
-                      onTogglePass: () => setState(() => _showConfirmPass = !_showConfirmPass),
+                      onTogglePass: () =>
+                          setState(() => _showConfirmPass = !_showConfirmPass),
                     ).animate().fadeIn(delay: 350.ms).slideX(begin: 0.05),
 
                     const SizedBox(height: 28),
@@ -442,7 +492,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                             },
                             child: AnimatedContainer(
                               duration: 250.ms,
-                              margin: EdgeInsets.only(right: role == 'Student' ? 10 : 0),
+                              margin: EdgeInsets.only(
+                                right: role == 'Student' ? 10 : 0,
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               decoration: BoxDecoration(
                                 color: isSelected
@@ -455,22 +507,36 @@ class _RegisterScreenState extends State<RegisterScreen>
                                       : Colors.white.withValues(alpha: 0.08),
                                 ),
                                 boxShadow: isSelected
-                                    ? [BoxShadow(color: AppColors.gold.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]
+                                    ? [
+                                        BoxShadow(
+                                          color: AppColors.gold.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ]
                                     : [],
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    role == 'Student' ? Icons.school_outlined : Icons.person_pin_outlined,
-                                    color: isSelected ? Colors.black : Colors.white54,
+                                    role == 'Student'
+                                        ? Icons.school_outlined
+                                        : Icons.person_pin_outlined,
+                                    color: isSelected
+                                        ? Colors.black
+                                        : Colors.white54,
                                     size: 18,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     role,
                                     style: GoogleFonts.inter(
-                                      color: isSelected ? Colors.black : Colors.white70,
+                                      color: isSelected
+                                          ? Colors.black
+                                          : Colors.white70,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                     ),
@@ -493,9 +559,13 @@ class _RegisterScreenState extends State<RegisterScreen>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.gold,
                           foregroundColor: Colors.black,
-                          disabledBackgroundColor: AppColors.gold.withValues(alpha: 0.4),
+                          disabledBackgroundColor: AppColors.gold.withValues(
+                            alpha: 0.4,
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 18),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
                           elevation: 8,
                           shadowColor: AppColors.gold.withValues(alpha: 0.4),
                         ),
@@ -524,15 +594,23 @@ class _RegisterScreenState extends State<RegisterScreen>
                     // OR divider
                     Row(
                       children: [
-                        const Expanded(child: Divider(color: Colors.white12, thickness: 1)),
+                        const Expanded(
+                          child: Divider(color: Colors.white12, thickness: 1),
+                        ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             'OR CONTINUE WITH',
-                            style: GoogleFonts.inter(color: Colors.white38, fontSize: 11, letterSpacing: 1),
+                            style: GoogleFonts.inter(
+                              color: Colors.white38,
+                              fontSize: 11,
+                              letterSpacing: 1,
+                            ),
                           ),
                         ),
-                        const Expanded(child: Divider(color: Colors.white12, thickness: 1)),
+                        const Expanded(
+                          child: Divider(color: Colors.white12, thickness: 1),
+                        ),
                       ],
                     ).animate().fadeIn(delay: 550.ms),
 
@@ -546,7 +624,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Colors.white12),
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -591,12 +671,18 @@ class _RegisterScreenState extends State<RegisterScreen>
                         onTap: () => Navigator.pop(context),
                         child: RichText(
                           text: TextSpan(
-                            style: GoogleFonts.inter(color: Colors.white38, fontSize: 13),
+                            style: GoogleFonts.inter(
+                              color: Colors.white38,
+                              fontSize: 13,
+                            ),
                             children: const [
                               TextSpan(text: 'Already have an account? '),
                               TextSpan(
                                 text: 'Sign In',
-                                style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: AppColors.gold,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -654,10 +740,10 @@ class _RegisterScreenState extends State<RegisterScreen>
           final borderCol = hasError
               ? AppColors.error
               : isFocused
-                  ? AppColors.gold
-                  : isValid
-                      ? AppColors.success
-                      : Colors.white.withValues(alpha: 0.08);
+              ? AppColors.gold
+              : isValid
+              ? AppColors.success
+              : Colors.white.withValues(alpha: 0.08);
 
           return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -673,7 +759,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                         color: AppColors.gold.withValues(alpha: 0.06),
                         blurRadius: 10,
                         spreadRadius: 1,
-                      )
+                      ),
                     ]
                   : [],
             ),
@@ -681,35 +767,58 @@ class _RegisterScreenState extends State<RegisterScreen>
               controller: controller,
               obscureText: isPassword && !showPass,
               keyboardType: keyboardType,
-              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.2), fontSize: 13),
-                prefixIcon: Icon(icon, color: isFocused ? AppColors.gold : Colors.white38, size: 20),
+                hintStyle: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  fontSize: 13,
+                ),
+                prefixIcon: Icon(
+                  icon,
+                  color: isFocused ? AppColors.gold : Colors.white38,
+                  size: 20,
+                ),
                 suffixIcon: isPassword
                     ? IconButton(
                         icon: Icon(
-                          showPass ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          showPass
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
                           color: Colors.white38,
                           size: 20,
                         ),
                         onPressed: onTogglePass,
                       )
                     : isValid
-                        ? const Icon(Icons.check_circle_outline, color: AppColors.successLight, size: 20)
-                        : null,
+                    ? const Icon(
+                        Icons.check_circle_outline,
+                        color: AppColors.successLight,
+                        size: 20,
+                      )
+                    : null,
                 filled: true,
                 fillColor: Colors.black.withValues(alpha: 0.15),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 18,
+                ),
                 errorText: errorText,
-                errorStyle: GoogleFonts.inter(color: AppColors.errorLight, fontSize: 11),
+                errorStyle: GoogleFonts.inter(
+                  color: AppColors.errorLight,
+                  fontSize: 11,
+                ),
               ),
             ),
           );
-        }
+        },
       ),
     );
   }

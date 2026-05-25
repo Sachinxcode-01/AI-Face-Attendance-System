@@ -31,7 +31,11 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
   }
 
   Future<void> _handleAction(String leaveId, String status) async {
-    final result = await ApiService.actionLeave(leaveId, status, "Processed via Teacher Portal");
+    final result = await ApiService.actionLeave(
+      leaveId,
+      status,
+      "Processed via Teacher Portal",
+    );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(result['message'] ?? 'Action successful')),
@@ -47,13 +51,12 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0A0E21),
-            Color(0xFF1D2671),
-          ],
+          colors: [Color(0xFF0A0E21), Color(0xFF1D2671)],
         ),
         image: DecorationImage(
-          image: const NetworkImage('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80'),
+          image: const NetworkImage(
+            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
+          ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
             Colors.black.withValues(alpha: 0.15),
@@ -64,23 +67,28 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-        title: Text('Leave Approval', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFFD700)))
-          : _pendingLeaves.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: _pendingLeaves.length,
-                  itemBuilder: (context, index) {
-                    return _buildReviewCard(_pendingLeaves[index])
-                        .animate()
-                        .fadeIn(delay: (index * 150).ms)
-                        .slideY(begin: 0.1);
-                  },
-                ),
+          title: Text(
+            'Leave Approval',
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: Colors.transparent,
+        ),
+        body: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFFFFD700)),
+              )
+            : _pendingLeaves.isEmpty
+            ? _buildEmptyState()
+            : ListView.builder(
+                padding: const EdgeInsets.all(20),
+                itemCount: _pendingLeaves.length,
+                itemBuilder: (context, index) {
+                  return _buildReviewCard(_pendingLeaves[index])
+                      .animate()
+                      .fadeIn(delay: (index * 150).ms)
+                      .slideY(begin: 0.1);
+                },
+              ),
       ),
     );
   }
@@ -90,10 +98,20 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.done_all_rounded, color: Colors.greenAccent.withValues(alpha: 0.5), size: 64),
+          Icon(
+            Icons.done_all_rounded,
+            color: Colors.greenAccent.withValues(alpha: 0.5),
+            size: 64,
+          ),
           const SizedBox(height: 16),
-          Text('All caught up!', style: GoogleFonts.inter(fontSize: 18, color: Colors.white54)),
-          const Text('No pending leave requests.', style: TextStyle(color: Colors.white24, fontSize: 12)),
+          Text(
+            'All caught up!',
+            style: GoogleFonts.inter(fontSize: 18, color: Colors.white54),
+          ),
+          const Text(
+            'No pending leave requests.',
+            style: TextStyle(color: Colors.white24, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -115,15 +133,31 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
             children: [
               CircleAvatar(
                 backgroundColor: const Color(0xFFFFD700),
-                child: Text(request['user_id']?[0].toUpperCase() ?? 'S', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                child: Text(
+                  request['user_id']?[0].toUpperCase() ?? 'S',
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(request['user_id'] ?? 'Student', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                    const Text('Request Details', style: TextStyle(color: Colors.white38, fontSize: 12)),
+                    Text(
+                      request['user_id'] ?? 'Student',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const Text(
+                      'Request Details',
+                      style: TextStyle(color: Colors.white38, fontSize: 12),
+                    ),
                   ],
                 ),
               ),
@@ -132,12 +166,21 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
           const SizedBox(height: 20),
           Text(
             'DURATION: ${request['start_date']} to ${request['end_date']}',
-            style: const TextStyle(color: Color(0xFFFFD700), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
+            style: const TextStyle(
+              color: Color(0xFFFFD700),
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
             request['reason'] ?? 'No reason provided',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14, height: 1.5),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.8),
+              fontSize: 14,
+              height: 1.5,
+            ),
           ),
           const SizedBox(height: 24),
           Row(
@@ -149,7 +192,9 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                     foregroundColor: Colors.redAccent,
                     side: const BorderSide(color: Colors.redAccent),
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: const Text('REJECT'),
                 ),
@@ -162,9 +207,14 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                     backgroundColor: Colors.greenAccent,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const Text('APPROVE', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'APPROVE',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],

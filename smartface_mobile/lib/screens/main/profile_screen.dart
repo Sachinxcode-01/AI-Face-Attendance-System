@@ -98,9 +98,9 @@ class _ProfileScreenState extends State<ProfileScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading profile: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading profile: $e')));
     }
   }
 
@@ -120,7 +120,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: Colors.white24,
                 borderRadius: BorderRadius.circular(2),
@@ -269,54 +270,95 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _showSuccessSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Row(children: [
-        const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
-        const SizedBox(width: 10),
-        Expanded(child: Text(msg, style: GoogleFonts.inter())),
-      ]),
-      backgroundColor: const Color(0xFF1A8F5E),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(
+              Icons.check_circle_outline,
+              color: Colors.white,
+              size: 18,
+            ),
+            const SizedBox(width: 10),
+            Expanded(child: Text(msg, style: GoogleFonts.inter())),
+          ],
+        ),
+        backgroundColor: const Color(0xFF1A8F5E),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
   }
 
   void _showErrorSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Row(children: [
-        const Icon(Icons.error_outline, color: Colors.white, size: 18),
-        const SizedBox(width: 10),
-        Expanded(child: Text(msg, style: GoogleFonts.inter())),
-      ]),
-      backgroundColor: Colors.redAccent.shade700,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 18),
+            const SizedBox(width: 10),
+            Expanded(child: Text(msg, style: GoogleFonts.inter())),
+          ],
+        ),
+        backgroundColor: Colors.redAccent.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
   }
 
   void _showEditProfileSheet() {
-    final isTeacher = (_profileData['role'] ?? '').toString().toLowerCase() == 'teacher';
+    final isTeacher =
+        (_profileData['role'] ?? '').toString().toLowerCase() == 'teacher';
 
-    final nameCtrl = TextEditingController(text: _profileData['full_name'] ?? '');
+    final nameCtrl = TextEditingController(
+      text: _profileData['full_name'] ?? '',
+    );
     final phoneCtrl = TextEditingController(text: _profileData['phone'] ?? '');
     final dobCtrl = TextEditingController(text: _profileData['dob'] ?? '');
-    final genderCtrl = TextEditingController(text: _profileData['gender'] ?? '');
-    final addressCtrl = TextEditingController(text: _profileData['address'] ?? '');
-    final langCtrl = TextEditingController(text: _profileData['language_preference'] ?? 'English');
+    final genderCtrl = TextEditingController(
+      text: _profileData['gender'] ?? '',
+    );
+    final addressCtrl = TextEditingController(
+      text: _profileData['address'] ?? '',
+    );
+    final langCtrl = TextEditingController(
+      text: _profileData['language_preference'] ?? 'English',
+    );
 
     // Student fields
-    final usnCtrl = TextEditingController(text: _profileData['usn'] ?? _profileData['student_id'] ?? '');
-    final courseCtrl = TextEditingController(text: _profileData['course'] ?? '');
-    final sectionCtrl = TextEditingController(text: _profileData['section'] ?? '');
-    final rollNoCtrl = TextEditingController(text: _profileData['roll_number'] ?? '');
-    final parentCtrl = TextEditingController(text: _profileData['parent_details'] ?? '');
+    final usnCtrl = TextEditingController(
+      text: _profileData['usn'] ?? _profileData['student_id'] ?? '',
+    );
+    final courseCtrl = TextEditingController(
+      text: _profileData['course'] ?? '',
+    );
+    final sectionCtrl = TextEditingController(
+      text: _profileData['section'] ?? '',
+    );
+    final rollNoCtrl = TextEditingController(
+      text: _profileData['roll_number'] ?? '',
+    );
+    final parentCtrl = TextEditingController(
+      text: _profileData['parent_details'] ?? '',
+    );
 
     // Teacher fields
-    final employeeIdCtrl = TextEditingController(text: _profileData['employee_id'] ?? '');
-    final designationCtrl = TextEditingController(text: _profileData['designation'] ?? '');
-    final specializationCtrl = TextEditingController(text: _profileData['specialization'] ?? '');
-    final qualificationCtrl = TextEditingController(text: _profileData['qualification'] ?? '');
-    final experienceCtrl = TextEditingController(text: _profileData['experience'] ?? '');
+    final employeeIdCtrl = TextEditingController(
+      text: _profileData['employee_id'] ?? '',
+    );
+    final designationCtrl = TextEditingController(
+      text: _profileData['designation'] ?? '',
+    );
+    final specializationCtrl = TextEditingController(
+      text: _profileData['specialization'] ?? '',
+    );
+    final qualificationCtrl = TextEditingController(
+      text: _profileData['qualification'] ?? '',
+    );
+    final experienceCtrl = TextEditingController(
+      text: _profileData['experience'] ?? '',
+    );
 
     showModalBottomSheet(
       context: context,
@@ -324,7 +366,9 @@ class _ProfileScreenState extends State<ProfileScreen>
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
           child: Container(
             height: MediaQuery.of(context).size.height * 0.78,
             decoration: const BoxDecoration(
@@ -335,7 +379,9 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
             ),
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(30),
+              ),
               child: Scaffold(
                 backgroundColor: Colors.transparent,
                 appBar: AppBar(
@@ -354,17 +400,28 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 ),
                 body: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 10.0,
+                  ),
                   child: Column(
                     children: [
                       const SizedBox(height: 10),
-                      _buildModalTextField('Full Name', Icons.person_outline, nameCtrl),
-                      const SizedBox(height: 15),
-                      _buildModalTextField('Phone Number', Icons.phone_android_outlined, phoneCtrl),
+                      _buildModalTextField(
+                        'Full Name',
+                        Icons.person_outline,
+                        nameCtrl,
+                      ),
                       const SizedBox(height: 15),
                       _buildModalTextField(
-                        'Date of Birth', 
-                        Icons.calendar_today_outlined, 
+                        'Phone Number',
+                        Icons.phone_android_outlined,
+                        phoneCtrl,
+                      ),
+                      const SizedBox(height: 15),
+                      _buildModalTextField(
+                        'Date of Birth',
+                        Icons.calendar_today_outlined,
                         dobCtrl,
                         onTap: () async {
                           final DateTime? picked = await showDatePicker(
@@ -391,25 +448,46 @@ class _ProfileScreenState extends State<ProfileScreen>
                           );
                           if (picked != null) {
                             final day = picked.day.toString().padLeft(2, '0');
-                            final month = picked.month.toString().padLeft(2, '0');
+                            final month = picked.month.toString().padLeft(
+                              2,
+                              '0',
+                            );
                             final year = picked.year;
                             dobCtrl.text = "$day/$month/$year";
                           }
                         },
                       ),
                       const SizedBox(height: 15),
-                      _buildModalTextField('Gender', Icons.wc_outlined, genderCtrl),
+                      _buildModalTextField(
+                        'Gender',
+                        Icons.wc_outlined,
+                        genderCtrl,
+                      ),
                       const SizedBox(height: 15),
-                      _buildModalTextField('Address', Icons.home_outlined, addressCtrl),
+                      _buildModalTextField(
+                        'Address',
+                        Icons.home_outlined,
+                        addressCtrl,
+                      ),
                       const SizedBox(height: 15),
                       DropdownButtonFormField<String>(
-                        initialValue: ['English', 'Kannada'].contains(langCtrl.text) ? langCtrl.text : 'English',
+                        initialValue:
+                            ['English', 'Kannada'].contains(langCtrl.text)
+                            ? langCtrl.text
+                            : 'English',
                         dropdownColor: AppColors.bgModal,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: 'Language Preference',
-                          labelStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                          prefixIcon: const Icon(Icons.language_outlined, color: AppColors.gold, size: 20),
+                          labelStyle: const TextStyle(
+                            color: Colors.white38,
+                            fontSize: 13,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.language_outlined,
+                            color: AppColors.gold,
+                            size: 20,
+                          ),
                           filled: true,
                           fillColor: Colors.white.withValues(alpha: 0.03),
                           enabledBorder: OutlineInputBorder(
@@ -418,12 +496,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: AppColors.gold, width: 1),
+                            borderSide: const BorderSide(
+                              color: AppColors.gold,
+                              width: 1,
+                            ),
                           ),
                         ),
                         items: const [
-                          DropdownMenuItem(value: 'English', child: Text('English')),
-                          DropdownMenuItem(value: 'Kannada', child: Text('Kannada')),
+                          DropdownMenuItem(
+                            value: 'English',
+                            child: Text('English'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Kannada',
+                            child: Text('Kannada'),
+                          ),
                         ],
                         onChanged: (val) {
                           if (val != null) {
@@ -433,25 +520,65 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                       const SizedBox(height: 15),
                       if (isTeacher) ...[
-                        _buildModalTextField('Employee ID', Icons.badge_outlined, employeeIdCtrl),
+                        _buildModalTextField(
+                          'Employee ID',
+                          Icons.badge_outlined,
+                          employeeIdCtrl,
+                        ),
                         const SizedBox(height: 15),
-                        _buildModalTextField('Designation', Icons.work_outline, designationCtrl),
+                        _buildModalTextField(
+                          'Designation',
+                          Icons.work_outline,
+                          designationCtrl,
+                        ),
                         const SizedBox(height: 15),
-                        _buildModalTextField('Subject Specialization', Icons.menu_book_outlined, specializationCtrl),
+                        _buildModalTextField(
+                          'Subject Specialization',
+                          Icons.menu_book_outlined,
+                          specializationCtrl,
+                        ),
                         const SizedBox(height: 15),
-                        _buildModalTextField('Qualification', Icons.school_outlined, qualificationCtrl),
+                        _buildModalTextField(
+                          'Qualification',
+                          Icons.school_outlined,
+                          qualificationCtrl,
+                        ),
                         const SizedBox(height: 15),
-                        _buildModalTextField('Years of Experience', Icons.timeline_outlined, experienceCtrl),
+                        _buildModalTextField(
+                          'Years of Experience',
+                          Icons.timeline_outlined,
+                          experienceCtrl,
+                        ),
                       ] else ...[
-                        _buildModalTextField('Student ID / USN', Icons.badge_outlined, usnCtrl),
+                        _buildModalTextField(
+                          'Student ID / USN',
+                          Icons.badge_outlined,
+                          usnCtrl,
+                        ),
                         const SizedBox(height: 15),
-                        _buildModalTextField('Class / Course', Icons.school_outlined, courseCtrl),
+                        _buildModalTextField(
+                          'Class / Course',
+                          Icons.school_outlined,
+                          courseCtrl,
+                        ),
                         const SizedBox(height: 15),
-                        _buildModalTextField('Section', Icons.grid_view_outlined, sectionCtrl),
+                        _buildModalTextField(
+                          'Section',
+                          Icons.grid_view_outlined,
+                          sectionCtrl,
+                        ),
                         const SizedBox(height: 15),
-                        _buildModalTextField('Roll Number', Icons.format_list_numbered_outlined, rollNoCtrl),
+                        _buildModalTextField(
+                          'Roll Number',
+                          Icons.format_list_numbered_outlined,
+                          rollNoCtrl,
+                        ),
                         const SizedBox(height: 15),
-                        _buildModalTextField('Parent / Guardian Details', Icons.family_restroom_outlined, parentCtrl),
+                        _buildModalTextField(
+                          'Parent / Guardian Details',
+                          Icons.family_restroom_outlined,
+                          parentCtrl,
+                        ),
                       ],
                       const SizedBox(height: 35),
                       SizedBox(
@@ -468,44 +595,56 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ),
                           onPressed: () async {
                             final session = this.context.read<SessionManager>();
-                            final args = ModalRoute.of(this.context)?.settings.arguments as Map?;
+                            final args =
+                                ModalRoute.of(this.context)?.settings.arguments
+                                    as Map?;
                             final token = args?['token'] ?? session.token ?? '';
-                            final updatedData = isTeacher ? {
-                              'full_name': nameCtrl.text.trim(),
-                              'phone': phoneCtrl.text.trim(),
-                              'dob': dobCtrl.text.trim(),
-                              'gender': genderCtrl.text.trim(),
-                              'address': addressCtrl.text.trim(),
-                              'language_preference': langCtrl.text.trim(),
-                              'employee_id': employeeIdCtrl.text.trim(),
-                              'designation': designationCtrl.text.trim(),
-                              'specialization': specializationCtrl.text.trim(),
-                              'qualification': qualificationCtrl.text.trim(),
-                              'experience': experienceCtrl.text.trim(),
-                            } : {
-                              'full_name': nameCtrl.text.trim(),
-                              'phone': phoneCtrl.text.trim(),
-                              'dob': dobCtrl.text.trim(),
-                              'gender': genderCtrl.text.trim(),
-                              'address': addressCtrl.text.trim(),
-                              'language_preference': langCtrl.text.trim(),
-                              'usn': usnCtrl.text.trim(),
-                              'student_id': usnCtrl.text.trim(),
-                              'course': courseCtrl.text.trim(),
-                              'section': sectionCtrl.text.trim(),
-                              'roll_number': rollNoCtrl.text.trim(),
-                              'parent_details': parentCtrl.text.trim(),
-                            };
+                            final updatedData = isTeacher
+                                ? {
+                                    'full_name': nameCtrl.text.trim(),
+                                    'phone': phoneCtrl.text.trim(),
+                                    'dob': dobCtrl.text.trim(),
+                                    'gender': genderCtrl.text.trim(),
+                                    'address': addressCtrl.text.trim(),
+                                    'language_preference': langCtrl.text.trim(),
+                                    'employee_id': employeeIdCtrl.text.trim(),
+                                    'designation': designationCtrl.text.trim(),
+                                    'specialization': specializationCtrl.text
+                                        .trim(),
+                                    'qualification': qualificationCtrl.text
+                                        .trim(),
+                                    'experience': experienceCtrl.text.trim(),
+                                  }
+                                : {
+                                    'full_name': nameCtrl.text.trim(),
+                                    'phone': phoneCtrl.text.trim(),
+                                    'dob': dobCtrl.text.trim(),
+                                    'gender': genderCtrl.text.trim(),
+                                    'address': addressCtrl.text.trim(),
+                                    'language_preference': langCtrl.text.trim(),
+                                    'usn': usnCtrl.text.trim(),
+                                    'student_id': usnCtrl.text.trim(),
+                                    'course': courseCtrl.text.trim(),
+                                    'section': sectionCtrl.text.trim(),
+                                    'roll_number': rollNoCtrl.text.trim(),
+                                    'parent_details': parentCtrl.text.trim(),
+                                  };
                             Navigator.pop(context);
                             setState(() => _isLoading = true);
                             try {
                               if (token.isNotEmpty) {
-                                await ApiService.updateProfile(updatedData, token);
+                                await ApiService.updateProfile(
+                                  updatedData,
+                                  token,
+                                );
                               }
                               if (!mounted) return;
                               ScaffoldMessenger.of(this.context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Profile synced successfully!', style: GoogleFonts.inter()),
+                                  content: Text(
+                                    'Profile synced successfully!',
+                                    style: GoogleFonts.inter(),
+                                  ),
                                   backgroundColor: const Color(0xFF1A8F5E),
                                 ),
                               );
@@ -539,7 +678,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildModalTextField(String label, IconData icon, TextEditingController controller, {VoidCallback? onTap}) {
+  Widget _buildModalTextField(
+    String label,
+    IconData icon,
+    TextEditingController controller, {
+    VoidCallback? onTap,
+  }) {
     return TextField(
       controller: controller,
       readOnly: onTap != null,
@@ -568,7 +712,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ──────────────────────────────────────────────────────────────────
   Widget _buildAvatarSection(String initials) {
     final String? networkAvatarUrl = _profileData['avatar_url'] as String?;
-    final hasNetworkAvatar = networkAvatarUrl != null && networkAvatarUrl.isNotEmpty;
+    final hasNetworkAvatar =
+        networkAvatarUrl != null && networkAvatarUrl.isNotEmpty;
     final hasLocalPreview = _localAvatarFile != null;
 
     ImageProvider? avatarImage;
@@ -609,13 +754,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: (_isDragOver
-                                  ? Colors.cyanAccent
-                                  : AppColors.gold)
-                              .withValues(
-                                  alpha: _isUploading
-                                      ? 0.15 + 0.25 * _pulseController.value
-                                      : (_isDragOver ? 0.4 : 0.2)),
+                          color:
+                              (_isDragOver ? Colors.cyanAccent : AppColors.gold)
+                                  .withValues(
+                                    alpha: _isUploading
+                                        ? 0.15 + 0.25 * _pulseController.value
+                                        : (_isDragOver ? 0.4 : 0.2),
+                                  ),
                           blurRadius: _isUploading ? 40 : 20,
                           spreadRadius: _isUploading ? 8 : 4,
                         ),
@@ -630,9 +775,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: _isDragOver
-                            ? Colors.cyanAccent
-                            : AppColors.gold,
+                        color: _isDragOver ? Colors.cyanAccent : AppColors.gold,
                         width: _isDragOver ? 3 : 2,
                       ),
                     ),
@@ -744,7 +887,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget build(BuildContext context) {
     final themeCtrl = context.watch<ThemeController>();
     final isDark = themeCtrl.isDark;
-    final isTeacher = (_profileData['role'] ?? '').toString().toLowerCase() == 'teacher';
+    final isTeacher =
+        (_profileData['role'] ?? '').toString().toLowerCase() == 'teacher';
     final initials = (_profileData['full_name'] ?? 'U')
         .toString()
         .trim()
@@ -759,14 +903,12 @@ class _ProfileScreenState extends State<ProfileScreen>
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.bgDeep,
-            AppColors.bgDark,
-          ],
+          colors: [AppColors.bgDeep, AppColors.bgDark],
         ),
         image: DecorationImage(
           image: const NetworkImage(
-              'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80'),
+            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
+          ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
             Colors.black.withValues(alpha: 0.15),
@@ -779,7 +921,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         appBar: AppBar(
           title: Text(
             'My Profile',
-            style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white),
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -802,16 +947,18 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               )
             : SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 10.0,
+                ),
                 child: Column(
                   children: [
                     const SizedBox(height: 10),
 
                     // ── Avatar Upload Section ──────────────────────────
-                    _buildAvatarSection(initials)
-                        .animate()
-                        .fadeIn(duration: 400.ms)
-                        .scale(delay: 100.ms),
+                    _buildAvatarSection(
+                      initials,
+                    ).animate().fadeIn(duration: 400.ms).scale(delay: 100.ms),
 
                     const SizedBox(height: 10),
 
@@ -846,11 +993,15 @@ class _ProfileScreenState extends State<ProfileScreen>
                       isTeacher
                           ? '${_profileData['designation'] ?? 'Faculty'} • ${_profileData['specialization'] ?? 'Academic'}'
                           : (_profileData['course'] != null
-                              ? '${_profileData['course']} • Section ${_profileData['section'] ?? 'A'}'
-                              : (_profileData['department'] != null && _profileData['college'] != null
-                                  ? '${_profileData['department']} • ${_profileData['college']}'
-                                  : 'SmartFace Academic Student')),
-                      style: GoogleFonts.inter(color: Colors.white54, fontSize: 13),
+                                ? '${_profileData['course']} • Section ${_profileData['section'] ?? 'A'}'
+                                : (_profileData['department'] != null &&
+                                          _profileData['college'] != null
+                                      ? '${_profileData['department']} • ${_profileData['college']}'
+                                      : 'SmartFace Academic Student')),
+                      style: GoogleFonts.inter(
+                        color: Colors.white54,
+                        fontSize: 13,
+                      ),
                       textAlign: TextAlign.center,
                     ).animate().fadeIn(delay: 300.ms),
 
@@ -858,29 +1009,147 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                     // ── Profile Fields ────────────────────────────────
                     if (isTeacher) ...[
-                      _buildProfileCard(Icons.badge_outlined, 'Employee ID', _profileData['employee_id'] ?? 'N/A', 1),
-                      _buildProfileCard(Icons.email_outlined, 'Institutional Email', _profileData['email'] ?? 'N/A', 2),
-                      _buildProfileCard(Icons.phone_outlined, 'Phone Number', _profileData['phone'] ?? 'N/A', 3),
-                      _buildProfileCard(Icons.work_outline, 'Designation', _profileData['designation'] ?? 'N/A', 4),
-                      _buildProfileCard(Icons.menu_book_outlined, 'Subject Specialization', _profileData['specialization'] ?? 'N/A', 5),
-                      _buildProfileCard(Icons.school_outlined, 'Qualification', _profileData['qualification'] ?? 'N/A', 6),
-                      _buildProfileCard(Icons.timeline_outlined, 'Years of Experience', _profileData['experience'] ?? 'N/A', 7),
-                      _buildProfileCard(Icons.wc_outlined, 'Gender', _profileData['gender'] ?? 'N/A', 8),
-                      _buildProfileCard(Icons.calendar_today_outlined, 'Date of Birth', _profileData['dob'] ?? 'N/A', 9),
-                      _buildProfileCard(Icons.home_outlined, 'Address', _profileData['address'] ?? 'N/A', 10),
-                      _buildProfileCard(Icons.language_outlined, 'Language Preference', _profileData['language_preference'] ?? 'English', 11),
+                      _buildProfileCard(
+                        Icons.badge_outlined,
+                        'Employee ID',
+                        _profileData['employee_id'] ?? 'N/A',
+                        1,
+                      ),
+                      _buildProfileCard(
+                        Icons.email_outlined,
+                        'Institutional Email',
+                        _profileData['email'] ?? 'N/A',
+                        2,
+                      ),
+                      _buildProfileCard(
+                        Icons.phone_outlined,
+                        'Phone Number',
+                        _profileData['phone'] ?? 'N/A',
+                        3,
+                      ),
+                      _buildProfileCard(
+                        Icons.work_outline,
+                        'Designation',
+                        _profileData['designation'] ?? 'N/A',
+                        4,
+                      ),
+                      _buildProfileCard(
+                        Icons.menu_book_outlined,
+                        'Subject Specialization',
+                        _profileData['specialization'] ?? 'N/A',
+                        5,
+                      ),
+                      _buildProfileCard(
+                        Icons.school_outlined,
+                        'Qualification',
+                        _profileData['qualification'] ?? 'N/A',
+                        6,
+                      ),
+                      _buildProfileCard(
+                        Icons.timeline_outlined,
+                        'Years of Experience',
+                        _profileData['experience'] ?? 'N/A',
+                        7,
+                      ),
+                      _buildProfileCard(
+                        Icons.wc_outlined,
+                        'Gender',
+                        _profileData['gender'] ?? 'N/A',
+                        8,
+                      ),
+                      _buildProfileCard(
+                        Icons.calendar_today_outlined,
+                        'Date of Birth',
+                        _profileData['dob'] ?? 'N/A',
+                        9,
+                      ),
+                      _buildProfileCard(
+                        Icons.home_outlined,
+                        'Address',
+                        _profileData['address'] ?? 'N/A',
+                        10,
+                      ),
+                      _buildProfileCard(
+                        Icons.language_outlined,
+                        'Language Preference',
+                        _profileData['language_preference'] ?? 'English',
+                        11,
+                      ),
                     ] else ...[
-                      _buildProfileCard(Icons.badge_outlined, 'Student ID / USN', _profileData['usn'] ?? _profileData['student_id'] ?? 'N/A', 1),
-                      _buildProfileCard(Icons.email_outlined, 'Institutional Email', _profileData['email'] ?? 'N/A', 2),
-                      _buildProfileCard(Icons.phone_outlined, 'Phone Number', _profileData['phone'] ?? 'N/A', 3),
-                      _buildProfileCard(Icons.school_outlined, 'Class / Course', _profileData['course'] ?? _profileData['college'] ?? 'N/A', 4),
-                      _buildProfileCard(Icons.grid_view_outlined, 'Section', _profileData['section'] ?? _profileData['department'] ?? 'N/A', 5),
-                      _buildProfileCard(Icons.format_list_numbered_outlined, 'Roll Number', _profileData['roll_number'] ?? _profileData['semester'] ?? 'N/A', 6),
-                      _buildProfileCard(Icons.wc_outlined, 'Gender', _profileData['gender'] ?? 'N/A', 7),
-                      _buildProfileCard(Icons.calendar_today_outlined, 'Date of Birth', _profileData['dob'] ?? 'N/A', 8),
-                      _buildProfileCard(Icons.home_outlined, 'Address', _profileData['address'] ?? 'N/A', 9),
-                      _buildProfileCard(Icons.family_restroom_outlined, 'Parent / Guardian Details', _profileData['parent_details'] ?? 'N/A', 10),
-                      _buildProfileCard(Icons.language_outlined, 'Language Preference', _profileData['language_preference'] ?? 'English', 11),
+                      _buildProfileCard(
+                        Icons.badge_outlined,
+                        'Student ID / USN',
+                        _profileData['usn'] ??
+                            _profileData['student_id'] ??
+                            'N/A',
+                        1,
+                      ),
+                      _buildProfileCard(
+                        Icons.email_outlined,
+                        'Institutional Email',
+                        _profileData['email'] ?? 'N/A',
+                        2,
+                      ),
+                      _buildProfileCard(
+                        Icons.phone_outlined,
+                        'Phone Number',
+                        _profileData['phone'] ?? 'N/A',
+                        3,
+                      ),
+                      _buildProfileCard(
+                        Icons.school_outlined,
+                        'Class / Course',
+                        _profileData['course'] ??
+                            _profileData['college'] ??
+                            'N/A',
+                        4,
+                      ),
+                      _buildProfileCard(
+                        Icons.grid_view_outlined,
+                        'Section',
+                        _profileData['section'] ??
+                            _profileData['department'] ??
+                            'N/A',
+                        5,
+                      ),
+                      _buildProfileCard(
+                        Icons.format_list_numbered_outlined,
+                        'Roll Number',
+                        _profileData['roll_number'] ??
+                            _profileData['semester'] ??
+                            'N/A',
+                        6,
+                      ),
+                      _buildProfileCard(
+                        Icons.wc_outlined,
+                        'Gender',
+                        _profileData['gender'] ?? 'N/A',
+                        7,
+                      ),
+                      _buildProfileCard(
+                        Icons.calendar_today_outlined,
+                        'Date of Birth',
+                        _profileData['dob'] ?? 'N/A',
+                        8,
+                      ),
+                      _buildProfileCard(
+                        Icons.home_outlined,
+                        'Address',
+                        _profileData['address'] ?? 'N/A',
+                        9,
+                      ),
+                      _buildProfileCard(
+                        Icons.family_restroom_outlined,
+                        'Parent / Guardian Details',
+                        _profileData['parent_details'] ?? 'N/A',
+                        10,
+                      ),
+                      _buildProfileCard(
+                        Icons.language_outlined,
+                        'Language Preference',
+                        _profileData['language_preference'] ?? 'English',
+                        11,
+                      ),
                     ],
 
                     const SizedBox(height: 24),
@@ -888,11 +1157,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                     // ── Security & Biometrics ─────────────────────────
                     Container(
                       margin: const EdgeInsets.only(bottom: 15),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.03),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.05),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -902,7 +1176,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: Colors.blueAccent.withValues(alpha: 0.08),
+                                  color: Colors.blueAccent.withValues(
+                                    alpha: 0.08,
+                                  ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Icon(
@@ -926,7 +1202,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      (_profileData['biometric_registered'] ?? false)
+                                      (_profileData['biometric_registered'] ??
+                                              false)
                                           ? 'Biometric ID Active ✓'
                                           : 'Biometric ID Inactive ⚠',
                                       style: const TextStyle(
@@ -946,38 +1223,68 @@ class _ProfileScreenState extends State<ProfileScreen>
                               Expanded(
                                 child: OutlinedButton.icon(
                                   onPressed: () async {
-                                    final session = context.read<SessionManager>();
-                                    final args = ModalRoute.of(context)?.settings.arguments as Map?;
-                                    final token = args?['token'] ?? session.token ?? '';
-                                    final email = args?['email'] ?? session.email ?? '';
+                                    final session = context
+                                        .read<SessionManager>();
+                                    final args =
+                                        ModalRoute.of(
+                                              context,
+                                            )?.settings.arguments
+                                            as Map?;
+                                    final token =
+                                        args?['token'] ?? session.token ?? '';
+                                    final email =
+                                        args?['email'] ?? session.email ?? '';
                                     if (token.isEmpty) {
-                                      _showSuccessSnack('Demo Mode: Face registered successfully.');
+                                      _showSuccessSnack(
+                                        'Demo Mode: Face registered successfully.',
+                                      );
                                       return;
                                     }
                                     setState(() => _isLoading = true);
                                     try {
-                                      await ApiService.registerBiometric(email, token);
+                                      await ApiService.registerBiometric(
+                                        email,
+                                        token,
+                                      );
                                       if (!mounted) return;
-                                      _showSuccessSnack('Biometrics synced successfully!');
+                                      _showSuccessSnack(
+                                        'Biometrics synced successfully!',
+                                      );
                                       _fetchProfile();
                                     } catch (e) {
                                       if (!mounted) return;
                                       setState(() => _isLoading = false);
-                                      _showErrorSnack('Failed to register biometrics: $e');
+                                      _showErrorSnack(
+                                        'Failed to register biometrics: $e',
+                                      );
                                     }
                                   },
-                                  icon: const Icon(Icons.face_unlock_outlined, size: 16),
+                                  icon: const Icon(
+                                    Icons.face_unlock_outlined,
+                                    size: 16,
+                                  ),
                                   label: Text(
-                                    (_profileData['biometric_registered'] ?? false)
+                                    (_profileData['biometric_registered'] ??
+                                            false)
                                         ? 'RE-REGISTER FACE'
                                         : 'REGISTER FACE',
-                                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: AppColors.gold,
-                                    side: const BorderSide(color: AppColors.gold, width: 1.5),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    side: const BorderSide(
+                                      color: AppColors.gold,
+                                      width: 1.5,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -990,11 +1297,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                     // ── App Customization ─────────────────────────────
                     Container(
                       margin: const EdgeInsets.only(bottom: 15),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.03),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.05),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -1005,7 +1317,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
-                              isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                              isDark
+                                  ? Icons.dark_mode_outlined
+                                  : Icons.light_mode_outlined,
                               color: AppColors.gold,
                               size: 22,
                             ),
@@ -1025,7 +1339,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  isDark ? 'Dark Mode Active' : 'Light Mode Active',
+                                  isDark
+                                      ? 'Dark Mode Active'
+                                      : 'Light Mode Active',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -1051,8 +1367,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () =>
-                            Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false),
+                        onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/',
+                          (route) => false,
+                        ),
                         icon: const Icon(Icons.logout_rounded, size: 20),
                         label: Text(
                           'LOGOUT SESSION',
@@ -1063,7 +1382,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.redAccent,
-                          side: const BorderSide(color: Colors.redAccent, width: 1.5),
+                          side: const BorderSide(
+                            color: Colors.redAccent,
+                            width: 1.5,
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -1080,7 +1402,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildProfileCard(IconData icon, String label, String value, int index) {
+  Widget _buildProfileCard(
+    IconData icon,
+    String label,
+    String value,
+    int index,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -1106,13 +1433,20 @@ class _ProfileScreenState extends State<ProfileScreen>
               children: [
                 Text(
                   label.toUpperCase(),
-                  style: GoogleFonts.inter(color: Colors.white38, fontSize: 10, letterSpacing: 1),
+                  style: GoogleFonts.inter(
+                    color: Colors.white38,
+                    fontSize: 10,
+                    letterSpacing: 1,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   value,
                   style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
               ],
             ),

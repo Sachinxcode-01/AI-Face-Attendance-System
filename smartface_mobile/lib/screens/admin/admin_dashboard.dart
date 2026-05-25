@@ -102,17 +102,21 @@ class _AdminDashboardState extends State<AdminDashboard>
             pinned: true,
             backgroundColor: isDark ? AppColors.bgDeep : AppColors.indigo,
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding:
-                  const EdgeInsets.only(left: 20, bottom: 16),
+              titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
               title: Row(
                 children: [
-                  const Icon(Icons.shield_outlined,
-                      color: AppColors.gold, size: 20),
+                  const Icon(
+                    Icons.shield_outlined,
+                    color: AppColors.gold,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Admin Control',
                     style: AppText.subheading(
-                        color: Colors.white, weight: FontWeight.bold),
+                      color: Colors.white,
+                      weight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -138,14 +142,13 @@ class _AdminDashboardState extends State<AdminDashboard>
                 animation: _pulseCtrl,
                 builder: (ctx, child) => Container(
                   margin: const EdgeInsets.only(right: 8, top: 10),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: (_serverOnline
-                            ? AppColors.success
-                            : AppColors.error)
-                        .withValues(
-                            alpha: 0.15 + 0.1 * _pulseCtrl.value),
+                    color: (_serverOnline ? AppColors.success : AppColors.error)
+                        .withValues(alpha: 0.15 + 0.1 * _pulseCtrl.value),
                     borderRadius: BorderRadius.circular(AppRadius.full),
                     border: Border.all(
                       color: _serverOnline
@@ -193,10 +196,15 @@ class _AdminDashboardState extends State<AdminDashboard>
               Stack(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.notifications_outlined,
-                        color: Colors.white),
-                    onPressed: () => Navigator.pushNamed(context, '/notifications',
-                        arguments: ModalRoute.of(context)?.settings.arguments),
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => Navigator.pushNamed(
+                      context,
+                      '/notifications',
+                      arguments: ModalRoute.of(context)?.settings.arguments,
+                    ),
                   ),
                   if (appState.unreadCount > 0)
                     Positioned(
@@ -212,8 +220,9 @@ class _AdminDashboardState extends State<AdminDashboard>
                         child: Center(
                           child: Text(
                             '${appState.unreadCount}',
-                            style: AppText.caption(color: Colors.white)
-                                .copyWith(fontSize: 9),
+                            style: AppText.caption(
+                              color: Colors.white,
+                            ).copyWith(fontSize: 9),
                           ),
                         ),
                       ),
@@ -236,8 +245,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Welcome back,',
-                                  style: AppText.body()),
+                              Text('Welcome back,', style: AppText.body()),
                               Text(
                                 session.name ?? 'Administrator',
                                 style: AppText.heading(color: Colors.white),
@@ -254,8 +262,10 @@ class _AdminDashboardState extends State<AdminDashboard>
                       _buildStatsGrid(),
 
                       const SizedBox(height: 28),
-                      Text('MANAGEMENT CONSOLE',
-                          style: AppText.label(color: AppColors.gold)),
+                      Text(
+                        'MANAGEMENT CONSOLE',
+                        style: AppText.label(color: AppColors.gold),
+                      ),
                       const SizedBox(height: 16),
 
                       // ── Action Cards ────────────────────────────
@@ -278,20 +288,19 @@ class _AdminDashboardState extends State<AdminDashboard>
                       _buildAction(
                         icon: Icons.approval_outlined,
                         title: 'Leave Approvals',
-                        subtitle:
-                            '${_stats['pending_leaves']} pending review',
+                        subtitle: '${_stats['pending_leaves']} pending review',
                         onTap: () => Navigator.pushNamed(
-                            context, '/leave-review',
-                            arguments: ModalRoute.of(context)
-                                ?.settings.arguments),
+                          context,
+                          '/leave-review',
+                          arguments: ModalRoute.of(context)?.settings.arguments,
+                        ),
                         color: AppColors.warning,
                         index: 2,
                       ),
                       _buildAction(
                         icon: Icons.security_outlined,
                         title: 'Security & Intruder Logs',
-                        subtitle:
-                            '${_stats['intruder_alerts']} recent alerts',
+                        subtitle: '${_stats['intruder_alerts']} recent alerts',
                         onTap: () =>
                             Navigator.pushNamed(context, '/security-logs'),
                         color: AppColors.errorLight,
@@ -301,9 +310,11 @@ class _AdminDashboardState extends State<AdminDashboard>
                         icon: Icons.analytics_outlined,
                         title: 'Advanced Analytics',
                         subtitle: 'AI-powered institution-wide insights',
-                        onTap: () => Navigator.pushNamed(context, '/analytics',
-                            arguments: ModalRoute.of(context)
-                                ?.settings.arguments),
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          '/analytics',
+                          arguments: ModalRoute.of(context)?.settings.arguments,
+                        ),
                         index: 4,
                       ),
                       _buildAction(
@@ -323,17 +334,23 @@ class _AdminDashboardState extends State<AdminDashboard>
                           onPressed: () async {
                             final navigator = Navigator.of(context);
                             await context.read<SessionManager>().logout();
-                            navigator.pushNamedAndRemoveUntil('/', (_) => false);
+                            navigator.pushNamedAndRemoveUntil(
+                              '/',
+                              (_) => false,
+                            );
                           },
                           icon: const Icon(Icons.logout_rounded, size: 18),
-                          label: Text('LOGOUT', style: AppText.button(color: AppColors.errorLight)),
+                          label: Text(
+                            'LOGOUT',
+                            style: AppText.button(color: AppColors.errorLight),
+                          ),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.errorLight,
                             side: const BorderSide(color: AppColors.errorLight),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.md)),
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                            ),
                           ),
                         ),
                       ).animate().fadeIn(delay: 700.ms),
@@ -387,11 +404,14 @@ class _AdminDashboardState extends State<AdminDashboard>
       itemBuilder: (_, i) {
         final m = metrics[i];
         return MetricCard(
-          label: m['label'] as String,
-          value: m['value'] as String,
-          icon: m['icon'] as IconData,
-          accentColor: m['color'] as Color,
-        ).animate().fadeIn(delay: (i * 80).ms).scale(begin: const Offset(0.9, 0.9));
+              label: m['label'] as String,
+              value: m['value'] as String,
+              icon: m['icon'] as IconData,
+              accentColor: m['color'] as Color,
+            )
+            .animate()
+            .fadeIn(delay: (i * 80).ms)
+            .scale(begin: const Offset(0.9, 0.9));
       },
     );
   }
@@ -423,21 +443,21 @@ class _AdminDashboardState extends State<AdminDashboard>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style:
-                        AppText.subheading(color: Colors.white, weight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: AppText.subheading(
+                    color: Colors.white,
+                    weight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 3),
                 Text(subtitle, style: AppText.caption()),
               ],
             ),
           ),
-          Icon(Icons.arrow_forward_ios,
-              size: 14, color: AppColors.white38),
+          Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.white38),
         ],
       ),
-    )
-        .animate()
-        .fadeIn(delay: (200 + index * 80).ms)
-        .slideX(begin: 0.06);
+    ).animate().fadeIn(delay: (200 + index * 80).ms).slideX(begin: 0.06);
   }
 }

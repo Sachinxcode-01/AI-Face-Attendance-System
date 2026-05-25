@@ -14,8 +14,10 @@ class OTPScreen extends StatefulWidget {
 }
 
 class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
-  final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> _controllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   bool _isVerifying = false;
@@ -32,10 +34,7 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _shakeController = AnimationController(
-      vsync: this,
-      duration: 500.ms,
-    );
+    _shakeController = AnimationController(vsync: this, duration: 500.ms);
     _shakeAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _shakeController, curve: Curves.elasticOut),
     );
@@ -55,15 +54,22 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
   void dispose() {
     _timer?.cancel();
     _shakeController.dispose();
-    for (final c in _controllers) { c.dispose(); }
-    for (final f in _focusNodes) { f.dispose(); }
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
   void _startCooldown() {
     _resendCooldown = 60;
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) { t.cancel(); return; }
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
       setState(() {
         if (_resendCooldown > 0) {
           _resendCooldown--;
@@ -97,10 +103,12 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
 
       if (res.containsKey('access_token')) {
         HapticFeedback.heavyImpact();
-        AppToast.show(context,
-            title: 'Verified!',
-            message: 'Welcome back 👋',
-            type: ToastType.success);
+        AppToast.show(
+          context,
+          title: 'Verified!',
+          message: 'Welcome back 👋',
+          type: ToastType.success,
+        );
         await Future.delayed(600.ms);
         if (!mounted) return;
         Navigator.pushReplacementNamed(
@@ -116,17 +124,23 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
       } else {
         _shakeController.forward(from: 0);
         HapticFeedback.vibrate();
-        AppToast.show(context,
-            message: res['detail'] ?? 'Invalid OTP. Try again.',
-            type: ToastType.error);
-        for (final c in _controllers) { c.clear(); }
+        AppToast.show(
+          context,
+          message: res['detail'] ?? 'Invalid OTP. Try again.',
+          type: ToastType.error,
+        );
+        for (final c in _controllers) {
+          c.clear();
+        }
         _focusNodes[0].requestFocus();
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context,
-          message: 'Network error. Please retry.',
-          type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'Network error. Please retry.',
+        type: ToastType.error,
+      );
     } finally {
       if (mounted) setState(() => _isVerifying = false);
     }
@@ -141,17 +155,23 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
     setState(() => _isResending = false);
 
     if (res.containsKey('message')) {
-      AppToast.show(context,
-          title: 'OTP Sent',
-          message: 'A new code was sent to $_email',
-          type: ToastType.success);
-      for (final c in _controllers) { c.clear(); }
+      AppToast.show(
+        context,
+        title: 'OTP Sent',
+        message: 'A new code was sent to $_email',
+        type: ToastType.success,
+      );
+      for (final c in _controllers) {
+        c.clear();
+      }
       _focusNodes[0].requestFocus();
       _startCooldown();
     } else {
-      AppToast.show(context,
-          message: res['detail'] ?? 'Failed to resend OTP',
-          type: ToastType.error);
+      AppToast.show(
+        context,
+        message: res['detail'] ?? 'Failed to resend OTP',
+        type: ToastType.error,
+      );
     }
   }
 
@@ -170,8 +190,10 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios,
-                        color: Colors.white70),
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white70,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
@@ -184,20 +206,24 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
                     shape: BoxShape.circle,
                     color: AppColors.gold.withValues(alpha: 0.1),
                     border: Border.all(
-                        color: AppColors.gold.withValues(alpha: 0.3), width: 1.5),
+                      color: AppColors.gold.withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
                     boxShadow: AppShadows.goldGlow(),
                   ),
-                  child: const Icon(Icons.lock_outline_rounded,
-                      color: AppColors.gold, size: 44),
+                  child: const Icon(
+                    Icons.lock_outline_rounded,
+                    color: AppColors.gold,
+                    size: 44,
+                  ),
                 ).animate().fadeIn(duration: 400.ms).scale(),
 
                 const SizedBox(height: 28),
 
-                Text('Verification Code',
-                        style: AppText.display(color: Colors.white))
-                    .animate()
-                    .fadeIn(delay: 100.ms)
-                    .slideY(begin: 0.3),
+                Text(
+                  'Verification Code',
+                  style: AppText.display(color: Colors.white),
+                ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.3),
                 const SizedBox(height: 10),
                 Text(
                   'Enter the 6-digit code sent to',
@@ -207,8 +233,10 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
                 const SizedBox(height: 4),
                 Text(
                   _email,
-                  style: AppText.body(color: AppColors.gold,
-                      weight: FontWeight.w600),
+                  style: AppText.body(
+                    color: AppColors.gold,
+                    weight: FontWeight.w600,
+                  ),
                   textAlign: TextAlign.center,
                 ).animate().fadeIn(delay: 200.ms),
 
@@ -219,9 +247,10 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
                   animation: _shakeAnimation,
                   builder: (_, child) => Transform.translate(
                     offset: Offset(
-                      8 * (_shakeAnimation.value <= 0.5
-                          ? _shakeAnimation.value * 2
-                          : (1 - _shakeAnimation.value) * 2) *
+                      8 *
+                          (_shakeAnimation.value <= 0.5
+                              ? _shakeAnimation.value * 2
+                              : (1 - _shakeAnimation.value) * 2) *
                           ((_shakeAnimation.value * 6).toInt() % 2 == 0
                               ? 1
                               : -1),
@@ -243,8 +272,9 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
                           keyboardType: TextInputType.number,
                           maxLength: 1,
                           style: AppText.heading(
-                              color: AppColors.gold,
-                              weight: FontWeight.bold),
+                            color: AppColors.gold,
+                            weight: FontWeight.bold,
+                          ),
                           decoration: InputDecoration(
                             counterText: '',
                             filled: true,
@@ -252,14 +282,16 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
                               borderSide: BorderSide(
-                                  color:
-                                      AppColors.gold.withValues(alpha: 0.2),
-                                  width: 1.5),
+                                color: AppColors.gold.withValues(alpha: 0.2),
+                                width: 1.5,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
                               borderSide: const BorderSide(
-                                  color: AppColors.gold, width: 2),
+                                color: AppColors.gold,
+                                width: 2,
+                              ),
                             ),
                           ),
                           inputFormatters: [
@@ -299,32 +331,40 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Didn't receive it?  ",
-                        style: AppText.body(color: AppColors.white38)),
+                    Text(
+                      "Didn't receive it?  ",
+                      style: AppText.body(color: AppColors.white38),
+                    ),
                     _resendCooldown > 0
-                        ? Row(children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                value: _resendCooldown / 60,
-                                strokeWidth: 2,
-                                color: AppColors.gold,
-                                backgroundColor:
-                                    AppColors.gold.withValues(alpha: 0.15),
+                        ? Row(
+                            children: [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  value: _resendCooldown / 60,
+                                  strokeWidth: 2,
+                                  color: AppColors.gold,
+                                  backgroundColor: AppColors.gold.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text('${_resendCooldown}s',
-                                style: AppText.body(color: AppColors.white38)),
-                          ])
+                              const SizedBox(width: 8),
+                              Text(
+                                '${_resendCooldown}s',
+                                style: AppText.body(color: AppColors.white38),
+                              ),
+                            ],
+                          )
                         : GestureDetector(
                             onTap: _isResending ? null : _resendOtp,
                             child: Text(
                               _isResending ? 'Sending…' : 'Resend OTP',
                               style: AppText.body(
-                                  color: AppColors.gold,
-                                  weight: FontWeight.bold),
+                                color: AppColors.gold,
+                                weight: FontWeight.bold,
+                              ),
                             ),
                           ),
                   ],

@@ -45,14 +45,15 @@ class _StudentDashboardState extends State<StudentDashboard> {
           _showSessionDialog(data);
         }
       }
-      
+
       // Update unread count and add to AppState if matching role
       final targetUser = data['user_id'];
       final targetRole = data['role'];
-      
-      bool isMatch = targetUser == session.email || 
-                    (targetRole == 'student' && session.isStudent);
-      
+
+      bool isMatch =
+          targetUser == session.email ||
+          (targetRole == 'student' && session.isStudent);
+
       if (isMatch) {
         final newNotif = {
           'id': data['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
@@ -101,7 +102,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
       if (stats.isNotEmpty) {
         if (mounted) {
           setState(() {
-            _overallPercentage = stats['overall_percentage']?.toDouble() ?? 0.82;
+            _overallPercentage =
+                stats['overall_percentage']?.toDouble() ?? 0.82;
             _standing = stats['standing'] ?? 'Elite Performer';
             _rank = stats['rank'] ?? 'Ranked #4 in Department';
             _streak = stats['streak'] ?? 12;
@@ -203,7 +205,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            isDark ? Colors.black.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.85),
+            isDark
+                ? Colors.black.withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.85),
             isDark ? BlendMode.dstATop : BlendMode.srcOver,
           ),
         ),
@@ -303,7 +307,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
               ),
               const SizedBox(height: 15),
               if (_subjects.isEmpty) ...[
-                _buildSubjectProgress('Machine Learning', 0.85, '17/20 Present'),
+                _buildSubjectProgress(
+                  'Machine Learning',
+                  0.85,
+                  '17/20 Present',
+                ),
                 _buildSubjectProgress('Data Ethics', 0.92, '23/25 Present'),
                 _buildSubjectProgress('Cloud Arch', 0.70, '14/20 Present'),
               ] else
@@ -313,7 +321,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   final int present = sub['present'] ?? 0;
                   final int total = sub['total'] ?? 0;
                   final pctText = '${(pct * 100).toInt()}%';
-                  return _buildSubjectProgress(name, pct, '$present/$total ($pctText)');
+                  return _buildSubjectProgress(
+                    name,
+                    pct,
+                    '$present/$total ($pctText)',
+                  );
                 }),
               const SizedBox(height: 30),
               _buildActionButtons(context),
@@ -394,9 +406,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: AppColors.gold.withValues(alpha: 0.15),
-        ),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
@@ -411,17 +421,23 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 children: [
                   // Outer breathing ring
                   Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.gold.withValues(alpha: 0.05),
-                        width: 1.5,
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.gold.withValues(alpha: 0.05),
+                            width: 1.5,
+                          ),
+                        ),
+                      )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scale(
+                        begin: const Offset(0.95, 0.95),
+                        end: const Offset(1.04, 1.04),
+                        duration: 2.seconds,
+                        curve: Curves.easeInOut,
                       ),
-                    ),
-                  ).animate(onPlay: (c) => c.repeat(reverse: true))
-                   .scale(begin: const Offset(0.95, 0.95), end: const Offset(1.04, 1.04), duration: 2.seconds, curve: Curves.easeInOut),
 
                   // Circular Progress Indicator with drop shadow glow
                   Container(
@@ -440,7 +456,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     child: CircularProgressIndicator(
                       value: value,
                       backgroundColor: Colors.white.withValues(alpha: 0.06),
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.gold,
+                      ),
                       strokeWidth: 7,
                       strokeCap: StrokeCap.round,
                     ),
@@ -481,10 +499,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 const SizedBox(height: 5),
                 Text(
                   _rank,
-                  style: GoogleFonts.inter(
-                    color: Colors.white54,
-                    fontSize: 12,
-                  ),
+                  style: GoogleFonts.inter(color: Colors.white54, fontSize: 12),
                 ),
               ],
             ),
@@ -537,7 +552,12 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   )
                   .animate(onPlay: (controller) => controller.repeat())
                   .shimmer(duration: 2000.ms)
-                  .scale(begin: const Offset(1, 1), end: const Offset(1.15, 1.15), duration: 1.seconds, curve: Curves.easeInOut),
+                  .scale(
+                    begin: const Offset(1, 1),
+                    end: const Offset(1.15, 1.15),
+                    duration: 1.seconds,
+                    curve: Curves.easeInOut,
+                  ),
               const SizedBox(width: 15),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -552,7 +572,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     ),
                   ),
                   Text(
-                    _streak > 0 ? 'Your consistency is legendary!' : 'Check in to start your streak!',
+                    _streak > 0
+                        ? 'Your consistency is legendary!'
+                        : 'Check in to start your streak!',
                     style: const TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                 ],
@@ -579,13 +601,33 @@ class _StudentDashboardState extends State<StudentDashboard> {
             physics: const BouncingScrollPhysics(),
             child: Row(
               children: [
-                _buildBadgeItem('Iron Streak', Icons.bolt, hasIronBadge, Colors.blueAccent),
+                _buildBadgeItem(
+                  'Iron Streak',
+                  Icons.bolt,
+                  hasIronBadge,
+                  Colors.blueAccent,
+                ),
                 const SizedBox(width: 10),
-                _buildBadgeItem('Consistency', Icons.workspace_premium, hasConsistencyBadge, Colors.deepOrangeAccent),
+                _buildBadgeItem(
+                  'Consistency',
+                  Icons.workspace_premium,
+                  hasConsistencyBadge,
+                  Colors.deepOrangeAccent,
+                ),
                 const SizedBox(width: 10),
-                _buildBadgeItem('Elite Status', Icons.insights, hasEliteBadge, AppColors.gold),
+                _buildBadgeItem(
+                  'Elite Status',
+                  Icons.insights,
+                  hasEliteBadge,
+                  AppColors.gold,
+                ),
                 const SizedBox(width: 10),
-                _buildBadgeItem('Champ', Icons.emoji_events, hasChampBadge, Colors.greenAccent),
+                _buildBadgeItem(
+                  'Champ',
+                  Icons.emoji_events,
+                  hasChampBadge,
+                  Colors.greenAccent,
+                ),
               ],
             ),
           ),
@@ -594,46 +636,53 @@ class _StudentDashboardState extends State<StudentDashboard> {
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1);
   }
 
-  Widget _buildBadgeItem(String label, IconData icon, bool unlocked, Color color) {
+  Widget _buildBadgeItem(
+    String label,
+    IconData icon,
+    bool unlocked,
+    Color color,
+  ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: unlocked ? color.withValues(alpha: 0.12) : Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: unlocked ? color.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.06),
-          width: unlocked ? 1.5 : 1,
-        ),
-        boxShadow: unlocked
-            ? [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.05),
-                  blurRadius: 8,
-                  spreadRadius: 1,
-                )
-              ]
-            : [],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: unlocked ? color : Colors.white24,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              color: unlocked ? Colors.white : Colors.white24,
-              fontWeight: unlocked ? FontWeight.bold : FontWeight.normal,
-              fontSize: 11,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: unlocked
+                ? color.withValues(alpha: 0.12)
+                : Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+              color: unlocked
+                  ? color.withValues(alpha: 0.4)
+                  : Colors.white.withValues(alpha: 0.06),
+              width: unlocked ? 1.5 : 1,
             ),
+            boxShadow: unlocked
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : [],
           ),
-        ],
-      ),
-    ).animate(target: unlocked ? 1 : 0).shimmer(delay: 500.ms, duration: 1500.ms);
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: unlocked ? color : Colors.white24),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: unlocked ? Colors.white : Colors.white24,
+                  fontWeight: unlocked ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        )
+        .animate(target: unlocked ? 1 : 0)
+        .shimmer(delay: 500.ms, duration: 1500.ms);
   }
 
   Widget _buildSubjectProgress(String subject, double value, String sub) {
@@ -645,7 +694,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
         color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isWarning ? AppColors.error.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.04),
+          color: isWarning
+              ? AppColors.error.withValues(alpha: 0.2)
+              : Colors.white.withValues(alpha: 0.04),
         ),
       ),
       child: Column(
@@ -686,20 +737,22 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 ),
                 // Glowing Shimmer effect overlay
                 Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.transparent,
-                          Colors.white.withValues(alpha: 0.15),
-                          Colors.transparent,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                  ).animate(onPlay: (c) => c.repeat())
-                   .shimmer(duration: 2000.ms),
+                  child:
+                      Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.white.withValues(alpha: 0.15),
+                                  Colors.transparent,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                          )
+                          .animate(onPlay: (c) => c.repeat())
+                          .shimmer(duration: 2000.ms),
                 ),
               ],
             ),

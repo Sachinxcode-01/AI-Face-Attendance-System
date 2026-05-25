@@ -1,0 +1,119 @@
+# Cursor Rules for Secure Development
+
+You must follow these security guidelines whenever writing, modifying, or refactoring code in this repository.
+
+---
+
+## 1. Secrets and Environment Variables
+* **Never expose secrets in frontend code.**
+* Store API keys, database URLs, JWT secrets, and private credentials only in `.env` files.
+* Ensure all `.env`, `.env.local`, and `.env.*.local` files are ignored in `.gitignore`.
+* In Next.js or Vite, only variables prefixed with `NEXT_PUBLIC_` or `VITE_` can be exposed to the frontend.
+* Access backend secrets only using `process.env.VARIABLE_NAME` in Node.js, `os.environ.get()` / `os.getenv()` in Python, or safe env handlers in Dart/Flutter.
+* Never return credentials, keys, or passwords in API responses.
+* Include a `.env.example` file with empty placeholder values for all environment variables.
+* Any public keys intentionally exposed to the frontend must include a clear inline comment explaining why.
+
+---
+
+## 2. Rate Limiting
+* **Apply rate limiting to all API routes.**
+* Standard limits to enforce:
+  * Authentication/Login endpoints: Max 5 requests per 15 minutes per IP
+  * General API endpoints: Max 60 requests per minute per IP
+  * AI/LLM endpoints: Max 10 requests per minute per user/IP
+  * File uploads: Max 5 requests per minute per IP
+* Return `429 Too Many Requests` with a proper `Retry-After` header when limits are breached.
+* Recommended libraries: `express-rate-limit` (Node.js/Express) or `slowapi` / custom limits (FastAPI/Python).
+
+---
+
+## 3. Input Validation and Sanitization
+* **Validate and sanitize all user input on the server.**
+* Use robust validation libraries: `Zod` (TypeScript/Node), `Pydantic` (Python), or standard validator patterns in Dart/Flutter.
+* Sanitize all inputs before storing them in database collections or rendering them on the front end.
+* Use parameterized queries or safe ORM methods (e.g. Mongoose queries with sanitization) rather than raw string concatenation.
+* Always validate data types, required fields, length limits, allowed character classes, and enum values.
+* Validate uploaded files using MIME type, file extension, and strict size limits.
+* Reject invalid inputs immediately with a `400 Bad Request` or `422 Unprocessable Entity` response.
+
+---
+
+## 4. Authentication and Authorization
+* **Use trusted authentication libraries.**
+* Store passwords securely using `bcrypt` (minimum cost factor 12) or `argon2`.
+* Sign JSON Web Tokens (JWTs) using strong, server-side secrets stored in environment variables.
+* Enforce short JWT expiration times and store refresh tokens in secure, `httpOnly`, `sameSite: 'strict'` cookies.
+* Verify user ownership and permissions on every request.
+* Implement account lockout after repeated failed logins.
+* Protect administrative routes with robust role-based authorization checks.
+
+---
+
+## 5. SQL and Database Security
+* **Use ORMs or parameterized queries.**
+* Recommended tools: Prisma, Drizzle, SQLAlchemy, or Mongoose.
+* Never build database queries using string interpolation or concatenation with user inputs.
+* Apply the principle of least privilege for database users.
+* Never expose raw database errors (e.g., MongoDB stack traces or internal DB error logs) to the client.
+
+---
+
+## 6. CORS Configuration
+* **Never use wildcard CORS (`*`) in production.**
+* Explicitly whitelist trusted origins using `CORS_ORIGINS` environment variables.
+* Restrict allowed HTTP methods and enable credentials only when absolutely necessary.
+
+---
+
+## 7. HTTP Security Headers
+* **Always configure security headers.**
+* Use `Helmet` (Express) or equivalent custom middleware (FastAPI) to inject:
+  * Content-Security-Policy (CSP)
+  * X-Frame-Options: DENY
+  * X-Content-Type-Options: nosniff
+  * Strict-Transport-Security (HSTS)
+  * Referrer-Policy
+* Always remove the `X-Powered-By` header to avoid disclosing technology stack details.
+
+---
+
+## 8. File Upload Security
+* **Validate and safely store uploaded files.**
+* Validate MIME types and file extensions on the server side.
+* Set strict file size limits.
+* Store uploads outside of the web root or in secure cloud storage.
+* Never allow uploaded files to have executable permissions.
+* Rename uploaded files using UUIDs to prevent file execution and directory traversal.
+
+---
+
+## 9. Error Handling and Logging
+* **Never expose internal errors to users.**
+* Return generic error messages to clients while logging detailed stack traces server-side.
+* Use proper HTTP status codes matching the standard specifications.
+
+---
+
+## 10. Dependency Security
+* **Audit and pin dependencies.**
+* Run `npm audit` or `pip-audit` regularly.
+* Avoid using abandoned or unmaintained packages.
+* Pin versions in production using lock files (`package-lock.json`, `poetry.lock`, etc.).
+
+---
+
+## 11. XSS Prevention
+* **Never render untrusted HTML directly.**
+* Avoid using direct HTML rendering or bypass mechanisms unless content is thoroughly sanitized using a trusted sanitizer like `DOMPurify`.
+* Never use `eval()` or `new Function()` with user-supplied values.
+
+---
+
+## 12. AI and LLM-Specific Security Rules
+* **Treat AI inputs and outputs as untrusted data.**
+* Sanitize prompts before sending them to LLM APIs (e.g., Groq, Gemini) to prevent prompt injection.
+* Always enforce a reasonable `max_tokens` limit on LLM requests.
+* Store AI/LLM API keys strictly server-side and route all client-side queries through a custom backend proxy.
+* Log token usage per user to track and implement user token budgets/quotas to prevent API cost abuse.
+* Sanitize all LLM-generated output before rendering it in UI elements to prevent dynamic scripts or HTML injections.

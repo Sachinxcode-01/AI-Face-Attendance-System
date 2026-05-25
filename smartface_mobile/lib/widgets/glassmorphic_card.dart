@@ -32,9 +32,10 @@ class GlassmorphicCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final effectiveBorder = borderColor ??
-        (isDark ? AppColors.white12 : const Color(0xFFE0E0E0));
-    final effectiveBg = backgroundColor ??
+    final effectiveBorder =
+        borderColor ?? (isDark ? AppColors.white12 : const Color(0xFFE0E0E0));
+    final effectiveBg =
+        backgroundColor ??
         (isDark
             ? Colors.white.withValues(alpha: 0.04)
             : Colors.white.withValues(alpha: 0.85));
@@ -97,18 +98,12 @@ class MetricCard extends StatelessWidget {
             child: Icon(icon, color: color, size: 22),
           ),
           const SizedBox(height: 12),
-          Text(
-            value,
-            style: AppText.heading(color: Colors.white),
-          ),
+          Text(value, style: AppText.heading(color: Colors.white)),
           const SizedBox(height: 4),
           Text(label, style: AppText.caption()),
           if (subtitle != null) ...[
             const SizedBox(height: 4),
-            Text(
-              subtitle!,
-              style: AppText.caption(color: color),
-            ),
+            Text(subtitle!, style: AppText.caption(color: color)),
           ],
         ],
       ),

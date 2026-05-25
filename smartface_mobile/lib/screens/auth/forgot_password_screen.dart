@@ -17,8 +17,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   int _step = 0;
 
   final _emailCtrl = TextEditingController();
-  final List<TextEditingController> _otpCtrls =
-      List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> _otpCtrls = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _otpFocus = List.generate(6, (_) => FocusNode());
   final _passCtrl = TextEditingController();
   final _confirmPassCtrl = TextEditingController();
@@ -44,8 +46,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     _emailCtrl.dispose();
     _passCtrl.dispose();
     _confirmPassCtrl.dispose();
-    for (final c in _otpCtrls) { c.dispose(); }
-    for (final f in _otpFocus) { f.dispose(); }
+    for (final c in _otpCtrls) {
+      c.dispose();
+    }
+    for (final f in _otpFocus) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -76,8 +82,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   Future<void> _sendOtp() async {
     final email = _emailCtrl.text.trim();
     if (email.isEmpty || !email.contains('@')) {
-      AppToast.show(context,
-          message: 'Enter a valid email address', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'Enter a valid email address',
+        type: ToastType.error,
+      );
       return;
     }
     setState(() => _loading = true);
@@ -87,14 +96,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
 
     if (res.containsKey('message')) {
       _emailForReset = email;
-      AppToast.show(context,
-          title: 'Code Sent',
-          message: 'OTP sent to $email',
-          type: ToastType.success);
+      AppToast.show(
+        context,
+        title: 'Code Sent',
+        message: 'OTP sent to $email',
+        type: ToastType.success,
+      );
       setState(() => _step = 1);
     } else {
-      AppToast.show(context,
-          message: res['detail'] ?? 'Email not found', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: res['detail'] ?? 'Email not found',
+        type: ToastType.error,
+      );
     }
   }
 
@@ -104,19 +118,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     final confirm = _confirmPassCtrl.text;
 
     if (newPass != confirm) {
-      AppToast.show(context,
-          message: 'Passwords do not match', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'Passwords do not match',
+        type: ToastType.error,
+      );
       return;
     }
     if (_passStrength < 0.5) {
-      AppToast.show(context,
-          message: 'Please use a stronger password', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please use a stronger password',
+        type: ToastType.warning,
+      );
       return;
     }
 
     setState(() => _loading = true);
     // Step 1: verify OTP (reuse login-otp/verify endpoint logic via forgotPassword flow)
-    final res = await ApiService.resetPassword(_emailForReset, _otpValue, newPass);
+    final res = await ApiService.resetPassword(
+      _emailForReset,
+      _otpValue,
+      newPass,
+    );
     if (!mounted) return;
     setState(() => _loading = false);
 
@@ -124,8 +148,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
       setState(() => _step = 3);
       _successCtrl.forward();
     } else {
-      AppToast.show(context,
-          message: res['detail'] ?? 'Reset failed', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: res['detail'] ?? 'Reset failed',
+        type: ToastType.error,
+      );
     }
   }
 
@@ -143,8 +170,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                 opacity: anim,
                 child: SlideTransition(
                   position: Tween<Offset>(
-                          begin: const Offset(0.05, 0), end: Offset.zero)
-                      .animate(anim),
+                    begin: const Offset(0.05, 0),
+                    end: Offset.zero,
+                  ).animate(anim),
                   child: child,
                 ),
               ),
@@ -158,10 +186,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
 
   Widget _buildStep() {
     switch (_step) {
-      case 0: return _buildEmailStep();
-      case 1: return _buildOtpAndPasswordStep();
-      case 3: return _buildSuccessStep();
-      default: return _buildEmailStep();
+      case 0:
+        return _buildEmailStep();
+      case 1:
+        return _buildOtpAndPasswordStep();
+      case 3:
+        return _buildSuccessStep();
+      default:
+        return _buildEmailStep();
     }
   }
 
@@ -178,12 +210,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
         // Step indicator
         _StepIndicator(current: 0),
         const SizedBox(height: 32),
-        Text('Reset Password', style: AppText.display())
-            .animate().fadeIn().slideY(begin: 0.3),
+        Text(
+          'Reset Password',
+          style: AppText.display(),
+        ).animate().fadeIn().slideY(begin: 0.3),
         const SizedBox(height: 8),
-        Text('Enter your registered email to receive a verification code.',
-                style: AppText.body())
-            .animate().fadeIn(delay: 100.ms),
+        Text(
+          'Enter your registered email to receive a verification code.',
+          style: AppText.body(),
+        ).animate().fadeIn(delay: 100.ms),
         const SizedBox(height: 40),
         TextField(
           controller: _emailCtrl,
@@ -202,8 +237,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
             onPressed: _loading ? null : _sendOtp,
             child: _loading
                 ? const SizedBox(
-                    width: 24, height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.black))
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.black,
+                    ),
+                  )
                 : Text('SEND CODE', style: AppText.button()),
           ),
         ).animate().fadeIn(delay: 300.ms),
@@ -225,42 +265,54 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
         const SizedBox(height: 32),
         Text('Verify & Reset', style: AppText.display()),
         const SizedBox(height: 8),
-        Text('Enter the code sent to $_emailForReset and your new password.',
-            style: AppText.body()),
+        Text(
+          'Enter the code sent to $_emailForReset and your new password.',
+          style: AppText.body(),
+        ),
         const SizedBox(height: 30),
 
         // OTP boxes
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(6, (i) => Container(
-            width: 46, height: 56,
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            child: TextField(
-              controller: _otpCtrls[i],
-              focusNode: _otpFocus[i],
-              textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
-              maxLength: 1,
-              style: AppText.heading(color: AppColors.gold, weight: FontWeight.bold),
-              decoration: const InputDecoration(
-                counterText: '',
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: AppColors.white12, width: 1.5),
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
+          children: List.generate(
+            6,
+            (i) => Container(
+              width: 46,
+              height: 56,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              child: TextField(
+                controller: _otpCtrls[i],
+                focusNode: _otpFocus[i],
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                maxLength: 1,
+                style: AppText.heading(
+                  color: AppColors.gold,
+                  weight: FontWeight.bold,
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: AppColors.gold, width: 2),
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                decoration: const InputDecoration(
+                  counterText: '',
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: AppColors.white12,
+                      width: 1.5,
+                    ),
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.gold, width: 2),
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  fillColor: Color(0x0AFFFF00),
+                  filled: true,
                 ),
-                fillColor: Color(0x0AFFFF00),
-                filled: true,
+                onChanged: (v) {
+                  if (v.length == 1 && i < 5) _otpFocus[i + 1].requestFocus();
+                  if (v.isEmpty && i > 0) _otpFocus[i - 1].requestFocus();
+                },
               ),
-              onChanged: (v) {
-                if (v.length == 1 && i < 5) _otpFocus[i + 1].requestFocus();
-                if (v.isEmpty && i > 0) _otpFocus[i - 1].requestFocus();
-              },
             ),
-          )),
+          ),
         ),
         const SizedBox(height: 28),
 
@@ -299,8 +351,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Password Strength', style: AppText.caption()),
-              Text(_strengthLabel,
-                  style: AppText.caption(color: _strengthColor)),
+              Text(
+                _strengthLabel,
+                style: AppText.caption(color: _strengthColor),
+              ),
             ],
           ),
         ],
@@ -313,13 +367,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             labelText: 'Confirm Password',
-            prefixIcon: const Icon(Icons.lock_reset_outlined, color: AppColors.gold),
+            prefixIcon: const Icon(
+              Icons.lock_reset_outlined,
+              color: AppColors.gold,
+            ),
             suffixIcon: IconButton(
               icon: Icon(
                 _confirmPassVisible ? Icons.visibility_off : Icons.visibility,
                 color: AppColors.white38,
               ),
-              onPressed: () => setState(() => _confirmPassVisible = !_confirmPassVisible),
+              onPressed: () =>
+                  setState(() => _confirmPassVisible = !_confirmPassVisible),
             ),
           ),
         ),
@@ -332,8 +390,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
             onPressed: _loading ? null : _verifyAndReset,
             child: _loading
                 ? const SizedBox(
-                    width: 24, height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.black))
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.black,
+                    ),
+                  )
                 : Text('RESET PASSWORD', style: AppText.button()),
           ),
         ),
@@ -361,18 +424,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                 border: Border.all(color: AppColors.success, width: 2),
                 boxShadow: AppShadows.glow(AppColors.success),
               ),
-              child: const Icon(Icons.check_rounded,
-                  color: AppColors.successLight, size: 56),
+              child: const Icon(
+                Icons.check_rounded,
+                color: AppColors.successLight,
+                size: 56,
+              ),
             ),
           ),
         ),
         const SizedBox(height: 32),
-        Text('Password Reset!', style: AppText.display())
-            .animate().fadeIn(delay: 400.ms),
+        Text(
+          'Password Reset!',
+          style: AppText.display(),
+        ).animate().fadeIn(delay: 400.ms),
         const SizedBox(height: 12),
-        Text('Your password has been updated successfully.',
-            style: AppText.body(), textAlign: TextAlign.center)
-            .animate().fadeIn(delay: 500.ms),
+        Text(
+          'Your password has been updated successfully.',
+          style: AppText.body(),
+          textAlign: TextAlign.center,
+        ).animate().fadeIn(delay: 500.ms),
         const SizedBox(height: 48),
         SizedBox(
           width: double.infinity,

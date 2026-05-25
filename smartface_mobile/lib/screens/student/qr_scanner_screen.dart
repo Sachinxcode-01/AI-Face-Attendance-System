@@ -21,7 +21,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   void _onDetect(BarcodeCapture capture) {
     if (!_isScanning) return;
-    
+
     final List<Barcode> barcodes = capture.barcodes;
     if (barcodes.isNotEmpty) {
       final String? code = barcodes.first.rawValue;
@@ -36,7 +36,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFFFD700))),
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: Color(0xFFFFD700)),
+      ),
     );
 
     try {
@@ -46,15 +48,22 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
       final session = context.read<SessionManager>();
       final args = ModalRoute.of(context)?.settings.arguments as Map?;
-      final studentEmail = args?['email'] ?? session.email ?? 'student@smartface.elite';
+      final studentEmail =
+          args?['email'] ?? session.email ?? 'student@smartface.elite';
 
-      final result = await ApiService.markAttendance(studentEmail, sessionId, token);
+      final result = await ApiService.markAttendance(
+        studentEmail,
+        sessionId,
+        token,
+      );
 
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
 
       bool success = result.containsKey('message');
-      String message = success ? 'Your attendance has been verified and logged.' : (result['detail'] ?? 'Verification failed');
+      String message = success
+          ? 'Your attendance has been verified and logged.'
+          : (result['detail'] ?? 'Verification failed');
 
       showDialog(
         context: context,
@@ -63,21 +72,26 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           backgroundColor: AppColors.bgModal,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
-            side: BorderSide(color: AppColors.gold.withValues(alpha: 0.15), width: 1.5),
+            side: BorderSide(
+              color: AppColors.gold.withValues(alpha: 0.15),
+              width: 1.5,
+            ),
           ),
           title: Row(
             children: [
               Icon(
-                success ? Icons.check_circle_rounded : Icons.error_outline_rounded, 
+                success
+                    ? Icons.check_circle_rounded
+                    : Icons.error_outline_rounded,
                 color: success ? AppColors.success : AppColors.error,
                 size: 26,
               ),
               const SizedBox(width: 12),
               Text(
-                success ? 'VALIDATED ✓' : 'VERIFICATION FAILED', 
+                success ? 'VALIDATED ✓' : 'VERIFICATION FAILED',
                 style: GoogleFonts.inter(
-                  color: Colors.white, 
-                  fontWeight: FontWeight.bold, 
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                   fontSize: 16,
                   letterSpacing: 0.5,
                 ),
@@ -85,8 +99,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             ],
           ),
           content: Text(
-            message, 
-            style: GoogleFonts.inter(color: Colors.white70, fontSize: 13, height: 1.4),
+            message,
+            style: GoogleFonts.inter(
+              color: Colors.white70,
+              fontSize: 13,
+              height: 1.4,
+            ),
           ),
           actions: [
             TextButton(
@@ -99,8 +117,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 }
               },
               child: Text(
-                'DISMISS', 
-                style: GoogleFonts.inter(color: AppColors.gold, fontWeight: FontWeight.bold, letterSpacing: 1),
+                'DISMISS',
+                style: GoogleFonts.inter(
+                  color: AppColors.gold,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
               ),
             ),
           ],
@@ -109,7 +131,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid QR Code Format')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Invalid QR Code Format')));
       setState(() => _isScanning = true);
     }
   }
@@ -120,10 +144,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          MobileScanner(
-            onDetect: _onDetect,
-          ),
-          
+          MobileScanner(onDetect: _onDetect),
+
           // Overlay
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
@@ -139,14 +161,17 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                       width: 250,
                       height: 250,
                       decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.gold.withValues(alpha: 0.6), width: 2),
+                        border: Border.all(
+                          color: AppColors.gold.withValues(alpha: 0.6),
+                          width: 2,
+                        ),
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.gold.withValues(alpha: 0.08),
                             blurRadius: 20,
                             spreadRadius: 2,
-                          )
+                          ),
                         ],
                       ),
                       child: Stack(
@@ -156,45 +181,60 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                             top: 0,
                             left: 0,
                             right: 0,
-                            child: Container(
-                              height: 4,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppColors.gold.withValues(alpha: 0.0),
-                                    AppColors.gold,
-                                    AppColors.gold.withValues(alpha: 0.0),
-                                  ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.gold.withValues(alpha: 0.6),
-                                    blurRadius: 10,
-                                    spreadRadius: 1.5,
-                                  )
-                                ],
-                              ),
-                            ).animate(onPlay: (c) => c.repeat())
-                             .moveY(begin: 0, end: 250, duration: 2.seconds, curve: Curves.easeInOut),
+                            child:
+                                Container(
+                                      height: 4,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            AppColors.gold.withValues(
+                                              alpha: 0.0,
+                                            ),
+                                            AppColors.gold,
+                                            AppColors.gold.withValues(
+                                              alpha: 0.0,
+                                            ),
+                                          ],
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.gold.withValues(
+                                              alpha: 0.6,
+                                            ),
+                                            blurRadius: 10,
+                                            spreadRadius: 1.5,
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                    .animate(onPlay: (c) => c.repeat())
+                                    .moveY(
+                                      begin: 0,
+                                      end: 250,
+                                      duration: 2.seconds,
+                                      curve: Curves.easeInOut,
+                                    ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 40),
                     Text(
-                      'ALIGN WITH TEACHER\'S QR',
-                      style: GoogleFonts.inter(
-                        color: AppColors.gold,
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(duration: 2.seconds),
+                          'ALIGN WITH TEACHER\'S QR',
+                          style: GoogleFonts.inter(
+                            color: AppColors.gold,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .shimmer(duration: 2.seconds),
                   ],
                 ),
               ),
             ),
           ),
-          
+
           // Back button
           Positioned(
             top: 50,

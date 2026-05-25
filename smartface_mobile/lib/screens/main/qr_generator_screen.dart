@@ -31,7 +31,8 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   Future<void> _initSession() async {
     final session = context.read<SessionManager>();
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    final teacherEmail = args?['email'] ?? session.email ?? 'teacher@smartface.elite';
+    final teacherEmail =
+        args?['email'] ?? session.email ?? 'teacher@smartface.elite';
     final subject = args?['subject'] ?? 'Advanced AI';
 
     final result = await ApiService.startSession(teacherEmail, subject);
@@ -57,7 +58,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
       _qrData = jsonEncode({
         'session_id': _sessionId,
         'token': token,
-        'type': 'attendance_qr'
+        'type': 'attendance_qr',
       });
       _secondsRemaining = 15;
     });
@@ -88,66 +89,93 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         backgroundColor: Colors.transparent,
       ),
       body: _isInitializing
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFFD700)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFFFD700)),
+            )
           : Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'SESSION ACTIVE',
-                    style: GoogleFonts.inter(color: Colors.greenAccent, letterSpacing: 3, fontWeight: FontWeight.bold),
-                  ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 2.seconds),
-            const SizedBox(height: 40),
-            
-            // --- THE ROTATING QR CODE ---
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(color: const Color(0xFFFFD700).withValues(alpha: 0.3), blurRadius: 40, spreadRadius: 5),
+                        'SESSION ACTIVE',
+                        style: GoogleFonts.inter(
+                          color: Colors.greenAccent,
+                          letterSpacing: 3,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                      .animate(onPlay: (c) => c.repeat())
+                      .shimmer(duration: 2.seconds),
+                  const SizedBox(height: 40),
+
+                  // --- THE ROTATING QR CODE ---
+                  Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(
+                                0xFFFFD700,
+                              ).withValues(alpha: 0.3),
+                              blurRadius: 40,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: QrImageView(
+                          data: _qrData,
+                          version: QrVersions.auto,
+                          size: 250.0,
+                          gapless: false,
+                        ),
+                      )
+                      .animate(key: ValueKey(_qrData))
+                      .scale(duration: 400.ms, curve: Curves.easeOutBack)
+                      .fadeIn(),
+
+                  const SizedBox(height: 50),
+
+                  // --- PROGRESS CIRCLE ---
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        height: 80,
+                        width: 80,
+                        child: CircularProgressIndicator(
+                          value: _secondsRemaining / 15,
+                          strokeWidth: 8,
+                          backgroundColor: Colors.white10,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFFFFD700),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '$_secondsRemaining',
+                        style: GoogleFonts.inter(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 30),
+                  const Text(
+                    'QR ROTATES EVERY 15 SECONDS FOR SECURITY',
+                    style: TextStyle(
+                      color: Colors.white38,
+                      fontSize: 10,
+                      letterSpacing: 1,
+                    ),
+                  ),
                 ],
               ),
-              child: QrImageView(
-                data: _qrData,
-                version: QrVersions.auto,
-                size: 250.0,
-                gapless: false,
-              ),
-            ).animate(key: ValueKey(_qrData)).scale(duration: 400.ms, curve: Curves.easeOutBack).fadeIn(),
-            
-            const SizedBox(height: 50),
-            
-            // --- PROGRESS CIRCLE ---
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  height: 80,
-                  width: 80,
-                  child: CircularProgressIndicator(
-                    value: _secondsRemaining / 15,
-                    strokeWidth: 8,
-                    backgroundColor: Colors.white10,
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
-                  ),
-                ),
-                Text(
-                  '$_secondsRemaining',
-                  style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-              ],
             ),
-            
-            const SizedBox(height: 30),
-            const Text(
-              'QR ROTATES EVERY 15 SECONDS FOR SECURITY',
-              style: TextStyle(color: Colors.white38, fontSize: 10, letterSpacing: 1),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

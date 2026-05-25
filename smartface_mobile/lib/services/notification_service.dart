@@ -60,8 +60,10 @@ class NotificationService {
       playSound: true,
     );
 
-    final androidImpl = _localNotif.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final androidImpl = _localNotif
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidImpl?.createNotificationChannel(androidChannel);
 
     // Initialize local notifications
@@ -81,11 +83,7 @@ class NotificationService {
 
     // Request FCM permissions
     final messaging = FirebaseMessaging.instance;
-    await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    await messaging.requestPermission(alert: true, badge: true, sound: true);
 
     // Get FCM token
     try {
@@ -145,7 +143,10 @@ class NotificationService {
       presentBadge: true,
       presentSound: true,
     );
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
     await _localNotif.show(
       id: id,
       title: title,

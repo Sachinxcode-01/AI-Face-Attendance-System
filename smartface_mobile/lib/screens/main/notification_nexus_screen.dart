@@ -41,7 +41,7 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
       setState(() => _isLoading = false);
       return;
     }
-    
+
     // Fetch notifications targeting this user/role
     final notifs = await ApiService.getNotifications(email);
     final List<Map<String, dynamic>> parsedNotifs = notifs.map((n) {
@@ -51,8 +51,8 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
         'title': map['title'] ?? 'Alert',
         'message': map['message'] ?? '',
         'type': map['type'] ?? 'info',
-        'time': map['created_at'] != null 
-            ? _formatTime(map['created_at']) 
+        'time': map['created_at'] != null
+            ? _formatTime(map['created_at'])
             : 'Just now',
         'priority': map['priority'] ?? 'Info',
         'is_read': map['is_read'] == true,
@@ -71,15 +71,16 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
     _subscription = _notificationService.stream.listen((data) {
       if (!mounted) return;
       final appState = context.read<AppState>();
-      
+
       final targetUser = data['user_id'];
       final targetRole = data['role']; // Optional role routing
-      
-      bool isMatch = targetUser == session.email || 
-                    (targetUser == 'admin' && session.isAdmin) ||
-                    (targetRole == 'student' && session.isStudent) ||
-                    (targetRole == 'teacher' && session.isTeacher);
-      
+
+      bool isMatch =
+          targetUser == session.email ||
+          (targetUser == 'admin' && session.isAdmin) ||
+          (targetRole == 'student' && session.isStudent) ||
+          (targetRole == 'teacher' && session.isTeacher);
+
       if (isMatch) {
         final newNotif = {
           'id': data['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
@@ -91,7 +92,7 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
           'is_read': false,
         };
         appState.addNotification(newNotif);
-        
+
         AppToast.show(
           context,
           message: newNotif['title']!,
@@ -176,10 +177,7 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
             if (notificationsList.isNotEmpty)
               IconButton(
                 onPressed: _clearAll,
-                icon: const Icon(
-                  Icons.done_all_rounded,
-                  color: AppColors.gold,
-                ),
+                icon: const Icon(Icons.done_all_rounded, color: AppColors.gold),
                 tooltip: 'Clear all',
               ),
           ],
@@ -187,61 +185,64 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
         body: _isLoading
             ? const NotificationShimmer()
             : notificationsList.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                    itemCount: notificationsList.length,
-                    itemBuilder: (context, index) {
-                      final notification = notificationsList[index];
-                      final notifId = notification['id'] ?? '';
-                      return Dismissible(
-                            key: Key(notifId),
-                            onDismissed: (direction) => _dismissNotification(notifId),
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.symmetric(horizontal: 30),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.transparent,
-                                    Colors.redAccent.withValues(alpha: 0.25),
-                                  ],
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
+            ? _buildEmptyState()
+            : ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                itemCount: notificationsList.length,
+                itemBuilder: (context, index) {
+                  final notification = notificationsList[index];
+                  final notifId = notification['id'] ?? '';
+                  return Dismissible(
+                        key: Key(notifId),
+                        onDismissed: (direction) =>
+                            _dismissNotification(notifId),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(horizontal: 30),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                Colors.redAccent.withValues(alpha: 0.25),
+                              ],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                'Dismissing...  ',
+                                style: GoogleFonts.inter(
+                                  color: Colors.redAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  letterSpacing: 1,
                                 ),
-                                borderRadius: BorderRadius.circular(25),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'Dismissing...  ',
-                                    style: GoogleFonts.inter(
-                                      color: Colors.redAccent,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                      letterSpacing: 1,
-                                    ),
-                                  ),
-                                  const Icon(
+                              const Icon(
                                     Icons.delete_sweep_rounded,
                                     color: Colors.redAccent,
                                     size: 26,
-                                  ).animate(onPlay: (c) => c.repeat()).shake(duration: 1.seconds),
-                                ],
-                              ),
-                            ),
-                            child: _buildNotificationCard(notification),
-                          )
-                          .animate()
-                          .fadeIn(delay: (index * 100).ms)
-                          .slideX(begin: 0.1);
-                    },
-                  ),
+                                  )
+                                  .animate(onPlay: (c) => c.repeat())
+                                  .shake(duration: 1.seconds),
+                            ],
+                          ),
+                        ),
+                        child: _buildNotificationCard(notification),
+                      )
+                      .animate()
+                      .fadeIn(delay: (index * 100).ms)
+                      .slideX(begin: 0.1);
+                },
+              ),
       ),
     );
   }
@@ -395,9 +396,13 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => _handleLeaveAction(notification, 'Rejected'),
+                          onPressed: () =>
+                              _handleLeaveAction(notification, 'Rejected'),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.redAccent, width: 1.2),
+                            side: const BorderSide(
+                              color: Colors.redAccent,
+                              width: 1.2,
+                            ),
                             foregroundColor: Colors.redAccent,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -405,14 +410,18 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
                           ),
                           child: const Text(
                             'DENY',
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => _handleLeaveAction(notification, 'Approved'),
+                          onPressed: () =>
+                              _handleLeaveAction(notification, 'Approved'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.greenAccent,
                             foregroundColor: Colors.black,
@@ -422,7 +431,10 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
                           ),
                           child: const Text(
                             'APPROVE',
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -437,22 +449,34 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
     );
   }
 
-  Future<void> _handleLeaveAction(Map<String, dynamic> notification, String status) async {
+  Future<void> _handleLeaveAction(
+    Map<String, dynamic> notification,
+    String status,
+  ) async {
     final leaveId = notification['leave_id'] ?? notification['id'] ?? '';
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+      builder: (context) =>
+          const Center(child: CircularProgressIndicator(color: AppColors.gold)),
     );
 
     try {
-      final res = await ApiService.actionLeave(leaveId, status, 'Actioned from Notification Nexus');
+      final res = await ApiService.actionLeave(
+        leaveId,
+        status,
+        'Actioned from Notification Nexus',
+      );
       if (mounted) Navigator.pop(context);
 
       if (res['detail'] == 'Connection failed') {
         if (mounted) {
-          AppToast.show(context, message: 'Failed to connect to server', type: ToastType.error);
+          AppToast.show(
+            context,
+            message: 'Failed to connect to server',
+            type: ToastType.error,
+          );
         }
       } else {
         if (mounted) {
@@ -467,7 +491,11 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        AppToast.show(context, message: 'Error processing action: $e', type: ToastType.error);
+        AppToast.show(
+          context,
+          message: 'Error processing action: $e',
+          type: ToastType.error,
+        );
       }
     }
   }

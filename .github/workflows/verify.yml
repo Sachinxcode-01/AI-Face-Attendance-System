@@ -88,11 +88,26 @@ jobs:
       - name: Verify no hard-coded secrets in source
         run: |
           echo "Scanning for potential hard-coded secrets..."
-          ! grep -rn \
-            --include="*.js" \
-            -E "(mongodb\+srv://[^'"'"'\"$\{]+:[^'"'"'\"$\{]+@|password\s*=\s*['"'"'\"]\w{8,})" \
-            src/ \
-            && echo "✅ No hard-coded credentials found."
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            function scan(dir) {
+              fs.readdirSync(dir).forEach(file => {
+                const fullPath = path.join(dir, file);
+                if (fs.statSync(fullPath).isDirectory()) {
+                  if (file !== "node_modules") scan(fullPath);
+                } else if (file.endsWith(".js")) {
+                  const content = fs.readFileSync(fullPath, "utf8");
+                  if (/mongodb\+srv:\/\/|password\s*=\s*["\x27]\w{8,}/.test(content)) {
+                    console.error("❌ Potential secret found in: " + fullPath);
+                    process.exit(1);
+                  }
+                }
+              });
+            }
+            scan("src");
+            console.log("✅ No hard-coded credentials found.");
+          '
 
   # ─────────────────────────────────────────────────────────────────────────
   # JOB 3: Python FastAPI — Syntax + Import Check
@@ -149,8 +164,6 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
           extra_args: --only-verified
 
   # ─────────────────────────────────────────────────────────────────────────
@@ -167,7 +180,8 @@ jobs:
         run: |
           if [[ "${{ needs.flutter-check.result }}" != "success" || \
                 "${{ needs.node-check.result }}" != "success" || \
-                "${{ needs.python-check.result }}" != "success" ]]; then
+                "${{ needs.python-check.result }}" != "success" || \
+                "${{ needs.secret-scan.result }}" != "success" ]]; then
             echo "❌ One or more checks failed."
             exit 1
           fi

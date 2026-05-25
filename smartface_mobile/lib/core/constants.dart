@@ -114,28 +114,25 @@ class AppText {
         color: color ?? AppColors.white70,
       );
 
-  static TextStyle caption({Color? color}) =>
-      GoogleFonts.inter(
-        fontSize: 11,
-        color: color ?? AppColors.white38,
-        letterSpacing: 0.4,
-      );
+  static TextStyle caption({Color? color}) => GoogleFonts.inter(
+    fontSize: 11,
+    color: color ?? AppColors.white38,
+    letterSpacing: 0.4,
+  );
 
-  static TextStyle label({Color? color}) =>
-      GoogleFonts.inter(
-        fontSize: 10,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 1.2,
-        color: color ?? AppColors.white38,
-      );
+  static TextStyle label({Color? color}) => GoogleFonts.inter(
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 1.2,
+    color: color ?? AppColors.white38,
+  );
 
-  static TextStyle button({Color? color}) =>
-      GoogleFonts.inter(
-        fontSize: 15,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 1.0,
-        color: color ?? Colors.black,
-      );
+  static TextStyle button({Color? color}) => GoogleFonts.inter(
+    fontSize: 15,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 1.0,
+    color: color ?? Colors.black,
+  );
 }
 
 // ─────────────────────────────────────────────
@@ -143,12 +140,12 @@ class AppText {
 // ─────────────────────────────────────────────
 class AppShadows {
   static List<BoxShadow> goldGlow({double intensity = 0.25}) => [
-        BoxShadow(
-          color: AppColors.gold.withValues(alpha: intensity),
-          blurRadius: 24,
-          spreadRadius: 4,
-        ),
-      ];
+    BoxShadow(
+      color: AppColors.gold.withValues(alpha: intensity),
+      blurRadius: 24,
+      spreadRadius: 4,
+    ),
+  ];
 
   static List<BoxShadow> card = [
     BoxShadow(
@@ -159,12 +156,12 @@ class AppShadows {
   ];
 
   static List<BoxShadow> glow(Color color, {double intensity = 0.3}) => [
-        BoxShadow(
-          color: color.withValues(alpha: intensity),
-          blurRadius: 20,
-          spreadRadius: 2,
-        ),
-      ];
+    BoxShadow(
+      color: color.withValues(alpha: intensity),
+      blurRadius: 20,
+      spreadRadius: 2,
+    ),
+  ];
 }
 
 // ─────────────────────────────────────────────
@@ -198,46 +195,66 @@ enum UserRole { admin, teacher, student, unknown }
 extension UserRoleExt on UserRole {
   String get label {
     switch (this) {
-      case UserRole.admin: return 'Admin';
-      case UserRole.teacher: return 'Teacher';
-      case UserRole.student: return 'Student';
-      case UserRole.unknown: return 'Unknown';
+      case UserRole.admin:
+        return 'Admin';
+      case UserRole.teacher:
+        return 'Teacher';
+      case UserRole.student:
+        return 'Student';
+      case UserRole.unknown:
+        return 'Unknown';
     }
   }
 
   Color get color {
     switch (this) {
-      case UserRole.admin: return AppColors.errorLight;
-      case UserRole.teacher: return AppColors.cyan;
-      case UserRole.student: return AppColors.gold;
-      case UserRole.unknown: return AppColors.white38;
+      case UserRole.admin:
+        return AppColors.errorLight;
+      case UserRole.teacher:
+        return AppColors.cyan;
+      case UserRole.student:
+        return AppColors.gold;
+      case UserRole.unknown:
+        return AppColors.white38;
     }
   }
 
   IconData get icon {
     switch (this) {
-      case UserRole.admin: return Icons.shield_outlined;
-      case UserRole.teacher: return Icons.school_outlined;
-      case UserRole.student: return Icons.person_outline;
-      case UserRole.unknown: return Icons.help_outline;
+      case UserRole.admin:
+        return Icons.shield_outlined;
+      case UserRole.teacher:
+        return Icons.school_outlined;
+      case UserRole.student:
+        return Icons.person_outline;
+      case UserRole.unknown:
+        return Icons.help_outline;
     }
   }
 
   String get dashboardRoute {
     switch (this) {
-      case UserRole.admin: return '/admin-home';
-      case UserRole.teacher: return '/teacher-home';
-      case UserRole.student: return '/student-home';
-      case UserRole.unknown: return '/';
+      case UserRole.admin:
+        return '/admin-home';
+      case UserRole.teacher:
+        return '/teacher-home';
+      case UserRole.student:
+        return '/student-home';
+      case UserRole.unknown:
+        return '/';
     }
   }
 
   static UserRole fromString(String? s) {
     switch (s?.toLowerCase()) {
-      case 'admin': return UserRole.admin;
-      case 'teacher': return UserRole.teacher;
-      case 'student': return UserRole.student;
-      default: return UserRole.unknown;
+      case 'admin':
+        return UserRole.admin;
+      case 'teacher':
+        return UserRole.teacher;
+      case 'student':
+        return UserRole.student;
+      default:
+        return UserRole.unknown;
     }
   }
 }

@@ -125,7 +125,9 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            isDark ? Colors.black.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.85),
+            isDark
+                ? Colors.black.withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.85),
             isDark ? BlendMode.dstATop : BlendMode.srcOver,
           ),
         ),
@@ -143,7 +145,10 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios, color: isDark ? Colors.white : AppColors.bgDark),
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: isDark ? Colors.white : AppColors.bgDark,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -322,7 +327,10 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
             onPressed: () {},
             child: const Text(
               'ATTACH',
-              style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.gold,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

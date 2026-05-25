@@ -18,7 +18,7 @@ class LiveMonitorScreen extends StatefulWidget {
 class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
   final NotificationService _notificationService = NotificationService();
   StreamSubscription? _subscription;
-  
+
   bool _isIntruderAlertActive = false;
   int _presentCount = 38;
   int _aiDetectedCount = 36;
@@ -33,11 +33,13 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
       if (data['type'] == 'attendance_update') {
         setState(() {
           _presentCount++;
-          if (_presentCount % 3 == 0) _aiDetectedCount++; // Simulate AI detection lag
+          if (_presentCount % 3 == 0) {
+            _aiDetectedCount++; // Simulate AI detection lag
+          }
           _recentCheckins.insert(0, {
             'email': data['student_email'],
             'status': data['status'],
-            'time': 'Just now'
+            'time': 'Just now',
           });
           if (_recentCheckins.length > 5) _recentCheckins.removeLast();
         });
@@ -63,13 +65,12 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.bgDeep,
-            AppColors.bgDark,
-          ],
+          colors: [AppColors.bgDeep, AppColors.bgDark],
         ),
         image: DecorationImage(
-          image: const NetworkImage('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80'),
+          image: const NetworkImage(
+            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
+          ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
             Colors.black.withValues(alpha: 0.15),
@@ -80,175 +81,209 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-        title: Text('Live Monitor', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        actions: [
-          _buildIntruderBadge(),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildLiveFeed(),
-            const SizedBox(height: 30),
-            _buildStatsRow(),
-            const SizedBox(height: 30),
-            if (_recentCheckins.isNotEmpty) ...[
-              Text(
-                'LIVE CHECK-INS (REAL-TIME)',
-                style: GoogleFonts.inter(fontSize: 12, letterSpacing: 2, color: Colors.greenAccent),
-              ),
-              const SizedBox(height: 15),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: _recentCheckins.map((checkin) => _buildCheckinItem(checkin)).toList(),
-              ),
-              const SizedBox(height: 25),
+          title: Text(
+            'Live Monitor',
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: Colors.transparent,
+          actions: [_buildIntruderBadge()],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildLiveFeed(),
+              const SizedBox(height: 30),
+              _buildStatsRow(),
+              const SizedBox(height: 30),
+              if (_recentCheckins.isNotEmpty) ...[
+                Text(
+                  'LIVE CHECK-INS (REAL-TIME)',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    letterSpacing: 2,
+                    color: Colors.greenAccent,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: _recentCheckins
+                      .map((checkin) => _buildCheckinItem(checkin))
+                      .toList(),
+                ),
+                const SizedBox(height: 25),
+              ],
+              _buildAbsenteeList(),
             ],
-            _buildAbsenteeList(),
-          ],
+          ),
         ),
       ),
-    ),
     );
   }
 
   Widget _buildCheckinItem(Map<String, String> checkin) {
     final double cardWidth = (MediaQuery.of(context).size.width - 52) / 2;
     return Container(
-      width: cardWidth,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.greenAccent.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.greenAccent.withValues(alpha: 0.08),
-            blurRadius: 15,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              // Avatar base
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: Colors.greenAccent.withValues(alpha: 0.1),
-                child: const Icon(
-                  Icons.person,
-                  color: Colors.greenAccent,
-                  size: 28,
-                ),
+          width: cardWidth,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.greenAccent.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.greenAccent.withValues(alpha: 0.08),
+                blurRadius: 15,
+                spreadRadius: 1,
               ),
-              // Scanner ring animation
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.greenAccent.withValues(alpha: 0.5),
-                      width: 1.5,
-                    ),
-                  ),
-                ).animate(onPlay: (c) => c.repeat(reverse: true))
-                 .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.1, 1.1), duration: 1.seconds),
-              ),
-              // Biometric floating points around the avatar
-              ...List.generate(4, (index) {
-                final angles = [0.0, 1.57, 3.14, 4.71];
-                final double distance = 36.0;
-                final double dx = distance * math.cos(angles[index]);
-                final double dy = distance * math.sin(angles[index]);
-                return Transform.translate(
-                  offset: Offset(dx, dy),
-                  child: Container(
-                    width: 5,
-                    height: 5,
-                    decoration: const BoxDecoration(
-                      color: Colors.greenAccent,
-                      shape: BoxShape.circle,
-                    ),
-                  ).animate(onPlay: (c) => c.repeat(reverse: true))
-                   .scale(begin: const Offset(0.5, 0.5), end: const Offset(1.5, 1.5), duration: 600.ms + (index * 150).ms)
-                   .fadeIn(duration: 300.ms),
-                );
-              }),
             ],
           ),
-          const SizedBox(height: 10),
-          Text(
-            checkin['email']!.split('@').first.toUpperCase(),
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              color: Colors.white,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-            decoration: BoxDecoration(
-              color: Colors.greenAccent.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.verified_user_outlined,
-                  color: Colors.greenAccent,
-                  size: 10,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Recognized ✓',
-                  style: GoogleFonts.inter(
-                    color: Colors.greenAccent,
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Avatar base
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: Colors.greenAccent.withValues(alpha: 0.1),
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.greenAccent,
+                      size: 28,
+                    ),
                   ),
+                  // Scanner ring animation
+                  Positioned.fill(
+                    child:
+                        Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.greenAccent.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  width: 1.5,
+                                ),
+                              ),
+                            )
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .scale(
+                              begin: const Offset(0.9, 0.9),
+                              end: const Offset(1.1, 1.1),
+                              duration: 1.seconds,
+                            ),
+                  ),
+                  // Biometric floating points around the avatar
+                  ...List.generate(4, (index) {
+                    final angles = [0.0, 1.57, 3.14, 4.71];
+                    final double distance = 36.0;
+                    final double dx = distance * math.cos(angles[index]);
+                    final double dy = distance * math.sin(angles[index]);
+                    return Transform.translate(
+                      offset: Offset(dx, dy),
+                      child:
+                          Container(
+                                width: 5,
+                                height: 5,
+                                decoration: const BoxDecoration(
+                                  color: Colors.greenAccent,
+                                  shape: BoxShape.circle,
+                                ),
+                              )
+                              .animate(onPlay: (c) => c.repeat(reverse: true))
+                              .scale(
+                                begin: const Offset(0.5, 0.5),
+                                end: const Offset(1.5, 1.5),
+                                duration: 600.ms + (index * 150).ms,
+                              )
+                              .fadeIn(duration: 300.ms),
+                    );
+                  }),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                checkin['email']!.split('@').first.toUpperCase(),
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: Colors.white,
                 ),
-              ],
-            ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.greenAccent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.verified_user_outlined,
+                      color: Colors.greenAccent,
+                      size: 10,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Recognized ✓',
+                      style: GoogleFonts.inter(
+                        color: Colors.greenAccent,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ).animate()
-     .slideY(begin: 0.1, duration: 400.ms, curve: Curves.easeOutBack)
-     .fadeIn(duration: 400.ms)
-     .shimmer(color: Colors.greenAccent.withValues(alpha: 0.3), duration: 1.seconds);
+        )
+        .animate()
+        .slideY(begin: 0.1, duration: 400.ms, curve: Curves.easeOutBack)
+        .fadeIn(duration: 400.ms)
+        .shimmer(
+          color: Colors.greenAccent.withValues(alpha: 0.3),
+          duration: 1.seconds,
+        );
   }
 
   Widget _buildIntruderBadge() {
     return Container(
-      margin: const EdgeInsets.only(right: 16),
-      child: Chip(
-        avatar: Icon(Icons.security, color: _isIntruderAlertActive ? Colors.white : Colors.greenAccent, size: 16),
-        label: Text(
-          _isIntruderAlertActive ? 'INTRUDER DETECTED' : 'SECURE',
-          style: TextStyle(
-            color: _isIntruderAlertActive ? Colors.white : Colors.greenAccent,
-            fontWeight: FontWeight.bold,
-            fontSize: 10,
+          margin: const EdgeInsets.only(right: 16),
+          child: Chip(
+            avatar: Icon(
+              Icons.security,
+              color: _isIntruderAlertActive ? Colors.white : Colors.greenAccent,
+              size: 16,
+            ),
+            label: Text(
+              _isIntruderAlertActive ? 'INTRUDER DETECTED' : 'SECURE',
+              style: TextStyle(
+                color: _isIntruderAlertActive
+                    ? Colors.white
+                    : Colors.greenAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
+            backgroundColor: _isIntruderAlertActive
+                ? Colors.redAccent
+                : Colors.white.withValues(alpha: 0.05),
           ),
-        ),
-        backgroundColor: _isIntruderAlertActive ? Colors.redAccent : Colors.white.withValues(alpha: 0.05),
-      ),
-    ).animate(target: _isIntruderAlertActive ? 1 : 0)
-     .shimmer(duration: 1.seconds);
+        )
+        .animate(target: _isIntruderAlertActive ? 1 : 0)
+        .shimmer(duration: 1.seconds);
   }
 
   Widget _buildLiveFeed() {
@@ -260,7 +295,11 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: Colors.white10),
         boxShadow: [
-          const BoxShadow(color: Colors.black54, blurRadius: 20, spreadRadius: 5),
+          const BoxShadow(
+            color: Colors.black54,
+            blurRadius: 20,
+            spreadRadius: 5,
+          ),
         ],
       ),
       child: Stack(
@@ -269,9 +308,20 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.videocam_off_outlined, color: Colors.white24, size: 48),
+                const Icon(
+                  Icons.videocam_off_outlined,
+                  color: Colors.white24,
+                  size: 48,
+                ),
                 const SizedBox(height: 10),
-                Text('LIVE FEED ENCRYPTED', style: GoogleFonts.inter(color: Colors.white24, fontSize: 12, letterSpacing: 2)),
+                Text(
+                  'LIVE FEED ENCRYPTED',
+                  style: GoogleFonts.inter(
+                    color: Colors.white24,
+                    fontSize: 12,
+                    letterSpacing: 2,
+                  ),
+                ),
               ],
             ),
           ),
@@ -281,12 +331,24 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
             child: Row(
               children: [
                 Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                ).animate(onPlay: (c) => c.repeat()).fadeOut(duration: 1.seconds),
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                    .animate(onPlay: (c) => c.repeat())
+                    .fadeOut(duration: 1.seconds),
                 const SizedBox(width: 8),
-                const Text('REC', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 12)),
+                const Text(
+                  'REC',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
           ),
@@ -295,8 +357,14 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
             right: 20,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(10)),
-              child: const Text('CAM_01: MAIN HALL', style: TextStyle(color: Colors.white70, fontSize: 10)),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                'CAM_01: MAIN HALL',
+                style: TextStyle(color: Colors.white70, fontSize: 10),
+              ),
             ),
           ),
         ],
@@ -307,9 +375,23 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
   Widget _buildStatsRow() {
     return Row(
       children: [
-        Expanded(child: _buildMiniStat('Students Present', _presentCount, Icons.people_outline, Colors.greenAccent)),
+        Expanded(
+          child: _buildMiniStat(
+            'Students Present',
+            _presentCount,
+            Icons.people_outline,
+            Colors.greenAccent,
+          ),
+        ),
         const SizedBox(width: 15),
-        Expanded(child: _buildMiniStat('AI Detected', _aiDetectedCount, Icons.face_retouching_natural, AppColors.gold)),
+        Expanded(
+          child: _buildMiniStat(
+            'AI Detected',
+            _aiDetectedCount,
+            Icons.face_retouching_natural,
+            AppColors.gold,
+          ),
+        ),
       ],
     );
   }
@@ -329,9 +411,16 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
           const SizedBox(height: 12),
           RollingNumberTicker(
             value: value,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-          Text(label, style: const TextStyle(color: Colors.white38, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white38, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -352,7 +441,11 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
           children: [
             Text(
               'AI ABSENTEE DETECTION',
-              style: GoogleFonts.inter(fontSize: 12, letterSpacing: 2, color: AppColors.gold),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                letterSpacing: 2,
+                color: AppColors.gold,
+              ),
             ),
             const Icon(Icons.auto_awesome, color: AppColors.gold, size: 16),
           ],
@@ -375,15 +468,24 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
         children: [
           CircleAvatar(
             backgroundColor: Colors.white10,
-            child: Text(student['name']![0], style: const TextStyle(color: Colors.white70)),
+            child: Text(
+              student['name']![0],
+              style: const TextStyle(color: Colors.white70),
+            ),
           ),
           const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(student['name']!, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(student['id']!, style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                Text(
+                  student['name']!,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  student['id']!,
+                  style: const TextStyle(color: Colors.white38, fontSize: 12),
+                ),
               ],
             ),
           ),
@@ -395,7 +497,11 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
             ),
             child: Text(
               '${student['risk']} Risk',
-              style: TextStyle(color: _getRiskColor(student['risk']!), fontSize: 10, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: _getRiskColor(student['risk']!),
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -405,9 +511,12 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
 
   Color _getRiskColor(String risk) {
     switch (risk) {
-      case 'High': return Colors.redAccent;
-      case 'Medium': return Colors.orangeAccent;
-      default: return Colors.blueAccent;
+      case 'High':
+        return Colors.redAccent;
+      case 'Medium':
+        return Colors.orangeAccent;
+      default:
+        return Colors.blueAccent;
     }
   }
 }
@@ -428,21 +537,17 @@ class RollingNumberTicker extends StatelessWidget {
       duration: const Duration(milliseconds: 350),
       transitionBuilder: (Widget child, Animation<double> animation) {
         return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0.0, 0.4),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutBack)),
-          child: FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
+          position:
+              Tween<Offset>(
+                begin: const Offset(0.0, 0.4),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+              ),
+          child: FadeTransition(opacity: animation, child: child),
         );
       },
-      child: Text(
-        '$value',
-        key: ValueKey<int>(value),
-        style: style,
-      ),
+      child: Text('$value', key: ValueKey<int>(value), style: style),
     );
   }
 }

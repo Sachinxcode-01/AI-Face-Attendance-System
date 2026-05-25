@@ -79,7 +79,8 @@ class SessionManager extends ChangeNotifier {
       _storage.write(key: _keyEmail, value: email),
       _storage.write(key: _keyRole, value: role),
       if (name != null) _storage.write(key: _keyName, value: name),
-      if (avatarUrl != null) _storage.write(key: _keyAvatarUrl, value: avatarUrl),
+      if (avatarUrl != null)
+        _storage.write(key: _keyAvatarUrl, value: avatarUrl),
       _storage.write(key: _keyBiometric, value: biometricRegistered.toString()),
     ]);
 
@@ -136,7 +137,7 @@ class SessionManager extends ChangeNotifier {
 
   // ─── Build auth headers for API calls ────────────────────────────
   Map<String, String> get authHeaders => {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${_token ?? ''}',
-      };
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ${_token ?? ''}',
+  };
 }

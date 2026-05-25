@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static const String baseUrl = 'http://10.210.101.48:8000';
 
-
   // ─── Health check ─────────────────────────────────────────────────
   static Future<bool> isServerOnline() async {
     try {
@@ -33,7 +32,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> verifyLoginOtp(String email, String otp) async {
+  static Future<Map<String, dynamic>> verifyLoginOtp(
+    String email,
+    String otp,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/login-otp/verify'),
@@ -46,7 +48,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> loginWithPassword(String email, String password) async {
+  static Future<Map<String, dynamic>> loginWithPassword(
+    String email,
+    String password,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/login-password'),
@@ -59,7 +64,12 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> googleLogin(String email, String name, String role, {String? avatarUrl}) async {
+  static Future<Map<String, dynamic>> googleLogin(
+    String email,
+    String name,
+    String role, {
+    String? avatarUrl,
+  }) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/google'),
@@ -77,7 +87,12 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> register(String name, String email, String password, String role) async {
+  static Future<Map<String, dynamic>> register(
+    String name,
+    String email,
+    String password,
+    String role,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/register'),
@@ -107,6 +122,7 @@ class ApiService {
       return {'detail': 'Connection failed'};
     }
   }
+
   static Future<List<dynamic>> getSecurityLogs() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/security/logs'));
@@ -129,18 +145,27 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> resetPassword(String email, String otp, String newPassword) async {
+  static Future<Map<String, dynamic>> resetPassword(
+    String email,
+    String otp,
+    String newPassword,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/reset-password'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'otp': otp, 'new_password': newPassword}),
+        body: jsonEncode({
+          'email': email,
+          'otp': otp,
+          'new_password': newPassword,
+        }),
       );
       return jsonDecode(response.body);
     } catch (e) {
       return {'detail': 'Connection failed'};
     }
   }
+
   static Future<Map<String, dynamic>> getUserProfile(String token) async {
     try {
       final response = await http.get(
@@ -156,7 +181,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data, String token) async {
+  static Future<Map<String, dynamic>> updateProfile(
+    Map<String, dynamic> data,
+    String token,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/update-profile'),
@@ -172,7 +200,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> registerBiometric(String email, String token) async {
+  static Future<Map<String, dynamic>> registerBiometric(
+    String email,
+    String token,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/register-biometric'),
@@ -206,9 +237,15 @@ class ApiService {
     return [];
   }
 
-  static Future<Map<String, dynamic>> uploadStudentFace(String email, File imageFile, String token) async {
+  static Future<Map<String, dynamic>> uploadStudentFace(
+    String email,
+    File imageFile,
+    String token,
+  ) async {
     try {
-      final uri = Uri.parse('$baseUrl/auth/upload-student-face?student_email=$email');
+      final uri = Uri.parse(
+        '$baseUrl/auth/upload-student-face?student_email=$email',
+      );
       final request = http.MultipartRequest('POST', uri)
         ..headers['Authorization'] = 'Bearer $token'
         ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
@@ -249,7 +286,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> startSession(String teacherEmail, String subject) async {
+  static Future<Map<String, dynamic>> startSession(
+    String teacherEmail,
+    String subject,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/sessions/start'),
@@ -262,7 +302,11 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> markAttendance(String studentEmail, String sessionId, String qrCode) async {
+  static Future<Map<String, dynamic>> markAttendance(
+    String studentEmail,
+    String sessionId,
+    String qrCode,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/attendance/mark'),
@@ -279,7 +323,9 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> applyLeave(Map<String, dynamic> data) async {
+  static Future<Map<String, dynamic>> applyLeave(
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/leave/apply'),
@@ -294,7 +340,9 @@ class ApiService {
 
   static Future<List<dynamic>> getStudentLeaves(String email) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/leave/student/$email'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/leave/student/$email'),
+      );
       return jsonDecode(response.body);
     } catch (e) {
       return [];
@@ -303,14 +351,20 @@ class ApiService {
 
   static Future<List<dynamic>> getPendingLeaves() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/leave/admin/pending'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/leave/admin/pending'),
+      );
       return jsonDecode(response.body);
     } catch (e) {
       return [];
     }
   }
 
-  static Future<Map<String, dynamic>> actionLeave(String leaveId, String status, String remarks) async {
+  static Future<Map<String, dynamic>> actionLeave(
+    String leaveId,
+    String status,
+    String remarks,
+  ) async {
     try {
       final response = await http.patch(
         Uri.parse('$baseUrl/leave/action'),
@@ -330,7 +384,10 @@ class ApiService {
   /// Uploads a profile avatar image as multipart/form-data.
   /// Uploads a profile avatar image as multipart/form-data.
   /// Returns map with `avatar_url` on success, or `detail` on failure.
-  static Future<Map<String, dynamic>> uploadAvatar(File imageFile, String token) async {
+  static Future<Map<String, dynamic>> uploadAvatar(
+    File imageFile,
+    String token,
+  ) async {
     try {
       final uri = Uri.parse('$baseUrl/auth/upload-avatar');
       final request = http.MultipartRequest('POST', uri)
@@ -348,7 +405,9 @@ class ApiService {
   // ─── Notifications Endpoints ─────────────────────────────────────
   static Future<List<dynamic>> getNotifications(String email) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/notifications/$email'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/notifications/$email'),
+      );
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as List<dynamic>;
       }
@@ -362,9 +421,7 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/notifications/unread-count/$email'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+        headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -376,7 +433,10 @@ class ApiService {
     return 0;
   }
 
-  static Future<bool> markNotificationsRead(List<String> ids, String token) async {
+  static Future<bool> markNotificationsRead(
+    List<String> ids,
+    String token,
+  ) async {
     try {
       final response = await http.patch(
         Uri.parse('$baseUrl/notifications/mark-read'),
@@ -393,13 +453,14 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> getStudentStats(String email, String token) async {
+  static Future<Map<String, dynamic>> getStudentStats(
+    String email,
+    String token,
+  ) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/student/stats/$email'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+        headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
@@ -414,9 +475,7 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/admin/stats'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+        headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;

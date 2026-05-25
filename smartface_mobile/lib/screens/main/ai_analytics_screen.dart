@@ -85,9 +85,7 @@ class AIAnalyticsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.gold.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: AppColors.gold.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

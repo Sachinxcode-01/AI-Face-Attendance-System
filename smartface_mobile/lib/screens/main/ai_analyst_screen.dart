@@ -17,26 +17,23 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
   final List<Map<String, dynamic>> _messages = [
     {
       'isMe': false,
-      'text': 'Hello! I am your SmartFace AI Analyst. How can I help you with your academic performance today?',
-      'time': 'Just now'
-    }
+      'text':
+          'Hello! I am your SmartFace AI Analyst. How can I help you with your academic performance today?',
+      'time': 'Just now',
+    },
   ];
   final TextEditingController _controller = TextEditingController();
   bool _isTyping = false;
 
   void _sendMessage() async {
     if (_controller.text.isEmpty) return;
-    
+
     final userQuery = _controller.text;
     setState(() {
-      _messages.add({
-        'isMe': true,
-        'text': userQuery,
-        'time': 'Now'
-      });
+      _messages.add({'isMe': true, 'text': userQuery, 'time': 'Now'});
       _isTyping = true;
     });
-    
+
     _controller.clear();
 
     // CALL REAL AI ENGINE
@@ -50,8 +47,11 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
         _isTyping = false;
         _messages.add({
           'isMe': false,
-          'text': result['response'] ?? result['answer'] ?? 'I apologize, but my neural processing units are currently undergoing maintenance. Please try again in a few minutes.',
-          'time': 'Just now'
+          'text':
+              result['response'] ??
+              result['answer'] ??
+              'I apologize, but my neural processing units are currently undergoing maintenance. Please try again in a few minutes.',
+          'time': 'Just now',
         });
       });
     }
@@ -64,13 +64,12 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.bgDeep,
-            AppColors.bgDark,
-          ],
+          colors: [AppColors.bgDeep, AppColors.bgDark],
         ),
         image: DecorationImage(
-          image: const NetworkImage('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80'),
+          image: const NetworkImage(
+            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
+          ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
             Colors.black.withValues(alpha: 0.15),
@@ -81,50 +80,62 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-        title: Row(
-          children: [
-            const CircleAvatar(
-              backgroundColor: AppColors.gold,
-              child: Icon(Icons.psychology, color: Colors.black),
-            ),
-            const SizedBox(width: 15),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('AI Analyst', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold)),
-                const Text('Neural Engine Online', style: TextStyle(fontSize: 10, color: Colors.greenAccent)),
-              ],
-            ),
-          ],
-        ),
-        backgroundColor: Colors.transparent,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                return _buildChatBubble(msg['text'], msg['isMe']);
-              },
-            ),
-          ),
-          if (_isTyping)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-              child: Row(
+          title: Row(
+            children: [
+              const CircleAvatar(
+                backgroundColor: AppColors.gold,
+                child: Icon(Icons.psychology, color: Colors.black),
+              ),
+              const SizedBox(width: 15),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('AI is thinking...', style: TextStyle(color: Colors.white30, fontSize: 10)),
+                  Text(
+                    'AI Analyst',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    'Neural Engine Online',
+                    style: TextStyle(fontSize: 10, color: Colors.greenAccent),
+                  ),
                 ],
               ),
-            ).animate().shimmer(),
-          _buildQuickReplyChips(),
-          _buildInputArea(),
-        ],
+            ],
+          ),
+          backgroundColor: Colors.transparent,
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(20),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final msg = _messages[index];
+                  return _buildChatBubble(msg['text'], msg['isMe']);
+                },
+              ),
+            ),
+            if (_isTyping)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                child: Row(
+                  children: [
+                    Text(
+                      'AI is thinking...',
+                      style: TextStyle(color: Colors.white30, fontSize: 10),
+                    ),
+                  ],
+                ),
+              ).animate().shimmer(),
+            _buildQuickReplyChips(),
+            _buildInputArea(),
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -162,7 +173,9 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
                 ),
               ),
               backgroundColor: AppColors.gold,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               onPressed: () {
                 _controller.text = query;
                 _sendMessage();
@@ -180,7 +193,9 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(16),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.8,
+        ),
         decoration: BoxDecoration(
           color: isMe ? AppColors.gold : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.only(
@@ -208,22 +223,22 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
   Widget _buildMarkdownContent(String text) {
     final List<Widget> children = [];
     final lines = text.split('\n');
-    
+
     List<List<String>> currentTable = [];
-    
+
     void flushTable() {
       if (currentTable.isEmpty) return;
-      
+
       final rows = currentTable.where((row) {
         if (row.isEmpty) return false;
         final firstCell = row.first.trim();
         return !firstCell.startsWith('---') && !firstCell.startsWith(':---');
       }).toList();
-      
+
       if (rows.isNotEmpty) {
         final header = rows.first;
         final dataRows = rows.skip(1).toList();
-        
+
         children.add(
           Container(
             margin: const EdgeInsets.symmetric(vertical: 10),
@@ -271,7 +286,9 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
                     final isEven = index % 2 == 0;
                     return TableRow(
                       decoration: BoxDecoration(
-                        color: isEven ? Colors.white.withValues(alpha: 0.02) : Colors.transparent,
+                        color: isEven
+                            ? Colors.white.withValues(alpha: 0.02)
+                            : Colors.transparent,
                       ),
                       children: rowCells.map((cell) {
                         return Padding(
@@ -295,10 +312,10 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
       }
       currentTable = [];
     }
-    
+
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
-      
+
       if (line.startsWith('|') && line.endsWith('|')) {
         final cells = line.split('|').map((c) => c.trim()).toList();
         if (cells.isNotEmpty && cells.first.isEmpty) cells.removeAt(0);
@@ -306,10 +323,12 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
         currentTable.add(cells);
       } else {
         flushTable();
-        
+
         if (line.isEmpty) {
           children.add(const SizedBox(height: 8));
-        } else if (line.startsWith('* ') || line.startsWith('- ') || line.startsWith('• ')) {
+        } else if (line.startsWith('* ') ||
+            line.startsWith('- ') ||
+            line.startsWith('• ')) {
           final content = line.substring(2);
           children.add(
             Padding(
@@ -324,7 +343,11 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
                   Expanded(
                     child: _buildInlineStyledText(
                       content,
-                      style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],
@@ -337,16 +360,20 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
               padding: const EdgeInsets.only(bottom: 8),
               child: _buildInlineStyledText(
                 line,
-                style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.4),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
               ),
             ),
           );
         }
       }
     }
-    
+
     flushTable();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: children,
@@ -357,7 +384,7 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
     if (!text.contains('**')) {
       return Text(text, style: style);
     }
-    
+
     final List<TextSpan> spans = [];
     final parts = text.split('**');
     for (int i = 0; i < parts.length; i++) {
@@ -372,7 +399,7 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
         ),
       );
     }
-    
+
     return RichText(
       text: TextSpan(children: spans, style: style),
     );
@@ -396,8 +423,14 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
                 hintStyle: const TextStyle(color: Colors.white24),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.05),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
               ),
             ),
           ),

@@ -98,19 +98,27 @@ class _ToastWidgetState extends State<_ToastWidget>
 
   Color get _color {
     switch (widget.type) {
-      case ToastType.success: return AppColors.success;
-      case ToastType.error: return AppColors.error;
-      case ToastType.warning: return AppColors.warning;
-      case ToastType.info: return AppColors.info;
+      case ToastType.success:
+        return AppColors.success;
+      case ToastType.error:
+        return AppColors.error;
+      case ToastType.warning:
+        return AppColors.warning;
+      case ToastType.info:
+        return AppColors.info;
     }
   }
 
   IconData get _icon {
     switch (widget.type) {
-      case ToastType.success: return Icons.check_circle_outline_rounded;
-      case ToastType.error: return Icons.error_outline_rounded;
-      case ToastType.warning: return Icons.warning_amber_rounded;
-      case ToastType.info: return Icons.info_outline_rounded;
+      case ToastType.success:
+        return Icons.check_circle_outline_rounded;
+      case ToastType.error:
+        return Icons.error_outline_rounded;
+      case ToastType.warning:
+        return Icons.warning_amber_rounded;
+      case ToastType.info:
+        return Icons.info_outline_rounded;
     }
   }
 
@@ -142,7 +150,10 @@ class _ToastWidgetState extends State<_ToastWidget>
               decoration: BoxDecoration(
                 color: const Color(0xFF111528),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: _color.withValues(alpha: 0.4), width: 1),
+                border: Border.all(
+                  color: _color.withValues(alpha: 0.4),
+                  width: 1,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: _color.withValues(alpha: 0.2),
@@ -194,8 +205,7 @@ class _ToastWidgetState extends State<_ToastWidget>
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Icon(Icons.close_rounded,
-                      color: AppColors.white38, size: 18),
+                  Icon(Icons.close_rounded, color: AppColors.white38, size: 18),
                 ],
               ),
             ),
@@ -268,8 +278,11 @@ class _AnimatedPressButtonState extends State<AnimatedPressButton>
 
     final success = await widget.onPressed();
 
-    setState(() =>
-        _state = success ? AnimatedButtonState.success : AnimatedButtonState.error);
+    setState(
+      () => _state = success
+          ? AnimatedButtonState.success
+          : AnimatedButtonState.error,
+    );
 
     HapticFeedback.lightImpact();
     await Future.delayed(1200.ms);

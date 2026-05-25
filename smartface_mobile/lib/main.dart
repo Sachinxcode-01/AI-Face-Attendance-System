@@ -59,10 +59,7 @@ void main() async {
   final themeController = ThemeController();
   final appState = AppState();
 
-  await Future.wait([
-    sessionManager.init(),
-    themeController.init(),
-  ]);
+  await Future.wait([sessionManager.init(), themeController.init()]);
 
   runApp(
     MultiProvider(

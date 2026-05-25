@@ -62,7 +62,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     super.didChangeDependencies();
     final session = Provider.of<SessionManager>(context, listen: false);
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    _role = (args?['role'] ?? session.role ?? 'student').toString().toLowerCase();
+    _role = (args?['role'] ?? session.role ?? 'student')
+        .toString()
+        .toLowerCase();
     _email = args?['email'] ?? session.email ?? '';
     _token = args?['token'] ?? session.token ?? '';
   }
@@ -81,7 +83,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         (camera) => camera.lensDirection == CameraLensDirection.front,
         orElse: () => _cameras!.first,
       );
-      
+
       _cameraController = CameraController(front, ResolutionPreset.medium);
       await _cameraController!.initialize();
       if (mounted) {
@@ -158,44 +160,94 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   }
 
   Future<void> _handleComplete() async {
-    final profileData = _role == 'teacher' ? {
-      'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'Teacher',
-      'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '1234567890',
-      'dob': _dobController.text.isNotEmpty ? _dobController.text : '1980-01-01',
-      'employee_id': _employeeIdController.text.isNotEmpty ? _employeeIdController.text : 'EMP-${1000 + Random().nextInt(9000)}',
-      'designation': _designationController.text.isNotEmpty ? _designationController.text : 'Professor',
-      'specialization': _specializationController.text.isNotEmpty ? _specializationController.text : 'Computer Science',
-      'qualification': _qualificationController.text.isNotEmpty ? _qualificationController.text : 'Ph.D.',
-      'experience': _experienceController.text.isNotEmpty ? _experienceController.text : '5',
-      'gender': _genderController.text.isNotEmpty ? _genderController.text : 'Other',
-      'address': _addressController.text.isNotEmpty ? _addressController.text : 'Campus Address',
-    } : {
-      'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'Student',
-      'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '1234567890',
-      'dob': _dobController.text.isNotEmpty ? _dobController.text : '2002-01-01',
-      'gender': _genderController.text.isNotEmpty ? _genderController.text : 'Other',
-      'address': _addressController.text.isNotEmpty ? _addressController.text : 'Home Address',
-      'language_preference': _selectedLang,
-      'usn': _usnController.text.isNotEmpty ? _usnController.text : 'USN-${1000 + Random().nextInt(9000)}',
-      'student_id': _usnController.text.isNotEmpty ? _usnController.text : 'USN-${1000 + Random().nextInt(9000)}',
-      'course': _courseController.text.isNotEmpty ? _courseController.text : 'B.E.',
-      'section': _sectionController.text.isNotEmpty ? _sectionController.text : 'A',
-      'roll_number': _rollNoController.text.isNotEmpty ? _rollNoController.text : '1',
-      'parent_details': _parentController.text.isNotEmpty ? _parentController.text : 'Guardian Contact',
-      'college': _collegeController.text.isNotEmpty ? _collegeController.text : 'SmartFace University',
-      'department': _deptController.text.isNotEmpty ? _deptController.text : 'CSE',
-      'semester': _semController.text.isNotEmpty ? _semController.text : 'Semester 6',
-    };
+    final profileData = _role == 'teacher'
+        ? {
+            'full_name': _nameController.text.isNotEmpty
+                ? _nameController.text
+                : 'Teacher',
+            'phone': _phoneController.text.isNotEmpty
+                ? _phoneController.text
+                : '1234567890',
+            'dob': _dobController.text.isNotEmpty
+                ? _dobController.text
+                : '1980-01-01',
+            'employee_id': _employeeIdController.text.isNotEmpty
+                ? _employeeIdController.text
+                : 'EMP-${1000 + Random().nextInt(9000)}',
+            'designation': _designationController.text.isNotEmpty
+                ? _designationController.text
+                : 'Professor',
+            'specialization': _specializationController.text.isNotEmpty
+                ? _specializationController.text
+                : 'Computer Science',
+            'qualification': _qualificationController.text.isNotEmpty
+                ? _qualificationController.text
+                : 'Ph.D.',
+            'experience': _experienceController.text.isNotEmpty
+                ? _experienceController.text
+                : '5',
+            'gender': _genderController.text.isNotEmpty
+                ? _genderController.text
+                : 'Other',
+            'address': _addressController.text.isNotEmpty
+                ? _addressController.text
+                : 'Campus Address',
+          }
+        : {
+            'full_name': _nameController.text.isNotEmpty
+                ? _nameController.text
+                : 'Student',
+            'phone': _phoneController.text.isNotEmpty
+                ? _phoneController.text
+                : '1234567890',
+            'dob': _dobController.text.isNotEmpty
+                ? _dobController.text
+                : '2002-01-01',
+            'gender': _genderController.text.isNotEmpty
+                ? _genderController.text
+                : 'Other',
+            'address': _addressController.text.isNotEmpty
+                ? _addressController.text
+                : 'Home Address',
+            'language_preference': _selectedLang,
+            'usn': _usnController.text.isNotEmpty
+                ? _usnController.text
+                : 'USN-${1000 + Random().nextInt(9000)}',
+            'student_id': _usnController.text.isNotEmpty
+                ? _usnController.text
+                : 'USN-${1000 + Random().nextInt(9000)}',
+            'course': _courseController.text.isNotEmpty
+                ? _courseController.text
+                : 'B.E.',
+            'section': _sectionController.text.isNotEmpty
+                ? _sectionController.text
+                : 'A',
+            'roll_number': _rollNoController.text.isNotEmpty
+                ? _rollNoController.text
+                : '1',
+            'parent_details': _parentController.text.isNotEmpty
+                ? _parentController.text
+                : 'Guardian Contact',
+            'college': _collegeController.text.isNotEmpty
+                ? _collegeController.text
+                : 'SmartFace University',
+            'department': _deptController.text.isNotEmpty
+                ? _deptController.text
+                : 'CSE',
+            'semester': _semController.text.isNotEmpty
+                ? _semController.text
+                : 'Semester 6',
+          };
 
     // Sync to MongoDB
     if (_token.isNotEmpty) {
       await ApiService.updateProfile(profileData, _token);
       await ApiService.registerBiometric(_email, _token);
     }
-    
+
     if (mounted) {
       Navigator.pushReplacementNamed(
-        context, 
+        context,
         '/dashboard',
         arguments: {'email': _email, 'role': _role, 'token': _token},
       );
@@ -218,7 +270,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 children: [
                   _buildWelcomeCard(),
                   _buildPersonalCard(),
-                  _role == 'teacher' ? _buildProfessionalCard() : _buildCollegeCard(),
+                  _role == 'teacher'
+                      ? _buildProfessionalCard()
+                      : _buildCollegeCard(),
                   _buildFaceRegistrationCard(),
                   _buildPermissionsCard(),
                   _buildThemeCard(),
@@ -243,7 +297,12 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             children: [
               Text(
                 'PROFILE SETUP',
-                style: GoogleFonts.inter(color: AppColors.gold, letterSpacing: 2, fontSize: 12, fontWeight: FontWeight.bold),
+                style: GoogleFonts.inter(
+                  color: AppColors.gold,
+                  letterSpacing: 2,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 '${_currentPage + 1} / $_totalPages',
@@ -266,7 +325,11 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     );
   }
 
-  Widget _buildCardBase({required String title, required String subtitle, required List<Widget> children}) {
+  Widget _buildCardBase({
+    required String title,
+    required String subtitle,
+    required List<Widget> children,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25),
       child: Center(
@@ -275,8 +338,18 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
-              Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 16)),
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(color: Colors.white54, fontSize: 16),
+              ),
               const SizedBox(height: 40),
               ...children,
             ],
@@ -289,7 +362,8 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   Widget _buildWelcomeCard() {
     return _buildCardBase(
       title: 'Welcome to SmartFace',
-      subtitle: 'Let\'s set up your premium smart campus profile in a few steps.',
+      subtitle:
+          'Let\'s set up your premium smart campus profile in a few steps.',
       children: [
         Center(
           child: Container(
@@ -300,7 +374,11 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               color: AppColors.gold.withValues(alpha: 0.05),
               border: Border.all(color: AppColors.gold.withValues(alpha: 0.2)),
             ),
-            child: const Icon(Icons.rocket_launch_outlined, size: 80, color: AppColors.gold),
+            child: const Icon(
+              Icons.rocket_launch_outlined,
+              size: 80,
+              color: AppColors.gold,
+            ),
           ).animate().scale(duration: 1.seconds, curve: Curves.elasticOut),
         ),
       ],
@@ -314,11 +392,15 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       children: [
         _buildInputField('Full Name', Icons.person_outline, _nameController),
         const SizedBox(height: 20),
-        _buildInputField('Phone Number', Icons.phone_android_outlined, _phoneController),
+        _buildInputField(
+          'Phone Number',
+          Icons.phone_android_outlined,
+          _phoneController,
+        ),
         const SizedBox(height: 20),
         _buildInputField(
-          'Date of Birth', 
-          Icons.calendar_today_outlined, 
+          'Date of Birth',
+          Icons.calendar_today_outlined,
           _dobController,
           onTap: () => _selectDate(context),
         ),
@@ -368,7 +450,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     child: Text(
                       'English',
                       style: GoogleFonts.inter(
-                        color: _selectedLang == 'English' ? Colors.black : Colors.white70,
+                        color: _selectedLang == 'English'
+                            ? Colors.black
+                            : Colors.white70,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -398,7 +482,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     child: Text(
                       'ಕನ್ನಡ (Kannada)',
                       style: GoogleFonts.inter(
-                        color: _selectedLang == 'Kannada' ? Colors.black : Colors.white70,
+                        color: _selectedLang == 'Kannada'
+                            ? Colors.black
+                            : Colors.white70,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -418,15 +504,35 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       title: 'Professional Info',
       subtitle: 'Specify your academic background.',
       children: [
-        _buildInputField('Employee ID', Icons.badge_outlined, _employeeIdController),
+        _buildInputField(
+          'Employee ID',
+          Icons.badge_outlined,
+          _employeeIdController,
+        ),
         const SizedBox(height: 20),
-        _buildInputField('Designation', Icons.work_outline, _designationController),
+        _buildInputField(
+          'Designation',
+          Icons.work_outline,
+          _designationController,
+        ),
         const SizedBox(height: 20),
-        _buildInputField('Subject Specialization', Icons.menu_book_outlined, _specializationController),
+        _buildInputField(
+          'Subject Specialization',
+          Icons.menu_book_outlined,
+          _specializationController,
+        ),
         const SizedBox(height: 20),
-        _buildInputField('Qualification', Icons.school_outlined, _qualificationController),
+        _buildInputField(
+          'Qualification',
+          Icons.school_outlined,
+          _qualificationController,
+        ),
         const SizedBox(height: 20),
-        _buildInputField('Years of Experience', Icons.timeline_outlined, _experienceController),
+        _buildInputField(
+          'Years of Experience',
+          Icons.timeline_outlined,
+          _experienceController,
+        ),
       ],
     );
   }
@@ -436,15 +542,35 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       title: 'Campus Details',
       subtitle: 'Connect with your institution.',
       children: [
-        _buildInputField('Student ID / USN', Icons.badge_outlined, _usnController),
+        _buildInputField(
+          'Student ID / USN',
+          Icons.badge_outlined,
+          _usnController,
+        ),
         const SizedBox(height: 20),
-        _buildInputField('Class / Course', Icons.school_outlined, _courseController),
+        _buildInputField(
+          'Class / Course',
+          Icons.school_outlined,
+          _courseController,
+        ),
         const SizedBox(height: 20),
-        _buildInputField('Section', Icons.grid_view_outlined, _sectionController),
+        _buildInputField(
+          'Section',
+          Icons.grid_view_outlined,
+          _sectionController,
+        ),
         const SizedBox(height: 20),
-        _buildInputField('Roll Number', Icons.format_list_numbered_outlined, _rollNoController),
+        _buildInputField(
+          'Roll Number',
+          Icons.format_list_numbered_outlined,
+          _rollNoController,
+        ),
         const SizedBox(height: 20),
-        _buildInputField('Parent / Guardian Details', Icons.family_restroom_outlined, _parentController),
+        _buildInputField(
+          'Parent / Guardian Details',
+          Icons.family_restroom_outlined,
+          _parentController,
+        ),
       ],
     );
   }
@@ -462,14 +588,19 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 children: [
                   // The AI Scan Ring
                   Container(
-                    height: 220,
-                    width: 220,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.gold.withValues(alpha: 0.5), width: 2),
-                    ),
-                  ).animate(onPlay: (c) => c.repeat()).rotate(duration: 3.seconds),
-                  
+                        height: 220,
+                        width: 220,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.gold.withValues(alpha: 0.5),
+                            width: 2,
+                          ),
+                        ),
+                      )
+                      .animate(onPlay: (c) => c.repeat())
+                      .rotate(duration: 3.seconds),
+
                   // The Camera Viewport
                   ClipOval(
                     child: Container(
@@ -478,43 +609,70 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                       color: Colors.black,
                       child: _isCameraInitialized
                           ? CameraPreview(_cameraController!)
-                          : const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+                          : const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.gold,
+                              ),
+                            ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 30),
               Text(
-                'POSITION YOUR FACE IN THE CIRCLE',
-                style: GoogleFonts.inter(fontSize: 10, letterSpacing: 2, color: AppColors.gold, fontWeight: FontWeight.bold),
-              ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(duration: 2.seconds),
+                    'POSITION YOUR FACE IN THE CIRCLE',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      letterSpacing: 2,
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .shimmer(duration: 2.seconds),
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () async {
-                  final args = ModalRoute.of(context)?.settings.arguments as Map?;
+                  final args =
+                      ModalRoute.of(context)?.settings.arguments as Map?;
                   final email = args?['email'] ?? 'test@student.com';
                   final token = args?['token'] ?? '';
-                  
+
                   // Simulate Scanning
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Processing Biometric Signatures...'), backgroundColor: AppColors.gold, duration: Duration(seconds: 2)),
+                    const SnackBar(
+                      content: Text('Processing Biometric Signatures...'),
+                      backgroundColor: AppColors.gold,
+                      duration: Duration(seconds: 2),
+                    ),
                   );
-                  
+
                   await Future.delayed(const Duration(milliseconds: 400));
-                  
-                  final result = await ApiService.registerBiometric(email, token);
-                  
+
+                  final result = await ApiService.registerBiometric(
+                    email,
+                    token,
+                  );
+
                   if (!mounted) return;
                   if (result.containsKey('message')) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('AI Scan Complete: Biometric ID Registered'), backgroundColor: Colors.green),
+                      const SnackBar(
+                        content: Text(
+                          'AI Scan Complete: Biometric ID Registered',
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
                     );
                     _nextPage();
                   }
                 },
                 icon: const Icon(Icons.face_unlock_outlined),
                 label: const Text('START AI SCAN'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.white10, foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white10,
+                  foregroundColor: Colors.white,
+                ),
               ),
             ],
           ),
@@ -528,9 +686,24 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       title: 'System Access',
       subtitle: 'Grant permissions for smart features.',
       children: [
-        _buildPermissionToggle('Camera Access', 'Required for Face ID & QR', Icons.camera_enhance_outlined, true),
-        _buildPermissionToggle('GPS Location', 'Required for Campus Validation', Icons.location_on_outlined, false),
-        _buildPermissionToggle('Notifications', 'Get alerts for attendance logs', Icons.notifications_active_outlined, true),
+        _buildPermissionToggle(
+          'Camera Access',
+          'Required for Face ID & QR',
+          Icons.camera_enhance_outlined,
+          true,
+        ),
+        _buildPermissionToggle(
+          'GPS Location',
+          'Required for Campus Validation',
+          Icons.location_on_outlined,
+          false,
+        ),
+        _buildPermissionToggle(
+          'Notifications',
+          'Get alerts for attendance logs',
+          Icons.notifications_active_outlined,
+          true,
+        ),
       ],
     );
   }
@@ -557,13 +730,22 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       subtitle: 'Your Smart Campus profile is ready for action.',
       children: [
         const Center(
-          child: Icon(Icons.check_circle_outline, size: 120, color: Colors.greenAccent),
+          child: Icon(
+            Icons.check_circle_outline,
+            size: 120,
+            color: Colors.greenAccent,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildInputField(String label, IconData icon, TextEditingController controller, {VoidCallback? onTap}) {
+  Widget _buildInputField(
+    String label,
+    IconData icon,
+    TextEditingController controller, {
+    VoidCallback? onTap,
+  }) {
     return TextField(
       controller: controller,
       readOnly: onTap != null,
@@ -575,16 +757,27 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         prefixIcon: Icon(icon, color: AppColors.gold),
         filled: true,
         fillColor: Colors.white.withValues(alpha: 0.05),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide.none,
+        ),
       ),
     );
   }
 
-  Widget _buildPermissionToggle(String title, String sub, IconData icon, bool active) {
+  Widget _buildPermissionToggle(
+    String title,
+    String sub,
+    IconData icon,
+    bool active,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Row(
         children: [
           Icon(icon, color: AppColors.gold),
@@ -593,12 +786,22 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(sub, style: const TextStyle(color: Colors.white38, fontSize: 10)),
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  sub,
+                  style: const TextStyle(color: Colors.white38, fontSize: 10),
+                ),
               ],
             ),
           ),
-          Switch(value: active, onChanged: (v) {}, activeThumbColor: AppColors.gold),
+          Switch(
+            value: active,
+            onChanged: (v) {},
+            activeThumbColor: AppColors.gold,
+          ),
         ],
       ),
     );
@@ -609,14 +812,26 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.gold : Colors.white.withValues(alpha: 0.05),
+          color: isSelected
+              ? AppColors.gold
+              : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           children: [
-            Icon(icon, color: isSelected ? Colors.black : Colors.white54, size: 40),
+            Icon(
+              icon,
+              color: isSelected ? Colors.black : Colors.white54,
+              size: 40,
+            ),
             const SizedBox(height: 10),
-            Text(label, style: TextStyle(color: isSelected ? Colors.black : Colors.white70, fontWeight: FontWeight.bold)),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.black : Colors.white70,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),
@@ -631,8 +846,14 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         children: [
           if (_currentPage > 0)
             TextButton(
-              onPressed: () => _pageController.previousPage(duration: 400.ms, curve: Curves.easeOut),
-              child: const Text('BACK', style: TextStyle(color: Colors.white38)),
+              onPressed: () => _pageController.previousPage(
+                duration: 400.ms,
+                curve: Curves.easeOut,
+              ),
+              child: const Text(
+                'BACK',
+                style: TextStyle(color: Colors.white38),
+              ),
             )
           else
             const SizedBox(width: 80),
@@ -643,7 +864,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               backgroundColor: AppColors.gold,
               foregroundColor: Colors.black,
             ),
-            child: Text(_currentPage == _totalPages - 1 ? 'GET STARTED' : 'CONTINUE'),
+            child: Text(
+              _currentPage == _totalPages - 1 ? 'GET STARTED' : 'CONTINUE',
+            ),
           ),
         ],
       ),

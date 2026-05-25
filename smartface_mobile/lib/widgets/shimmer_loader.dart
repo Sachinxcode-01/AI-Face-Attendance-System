@@ -20,7 +20,9 @@ class ShimmerBox extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Shimmer.fromColors(
       baseColor: isDark ? const Color(0xFF1E2440) : const Color(0xFFE0E0E0),
-      highlightColor: isDark ? const Color(0xFF2E3660) : const Color(0xFFF5F5F5),
+      highlightColor: isDark
+          ? const Color(0xFF2E3660)
+          : const Color(0xFFF5F5F5),
       child: Container(
         width: width,
         height: height,
@@ -46,9 +48,7 @@ class ProfileShimmer extends StatelessWidget {
         children: [
           const SizedBox(height: 12),
           // Avatar circle
-          Center(
-            child: ShimmerBox(width: 140, height: 140, radius: 70),
-          ),
+          Center(child: ShimmerBox(width: 140, height: 140, radius: 70)),
           const SizedBox(height: 18),
           // Name
           Center(child: ShimmerBox(width: 180, height: 24)),
@@ -83,11 +83,14 @@ class DashboardShimmer extends StatelessWidget {
             children: [
               ShimmerBox(width: 48, height: 48, radius: 24),
               const SizedBox(width: 14),
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                ShimmerBox(width: 120, height: 16),
-                const SizedBox(height: 8),
-                ShimmerBox(width: 80, height: 12),
-              ]),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ShimmerBox(width: 120, height: 16),
+                  const SizedBox(height: 8),
+                  ShimmerBox(width: 80, height: 12),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 28),

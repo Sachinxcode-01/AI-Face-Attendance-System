@@ -21,8 +21,9 @@ class CacheService {
 
     // Enforce max entry count (remove oldest)
     if (_memory.length > _maxEntries) {
-      final oldest = _memory.entries
-          .reduce((a, b) => a.value.expiry.isBefore(b.value.expiry) ? a : b);
+      final oldest = _memory.entries.reduce(
+        (a, b) => a.value.expiry.isBefore(b.value.expiry) ? a : b,
+      );
       _memory.remove(oldest.key);
     }
 
@@ -31,10 +32,7 @@ class CacheService {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(
           '$_diskKeyPrefix$key',
-          jsonEncode({
-            'value': value,
-            'expiry': expiry.toIso8601String(),
-          }),
+          jsonEncode({'value': value, 'expiry': expiry.toIso8601String()}),
         );
       } catch (e) {
         debugPrint('[Cache] persist error: $e');
@@ -90,8 +88,9 @@ class CacheService {
     _memory.removeWhere((k, _) => k.startsWith(prefix));
     try {
       final prefs = await SharedPreferences.getInstance();
-      final keys = prefs.getKeys().where((k) =>
-          k.startsWith('$_diskKeyPrefix$prefix'));
+      final keys = prefs.getKeys().where(
+        (k) => k.startsWith('$_diskKeyPrefix$prefix'),
+      );
       for (final k in keys) {
         await prefs.remove(k);
       }

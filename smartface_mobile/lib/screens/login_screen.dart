@@ -32,28 +32,37 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn(
-        serverClientId: '153684832501-4mikvqi78kam3j1tcmnab7gp1o3e7mnt.apps.googleusercontent.com',
+        serverClientId:
+            '153684832501-4mikvqi78kam3j1tcmnab7gp1o3e7mnt.apps.googleusercontent.com',
       ).signIn();
       if (googleUser == null) {
         setState(() => _isLoading = false);
         return;
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-      
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
       if (userCredential.user != null) {
         final email = userCredential.user!.email ?? '';
         final name = userCredential.user!.displayName ?? 'User';
         final photoUrl = userCredential.user!.photoURL;
-        
-        final result = await ApiService.googleLogin(email, name, selectedRole, avatarUrl: photoUrl);
-        
+
+        final result = await ApiService.googleLogin(
+          email,
+          name,
+          selectedRole,
+          avatarUrl: photoUrl,
+        );
+
         if (result.containsKey('access_token')) {
           if (!mounted) return;
           final session = context.read<SessionManager>();
@@ -63,15 +72,18 @@ class _LoginScreenState extends State<LoginScreen> {
             role: result['role'],
           );
           if (!mounted) return;
-          final bool biometricRegistered = result['biometric_registered'] ?? false;
-          final String targetRoute = biometricRegistered ? '/dashboard' : '/setup';
+          final bool biometricRegistered =
+              result['biometric_registered'] ?? false;
+          final String targetRoute = biometricRegistered
+              ? '/dashboard'
+              : '/setup';
           Navigator.pushReplacementNamed(
-            context, 
+            context,
             targetRoute,
             arguments: {
-              'role': result['role'], 
-              'token': result['access_token'], 
-              'email': email
+              'role': result['role'],
+              'token': result['access_token'],
+              'email': email,
             },
           );
         } else {
@@ -80,9 +92,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google Sign-In failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Google Sign-In failed: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -112,15 +124,18 @@ class _LoginScreenState extends State<LoginScreen> {
           role: result['role'],
         );
         if (!mounted) return;
-        final bool biometricRegistered = result['biometric_registered'] ?? false;
-        final String targetRoute = biometricRegistered ? '/dashboard' : '/setup';
+        final bool biometricRegistered =
+            result['biometric_registered'] ?? false;
+        final String targetRoute = biometricRegistered
+            ? '/dashboard'
+            : '/setup';
         Navigator.pushReplacementNamed(
-          context, 
+          context,
           targetRoute,
           arguments: {
-            'role': result['role'], 
-            'token': result['access_token'], 
-            'email': _emailController.text.trim()
+            'role': result['role'],
+            'token': result['access_token'],
+            'email': _emailController.text.trim(),
           },
         );
       } else {
@@ -129,7 +144,11 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: ${e.toString().replaceAll("Exception: ", "")}')),
+        SnackBar(
+          content: Text(
+            'Login failed: ${e.toString().replaceAll("Exception: ", "")}',
+          ),
+        ),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -146,7 +165,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final result = await ApiService.sendLoginOtp(_emailController.text.trim());
+      final result = await ApiService.sendLoginOtp(
+        _emailController.text.trim(),
+      );
       if (result.containsKey('message')) {
         setState(() => _otpSent = true);
         if (!mounted) return;
@@ -158,9 +179,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -177,10 +198,10 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       final result = await ApiService.verifyLoginOtp(
-        _emailController.text.trim(), 
-        _otpController.text.trim()
+        _emailController.text.trim(),
+        _otpController.text.trim(),
       );
-      
+
       if (result.containsKey('access_token')) {
         if (!mounted) return;
         final session = context.read<SessionManager>();
@@ -190,15 +211,18 @@ class _LoginScreenState extends State<LoginScreen> {
           role: result['role'],
         );
         if (!mounted) return;
-        final bool biometricRegistered = result['biometric_registered'] ?? false;
-        final String targetRoute = biometricRegistered ? '/dashboard' : '/setup';
+        final bool biometricRegistered =
+            result['biometric_registered'] ?? false;
+        final String targetRoute = biometricRegistered
+            ? '/dashboard'
+            : '/setup';
         Navigator.pushReplacementNamed(
-          context, 
+          context,
           targetRoute,
           arguments: {
-            'role': result['role'], 
-            'token': result['access_token'], 
-            'email': _emailController.text.trim()
+            'role': result['role'],
+            'token': result['access_token'],
+            'email': _emailController.text.trim(),
           },
         );
       } else {
@@ -206,9 +230,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid OTP: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Invalid OTP: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -228,31 +252,44 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Center(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28.0,
+                  vertical: 16.0,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // --- LUXURY BRAND LOGO ZONE ---
                     _buildAnimatedLogoHUD(),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     Text(
-                      'SmartAttendance-\nAI',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 38,
-                        height: 1.15,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
-                        color: AppColors.gold,
-                        shadows: [
-                          const Shadow(color: Colors.black54, offset: Offset(0, 4), blurRadius: 12),
-                          Shadow(color: AppColors.gold.withValues(alpha: 0.3), blurRadius: 20),
-                        ],
-                      ),
-                    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.15, end: 0, duration: 400.ms),
-                    
+                          'SmartAttendance-\nAI',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 38,
+                            height: 1.15,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                            color: AppColors.gold,
+                            shadows: [
+                              const Shadow(
+                                color: Colors.black54,
+                                offset: Offset(0, 4),
+                                blurRadius: 12,
+                              ),
+                              Shadow(
+                                color: AppColors.gold.withValues(alpha: 0.3),
+                                blurRadius: 20,
+                              ),
+                            ],
+                          ),
+                        )
+                        .animate()
+                        .fadeIn(duration: 400.ms)
+                        .slideY(begin: 0.15, end: 0, duration: 400.ms),
+
                     const SizedBox(height: 8),
 
                     Text(
@@ -264,30 +301,36 @@ class _LoginScreenState extends State<LoginScreen> {
                         fontWeight: FontWeight.w800,
                       ),
                     ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
-                    
+
                     const SizedBox(height: 35),
-                    
+
                     // --- STYLISH SLIDING ROLE SELECTOR ---
                     if (!_otpSent)
                       _buildPremiumRoleSelector()
                           .animate()
                           .fadeIn(delay: 300.ms, duration: 400.ms)
                           .slideY(begin: 0.1, end: 0, duration: 400.ms),
-                    
+
                     const SizedBox(height: 25),
-                    
+
                     // --- GLASSMORPHIC ACCESS CARD ---
                     _buildGlassmorphicFormCard()
                         .animate()
                         .fadeIn(delay: 400.ms, duration: 500.ms)
-                        .scaleXY(begin: 0.95, end: 1.0, curve: Curves.easeOutBack, duration: 500.ms),
-                    
+                        .scaleXY(
+                          begin: 0.95,
+                          end: 1.0,
+                          curve: Curves.easeOutBack,
+                          duration: 500.ms,
+                        ),
+
                     const SizedBox(height: 25),
-                    
+
                     // --- FOOTER SIGN-UP TRIGGER ---
-                    _buildFooterNavigator()
-                        .animate()
-                        .fadeIn(delay: 600.ms, duration: 400.ms),
+                    _buildFooterNavigator().animate().fadeIn(
+                      delay: 600.ms,
+                      duration: 400.ms,
+                    ),
                   ],
                 ),
               ),
@@ -318,76 +361,114 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-        
+
         // Floating Ambient Mesh Light 1 (Gold/Amber)
         Positioned(
           top: -80,
           left: -40,
-          child: Container(
-            width: 280,
-            height: 280,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.gold.withValues(alpha: 0.12),
-            ),
-          ).animate(onPlay: (c) => c.repeat(reverse: true))
-           .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.25, 1.25), duration: 5.seconds, curve: Curves.easeInOut)
-           .move(begin: const Offset(0, 0), end: const Offset(20, 30), duration: 5.seconds, curve: Curves.easeInOut),
+          child:
+              Container(
+                    width: 280,
+                    height: 280,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.gold.withValues(alpha: 0.12),
+                    ),
+                  )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scale(
+                    begin: const Offset(0.9, 0.9),
+                    end: const Offset(1.25, 1.25),
+                    duration: 5.seconds,
+                    curve: Curves.easeInOut,
+                  )
+                  .move(
+                    begin: const Offset(0, 0),
+                    end: const Offset(20, 30),
+                    duration: 5.seconds,
+                    curve: Curves.easeInOut,
+                  ),
         ),
 
         // Floating Ambient Mesh Light 2 (Indigo Pulse)
         Positioned(
           bottom: -100,
           right: -80,
-          child: Container(
-            width: 380,
-            height: 380,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF1D2671).withValues(alpha: 0.28),
-            ),
-          ).animate(onPlay: (c) => c.repeat(reverse: true))
-           .scale(begin: const Offset(1.15, 1.15), end: const Offset(0.85, 0.85), duration: 7.seconds, curve: Curves.easeInOut)
-           .move(begin: const Offset(0, 0), end: const Offset(-30, -40), duration: 7.seconds, curve: Curves.easeInOut),
+          child:
+              Container(
+                    width: 380,
+                    height: 380,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF1D2671).withValues(alpha: 0.28),
+                    ),
+                  )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scale(
+                    begin: const Offset(1.15, 1.15),
+                    end: const Offset(0.85, 0.85),
+                    duration: 7.seconds,
+                    curve: Curves.easeInOut,
+                  )
+                  .move(
+                    begin: const Offset(0, 0),
+                    end: const Offset(-30, -40),
+                    duration: 7.seconds,
+                    curve: Curves.easeInOut,
+                  ),
         ),
 
         // Floating Ambient Mesh Light 3 (Cyber Cyan)
         Positioned(
           top: 250,
           right: -90,
-          child: Container(
-            width: 220,
-            height: 220,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF00F2FE).withValues(alpha: 0.08),
-            ),
-          ).animate(onPlay: (c) => c.repeat(reverse: true))
-           .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2), duration: 6.seconds, curve: Curves.easeInOut)
-           .move(begin: const Offset(0, 0), end: const Offset(-20, 20), duration: 6.seconds, curve: Curves.easeInOut),
+          child:
+              Container(
+                    width: 220,
+                    height: 220,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF00F2FE).withValues(alpha: 0.08),
+                    ),
+                  )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scale(
+                    begin: const Offset(0.8, 0.8),
+                    end: const Offset(1.2, 1.2),
+                    duration: 6.seconds,
+                    curve: Curves.easeInOut,
+                  )
+                  .move(
+                    begin: const Offset(0, 0),
+                    end: const Offset(-20, 20),
+                    duration: 6.seconds,
+                    curve: Curves.easeInOut,
+                  ),
         ),
 
         // Matte Glassmorphic Blur Shield
         BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-          child: Container(
-            color: Colors.transparent,
-          ),
+          child: Container(color: Colors.transparent),
         ),
 
         // Glowing Cybernetic Facial Grid Mesh
         Opacity(
-          opacity: 0.07,
-          child: Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/ai_face_grid.png'),
-                fit: BoxFit.cover,
+              opacity: 0.07,
+              child: Container(
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/ai_face_grid.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
+            )
+            .animate(onPlay: (c) => c.repeat(reverse: true))
+            .shimmer(
+              duration: 5.seconds,
+              color: AppColors.gold.withValues(alpha: 0.2),
             ),
-          ),
-        ).animate(onPlay: (c) => c.repeat(reverse: true))
-         .shimmer(duration: 5.seconds, color: AppColors.gold.withValues(alpha: 0.2)),
       ],
     );
   }
@@ -400,18 +481,24 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           // Cyber golden radar wave
           Container(
-            height: 185,
-            width: 185,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.gold.withValues(alpha: 0.12), 
-                width: 1.5
-              ),
-            ),
-          ).animate(onPlay: (c) => c.repeat())
-           .scale(begin: const Offset(0.85, 0.85), end: const Offset(1.15, 1.15), curve: Curves.easeInOut, duration: 2500.ms)
-           .fadeOut(duration: 2500.ms),
+                height: 185,
+                width: 185,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.12),
+                    width: 1.5,
+                  ),
+                ),
+              )
+              .animate(onPlay: (c) => c.repeat())
+              .scale(
+                begin: const Offset(0.85, 0.85),
+                end: const Offset(1.15, 1.15),
+                curve: Curves.easeInOut,
+                duration: 2500.ms,
+              )
+              .fadeOut(duration: 2500.ms),
 
           // Outer thin tech ring
           Container(
@@ -458,7 +545,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          
+
           // Concentric rotating tracking point rings
           Container(
             height: 145,
@@ -468,11 +555,10 @@ class _LoginScreenState extends State<LoginScreen> {
               border: Border.all(
                 color: AppColors.gold.withValues(alpha: 0.3),
                 width: 1,
-                strokeAlign: BorderSide.strokeAlignOutside
+                strokeAlign: BorderSide.strokeAlignOutside,
               ),
             ),
-          ).animate(onPlay: (c) => c.repeat())
-           .rotate(duration: 12.seconds),
+          ).animate(onPlay: (c) => c.repeat()).rotate(duration: 12.seconds),
 
           // Rotating dashed circular HUD indicator
           Container(
@@ -489,46 +575,49 @@ class _LoginScreenState extends State<LoginScreen> {
 
           // Central luxury Logo Shield
           Hero(
-            tag: 'logo',
-            child: Container(
-              height: 105,
-              width: 105,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF030510),
-                border: Border.all(
-                  color: AppColors.gold,
-                  width: 2.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.gold.withValues(alpha: 0.25),
-                    blurRadius: 15,
-                    spreadRadius: 1,
+                tag: 'logo',
+                child: Container(
+                  height: 105,
+                  width: 105,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF030510),
+                    border: Border.all(color: AppColors.gold, width: 2.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.gold.withValues(alpha: 0.25),
+                        blurRadius: 15,
+                        spreadRadius: 1,
+                      ),
+                      const BoxShadow(
+                        color: Colors.black54,
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                    image: const DecorationImage(
+                      image: AssetImage('assets/images/logo.png'),
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                  const BoxShadow(
-                    color: Colors.black54,
-                    blurRadius: 10,
-                    offset: Offset(0, 5),
-                  )
-                ],
-                image: const DecorationImage(
-                  image: AssetImage('assets/images/logo.png'),
-                  fit: BoxFit.cover,
+                ),
+              )
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .moveY(
+                begin: -4,
+                end: 4,
+                duration: 1500.ms,
+                curve: Curves.easeInOut,
+              )
+              .custom(
+                builder: (context, value, child) => Transform(
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.0015)
+                    ..rotateY(value * 0.08),
+                  alignment: Alignment.center,
+                  child: child,
                 ),
               ),
-            ),
-          ).animate(onPlay: (c) => c.repeat(reverse: true))
-           .moveY(begin: -4, end: 4, duration: 1500.ms, curve: Curves.easeInOut)
-           .custom(
-             builder: (context, value, child) => Transform(
-               transform: Matrix4.identity()
-                 ..setEntry(3, 2, 0.0015)
-                 ..rotateY(value * 0.08),
-               alignment: Alignment.center,
-               child: child,
-             ),
-           ),
         ],
       ),
     ).animate().fadeIn(duration: 500.ms).scale(curve: Curves.easeOutBack);
@@ -594,7 +683,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           role,
                           style: GoogleFonts.inter(
                             color: isSelected ? Colors.black : Colors.white60,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w600,
                             fontSize: 15,
                             letterSpacing: 0.5,
                           ),
@@ -606,7 +697,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           );
-        }
+        },
       ),
     );
   }
@@ -618,7 +709,10 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF070B1A).withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.04), width: 1.2),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.04),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.55),
@@ -644,7 +738,9 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: !_showPassword,
               suffixIcon: IconButton(
                 icon: Icon(
-                  _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  _showPassword
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
                   color: Colors.white38,
                   size: 20,
                 ),
@@ -652,10 +748,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildButton(
-              text: 'SIGN IN',
-              onPressed: _signInWithPassword,
-            ),
+            _buildButton(text: 'SIGN IN', onPressed: _signInWithPassword),
             const SizedBox(height: 10),
             GestureDetector(
               onTap: () => setState(() {
@@ -665,7 +758,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Text(
                 'Sign In with OTP instead',
                 style: GoogleFonts.inter(
-                  color: AppColors.gold.withValues(alpha: 0.7), 
+                  color: AppColors.gold.withValues(alpha: 0.7),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   decoration: TextDecoration.underline,
@@ -679,17 +772,14 @@ class _LoginScreenState extends State<LoginScreen> {
               icon: Icons.alternate_email_rounded,
             ),
             const SizedBox(height: 20),
-            _buildButton(
-              text: 'REQUEST SECURE OTP',
-              onPressed: _sendOtp,
-            ),
+            _buildButton(text: 'REQUEST SECURE OTP', onPressed: _sendOtp),
             const SizedBox(height: 10),
             GestureDetector(
               onTap: () => setState(() => _usePassword = true),
               child: Text(
                 'Sign In with Password instead',
                 style: GoogleFonts.inter(
-                  color: AppColors.gold.withValues(alpha: 0.7), 
+                  color: AppColors.gold.withValues(alpha: 0.7),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   decoration: TextDecoration.underline,
@@ -705,7 +795,11 @@ class _LoginScreenState extends State<LoginScreen> {
             Text(
               _emailController.text,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ).animate().fadeIn(),
             const SizedBox(height: 20),
             _buildTextField(
@@ -715,17 +809,14 @@ class _LoginScreenState extends State<LoginScreen> {
               isOtp: true,
             ),
             const SizedBox(height: 20),
-            _buildButton(
-              text: 'AUTHENTICATE & ENTER',
-              onPressed: _verifyOtp,
-            ),
+            _buildButton(text: 'AUTHENTICATE & ENTER', onPressed: _verifyOtp),
             const SizedBox(height: 10),
             GestureDetector(
               onTap: () => setState(() => _otpSent = false),
               child: Text(
                 'Use different email address',
                 style: GoogleFonts.inter(
-                  color: AppColors.gold.withValues(alpha: 0.7), 
+                  color: AppColors.gold.withValues(alpha: 0.7),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   decoration: TextDecoration.underline,
@@ -733,30 +824,40 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ],
-          
+
           const SizedBox(height: 24),
-          
+
           Row(
             children: [
-              Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.06), height: 1)),
+              Expanded(
+                child: Divider(
+                  color: Colors.white.withValues(alpha: 0.06),
+                  height: 1,
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Text(
-                  'OR AUTHORIZE SECURELY', 
+                  'OR AUTHORIZE SECURELY',
                   style: GoogleFonts.inter(
-                    color: Colors.white24, 
-                    fontSize: 10, 
-                    letterSpacing: 1.5, 
-                    fontWeight: FontWeight.w800
+                    color: Colors.white24,
+                    fontSize: 10,
+                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
-              Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.06), height: 1)),
+              Expanded(
+                child: Divider(
+                  color: Colors.white.withValues(alpha: 0.06),
+                  height: 1,
+                ),
+              ),
             ],
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Google secondary login
           SizedBox(
             width: double.infinity,
@@ -765,8 +866,13 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: _signInWithGoogle,
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white,
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1.2),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                side: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  width: 1.2,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -776,8 +882,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'Continue with Google',
                     style: GoogleFonts.inter(
-                      fontWeight: FontWeight.bold, 
-                      fontSize: 15, 
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -809,7 +915,9 @@ class _LoginScreenState extends State<LoginScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isFocused ? AppColors.gold : Colors.white.withValues(alpha: 0.08),
+                color: isFocused
+                    ? AppColors.gold
+                    : Colors.white.withValues(alpha: 0.08),
                 width: isFocused ? 1.5 : 1.0,
               ),
               boxShadow: isFocused
@@ -818,7 +926,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: AppColors.gold.withValues(alpha: 0.08),
                         blurRadius: 10,
                         spreadRadius: 1,
-                      )
+                      ),
                     ]
                   : [],
             ),
@@ -827,30 +935,47 @@ class _LoginScreenState extends State<LoginScreen> {
               keyboardType: isOtp
                   ? TextInputType.number
                   : isPassword
-                      ? TextInputType.visiblePassword
-                      : TextInputType.emailAddress,
+                  ? TextInputType.visiblePassword
+                  : TextInputType.emailAddress,
               obscureText: obscureText,
-              style: GoogleFonts.inter(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
               textAlign: isOtp ? TextAlign.center : TextAlign.start,
               decoration: InputDecoration(
-                prefixIcon: isOtp 
-                    ? null 
+                prefixIcon: isOtp
+                    ? null
                     : Padding(
                         padding: const EdgeInsets.only(left: 18.0, right: 14.0),
-                        child: Icon(icon, color: isFocused ? AppColors.gold : Colors.white38, size: 22),
+                        child: Icon(
+                          icon,
+                          color: isFocused ? AppColors.gold : Colors.white38,
+                          size: 22,
+                        ),
                       ),
-                prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                prefixIconConstraints: const BoxConstraints(
+                  minWidth: 0,
+                  minHeight: 0,
+                ),
                 suffixIcon: suffixIcon,
                 hintText: hint,
-                hintStyle: GoogleFonts.inter(color: Colors.white38, fontSize: 16),
+                hintStyle: GoogleFonts.inter(
+                  color: Colors.white38,
+                  fontSize: 16,
+                ),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.02),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 20,
+                  horizontal: 20,
+                ),
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
@@ -867,7 +992,7 @@ class _LoginScreenState extends State<LoginScreen> {
             blurRadius: 20,
             spreadRadius: 2,
             offset: const Offset(0, 6),
-          )
+          ),
         ],
       ),
       child: ElevatedButton(
@@ -876,11 +1001,18 @@ class _LoginScreenState extends State<LoginScreen> {
           backgroundColor: const Color(0xFFFFB300),
           foregroundColor: Colors.black,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
         ),
         child: Text(
           text,
-          style: GoogleFonts.inter(fontWeight: FontWeight.w900, letterSpacing: 2.0, fontSize: 15, color: Colors.black),
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2.0,
+            fontSize: 15,
+            color: Colors.black,
+          ),
         ),
       ),
     );
@@ -896,7 +1028,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Text(
             'New to SmartAttendance? ',
             style: GoogleFonts.inter(
-              color: Colors.white30, 
+              color: Colors.white30,
               fontSize: 15,
               fontWeight: FontWeight.w500,
             ),
@@ -1021,30 +1153,33 @@ class GoogleLogoPainter extends CustomPainter {
     final double w = size.width;
     final double r = w / 2;
     final center = Offset(r, r);
-    
+
     // Thickness of the logo relative to size
     final double thickness = w * 0.22;
-    final Rect rect = Rect.fromCircle(center: center, radius: r - thickness / 2);
-    
+    final Rect rect = Rect.fromCircle(
+      center: center,
+      radius: r - thickness / 2,
+    );
+
     // Paints for four color segments
     final paintRed = Paint()
       ..color = const Color(0xFFEA4335)
       ..style = PaintingStyle.stroke
       ..strokeWidth = thickness
       ..strokeCap = StrokeCap.butt;
-      
+
     final paintYellow = Paint()
       ..color = const Color(0xFFFBBC05)
       ..style = PaintingStyle.stroke
       ..strokeWidth = thickness
       ..strokeCap = StrokeCap.butt;
-      
+
     final paintGreen = Paint()
       ..color = const Color(0xFF34A853)
       ..style = PaintingStyle.stroke
       ..strokeWidth = thickness
       ..strokeCap = StrokeCap.butt;
-      
+
     final paintBlue = Paint()
       ..color = const Color(0xFF4285F4)
       ..style = PaintingStyle.stroke
@@ -1060,13 +1195,18 @@ class GoogleLogoPainter extends CustomPainter {
     canvas.drawArc(rect, 0.785, 1.57, false, paintGreen);
     // Blue covers right segment
     canvas.drawArc(rect, -0.785, 1.57, false, paintBlue);
-    
+
     // Draw the horizontal bar matching the blue color
     final barPaint = Paint()
       ..color = const Color(0xFF4285F4)
       ..style = PaintingStyle.fill;
-    
-    final Rect barRect = Rect.fromLTRB(r, r - thickness / 2, w, r + thickness / 2);
+
+    final Rect barRect = Rect.fromLTRB(
+      r,
+      r - thickness / 2,
+      w,
+      r + thickness / 2,
+    );
     canvas.drawRect(barRect, barPaint);
   }
 
