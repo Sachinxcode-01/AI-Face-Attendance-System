@@ -21,8 +21,24 @@ const app = express();
 const server = http.createServer(app);
 
 // ─── Middleware Stack ───────────────────────────────────────────────
+const allowedOrigins = process.env.CORS_ORIGINS 
+  ? process.env.CORS_ORIGINS.split(',') 
+  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+
 app.use(cors({
-  origin: (process.env.CORS_ORIGINS || '*').split(','),
+  origin: (reqOrigin, callback) => {
+    // Permit all origins in development, but restrict strictly in production
+    const isProduction = process.env.APP_ENV === 'production' || process.env.NODE_ENV === 'production';
+    if (!isProduction) {
+      callback(null, true);
+    } else {
+      if (!reqOrigin || allowedOrigins.includes(reqOrigin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS Policy: Origin not allowed.'));
+      }
+    }
+  },
   credentials: true,
   exposedHeaders: ['X-Request-ID']
 }));
@@ -64,6 +80,7 @@ const leaveRoutes = require('./routes/leave');
 const securityRoutes = require('./routes/security');
 const notificationRoutes = require('./routes/notifications');
 const aiRoutes = require('./routes/ai');
+const telemetryRoutes = require('./routes/telemetry');
 
 app.use('/auth', authRoutes);
 app.use('/sessions', sessionRoutes);
@@ -71,6 +88,7 @@ app.use('/attendance', attendanceRoutes);
 app.use('/leave', leaveRoutes);
 app.use('/security', securityRoutes);
 app.use('/notifications', notificationRoutes);
+app.use('/telemetry', telemetryRoutes);
 app.use('/', aiRoutes);
 
 // Error fallback handler for all routes

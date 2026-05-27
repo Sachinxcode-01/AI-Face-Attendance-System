@@ -3,9 +3,42 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/leave_model.dart';
+import '../models/student_stats_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.210.101.48:8000';
+  static String _host = '10.210.101.48';
+  static String _port = '8000';
+
+  static String get serverHost => _host;
+  static String get serverPort => _port;
+
+  static String get baseUrl => 'http://$_host:$_port';
+
+  static Future<void> init() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _host = prefs.getString('sf_server_host') ?? '10.210.101.48';
+      _port = prefs.getString('sf_server_port') ?? '8000';
+      debugPrint('[ApiService] Initialized with baseUrl: $baseUrl');
+    } catch (e) {
+      debugPrint('[ApiService] init failed: $e');
+    }
+  }
+
+  static Future<void> saveServerSettings(String host, String port) async {
+    _host = host;
+    _port = port;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('sf_server_host', host);
+      await prefs.setString('sf_server_port', port);
+      debugPrint('[ApiService] Updated server settings: $baseUrl');
+    } catch (e) {
+      debugPrint('[ApiService] saveServerSettings failed: $e');
+    }
+  }
 
   // ─── Health check ─────────────────────────────────────────────────
   static Future<bool> isServerOnline() async {
@@ -338,13 +371,20 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> getStudentLeaves(String email) async {
+  static Future<List<LeaveModel>> getStudentLeaves(String email) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/leave/student/$email'),
       );
-      return jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final List<dynamic> list = jsonDecode(response.body) as List<dynamic>;
+        return list
+            .map((item) => LeaveModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
     } catch (e) {
+      debugPrint('getStudentLeaves error: $e');
       return [];
     }
   }
@@ -453,7 +493,7 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> getStudentStats(
+  static Future<StudentStatsModel?> getStudentStats(
     String email,
     String token,
   ) async {
@@ -463,12 +503,14 @@ class ApiService {
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+        final Map<String, dynamic> jsonMap =
+            jsonDecode(response.body) as Map<String, dynamic>;
+        return StudentStatsModel.fromJson(jsonMap);
       }
     } catch (e) {
       debugPrint('getStudentStats error: $e');
     }
-    return {};
+    return null;
   }
 
   static Future<Map<String, dynamic>> getAdminStats(String token) async {
@@ -499,5 +541,128 @@ class ApiService {
       debugPrint('getActivityLog error: $e');
     }
     return [];
+  }
+
+  static Future<Map<String, dynamic>?> getStudentAnalytics(
+    String email,
+    String token,
+  ) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/attendance/student/analytics/$email'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getStudentAnalytics error: $e');
+    }
+    return null;
+  }
+
+  static Future<Map<String, dynamic>?> getVerificationHistory(
+    String email,
+    String token, {
+    int page = 1,
+    int limit = 20,
+    String? status,
+    String? month,
+  }) async {
+    try {
+      String query = 'page=$page&limit=$limit';
+      if (status != null) query += '&status=$status';
+      if (month != null) query += '&month=$month';
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/attendance/student/$email?$query'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getVerificationHistory error: $e');
+    }
+    return null;
+  }
+
+  static Future<List<dynamic>> getActiveSessions(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/auth/sessions/active'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getActiveSessions error: $e');
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> logoutAllSessions(String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/sessions/logout-all'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {'detail': 'Connection failed'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getSystemTelemetry(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/telemetry/system'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getSystemTelemetry error: $e');
+    }
+    return {};
+  }
+
+  static Future<Map<String, dynamic>> acknowledgeIntruderAlert(
+    String logId,
+    String token,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/security/acknowledge'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'log_id': logId,
+          'status': 'Acknowledged',
+        }),
+      );
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {'detail': 'Connection failed: $e'};
+    }
   }
 }

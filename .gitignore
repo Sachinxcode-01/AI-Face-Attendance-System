@@ -76,4 +76,7 @@ desktop.ini
 # ───────────────────────────────────────────────
 .vscode/
 .idea/
-*.iml
+*.iml# Local sensitive files - do NOT commit
+data/face_encodings_arcface.pkl
+smartface_mobile/android/app/google-services.json
+smartface_mobile/ios/Runner/GoogleService-Info.plist

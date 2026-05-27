@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../core/session_manager.dart';
 import '../../services/api_service.dart';
+import '../../models/leave_model.dart';
 import 'dart:developer' as developer;
 
 class LeaveHistoryScreen extends StatefulWidget {
@@ -14,7 +15,7 @@ class LeaveHistoryScreen extends StatefulWidget {
 }
 
 class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
-  List<dynamic> _leaves = [];
+  List<LeaveModel> _leaves = [];
   bool _isLoading = true;
   String _studentEmail = '';
   Map? _args;
@@ -164,11 +165,11 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
     );
   }
 
-  Widget _buildLeaveCard(Map<String, dynamic> leave) {
-    final status = leave['status'] ?? 'Pending';
+  Widget _buildLeaveCard(LeaveModel leave) {
+    final status = leave.status;
     final color = _getStatusColor(status);
-    final startDateStr = _formatDateString(leave['start_date'] ?? '');
-    final endDateStr = _formatDateString(leave['end_date'] ?? '');
+    final startDateStr = _formatDateString(leave.startDate);
+    final endDateStr = _formatDateString(leave.endDate);
     final dates = '$startDateStr - $endDateStr';
 
     return Container(
@@ -194,7 +195,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            leave['reason'] ?? 'No reason provided',
+            leave.reason,
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -203,7 +204,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            leave['remarks'] ?? 'Awaiting department head review.',
+            leave.remarks ?? 'Awaiting department head review.',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.5),
               fontSize: 13,

@@ -51,9 +51,23 @@ router.get('/logs', authenticate, async (req, res) => {
     const result = logs.map(l => {
       l.id = l._id.toString();
       delete l._id;
+      l.status = l.status || "Active";
       return l;
     });
     res.json(result);
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// ─── POST /security/acknowledge ──────────────────────────────────
+router.post('/acknowledge', authenticate, requireRole(['teacher', 'admin']), async (req, res) => {
+  try {
+    const { log_id, status } = req.body;
+    const updateStatus = status || "Acknowledged";
+    
+    await SecurityLog.updateOne({ _id: log_id }, { $set: { status: updateStatus } });
+    res.json({ status: "success", message: `Alert marked as ${updateStatus.toLowerCase()}` });
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }

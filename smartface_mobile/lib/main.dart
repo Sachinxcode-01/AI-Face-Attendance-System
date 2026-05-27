@@ -8,6 +8,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/app_state.dart';
 import 'core/session_manager.dart';
 import 'core/theme_controller.dart';
+import 'services/api_service.dart';
 
 // Screens
 import 'screens/login_screen.dart';
@@ -23,6 +24,7 @@ import 'screens/auth/setup_wizard_screen.dart';
 import 'screens/main/ai_analyst_screen.dart';
 import 'screens/main/qr_generator_screen.dart';
 import 'screens/student/qr_scanner_screen.dart';
+import 'screens/student/student_profile_screen.dart';
 import 'screens/student/leave_apply_screen.dart';
 import 'screens/student/leave_history_screen.dart';
 import 'screens/teacher/leave_review_screen.dart';
@@ -30,6 +32,7 @@ import 'screens/teacher/live_monitor_screen.dart';
 import 'screens/teacher/teacher_stats_screen.dart';
 import 'screens/main/notification_nexus_screen.dart';
 import 'screens/teacher/train_faces_screen.dart';
+import 'screens/teacher/system_health_screen.dart';
 
 /// FCM background message handler (must be top-level)
 @pragma('vm:entry-point')
@@ -59,7 +62,11 @@ void main() async {
   final themeController = ThemeController();
   final appState = AppState();
 
-  await Future.wait([sessionManager.init(), themeController.init()]);
+  await Future.wait([
+    ApiService.init(),
+    sessionManager.init(),
+    themeController.init(),
+  ]);
 
   runApp(
     MultiProvider(
@@ -95,6 +102,7 @@ class SmartAttendanceApp extends StatelessWidget {
         '/otp': (_) => const OTPScreen(),
         '/dashboard': (_) => const DashboardScreen(),
         '/profile': (_) => const ProfileScreen(),
+        '/student-profile': (_) => const StudentProfileScreen(),
         '/security-logs': (_) => const SecurityLogsScreen(),
         '/analytics': (_) => const AIAnalyticsScreen(),
         '/setup': (_) => const SetupWizardScreen(),
@@ -108,6 +116,7 @@ class SmartAttendanceApp extends StatelessWidget {
         '/teacher-stats': (_) => const TeacherStatsScreen(),
         '/notifications': (_) => const NotificationNexusScreen(),
         '/train-faces': (_) => const TrainFacesScreen(),
+        '/system-health': (_) => const SystemHealthScreen(),
       },
     );
   }

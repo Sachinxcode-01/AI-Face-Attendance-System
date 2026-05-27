@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert';
+import 'api_service.dart';
 
 class NotificationService {
   static final _localNotif = FlutterLocalNotificationsPlugin();
@@ -13,7 +14,7 @@ class NotificationService {
   static String? get fcmToken => _fcmToken;
 
   // ─── WebSocket real-time stream ───────────────────────────────────
-  static const String _wsBaseUrl = 'ws://10.210.101.48:8000';
+  static String get _wsBaseUrl => 'ws://${ApiService.serverHost}:${ApiService.serverPort}';
   WebSocketChannel? _channel;
   final _streamController = StreamController<Map<String, dynamic>>.broadcast();
 

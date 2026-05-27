@@ -238,6 +238,240 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _showServerSettingsDialog() {
+    final hostController = TextEditingController(text: ApiService.serverHost);
+    final portController = TextEditingController(text: ApiService.serverPort);
+    String connectionStatus = 'UNTESTED'; // UNTESTED, ONLINE, OFFLINE
+    bool testingStatus = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: AlertDialog(
+                backgroundColor: const Color(0xFF0C1033).withValues(alpha: 0.85),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                  side: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    width: 1.2,
+                  ),
+                ),
+                title: Row(
+                  children: [
+                    const Icon(Icons.dns_outlined, color: AppColors.gold, size: 24),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Server Settings',
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ],
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Configure backend connection parameters:',
+                      style: GoogleFonts.inter(color: Colors.white54, fontSize: 13),
+                    ),
+                    const SizedBox(height: 20),
+                    // Host field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.02),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                      ),
+                      child: TextField(
+                        controller: hostController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          hintText: 'Server Host IP / Domain',
+                          hintStyle: TextStyle(color: Colors.white38),
+                          prefixIcon: Icon(Icons.link_rounded, color: Colors.white38),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Port field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.02),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                      ),
+                      child: TextField(
+                        controller: portController,
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          hintText: 'Port (e.g. 8000)',
+                          hintStyle: TextStyle(color: Colors.white38),
+                          prefixIcon: Icon(Icons.settings_ethernet_rounded, color: Colors.white38),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Connection Status bar
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Connection Status:',
+                          style: GoogleFonts.inter(color: Colors.white38, fontSize: 12),
+                        ),
+                        if (testingStatus)
+                          const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
+                            ),
+                          )
+                        else if (connectionStatus == 'ONLINE')
+                          Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF76E600), // cyber neon green
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'ONLINE',
+                                style: GoogleFonts.inter(
+                                  color: const Color(0xFF76E600),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                            ],
+                          )
+                        else if (connectionStatus == 'OFFLINE')
+                          Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF05050), // cyber coral red
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'OFFLINE',
+                                style: GoogleFonts.inter(
+                                  color: const Color(0xFFF05050),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          Text(
+                            'UNTESTED',
+                            style: GoogleFonts.inter(
+                              color: Colors.white38,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+                actions: [
+                  // Test Button
+                  TextButton(
+                    onPressed: testingStatus
+                        ? null
+                        : () async {
+                            setDialogState(() {
+                              testingStatus = true;
+                              connectionStatus = 'TESTING';
+                            });
+                            // Temporarily configure ApiService to test this connection
+                            final originalHost = ApiService.serverHost;
+                            final originalPort = ApiService.serverPort;
+                            await ApiService.saveServerSettings(
+                              hostController.text.trim(),
+                              portController.text.trim(),
+                            );
+                            final online = await ApiService.isServerOnline();
+                            
+                            // Restore settings so they must explicitly save
+                            await ApiService.saveServerSettings(originalHost, originalPort);
+
+                            setDialogState(() {
+                              testingStatus = false;
+                              connectionStatus = online ? 'ONLINE' : 'OFFLINE';
+                            });
+                          },
+                    child: Text(
+                      'TEST PING',
+                      style: GoogleFonts.inter(
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                  // Save Button
+                  ElevatedButton(
+                    onPressed: () async {
+                      await ApiService.saveServerSettings(
+                        hostController.text.trim(),
+                        portController.text.trim(),
+                      );
+                      if (!context.mounted) return;
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Server settings saved & applied!'),
+                          backgroundColor: Color(0xFF0C1033),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.gold,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('SAVE & APPLY'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -332,6 +566,37 @@ class _LoginScreenState extends State<LoginScreen> {
                       duration: 400.ms,
                     ),
                   ],
+                ),
+              ),
+            ),
+          ),
+
+          // ⚙️ PREMIUM GLASSMORPHIC SERVER SETTINGS BUTTON
+          Positioned(
+            top: 16,
+            right: 16,
+            child: SafeArea(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.settings_outlined,
+                        color: AppColors.gold,
+                        size: 24,
+                      ),
+                      onPressed: _showServerSettingsDialog,
+                    ),
+                  ),
                 ),
               ),
             ),

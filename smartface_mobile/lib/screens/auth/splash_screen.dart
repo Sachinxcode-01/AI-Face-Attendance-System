@@ -18,7 +18,7 @@ class _SplashScreenState extends State<SplashScreen> {
   String _bootMessage = 'BOOT SEQUENCE STARTED...';
   int _bootIndex = 0;
   late Timer _bootTimer;
-  bool _showWelcome = false;
+  final bool _showWelcome = false;
   final List<String> _bootChecks = [
     'INITIALIZING SECURE AI SUITE...',
     'PARSING BIOMETRIC MATRIX...',
@@ -41,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     });
 
-    Future.delayed(const Duration(milliseconds: 1200), () {
+    Future.delayed(const Duration(milliseconds: 1200), () async {
       if (mounted) {
         final session = context.read<SessionManager>();
         if (session.isLoggedIn) {
@@ -58,9 +58,7 @@ class _SplashScreenState extends State<SplashScreen> {
             },
           );
         } else {
-          setState(() {
-            _showWelcome = true;
-          });
+          Navigator.pushReplacementNamed(context, '/');
         }
       }
     });

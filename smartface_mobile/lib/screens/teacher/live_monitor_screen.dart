@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,8 +7,6 @@ import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../core/session_manager.dart';
 import '../../services/notification_service.dart';
-import 'dart:async';
-import 'dart:math' as math;
 
 class LiveMonitorScreen extends StatefulWidget {
   const LiveMonitorScreen({super.key});
@@ -18,35 +18,65 @@ class LiveMonitorScreen extends StatefulWidget {
 class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
   final NotificationService _notificationService = NotificationService();
   StreamSubscription? _subscription;
+  Timer? _fpsTimer;
 
   bool _isIntruderAlertActive = false;
-  int _presentCount = 38;
-  int _aiDetectedCount = 36;
-  final List<Map<String, String>> _recentCheckins = [];
+  int _presentCount = 14;
+  int _aiDetectedCount = 12;
+  double _mockFps = 15.0;
+  double _mockScanRate = 1.1;
+  String _selectedClass = 'CS-402: Neural Networks';
+  
+  final List<Map<String, dynamic>> _recentCheckins = [
+    {'name': 'ALEX CARTER', 'roll': 'STU-104', 'time': '09:02 AM', 'confidence': '98.5%', 'status': 'Present'},
+    {'name': 'SOPHIA LI', 'roll': 'STU-112', 'time': '09:04 AM', 'confidence': '96.2%', 'status': 'Present'},
+    {'name': 'LIAM NEESON', 'roll': 'STU-242', 'time': '09:05 AM', 'confidence': '95.8%', 'status': 'Present'}
+  ];
+
+  final List<Map<String, String>> _absentees = [
+    {'name': 'James Wilson', 'id': 'STU-992', 'risk': 'High'},
+    {'name': 'Emily Chen', 'id': 'STU-104', 'risk': 'Medium'},
+    {'name': 'Marcus Miller', 'id': 'STU-552', 'risk': 'Low'},
+  ];
 
   @override
   void initState() {
     super.initState();
     final session = Provider.of<SessionManager>(context, listen: false);
+    
+    // Connect WebSockets
     _notificationService.connect(token: session.token);
     _subscription = _notificationService.stream.listen((data) {
       if (data['type'] == 'attendance_update') {
-        setState(() {
-          _presentCount++;
-          if (_presentCount % 3 == 0) {
-            _aiDetectedCount++; // Simulate AI detection lag
-          }
-          _recentCheckins.insert(0, {
-            'email': data['student_email'],
-            'status': data['status'],
-            'time': 'Just now',
+        if (mounted) {
+          setState(() {
+            _presentCount++;
+            _aiDetectedCount++;
+            _recentCheckins.insert(0, {
+              'name': data['student_email'].toString().split('@').first.toUpperCase(),
+              'roll': 'STU-${math.Random().nextInt(800) + 100}',
+              'time': 'Just now',
+              'confidence': '${(92.0 + math.Random().nextDouble() * 7.5).toStringAsFixed(1)}%',
+              'status': 'Present'
+            });
+            if (_recentCheckins.length > 8) {
+              _recentCheckins.removeLast();
+            }
           });
-          if (_recentCheckins.length > 5) _recentCheckins.removeLast();
-        });
+        }
       } else if (data['type'] == 'intruder_alert') {
-        setState(() => _isIntruderAlertActive = true);
-        Future.delayed(const Duration(seconds: 10), () {
-          if (mounted) setState(() => _isIntruderAlertActive = false);
+        if (mounted) {
+          setState(() => _isIntruderAlertActive = true);
+        }
+      }
+    });
+
+    // Fluctuating FPS and scan rate telemetry simulation
+    _fpsTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (mounted) {
+        setState(() {
+          _mockFps = 14.2 + math.Random().nextDouble() * 1.5;
+          _mockScanRate = 0.9 + math.Random().nextDouble() * 0.4;
         });
       }
     });
@@ -55,25 +85,22 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
   @override
   void dispose() {
     _subscription?.cancel();
+    _fpsTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.bgDeep, AppColors.bgDark],
-        ),
+      decoration: const BoxDecoration(
+        color: AppColors.bgDark,
         image: DecorationImage(
-          image: const NetworkImage(
+          image: NetworkImage(
             'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            Colors.black.withValues(alpha: 0.15),
+            Colors.black,
             BlendMode.dstATop,
           ),
         ),
@@ -82,40 +109,43 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           title: Text(
-            'Live Monitor',
-            style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+            'Live CCTV Portal',
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white),
           ),
           backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
           actions: [_buildIntruderBadge()],
         ),
         body: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildLiveFeed(),
-              const SizedBox(height: 30),
-              _buildStatsRow(),
-              const SizedBox(height: 30),
-              if (_recentCheckins.isNotEmpty) ...[
-                Text(
-                  'LIVE CHECK-INS (REAL-TIME)',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    letterSpacing: 2,
-                    color: Colors.greenAccent,
-                  ),
+              _buildClassPickerRow(),
+              const SizedBox(height: 15),
+              _buildLiveFeedHUD(),
+              const SizedBox(height: 20),
+              _buildHardwareStats(),
+              const SizedBox(height: 25),
+              
+              Text(
+                'REAL-TIME SCANNER VERIFICATION FEED',
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  color: Colors.greenAccent,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 15),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: _recentCheckins
-                      .map((checkin) => _buildCheckinItem(checkin))
-                      .toList(),
-                ),
-                const SizedBox(height: 25),
-              ],
+              ),
+              const SizedBox(height: 15),
+              _buildLiveScansFeed(),
+              const SizedBox(height: 25),
+              
               _buildAbsenteeList(),
             ],
           ),
@@ -124,169 +154,79 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
     );
   }
 
-  Widget _buildCheckinItem(Map<String, String> checkin) {
-    final double cardWidth = (MediaQuery.of(context).size.width - 52) / 2;
-    return Container(
-          width: cardWidth,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.greenAccent.withValues(alpha: 0.3),
-              width: 1.5,
+  Widget _buildClassPickerRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF070B1A).withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.2)),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.greenAccent.withValues(alpha: 0.08),
-                blurRadius: 15,
-                spreadRadius: 1,
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedClass,
+                dropdownColor: const Color(0xFF070B1A),
+                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.gold),
+                style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _selectedClass = val);
+                  }
+                },
+                items: ['CS-402: Neural Networks', 'CS-301: Data Structures'].map((cl) {
+                  return DropdownMenuItem<String>(
+                    value: cl,
+                    child: Text(cl),
+                  );
+                }).toList(),
               ),
-            ],
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Avatar base
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.greenAccent.withValues(alpha: 0.1),
-                    child: const Icon(
-                      Icons.person,
-                      color: Colors.greenAccent,
-                      size: 28,
-                    ),
-                  ),
-                  // Scanner ring animation
-                  Positioned.fill(
-                    child:
-                        Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.greenAccent.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                  width: 1.5,
-                                ),
-                              ),
-                            )
-                            .animate(onPlay: (c) => c.repeat(reverse: true))
-                            .scale(
-                              begin: const Offset(0.9, 0.9),
-                              end: const Offset(1.1, 1.1),
-                              duration: 1.seconds,
-                            ),
-                  ),
-                  // Biometric floating points around the avatar
-                  ...List.generate(4, (index) {
-                    final angles = [0.0, 1.57, 3.14, 4.71];
-                    final double distance = 36.0;
-                    final double dx = distance * math.cos(angles[index]);
-                    final double dy = distance * math.sin(angles[index]);
-                    return Transform.translate(
-                      offset: Offset(dx, dy),
-                      child:
-                          Container(
-                                width: 5,
-                                height: 5,
-                                decoration: const BoxDecoration(
-                                  color: Colors.greenAccent,
-                                  shape: BoxShape.circle,
-                                ),
-                              )
-                              .animate(onPlay: (c) => c.repeat(reverse: true))
-                              .scale(
-                                begin: const Offset(0.5, 0.5),
-                                end: const Offset(1.5, 1.5),
-                                duration: 600.ms + (index * 150).ms,
-                              )
-                              .fadeIn(duration: 300.ms),
-                    );
-                  }),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                checkin['email']!.split('@').first.toUpperCase(),
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: Colors.white,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.greenAccent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.verified_user_outlined,
-                      color: Colors.greenAccent,
-                      size: 10,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Recognized ✓',
-                      style: GoogleFonts.inter(
-                        color: Colors.greenAccent,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        )
-        .animate()
-        .slideY(begin: 0.1, duration: 400.ms, curve: Curves.easeOutBack)
-        .fadeIn(duration: 400.ms)
-        .shimmer(
-          color: Colors.greenAccent.withValues(alpha: 0.3),
-          duration: 1.seconds,
-        );
+        ),
+        const SizedBox(width: 15),
+        IconButton(
+          onPressed: () {
+            setState(() {
+              _isIntruderAlertActive = false;
+            });
+          },
+          icon: const Icon(Icons.refresh_rounded, color: AppColors.gold),
+        ),
+      ],
+    );
   }
 
   Widget _buildIntruderBadge() {
     return Container(
-          margin: const EdgeInsets.only(right: 16),
-          child: Chip(
-            avatar: Icon(
-              Icons.security,
-              color: _isIntruderAlertActive ? Colors.white : Colors.greenAccent,
-              size: 16,
-            ),
-            label: Text(
-              _isIntruderAlertActive ? 'INTRUDER DETECTED' : 'SECURE',
-              style: TextStyle(
-                color: _isIntruderAlertActive
-                    ? Colors.white
-                    : Colors.greenAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 10,
-              ),
-            ),
-            backgroundColor: _isIntruderAlertActive
-                ? Colors.redAccent
-                : Colors.white.withValues(alpha: 0.05),
+      margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+      child: Chip(
+        avatar: Icon(
+          Icons.security,
+          color: _isIntruderAlertActive ? Colors.white : Colors.greenAccent,
+          size: 14,
+        ),
+        label: Text(
+          _isIntruderAlertActive ? 'INTRUDER DETECTED' : 'SECURE',
+          style: TextStyle(
+            color: _isIntruderAlertActive ? Colors.white : Colors.greenAccent,
+            fontWeight: FontWeight.bold,
+            fontSize: 9,
           ),
-        )
+        ),
+        backgroundColor: _isIntruderAlertActive
+            ? const Color(0xFFF05050)
+            : Colors.white.withValues(alpha: 0.05),
+      ),
+    )
         .animate(target: _isIntruderAlertActive ? 1 : 0)
         .shimmer(duration: 1.seconds);
   }
 
-  Widget _buildLiveFeed() {
+  Widget _buildLiveFeedHUD() {
     return Container(
       height: 250,
       width: double.infinity,
@@ -295,144 +235,281 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: Colors.white10),
         boxShadow: [
-          const BoxShadow(
-            color: Colors.black54,
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 20,
             spreadRadius: 5,
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.videocam_off_outlined,
-                  color: Colors.white24,
-                  size: 48,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'LIVE FEED ENCRYPTED',
-                  style: GoogleFonts.inter(
-                    color: Colors.white24,
-                    fontSize: 12,
-                    letterSpacing: 2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            top: 20,
-            left: 20,
-            child: Row(
-              children: [
-                Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                    )
-                    .animate(onPlay: (c) => c.repeat())
-                    .fadeOut(duration: 1.seconds),
-                const SizedBox(width: 8),
-                const Text(
-                  'REC',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            bottom: 20,
-            right: 20,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text(
-                'CAM_01: MAIN HALL',
-                style: TextStyle(color: Colors.white70, fontSize: 10),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: Stack(
+          children: [
+            // Dark futuristic surveillance grid placeholder
+            Positioned.fill(
+              child: Image.network(
+                'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80',
+                fit: BoxFit.cover,
+                color: Colors.black.withValues(alpha: 0.5),
+                colorBlendMode: BlendMode.srcOver,
               ),
             ),
-          ),
-        ],
+
+            // Surveillance scanning grid line animation
+            Positioned.fill(
+              child: CustomPaint(
+                painter: SurveillanceOverlayPainter(),
+              ),
+            ),
+
+            // Scanning Overlay Laser line
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.transparent, Color(0x2000FFCC), Colors.transparent],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              )
+                  .animate(onPlay: (c) => c.repeat())
+                  .slideY(begin: -1, end: 1, duration: 3.seconds),
+            ),
+
+            // Bounding boxes simulating face identification
+            Positioned(
+              top: 50,
+              left: 60,
+              child: _buildSurveillanceFaceBox('Alex STU-104', '98.5%'),
+            ),
+            Positioned(
+              top: 100,
+              right: 80,
+              child: _buildSurveillanceFaceBox('Sophia STU-112', '96.2%'),
+            ),
+
+            Positioned(
+              top: 20,
+              left: 20,
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                      .animate(onPlay: (c) => c.repeat())
+                      .fadeOut(duration: 1.seconds),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'REC FEED',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Positioned(
+              bottom: 20,
+              left: 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'SCANRATE: ${_mockScanRate.toStringAsFixed(2)}s',
+                  style: GoogleFonts.robotoMono(color: const Color(0xFF76E600), fontSize: 9, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+
+            Positioned(
+              bottom: 20,
+              right: 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'CAM_01: CS HALLWAY',
+                  style: TextStyle(color: Colors.white70, fontSize: 9),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-    ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95));
+    ).animate().fadeIn().scale(begin: const Offset(0.98, 0.98));
   }
 
-  Widget _buildStatsRow() {
-    return Row(
+  Widget _buildSurveillanceFaceBox(String label, String conf) {
+    return Column(
       children: [
-        Expanded(
-          child: _buildMiniStat(
-            'Students Present',
-            _presentCount,
-            Icons.people_outline,
-            Colors.greenAccent,
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xFF00FFCC), width: 1.5),
+            color: const Color(0x1000FFCC),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _hudCorner(),
+                  _hudCorner(),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _hudCorner(),
+                  _hudCorner(),
+                ],
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 15),
-        Expanded(
-          child: _buildMiniStat(
-            'AI Detected',
-            _aiDetectedCount,
-            Icons.face_retouching_natural,
-            AppColors.gold,
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          color: Colors.black87,
+          child: Text(
+            '$label ($conf)',
+            style: const TextStyle(color: Color(0xFF00FFCC), fontSize: 7, fontWeight: FontWeight.bold),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMiniStat(String label, int value, IconData icon, Color color) {
+  Widget _hudCorner() {
+    return Container(width: 4, height: 4, color: const Color(0xFF00FFCC));
+  }
+
+  Widget _buildHardwareStats() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildSurveillanceTelemetryBox('CAMERA FPS', '${_mockFps.toStringAsFixed(1)} FPS', const Color(0xFF00C6FF)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildSurveillanceTelemetryBox('PRESENTS', '$_presentCount STUDENTS', const Color(0xFF76E600)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildSurveillanceTelemetryBox('AI MATCHED', '$_aiDetectedCount RECOGNITIONS', AppColors.gold),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSurveillanceTelemetryBox(String label, String value, Color color) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        color: const Color(0xFF070B1A).withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 12),
-          RollingNumberTicker(
-            value: value,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
           Text(
             label,
-            style: const TextStyle(color: Colors.white38, fontSize: 12),
+            style: GoogleFonts.inter(color: Colors.white38, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: GoogleFonts.robotoMono(color: color, fontSize: 12, fontWeight: FontWeight.bold),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAbsenteeList() {
-    final absentees = [
-      {'name': 'James Wilson', 'id': 'STU-992', 'risk': 'High'},
-      {'name': 'Emily Chen', 'id': 'STU-104', 'risk': 'Medium'},
-      {'name': 'Marcus Miller', 'id': 'STU-552', 'risk': 'Low'},
-    ];
+  Widget _buildLiveScansFeed() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF070B1A).withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: _recentCheckins.length,
+        separatorBuilder: (context, index) => Divider(color: Colors.white.withValues(alpha: 0.05), height: 16),
+        itemBuilder: (context, index) {
+          final scan = _recentCheckins[index];
+          return Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: const Color(0xFF76E600).withValues(alpha: 0.1),
+                radius: 18,
+                child: const Icon(Icons.person, color: Color(0xFF76E600), size: 18),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      scan['name'] ?? '',
+                      style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Roll: ${scan['roll']} • Time: ${scan['time']}',
+                      style: const TextStyle(color: Colors.white38, fontSize: 10),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00FFCC).withValues(alpha: 0.1),
+                      border: Border.all(color: const Color(0xFF00FFCC).withValues(alpha: 0.3)),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'AI: ${scan['confidence']}',
+                      style: GoogleFonts.robotoMono(color: const Color(0xFF00FFCC), fontSize: 9, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
+  Widget _buildAbsenteeList() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -440,114 +517,123 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'AI ABSENTEE DETECTION',
+              'AI ABSENTEE DETECTION & RISK MODEL',
               style: GoogleFonts.inter(
-                fontSize: 12,
+                fontSize: 10,
                 letterSpacing: 2,
                 color: AppColors.gold,
-              ),
-            ),
-            const Icon(Icons.auto_awesome, color: AppColors.gold, size: 16),
-          ],
-        ),
-        const SizedBox(height: 20),
-        ...absentees.map((student) => _buildAbsenteeItem(student)),
-      ],
-    );
-  }
-
-  Widget _buildAbsenteeItem(Map<String, String> student) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: Colors.white10,
-            child: Text(
-              student['name']![0],
-              style: const TextStyle(color: Colors.white70),
-            ),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  student['name']!,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  student['id']!,
-                  style: const TextStyle(color: Colors.white38, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: _getRiskColor(student['risk']!).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '${student['risk']} Risk',
-              style: TextStyle(
-                color: _getRiskColor(student['risk']!),
-                fontSize: 10,
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const Icon(Icons.auto_awesome, color: AppColors.gold, size: 14),
+          ],
+        ),
+        const SizedBox(height: 15),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF070B1A).withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
-        ],
-      ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _absentees.length,
+            separatorBuilder: (context, index) => Divider(color: Colors.white.withValues(alpha: 0.05), height: 16),
+            itemBuilder: (context, index) {
+              final student = _absentees[index];
+              final riskColor = _getRiskColor(student['risk']!);
+              return Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.white.withValues(alpha: 0.05),
+                    radius: 18,
+                    child: Text(
+                      student['name']![0],
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          student['name']!,
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+                        ),
+                        Text(
+                          student['id']!,
+                          style: const TextStyle(color: Colors.white38, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: riskColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: riskColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      '${student['risk']} Risk',
+                      style: TextStyle(
+                        color: riskColor,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
   Color _getRiskColor(String risk) {
     switch (risk) {
       case 'High':
-        return Colors.redAccent;
+        return const Color(0xFFF05050);
       case 'Medium':
         return Colors.orangeAccent;
       default:
-        return Colors.blueAccent;
+        return const Color(0xFF00C6FF);
     }
   }
 }
 
-class RollingNumberTicker extends StatelessWidget {
-  final int value;
-  final TextStyle style;
+class SurveillanceOverlayPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.03)
+      ..strokeWidth = 1.0;
 
-  const RollingNumberTicker({
-    super.key,
-    required this.value,
-    required this.style,
-  });
+    // Draw surveillance grids
+    const int numLines = 8;
+    for (int i = 1; i < numLines; i++) {
+      final double x = size.width * (i / numLines);
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      
+      final double y = size.height * (i / numLines);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+
+    // Draw crosshair at the center
+    final centerPaint = Paint()
+      ..color = Colors.white24
+      ..strokeWidth = 1.5;
+    
+    final Offset center = Offset(size.width / 2, size.height / 2);
+    canvas.drawLine(Offset(center.dx - 15, center.dy), Offset(center.dx + 15, center.dy), centerPaint);
+    canvas.drawLine(Offset(center.dx, center.dy - 15), Offset(center.dx, center.dy + 15), centerPaint);
+  }
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 350),
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        return SlideTransition(
-          position:
-              Tween<Offset>(
-                begin: const Offset(0.0, 0.4),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
-              ),
-          child: FadeTransition(opacity: animation, child: child),
-        );
-      },
-      child: Text('$value', key: ValueKey<int>(value), style: style),
-    );
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
