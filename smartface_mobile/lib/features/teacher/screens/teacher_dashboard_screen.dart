@@ -35,6 +35,7 @@ import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
+import 'package:smartface_attendance/design_system/design_system.dart';
 
 /// Central hub screen for faculty members to access attendance, live CCTV monitoring, system health, and student stats.
 class TeacherDashboard extends StatefulWidget {
@@ -186,12 +187,11 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
+        appBar: PremiumAppBar(
+          title: 'Faculty Dashboard',
           leadingWidth: 0,
           leading: const SizedBox.shrink(),
-          title: Row(
+          titleWidget: Row(
             children: [
               Container(
                 width: 38,

@@ -6,7 +6,23 @@ import 'package:smartface_attendance/design_system/design_system.dart';
 class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
-  const PremiumAppBar({super.key, required this.title, this.actions});
+  final Widget? leading;
+  final double? leadingWidth;
+  final Widget? titleWidget;
+  final bool centerTitle;
+  final double elevation;
+  final Color? backgroundColor;
+  const PremiumAppBar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.leading,
+    this.leadingWidth,
+    this.titleWidget,
+    this.centerTitle = false,
+    this.elevation = 0.0,
+    this.backgroundColor,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(64);
@@ -14,10 +30,12 @@ class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      centerTitle: false,
-      title: Row(
+      backgroundColor: backgroundColor ?? Colors.transparent,
+      elevation: elevation,
+      centerTitle: centerTitle,
+      leading: leading,
+      leadingWidth: leadingWidth,
+      title: titleWidget ?? Row(
         children: [
           SvgPicture.asset('assets/logos/logo.svg', width: 44, height: 44),
           const SizedBox(width: 12),
