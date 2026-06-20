@@ -15,7 +15,7 @@ import time
 
 from insightface.app import FaceAnalysis
 from dotenv import load_dotenv  
-import ai_analyst
+from core import ai_analyst
 import requests
 
 load_dotenv()
@@ -225,6 +225,13 @@ class SmartAttendanceSystem:
         try:
             engine = pyttsx3.init()
             engine.setProperty("rate", 150)
+            
+            # Configure a clear, beautiful female voice (Zira) if available
+            voices = engine.getProperty("voices")
+            for voice in voices:
+                if "zira" in voice.name.lower():
+                    engine.setProperty("voice", voice.id)
+                    break
         except Exception as e:
             print(f"[VOICE ERROR] Failed to initialize voice worker: {e}")
             return
@@ -546,6 +553,7 @@ class SmartAttendanceSystem:
 
     def run(self):
         print("[INFO] Starting Security Camera... Press 'q' to End Session.")
+        self.speak("Attendance scanning started.")
         self.camera = ThreadedCamera(0).start()
         
         frame_count = 0
@@ -654,6 +662,8 @@ class SmartAttendanceSystem:
             cv2.imshow('Smart Attendance System By Face Recognition Done by AI', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 self.process_absentees()
+                self.speak("Attendance session ended.")
+                self.speech_queue.join()
                 break
         
         self.camera.release()

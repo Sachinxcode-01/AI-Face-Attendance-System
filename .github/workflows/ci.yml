@@ -1,0 +1,101 @@
+name: SmartFace Attendance CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  flutter-client:
+    name: Flutter Mobile Client CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: smartface_mobile
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Verify Code Formatting
+        run: flutter format --set-exit-if-changed lib/ test/
+
+      - name: Static Code Analysis
+        run: flutter analyze
+
+      - name: Run Unit & Widget Tests
+        run: flutter test
+
+  fastapi-backend:
+    name: FastAPI Python Backend CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: smartface_pro_api
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Python Linter (Ruff)
+        run: pip install ruff
+
+      - name: Lint Python Code with Ruff
+        run: ruff check .
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify Python Imports & Code Compilation
+        run: python -m py_compile *.py core/*.py
+
+  node-backend:
+    name: Node.js API Backend CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: smartface_node_api
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: smartface_node_api/package-lock.json
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Run Code Linter
+        run: |
+          if npm run | grep -q "lint"; then
+            npm run lint
+          else
+            echo "No lint script defined in package.json. Skipping linter."
+          fi

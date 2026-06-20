@@ -9,6 +9,11 @@ const { authenticate } = require('../middleware/auth');
 router.get('/:email', authenticate, async (req, res) => {
   try {
     const { email } = req.params;
+
+    if (req.userEmail.toLowerCase() !== email.toLowerCase() && req.userRole.toLowerCase() !== 'admin') {
+      return res.status(403).json({ detail: "Forbidden: Cannot access notifications for another user." });
+    }
+
     const notifications = await Notification.find({ user_id: email })
       .sort({ created_at: -1 })
       .limit(20)
@@ -30,6 +35,11 @@ router.get('/:email', authenticate, async (req, res) => {
 router.get('/unread-count/:email', authenticate, async (req, res) => {
   try {
     const { email } = req.params;
+
+    if (req.userEmail.toLowerCase() !== email.toLowerCase() && req.userRole.toLowerCase() !== 'admin') {
+      return res.status(403).json({ detail: "Forbidden: Cannot access notification counts for another user." });
+    }
+
     const count = await Notification.countDocuments({ user_id: email, is_read: { $ne: true } });
     res.json({ unread_count: count });
   } catch (error) {

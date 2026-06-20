@@ -7,20 +7,32 @@ import smtplib
 from email.message import EmailMessage
 from dotenv import load_dotenv
 
+# Ensure console supports UTF-8 encoding for emojis on Windows
+if sys.platform.startswith('win'):
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
+
 # Ensure core/ is in sys.path so that ai_analyst imports successfully
 _CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 _WORKSPACE_ROOT = os.path.dirname(_CURRENT_DIR)
-_CORE_DIR = os.path.join(_WORKSPACE_ROOT, "core")
-if _CORE_DIR not in sys.path:
-    sys.path.insert(0, _CORE_DIR)
+_DATA_DIR = os.path.join(_WORKSPACE_ROOT, "data")
 
-import ai_analyst
+# Ensure the workspace root is in sys.path so we can import from core/
+if _WORKSPACE_ROOT not in sys.path:
+    sys.path.insert(0, _WORKSPACE_ROOT)
+
+# Change directory to the data folder to resolve relative paths cleanly
+if os.path.exists(_DATA_DIR):
+    os.chdir(_DATA_DIR)
+
+from core import ai_analyst
 
 # --- CONFIGURATION ---
-load_dotenv()
-SENDER_EMAIL = "saxhin0708@gmail.com"
+load_dotenv(os.path.join(_WORKSPACE_ROOT, ".env"))
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", "saxhin0708@gmail.com")
 SENDER_PASSWORD = os.getenv("EMAIL_PASSWORD")
-DEAN_EMAIL = "saxhin0708@gmail.com" # Default Dean/Admin Email
+DEAN_EMAIL = os.getenv("DEAN_EMAIL", "saxhin0708@gmail.com") # Default Dean/Admin Email
 
 class DeanReportPDF(FPDF):
     def header(self):
@@ -84,7 +96,7 @@ def generate_dean_report():
     # Overview
     pdf.set_font('Arial', 'B', 16)
     pdf.set_text_color(10, 25, 47)
-    pdf.cell(0, 10, '📊 ACADEMIC OVERVIEW', 0, 1, 'L')
+    pdf.cell(0, 10, 'ACADEMIC OVERVIEW', 0, 1, 'L')
     
     total_students = len(summary)
     avg_attendance = summary['Percentage'].mean()
@@ -104,7 +116,7 @@ def generate_dean_report():
     # Top Performers
     pdf.set_font('Arial', 'B', 16)
     pdf.set_text_color(0, 100, 0) # Green
-    pdf.cell(0, 10, '🌟 TOP PERFORMERS (Above 90%)', 0, 1, 'L')
+    pdf.cell(0, 10, 'TOP PERFORMERS (Above 90%)', 0, 1, 'L')
     
     pdf.set_font('Arial', 'B', 11)
     pdf.set_fill_color(230, 255, 230)
@@ -123,7 +135,7 @@ def generate_dean_report():
     # Critical List
     pdf.set_font('Arial', 'B', 16)
     pdf.set_text_color(200, 0, 0) # Red
-    pdf.cell(0, 10, '🚨 CRITICAL SHORTAGE LIST (Below 75%)', 0, 1, 'L')
+    pdf.cell(0, 10, 'CRITICAL SHORTAGE LIST (Below 75%)', 0, 1, 'L')
     
     pdf.set_font('Arial', 'B', 11)
     pdf.set_fill_color(255, 230, 230)
@@ -141,11 +153,13 @@ def generate_dean_report():
     pdf.ln(10)
     pdf.set_font('Arial', 'B', 16)
     pdf.set_text_color(10, 25, 47)
-    pdf.cell(0, 10, '🧠 AI EXECUTIVE SUMMARY', 0, 1, 'L')
+    pdf.cell(0, 10, 'AI EXECUTIVE SUMMARY', 0, 1, 'L')
     
     try:
         ai_prompt = f"Write a professional executive summary for the Dean based on this data: {total_students} students tracked, average attendance is {avg_attendance:.1f}%. {len(top_performers)} students are doing excellent, while {len(critical_list)} students are at risk. Provide 2 strategic suggestions."
         ai_summary = ai_analyst.get_ai_response(ai_prompt)
+        if not ai_summary:
+            ai_summary = "AI Summary service unavailable. Overall system data suggests a consistent attendance pattern across the department."
     except:
         ai_summary = "AI Summary service unavailable. Overall system data suggests a consistent attendance pattern across the department."
         

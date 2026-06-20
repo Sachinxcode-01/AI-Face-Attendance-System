@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy as np
 import pickle
+import pyttsx3
 from insightface.app import FaceAnalysis
 
 # ================= CONFIG =================
@@ -11,7 +12,25 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 DATASET_DIR = os.path.join(DATA_DIR, "dataset") 
 OUTPUT_FILE = os.path.join(DATA_DIR, "face_encodings_arcface.pkl")
 
+def speak(text: str):
+    try:
+        engine = pyttsx3.init()
+        engine.setProperty("rate", 150)
+        
+        # Configure a clear, beautiful female voice (Zira) if available
+        voices = engine.getProperty("voices")
+        for voice in voices:
+            if "zira" in voice.name.lower():
+                engine.setProperty("voice", voice.id)
+                break
+                
+        engine.say(text)
+        engine.runAndWait()
+    except Exception as e:
+        print(f"[VOICE ERROR] Failed to speak: {e}")
+
 def run_training() -> bool:
+    speak("Training is started.")
     print("\n" + "=" * 60)
     print("   ARCFACE HIGH-ACCURACY TRAINING SYSTEM")
     print("=" * 60)
@@ -120,6 +139,7 @@ def run_training() -> bool:
     print(f"[INFO] Total Faces Encoded: {len(known_face_encodings)}")
     print(f"[INFO] Embedding Dimension: {len(known_face_encodings[0])} (Should be 512)")
     print("=" * 60)
+    speak("Training is successfully completed.")
     return True
 
 if __name__ == "__main__":

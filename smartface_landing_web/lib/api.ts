@@ -1,0 +1,194 @@
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
+export interface RegisterPayload {
+  [key: string]: unknown;
+}
+
+export interface ApplyLeavePayload {
+  user_id: string;
+  reason: string;
+  start_date: string;
+  end_date: string;
+  leave_type: string;
+  status: string;
+}
+
+async function request(path: string, options: RequestInit = {}) {
+  const url = `${BASE_URL}${path}`;
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+  const text = await response.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { detail: text };
+  }
+
+  if (!response.ok) {
+    throw new Error(data.detail || `HTTP Error ${response.status}`);
+  }
+
+  return data;
+}
+
+export const api = {
+  // Authentication
+  loginPassword: (email: string, password: string) =>
+    request("/auth/login-password", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+
+  sendOtp: (email: string) =>
+    request("/auth/login-otp/send", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  verifyOtp: (email: string, otp: string) =>
+    request("/auth/login-otp/verify", {
+      method: "POST",
+      body: JSON.stringify({ email, otp }),
+    }),
+
+  register: (data: RegisterPayload) =>
+    request("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getProfile: (token: string) =>
+    request("/auth/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  listStudents: (token: string) =>
+    request("/auth/students", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  googleLogin: (email: string, name: string, role: string = "student") =>
+    request("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ email, name, role }),
+    }),
+
+  // Attendance
+  getStudentStats: (email: string, token: string) =>
+    request(`/student/stats/${email}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getAdminStats: (token: string) =>
+    request("/admin/stats", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getActivityLog: (token: string) =>
+    request("/admin/activity-log", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getActiveSession: () =>
+    request("/sessions/active"),
+
+  startSession: (teacherEmail: string, subject: string) =>
+    request("/sessions/start", {
+      method: "POST",
+      body: JSON.stringify({ teacher_email: teacherEmail, subject }),
+    }),
+
+  stopSession: (sessionId: string) =>
+    request("/sessions/stop", {
+      method: "POST",
+      body: JSON.stringify({ session_id: sessionId }),
+    }),
+
+  // Leave Management
+  getLeaveBalance: (email: string, token: string) =>
+    request(`/leave/balance/${email}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  applyLeave: (data: ApplyLeavePayload, token: string) =>
+    request("/leave/apply", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    }),
+
+  getStudentLeaves: (email: string, token: string) =>
+    request(`/leave/student/${email}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getPendingLeaves: (token: string) =>
+    request("/leave/admin/pending", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  leaveAction: (leaveId: string, status: string, remarks: string, token: string) =>
+    request("/leave/action", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ leave_id: leaveId, status, remarks }),
+    }),
+
+  // Notifications
+  getNotifications: (email: string, token: string) =>
+    request(`/notifications/${email}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+    markNotificationsRead: (ids: string[], token: string) =>
+    request("/notifications/mark-read", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ ids }),
+    }),
+
+  askAi: (email: string, query: string, token: string) =>
+    request("/ai/ask", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ email, query }),
+    }),
+
+  getParentChildren: (token: string) =>
+    request("/parent/children", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getParentChildStats: (email: string, token: string) =>
+    request(`/parent/child/stats/${email}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getParentChildLeaves: (email: string, token: string) =>
+    request(`/parent/child/leaves/${email}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getParentChildAttendanceLogs: (email: string, token: string) =>
+    request(`/parent/child/attendance-logs/${email}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  logout: (token: string) =>
+    request("/auth/logout", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getSecurityLogs: (token: string) =>
+    request("/security/logs", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+};

@@ -219,6 +219,14 @@ Keep the response concise (3-4 sentences) and professional.`;
 router.get(['/student/stats/:email', '/ai/student/stats/:email'], authenticate, async (req, res) => {
   try {
     const { email } = req.params;
+    
+    const isSelf = req.userEmail && req.userEmail.toLowerCase() === email.toLowerCase();
+    const isStaff = req.userRole && ['admin', 'teacher', 'hod', 'principal', 'management'].includes(req.userRole.toLowerCase());
+
+    if (!isSelf && !isStaff) {
+      return res.status(403).json({ detail: "Forbidden: You do not have permission to view these statistics." });
+    }
+
     const stats = await getStudentAttendanceStats(email);
     res.json(stats);
   } catch (error) {
@@ -270,6 +278,14 @@ router.get(['/admin/stats', '/ai/admin/stats'], authenticate, requireRole(['admi
 router.get(['/student/streak/:student_id', '/ai/student/streak/:student_id'], authenticate, async (req, res) => {
   try {
     const { student_id } = req.params;
+    
+    const isSelf = req.userEmail && req.userEmail.toLowerCase() === student_id.toLowerCase();
+    const isStaff = req.userRole && ['admin', 'teacher', 'hod', 'principal', 'management'].includes(req.userRole.toLowerCase());
+
+    if (!isSelf && !isStaff) {
+      return res.status(403).json({ detail: "Forbidden: You do not have permission to view this streak." });
+    }
+
     const streak = await getStreak(student_id);
     res.json({ student_id, streak });
   } catch (error) {
@@ -289,6 +305,13 @@ router.get(['/student/ai-analysis/:student_id', '/ai/student/ai-analysis/:studen
 
     if (!student) {
       return res.status(404).json({ detail: "Student not found" });
+    }
+
+    const isSelf = req.userEmail && req.userEmail.toLowerCase() === student.email.toLowerCase();
+    const isStaff = req.userRole && ['admin', 'teacher', 'hod', 'principal', 'management'].includes(req.userRole.toLowerCase());
+
+    if (!isSelf && !isStaff) {
+      return res.status(403).json({ detail: "Forbidden: You do not have permission to view this analysis." });
     }
 
     const studentEmail = student.email;
@@ -368,12 +391,21 @@ router.get(['/admin/activity-log', '/ai/admin/activity-log'], authenticate, requ
 });
 
 // ─── POST /ai/ask ───────────────────────────────────────────────
-router.post(['/ask', '/ai/ask'], async (req, res) => {
+router.post(['/ask', '/ai/ask'], authenticate, async (req, res) => {
   try {
     const { email, query } = req.body;
+    
+    // Enforce data ownership check
+    const isSelf = req.userEmail && req.userEmail.toLowerCase() === email.toLowerCase();
+    const isStaff = req.userRole && ['admin', 'teacher', 'hod', 'principal', 'management'].includes(req.userRole.toLowerCase());
+
+    if (!isSelf && !isStaff) {
+      return res.status(403).json({ detail: "Forbidden: You do not have permission to query this student's AI insights." });
+    }
+
     const student = await User.findOne({ email });
     if (!student) {
-      return res.json({ answer: "Student not found.", response: "Student not found." });
+      return res.status(404).json({ detail: "Student not found." });
     }
 
     const attendanceSummary = await getAttendanceSummary(email);

@@ -35,6 +35,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   google_fonts: ^8.1.0
+  flutter_svg: ^1.1.3
   font_awesome_flutter: ^11.0.0
   animations: ^2.2.0
   intl: ^0.20.2
@@ -50,14 +51,27 @@ dependencies:
   qr_flutter: ^4.1.0
   http: ^1.2.1
   web_socket_channel: ^3.0.1
+  flutter_dotenv: ^5.2.1
+  go_router: ^14.2.0
   image_picker: ^1.2.2
   provider: ^6.1.5+1
+  get_it: ^7.7.0
   flutter_secure_storage: ^10.2.0
   shared_preferences: ^2.5.5
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
   flutter_local_notifications: ^21.0.0
   firebase_messaging: ^15.2.10
+  fl_chart: ^0.68.0
+  table_calendar: ^3.1.2
+  pdf: ^3.10.8
+  printing: ^5.11.1
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  connectivity_plus: ^7.1.1
+  workmanager: ^0.9.0+3
+  crypto: ^3.0.7
+  uuid: ^4.5.3
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +88,7 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
+  firebase_core_platform_interface: any
 flutter:
 
   # The following line ensures that the Material Icons font is
@@ -84,6 +99,11 @@ flutter:
   assets:
     - assets/images/logo.png
     - assets/images/ai_face_grid.png
+    - assets/logos/logo.svg
+    - .env
+    - .env.development
+    - .env.staging
+    - .env.production
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
