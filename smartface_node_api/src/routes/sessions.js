@@ -10,6 +10,10 @@ const { authenticate, requireRole } = require('../middleware/auth');
 router.post('/start', authenticate, requireRole(['teacher', 'admin']), async (req, res) => {
   try {
     const { teacher_email, subject } = req.body;
+
+    if (req.userEmail.toLowerCase() !== teacher_email.toLowerCase() && req.userRole.toLowerCase() !== 'admin') {
+      return res.status(403).json({ detail: "Forbidden: Cannot start session on behalf of another teacher." });
+    }
     const sessionId = new mongoose.Types.ObjectId();
     const qrCode = `QR_${sessionId.toString()}_${Math.floor(1000 + Math.random() * 9000)}`;
 

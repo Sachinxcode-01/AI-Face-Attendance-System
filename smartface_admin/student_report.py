@@ -8,22 +8,34 @@ import smtplib
 from email.message import EmailMessage
 from dotenv import load_dotenv
 
+# Ensure console supports UTF-8 encoding for emojis on Windows
+if sys.platform.startswith('win'):
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
+
 # Ensure core/ is in sys.path so that ai_analyst imports successfully
 _CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 _WORKSPACE_ROOT = os.path.dirname(_CURRENT_DIR)
-_CORE_DIR = os.path.join(_WORKSPACE_ROOT, "core")
-if _CORE_DIR not in sys.path:
-    sys.path.insert(0, _CORE_DIR)
+_DATA_DIR = os.path.join(_WORKSPACE_ROOT, "data")
 
-import ai_analyst
+# Ensure the workspace root is in sys.path so we can import from core/
+if _WORKSPACE_ROOT not in sys.path:
+    sys.path.insert(0, _WORKSPACE_ROOT)
+
+# Change directory to the data folder to resolve relative paths cleanly
+if os.path.exists(_DATA_DIR):
+    os.chdir(_DATA_DIR)
+
+from core import ai_analyst
 
 
 # Suppress pandas warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # --- EMAIL SECRETS ---
-load_dotenv()
-SENDER_EMAIL = "saxhin0708@gmail.com"
+load_dotenv(os.path.join(_WORKSPACE_ROOT, ".env"))
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", "saxhin0708@gmail.com")
 SENDER_PASSWORD = os.getenv("EMAIL_PASSWORD")
 
 # ==========================================
@@ -134,7 +146,7 @@ def export_to_pdf(student_df, name, roll, total, present, absent, pct, monthly_s
     pdf.ln(10)
     pdf.set_font('Arial', 'B', 16)
     pdf.set_text_color(10, 25, 47)
-    pdf.cell(0, 10, '🤖 AI PERFORMANCE INSIGHT', 0, 1, 'L')
+    pdf.cell(0, 10, 'AI PERFORMANCE INSIGHT', 0, 1, 'L')
     
     pdf.set_font('Arial', 'I', 11)
     pdf.set_text_color(70, 70, 70)

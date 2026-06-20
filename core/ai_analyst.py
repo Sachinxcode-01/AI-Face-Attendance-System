@@ -41,6 +41,11 @@ def get_groq_response(prompt, system_prompt="You are a helpful academic assistan
         print(f"Groq API Error: {str(e)}")
         return None
 
+def get_ai_response(prompt, system_prompt="You are a helpful academic assistant."):
+    """Helper alias for get_groq_response used by executive reporting scripts."""
+    return get_groq_response(prompt, system_prompt)
+
+
 def get_greeting(name):
     """Generates a friendly AI greeting for the student when recognized."""
     prompt = f"Generate a very short, professional, and welcoming greeting for a student named {name} who just entered the classroom. Keep it under 5 words."

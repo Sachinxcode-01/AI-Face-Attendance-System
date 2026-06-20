@@ -1,0 +1,49 @@
+# Pre-commit configuration for full-stack SmartFace Attendance system
+# Run 'pre-commit install' to set up hooks in your local Git repository.
+
+repos:
+  # ─────────────────────────────────────────────────────────────
+  # 1. General & File Quality Hooks
+  # ─────────────────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=2000'] # Protect against committing large face model weights
+
+  # ─────────────────────────────────────────────────────────────
+  # 2. Python (Ruff: fast linting and formatting)
+  # ─────────────────────────────────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # ─────────────────────────────────────────────────────────────
+  # 3. Flutter & Dart Formatting
+  # ─────────────────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: dart-format
+        name: Dart Formatter
+        entry: dart format
+        language: system
+        types: [dart]
+        pass_filenames: true
+
+  # ─────────────────────────────────────────────────────────────
+  # 4. Node.js & Javascript Linter (Optional hooks)
+  # ─────────────────────────────────────────────────────────────
+      - id: eslint
+        name: ESLint (Node.js API)
+        entry: npm --prefix smartface_node_api run lint
+        language: system
+        files: ^smartface_node_api/src/
+        types: [javascript]
+        pass_filenames: false

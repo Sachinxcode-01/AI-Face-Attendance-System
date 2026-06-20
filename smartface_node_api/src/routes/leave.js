@@ -11,6 +11,10 @@ router.post('/apply', authenticate, async (req, res) => {
   try {
     const { user_id, reason, start_date, end_date } = req.body;
 
+    if (req.userEmail.toLowerCase() !== user_id.toLowerCase() && req.userRole.toLowerCase() !== 'admin') {
+      return res.status(403).json({ detail: "Forbidden: Cannot apply for leave on behalf of another user." });
+    }
+
     const newLeave = new Leave({
       user_id,
       reason,
@@ -41,6 +45,14 @@ router.post('/apply', authenticate, async (req, res) => {
 router.get('/student/:email', authenticate, async (req, res) => {
   try {
     const { email } = req.params;
+    
+    const isSelf = req.userEmail && req.userEmail.toLowerCase() === email.toLowerCase();
+    const isStaff = req.userRole && ['admin', 'teacher', 'hod', 'principal', 'management'].includes(req.userRole.toLowerCase());
+
+    if (!isSelf && !isStaff) {
+      return res.status(403).json({ detail: "Forbidden: You do not have permission to view these leaves." });
+    }
+
     const leaves = await Leave.find({ user_id: email }).sort({ created_at: -1 }).lean();
     
     const result = leaves.map(l => {

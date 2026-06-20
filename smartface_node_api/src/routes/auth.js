@@ -4,13 +4,35 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
+const crypto = require('crypto');
 
 const User = require('../models/User');
 const Otp = require('../models/Otp');
+const UserSession = require('../models/UserSession');
 const AuthService = require('../services/authService');
 const EmailService = require('../services/emailService');
 const { authenticate } = require('../middleware/auth');
 const { limitRegister, limitOtpSend, limitOtpVerify } = require('../middleware/rateLimiter');
+
+async function registerSession(userId, token, req) {
+  try {
+    const userAgent = req.headers['user-agent'] || 'Unknown Device';
+    const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+    
+    // Hash token to identify the session uniquely
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    
+    await UserSession.create({
+      userId,
+      device: userAgent,
+      ip,
+      location: "Local Network",
+      tokenHash
+    });
+  } catch (err) {
+    console.error("Session Registration Error:", err);
+  }
+}
 
 // Configure Multer for temp/avatar storage
 const avatarsDir = path.join(__dirname, '../../../data/avatars');
@@ -167,6 +189,7 @@ router.post('/login-otp/verify', limitOtpVerify, async (req, res) => {
     const role = user ? user.role : record.role;
 
     const token = AuthService.createAccessToken({ sub: email, role });
+    await registerSession(email, token, req);
 
     res.json({
       access_token: token,
@@ -194,6 +217,7 @@ router.post('/login-password', async (req, res) => {
     }
 
     const token = AuthService.createAccessToken({ sub: email, role: user.role });
+    await registerSession(email, token, req);
 
     res.json({
       access_token: token,
@@ -235,6 +259,7 @@ router.post('/google', async (req, res) => {
     }
 
     const token = AuthService.createAccessToken({ sub: email, role: userRole });
+    await registerSession(email, token, req);
 
     res.json({
       access_token: token,
@@ -440,6 +465,42 @@ router.post('/train-faces', authenticate, async (req, res) => {
     py.unref(); // Allow node to exit independently of this spawned process
 
     res.json({ message: "AI face recognition model training initiated in the background." });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// ─── GET /auth/sessions/active ─────────────────────────────────────
+router.get('/sessions/active', authenticate, async (req, res) => {
+  try {
+    const sessions = await UserSession.find({ userId: req.userEmail }).sort({ lastActive: -1 }).lean();
+    const result = sessions.map(s => ({
+      id: s._id.toString(),
+      device: s.device,
+      ip: s.ip,
+      location: s.location,
+      last_active: s.lastActive,
+      is_current: crypto.createHash('sha256').update(req.headers['authorization'].split(' ')[1]).digest('hex') === s.tokenHash
+    }));
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// ─── POST /auth/sessions/logout-all ────────────────────────────────
+router.post('/sessions/logout-all', authenticate, async (req, res) => {
+  try {
+    const currentToken = req.headers['authorization'].split(' ')[1];
+    const currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
+    
+    // Delete all sessions for this user EXCEPT the current one
+    await UserSession.deleteMany({
+      userId: req.userEmail,
+      tokenHash: { $ne: currentTokenHash }
+    });
+    
+    res.json({ message: "Successfully logged out of all other devices" });
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }

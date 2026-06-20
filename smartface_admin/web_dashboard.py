@@ -58,7 +58,7 @@ except ImportError:
 
 # ── AI Analyst (graceful fallback if Gemini key missing) ───────────────────
 try:
-    import ai_analyst
+    from core import ai_analyst
     _AI_AVAILABLE = True
 except Exception:
     _AI_AVAILABLE = False
