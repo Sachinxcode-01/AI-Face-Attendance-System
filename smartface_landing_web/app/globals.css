@@ -1,0 +1,165 @@
+@import "tailwindcss";
+
+:root {
+  --background: #020617;
+  --foreground: #f8fafc;
+  --primary: #2563EB;
+  --accent: #3B82F6;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+
+  --card-bg-solid: #0f172a;
+  --card-bg: rgba(15, 23, 42, 0.45);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-hover-bg: rgba(255, 255, 255, 0.06);
+  --card-hover-border: rgba(255, 255, 255, 0.15);
+  --text-primary: #ffffff;
+  --text-muted: #94a3b8;
+  --border-color: rgba(255, 255, 255, 0.05);
+}
+
+.theme-light {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --primary: #2563EB;
+  --accent: #3B82F6;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+
+  --card-bg-solid: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-border: rgba(15, 23, 42, 0.08);
+  --card-hover-bg: rgba(255, 255, 255, 0.95);
+  --card-hover-border: rgba(37, 99, 235, 0.2);
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --border-color: rgba(15, 23, 42, 0.05);
+}
+
+.theme-cyberpunk {
+  --background: #0a050d;
+  --foreground: #f59e0b;
+  --primary: #f59e0b;
+  --accent: #e5a93b;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  --card-bg-solid: #1a0c22;
+  --card-bg: rgba(26, 12, 34, 0.6);
+  --card-border: rgba(245, 158, 11, 0.2);
+  --card-hover-bg: rgba(26, 12, 34, 0.8);
+  --card-hover-border: rgba(245, 158, 11, 0.45);
+  --text-primary: #f59e0b;
+  --text-muted: #a1a1aa;
+  --border-color: rgba(245, 158, 11, 0.15);
+}
+
+@theme {
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-space: var(--background);
+  --color-space-light: var(--card-bg-solid);
+  --color-space-card: var(--card-bg);
+  --color-glass: var(--card-bg);
+  --color-glass-hover: var(--card-hover-bg);
+  --color-glass-border: var(--card-border);
+  --color-glass-border-hover: var(--card-hover-border);
+  --color-muted: var(--text-muted);
+  --color-primary-text: var(--text-primary);
+  
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  
+  --animate-laser: scan 3s linear infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-spin-slow: spin 20s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+
+  @keyframes scan {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: hidden;
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--card-border);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-panel-hover:hover {
+  background: var(--card-hover-bg);
+  border-color: var(--card-hover-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Cybernetic Grid Overlay */
+.cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Glow effects */
+.glow-text-blue {
+  text-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+.glow-text-green {
+  text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+.glow-border {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+/* Hide canvas outline focus */
+canvas {
+  outline: none;
+}
+
+/* Custom grid layout for Heatmap (17 columns) */
+.grid-cols-17 {
+  grid-template-columns: repeat(17, minmax(0, 1fr));
+}

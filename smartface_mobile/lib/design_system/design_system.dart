@@ -1,4 +1,4 @@
-library design_system;
+
 
 export 'tokens.dart';
 export 'theme/premium_theme.dart';

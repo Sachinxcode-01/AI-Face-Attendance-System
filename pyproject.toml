@@ -1,0 +1,35 @@
+[tool.ruff]
+# Target Python version
+target-version = "py310"
+
+# Source directories to check
+src = ["smartface_pro_api", "smartface_admin", "scripts"]
+
+# Enable standard linter rules:
+# - E: pycodestyle errors
+# - W: pycodestyle warnings
+# - F: Pyflakes (errors, unused imports/variables)
+# - I: isort (automatic import sorting)
+# - B: flake8-bugbear (bug prevention)
+# - UP: pyupgrade (modern syntax suggestions)
+select = ["E", "W", "F", "I", "B", "UP"]
+
+# Maximum line length limit
+line-length = 100
+
+# Files and patterns to ignore
+exclude = [
+    ".git",
+    "__pycache__",
+    "venv",
+    ".venv",
+    "build",
+    "dist"
+]
+
+[tool.ruff.format]
+# Style formatting guidelines matching standard modern Python (Black style)
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

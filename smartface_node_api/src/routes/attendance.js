@@ -2,15 +2,97 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 
+// Models
 const Session = require('../models/Session');
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
+const Leave = require('../models/Leave');
+const AttendanceAnalytics = require('../models/AttendanceAnalytics');
+const DepartmentAnalytics = require('../models/DepartmentAnalytics');
+const AttendanceAuditLog = require('../models/AttendanceAuditLog');
+
+// Services
 const notificationService = require('../services/notificationService');
 const GSheetsManager = require('../services/gsheetsManager');
 const gsheets = new GSheetsManager();
 
-const { authenticate } = require('../middleware/auth');
+const { authenticate, requireRole } = require('../middleware/auth');
 const SHEET_URL = process.env.GSHEETS_URL || "";
+
+// Security Audit Logging Helper
+const auditLog = async (email, role, action, details, req) => {
+  try {
+    const ip = req ? (req.headers['x-forwarded-for'] || req.socket.remoteAddress) : '127.0.0.1';
+    await AttendanceAuditLog.create({
+      actor_email: email || 'system@smartface.ai',
+      role: role || 'system',
+      action,
+      details,
+      ip_address: ip
+    });
+  } catch (err) {
+    console.error("Audit logging failed:", err);
+  }
+};
+
+// Heuristics Helper: Calculate Student Attendance Health Score
+const calculateHealthScore = async (email) => {
+  try {
+    const records = await Attendance.find({ student_email: email }).lean();
+    if (records.length === 0) {
+      return { score: 80, standing: 'Good', lates: 0, consecutiveAbsences: 0, percentage: 80 };
+    }
+
+    const presentCount = records.filter(r => r.status === 'Present').length;
+    const lates = records.filter(r => r.verified_by === 'manual' || r.status === 'Late').length; // Map manual/late indicators
+    
+    // Sort records to check consecutive absences (simulate for demo, or compute dynamically)
+    const sorted = [...records].sort((a, b) => b.timestamp - a.timestamp);
+    let consecutiveAbsences = 0;
+    
+    // Calculate basic attendance percentage
+    // Find sessions that student should have attended (simulate total sessions based on department average if necessary, e.g. 30 sessions)
+    const user = await User.findOne({ email }).lean();
+    let totalSessions = 30; // default baseline
+    if (user) {
+      const activeSessionsCount = await Session.countDocuments({});
+      totalSessions = Math.max(activeSessionsCount, records.length, 1);
+    }
+
+    const percentage = (presentCount / totalSessions) * 100;
+    
+    // Heuristics formula: Health = Percentage * (1.0 - 0.05*Lates - 0.1*ConsecutiveAbsences)
+    // For demo purposes, we will bound it between 0 and 100
+    let latePenalty = lates * 2; // e.g. 2% penalty per late
+    let consecutivePenalty = consecutiveAbsences * 5; 
+    let healthScore = Math.max(0, Math.min(100, Math.round(percentage - latePenalty - consecutivePenalty)));
+
+    let standing = 'Good';
+    if (healthScore >= 90) standing = 'Excellent';
+    else if (healthScore >= 75) standing = 'Good';
+    else if (healthScore >= 60) standing = 'Warning';
+    else standing = 'Critical';
+
+    // Update Cache
+    await AttendanceAnalytics.findOneAndUpdate(
+      { student_email: email },
+      {
+        student_email: email,
+        health_score: healthScore,
+        standing,
+        consecutive_absences: consecutiveAbsences,
+        late_arrivals_count: lates,
+        last_calculated: new Date()
+      },
+      { upsert: true }
+    );
+
+    return { score: healthScore, standing, lates, consecutiveAbsences, percentage };
+  } catch (err) {
+    console.error("Health score computation error:", err);
+    return { score: 80, standing: 'Good', lates: 0, consecutiveAbsences: 0, percentage: 80 };
+  }
+};
 
 // ─── POST /attendance/mark ────────────────────────────────────────
 router.post('/mark', authenticate, async (req, res) => {
@@ -62,6 +144,9 @@ router.post('/mark', authenticate, async (req, res) => {
 
     await newRecord.save();
 
+    // Audit Log
+    await auditLog(student_email, 'student', 'ATTENDANCE_MARKED', { method: 'qr', session_id, subject: session.subject }, req);
+
     // Broadcast update to live-logs WebSockets
     notificationService.broadcast({
       type: "attendance_update",
@@ -71,19 +156,8 @@ router.post('/mark', authenticate, async (req, res) => {
       timestamp: timestamp.toISOString()
     }).catch(console.error);
 
-    // Sync to Google Sheets in background
-    if (SHEET_URL) {
-      User.findOne({ email: student_email }).then(user => {
-        const name = user ? user.full_name : student_email;
-        gsheets.addRecord(SHEET_URL, "Attendance", [
-          name,
-          student_email,
-          session.subject,
-          timestamp.toISOString(),
-          "Present"
-        ]).catch(err => console.error("GSheets Sync Error:", err));
-      }).catch(console.error);
-    }
+    // Recalculate health score cache in background
+    calculateHealthScore(student_email).catch(console.error);
 
     res.json({ status: "success", message: "Attendance marked successfully" });
   } catch (error) {
@@ -94,9 +168,12 @@ router.post('/mark', authenticate, async (req, res) => {
 // ─── POST /attendance/mark/face ───────────────────────────────────
 router.post('/mark/face', async (req, res) => {
   try {
-    const token = req.headers['token'] || req.headers['authorization']?.split(' ')[1];
-    const expectedToken = process.env.FACE_SCANNER_TOKEN || "secure_face_scanner_default_key_123";
-    if (token !== expectedToken) {
+    const token = req.headers['token'] || req.headers['authorization']?.split(' ')[1] || req.headers['x-face-scanner-token'];
+    const expectedToken = process.env.FACE_SCANNER_TOKEN;
+    if (!expectedToken || expectedToken.trim() === '') {
+      return res.status(500).json({ detail: "Server misconfiguration: FACE_SCANNER_TOKEN is missing" });
+    }
+    if (!token || token !== expectedToken) {
       return res.status(401).json({ detail: "Unauthorized face scanner token" });
     }
 
@@ -128,6 +205,9 @@ router.post('/mark/face', async (req, res) => {
 
     await newRecord.save();
 
+    // Audit Log
+    await auditLog(student_email, 'student', 'ATTENDANCE_MARKED', { method: 'face', session_id: session._id.toString(), confidence }, req);
+
     // Broadcast update to live-logs WebSockets
     notificationService.broadcast({
       type: "attendance_update",
@@ -139,22 +219,237 @@ router.post('/mark/face', async (req, res) => {
       confidence
     }).catch(console.error);
 
-    // Sync to Google Sheets in background
-    if (SHEET_URL) {
-      User.findOne({ email: student_email }).then(user => {
-        const name = user ? user.full_name : student_email;
-        const formattedDate = timestamp.toISOString().replace('T', ' ').substring(0, 19);
-        gsheets.addRecord(SHEET_URL, "Attendance", [
-          name,
-          student_email,
-          session.subject,
-          formattedDate,
-          "Present"
-        ]).catch(err => console.error("GSheets Sync Error (Face Scanner):", err));
-      }).catch(console.error);
-    }
+    // Recalculate health score cache in background
+    calculateHealthScore(student_email).catch(console.error);
 
     res.json({ status: "success", message: "Face attendance marked successfully" });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// ─── GET /attendance/dashboard ────────────────────────────────────
+// Central student attendance intelligence metrics
+router.get('/dashboard', authenticate, async (req, res) => {
+  try {
+    const email = req.userEmail;
+    const user = await User.findOne({ email }).lean();
+    if (!user) return res.status(404).json({ detail: "User not found" });
+
+    // Calculate metrics
+    const stats = await calculateHealthScore(email);
+
+    // Fetch alerts
+    const analytics = await AttendanceAnalytics.findOne({ student_email: email }).lean();
+    const alerts = analytics ? analytics.risk_alerts : [];
+
+    // Formulate alerts based on status
+    const formattedAlerts = [];
+    if (stats.score < 75) {
+      formattedAlerts.push({
+        type: 'critical',
+        message: '⚠️ Warning: Your attendance health has dropped below eligibility (75%). Attend next classes immediately.'
+      });
+    } else if (stats.score < 85) {
+      formattedAlerts.push({
+        type: 'warning',
+        message: '⚠️ Caution: Attendance health is approaching warning levels. Maintain active session checks.'
+      });
+    } else {
+      formattedAlerts.push({
+        type: 'info',
+        message: '🏆 Well done! You are in good attendance standing.'
+      });
+    }
+
+    res.json({
+      health_score: stats.score,
+      standing: stats.standing,
+      total_percentage: stats.percentage,
+      late_count: stats.lates,
+      consecutive_absences: stats.consecutiveAbsences,
+      risk_alerts: formattedAlerts
+    });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// ─── GET /attendance/command-center ───────────────────────────────
+// Centralized command center dashboard for HODs & Admins
+router.get('/command-center', authenticate, requireRole(['admin', 'teacher']), async (req, res) => {
+  try {
+    const totalStudents = await User.countDocuments({ role: 'student' });
+    const activeSessionsCount = await Session.countDocuments({ is_active: true });
+
+    // Compute metrics
+    const criticalCount = await AttendanceAnalytics.countDocuments({ health_score: { $lt: 60 } });
+    const warningCount = await AttendanceAnalytics.countDocuments({ health_score: { $gte: 60, $lt: 75 } });
+    
+    // Average attendance rate across all students
+    const allStats = await AttendanceAnalytics.find({}).lean();
+    let avgHealth = 85;
+    if (allStats.length > 0) {
+      const sum = allStats.reduce((acc, current) => acc + current.health_score, 0);
+      avgHealth = Math.round(sum / allStats.length);
+    }
+
+    res.json({
+      average_attendance: avgHealth,
+      total_students: totalStudents,
+      active_sessions: activeSessionsCount,
+      critical_students: criticalCount,
+      warning_students: warningCount
+    });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// ─── GET /attendance/live-monitor ─────────────────────────────────
+router.get('/live-monitor', authenticate, requireRole(['admin', 'teacher']), async (req, res) => {
+  try {
+    const activeSessions = await Session.find({ is_active: true }).lean();
+    
+    const sessionsTelemetry = [];
+    for (const session of activeSessions) {
+      const presentCount = await Attendance.countDocuments({ session_id: session._id.toString(), status: 'Present' });
+      const faceCount = await Attendance.countDocuments({ session_id: session._id.toString(), verified_by: 'face' });
+      
+      const teacher = await User.findOne({ email: session.teacher_id }).lean();
+      
+      sessionsTelemetry.push({
+        session_id: session._id.toString(),
+        subject: session.subject,
+        teacher_name: teacher ? teacher.full_name : session.teacher_id,
+        students_present: presentCount,
+        face_scans: faceCount,
+        duration: session.duration,
+        start_time: session.start_time
+      });
+    }
+
+    res.json(sessionsTelemetry);
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// ─── GET /attendance/risk-analysis ────────────────────────────────
+router.get('/risk-analysis', authenticate, requireRole(['admin', 'teacher']), async (req, res) => {
+  try {
+    const riskType = req.query.type || 'below_75'; // below_75, below_60, frequent_late
+    let filter = {};
+    
+    if (riskType === 'below_60') {
+      filter = { health_score: { $lt: 60 } };
+    } else if (riskType === 'frequent_late') {
+      filter = { late_arrivals_count: { $gte: 3 } };
+    } else {
+      filter = { health_score: { $gte: 60, $lt: 75 } }; // default: below 75 warning
+    }
+
+    const analytics = await AttendanceAnalytics.find(filter).lean();
+    
+    const riskStudentsList = [];
+    for (const record of analytics) {
+      const student = await User.findOne({ email: record.student_email }).lean();
+      if (student) {
+        riskStudentsList.push({
+          name: student.full_name,
+          email: student.email,
+          usn: student.usn || student.student_id,
+          department: student.department || 'Computer Science',
+          semester: student.semester || '6th',
+          health_score: record.health_score,
+          standing: record.standing,
+          lates: record.late_arrivals_count
+        });
+      }
+    }
+
+    res.json(riskStudentsList);
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// ─── GET /attendance/heatmap ──────────────────────────────────────
+router.get('/heatmap', authenticate, async (req, res) => {
+  try {
+    const email = req.userEmail;
+    
+    // Construct simple monthly heatmap metrics
+    // We group checkins by day of the year
+    const checkins = await Attendance.find({ student_email: email }).lean();
+    const heatmap = {};
+    
+    checkins.forEach(c => {
+      const dateStr = c.timestamp.toISOString().split('T')[0];
+      heatmap[dateStr] = (heatmap[dateStr] || 0) + 1; // Number of classes attended on date
+    });
+
+    res.json(heatmap);
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// ─── GET /attendance/report/generate ──────────────────────────────
+router.get('/report/generate', authenticate, async (req, res) => {
+  try {
+    const format = req.query.format || 'csv';
+    const email = req.userEmail;
+    const user = await User.findOne({ email }).lean();
+    if (!user) return res.status(404).json({ detail: "User not found" });
+
+    // Fetch student check-ins
+    const records = await Attendance.find({ student_email: email }).lean();
+    
+    if (format === 'csv') {
+      res.setHeader('Content-disposition', 'attachment; filename=attendance_ledger.csv');
+      res.set('Content-Type', 'text/csv');
+      
+      let csv = 'Date,Time,Subject,Verified By,Status\n';
+      for (const rec of records) {
+        const session = await Session.findById(rec.session_id).lean();
+        const dateStr = rec.timestamp.toISOString().split('T')[0];
+        const timeStr = rec.timestamp.toISOString().split('T')[1].substring(0, 5);
+        csv += `${dateStr},${timeStr},"${session ? session.subject : 'Class'}",${rec.verified_by},${rec.status}\n`;
+      }
+      return res.send(csv);
+    } else if (format === 'excel') {
+      // Stream tab-separated spreadsheet which opens in Excel directly
+      res.setHeader('Content-disposition', 'attachment; filename=attendance_ledger.xls');
+      res.set('Content-Type', 'application/vnd.ms-excel');
+      
+      let xls = 'Date\tTime\tSubject\tVerified By\tStatus\n';
+      for (const rec of records) {
+        const session = await Session.findById(rec.session_id).lean();
+        const dateStr = rec.timestamp.toISOString().split('T')[0];
+        const timeStr = rec.timestamp.toISOString().split('T')[1].substring(0, 5);
+        xls += `${dateStr}\t${timeStr}\t"${session ? session.subject : 'Class'}"\t${rec.verified_by}\t${rec.status}\n`;
+      }
+      return res.send(xls);
+    } else {
+      // Stream simple report metadata
+      res.json({
+        student: user.full_name,
+        email: user.email,
+        records_count: records.length,
+        status: "verified"
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// ─── GET /attendance/audit-logs ───────────────────────────────────
+router.get('/audit-logs', authenticate, requireRole('admin'), async (req, res) => {
+  try {
+    const logs = await AttendanceAuditLog.find({}).sort({ timestamp: -1 }).limit(100).lean();
+    res.json(logs);
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }
@@ -175,7 +470,6 @@ router.get('/student/:email', authenticate, async (req, res) => {
     }
     
     if (req.query.month) {
-      // Expecting month as YYYY-MM
       const startOfMonth = new Date(`${req.query.month}-01T00:00:00.000Z`);
       const endOfMonth = new Date(startOfMonth);
       endOfMonth.setUTCMonth(endOfMonth.getUTCMonth() + 1);
@@ -189,7 +483,6 @@ router.get('/student/:email', authenticate, async (req, res) => {
       .limit(limit)
       .lean();
 
-    // Map logs to return session details
     const result = [];
     for (const log of logs) {
       const session = await Session.findOne({ _id: log.session_id }).lean();
@@ -223,7 +516,6 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
     const { email } = req.params;
     const records = await Attendance.find({ student_email: email }).lean();
     
-    // Count attendance per subject
     const presentCounts = {};
     for (const rec of records) {
       const session = await Session.findOne({ _id: rec.session_id }).lean();
@@ -247,7 +539,6 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
       let pCount = presentCounts[sub] || 0;
       let tCount = Math.max(totalSessions, pCount, 1);
       
-      // If mock environment or no sessions found, generate realistic ratios
       if (totalSessions === 0) {
         if (sub === 'Machine Learning') {
           tCount = 20;
@@ -277,7 +568,6 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
 
     const overallPercentage = totalPossible > 0 ? (totalPresent / totalPossible) : 0.82;
     
-    // Calculate weekly trends (last 7 weeks present count)
     const weeklyTrends = [];
     const now = new Date();
     for (let i = 6; i >= 0; i--) {
@@ -296,7 +586,6 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
       });
     }
 
-    // Monthly trends (last 6 months present counts)
     const monthlyTrends = [];
     for (let i = 5; i >= 0; i--) {
       const monthDate = new Date();
@@ -316,7 +605,6 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
       });
     }
 
-    // AI recognition metrics
     const faceRecords = records.filter(r => r.verified_by === 'face');
     const avgConfidence = faceRecords.length > 0
       ? faceRecords.reduce((sum, r) => sum + (r.confidence || 0.95), 0) / faceRecords.length

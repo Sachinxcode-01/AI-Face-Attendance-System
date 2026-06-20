@@ -4,7 +4,10 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const SECRET_KEY = process.env.JWT_SECRET || process.env.SECRET_KEY || "smartface_ultra_secure_secret_999";
+const SECRET_KEY = process.env.JWT_SECRET || process.env.SECRET_KEY;
+if (!SECRET_KEY || SECRET_KEY.trim() === '') {
+  throw new Error("CRITICAL SECURITY ERROR: SECRET_KEY/JWT_SECRET environment variable is missing.");
+}
 const EXPIRE_MINUTES = parseInt(process.env.ACCESS_TOKEN_EXPIRE_MINUTES || "1440", 10);
 
 class AuthService {

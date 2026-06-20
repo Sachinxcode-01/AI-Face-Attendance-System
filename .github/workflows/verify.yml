@@ -12,9 +12,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Shared test environment — secrets are injected from GitHub repository secrets
-  MONGODB_URL: ${{ secrets.MONGODB_URL }}
-  SECRET_KEY: ${{ secrets.SECRET_KEY }}
   NODE_VERSION: '20'
   PYTHON_VERSION: '3.11'
   FLUTTER_VERSION: '3.22.0'

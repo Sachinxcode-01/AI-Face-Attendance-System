@@ -1,0 +1,200 @@
+name: SmartFace Attendance CD Pipeline
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+' # Trigger on release tags (e.g. v1.0.0)
+  workflow_dispatch: # Allow manual triggers
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+  FLUTTER_VERSION: '3.22.0'
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_OWNER: ${{ github.repository_owner }}
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────
+  # Stage 1: Build & Deploy Node.js Express API Backend
+  # ─────────────────────────────────────────────────────────────────────────
+  deploy-node-api:
+    name: "🚀 Release Node.js API"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Metadata (Tags, Labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_OWNER }}/smartface-node-api
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and Push Node.js API Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./smartface_node_api
+          file: ./smartface_node_api/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Example Deploy step to AWS ECS / EKS or Kubernetes
+      # - name: Deploy to AWS ECS
+      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      #   with:
+      #     task-definition: task-definition.json
+      #     service: smartface-node-api-service
+      #     cluster: smartface-prod-cluster
+      #     wait-for-service-stability: true
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Stage 2: Build & Deploy Python FastAPI AI Service Backend
+  # ─────────────────────────────────────────────────────────────────────────
+  deploy-python-ai:
+    name: "🚀 Release Python AI Service"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Metadata (Tags, Labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_OWNER }}/smartface-python-ai
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and Push Python AI Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./smartface_pro_api
+          file: ./smartface_pro_api/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Stage 3: Build & Package Flutter Android App (AAB / APK)
+  # ─────────────────────────────────────────────────────────────────────────
+  release-flutter-android:
+    name: "📱 Release Flutter Android Client"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: smartface_mobile
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # Decode Release KeyStore and Keystore Properties from Secrets
+      - name: Prepare Android Signing Key
+        run: |
+          echo "${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.jks
+          echo "storeFile=release.jks" > android/key.properties
+          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
+        env:
+          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      # Build App Bundle (AAB) with Obfuscation & Split Debug Symbols for Play Store
+      - name: Build Production Android App Bundle (AAB)
+        run: |
+          flutter build appbundle \
+            --release \
+            --obfuscate \
+            --split-debug-info=build/app/outputs/symbols \
+            --build-name=${{ github.ref_name }} \
+            --build-number=${{ github.run_number }}
+
+      # Build APK for direct downloads and testing
+      - name: Build Production APK
+        run: |
+          flutter build apk \
+            --release \
+            --obfuscate \
+            --split-debug-info=build/app/outputs/symbols \
+            --build-name=${{ github.ref_name }} \
+            --build-number=${{ github.run_number }}
+
+      # Upload Artifacts (App Bundle & APK)
+      - name: Archive Android App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartface-android-aab
+          path: smartface_mobile/build/app/outputs/bundle/release/app-release.aab
+
+      - name: Archive Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartface-android-apk
+          path: smartface_mobile/build/app/outputs/apk/release/app-release.apk
+
+      - name: Upload Debug Symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartface-android-symbols
+          path: smartface_mobile/build/app/outputs/symbols
+
+      # Optional step to distribute to Google Play Store / Firebase App Distribution
+      # - name: Publish to Firebase App Distribution
+      #   uses: wzieba/Firebase-App-Distribution@v2
+      #   with:
+      #     appId: ${{ secrets.FIREBASE_APP_ID }}
+      #     token: ${{ secrets.FIREBASE_CLI_TOKEN }}
+      #     groups: testers
+      #     file: smartface_mobile/build/app/outputs/apk/release/app-release.apk

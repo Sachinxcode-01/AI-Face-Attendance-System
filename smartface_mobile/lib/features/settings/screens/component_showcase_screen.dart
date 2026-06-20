@@ -24,10 +24,7 @@ class ComponentShowcaseScreen extends StatelessWidget {
     return Scaffold(
         backgroundColor: Colors.transparent, // Required to let AnimatedMeshBackground shine through
         appBar: PremiumAppBar(
-          title: Text(
-            'SmartFace Component Showcase',
-            style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
+          title: 'SmartFace Component Showcase',
           actions: [
             IconButton(
               icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
@@ -186,7 +183,7 @@ class ComponentShowcaseScreen extends StatelessWidget {
                     Expanded(
                       child: PremiumButton(
                         onPressed: null, // Disabled State
-                        child: const Text('DISABLED ACTION BUTTON'),
+                        child: Text('DISABLED ACTION BUTTON'),
                       ),
                     ),
                   ],
@@ -220,7 +217,6 @@ class ComponentShowcaseScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
     );
   }
 

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:smartface_attendance/design_system/design_system.dart';
 
 /// PremiumScaffold wraps app content with an animated premium background.
 class PremiumScaffold extends StatefulWidget {
@@ -26,8 +25,8 @@ class _PremiumScaffoldState extends State<PremiumScaffold> with SingleTickerProv
   void _toggleGradient() {
     setState(() {
       if (_begin == Alignment.topLeft) {
-        _begin = Alignment(-0.8, -0.6);
-        _end = Alignment(0.8, 0.6);
+        _begin = const Alignment(-0.8, -0.6);
+        _end = const Alignment(0.8, 0.6);
       } else {
         _begin = Alignment.topLeft;
         _end = Alignment.bottomRight;
@@ -53,9 +52,9 @@ class _PremiumScaffoldState extends State<PremiumScaffold> with SingleTickerProv
               begin: _begin,
               end: _end,
               colors: [
-                AppColors.bgDeep,
-                AppColors.bgDark.withOpacity(0.9),
-                AppColors.indigo.withOpacity(0.06),
+                const Color(0xFF020617),            // bgDeep
+                const Color(0xFF0F172A).withValues(alpha: 0.9), // bgDark
+                const Color(0xFF1E3A8A).withValues(alpha: 0.06), // indigo
               ],
             ),
           ),

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 /// Lightweight overlay toast used for premium UI.
 void showPremiumToast(BuildContext context, String message, {Duration duration = const Duration(seconds: 3)}) {
   final overlay = Overlay.of(context);
-  if (overlay == null) return;
 
   final entry = OverlayEntry(
     builder: (context) => Positioned(

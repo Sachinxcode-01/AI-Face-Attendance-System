@@ -22,10 +22,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
-import 'package:smartface_attendance/app/theme/dark_theme.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 
 // ======================================================

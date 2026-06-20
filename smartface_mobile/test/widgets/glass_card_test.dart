@@ -5,11 +5,11 @@ import 'package:smartface_attendance/design_system/design_system.dart';
 void main() {
   testWidgets('GlassCard builds and shows child', (WidgetTester tester) async {
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: Center(
             child: GlassCard(
-              child: const Text('Glass'),
+              child: Text('Glass'),
             ),
           ),
         ),

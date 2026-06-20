@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:smartface_attendance/design_system/design_system.dart';
 
 class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;

@@ -9,7 +9,32 @@ const dotenv = require('dotenv');
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-const { connectDB } = require('./database');
+// Enforce critical environment variable validation
+const requiredEnvVars = ['MONGODB_URL', 'FACE_SCANNER_TOKEN'];
+const missingEnvVars = [];
+requiredEnvVars.forEach(varName => {
+  const val = process.env[varName];
+  if (!val || val.trim() === '') {
+    missingEnvVars.push(varName);
+  }
+});
+const jwtSecret = process.env.SECRET_KEY || process.env.JWT_SECRET;
+if (!jwtSecret || jwtSecret.trim() === '') {
+  missingEnvVars.push('SECRET_KEY / JWT_SECRET');
+}
+
+if (missingEnvVars.length > 0) {
+  console.error("\n======================================================================");
+  console.error("❌ CRITICAL STARTUP CONFIGURATION ERROR: Missing Required Environments");
+  console.error("======================================================================");
+  missingEnvVars.forEach(v => {
+    console.error(`🚨 ${v} is missing or empty in the environment configuration.`);
+  });
+  console.error("======================================================================\n");
+  process.exit(1);
+}
+
+const { connectDB } = require('./config/database');
 const securityAndLogger = require('./middleware/logger');
 const notificationService = require('./services/notificationService');
 const AuthService = require('./services/authService');
@@ -19,6 +44,16 @@ connectDB();
 
 const app = express();
 const server = http.createServer(app);
+
+// ─── Secure HTTP Headers Middleware ─────────────────────────────────
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Content-Security-Policy', "default-src 'self'");
+  next();
+});
 
 // ─── Middleware Stack ───────────────────────────────────────────────
 const allowedOrigins = process.env.CORS_ORIGINS 
@@ -81,6 +116,8 @@ const securityRoutes = require('./routes/security');
 const notificationRoutes = require('./routes/notifications');
 const aiRoutes = require('./routes/ai');
 const telemetryRoutes = require('./routes/telemetry');
+const managementRoutes = require('./routes/management');
+const academicRoutes = require('./routes/academic');
 
 app.use('/auth', authRoutes);
 app.use('/sessions', sessionRoutes);
@@ -89,6 +126,8 @@ app.use('/leave', leaveRoutes);
 app.use('/security', securityRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/telemetry', telemetryRoutes);
+app.use('/management', managementRoutes);
+app.use('/academic', academicRoutes);
 app.use('/', aiRoutes);
 
 // Error fallback handler for all routes

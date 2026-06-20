@@ -51,7 +51,7 @@ class PremiumTheme {
         elevation: 0,
         iconTheme: IconThemeData(color: Color(0xFF1A1F38)),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.bgCardLight,
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),

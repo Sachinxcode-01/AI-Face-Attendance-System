@@ -9,6 +9,30 @@ const { authenticate, requireRole } = require('../middleware/auth');
 // ─── POST /security/intruder-alert ────────────────────────────────
 router.post('/intruder-alert', async (req, res) => {
   try {
+    const expectedToken = process.env.FACE_SCANNER_TOKEN;
+    const clientToken = req.headers['token'] || req.headers['authorization']?.split(' ')[1] || req.headers['x-face-scanner-token'];
+
+    let authorized = false;
+    if (expectedToken && expectedToken.trim() !== '' && clientToken === expectedToken) {
+      authorized = true;
+    }
+
+    if (!authorized) {
+      const authHeader = req.headers['authorization'];
+      if (authHeader) {
+        const jwtToken = authHeader.split(' ')[1];
+        const AuthService = require('../services/authService');
+        const payload = AuthService.decodeToken(jwtToken);
+        if (payload && (payload.role === 'admin' || payload.role === 'teacher' || payload.role === 'hod' || payload.role === 'principal' || payload.role === 'management')) {
+          authorized = true;
+        }
+      }
+    }
+
+    if (!authorized) {
+      return res.status(401).json({ detail: "Unauthorized scanner or session key" });
+    }
+
     const { location, camera_id, type, image_base64 } = req.body;
     const alertLocation = location || camera_id || "Unknown Location";
     const alertType = type || "intruder";
