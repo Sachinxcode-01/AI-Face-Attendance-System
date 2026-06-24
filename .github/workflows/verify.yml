@@ -40,6 +40,9 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
+      - name: Create placeholder env files for asset validation
+        run: touch .env .env.development .env.staging .env.production
+
       - name: Verify dart format (no changes expected)
         run: dart format --output none --set-exit-if-changed lib/
 
