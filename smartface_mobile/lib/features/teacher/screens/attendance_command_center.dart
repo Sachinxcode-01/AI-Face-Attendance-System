@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
@@ -152,17 +153,8 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
     final int totalStudents = data['total_students'] ?? 100;
     final int activeSessions = data['active_sessions'] ?? 0;
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.bgDark,
-        image: DecorationImage(
-          image: NetworkImage(
-            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
-          ),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(Colors.black87, BlendMode.dstATop),
-        ),
-      ),
+    return AuroraBackground(
+      baseColor: AppColors.bgDark,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PremiumAppBar(

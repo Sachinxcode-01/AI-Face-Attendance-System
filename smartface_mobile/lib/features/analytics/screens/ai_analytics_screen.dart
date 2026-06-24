@@ -31,6 +31,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/analytics/controllers/analytics_controller.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
@@ -375,22 +376,9 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
     final stats = analyticsCtrl.adminAnalytics;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.bgDeep : AppColors.bgLight,
-        image: DecorationImage(
-          image: const NetworkImage(
-            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
-          ),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            isDark
-                ? Colors.black.withValues(alpha: 0.15)
-                : Colors.white.withValues(alpha: 0.85),
-            isDark ? BlendMode.dstATop : BlendMode.srcOver,
-          ),
-        ),
-      ),
+    return AuroraBackground(
+      baseColor: isDark ? AppColors.bgDeep : AppColors.bgLight,
+      animate: isDark,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PremiumAppBar(
