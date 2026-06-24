@@ -40,7 +40,7 @@ class WebSocketService {
           ? '$path?token=$token'
           : path;
       debugPrint('[WS] Connecting to $wsBaseUrl$wsPath');
-      
+
       _channel = WebSocketChannel.connect(Uri.parse('$wsBaseUrl$wsPath'));
       _channel!.stream.listen(
         (data) {

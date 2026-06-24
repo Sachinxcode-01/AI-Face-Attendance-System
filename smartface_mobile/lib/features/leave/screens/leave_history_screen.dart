@@ -95,7 +95,9 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            isDark ? Colors.black.withValues(alpha: 0.25) : Colors.white.withValues(alpha: 0.9),
+            isDark
+                ? Colors.black.withValues(alpha: 0.25)
+                : Colors.white.withValues(alpha: 0.9),
             isDark ? BlendMode.dstATop : BlendMode.srcOver,
           ),
         ),
@@ -105,13 +107,19 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
         appBar: PremiumAppBar(
           title: 'Absence Registry',
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios, color: isDark ? Colors.white : AppColors.bgDark),
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: isDark ? Colors.white : AppColors.bgDark,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
           actions: [
             IconButton(
               onPressed: _refreshData,
-              icon: Icon(Icons.refresh, color: isDark ? Colors.white : AppColors.bgDark),
+              icon: Icon(
+                Icons.refresh,
+                color: isDark ? Colors.white : AppColors.bgDark,
+              ),
             ),
           ],
         ),
@@ -120,20 +128,22 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
             _buildSearchAndFilters(controller, isDark),
             Expanded(
               child: controller.isLoading
-                  ? const Center(child: CircularProgressIndicator(color: AppColors.gold))
+                  ? const Center(
+                      child: CircularProgressIndicator(color: AppColors.gold),
+                    )
                   : filteredLeaves.isEmpty
-                      ? _buildEmptyState(isDark)
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(20),
-                          itemCount: filteredLeaves.length,
-                          itemBuilder: (context, index) {
-                            final leave = filteredLeaves[index];
-                            return _buildLeaveCard(leave, isDark)
-                                .animate()
-                                .fadeIn(delay: (index * 60).ms)
-                                .slideY(begin: 0.05);
-                          },
-                        ),
+                  ? _buildEmptyState(isDark)
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(20),
+                      itemCount: filteredLeaves.length,
+                      itemBuilder: (context, index) {
+                        final leave = filteredLeaves[index];
+                        return _buildLeaveCard(leave, isDark)
+                            .animate()
+                            .fadeIn(delay: (index * 60).ms)
+                            .slideY(begin: 0.05);
+                      },
+                    ),
             ),
           ],
         ),
@@ -142,7 +152,13 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
   }
 
   Widget _buildSearchAndFilters(LeaveController controller, bool isDark) {
-    final filterOptions = ['All', 'Pending', 'Approved', 'Rejected', 'Clarification'];
+    final filterOptions = [
+      'All',
+      'Pending',
+      'Approved',
+      'Rejected',
+      'Clarification',
+    ];
     final sortOptions = [
       'Date (Newest)',
       'Date (Oldest)',
@@ -153,8 +169,12 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? Colors.black.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.05),
-        border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12)),
+        color: isDark
+            ? Colors.black.withValues(alpha: 0.1)
+            : Colors.white.withValues(alpha: 0.05),
+        border: Border(
+          bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+        ),
       ),
       child: Column(
         children: [
@@ -162,16 +182,29 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
             children: [
               Expanded(
                 child: GlassContainer(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 2,
+                  ),
                   borderColor: Colors.white10,
                   child: TextField(
                     controller: _searchController,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 14,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Search by reason or category...',
-                      hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                      hintStyle: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 13,
+                      ),
                       border: InputBorder.none,
-                      icon: Icon(Icons.search, color: isDark ? Colors.white54 : Colors.black54, size: 20),
+                      icon: Icon(
+                        Icons.search,
+                        color: isDark ? Colors.white54 : Colors.black54,
+                        size: 20,
+                      ),
                     ),
                     onChanged: (val) {
                       controller.updateSearchQuery(val.trim());
@@ -183,7 +216,9 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.white10),
                 ),
@@ -191,13 +226,21 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                   child: DropdownButton<String>(
                     value: controller.sortBy,
                     dropdownColor: AppColors.bgModal,
-                    icon: Icon(Icons.sort, color: isDark ? AppColors.gold : AppColors.bgDark, size: 20),
+                    icon: Icon(
+                      Icons.sort,
+                      color: isDark ? AppColors.gold : AppColors.bgDark,
+                      size: 20,
+                    ),
                     items: sortOptions.map((opt) {
                       return DropdownMenuItem<String>(
                         value: opt,
                         child: Text(
                           opt,
-                          style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 12, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       );
                     }).toList(),
@@ -226,14 +269,18 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                     label: Text(
                       opt.toUpperCase(),
                       style: TextStyle(
-                        color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87),
+                        color: isSelected
+                            ? Colors.black
+                            : (isDark ? Colors.white70 : Colors.black87),
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
                       ),
                     ),
                     selected: isSelected,
                     selectedColor: AppColors.gold,
-                    backgroundColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                    backgroundColor: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.03),
                     side: const BorderSide(color: Colors.transparent),
                     onSelected: (val) {
                       if (val) {
@@ -255,11 +302,18 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.rule_folder_outlined, color: isDark ? Colors.white24 : Colors.black26, size: 64),
+          Icon(
+            Icons.rule_folder_outlined,
+            color: isDark ? Colors.white24 : Colors.black26,
+            size: 64,
+          ),
           const SizedBox(height: 16),
           Text(
             'No matching leave records found',
-            style: GoogleFonts.inter(fontSize: 16, color: isDark ? Colors.white54 : Colors.black54),
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              color: isDark ? Colors.white54 : Colors.black54,
+            ),
           ),
         ],
       ),
@@ -268,8 +322,11 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
 
   Widget _buildLeaveCard(LeaveModel leave, bool isDark) {
     final statusColor = _getStatusColor(leave.status);
-    final dates = '${_formatDateString(leave.startDate)} to ${_formatDateString(leave.endDate)}';
-    final durationStr = leave.durationDays == 1 ? '1 Day' : '${leave.durationDays} Days';
+    final dates =
+        '${_formatDateString(leave.startDate)} to ${_formatDateString(leave.endDate)}';
+    final durationStr = leave.durationDays == 1
+        ? '1 Day'
+        : '${leave.durationDays} Days';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -286,11 +343,16 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: statusColor.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     leave.status.toUpperCase(),
@@ -304,7 +366,11 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                 ),
                 Text(
                   dates,
-                  style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 11, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: isDark ? Colors.white38 : Colors.black38,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -327,7 +393,11 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                 ),
                 Text(
                   durationStr,
-                  style: const TextStyle(color: AppColors.gold, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: AppColors.gold,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),

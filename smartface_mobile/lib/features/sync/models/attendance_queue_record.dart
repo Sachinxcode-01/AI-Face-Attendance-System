@@ -111,7 +111,8 @@ class AttendanceQueueRecord {
   ///
   /// The signature covers all immutable fields to detect tampering.
   String computeHmac(String key) {
-    final payload = '$id|$studentEmail|$sessionId|$qrToken|${timestamp.toIso8601String()}|$verificationMethod';
+    final payload =
+        '$id|$studentEmail|$sessionId|$qrToken|${timestamp.toIso8601String()}|$verificationMethod';
     final hmac = Hmac(sha256, utf8.encode(key));
     final digest = hmac.convert(utf8.encode(payload));
     return digest.toString();

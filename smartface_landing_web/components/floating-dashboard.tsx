@@ -214,7 +214,8 @@ export default function FloatingDashboard() {
       <Canvas
         shadows
         camera={{ position: [0, 0, 5], fov: 50 }}
-        gl={{ alpha: true, antialias: true }}
+        dpr={[1, 1.5]}
+        gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
       >
         <ambientLight intensity={0.4} />
         

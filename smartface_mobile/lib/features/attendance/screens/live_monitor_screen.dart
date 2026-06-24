@@ -70,11 +70,29 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
   double _mockFps = 15.0;
   double _mockScanRate = 1.1;
   String _selectedClass = 'CS-402: Neural Networks';
-  
+
   final List<Map<String, dynamic>> _recentCheckins = [
-    {'name': 'ALEX CARTER', 'roll': 'STU-104', 'time': '09:02 AM', 'confidence': '98.5%', 'status': 'Present'},
-    {'name': 'SOPHIA LI', 'roll': 'STU-112', 'time': '09:04 AM', 'confidence': '96.2%', 'status': 'Present'},
-    {'name': 'LIAM NEESON', 'roll': 'STU-242', 'time': '09:05 AM', 'confidence': '95.8%', 'status': 'Present'}
+    {
+      'name': 'ALEX CARTER',
+      'roll': 'STU-104',
+      'time': '09:02 AM',
+      'confidence': '98.5%',
+      'status': 'Present',
+    },
+    {
+      'name': 'SOPHIA LI',
+      'roll': 'STU-112',
+      'time': '09:04 AM',
+      'confidence': '96.2%',
+      'status': 'Present',
+    },
+    {
+      'name': 'LIAM NEESON',
+      'roll': 'STU-242',
+      'time': '09:05 AM',
+      'confidence': '95.8%',
+      'status': 'Present',
+    },
   ];
 
   final List<Map<String, String>> _absentees = [
@@ -87,7 +105,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
   void initState() {
     super.initState();
     final session = Provider.of<SessionManager>(context, listen: false);
-    
+
     // Connect WebSockets
     _notificationService.connect(token: session.token);
     _subscription = _notificationService.stream.listen((data) {
@@ -97,11 +115,16 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
             _presentCount++;
             _aiDetectedCount++;
             _recentCheckins.insert(0, {
-              'name': data['student_email'].toString().split('@').first.toUpperCase(),
+              'name': data['student_email']
+                  .toString()
+                  .split('@')
+                  .first
+                  .toUpperCase(),
               'roll': 'STU-${math.Random().nextInt(800) + 100}',
               'time': 'Just now',
-              'confidence': '${(92.0 + math.Random().nextDouble() * 7.5).toStringAsFixed(1)}%',
-              'status': 'Present'
+              'confidence':
+                  '${(92.0 + math.Random().nextDouble() * 7.5).toStringAsFixed(1)}%',
+              'status': 'Present',
             });
             if (_recentCheckins.length > 8) {
               _recentCheckins.removeLast();
@@ -143,10 +166,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
             'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
           ),
           fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black,
-            BlendMode.dstATop,
-          ),
+          colorFilter: ColorFilter.mode(Colors.black, BlendMode.dstATop),
         ),
       ),
       child: Scaffold(
@@ -154,7 +174,10 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
         appBar: PremiumAppBar(
           title: 'Live CCTV Portal',
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
           actions: [_buildIntruderBadge()],
@@ -171,7 +194,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
               const SizedBox(height: 20),
               _buildHardwareStats(),
               const SizedBox(height: 25),
-              
+
               Text(
                 'REAL-TIME SCANNER VERIFICATION FEED',
                 style: GoogleFonts.inter(
@@ -184,7 +207,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
               const SizedBox(height: 15),
               _buildLiveScansFeed(),
               const SizedBox(height: 25),
-              
+
               _buildAbsenteeList(),
             ],
           ),
@@ -209,19 +232,28 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
               child: DropdownButton<String>(
                 value: _selectedClass,
                 dropdownColor: const Color(0xFF070B1A),
-                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.gold),
-                style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.gold,
+                ),
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
                 onChanged: (val) {
                   if (val != null) {
                     setState(() => _selectedClass = val);
                   }
                 },
-                items: ['CS-402: Neural Networks', 'CS-301: Data Structures'].map((cl) {
-                  return DropdownMenuItem<String>(
-                    value: cl,
-                    child: Text(cl),
-                  );
-                }).toList(),
+                items: ['CS-402: Neural Networks', 'CS-301: Data Structures']
+                    .map((cl) {
+                      return DropdownMenuItem<String>(
+                        value: cl,
+                        child: Text(cl),
+                      );
+                    })
+                    .toList(),
               ),
             ),
           ),
@@ -241,26 +273,28 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
 
   Widget _buildIntruderBadge() {
     return Container(
-      margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
-      child: Chip(
-        avatar: Icon(
-          Icons.security,
-          color: _isIntruderAlertActive ? Colors.white : Colors.greenAccent,
-          size: 14,
-        ),
-        label: Text(
-          _isIntruderAlertActive ? 'INTRUDER DETECTED' : 'SECURE',
-          style: TextStyle(
-            color: _isIntruderAlertActive ? Colors.white : Colors.greenAccent,
-            fontWeight: FontWeight.bold,
-            fontSize: 9,
+          margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+          child: Chip(
+            avatar: Icon(
+              Icons.security,
+              color: _isIntruderAlertActive ? Colors.white : Colors.greenAccent,
+              size: 14,
+            ),
+            label: Text(
+              _isIntruderAlertActive ? 'INTRUDER DETECTED' : 'SECURE',
+              style: TextStyle(
+                color: _isIntruderAlertActive
+                    ? Colors.white
+                    : Colors.greenAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 9,
+              ),
+            ),
+            backgroundColor: _isIntruderAlertActive
+                ? const Color(0xFFF05050)
+                : Colors.white.withValues(alpha: 0.05),
           ),
-        ),
-        backgroundColor: _isIntruderAlertActive
-            ? const Color(0xFFF05050)
-            : Colors.white.withValues(alpha: 0.05),
-      ),
-    )
+        )
         .animate(target: _isIntruderAlertActive ? 1 : 0)
         .shimmer(duration: 1.seconds);
   }
@@ -297,24 +331,27 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
 
             // Surveillance scanning grid line animation
             Positioned.fill(
-              child: CustomPaint(
-                painter: SurveillanceOverlayPainter(),
-              ),
+              child: CustomPaint(painter: SurveillanceOverlayPainter()),
             ),
 
             // Scanning Overlay Laser line
             Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.transparent, Color(0x2000FFCC), Colors.transparent],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
-              )
-                  .animate(onPlay: (c) => c.repeat())
-                  .slideY(begin: -1, end: 1, duration: 3.seconds),
+              child:
+                  Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              Color(0x2000FFCC),
+                              Colors.transparent,
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                        ),
+                      )
+                      .animate(onPlay: (c) => c.repeat())
+                      .slideY(begin: -1, end: 1, duration: 3.seconds),
             ),
 
             // Bounding boxes simulating face identification
@@ -335,13 +372,13 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
               child: Row(
                 children: [
                   Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                  )
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      )
                       .animate(onPlay: (c) => c.repeat())
                       .fadeOut(duration: 1.seconds),
                   const SizedBox(width: 8),
@@ -362,14 +399,21 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
               bottom: 20,
               left: 20,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   'SCANRATE: ${_mockScanRate.toStringAsFixed(2)}s',
-                  style: GoogleFonts.robotoMono(color: const Color(0xFF76E600), fontSize: 9, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.robotoMono(
+                    color: const Color(0xFF76E600),
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -378,7 +422,10 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
               bottom: 20,
               right: 20,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(8),
@@ -410,17 +457,11 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _hudCorner(),
-                  _hudCorner(),
-                ],
+                children: [_hudCorner(), _hudCorner()],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _hudCorner(),
-                  _hudCorner(),
-                ],
+                children: [_hudCorner(), _hudCorner()],
               ),
             ],
           ),
@@ -431,7 +472,11 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
           color: Colors.black87,
           child: Text(
             '$label ($conf)',
-            style: const TextStyle(color: Color(0xFF00FFCC), fontSize: 7, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Color(0xFF00FFCC),
+              fontSize: 7,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],
@@ -446,21 +491,37 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
     return Row(
       children: [
         Expanded(
-          child: _buildSurveillanceTelemetryBox('CAMERA FPS', '${_mockFps.toStringAsFixed(1)} FPS', const Color(0xFF00C6FF)),
+          child: _buildSurveillanceTelemetryBox(
+            'CAMERA FPS',
+            '${_mockFps.toStringAsFixed(1)} FPS',
+            const Color(0xFF00C6FF),
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildSurveillanceTelemetryBox('PRESENTS', '$_presentCount STUDENTS', const Color(0xFF76E600)),
+          child: _buildSurveillanceTelemetryBox(
+            'PRESENTS',
+            '$_presentCount STUDENTS',
+            const Color(0xFF76E600),
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildSurveillanceTelemetryBox('AI MATCHED', '$_aiDetectedCount RECOGNITIONS', AppColors.gold),
+          child: _buildSurveillanceTelemetryBox(
+            'AI MATCHED',
+            '$_aiDetectedCount RECOGNITIONS',
+            AppColors.gold,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildSurveillanceTelemetryBox(String label, String value, Color color) {
+  Widget _buildSurveillanceTelemetryBox(
+    String label,
+    String value,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -473,12 +534,21 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
         children: [
           Text(
             label,
-            style: GoogleFonts.inter(color: Colors.white38, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+            style: GoogleFonts.inter(
+              color: Colors.white38,
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             value,
-            style: GoogleFonts.robotoMono(color: color, fontSize: 12, fontWeight: FontWeight.bold),
+            style: GoogleFonts.robotoMono(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -497,7 +567,8 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _recentCheckins.length,
-        separatorBuilder: (context, index) => Divider(color: Colors.white.withValues(alpha: 0.05), height: 16),
+        separatorBuilder: (context, index) =>
+            Divider(color: Colors.white.withValues(alpha: 0.05), height: 16),
         itemBuilder: (context, index) {
           final scan = _recentCheckins[index];
           return Row(
@@ -505,7 +576,11 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
               CircleAvatar(
                 backgroundColor: const Color(0xFF76E600).withValues(alpha: 0.1),
                 radius: 18,
-                child: const Icon(Icons.person, color: Color(0xFF76E600), size: 18),
+                child: const Icon(
+                  Icons.person,
+                  color: Color(0xFF76E600),
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 15),
               Expanded(
@@ -514,12 +589,19 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
                   children: [
                     Text(
                       scan['name'] ?? '',
-                      style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Roll: ${scan['roll']} • Time: ${scan['time']}',
-                      style: const TextStyle(color: Colors.white38, fontSize: 10),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 10,
+                      ),
                     ),
                   ],
                 ),
@@ -528,15 +610,24 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF00FFCC).withValues(alpha: 0.1),
-                      border: Border.all(color: const Color(0xFF00FFCC).withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: const Color(0xFF00FFCC).withValues(alpha: 0.3),
+                      ),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       'AI: ${scan['confidence']}',
-                      style: GoogleFonts.robotoMono(color: const Color(0xFF00FFCC), fontSize: 9, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.robotoMono(
+                        color: const Color(0xFF00FFCC),
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -579,7 +670,10 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _absentees.length,
-            separatorBuilder: (context, index) => Divider(color: Colors.white.withValues(alpha: 0.05), height: 16),
+            separatorBuilder: (context, index) => Divider(
+              color: Colors.white.withValues(alpha: 0.05),
+              height: 16,
+            ),
             itemBuilder: (context, index) {
               final student = _absentees[index];
               final riskColor = _getRiskColor(student['risk']!);
@@ -590,7 +684,10 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
                     radius: 18,
                     child: Text(
                       student['name']![0],
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 15),
@@ -600,21 +697,33 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
                       children: [
                         Text(
                           student['name']!,
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
                         ),
                         Text(
                           student['id']!,
-                          style: const TextStyle(color: Colors.white38, fontSize: 10),
+                          style: const TextStyle(
+                            color: Colors.white38,
+                            fontSize: 10,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: riskColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: riskColor.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: riskColor.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Text(
                       '${student['risk']} Risk',
@@ -658,7 +767,7 @@ class SurveillanceOverlayPainter extends CustomPainter {
     for (int i = 1; i < numLines; i++) {
       final double x = size.width * (i / numLines);
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-      
+
       final double y = size.height * (i / numLines);
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
@@ -667,10 +776,18 @@ class SurveillanceOverlayPainter extends CustomPainter {
     final centerPaint = Paint()
       ..color = Colors.white24
       ..strokeWidth = 1.5;
-    
+
     final Offset center = Offset(size.width / 2, size.height / 2);
-    canvas.drawLine(Offset(center.dx - 15, center.dy), Offset(center.dx + 15, center.dy), centerPaint);
-    canvas.drawLine(Offset(center.dx, center.dy - 15), Offset(center.dx, center.dy + 15), centerPaint);
+    canvas.drawLine(
+      Offset(center.dx - 15, center.dy),
+      Offset(center.dx + 15, center.dy),
+      centerPaint,
+    );
+    canvas.drawLine(
+      Offset(center.dx, center.dy - 15),
+      Offset(center.dx, center.dy + 15),
+      centerPaint,
+    );
   }
 
   @override

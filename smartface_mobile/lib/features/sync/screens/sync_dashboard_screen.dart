@@ -32,7 +32,10 @@ class SyncDashboardScreen extends StatelessWidget {
       appBar: PremiumAppBar(
         title: 'Offline Sync Engine',
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -61,7 +64,9 @@ class SyncDashboardScreen extends StatelessWidget {
                           label: const Text('Retry Failed'),
                           style: TextButton.styleFrom(
                             foregroundColor: AppColors.gold,
-                            backgroundColor: AppColors.gold.withValues(alpha: 0.1),
+                            backgroundColor: AppColors.gold.withValues(
+                              alpha: 0.1,
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -75,11 +80,16 @@ class SyncDashboardScreen extends StatelessWidget {
                           onPressed: controller.isSyncing
                               ? null
                               : () => controller.clearFailed(),
-                          icon: const Icon(Icons.delete_sweep_rounded, size: 18),
+                          icon: const Icon(
+                            Icons.delete_sweep_rounded,
+                            size: 18,
+                          ),
                           label: const Text('Clear Failed'),
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.red.shade400,
-                            backgroundColor: Colors.red.shade400.withValues(alpha: 0.1),
+                            backgroundColor: Colors.red.shade400.withValues(
+                              alpha: 0.1,
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -153,17 +163,17 @@ class SyncDashboardScreen extends StatelessWidget {
           Text(
             'Offline scans will appear here automatically.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              color: Colors.white38,
-              fontSize: 13,
-            ),
+            style: GoogleFonts.inter(color: Colors.white38, fontSize: 13),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildQueueLogTile(BuildContext context, AttendanceQueueRecord record) {
+  Widget _buildQueueLogTile(
+    BuildContext context,
+    AttendanceQueueRecord record,
+  ) {
     Color statusColor;
     IconData statusIcon;
     String statusText;
@@ -191,7 +201,9 @@ class SyncDashboardScreen extends StatelessWidget {
         break;
     }
 
-    final formattedTime = DateFormat('MMM dd, hh:mm a').format(record.timestamp);
+    final formattedTime = DateFormat(
+      'MMM dd, hh:mm a',
+    ).format(record.timestamp);
 
     return GlassContainer(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -245,7 +257,8 @@ class SyncDashboardScreen extends StatelessWidget {
           _buildDetailRow('Method', record.verificationMethod.toUpperCase()),
 
           // Error / Server response
-          if (record.serverResponse != null && record.syncStatus == SyncStatus.failed) ...[
+          if (record.serverResponse != null &&
+              record.syncStatus == SyncStatus.failed) ...[
             const SizedBox(height: 10),
             Container(
               width: double.infinity,
@@ -253,7 +266,9 @@ class SyncDashboardScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.red.shade900.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.red.shade900.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: Colors.red.shade900.withValues(alpha: 0.2),
+                ),
               ),
               child: Text(
                 'Server Response: ${record.serverResponse}',
@@ -275,10 +290,7 @@ class SyncDashboardScreen extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            color: Colors.white38,
-            fontSize: 12,
-          ),
+          style: GoogleFonts.inter(color: Colors.white38, fontSize: 12),
         ),
         Text(
           value,

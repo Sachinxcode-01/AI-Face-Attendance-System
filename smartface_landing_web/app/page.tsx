@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
+import { DashboardCard } from '@/components/portal/ui-helpers';
 import { 
   ArrowRight, 
   Play, 
@@ -64,11 +65,11 @@ const MobilePhoneCanvas = dynamic(() => import('@/components/mobile-phone-canvas
   )
 });
 
-const HeroFaceCanvas = dynamic(() => import('@/components/hero-face-canvas'), {
+const HeroVideo = dynamic(() => import('@/components/hero-video'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-[400px] flex items-center justify-center text-slate-500 font-mono text-xs">
-      Loading Biometric Scanner...
+      Loading Biometric Video Feed...
     </div>
   )
 });
@@ -269,9 +270,9 @@ export default function Home() {
             </motion.div>
           </div>
 
-          {/* Right 3D Visual Column */}
+          {/* Right Video Visual Column */}
           <div className="lg:col-span-5 flex justify-center items-center h-[380px] md:h-[480px] relative">
-            <HeroFaceCanvas />
+            <HeroVideo />
           </div>
 
         </div>
@@ -297,14 +298,20 @@ export default function Home() {
               "Live Notification System",
               "Secure Authentication"
             ].map((metric, idx) => (
-              <div key={idx} className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/20 transition-all duration-300">
+              <DashboardCard 
+                key={idx} 
+                glow={idx % 2 === 0} 
+                floating={idx % 3 === 0}
+                delay={idx * 100}
+                className="flex items-center gap-2.5 p-4"
+              >
                 <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </div>
                 <span className="text-[10px] sm:text-xs font-semibold text-slate-300 font-sans tracking-wide">
                   {metric}
                 </span>
-              </div>
+              </DashboardCard>
             ))}
           </div>
         </div>

@@ -248,4 +248,3 @@ class SessionManager extends ChangeNotifier {
     'Authorization': 'Bearer ${_token ?? ''}',
   };
 }
-

@@ -29,14 +29,23 @@ class ApiService {
       id: 'LV-2026-001',
       studentEmail: 'student@example.com',
       reason: 'Diagnosed with viral fever, advised bed rest for 3 days.',
-      startDate: DateTime.now().subtract(const Duration(days: 5)).toIso8601String(),
-      endDate: DateTime.now().subtract(const Duration(days: 3)).toIso8601String(),
+      startDate: DateTime.now()
+          .subtract(const Duration(days: 5))
+          .toIso8601String(),
+      endDate: DateTime.now()
+          .subtract(const Duration(days: 3))
+          .toIso8601String(),
       status: 'Approved',
-      remarks: 'Granted. Get well soon and submit medical certificate upon return.',
-      createdAt: DateTime.now().subtract(const Duration(days: 6)).toIso8601String(),
+      remarks:
+          'Granted. Get well soon and submit medical certificate upon return.',
+      createdAt: DateTime.now()
+          .subtract(const Duration(days: 6))
+          .toIso8601String(),
       leaveType: 'sick',
       hodStatus: 'approved',
-      approvalDate: DateTime.now().subtract(const Duration(days: 4)).toIso8601String(),
+      approvalDate: DateTime.now()
+          .subtract(const Duration(days: 4))
+          .toIso8601String(),
       attachmentName: 'medical_report_signed.pdf',
     ),
     LeaveModel(
@@ -47,19 +56,25 @@ class ApiService {
       endDate: DateTime.now().add(const Duration(days: 5)).toIso8601String(),
       status: 'Pending',
       remarks: 'Awaiting HOD department head review.',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
+      createdAt: DateTime.now()
+          .subtract(const Duration(days: 1))
+          .toIso8601String(),
       leaveType: 'personal',
       hodStatus: 'pending',
     ),
     LeaveModel(
       id: 'LV-2026-003',
       studentEmail: 'student@example.com',
-      reason: 'Attending National AI & Robotics Summit as a college representative.',
+      reason:
+          'Attending National AI & Robotics Summit as a college representative.',
       startDate: DateTime.now().add(const Duration(days: 10)).toIso8601String(),
       endDate: DateTime.now().add(const Duration(days: 12)).toIso8601String(),
       status: 'Clarification',
-      remarks: 'Please upload the official invitation letter or event brochure.',
-      createdAt: DateTime.now().subtract(const Duration(days: 2)).toIso8601String(),
+      remarks:
+          'Please upload the official invitation letter or event brochure.',
+      createdAt: DateTime.now()
+          .subtract(const Duration(days: 2))
+          .toIso8601String(),
       leaveType: 'academic',
       hodStatus: 'none',
       isClarificationRequested: true,
@@ -68,19 +83,29 @@ class ApiService {
       id: 'LV-2026-004',
       studentEmail: 'student2@example.com',
       reason: 'Emergency family emergency requiring urgent travel.',
-      startDate: DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
+      startDate: DateTime.now()
+          .subtract(const Duration(days: 1))
+          .toIso8601String(),
       endDate: DateTime.now().add(const Duration(days: 1)).toIso8601String(),
       status: 'Rejected',
-      remarks: 'Application submitted after the start date without prior notification.',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
+      remarks:
+          'Application submitted after the start date without prior notification.',
+      createdAt: DateTime.now()
+          .subtract(const Duration(days: 1))
+          .toIso8601String(),
       leaveType: 'emergency',
       hodStatus: 'rejected',
       approvalDate: DateTime.now().toIso8601String(),
-    )
+    ),
   ];
 
   static final Map<String, LeaveBalance> _mockBalances = {
-    'student@example.com': const LeaveBalance(sick: 8, personal: 14, emergency: 5, academic: 10),
+    'student@example.com': const LeaveBalance(
+      sick: 8,
+      personal: 14,
+      emergency: 5,
+      academic: 10,
+    ),
   };
 
   static String get baseUrl => EnvConfig.apiUrl;
@@ -108,7 +133,9 @@ class ApiService {
   }
 
   static Future<void> saveServerSettings(String host, String port) async {
-    debugPrint('[ApiService] saveServerSettings called with $host:$port. EnvConfig is locked to $baseUrl');
+    debugPrint(
+      '[ApiService] saveServerSettings called with $host:$port. EnvConfig is locked to $baseUrl',
+    );
   }
 
   static Future<bool> isServerOnline() async {
@@ -133,7 +160,8 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> requestLoginOtp(String email) => sendLoginOtp(email);
+  static Future<Map<String, dynamic>> requestLoginOtp(String email) =>
+      sendLoginOtp(email);
 
   static Future<Map<String, dynamic>> sendLoginOtp(String email) async {
     try {
@@ -431,7 +459,8 @@ class ApiService {
         Uri.parse('$baseUrl/attendance/mark'),
         headers: {
           'Content-Type': 'application/json',
-          'X-Face-Scanner-Token': EnvConfig.faceScannerToken, // Secure injection
+          'X-Face-Scanner-Token':
+              EnvConfig.faceScannerToken, // Secure injection
         },
         body: jsonEncode({
           'student_email': studentEmail,
@@ -447,7 +476,9 @@ class ApiService {
 
   static Future<LeaveBalance> getLeaveBalance(String email) async {
     try {
-      final response = await client.get(Uri.parse('$baseUrl/leave/balance/$email')).timeout(const Duration(seconds: 3));
+      final response = await client
+          .get(Uri.parse('$baseUrl/leave/balance/$email'))
+          .timeout(const Duration(seconds: 3));
       if (response.statusCode == 200) {
         return LeaveBalance.fromJson(jsonDecode(response.body));
       }
@@ -459,11 +490,13 @@ class ApiService {
     Map<String, dynamic> data,
   ) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/leave/apply'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
-      ).timeout(const Duration(seconds: 3));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/leave/apply'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(data),
+          )
+          .timeout(const Duration(seconds: 3));
       if (response.statusCode == 200 || response.statusCode == 201) {
         final resMap = jsonDecode(response.body) as Map<String, dynamic>;
         final newLeave = LeaveModel.fromJson(resMap);
@@ -473,25 +506,40 @@ class ApiService {
     } catch (_) {}
 
     final id = 'LV-${DateTime.now().year}-${100 + _mockLeaves.length + 1}';
-    final parsed = LeaveModel.fromJson({...data, 'id': id, 'status': 'Pending'});
+    final parsed = LeaveModel.fromJson({
+      ...data,
+      'id': id,
+      'status': 'Pending',
+    });
     _mockLeaves.add(parsed);
 
     final email = parsed.studentEmail;
-    final currentBal = _mockBalances.putIfAbsent(email, () => LeaveBalance.initial());
+    final currentBal = _mockBalances.putIfAbsent(
+      email,
+      () => LeaveBalance.initial(),
+    );
     final duration = parsed.durationDays;
     LeaveBalance newBal;
     switch (parsed.leaveType.toLowerCase()) {
       case 'sick':
-        newBal = currentBal.copyWith(sick: (currentBal.sick - duration).clamp(0, 100));
+        newBal = currentBal.copyWith(
+          sick: (currentBal.sick - duration).clamp(0, 100),
+        );
         break;
       case 'personal':
-        newBal = currentBal.copyWith(personal: (currentBal.personal - duration).clamp(0, 100));
+        newBal = currentBal.copyWith(
+          personal: (currentBal.personal - duration).clamp(0, 100),
+        );
         break;
       case 'emergency':
-        newBal = currentBal.copyWith(emergency: (currentBal.emergency - duration).clamp(0, 100));
+        newBal = currentBal.copyWith(
+          emergency: (currentBal.emergency - duration).clamp(0, 100),
+        );
         break;
       case 'academic':
-        newBal = currentBal.copyWith(academic: (currentBal.academic - duration).clamp(0, 100));
+        newBal = currentBal.copyWith(
+          academic: (currentBal.academic - duration).clamp(0, 100),
+        );
         break;
       default:
         newBal = currentBal;
@@ -508,9 +556,9 @@ class ApiService {
 
   static Future<List<LeaveModel>> getStudentLeaves(String email) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/leave/student/$email'),
-      ).timeout(const Duration(seconds: 3));
+      final response = await client
+          .get(Uri.parse('$baseUrl/leave/student/$email'))
+          .timeout(const Duration(seconds: 3));
       if (response.statusCode == 200) {
         final List<dynamic> list = jsonDecode(response.body) as List<dynamic>;
         return list
@@ -524,9 +572,9 @@ class ApiService {
 
   static Future<List<dynamic>> getPendingLeaves() async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/leave/admin/pending'),
-      ).timeout(const Duration(seconds: 3));
+      final response = await client
+          .get(Uri.parse('$baseUrl/leave/admin/pending'))
+          .timeout(const Duration(seconds: 3));
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as List<dynamic>;
       }
@@ -545,16 +593,18 @@ class ApiService {
     bool isClarificationRequested = false,
   }) async {
     try {
-      final response = await client.patch(
-        Uri.parse('$baseUrl/leave/action'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'leave_id': leaveId,
-          'status': status,
-          'remarks': remarks,
-          'is_clarification_requested': isClarificationRequested,
-        }),
-      ).timeout(const Duration(seconds: 3));
+      final response = await client
+          .patch(
+            Uri.parse('$baseUrl/leave/action'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'leave_id': leaveId,
+              'status': status,
+              'remarks': remarks,
+              'is_clarification_requested': isClarificationRequested,
+            }),
+          )
+          .timeout(const Duration(seconds: 3));
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
@@ -568,27 +618,40 @@ class ApiService {
         remarks: remarks,
         isClarificationRequested: isClarificationRequested,
         approvalDate: DateTime.now().toIso8601String(),
-        hodStatus: status.toLowerCase() == 'approved' ? 'approved' : (status.toLowerCase() == 'rejected' ? 'rejected' : 'pending'),
+        hodStatus: status.toLowerCase() == 'approved'
+            ? 'approved'
+            : (status.toLowerCase() == 'rejected' ? 'rejected' : 'pending'),
       );
       _mockLeaves[index] = updated;
 
       if (status.toLowerCase() == 'rejected') {
         final email = old.studentEmail;
-        final currentBal = _mockBalances.putIfAbsent(email, () => LeaveBalance.initial());
+        final currentBal = _mockBalances.putIfAbsent(
+          email,
+          () => LeaveBalance.initial(),
+        );
         final duration = old.durationDays;
         LeaveBalance newBal;
         switch (old.leaveType.toLowerCase()) {
           case 'sick':
-            newBal = currentBal.copyWith(sick: (currentBal.sick + duration).clamp(0, 100));
+            newBal = currentBal.copyWith(
+              sick: (currentBal.sick + duration).clamp(0, 100),
+            );
             break;
           case 'personal':
-            newBal = currentBal.copyWith(personal: (currentBal.personal + duration).clamp(0, 100));
+            newBal = currentBal.copyWith(
+              personal: (currentBal.personal + duration).clamp(0, 100),
+            );
             break;
           case 'emergency':
-            newBal = currentBal.copyWith(emergency: (currentBal.emergency + duration).clamp(0, 100));
+            newBal = currentBal.copyWith(
+              emergency: (currentBal.emergency + duration).clamp(0, 100),
+            );
             break;
           case 'academic':
-            newBal = currentBal.copyWith(academic: (currentBal.academic + duration).clamp(0, 100));
+            newBal = currentBal.copyWith(
+              academic: (currentBal.academic + duration).clamp(0, 100),
+            );
             break;
           default:
             newBal = currentBal;
@@ -607,16 +670,18 @@ class ApiService {
 
   static Future<Map<String, dynamic>> getLeaveAnalytics() async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/leave/analytics'),
-      ).timeout(const Duration(seconds: 3));
+      final response = await client
+          .get(Uri.parse('$baseUrl/leave/analytics'))
+          .timeout(const Duration(seconds: 3));
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
     } catch (_) {}
 
     final total = _mockLeaves.length;
-    final approved = _mockLeaves.where((l) => l.status.toLowerCase() == 'approved').length;
+    final approved = _mockLeaves
+        .where((l) => l.status.toLowerCase() == 'approved')
+        .length;
     final approvalRate = total > 0 ? (approved / total) : 0.85;
 
     return {
@@ -635,7 +700,7 @@ class ApiService {
         'Apr': 15,
         'May': 22,
         'Jun': 18,
-      }
+      },
     };
   }
 
@@ -766,7 +831,7 @@ class ApiService {
         'Apr': 91.0,
         'May': 90.8,
         'Jun': 92.1,
-      }
+      },
     };
   }
 
@@ -788,25 +853,31 @@ class ApiService {
         'icon': 'check_circle',
         'title': 'Attendance Marked',
         'detail': 'student@smartface.elite marked present',
-        'timestamp': DateTime.now().subtract(const Duration(minutes: 5)).toIso8601String(),
-        'color': 'success'
+        'timestamp': DateTime.now()
+            .subtract(const Duration(minutes: 5))
+            .toIso8601String(),
+        'color': 'success',
       },
       {
         'type': 'session',
         'icon': 'play_circle',
         'title': 'Session Started',
         'detail': 'Cloud Arch by Prof. Alan',
-        'timestamp': DateTime.now().subtract(const Duration(hours: 1)).toIso8601String(),
-        'color': 'info'
+        'timestamp': DateTime.now()
+            .subtract(const Duration(hours: 1))
+            .toIso8601String(),
+        'color': 'info',
       },
       {
         'type': 'security',
         'icon': 'warning',
         'title': 'Security Alert',
         'detail': 'Intruder detected at Main Entrance',
-        'timestamp': DateTime.now().subtract(const Duration(hours: 3)).toIso8601String(),
-        'color': 'error'
-      }
+        'timestamp': DateTime.now()
+            .subtract(const Duration(hours: 3))
+            .toIso8601String(),
+        'color': 'error',
+      },
     ];
   }
 
@@ -828,7 +899,7 @@ class ApiService {
     } catch (e) {
       debugPrint('getStudentAnalytics error: $e');
     }
-    
+
     // Fallback fully hydrated analytics payload for student sandbox
     return {
       'overall_percentage': 0.94,
@@ -837,16 +908,43 @@ class ApiService {
       'risk_level': 'low',
       'missable_classes': 3,
       'personal_insights': [
-        {'text': 'Your attendance increased by 12% this month.', 'type': 'improving'},
+        {
+          'text': 'Your attendance increased by 12% this month.',
+          'type': 'improving',
+        },
         {'text': 'You are ranked #12 in your department.', 'type': 'champion'},
         {'text': 'You need 3 more classes to reach 95%.', 'type': 'trend'},
         {'text': 'Maintain streak to avoid critical warnings.', 'type': 'risk'},
       ],
       'leaderboard': [
-        {'name': 'Sachin K', 'department': 'CSE', 'rank': 12, 'score': 94.0, 'is_me': true},
-        {'name': 'Aditya S', 'department': 'CSE', 'rank': 1, 'score': 99.0, 'is_me': false},
-        {'name': 'Neha R', 'department': 'ECE', 'rank': 2, 'score': 98.0, 'is_me': false},
-        {'name': 'Vikram M', 'department': 'ME', 'rank': 3, 'score': 97.0, 'is_me': false},
+        {
+          'name': 'Sachin K',
+          'department': 'CSE',
+          'rank': 12,
+          'score': 94.0,
+          'is_me': true,
+        },
+        {
+          'name': 'Aditya S',
+          'department': 'CSE',
+          'rank': 1,
+          'score': 99.0,
+          'is_me': false,
+        },
+        {
+          'name': 'Neha R',
+          'department': 'ECE',
+          'rank': 2,
+          'score': 98.0,
+          'is_me': false,
+        },
+        {
+          'name': 'Vikram M',
+          'department': 'ME',
+          'rank': 3,
+          'score': 97.0,
+          'is_me': false,
+        },
       ],
       'weekly_trends': [
         {'week': 'Wk 1', 'present': 4},
@@ -882,8 +980,8 @@ class ApiService {
       'ai_metrics': {
         'average_confidence': 0.96,
         'lighting_quality': 'Good',
-        'face_visibility': 'Excellent'
-      }
+        'face_visibility': 'Excellent',
+      },
     };
   }
 
@@ -915,9 +1013,24 @@ class ApiService {
         {'name': 'Karan Singh', 'id': 'CS22019', 'score': 95.2, 'rank': 3},
       ],
       'low_attendance_students': [
-        {'name': 'Arjun Sharma', 'id': 'CS21001', 'score': 58.0, 'subject': 'Neural Networks'},
-        {'name': 'Priya Patel', 'id': 'IT21045', 'score': 62.0, 'subject': 'DBMS'},
-        {'name': 'Rohan J', 'id': 'CS21098', 'score': 68.0, 'subject': 'Automata'},
+        {
+          'name': 'Arjun Sharma',
+          'id': 'CS21001',
+          'score': 58.0,
+          'subject': 'Neural Networks',
+        },
+        {
+          'name': 'Priya Patel',
+          'id': 'IT21045',
+          'score': 62.0,
+          'subject': 'DBMS',
+        },
+        {
+          'name': 'Rohan J',
+          'id': 'CS21098',
+          'score': 68.0,
+          'subject': 'Automata',
+        },
       ],
       'weekly_trends': [88.0, 91.0, 78.0, 95.0, 82.0, 89.0, 93.0],
       'section_performance': {
@@ -925,7 +1038,7 @@ class ApiService {
         'ECE-3B': 88.5,
         'CSE-7A': 91.0,
         'ME-5B': 79.8,
-      }
+      },
     };
   }
 
@@ -941,7 +1054,7 @@ class ApiService {
       String query = 'page=$page&limit=$limit';
       if (status != null) query += '&status=$status';
       if (month != null) query += '&month=$month';
-      
+
       final response = await client.get(
         Uri.parse('$baseUrl/attendance/student/$email?$query'),
         headers: {
@@ -1020,10 +1133,7 @@ class ApiService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'log_id': logId,
-          'status': 'Acknowledged',
-        }),
+        body: jsonEncode({'log_id': logId, 'status': 'Acknowledged'}),
       );
       return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {

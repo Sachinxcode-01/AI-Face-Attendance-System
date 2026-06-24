@@ -61,7 +61,8 @@ class LeaveModel {
   factory LeaveModel.fromJson(Map<String, dynamic> json) {
     return LeaveModel(
       id: json['id'] as String? ?? json['_id'] as String?,
-      studentEmail: json['student_email'] as String? ?? json['user_id'] as String? ?? '',
+      studentEmail:
+          json['student_email'] as String? ?? json['user_id'] as String? ?? '',
       reason: json['reason'] as String? ?? 'No reason provided',
       startDate: json['start_date'] as String? ?? '',
       endDate: json['end_date'] as String? ?? '',
@@ -72,7 +73,8 @@ class LeaveModel {
       leaveType: json['leave_type'] as String? ?? 'personal',
       hodStatus: json['hod_status'] as String? ?? 'none',
       approvalDate: json['approval_date'] as String?,
-      isClarificationRequested: json['is_clarification_requested'] as bool? ?? false,
+      isClarificationRequested:
+          json['is_clarification_requested'] as bool? ?? false,
       attachmentName: json['attachment_name'] as String?,
     );
   }
@@ -127,7 +129,8 @@ class LeaveModel {
       leaveType: leaveType ?? this.leaveType,
       hodStatus: hodStatus ?? this.hodStatus,
       approvalDate: approvalDate ?? this.approvalDate,
-      isClarificationRequested: isClarificationRequested ?? this.isClarificationRequested,
+      isClarificationRequested:
+          isClarificationRequested ?? this.isClarificationRequested,
       attachmentName: attachmentName ?? this.attachmentName,
     );
   }

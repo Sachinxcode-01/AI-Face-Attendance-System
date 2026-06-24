@@ -83,7 +83,9 @@ class SyncEngine {
 
         // Validate HMAC integrity to check for tampering
         if (!queueService.validateRecord(record)) {
-          debugPrint('[SyncEngine] Security violation: Record ${record.id} has invalid HMAC signature! Rejecting.');
+          debugPrint(
+            '[SyncEngine] Security violation: Record ${record.id} has invalid HMAC signature! Rejecting.',
+          );
           await queueService.updateStatus(
             record.id,
             SyncStatus.failed,
@@ -97,7 +99,9 @@ class SyncEngine {
         // Apply exponential backoff delay if record has retried before
         if (record.retryCount > 0) {
           final delay = _calculateBackoffDelay(record.retryCount);
-          debugPrint('[SyncEngine] Record ${record.id} has retryCount=${record.retryCount}. Backing off for ${delay.inMilliseconds}ms');
+          debugPrint(
+            '[SyncEngine] Record ${record.id} has retryCount=${record.retryCount}. Backing off for ${delay.inMilliseconds}ms',
+          );
           await Future.delayed(delay);
         }
 
@@ -126,25 +130,43 @@ class SyncEngine {
           responseBody = response.body;
 
           if (response.statusCode == 200 || response.statusCode == 201) {
-            await queueService.markSynced(record.id, serverResponse: responseBody);
+            await queueService.markSynced(
+              record.id,
+              serverResponse: responseBody,
+            );
             _syncDurations.add(stopwatch.elapsedMilliseconds);
             _updateAverageSyncDuration();
             debugPrint('[SyncEngine] Successfully synced record ${record.id}');
-          } else if (response.statusCode == 409 || 
-                     responseBody.contains('already marked') || 
-                     responseBody.contains('already verified')) {
+          } else if (response.statusCode == 409 ||
+              responseBody.contains('already marked') ||
+              responseBody.contains('already verified')) {
             // Server-wins conflict resolution (duplicate)
-            await queueService.markSynced(record.id, serverResponse: 'Duplicate resolved: $responseBody');
-            debugPrint('[SyncEngine] Resolved duplicate record ${record.id} as synced.');
+            await queueService.markSynced(
+              record.id,
+              serverResponse: 'Duplicate resolved: $responseBody',
+            );
+            debugPrint(
+              '[SyncEngine] Resolved duplicate record ${record.id} as synced.',
+            );
           } else {
             // Server error or bad request (4xx / 5xx)
-            debugPrint('[SyncEngine] Server rejected record ${record.id} with status ${response.statusCode}');
-            await queueService.markFailed(record.id, serverResponse: responseBody);
+            debugPrint(
+              '[SyncEngine] Server rejected record ${record.id} with status ${response.statusCode}',
+            );
+            await queueService.markFailed(
+              record.id,
+              serverResponse: responseBody,
+            );
           }
         } catch (e) {
           stopwatch.stop();
-          debugPrint('[SyncEngine] Network exception syncing record ${record.id}: $e');
-          await queueService.markFailed(record.id, serverResponse: e.toString());
+          debugPrint(
+            '[SyncEngine] Network exception syncing record ${record.id}: $e',
+          );
+          await queueService.markFailed(
+            record.id,
+            serverResponse: e.toString(),
+          );
           // If we hit a network exception, connectivity is likely unstable, so we break the loop
           break;
         }
@@ -177,7 +199,8 @@ class SyncEngine {
     // delay = min(2^retryCount * 1000ms, 60000ms) with +/- 20% jitter
     final baseDelayMs = min(pow(2, retryCount) * 1000, 60000).toInt();
     final random = Random();
-    final jitterPercentage = (random.nextDouble() * 40 - 20) / 100; // -20% to +20%
+    final jitterPercentage =
+        (random.nextDouble() * 40 - 20) / 100; // -20% to +20%
     final jitterMs = (baseDelayMs * jitterPercentage).toInt();
     return Duration(milliseconds: baseDelayMs + jitterMs);
   }

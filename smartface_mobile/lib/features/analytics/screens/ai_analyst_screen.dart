@@ -71,11 +71,15 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
     try {
       final session = context.read<SessionManager>();
       final email = session.email ?? 'student@smartface.elite';
-      final cached = await CacheService.get<List<dynamic>>('chat_history_$email');
+      final cached = await CacheService.get<List<dynamic>>(
+        'chat_history_$email',
+      );
       if (cached != null && cached.isNotEmpty && mounted) {
         setState(() {
           _messages.clear();
-          _messages.addAll(cached.map((m) => Map<String, dynamic>.from(m as Map)));
+          _messages.addAll(
+            cached.map((m) => Map<String, dynamic>.from(m as Map)),
+          );
         });
       }
     } catch (e) {

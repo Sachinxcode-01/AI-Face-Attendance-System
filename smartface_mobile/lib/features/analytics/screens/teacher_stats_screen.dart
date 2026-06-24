@@ -43,7 +43,8 @@ class TeacherStatsScreen extends StatefulWidget {
   State<TeacherStatsScreen> createState() => _TeacherStatsScreenState();
 }
 
-class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTickerProviderStateMixin {
+class _TeacherStatsScreenState extends State<TeacherStatsScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   late TabController _rosterTabController;
 
@@ -67,7 +68,10 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
       final session = context.read<SessionManager>();
       final analyticsCtrl = context.read<AnalyticsController>();
       if (session.token != null && session.email != null) {
-        await analyticsCtrl.fetchTeacherAnalytics(session.email!, session.token!);
+        await analyticsCtrl.fetchTeacherAnalytics(
+          session.email!,
+          session.token!,
+        );
       }
     } catch (e) {
       debugPrint('[TeacherStats] load error: $e');
@@ -89,7 +93,10 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
           ),
           title: Text(
             'Export Analytics Center',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -99,20 +106,32 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
                 style: GoogleFonts.inter(color: Colors.white70, fontSize: 12),
               ),
               const SizedBox(height: 20),
-              _buildExportOptionTile('PDF Documents (.pdf)', Icons.picture_as_pdf_outlined, () async {
-                Navigator.pop(context);
-                await _exportClassroomReportPdf(analytics);
-              }),
+              _buildExportOptionTile(
+                'PDF Documents (.pdf)',
+                Icons.picture_as_pdf_outlined,
+                () async {
+                  Navigator.pop(context);
+                  await _exportClassroomReportPdf(analytics);
+                },
+              ),
               const SizedBox(height: 12),
-              _buildExportOptionTile('CSV Spreadsheets (.csv)', Icons.grid_on_outlined, () async {
-                Navigator.pop(context);
-                await _exportClassroomReportCsv(analytics);
-              }),
+              _buildExportOptionTile(
+                'CSV Spreadsheets (.csv)',
+                Icons.grid_on_outlined,
+                () async {
+                  Navigator.pop(context);
+                  await _exportClassroomReportCsv(analytics);
+                },
+              ),
               const SizedBox(height: 12),
-              _buildExportOptionTile('Excel Ledger (.xlsx)', Icons.table_view_outlined, () async {
-                Navigator.pop(context);
-                await _exportClassroomReportExcel(analytics);
-              }),
+              _buildExportOptionTile(
+                'Excel Ledger (.xlsx)',
+                Icons.table_view_outlined,
+                () async {
+                  Navigator.pop(context);
+                  await _exportClassroomReportExcel(analytics);
+                },
+              ),
             ],
           ),
         ),
@@ -120,13 +139,21 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
     );
   }
 
-  Widget _buildExportOptionTile(String label, IconData icon, VoidCallback onTap) {
+  Widget _buildExportOptionTile(
+    String label,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
     return ListTile(
       onTap: onTap,
       leading: Icon(icon, color: AppColors.gold, size: 22),
       title: Text(
         label,
-        style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+        style: GoogleFonts.inter(
+          color: Colors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       tileColor: Colors.white.withValues(alpha: 0.02),
       shape: RoundedRectangleBorder(
@@ -140,7 +167,8 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
     try {
       final pdf = pw.Document();
       final activeList = analytics['active_students'] as List<dynamic>? ?? [];
-      final riskList = analytics['low_attendance_students'] as List<dynamic>? ?? [];
+      final riskList =
+          analytics['low_attendance_students'] as List<dynamic>? ?? [];
 
       pdf.addPage(
         pw.Page(
@@ -151,22 +179,60 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text('SMARTFACE CLASSROOM TELEMETRY REPORT', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                  pw.Text(
+                    'SMARTFACE CLASSROOM TELEMETRY REPORT',
+                    style: pw.TextStyle(
+                      fontSize: 18,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
                   pw.SizedBox(height: 8),
-                  pw.Text('Report Generated on: ${DateTime.now().toLocal().toString().split('.')[0]}'),
+                  pw.Text(
+                    'Report Generated on: ${DateTime.now().toLocal().toString().split('.')[0]}',
+                  ),
                   pw.Divider(thickness: 1),
                   pw.SizedBox(height: 15),
-                  pw.Text('OVERVIEW METRICS', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-                  pw.Text('Average Class Attendance: ${analytics['class_attendance_rate']}%'),
-                  pw.Text('Total Conducted Sessions: ${analytics['total_sessions']}'),
+                  pw.Text(
+                    'OVERVIEW METRICS',
+                    style: pw.TextStyle(
+                      fontSize: 14,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.Text(
+                    'Average Class Attendance: ${analytics['class_attendance_rate']}%',
+                  ),
+                  pw.Text(
+                    'Total Conducted Sessions: ${analytics['total_sessions']}',
+                  ),
                   pw.SizedBox(height: 20),
-                  pw.Text('ACTIVE CHAMPIONS roster', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                  pw.Text(
+                    'ACTIVE CHAMPIONS roster',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
                   pw.Divider(thickness: 0.5),
-                  ...activeList.map((s) => pw.Text('#${s['rank']} ${s['name']} (${s['id']}) - Score: ${s['score']}%')),
+                  ...activeList.map(
+                    (s) => pw.Text(
+                      '#${s['rank']} ${s['name']} (${s['id']}) - Score: ${s['score']}%',
+                    ),
+                  ),
                   pw.SizedBox(height: 20),
-                  pw.Text('AT RISK roster (LOW ATTENDANCE)', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                  pw.Text(
+                    'AT RISK roster (LOW ATTENDANCE)',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
                   pw.Divider(thickness: 0.5),
-                  ...riskList.map((s) => pw.Text('${s['name']} (${s['id']}) - Score: ${s['score']}% [Subject: ${s['subject'] ?? "General"}]')),
+                  ...riskList.map(
+                    (s) => pw.Text(
+                      '${s['name']} (${s['id']}) - Score: ${s['score']}% [Subject: ${s['subject'] ?? "General"}]',
+                    ),
+                  ),
                 ],
               ),
             );
@@ -178,7 +244,9 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
       final file = File('${output.path}/classroom_report.pdf');
       await file.writeAsBytes(await pdf.save());
 
-      await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+      );
     } catch (e) {
       debugPrint('Class PDF export error: $e');
     }
@@ -187,15 +255,22 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
   Future<void> _exportClassroomReportCsv(Map<String, dynamic> analytics) async {
     try {
       final buffer = StringBuffer();
-      buffer.writeln('Student Name,Student ID,Attendance Score,Status Category,Details');
+      buffer.writeln(
+        'Student Name,Student ID,Attendance Score,Status Category,Details',
+      );
 
       final activeList = analytics['active_students'] as List<dynamic>? ?? [];
       for (final s in activeList) {
-        buffer.writeln('"${s['name']}","${s['id']}","${s['score']}%","Active Champion","Rank #${s['rank']}"');
+        buffer.writeln(
+          '"${s['name']}","${s['id']}","${s['score']}%","Active Champion","Rank #${s['rank']}"',
+        );
       }
-      final riskList = analytics['low_attendance_students'] as List<dynamic>? ?? [];
+      final riskList =
+          analytics['low_attendance_students'] as List<dynamic>? ?? [];
       for (final s in riskList) {
-        buffer.writeln('"${s['name']}","${s['id']}","${s['score']}%","At Risk Alert","Subject: ${s['subject'] ?? ""}"');
+        buffer.writeln(
+          '"${s['name']}","${s['id']}","${s['score']}%","At Risk Alert","Subject: ${s['subject'] ?? ""}"',
+        );
       }
 
       final output = await getTemporaryDirectory();
@@ -203,25 +278,38 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
       await file.writeAsString(buffer.toString());
 
       if (mounted) {
-        AppToast.show(context, message: 'CSV file compiled successfully!', type: ToastType.success);
+        AppToast.show(
+          context,
+          message: 'CSV file compiled successfully!',
+          type: ToastType.success,
+        );
       }
     } catch (e) {
       debugPrint('Class CSV export error: $e');
     }
   }
 
-  Future<void> _exportClassroomReportExcel(Map<String, dynamic> analytics) async {
+  Future<void> _exportClassroomReportExcel(
+    Map<String, dynamic> analytics,
+  ) async {
     try {
       final buffer = StringBuffer();
-      buffer.writeln('Student Name\tStudent ID\tAttendance Score\tStatus Category\tDetails');
+      buffer.writeln(
+        'Student Name\tStudent ID\tAttendance Score\tStatus Category\tDetails',
+      );
 
       final activeList = analytics['active_students'] as List<dynamic>? ?? [];
       for (final s in activeList) {
-        buffer.writeln('${s['name']}\t${s['id']}\t${s['score']}%\tActive Champion\tRank #${s['rank']}');
+        buffer.writeln(
+          '${s['name']}\t${s['id']}\t${s['score']}%\tActive Champion\tRank #${s['rank']}',
+        );
       }
-      final riskList = analytics['low_attendance_students'] as List<dynamic>? ?? [];
+      final riskList =
+          analytics['low_attendance_students'] as List<dynamic>? ?? [];
       for (final s in riskList) {
-        buffer.writeln('${s['name']}\t${s['id']}\t${s['score']}%\tAt Risk Alert\tSubject: ${s['subject'] ?? ""}');
+        buffer.writeln(
+          '${s['name']}\t${s['id']}\t${s['score']}%\tAt Risk Alert\tSubject: ${s['subject'] ?? ""}',
+        );
       }
 
       final output = await getTemporaryDirectory();
@@ -229,7 +317,11 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
       await file.writeAsString(buffer.toString());
 
       if (mounted) {
-        AppToast.show(context, message: 'Excel ledger compiled successfully!', type: ToastType.success);
+        AppToast.show(
+          context,
+          message: 'Excel ledger compiled successfully!',
+          type: ToastType.success,
+        );
       }
     } catch (e) {
       debugPrint('Class Excel export error: $e');
@@ -251,7 +343,9 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            isDark ? Colors.black.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.85),
+            isDark
+                ? Colors.black.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.85),
             isDark ? BlendMode.dstATop : BlendMode.srcOver,
           ),
         ),
@@ -261,7 +355,10 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
         appBar: PremiumAppBar(
           title: 'Classroom Insights',
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : AppColors.bgDark),
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: isDark ? Colors.white : AppColors.bgDark,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
           actions: [
@@ -283,7 +380,10 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
                 backgroundColor: AppColors.bgDeep,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -325,13 +425,38 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
     final rate = analytics['class_attendance_rate'] ?? 0.0;
     final total = analytics['total_sessions'] ?? 0;
     final activeCount = (analytics['active_students'] as List?)?.length ?? 0;
-    final riskCount = (analytics['low_attendance_students'] as List?)?.length ?? 0;
+    final riskCount =
+        (analytics['low_attendance_students'] as List?)?.length ?? 0;
 
     final cards = [
-      ('CLASS ATTENDANCE', '$rate%', Icons.insert_chart_outlined_rounded, AppColors.cyan, '+1.4% vs last wk'),
-      ('CONDUCTED SESSIONS', '$total', Icons.school_rounded, AppColors.gold, 'Standard Semester'),
-      ('ACTIVE HEROES', '$activeCount', Icons.workspace_premium_rounded, AppColors.success, 'Perfect/Top scores'),
-      ('AT-RISK ALERTS', '$riskCount', Icons.warning_amber_rounded, AppColors.error, 'Attendance < 75%'),
+      (
+        'CLASS ATTENDANCE',
+        '$rate%',
+        Icons.insert_chart_outlined_rounded,
+        AppColors.cyan,
+        '+1.4% vs last wk',
+      ),
+      (
+        'CONDUCTED SESSIONS',
+        '$total',
+        Icons.school_rounded,
+        AppColors.gold,
+        'Standard Semester',
+      ),
+      (
+        'ACTIVE HEROES',
+        '$activeCount',
+        Icons.workspace_premium_rounded,
+        AppColors.success,
+        'Perfect/Top scores',
+      ),
+      (
+        'AT-RISK ALERTS',
+        '$riskCount',
+        Icons.warning_amber_rounded,
+        AppColors.error,
+        'Attendance < 75%',
+      ),
     ];
 
     return GridView.count(
@@ -387,7 +512,15 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
       return const SizedBox.shrink();
     }
 
-    final List<String> weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final List<String> weekDays = [
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat',
+      'Sun',
+    ];
 
     return SizedBox(
       height: 220,
@@ -445,8 +578,12 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
                   ),
                 ),
               ),
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
             ),
             lineBarsData: [
               LineChartBarData(
@@ -503,8 +640,12 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
     ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.05);
   }
 
-  Widget _buildSectionPerformanceChart(Map<String, dynamic> analytics, bool isDark) {
-    final sectionPerf = analytics['section_performance'] as Map<String, dynamic>? ?? {};
+  Widget _buildSectionPerformanceChart(
+    Map<String, dynamic> analytics,
+    bool isDark,
+  ) {
+    final sectionPerf =
+        analytics['section_performance'] as Map<String, dynamic>? ?? {};
     if (sectionPerf.isEmpty) return const SizedBox.shrink();
 
     final List<String> sections = sectionPerf.keys.toList();
@@ -520,8 +661,12 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
             borderData: FlBorderData(show: false),
             gridData: const FlGridData(show: false),
             titlesData: FlTitlesData(
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
@@ -537,12 +682,17 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
                   showTitles: true,
                   getTitlesWidget: (val, meta) {
                     final idx = val.toInt();
-                    if (idx < 0 || idx >= sections.length) return const SizedBox.shrink();
+                    if (idx < 0 || idx >= sections.length) {
+                      return const SizedBox.shrink();
+                    }
                     return Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
                         sections[idx],
-                        style: const TextStyle(color: Colors.white38, fontSize: 10),
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 10,
+                        ),
                       ),
                     );
                   },
@@ -550,7 +700,8 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
               ),
             ),
             barGroups: List.generate(sections.length, (index) {
-              final double val = (sectionPerf[sections[index]] as num? ?? 0.0).toDouble();
+              final double val = (sectionPerf[sections[index]] as num? ?? 0.0)
+                  .toDouble();
               return BarChartGroupData(
                 x: index,
                 barRods: [
@@ -571,7 +722,8 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
 
   Widget _buildStudentRosters(Map<String, dynamic> analytics, bool isDark) {
     final activeList = analytics['active_students'] as List<dynamic>? ?? [];
-    final riskList = analytics['low_attendance_students'] as List<dynamic>? ?? [];
+    final riskList =
+        analytics['low_attendance_students'] as List<dynamic>? ?? [];
 
     return GlassContainer(
       padding: const EdgeInsets.all(12),
@@ -583,7 +735,10 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
             indicatorColor: AppColors.gold,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white38,
-            labelStyle: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12),
+            labelStyle: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
             tabs: [
               Tab(text: 'Active Champions (${activeList.length})'),
               Tab(text: 'At Risk Alerts (${riskList.length})'),
@@ -606,7 +761,12 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
 
   Widget _buildActiveChampionsTab(List<dynamic> activeList) {
     if (activeList.isEmpty) {
-      return const Center(child: Text('No active champions reported', style: TextStyle(color: Colors.white38)));
+      return const Center(
+        child: Text(
+          'No active champions reported',
+          style: TextStyle(color: Colors.white38),
+        ),
+      );
     }
 
     return ListView.builder(
@@ -632,12 +792,18 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
                 decoration: BoxDecoration(
                   color: AppColors.success.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: AppColors.success.withValues(alpha: 0.2),
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   initials,
-                  style: GoogleFonts.inter(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 12),
+                  style: GoogleFonts.inter(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -647,11 +813,18 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
                   children: [
                     Text(
                       s['name'] ?? '',
-                      style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                     Text(
                       s['id'] ?? '',
-                      style: const TextStyle(color: Colors.white38, fontSize: 10),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 10,
+                      ),
                     ),
                   ],
                 ),
@@ -661,7 +834,11 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
                 children: [
                   Text(
                     '${s['score']}%',
-                    style: GoogleFonts.robotoMono(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 14),
+                    style: GoogleFonts.robotoMono(
+                      color: AppColors.success,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                   Text(
                     'Rank #${s['rank']}',
@@ -678,7 +855,12 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
 
   Widget _buildAtRiskTab(List<dynamic> riskList) {
     if (riskList.isEmpty) {
-      return const Center(child: Text('No at-risk students reported', style: TextStyle(color: Colors.white38)));
+      return const Center(
+        child: Text(
+          'No at-risk students reported',
+          style: TextStyle(color: Colors.white38),
+        ),
+      );
     }
 
     return ListView.builder(
@@ -704,12 +886,18 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: AppColors.error.withValues(alpha: 0.2),
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   initials,
-                  style: GoogleFonts.inter(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 12),
+                  style: GoogleFonts.inter(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -719,11 +907,18 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
                   children: [
                     Text(
                       s['name'] ?? '',
-                      style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                     Text(
                       '${s['id']} • ${s['subject'] ?? "General"}',
-                      style: const TextStyle(color: Colors.white38, fontSize: 10),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 10,
+                      ),
                     ),
                   ],
                 ),
@@ -733,17 +928,28 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen> with SingleTick
                 children: [
                   Text(
                     '${s['score']}%',
-                    style: GoogleFonts.robotoMono(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 14),
+                    style: GoogleFonts.robotoMono(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 1,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       'AT RISK',
-                      style: GoogleFonts.inter(color: AppColors.error, fontSize: 6, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.inter(
+                        color: AppColors.error,
+                        fontSize: 6,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],

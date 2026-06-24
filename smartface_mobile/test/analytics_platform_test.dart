@@ -143,10 +143,16 @@ void main() {
         states.add(controller.isLoading);
       });
 
-      await controller.fetchStudentAnalytics('student@example.com', 'dummy_token');
+      await controller.fetchStudentAnalytics(
+        'student@example.com',
+        'dummy_token',
+      );
 
       expect(controller.studentAnalytics, isNotEmpty);
-      expect(controller.studentAnalytics['predicted_semester_attendance'], 96.0);
+      expect(
+        controller.studentAnalytics['predicted_semester_attendance'],
+        96.0,
+      );
       expect(controller.isLoading, isFalse);
     });
   });

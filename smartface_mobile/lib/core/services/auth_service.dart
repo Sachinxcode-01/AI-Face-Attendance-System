@@ -28,7 +28,10 @@ class AuthService {
 
   Future<Map<String, dynamic>> sendLoginOtp(String email) async {
     try {
-      final response = await _api.post('/auth/login-otp/send', body: {'email': email});
+      final response = await _api.post(
+        '/auth/login-otp/send',
+        body: {'email': email},
+      );
       return jsonDecode(response.body);
     } catch (_) {
       return {'detail': 'Connection failed'};
@@ -37,16 +40,25 @@ class AuthService {
 
   Future<Map<String, dynamic>> verifyLoginOtp(String email, String otp) async {
     try {
-      final response = await _api.post('/auth/login-otp/verify', body: {'email': email, 'otp': otp});
+      final response = await _api.post(
+        '/auth/login-otp/verify',
+        body: {'email': email, 'otp': otp},
+      );
       return jsonDecode(response.body);
     } catch (_) {
       return {'detail': 'Connection failed'};
     }
   }
 
-  Future<Map<String, dynamic>> loginWithPassword(String email, String password) async {
+  Future<Map<String, dynamic>> loginWithPassword(
+    String email,
+    String password,
+  ) async {
     try {
-      final response = await _api.post('/auth/login-password', body: {'email': email, 'password': password});
+      final response = await _api.post(
+        '/auth/login-password',
+        body: {'email': email, 'password': password},
+      );
       return jsonDecode(response.body);
     } catch (_) {
       return {'detail': 'Connection failed'};
@@ -60,12 +72,15 @@ class AuthService {
     String? avatarUrl,
   }) async {
     try {
-      final response = await _api.post('/auth/google', body: {
-        'email': email,
-        'name': name,
-        'role': role,
-        'avatar_url': avatarUrl,
-      });
+      final response = await _api.post(
+        '/auth/google',
+        body: {
+          'email': email,
+          'name': name,
+          'role': role,
+          'avatar_url': avatarUrl,
+        },
+      );
       return jsonDecode(response.body);
     } catch (_) {
       return {'detail': 'Connection failed'};
@@ -79,12 +94,15 @@ class AuthService {
     String role,
   ) async {
     try {
-      final response = await _api.post('/auth/register', body: {
-        'full_name': name,
-        'email': email,
-        'password': password,
-        'role': role.toLowerCase(),
-      });
+      final response = await _api.post(
+        '/auth/register',
+        body: {
+          'full_name': name,
+          'email': email,
+          'password': password,
+          'role': role.toLowerCase(),
+        },
+      );
       return jsonDecode(response.body);
     } catch (_) {
       return {'detail': 'Connection failed'};
@@ -93,7 +111,10 @@ class AuthService {
 
   Future<Map<String, dynamic>> forgotPassword(String email) async {
     try {
-      final response = await _api.post('/auth/forgot-password', body: {'email': email});
+      final response = await _api.post(
+        '/auth/forgot-password',
+        body: {'email': email},
+      );
       return jsonDecode(response.body);
     } catch (_) {
       return {'detail': 'Connection failed'};
@@ -106,11 +127,10 @@ class AuthService {
     String newPassword,
   ) async {
     try {
-      final response = await _api.post('/auth/reset-password', body: {
-        'email': email,
-        'otp': otp,
-        'new_password': newPassword,
-      });
+      final response = await _api.post(
+        '/auth/reset-password',
+        body: {'email': email, 'otp': otp, 'new_password': newPassword},
+      );
       return jsonDecode(response.body);
     } catch (_) {
       return {'detail': 'Connection failed'};
@@ -132,7 +152,10 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data, String token) async {
+  Future<Map<String, dynamic>> updateProfile(
+    Map<String, dynamic> data,
+    String token,
+  ) async {
     try {
       final response = await _api.post(
         '/auth/update-profile',
@@ -148,7 +171,10 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> registerBiometric(String email, String token) async {
+  Future<Map<String, dynamic>> registerBiometric(
+    String email,
+    String token,
+  ) async {
     try {
       final response = await _api.post(
         '/auth/register-biometric',
@@ -186,7 +212,9 @@ class AuthService {
     String token,
   ) async {
     try {
-      final uri = Uri.parse('${_api.baseUrl}/auth/upload-student-face?student_email=$email');
+      final uri = Uri.parse(
+        '${_api.baseUrl}/auth/upload-student-face?student_email=$email',
+      );
       final request = http.MultipartRequest('POST', uri)
         ..headers['Authorization'] = 'Bearer $token'
         ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
@@ -229,7 +257,10 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> uploadAvatar(File imageFile, String token) async {
+  Future<Map<String, dynamic>> uploadAvatar(
+    File imageFile,
+    String token,
+  ) async {
     try {
       final uri = Uri.parse('${_api.baseUrl}/auth/upload-avatar');
       final request = http.MultipartRequest('POST', uri)

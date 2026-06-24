@@ -114,7 +114,10 @@ class MetricCard extends StatelessWidget {
               ),
               if (trend != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: isTrendPositive
                         ? AppColors.success.withValues(alpha: 0.1)
@@ -125,8 +128,12 @@ class MetricCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isTrendPositive ? Icons.arrow_upward : Icons.arrow_downward,
-                        color: isTrendPositive ? AppColors.success : AppColors.error,
+                        isTrendPositive
+                            ? Icons.arrow_upward
+                            : Icons.arrow_downward,
+                        color: isTrendPositive
+                            ? AppColors.success
+                            : AppColors.error,
                         size: 10,
                       ),
                       const SizedBox(width: 4),
@@ -135,7 +142,9 @@ class MetricCard extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: isTrendPositive ? AppColors.success : AppColors.error,
+                          color: isTrendPositive
+                              ? AppColors.success
+                              : AppColors.error,
                         ),
                       ),
                     ],
@@ -155,14 +164,13 @@ class MetricCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: AppText.caption(color: isDark ? Colors.white54 : Colors.black54),
+            style: AppText.caption(
+              color: isDark ? Colors.white54 : Colors.black54,
+            ),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 4),
-            Text(
-              subtitle!,
-              style: AppText.caption(color: color),
-            ),
+            Text(subtitle!, style: AppText.caption(color: color)),
           ],
         ],
       ),
@@ -214,7 +222,9 @@ class _InsightCardState extends State<InsightCard> {
     return GlassmorphicCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       borderColor: themeColor.withValues(alpha: 0.3),
-      backgroundColor: isDark ? AppColors.bgCard.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.9),
+      backgroundColor: isDark
+          ? AppColors.bgCard.withValues(alpha: 0.6)
+          : Colors.white.withValues(alpha: 0.9),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -228,19 +238,20 @@ class _InsightCardState extends State<InsightCard> {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: themeColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    boxShadow: AppShadows.glow(themeColor, intensity: 0.2),
-                  ),
-                  child: Icon(
-                    widget.icon,
-                    color: themeColor,
-                    size: 16,
-                  ),
-                ).animate(onPlay: (controller) => controller.repeat())
-                 .shimmer(delay: 1000.ms, duration: 1500.ms, color: Colors.white24),
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: themeColor.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        boxShadow: AppShadows.glow(themeColor, intensity: 0.2),
+                      ),
+                      child: Icon(widget.icon, color: themeColor, size: 16),
+                    )
+                    .animate(onPlay: (controller) => controller.repeat())
+                    .shimmer(
+                      delay: 1000.ms,
+                      duration: 1500.ms,
+                      color: Colors.white24,
+                    ),
                 const SizedBox(width: 8),
                 Text(
                   widget.title.toUpperCase(),
@@ -253,7 +264,9 @@ class _InsightCardState extends State<InsightCard> {
                 ),
                 const Spacer(),
                 Icon(
-                  _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  _isExpanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
                   color: isDark ? Colors.white54 : Colors.black54,
                   size: 20,
                 ),
@@ -272,7 +285,9 @@ class _InsightCardState extends State<InsightCard> {
             const SizedBox(height: 8),
             Text(
               widget.recommendation,
-              style: AppText.body(color: isDark ? Colors.white54 : Colors.black54),
+              style: AppText.body(
+                color: isDark ? Colors.white54 : Colors.black54,
+              ),
             ),
           ],
         ],
@@ -359,7 +374,9 @@ class StatusCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: AppText.caption(color: isDark ? Colors.white54 : Colors.black54),
+                  style: AppText.caption(
+                    color: isDark ? Colors.white54 : Colors.black54,
+                  ),
                 ),
               ],
             ),
@@ -374,15 +391,23 @@ class StatusCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    shape: BoxShape.circle,
-                  ),
-                ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-                 .scale(end: const Offset(1.5, 1.5), duration: 800.ms)
-                 .boxShadow(end: BoxShadow(color: statusColor.withValues(alpha: 0.6), blurRadius: 6)),
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                    .animate(
+                      onPlay: (controller) => controller.repeat(reverse: true),
+                    )
+                    .scale(end: const Offset(1.5, 1.5), duration: 800.ms)
+                    .boxShadow(
+                      end: BoxShadow(
+                        color: statusColor.withValues(alpha: 0.6),
+                        blurRadius: 6,
+                      ),
+                    ),
                 const SizedBox(width: 6),
                 Text(
                   status.toUpperCase(),
@@ -452,7 +477,9 @@ class AnalyticsCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: AppText.caption(color: isDark ? Colors.white54 : Colors.black54),
+                      style: AppText.caption(
+                        color: isDark ? Colors.white54 : Colors.black54,
+                      ),
                     ),
                   ],
                 ),
@@ -471,10 +498,15 @@ class AnalyticsCard extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: InkWell(
-                      onTap: onSegmentChanged != null ? () => onSegmentChanged!(index) : null,
+                      onTap: onSegmentChanged != null
+                          ? () => onSegmentChanged!(index)
+                          : null,
                       borderRadius: BorderRadius.circular(AppRadius.sm),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.accent.withValues(alpha: 0.15)
@@ -504,10 +536,7 @@ class AnalyticsCard extends StatelessWidget {
               ),
             ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 180,
-            child: chart,
-          ),
+          SizedBox(height: 180, child: chart),
         ],
       ),
     );
@@ -540,11 +569,7 @@ class ActivityTimeline extends StatelessWidget {
   final String title;
   final List<TimelineItem> items;
 
-  const ActivityTimeline({
-    super.key,
-    required this.title,
-    required this.items,
-  });
+  const ActivityTimeline({super.key, required this.title, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -566,7 +591,9 @@ class ActivityTimeline extends StatelessWidget {
             Center(
               child: Text(
                 'No recent activity',
-                style: AppText.body(color: isDark ? Colors.white38 : Colors.black38),
+                style: AppText.body(
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
               ),
             )
           else
@@ -596,13 +623,19 @@ class ActivityTimeline extends StatelessWidget {
                                 width: 1.0,
                               ),
                             ),
-                            child: Icon(item.icon, color: item.iconColor, size: 16),
+                            child: Icon(
+                              item.icon,
+                              color: item.iconColor,
+                              size: 16,
+                            ),
                           ),
                           if (!isLast)
                             Expanded(
                               child: Container(
                                 width: 2,
-                                color: isDark ? AppColors.white12 : Colors.black12,
+                                color: isDark
+                                    ? AppColors.white12
+                                    : Colors.black12,
                               ),
                             ),
                         ],
@@ -616,7 +649,8 @@ class ActivityTimeline extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Text(
@@ -624,14 +658,18 @@ class ActivityTimeline extends StatelessWidget {
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark ? Colors.white : AppColors.bgDeep,
+                                        color: isDark
+                                            ? Colors.white
+                                            : AppColors.bgDeep,
                                       ),
                                     ),
                                   ),
                                   Text(
                                     item.timestamp,
                                     style: AppText.caption(
-                                      color: isDark ? Colors.white38 : Colors.black38,
+                                      color: isDark
+                                          ? Colors.white38
+                                          : Colors.black38,
                                     ),
                                   ),
                                 ],
@@ -640,7 +678,9 @@ class ActivityTimeline extends StatelessWidget {
                               Text(
                                 item.description,
                                 style: AppText.body(
-                                  color: isDark ? Colors.white54 : Colors.black54,
+                                  color: isDark
+                                      ? Colors.white54
+                                      : Colors.black54,
                                 ),
                               ),
                             ],
@@ -729,8 +769,7 @@ class ActionTile extends StatelessWidget {
           ],
         ),
       ),
-    ).animate()
-     .scale(duration: 200.ms, curve: Curves.easeInOut);
+    ).animate().scale(duration: 200.ms, curve: Curves.easeInOut);
   }
 }
 
@@ -815,16 +854,21 @@ class HeatmapWidget extends StatelessWidget {
                       boxShadow: state == AttendanceState.present
                           ? [
                               BoxShadow(
-                                color: AppColors.success.withValues(alpha: 0.15),
+                                color: AppColors.success.withValues(
+                                  alpha: 0.15,
+                                ),
                                 blurRadius: 4,
                                 spreadRadius: 1,
-                              )
+                              ),
                             ]
                           : null,
                     ),
                   ),
-                ).animate()
-                 .scale(delay: (index * 15).ms, duration: 250.ms, curve: Curves.easeOut);
+                ).animate().scale(
+                  delay: (index * 15).ms,
+                  duration: 250.ms,
+                  curve: Curves.easeOut,
+                );
               }),
             ),
           ),
@@ -859,10 +903,7 @@ class HeatmapWidget extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: AppText.caption(color: Colors.white54),
-        ),
+        Text(label, style: AppText.caption(color: Colors.white54)),
       ],
     );
   }
@@ -1034,22 +1075,31 @@ class SessionBanner extends StatelessWidget {
       child: GlassmorphicCard(
         padding: const EdgeInsets.all(AppSpacing.md),
         backgroundColor: const Color(0x11EF4444), // Translucent red
-        borderColor: Colors.transparent, // Border already handled by wrapping container
+        borderColor:
+            Colors.transparent, // Border already handled by wrapping container
         child: Column(
           children: [
             Row(
               children: [
                 // Pulsing indicator
                 Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.redAccent,
-                    shape: BoxShape.circle,
-                  ),
-                ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-                 .scale(end: const Offset(1.5, 1.5), duration: 750.ms)
-                 .boxShadow(end: BoxShadow(color: Colors.redAccent.withValues(alpha: 0.8), blurRadius: 8)),
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.redAccent,
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                    .animate(
+                      onPlay: (controller) => controller.repeat(reverse: true),
+                    )
+                    .scale(end: const Offset(1.5, 1.5), duration: 750.ms)
+                    .boxShadow(
+                      end: BoxShadow(
+                        color: Colors.redAccent.withValues(alpha: 0.8),
+                        blurRadius: 8,
+                      ),
+                    ),
                 const SizedBox(width: 8),
                 Text(
                   'ACTIVE SESSION DETECTED',
@@ -1063,7 +1113,11 @@ class SessionBanner extends StatelessWidget {
                 const Spacer(),
                 Row(
                   children: [
-                    const Icon(Icons.timer_outlined, color: Colors.white54, size: 12),
+                    const Icon(
+                      Icons.timer_outlined,
+                      color: Colors.white54,
+                      size: 12,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '$minutesRemaining Mins Left',
@@ -1080,10 +1134,7 @@ class SessionBanner extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      subject,
-                      style: AppText.heading(color: Colors.white),
-                    ),
+                    Text(subject, style: AppText.heading(color: Colors.white)),
                     const SizedBox(height: 4),
                     Text(
                       'Instructor: $teacher',
@@ -1092,33 +1143,46 @@ class SessionBanner extends StatelessWidget {
                   ],
                 ),
                 ElevatedButton(
-                  onPressed: isLoading ? null : onVerifyTap,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                    ),
-                    shadowColor: AppColors.accent.withValues(alpha: 0.5),
-                    elevation: 8,
-                  ),
-                  child: isLoading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : Text(
-                          'VERIFY NOW',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.8,
-                          ),
+                      onPressed: isLoading ? null : onVerifyTap,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
-                ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-                 .shimmer(delay: 2000.ms, duration: 1500.ms, color: Colors.white24),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
+                        shadowColor: AppColors.accent.withValues(alpha: 0.5),
+                        elevation: 8,
+                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              'VERIFY NOW',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                    )
+                    .animate(
+                      onPlay: (controller) => controller.repeat(reverse: true),
+                    )
+                    .shimmer(
+                      delay: 2000.ms,
+                      duration: 1500.ms,
+                      color: Colors.white24,
+                    ),
               ],
             ),
           ],

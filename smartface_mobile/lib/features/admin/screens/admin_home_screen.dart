@@ -128,7 +128,8 @@ class _AdminDashboardState extends State<AdminDashboard>
       );
     }
 
-    final hasIntruderAlert = int.parse(_stats['intruder_alerts']?.toString() ?? '0') > 0;
+    final hasIntruderAlert =
+        int.parse(_stats['intruder_alerts']?.toString() ?? '0') > 0;
 
     // Redesigned components
     final header = _buildWelcomeHeader(isDark, session);
@@ -144,11 +145,7 @@ class _AdminDashboardState extends State<AdminDashboard>
         title: 'Admin Control Panel',
         titleWidget: Row(
           children: [
-            const Icon(
-              Icons.shield_outlined,
-              color: AppColors.gold,
-              size: 22,
-            ),
+            const Icon(Icons.shield_outlined, color: AppColors.gold, size: 22),
             const SizedBox(width: 8),
             Text(
               'Admin Control Panel',
@@ -399,7 +396,9 @@ class _AdminDashboardState extends State<AdminDashboard>
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Icon(
-              hasIntruderAlert ? Icons.warning_amber_rounded : Icons.gpp_good_outlined,
+              hasIntruderAlert
+                  ? Icons.warning_amber_rounded
+                  : Icons.gpp_good_outlined,
               color: statusColor,
               size: 28,
             ),
@@ -422,16 +421,14 @@ class _AdminDashboardState extends State<AdminDashboard>
                   hasIntruderAlert
                       ? '$alertCount unknown faces captured on campus CCTV feed.'
                       : 'Zero unauthorized intruder breaches logged today.',
-                  style: AppText.caption(color: isDark ? Colors.white54 : Colors.black54),
+                  style: AppText.caption(
+                    color: isDark ? Colors.white54 : Colors.black54,
+                  ),
                 ),
               ],
             ),
           ),
-          StatusBadge(
-            label: statusLabel,
-            color: statusColor,
-            animateDot: true,
-          ),
+          StatusBadge(label: statusLabel, color: statusColor, animateDot: true),
         ],
       ),
     );

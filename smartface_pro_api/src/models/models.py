@@ -45,6 +45,7 @@ class UserBase(BaseModel):
     full_name: str
     role: str # admin, teacher, student, parent
     child_emails: Optional[List[str]] = None
+    phone: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
@@ -109,3 +110,41 @@ class FaceAttendanceMark(BaseModel):
 
 class SessionStop(BaseModel):
     session_id: str
+
+class LoginSessionResponse(BaseModel):
+    session_id: str
+    user_email: str
+    device_id: str
+    ip_address: str
+    user_agent: str
+    created_at: datetime
+    last_active: datetime
+    is_active: bool
+
+class DeviceTrack(BaseModel):
+    device_id: str
+    user_email: str
+    user_agent: str
+    ip_address: str
+    device_type: str
+    os_name: str
+    browser_name: str
+    last_active: datetime
+
+
+class CompleteProfileRequest(BaseModel):
+    full_name: Optional[str] = None
+    gender: Optional[str] = None
+    dob: Optional[str] = None
+    address: Optional[str] = None
+    department: Optional[str] = None
+    course: Optional[str] = None
+    semester: Optional[str] = None
+    student_id: Optional[str] = None
+    phone: Optional[str] = None
+
+
+class FaceRegisterRequest(BaseModel):
+    images: List[str]  # Base64 string data of scanned angles
+
+

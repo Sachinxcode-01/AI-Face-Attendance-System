@@ -36,13 +36,15 @@ class GlassContainer extends StatelessWidget {
     final theme = Theme.of(context);
     final appColors = theme.extension<DarkAppColors>();
 
-    final effectiveBg = backgroundColor ??
+    final effectiveBg =
+        backgroundColor ??
         appColors?.surfaceCard ??
         (theme.brightness == Brightness.dark
             ? const Color(0xD9111827)
             : const Color(0xD9FFFFFF));
 
-    final effectiveBorderGradient = borderGradient ??
+    final effectiveBorderGradient =
+        borderGradient ??
         LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -111,7 +113,8 @@ class GradientBorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Inset the rect slightly by half the stroke width to prevent outer edge clipping
-    final rect = Offset(strokeWidth / 2, strokeWidth / 2) &
+    final rect =
+        Offset(strokeWidth / 2, strokeWidth / 2) &
         Size(size.width - strokeWidth, size.height - strokeWidth);
 
     final paint = Paint()

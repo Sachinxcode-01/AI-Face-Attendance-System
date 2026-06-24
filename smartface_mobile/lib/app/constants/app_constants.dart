@@ -42,13 +42,19 @@ class AppColors {
   static const bgDeep = Color(0xFF020617); // Slate Dark-Void base background
   static const bgDark = Color(0xFF0F172A); // Slate Primary Dark mode primary
   static const bgCard = Color(0xFF111827); // Frosted Card surface
-  static const bgSurface = Color(0xFF1E293B); // Border lines / inner surface slate
+  static const bgSurface = Color(
+    0xFF1E293B,
+  ); // Border lines / inner surface slate
   static const bgModal = Color(0xFF0F172A); // Clean modal slate
 
   // Cobalt primary accents
   static const indigo = Color(0xFF1E3A8A); // Royal premium navy
-  static const indigoLight = Color(0xFF2563EB); // High-fidelity cobalt primary accent
-  static const accent = Color(0xFF2563EB); // High-fidelity cobalt primary accent
+  static const indigoLight = Color(
+    0xFF2563EB,
+  ); // High-fidelity cobalt primary accent
+  static const accent = Color(
+    0xFF2563EB,
+  ); // High-fidelity cobalt primary accent
 
   // Light backgrounds
   static const bgLight = Color(0xFFF8FAFC); // Clean neutral slate light

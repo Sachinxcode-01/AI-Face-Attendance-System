@@ -14,35 +14,44 @@ void main() {
   });
 
   group('Premium Shared Widgets Tests', () {
-    testWidgets('GlassContainer renders child and implements CustomPaint border', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: GlassContainer(
-              blur: 15.0,
-              borderRadius: 20,
-              borderWidth: 2.0,
-              child: Text('Frosted Card'),
+    testWidgets(
+      'GlassContainer renders child and implements CustomPaint border',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: GlassContainer(
+                blur: 15.0,
+                borderRadius: 20,
+                borderWidth: 2.0,
+                child: Text('Frosted Card'),
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      // Verify child text is rendered
-      expect(find.text('Frosted Card'), findsOneWidget);
+        // Verify child text is rendered
+        expect(find.text('Frosted Card'), findsOneWidget);
 
-      // Verify that BackdropFilter and ClipRRect are used
-      expect(find.byType(BackdropFilter), findsOneWidget);
-      expect(find.byType(ClipRRect), findsOneWidget);
-      
-      // Verify CustomPaint with GradientBorderPainter is present for the border painting
-      expect(
-        find.byWidgetPredicate((widget) => widget is CustomPaint && widget.painter is GradientBorderPainter),
-        findsOneWidget,
-      );
-    });
+        // Verify that BackdropFilter and ClipRRect are used
+        expect(find.byType(BackdropFilter), findsOneWidget);
+        expect(find.byType(ClipRRect), findsOneWidget);
 
-    testWidgets('AttendanceRing animates fill on load rather than snapping', (WidgetTester tester) async {
+        // Verify CustomPaint with GradientBorderPainter is present for the border painting
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is CustomPaint &&
+                widget.painter is GradientBorderPainter,
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('AttendanceRing animates fill on load rather than snapping', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -62,7 +71,7 @@ void main() {
 
       // Advance by 500ms (halfway)
       await tester.pump(const Duration(milliseconds: 500));
-      
+
       // The percentage should be somewhere between 0% and 85% due to CurvedAnimation/Tween
       final textFinder = find.byWidgetPredicate((widget) {
         if (widget is Text) {
@@ -84,7 +93,9 @@ void main() {
       expect(find.text('0%'), findsNothing);
     });
 
-    testWidgets('GlowButton scale transition triggers on tap gestures', (WidgetTester tester) async {
+    testWidgets('GlowButton scale transition triggers on tap gestures', (
+      WidgetTester tester,
+    ) async {
       bool pressed = false;
 
       await tester.pumpWidget(
@@ -111,14 +122,18 @@ void main() {
         matching: find.byType(ScaleTransition),
       );
       expect(scaleFinder, findsOneWidget);
-      
+
       ScaleTransition scaleWidget = tester.widget<ScaleTransition>(scaleFinder);
       expect(scaleWidget.scale.value, 1.0); // Starts at 1.0
 
       // Tap and hold (TapDown)
-      final gesture = await tester.startGesture(tester.getCenter(find.text('SUBMIT')));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('SUBMIT')),
+      );
       await tester.pump(); // trigger tap down frame
-      await tester.pump(const Duration(milliseconds: 70)); // let scale animate part-way
+      await tester.pump(
+        const Duration(milliseconds: 70),
+      ); // let scale animate part-way
 
       // Scale should be shrinking towards 0.97
       scaleWidget = tester.widget<ScaleTransition>(scaleFinder);
@@ -129,13 +144,15 @@ void main() {
       await tester.pumpAndSettle(); // let spring animation complete
 
       expect(pressed, isTrue);
-      
+
       // Scale should be back to 1.0
       scaleWidget = tester.widget<ScaleTransition>(scaleFinder);
       expect(scaleWidget.scale.value, 1.0);
     });
 
-    testWidgets('ShimmerSkeleton renders correctly based on shapes', (WidgetTester tester) async {
+    testWidgets('ShimmerSkeleton renders correctly based on shapes', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -150,13 +167,15 @@ void main() {
       );
 
       expect(find.byType(ShimmerSkeleton), findsNWidgets(2));
-      
+
       // Look for custom shape configurations inside containers
       final containerFinder = find.byType(Container);
       expect(containerFinder, findsNWidgets(2));
     });
 
-    testWidgets('StatusBadge renders active pulsing dot and text label', (WidgetTester tester) async {
+    testWidgets('StatusBadge renders active pulsing dot and text label', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(

@@ -29,7 +29,8 @@ class AttendanceCommandCenter extends StatefulWidget {
   const AttendanceCommandCenter({super.key});
 
   @override
-  State<AttendanceCommandCenter> createState() => _AttendanceCommandCenterState();
+  State<AttendanceCommandCenter> createState() =>
+      _AttendanceCommandCenterState();
 }
 
 class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
@@ -56,20 +57,44 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
 
       // Parallel API calls
       final requests = [
-        http.get(Uri.parse('${ApiService.baseUrl}/attendance/command-center'), headers: {'Authorization': 'Bearer $token'}),
-        http.get(Uri.parse('${ApiService.baseUrl}/attendance/live-monitor'), headers: {'Authorization': 'Bearer $token'}),
-        http.get(Uri.parse('${ApiService.baseUrl}/attendance/risk-analysis?type=below_75'), headers: {'Authorization': 'Bearer $token'}),
-        http.get(Uri.parse('${ApiService.baseUrl}/attendance/risk-analysis?type=below_60'), headers: {'Authorization': 'Bearer $token'}),
+        http.get(
+          Uri.parse('${ApiService.baseUrl}/attendance/command-center'),
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+        http.get(
+          Uri.parse('${ApiService.baseUrl}/attendance/live-monitor'),
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+        http.get(
+          Uri.parse(
+            '${ApiService.baseUrl}/attendance/risk-analysis?type=below_75',
+          ),
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+        http.get(
+          Uri.parse(
+            '${ApiService.baseUrl}/attendance/risk-analysis?type=below_60',
+          ),
+          headers: {'Authorization': 'Bearer $token'},
+        ),
       ];
 
       // Add audit logs request if admin
       if (isAdmin) {
-        requests.add(http.get(Uri.parse('${ApiService.baseUrl}/attendance/audit-logs'), headers: {'Authorization': 'Bearer $token'}));
+        requests.add(
+          http.get(
+            Uri.parse('${ApiService.baseUrl}/attendance/audit-logs'),
+            headers: {'Authorization': 'Bearer $token'},
+          ),
+        );
       }
 
       final results = await Future.wait(requests);
 
-      if (results[0].statusCode == 200 && results[1].statusCode == 200 && results[2].statusCode == 200 && results[3].statusCode == 200) {
+      if (results[0].statusCode == 200 &&
+          results[1].statusCode == 200 &&
+          results[2].statusCode == 200 &&
+          results[3].statusCode == 200) {
         if (mounted) {
           setState(() {
             _commandData = jsonDecode(results[0].body);
@@ -88,7 +113,11 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
     } catch (e) {
       debugPrint('Error loading command center: $e');
       if (mounted) {
-        AppToast.show(context, message: 'Failed to load command center telemetry', type: ToastType.error);
+        AppToast.show(
+          context,
+          message: 'Failed to load command center telemetry',
+          type: ToastType.error,
+        );
         setState(() => _isLoading = false);
       }
     }
@@ -111,7 +140,10 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
       return Scaffold(
         backgroundColor: AppColors.bgDark,
         body: Center(
-          child: Text('No telemetry available.', style: AppText.body(color: Colors.white38)),
+          child: Text(
+            'No telemetry available.',
+            style: AppText.body(color: Colors.white38),
+          ),
         ),
       );
     }
@@ -143,7 +175,7 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
             IconButton(
               icon: const Icon(Icons.refresh, color: Colors.white),
               onPressed: _fetchCommandCenterData,
-            )
+            ),
           ],
         ),
         body: RefreshIndicator(
@@ -153,7 +185,11 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             children: [
               // 1. Department Overview Counters
-              _buildDepartmentCounters(avgAttendance, totalStudents, activeSessions),
+              _buildDepartmentCounters(
+                avgAttendance,
+                totalStudents,
+                activeSessions,
+              ),
               const SizedBox(height: 20),
 
               // 2. Live Active Sessions Monitor
@@ -161,9 +197,12 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
               const SizedBox(height: 20),
 
               // 3. Risk Categories
-              Text('COMPLIANCE RISK CHANNELS', style: AppText.label(color: AppColors.gold)),
+              Text(
+                'COMPLIANCE RISK CHANNELS',
+                style: AppText.label(color: AppColors.gold),
+              ),
               const SizedBox(height: 10),
-              
+
               // 3.1 Warning list (60-75)
               RiskAnalysisCard(
                 riskStudents: _warningStudents,
@@ -185,7 +224,7 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                 AuditLogList(logs: _auditLogs),
                 const SizedBox(height: 20),
               ],
-              
+
               const SizedBox(height: 40),
             ],
           ),
@@ -194,21 +233,36 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
     );
   }
 
-  Widget _buildDepartmentCounters(int avgAttendance, int totalStudents, int activeSessions) {
+  Widget _buildDepartmentCounters(
+    int avgAttendance,
+    int totalStudents,
+    int activeSessions,
+  ) {
     return GlassmorphicCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('DEPARTMENT STATUS SUMMARY', style: AppText.label(color: AppColors.gold)),
+          Text(
+            'DEPARTMENT STATUS SUMMARY',
+            style: AppText.label(color: AppColors.gold),
+          ),
           const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildCounterItem('AVG RATE', '$avgAttendance%', AppColors.success),
+              _buildCounterItem(
+                'AVG RATE',
+                '$avgAttendance%',
+                AppColors.success,
+              ),
               Container(width: 1, height: 40, color: Colors.white12),
               _buildCounterItem('STUDENTS', '$totalStudents', AppColors.cyan),
               Container(width: 1, height: 40, color: Colors.white12),
-              _buildCounterItem('ACTIVE', '$activeSessions', AppColors.errorLight),
+              _buildCounterItem(
+                'ACTIVE',
+                '$activeSessions',
+                AppColors.errorLight,
+              ),
             ],
           ),
         ],
@@ -219,7 +273,14 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
   Widget _buildCounterItem(String label, String val, Color color) {
     return Column(
       children: [
-        Text(val, style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w900, color: color)),
+        Text(
+          val,
+          style: GoogleFonts.outfit(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: color,
+          ),
+        ),
         const SizedBox(height: 4),
         Text(label, style: AppText.caption(color: Colors.white54)),
       ],

@@ -92,7 +92,7 @@ void main() {
             'percentage': 0.85,
             'present': 17,
             'total': 20,
-          }
+          },
         ],
       };
 
@@ -135,7 +135,7 @@ void main() {
             percentage: 0.95,
             present: 19,
             total: 20,
-          )
+          ),
         ],
       );
 
@@ -145,7 +145,7 @@ void main() {
       expect(json['standing'], 'Top Scholar');
       expect(json['rank'], '#1 in class');
       expect(json['streak'], 20);
-      
+
       final subjectsJson = json['subjects'] as List<dynamic>;
       expect(subjectsJson.length, 1);
       expect(subjectsJson.first['subject'], 'Cloud Arch');

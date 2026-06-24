@@ -7,11 +7,7 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: Center(
-            child: GlassCard(
-              child: Text('Glass'),
-            ),
-          ),
+          body: Center(child: GlassCard(child: Text('Glass'))),
         ),
       ),
     );

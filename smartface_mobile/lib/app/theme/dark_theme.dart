@@ -39,11 +39,17 @@ class DarkAppColors extends ThemeExtension<DarkAppColors> {
     primary: Color(0xFF2563EB),
     primaryGlow: Color(0xFF3B82F6),
     success: Color(0xFF10B981),
-    successGlow: Color(0x3310B981), // matching glow box-shadow color (20% opacity)
+    successGlow: Color(
+      0x3310B981,
+    ), // matching glow box-shadow color (20% opacity)
     warning: Color(0xFFF59E0B),
-    warningGlow: Color(0x33F59E0B), // matching glow box-shadow color (20% opacity)
+    warningGlow: Color(
+      0x33F59E0B,
+    ), // matching glow box-shadow color (20% opacity)
     error: Color(0xFFEF4444),
-    errorGlow: Color(0x33EF4444), // matching glow box-shadow color (20% opacity)
+    errorGlow: Color(
+      0x33EF4444,
+    ), // matching glow box-shadow color (20% opacity)
     glassBorder: Color(0x14FFFFFF), // Colors.white.withOpacity(0.08)
   );
 
@@ -205,9 +211,7 @@ ThemeData getDarkTheme() {
         ),
       ),
     ),
-    extensions: const <ThemeExtension<dynamic>>[
-      DarkAppColors.dark,
-    ],
+    extensions: const <ThemeExtension<dynamic>>[DarkAppColors.dark],
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: DarkAppColors.dark.primary,

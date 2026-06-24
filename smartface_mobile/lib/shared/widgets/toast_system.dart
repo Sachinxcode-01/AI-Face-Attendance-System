@@ -255,7 +255,11 @@ class _ToastWidgetState extends State<_ToastWidget>
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.close_rounded, color: AppColors.white38, size: 18),
+                  const Icon(
+                    Icons.close_rounded,
+                    color: AppColors.white38,
+                    size: 18,
+                  ),
                 ],
               ),
             ),
@@ -449,4 +453,3 @@ class RoleBadge extends StatelessWidget {
     );
   }
 }
-

@@ -32,7 +32,9 @@ class ApiService {
     final uri = Uri.parse('$baseUrl$path');
     debugPrint('[ApiService] GET Request: $uri');
     try {
-      final response = await _client.get(uri, headers: headers).timeout(const Duration(seconds: 15));
+      final response = await _client
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 15));
       debugPrint('[ApiService] GET Response Status: ${response.statusCode}');
       return response;
     } catch (e) {
@@ -42,17 +44,19 @@ class ApiService {
   }
 
   /// Performs an HTTP POST request.
-  Future<http.Response> post(String path, {Map<String, String>? headers, Object? body}) async {
+  Future<http.Response> post(
+    String path, {
+    Map<String, String>? headers,
+    Object? body,
+  }) async {
     final uri = Uri.parse('$baseUrl$path');
     debugPrint('[ApiService] POST Request: $uri');
     try {
       final reqHeaders = headers ?? {'Content-Type': 'application/json'};
       final reqBody = body is Map || body is List ? jsonEncode(body) : body;
-      final response = await _client.post(
-        uri,
-        headers: reqHeaders,
-        body: reqBody,
-      ).timeout(const Duration(seconds: 15));
+      final response = await _client
+          .post(uri, headers: reqHeaders, body: reqBody)
+          .timeout(const Duration(seconds: 15));
       debugPrint('[ApiService] POST Response Status: ${response.statusCode}');
       return response;
     } catch (e) {
@@ -62,17 +66,19 @@ class ApiService {
   }
 
   /// Performs an HTTP PATCH request.
-  Future<http.Response> patch(String path, {Map<String, String>? headers, Object? body}) async {
+  Future<http.Response> patch(
+    String path, {
+    Map<String, String>? headers,
+    Object? body,
+  }) async {
     final uri = Uri.parse('$baseUrl$path');
     debugPrint('[ApiService] PATCH Request: $uri');
     try {
       final reqHeaders = headers ?? {'Content-Type': 'application/json'};
       final reqBody = body is Map || body is List ? jsonEncode(body) : body;
-      final response = await _client.patch(
-        uri,
-        headers: reqHeaders,
-        body: reqBody,
-      ).timeout(const Duration(seconds: 15));
+      final response = await _client
+          .patch(uri, headers: reqHeaders, body: reqBody)
+          .timeout(const Duration(seconds: 15));
       debugPrint('[ApiService] PATCH Response Status: ${response.statusCode}');
       return response;
     } catch (e) {
@@ -85,8 +91,12 @@ class ApiService {
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     debugPrint('[ApiService] Send Multipart Request: ${request.url}');
     try {
-      final response = await _client.send(request).timeout(const Duration(seconds: 30));
-      debugPrint('[ApiService] Multipart Response Status: ${response.statusCode}');
+      final response = await _client
+          .send(request)
+          .timeout(const Duration(seconds: 30));
+      debugPrint(
+        '[ApiService] Multipart Response Status: ${response.statusCode}',
+      );
       return response;
     } catch (e) {
       debugPrint('[ApiService] Multipart Exception: $e');

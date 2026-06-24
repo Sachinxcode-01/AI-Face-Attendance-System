@@ -40,7 +40,8 @@ class QRScannerScreen extends StatefulWidget {
   State<QRScannerScreen> createState() => _QRScannerScreenState();
 }
 
-class _QRScannerScreenState extends State<QRScannerScreen> with TickerProviderStateMixin {
+class _QRScannerScreenState extends State<QRScannerScreen>
+    with TickerProviderStateMixin {
   bool _isScanning = true;
   final MobileScannerController _controller = MobileScannerController();
   late final AnimationController _laserController;
@@ -87,7 +88,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> with TickerProviderSt
 
       final session = context.read<SessionManager>();
       final args = ModalRoute.of(context)?.settings.arguments as Map?;
-      final studentEmail = args?['email'] ?? session.email ?? 'student@smartface.elite';
+      final studentEmail =
+          args?['email'] ?? session.email ?? 'student@smartface.elite';
 
       final record = await sl<SyncRepository>().recordAttendance(
         studentEmail: studentEmail,
@@ -105,7 +107,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> with TickerProviderSt
         setState(() {
           _resultState = ScanResultState.success;
         });
-        
+
         await Future.delayed(const Duration(milliseconds: 1500));
         if (mounted) {
           context.go('/student/home');
@@ -122,10 +124,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> with TickerProviderSt
       });
       AppToast.show(
         context,
-        message: e is FormatException ? 'Invalid QR Code Format' : 'Attendance record failed',
+        message: e is FormatException
+            ? 'Invalid QR Code Format'
+            : 'Attendance record failed',
         type: ToastType.error,
       );
-      
+
       await Future.delayed(const Duration(milliseconds: 2000));
       if (mounted) {
         setState(() {
@@ -143,172 +147,199 @@ class _QRScannerScreenState extends State<QRScannerScreen> with TickerProviderSt
       body: Stack(
         children: [
           // 📷 Live Camera Feed
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _controller, onDetect: _onDetect),
 
           // 🛡️ Cyber Mask HUD Overlay
           CustomPaint(
             size: Size.infinite,
-            painter: ScannerHUDPainter(cutoutSize: 260, resultState: _resultState),
+            painter: ScannerHUDPainter(
+              cutoutSize: 260,
+              resultState: _resultState,
+            ),
           ),
 
           // 📟 Top Instruction Card
           Positioned(
-            top: 110,
-            left: 24,
-            right: 24,
-            child: GlassContainer(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              borderColor: Colors.white.withValues(alpha: 0.08),
-              backgroundColor: Colors.black.withValues(alpha: 0.4),
-              borderRadius: AppRadius.md,
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline_rounded, color: Colors.cyanAccent, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Align the classroom attendance QR code inside the cyber-brackets below.',
-                      style: GoogleFonts.inter(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                top: 110,
+                left: 24,
+                right: 24,
+                child: GlassContainer(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
-                ],
-              ),
-            ),
-          ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2, end: 0, duration: 400.ms, curve: Curves.easeOutCubic),
-
-          // 📟 Centered Viewport & In-Cutout Result Overlays
-          Center(
-            child: Container(
-              width: 260,
-              height: 260,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: _resultState == ScanResultState.success
-                      ? Colors.greenAccent
-                      : _resultState == ScanResultState.error
-                          ? Colors.redAccent
-                          : Colors.cyanAccent.withValues(alpha: 0.3),
-                  width: 2,
-                ),
-                boxShadow: _resultState == ScanResultState.success
-                    ? [
-                        BoxShadow(
-                          color: Colors.greenAccent.withValues(alpha: 0.4),
-                          blurRadius: 20,
-                          spreadRadius: 4,
-                        ),
-                      ]
-                    : _resultState == ScanResultState.error
-                        ? [
-                            BoxShadow(
-                              color: Colors.redAccent.withValues(alpha: 0.4),
-                              blurRadius: 20,
-                              spreadRadius: 4,
-                            ),
-                          ]
-                        : null,
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: Stack(
-                  children: [
-                    // Laser line (only if scanning/none)
-                    if (_resultState == ScanResultState.none)
-                      AnimatedBuilder(
-                        animation: _laserController,
-                        builder: (context, child) {
-                          final double position = _laserController.value * 260.0;
-                          return Positioned(
-                            top: position - 40.0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              height: 40,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.cyanAccent.withValues(alpha: 0.0),
-                                    Colors.cyanAccent.withValues(alpha: 0.1),
-                                    Colors.cyanAccent.withValues(alpha: 0.4),
-                                  ],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                ),
-                              ),
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: Container(
-                                  height: 2.5,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.cyanAccent,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.cyanAccent,
-                                        blurRadius: 10,
-                                        spreadRadius: 1,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
+                  borderColor: Colors.white.withValues(alpha: 0.08),
+                  backgroundColor: Colors.black.withValues(alpha: 0.4),
+                  borderRadius: AppRadius.md,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        color: Colors.cyanAccent,
+                        size: 20,
                       ),
-                    
-                    // Loading State: central spinning cyan ring
-                    if (_resultState == ScanResultState.loading)
-                      const Center(
-                        child: SizedBox(
-                          width: 60,
-                          height: 60,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 4,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Align the classroom attendance QR code inside the cyber-brackets below.',
+                          style: GoogleFonts.inter(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
-                      
-                    // Success State: drawn checkmark path with green pulse glow
-                    if (_resultState == ScanResultState.success)
-                      const Center(
-                        child: AnimatedCheckmark(size: 80),
-                      ),
+                    ],
+                  ),
+                ),
+              )
+              .animate()
+              .fadeIn(duration: 400.ms)
+              .slideY(
+                begin: -0.2,
+                end: 0,
+                duration: 400.ms,
+                curve: Curves.easeOutCubic,
+              ),
 
-                    // Error State: drawn cross with red pulse glow
-                    if (_resultState == ScanResultState.error)
-                      const Center(
-                        child: Icon(
-                          Icons.close_rounded,
-                          color: Colors.redAccent,
-                          size: 80,
+          // 📟 Centered Viewport & In-Cutout Result Overlays
+          Center(
+            child:
+                Container(
+                      width: 260,
+                      height: 260,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: _resultState == ScanResultState.success
+                              ? Colors.greenAccent
+                              : _resultState == ScanResultState.error
+                              ? Colors.redAccent
+                              : Colors.cyanAccent.withValues(alpha: 0.3),
+                          width: 2,
+                        ),
+                        boxShadow: _resultState == ScanResultState.success
+                            ? [
+                                BoxShadow(
+                                  color: Colors.greenAccent.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  blurRadius: 20,
+                                  spreadRadius: 4,
+                                ),
+                              ]
+                            : _resultState == ScanResultState.error
+                            ? [
+                                BoxShadow(
+                                  color: Colors.redAccent.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  blurRadius: 20,
+                                  spreadRadius: 4,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Stack(
+                          children: [
+                            // Laser line (only if scanning/none)
+                            if (_resultState == ScanResultState.none)
+                              AnimatedBuilder(
+                                animation: _laserController,
+                                builder: (context, child) {
+                                  final double position =
+                                      _laserController.value * 260.0;
+                                  return Positioned(
+                                    top: position - 40.0,
+                                    left: 0,
+                                    right: 0,
+                                    child: Container(
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.cyanAccent.withValues(
+                                              alpha: 0.0,
+                                            ),
+                                            Colors.cyanAccent.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            Colors.cyanAccent.withValues(
+                                              alpha: 0.4,
+                                            ),
+                                          ],
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                        ),
+                                      ),
+                                      child: Align(
+                                        alignment: Alignment.bottomCenter,
+                                        child: Container(
+                                          height: 2.5,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.cyanAccent,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.cyanAccent,
+                                                blurRadius: 10,
+                                                spreadRadius: 1,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+
+                            // Loading State: central spinning cyan ring
+                            if (_resultState == ScanResultState.loading)
+                              const Center(
+                                child: SizedBox(
+                                  width: 60,
+                                  height: 60,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 4,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.cyanAccent,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            // Success State: drawn checkmark path with green pulse glow
+                            if (_resultState == ScanResultState.success)
+                              const Center(child: AnimatedCheckmark(size: 80)),
+
+                            // Error State: drawn cross with red pulse glow
+                            if (_resultState == ScanResultState.error)
+                              const Center(
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.redAccent,
+                                  size: 80,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                  ],
-                ),
-              ),
-            )
-            .animate(
-              target: _resultState == ScanResultState.error ? 1 : 0,
-            )
-            .shake(duration: 400.ms)
-            .animate(
-              target: _resultState == ScanResultState.success ? 1 : 0,
-            )
-            .scale(
-              begin: const Offset(1, 1),
-              end: const Offset(1.05, 1.05),
-              duration: 200.ms,
-              curve: Curves.easeOutBack,
-            ),
+                    )
+                    .animate(
+                      target: _resultState == ScanResultState.error ? 1 : 0,
+                    )
+                    .shake(duration: 400.ms)
+                    .animate(
+                      target: _resultState == ScanResultState.success ? 1 : 0,
+                    )
+                    .scale(
+                      begin: const Offset(1, 1),
+                      end: const Offset(1.05, 1.05),
+                      duration: 200.ms,
+                      curve: Curves.easeOutBack,
+                    ),
           ),
 
           // 💾 Telemetry Info Overlay
@@ -320,34 +351,46 @@ class _QRScannerScreenState extends State<QRScannerScreen> with TickerProviderSt
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'SYSTEM READY // SCANNING ACTIVE',
-                  style: GoogleFonts.robotoMono(
-                    color: Colors.cyanAccent,
-                    fontSize: 11,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ).animate(onPlay: (c) => c.repeat(reverse: true))
-                 .shimmer(duration: 1500.ms, color: Colors.white24),
+                      'SYSTEM READY // SCANNING ACTIVE',
+                      style: GoogleFonts.robotoMono(
+                        color: Colors.cyanAccent,
+                        fontSize: 11,
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .shimmer(duration: 1500.ms, color: Colors.white24),
                 const SizedBox(height: 12),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
                       ),
                       child: Column(
                         children: [
-                          _buildTelemetryItem('SCAN TYPE', 'ENCRYPTED COURSE QR'),
+                          _buildTelemetryItem(
+                            'SCAN TYPE',
+                            'ENCRYPTED COURSE QR',
+                          ),
                           const Divider(color: Colors.white12, height: 16),
                           _buildTelemetryItem('CAMERA MODE', 'LIVENESS ACTIVE'),
                           const Divider(color: Colors.white12, height: 16),
-                          _buildTelemetryItem('TIMESTAMP', DateTime.now().toIso8601String().split('T')[0]),
+                          _buildTelemetryItem(
+                            'TIMESTAMP',
+                            DateTime.now().toIso8601String().split('T')[0],
+                          ),
                         ],
                       ),
                     ),
@@ -373,7 +416,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> with TickerProviderSt
                       border: Border.all(color: Colors.white10),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70, size: 18),
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white70,
+                        size: 18,
+                      ),
                       onPressed: () {
                         context.go('/student/home');
                       },
@@ -394,11 +441,20 @@ class _QRScannerScreenState extends State<QRScannerScreen> with TickerProviderSt
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(fontSize: 9, color: Colors.white38, fontWeight: FontWeight.bold, letterSpacing: 1),
+          style: GoogleFonts.inter(
+            fontSize: 9,
+            color: Colors.white38,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
         ),
         Text(
           value,
-          style: GoogleFonts.robotoMono(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+          style: GoogleFonts.robotoMono(
+            fontSize: 10,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );
@@ -463,7 +519,7 @@ class _CheckmarkPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final path = Path();
-    
+
     final startX = size.width * 0.25;
     final startY = size.height * 0.5;
     final midX = size.width * 0.45;
@@ -518,7 +574,7 @@ class ScannerHUDPainter extends CustomPainter {
 
     // Draw opaque outer background mask
     final maskPaint = Paint()..color = Colors.black.withValues(alpha: 0.65);
-    
+
     // Path subtraction to exclude the cutout center
     final maskPath = Path()
       ..moveTo(0, 0)
@@ -535,7 +591,11 @@ class ScannerHUDPainter extends CustomPainter {
         ),
       );
 
-    final finalMaskPath = Path.combine(PathOperation.difference, maskPath, cutoutPath);
+    final finalMaskPath = Path.combine(
+      PathOperation.difference,
+      maskPath,
+      cutoutPath,
+    );
     canvas.drawPath(finalMaskPath, maskPaint);
 
     // Draw tech brackets around cutout corners
@@ -543,8 +603,8 @@ class ScannerHUDPainter extends CustomPainter {
       ..color = resultState == ScanResultState.success
           ? Colors.greenAccent
           : resultState == ScanResultState.error
-              ? Colors.redAccent
-              : Colors.cyanAccent
+          ? Colors.redAccent
+          : Colors.cyanAccent
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.5
       ..strokeCap = StrokeCap.round;
@@ -557,7 +617,10 @@ class ScannerHUDPainter extends CustomPainter {
       Path()
         ..moveTo(left, top + bracketLength)
         ..lineTo(left, top + radius)
-        ..arcToPoint(Offset(left + radius, top), radius: const Radius.circular(radius))
+        ..arcToPoint(
+          Offset(left + radius, top),
+          radius: const Radius.circular(radius),
+        )
         ..lineTo(left + bracketLength, top),
       bracketPaint,
     );
@@ -567,7 +630,10 @@ class ScannerHUDPainter extends CustomPainter {
       Path()
         ..moveTo(right - bracketLength, top)
         ..lineTo(right - radius, top)
-        ..arcToPoint(Offset(right, top + radius), radius: const Radius.circular(radius))
+        ..arcToPoint(
+          Offset(right, top + radius),
+          radius: const Radius.circular(radius),
+        )
         ..lineTo(right, top + bracketLength),
       bracketPaint,
     );
@@ -577,7 +643,12 @@ class ScannerHUDPainter extends CustomPainter {
       Path()
         ..moveTo(left, bottom - bracketLength)
         ..lineTo(left, bottom - radius)
-        ..arcToPoint(Offset(left + radius, bottom), radius: const Radius.circular(radius), rotation: 90, clockwise: false)
+        ..arcToPoint(
+          Offset(left + radius, bottom),
+          radius: const Radius.circular(radius),
+          rotation: 90,
+          clockwise: false,
+        )
         ..lineTo(left + bracketLength, bottom),
       bracketPaint,
     );
@@ -587,7 +658,10 @@ class ScannerHUDPainter extends CustomPainter {
       Path()
         ..moveTo(right - bracketLength, bottom)
         ..lineTo(right - radius, bottom)
-        ..arcToPoint(Offset(right, bottom - radius), radius: const Radius.circular(radius))
+        ..arcToPoint(
+          Offset(right, bottom - radius),
+          radius: const Radius.circular(radius),
+        )
         ..lineTo(right, bottom - bracketLength),
       bracketPaint,
     );
@@ -595,6 +669,7 @@ class ScannerHUDPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ScannerHUDPainter oldDelegate) {
-    return oldDelegate.cutoutSize != cutoutSize || oldDelegate.resultState != resultState;
+    return oldDelegate.cutoutSize != cutoutSize ||
+        oldDelegate.resultState != resultState;
   }
 }

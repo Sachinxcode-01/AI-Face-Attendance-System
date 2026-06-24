@@ -35,8 +35,16 @@ class NotificationRepository {
     return await _notificationService.markNotificationsRead(ids, token);
   }
 
-  Future<void> showAlert({required String title, required String message, String? payload}) async {
-    await _notificationService.showAlert(title: title, message: message, payload: payload);
+  Future<void> showAlert({
+    required String title,
+    required String message,
+    String? payload,
+  }) async {
+    await _notificationService.showAlert(
+      title: title,
+      message: message,
+      payload: payload,
+    );
   }
 
   Future<void> dismissAll() async {

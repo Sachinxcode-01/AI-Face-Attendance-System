@@ -96,11 +96,11 @@ class SyncStatusBanner extends StatelessWidget {
                     ),
                   ),
                 ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: textColor.withValues(alpha: 0.6),
-                    size: 20,
-                  ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: textColor.withValues(alpha: 0.6),
+                  size: 20,
+                ),
               ],
             ),
           ),
@@ -109,7 +109,9 @@ class SyncStatusBanner extends StatelessWidget {
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           child: Container(
-            key: ValueKey('${connectivity.name}_${pending}_${failed}_$isSyncing'),
+            key: ValueKey(
+              '${connectivity.name}_${pending}_${failed}_$isSyncing',
+            ),
             margin: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
               color: bannerColor,

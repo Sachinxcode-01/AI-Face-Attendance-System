@@ -25,10 +25,13 @@ class TeacherLeaveDashboardScreen extends StatefulWidget {
   const TeacherLeaveDashboardScreen({super.key});
 
   @override
-  State<TeacherLeaveDashboardScreen> createState() => _TeacherLeaveDashboardScreenState();
+  State<TeacherLeaveDashboardScreen> createState() =>
+      _TeacherLeaveDashboardScreenState();
 }
 
-class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScreen> with SingleTickerProviderStateMixin {
+class _TeacherLeaveDashboardScreenState
+    extends State<TeacherLeaveDashboardScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _remarksController = TextEditingController();
   bool _isInit = true;
@@ -97,7 +100,9 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
               ),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.bgModal : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(30),
+                ),
                 border: Border.all(
                   color: isDark ? Colors.white12 : Colors.black12,
                   width: 1.0,
@@ -140,32 +145,48 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
                     const SizedBox(height: 16),
                     Text(
                       'Student: ${request.studentEmail}',
-                      style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white70),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white70,
+                      ),
                     ),
                     const SizedBox(height: 6),
-                    Text('Type: ${request.leaveType.toUpperCase()}', style: const TextStyle(color: Colors.white54)),
+                    Text(
+                      'Type: ${request.leaveType.toUpperCase()}',
+                      style: const TextStyle(color: Colors.white54),
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'Reason: ${request.reason}',
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 14,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     TextField(
                       controller: _remarksController,
                       maxLines: 3,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
                       decoration: InputDecoration(
                         labelText: 'Reviewer Remarks / Feedback',
                         labelStyle: const TextStyle(color: Colors.white54),
                         filled: true,
-                        fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                        fillColor: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.black.withValues(alpha: 0.03),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: AppColors.gold, width: 1.5),
+                          borderSide: const BorderSide(
+                            color: AppColors.gold,
+                            width: 1.5,
+                          ),
                         ),
                       ),
                     ),
@@ -175,11 +196,18 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () async {
-                              final controller = context.read<LeaveController>();
-                              final remarks = _remarksController.text.trim().isNotEmpty
+                              final controller = context
+                                  .read<LeaveController>();
+                              final remarks =
+                                  _remarksController.text.trim().isNotEmpty
                                   ? _remarksController.text.trim()
                                   : 'Clarification requested by department head.';
-                              await controller.actionLeave(request.id!, 'Clarification', remarks, isClarificationRequested: true);
+                              await controller.actionLeave(
+                                request.id!,
+                                'Clarification',
+                                remarks,
+                                isClarificationRequested: true,
+                              );
                               if (context.mounted) {
                                 Navigator.pop(context);
                                 _refreshData();
@@ -189,20 +217,31 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
                               foregroundColor: Colors.cyanAccent,
                               side: const BorderSide(color: Colors.cyanAccent),
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
-                            child: const Text('NEED INFO', style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              'NEED INFO',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () async {
-                              final controller = context.read<LeaveController>();
-                              final remarks = _remarksController.text.trim().isNotEmpty
+                              final controller = context
+                                  .read<LeaveController>();
+                              final remarks =
+                                  _remarksController.text.trim().isNotEmpty
                                   ? _remarksController.text.trim()
                                   : 'Rejected. Violation of leaves criteria.';
-                              await controller.actionLeave(request.id!, 'Rejected', remarks);
+                              await controller.actionLeave(
+                                request.id!,
+                                'Rejected',
+                                remarks,
+                              );
                               if (context.mounted) {
                                 Navigator.pop(context);
                                 _refreshData();
@@ -212,20 +251,31 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
                               foregroundColor: Colors.redAccent,
                               side: const BorderSide(color: Colors.redAccent),
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
-                            child: const Text('REJECT', style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              'REJECT',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () async {
-                              final controller = context.read<LeaveController>();
-                              final remarks = _remarksController.text.trim().isNotEmpty
+                              final controller = context
+                                  .read<LeaveController>();
+                              final remarks =
+                                  _remarksController.text.trim().isNotEmpty
                                   ? _remarksController.text.trim()
                                   : 'Approved. Absences excused.';
-                              await controller.actionLeave(request.id!, 'Approved', remarks);
+                              await controller.actionLeave(
+                                request.id!,
+                                'Approved',
+                                remarks,
+                              );
                               if (context.mounted) {
                                 Navigator.pop(context);
                                 _refreshData();
@@ -235,9 +285,14 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
                               backgroundColor: Colors.greenAccent,
                               foregroundColor: Colors.black,
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
-                            child: const Text('APPROVE', style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              'APPROVE',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
                       ],
@@ -260,9 +315,19 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
     final analytics = controller.analytics;
 
     // Filter lists for tabs
-    final pending = pendingList.where((l) => l.status.toLowerCase() == 'pending').toList();
-    final approved = pendingList.where((l) => l.status.toLowerCase() == 'approved').toList();
-    final rejected = pendingList.where((l) => l.status.toLowerCase() == 'rejected' || l.status.toLowerCase() == 'clarification').toList();
+    final pending = pendingList
+        .where((l) => l.status.toLowerCase() == 'pending')
+        .toList();
+    final approved = pendingList
+        .where((l) => l.status.toLowerCase() == 'approved')
+        .toList();
+    final rejected = pendingList
+        .where(
+          (l) =>
+              l.status.toLowerCase() == 'rejected' ||
+              l.status.toLowerCase() == 'clarification',
+        )
+        .toList();
 
     final totalReq = analytics['total_requests'] ?? pendingList.length;
     final approvalRate = analytics['approval_rate'] ?? 0.85;
@@ -276,7 +341,9 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            isDark ? Colors.black.withValues(alpha: 0.25) : Colors.white.withValues(alpha: 0.9),
+            isDark
+                ? Colors.black.withValues(alpha: 0.25)
+                : Colors.white.withValues(alpha: 0.9),
             isDark ? BlendMode.dstATop : BlendMode.srcOver,
           ),
         ),
@@ -286,12 +353,18 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
         appBar: PremiumAppBar(
           title: 'Leave Audit Desk',
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios, color: isDark ? Colors.white : AppColors.bgDark),
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: isDark ? Colors.white : AppColors.bgDark,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
           actions: [
             IconButton(
-              icon: Icon(Icons.refresh, color: isDark ? Colors.white : AppColors.bgDark),
+              icon: Icon(
+                Icons.refresh,
+                color: isDark ? Colors.white : AppColors.bgDark,
+              ),
               onPressed: _refreshData,
             ),
           ],
@@ -300,10 +373,18 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    _buildOverviewMetrics(pending.length, totalReq, approvalRate, isDark),
+                    _buildOverviewMetrics(
+                      pending.length,
+                      totalReq,
+                      approvalRate,
+                      isDark,
+                    ),
                     const SizedBox(height: 24),
                     _buildTabBar(isDark),
                     const SizedBox(height: 12),
@@ -325,7 +406,12 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
     );
   }
 
-  Widget _buildOverviewMetrics(int pendingCount, int total, double rate, bool isDark) {
+  Widget _buildOverviewMetrics(
+    int pendingCount,
+    int total,
+    double rate,
+    bool isDark,
+  ) {
     final ratePercent = (rate * 100).toStringAsFixed(0);
 
     return GridView.count(
@@ -361,7 +447,9 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
   Widget _buildTabBar(bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : Colors.black.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
       ),
       child: TabBar(
@@ -373,7 +461,10 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.black,
         unselectedLabelColor: isDark ? Colors.white54 : Colors.black54,
-        labelStyle: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13),
+        labelStyle: GoogleFonts.inter(
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+        ),
         tabs: const [
           Tab(text: 'PENDING'),
           Tab(text: 'APPROVED'),
@@ -383,17 +474,28 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
     );
   }
 
-  Widget _buildRequestsList(List<LeaveModel> list, bool isPending, bool isDark) {
+  Widget _buildRequestsList(
+    List<LeaveModel> list,
+    bool isPending,
+    bool isDark,
+  ) {
     if (list.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.rule_folder_outlined, color: isDark ? Colors.white24 : Colors.black26, size: 64),
+            Icon(
+              Icons.rule_folder_outlined,
+              color: isDark ? Colors.white24 : Colors.black26,
+              size: 64,
+            ),
             const SizedBox(height: 16),
             Text(
               'No requests in this category',
-              style: GoogleFonts.inter(fontSize: 16, color: isDark ? Colors.white54 : Colors.black54),
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                color: isDark ? Colors.white54 : Colors.black54,
+              ),
             ),
           ],
         ),
@@ -426,7 +528,11 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
                           backgroundColor: AppColors.gold,
                           child: Text(
                             request.studentEmail[0].toUpperCase(),
-                            style: const TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -441,7 +547,10 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -473,11 +582,17 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
                   children: [
                     Text(
                       'Type: ${request.leaveType.toUpperCase()}',
-                      style: const TextStyle(color: Colors.white38, fontSize: 11),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 11,
+                      ),
                     ),
                     Text(
                       'Dates: ${_formatDateString(request.startDate)} to ${_formatDateString(request.endDate)}',
-                      style: const TextStyle(color: Colors.white38, fontSize: 11),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
@@ -485,7 +600,11 @@ class _TeacherLeaveDashboardScreenState extends State<TeacherLeaveDashboardScree
                   const Divider(color: Colors.white10, height: 20),
                   Text(
                     'Remarks: ${request.remarks}',
-                    style: const TextStyle(color: AppColors.gold, fontSize: 12, fontStyle: FontStyle.italic),
+                    style: const TextStyle(
+                      color: AppColors.gold,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ],
               ],

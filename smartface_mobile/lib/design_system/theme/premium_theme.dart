@@ -6,7 +6,8 @@ import 'package:smartface_attendance/app/theme/dark_theme.dart';
 /// PremiumTheme provides the light/dark ThemeData for the premium UI.
 class PremiumTheme {
   static ThemeData get lightTheme => _buildLightTheme();
-  static ThemeData get darkTheme => getDarkTheme(); // reuse existing rich dark theme
+  static ThemeData get darkTheme =>
+      getDarkTheme(); // reuse existing rich dark theme
 
   static ThemeData _buildLightTheme() {
     final base = ThemeData.light();
@@ -54,7 +55,9 @@ class PremiumTheme {
       cardTheme: CardThemeData(
         color: AppColors.bgCardLight,
         elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
       ),
     );
   }

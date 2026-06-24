@@ -80,10 +80,12 @@ class _SplashScreenState extends State<SplashScreen> {
         if (session.isLoggedIn) {
           final String targetRoute = session.biometricRegistered
               ? (session.role?.toLowerCase() == 'admin'
-                  ? '/admin/home'
-                  : (session.role?.toLowerCase() == 'teacher' || session.role?.toLowerCase() == 'faculty' || session.role?.toLowerCase() == 'lecturer'
-                      ? '/teacher/home'
-                      : '/student/home'))
+                    ? '/admin/home'
+                    : (session.role?.toLowerCase() == 'teacher' ||
+                              session.role?.toLowerCase() == 'faculty' ||
+                              session.role?.toLowerCase() == 'lecturer'
+                          ? '/teacher/home'
+                          : '/student/home'))
               : '/auth/setup';
           context.go(targetRoute);
         } else {
@@ -126,7 +128,9 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               );
             },
-            child: _showWelcome ? _buildWelcomeUI(primaryColor, primaryGlow) : _buildBootUI(primaryColor, primaryGlow),
+            child: _showWelcome
+                ? _buildWelcomeUI(primaryColor, primaryGlow)
+                : _buildBootUI(primaryColor, primaryGlow),
           ),
         ],
       ),
@@ -399,27 +403,27 @@ class _SplashScreenState extends State<SplashScreen> {
               const SizedBox(height: 40),
 
               SizedBox(
-                width: double.infinity,
-                height: 60,
-                child: GlowButton(
-                  onPressed: () => context.go('/auth/login'),
-                  color: primaryColor,
-                  glowColor: primaryGlow,
-                  borderRadius: 20,
-                  child: Text(
-                    'GET STARTED',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                      color: Colors.white,
+                    width: double.infinity,
+                    height: 60,
+                    child: GlowButton(
+                      onPressed: () => context.go('/auth/login'),
+                      color: primaryColor,
+                      glowColor: primaryGlow,
+                      borderRadius: 20,
+                      child: Text(
+                        'GET STARTED',
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              )
-              .animate()
-              .fadeIn(delay: 800.ms, duration: 500.ms)
-              .slideY(begin: 0.2, end: 0),
+                  )
+                  .animate()
+                  .fadeIn(delay: 800.ms, duration: 500.ms)
+                  .slideY(begin: 0.2, end: 0),
             ],
           ),
         ),

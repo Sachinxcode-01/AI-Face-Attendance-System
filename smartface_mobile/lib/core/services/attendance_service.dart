@@ -36,12 +36,15 @@ class AttendanceService {
     }
   }
 
-  Future<Map<String, dynamic>> startSession(String teacherEmail, String subject) async {
+  Future<Map<String, dynamic>> startSession(
+    String teacherEmail,
+    String subject,
+  ) async {
     try {
-      final response = await _api.post('/sessions/start', body: {
-        'teacher_email': teacherEmail,
-        'subject': subject,
-      });
+      final response = await _api.post(
+        '/sessions/start',
+        body: {'teacher_email': teacherEmail, 'subject': subject},
+      );
       return jsonDecode(response.body);
     } catch (_) {
       return {'detail': 'Connection failed'};
@@ -58,7 +61,8 @@ class AttendanceService {
         '/attendance/mark',
         headers: {
           'Content-Type': 'application/json',
-          'X-Face-Scanner-Token': EnvConfig.faceScannerToken, // Secure injection of face scanner token
+          'X-Face-Scanner-Token': EnvConfig
+              .faceScannerToken, // Secure injection of face scanner token
         },
         body: {
           'student_email': studentEmail,
@@ -111,11 +115,10 @@ class AttendanceService {
     String remarks,
   ) async {
     try {
-      final response = await _api.patch('/leave/action', body: {
-        'leave_id': leaveId,
-        'status': status,
-        'remarks': remarks,
-      });
+      final response = await _api.patch(
+        '/leave/action',
+        body: {'leave_id': leaveId, 'status': status, 'remarks': remarks},
+      );
       return jsonDecode(response.body);
     } catch (_) {
       return {'detail': 'Connection failed'};
@@ -129,7 +132,8 @@ class AttendanceService {
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+        final Map<String, dynamic> jsonMap =
+            jsonDecode(response.body) as Map<String, dynamic>;
         return StudentStatsModel.fromJson(jsonMap);
       }
     } catch (e) {
@@ -164,7 +168,10 @@ class AttendanceService {
     return [];
   }
 
-  Future<Map<String, dynamic>?> getStudentAnalytics(String email, String token) async {
+  Future<Map<String, dynamic>?> getStudentAnalytics(
+    String email,
+    String token,
+  ) async {
     try {
       final response = await _api.get(
         '/attendance/student/analytics/$email',
@@ -250,17 +257,20 @@ class AttendanceService {
 
   Future<Map<String, dynamic>> sendIntruderAlert(String cameraId) async {
     try {
-      final response = await _api.post('/security/intruder-alert', body: {
-        'camera_id': cameraId,
-        'type': 'intruder',
-      });
+      final response = await _api.post(
+        '/security/intruder-alert',
+        body: {'camera_id': cameraId, 'type': 'intruder'},
+      );
       return jsonDecode(response.body);
     } catch (_) {
       return {'detail': 'Connection failed'};
     }
   }
 
-  Future<Map<String, dynamic>> acknowledgeIntruderAlert(String logId, String token) async {
+  Future<Map<String, dynamic>> acknowledgeIntruderAlert(
+    String logId,
+    String token,
+  ) async {
     try {
       final response = await _api.post(
         '/security/acknowledge',

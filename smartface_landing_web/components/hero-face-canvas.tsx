@@ -253,7 +253,8 @@ export default function HeroFaceCanvas() {
       <CanvasContainer className="w-full h-full">
         <Canvas
           camera={{ position: [0, 0, 3.2], fov: 45 }}
-          gl={{ alpha: true, antialias: true }}
+          dpr={[1, 1.5]}
+          gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
         >
           <ambientLight intensity={0.6} />
           <pointLight position={[5, 5, 5]} intensity={1.2} color="#3b82f6" />

@@ -16,3 +16,8 @@ users_collection = db.users
 attendance_collection = db.attendance
 sessions_collection = db.sessions
 notifications_collection = db.notifications
+login_logs_collection = db.login_logs
+audit_logs_collection = db.audit_logs
+devices_collection = db.devices
+login_sessions_collection = db.login_sessions
+

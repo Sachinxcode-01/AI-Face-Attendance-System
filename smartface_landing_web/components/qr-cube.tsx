@@ -201,7 +201,8 @@ export default function QrCube() {
         <Canvas
           shadows
           camera={{ position: [0, 0, 4.5], fov: 45 }}
-          gl={{ alpha: true, antialias: true }}
+          dpr={[1, 1.5]}
+          gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
         >
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} intensity={1.5} color="#3b82f6" />

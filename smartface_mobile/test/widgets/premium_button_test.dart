@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 
 void main() {
-  testWidgets('PremiumButton renders and responds to tap', (WidgetTester tester) async {
+  testWidgets('PremiumButton renders and responds to tap', (
+    WidgetTester tester,
+  ) async {
     var pressed = false;
     await tester.pumpWidget(
       MaterialApp(

@@ -24,13 +24,11 @@ class ShimmerSkeleton extends StatelessWidget {
   });
 
   /// Factory constructor for creating a circular skeleton placeholder (e.g. avatars)
-  const ShimmerSkeleton.circle({
-    super.key,
-    required double size,
-  })  : width = size,
-        height = size,
-        borderRadius = 0.0,
-        shape = SkeletonShape.circle;
+  const ShimmerSkeleton.circle({super.key, required double size})
+    : width = size,
+      height = size,
+      borderRadius = 0.0,
+      shape = SkeletonShape.circle;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +37,9 @@ class ShimmerSkeleton extends StatelessWidget {
 
     // Harmonious colors tuned for high-fidelity dark/light styling
     final Color baseColor = isDark
-        ? const Color(0xFF1F2937) // Slate 800 (slightly lighter than #111827 card background)
+        ? const Color(
+            0xFF1F2937,
+          ) // Slate 800 (slightly lighter than #111827 card background)
         : const Color(0xFFE5E7EB); // Slate 200
 
     final Color highlightColor = isDark
@@ -54,8 +54,11 @@ class ShimmerSkeleton extends StatelessWidget {
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: Colors.white, // Inner fill required by Shimmer to apply shader masks
-          shape: shape == SkeletonShape.circle ? BoxShape.circle : BoxShape.rectangle,
+          color: Colors
+              .white, // Inner fill required by Shimmer to apply shader masks
+          shape: shape == SkeletonShape.circle
+              ? BoxShape.circle
+              : BoxShape.rectangle,
           borderRadius: shape == SkeletonShape.circle
               ? null
               : BorderRadius.circular(borderRadius),

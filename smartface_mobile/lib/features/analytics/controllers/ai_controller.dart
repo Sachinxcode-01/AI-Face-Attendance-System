@@ -38,7 +38,8 @@ class AIController extends ChangeNotifier {
     _setError(null);
     try {
       final res = await _repository.askAI(email, query);
-      if (res.containsKey('detail') && res['detail'].toString().contains('offline')) {
+      if (res.containsKey('detail') &&
+          res['detail'].toString().contains('offline')) {
         _setError(res['detail'] as String);
       }
       return res;

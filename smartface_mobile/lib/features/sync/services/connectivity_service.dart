@@ -41,8 +41,9 @@ class ConnectivityService {
   ConnectivityStatus get currentStatus => _lastStatus;
 
   /// Whether the device is currently online (synchronous).
-  bool get isOnline => _lastStatus == ConnectivityStatus.online ||
-                       _lastStatus == ConnectivityStatus.syncing;
+  bool get isOnline =>
+      _lastStatus == ConnectivityStatus.online ||
+      _lastStatus == ConnectivityStatus.syncing;
 
   /// Starts monitoring connectivity. Call once at app startup.
   Future<void> init() async {
@@ -58,11 +59,15 @@ class ConnectivityService {
     debugPrint('[Connectivity] Initialized: ${_lastStatus.name}');
   }
 
-  void _processResults(List<ConnectivityResult> results, {bool isInitial = false}) {
+  void _processResults(
+    List<ConnectivityResult> results, {
+    bool isInitial = false,
+  }) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 300), () {
-      final wasOffline = _lastStatus == ConnectivityStatus.offline ||
-                         _lastStatus == ConnectivityStatus.syncFailed;
+      final wasOffline =
+          _lastStatus == ConnectivityStatus.offline ||
+          _lastStatus == ConnectivityStatus.syncFailed;
 
       final newStatus = _mapResults(results);
 

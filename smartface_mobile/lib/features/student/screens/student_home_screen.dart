@@ -60,7 +60,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   StreamSubscription? _notifSubscription;
 
   bool _isLoading = true;
-  
+
   // HUD Data
   double _overallPercentage = 0.82;
   String _standing = 'Elite Performer';
@@ -75,7 +75,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   Map<String, dynamic> _aiMetrics = {
     'average_confidence': 0.96,
     'lighting_quality': 'Good',
-    'face_visibility': 'Excellent'
+    'face_visibility': 'Excellent',
   };
 
   @override
@@ -83,7 +83,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     super.initState();
 
     final session = Provider.of<SessionManager>(context, listen: false);
-    
+
     // Connect WebSockets for real-time notifications
     _notificationService.connect(token: session.token);
     _notifSubscription = _notificationService.stream.listen((data) {
@@ -165,7 +165,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result['message'] ?? 'Successfully logged out other devices'),
+          content: Text(
+            result['message'] ?? 'Successfully logged out other devices',
+          ),
           backgroundColor: const Color(0xFF0C1033),
         ),
       );
@@ -206,12 +208,16 @@ class _StudentDashboardState extends State<StudentDashboard> {
                               color: PdfColors.blueGrey900,
                             ),
                           ),
-                          pw.Text('OFFICIAL SEMESTER REPORT', style: const pw.TextStyle(fontSize: 10)),
+                          pw.Text(
+                            'OFFICIAL SEMESTER REPORT',
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
                         ],
                       ),
                       pw.BarcodeWidget(
                         barcode: pw.Barcode.qrCode(),
-                        data: 'https://smartface.college/verify/report/${session.email}',
+                        data:
+                            'https://smartface.college/verify/report/${session.email}',
                         width: 50,
                         height: 50,
                       ),
@@ -220,29 +226,62 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   pw.SizedBox(height: 30),
                   pw.Divider(thickness: 1, color: PdfColors.amber),
                   pw.SizedBox(height: 20),
-                  pw.Text('STUDENT INFORMATION', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                  pw.Text(
+                    'STUDENT INFORMATION',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
                   pw.SizedBox(height: 10),
                   pw.Text('Name: ${session.name ?? "Student User"}'),
                   pw.Text('Email: ${session.email ?? ""}'),
                   pw.Text('Role: ${session.role?.toUpperCase() ?? ""}'),
                   pw.SizedBox(height: 30),
-                  pw.Text('ATTENDANCE SUMMARY', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                  pw.Text(
+                    'ATTENDANCE SUMMARY',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
                   pw.SizedBox(height: 10),
-                  pw.Text('Overall Attendance Percentage: ${(_overallPercentage * 100).toInt()}%'),
+                  pw.Text(
+                    'Overall Attendance Percentage: ${(_overallPercentage * 100).toInt()}%',
+                  ),
                   pw.Text('Overall Standing: $_standing'),
                   pw.Text('Current Streak: $_streak Days'),
                   pw.SizedBox(height: 30),
-                  pw.Text('SUBJECT PROGRESS DETAILS', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                  pw.Text(
+                    'SUBJECT PROGRESS DETAILS',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
                   pw.SizedBox(height: 10),
-                  ..._subjects.map((sub) => pw.Text('${sub.subject}: ${sub.present}/${sub.total} Sessions (${(sub.percentage * 100).toInt()}%)')),
+                  ..._subjects.map(
+                    (sub) => pw.Text(
+                      '${sub.subject}: ${sub.present}/${sub.total} Sessions (${(sub.percentage * 100).toInt()}%)',
+                    ),
+                  ),
                   pw.Spacer(),
                   pw.Divider(thickness: 1, color: PdfColors.amber),
                   pw.SizedBox(height: 10),
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                     children: [
-                      pw.Text('Generated Time: ${DateTime.now().toIso8601String().split('T')[0]}', style: const pw.TextStyle(fontSize: 8)),
-                      pw.Text('Digital Signature: SECURE_AI_VERIFIED_SHA256', style: const pw.TextStyle(fontSize: 8, color: PdfColors.green)),
+                      pw.Text(
+                        'Generated Time: ${DateTime.now().toIso8601String().split('T')[0]}',
+                        style: const pw.TextStyle(fontSize: 8),
+                      ),
+                      pw.Text(
+                        'Digital Signature: SECURE_AI_VERIFIED_SHA256',
+                        style: const pw.TextStyle(
+                          fontSize: 8,
+                          color: PdfColors.green,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -277,7 +316,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
         ),
         title: Text(
           'Export Report Ledger',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -288,10 +330,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
             ),
             const SizedBox(height: 20),
             ListTile(
-              leading: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.gold),
-              title: const Text('PDF Document (.pdf)', style: TextStyle(color: Colors.white, fontSize: 13)),
+              leading: const Icon(
+                Icons.picture_as_pdf_outlined,
+                color: AppColors.gold,
+              ),
+              title: const Text(
+                'PDF Document (.pdf)',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
               tileColor: Colors.white10,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _exportAttendanceReportPdf();
@@ -299,10 +349,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
             ),
             const SizedBox(height: 10),
             ListTile(
-              leading: const Icon(Icons.grid_on_rounded, color: Colors.cyanAccent),
-              title: const Text('CSV Spreadsheet (.csv)', style: TextStyle(color: Colors.white, fontSize: 13)),
+              leading: const Icon(
+                Icons.grid_on_rounded,
+                color: Colors.cyanAccent,
+              ),
+              title: const Text(
+                'CSV Spreadsheet (.csv)',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
               tileColor: Colors.white10,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               onTap: () async {
                 Navigator.pop(context);
                 await _compileAndSaveCsv();
@@ -310,10 +368,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
             ),
             const SizedBox(height: 10),
             ListTile(
-              leading: const Icon(Icons.table_chart_rounded, color: Colors.greenAccent),
-              title: const Text('Excel Ledger (.xlsx)', style: TextStyle(color: Colors.white, fontSize: 13)),
+              leading: const Icon(
+                Icons.table_chart_rounded,
+                color: Colors.greenAccent,
+              ),
+              title: const Text(
+                'Excel Ledger (.xlsx)',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
               tileColor: Colors.white10,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               onTap: () async {
                 Navigator.pop(context);
                 await _compileAndSaveExcel();
@@ -329,7 +395,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     try {
       final session = context.read<SessionManager>();
       final email = session.email ?? 'student';
-      
+
       final buffer = StringBuffer();
       buffer.writeln('Date,Subject,Status,Confidence,Method');
       for (final log in _verificationHistory) {
@@ -346,7 +412,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
       await file.writeAsString(buffer.toString());
 
       if (mounted) {
-        AppToast.show(context, message: 'CSV file compiled successfully!', type: ToastType.success);
+        AppToast.show(
+          context,
+          message: 'CSV file compiled successfully!',
+          type: ToastType.success,
+        );
       }
     } catch (e) {
       debugPrint('CSV Export Error: $e');
@@ -374,7 +444,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
       await file.writeAsString(buffer.toString());
 
       if (mounted) {
-        AppToast.show(context, message: 'Excel ledger compiled successfully!', type: ToastType.success);
+        AppToast.show(
+          context,
+          message: 'Excel ledger compiled successfully!',
+          type: ToastType.success,
+        );
       }
     } catch (e) {
       debugPrint('Excel Export Error: $e');
@@ -393,7 +467,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
             const SizedBox(width: 10),
             Text(
               'Live Session Alert',
-              style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ],
         ),
@@ -449,11 +526,17 @@ class _StudentDashboardState extends State<StudentDashboard> {
             ),
             title: Row(
               children: [
-                const Icon(Icons.face_retouching_natural_rounded, color: AppColors.gold),
+                const Icon(
+                  Icons.face_retouching_natural_rounded,
+                  color: AppColors.gold,
+                ),
                 const SizedBox(width: 10),
                 Text(
                   'Biometric Register',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),
@@ -466,25 +549,49 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   style: GoogleFonts.inter(color: Colors.white54, fontSize: 12),
                 ),
                 const SizedBox(height: 16),
-                _buildRegistrationGuideItem(Icons.light_mode_outlined, 'Lighting Quality', 'Good', const Color(0xFF76E600)),
-                _buildRegistrationGuideItem(Icons.blur_off_rounded, 'Blur Level Detection', 'Excellent', const Color(0xFF76E600)),
-                _buildRegistrationGuideItem(Icons.portrait_rounded, 'Face Angle Alignment', 'Aligned (0° yaw)', const Color(0xFF76E600)),
+                _buildRegistrationGuideItem(
+                  Icons.light_mode_outlined,
+                  'Lighting Quality',
+                  'Good',
+                  const Color(0xFF76E600),
+                ),
+                _buildRegistrationGuideItem(
+                  Icons.blur_off_rounded,
+                  'Blur Level Detection',
+                  'Excellent',
+                  const Color(0xFF76E600),
+                ),
+                _buildRegistrationGuideItem(
+                  Icons.portrait_rounded,
+                  'Face Angle Alignment',
+                  'Aligned (0° yaw)',
+                  const Color(0xFF76E600),
+                ),
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.02),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline_rounded, color: AppColors.gold, size: 16),
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        color: AppColors.gold,
+                        size: 16,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           'Updating embeddings prompts the server-side AI model to re-train in the background.',
-                          style: GoogleFonts.inter(color: Colors.white38, fontSize: 10),
+                          style: GoogleFonts.inter(
+                            color: Colors.white38,
+                            fontSize: 10,
+                          ),
                         ),
                       ),
                     ],
@@ -495,7 +602,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('CANCEL', style: TextStyle(color: Colors.white38)),
+                child: const Text(
+                  'CANCEL',
+                  style: TextStyle(color: Colors.white38),
+                ),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -525,18 +635,30 @@ class _StudentDashboardState extends State<StudentDashboard> {
     );
   }
 
-  Widget _buildRegistrationGuideItem(IconData icon, String title, String val, Color color) {
+  Widget _buildRegistrationGuideItem(
+    IconData icon,
+    String title,
+    String val,
+    Color color,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
         children: [
           Icon(icon, size: 16, color: Colors.white38),
           const SizedBox(width: 8),
-          Text(title, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          Text(
+            title,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
           const Spacer(),
           Text(
             val,
-            style: GoogleFonts.robotoMono(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+            style: GoogleFonts.robotoMono(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
           ),
         ],
       ),
@@ -575,73 +697,131 @@ class _StudentDashboardState extends State<StudentDashboard> {
         : null;
 
     final analyticsCtrl = context.watch<AnalyticsController>();
-    final rawInsights = analyticsCtrl.studentAnalytics['personal_insights'] as List<dynamic>? ?? [];
-    final insightsList = rawInsights.map((i) => PersonalInsight.fromJson(Map<String, dynamic>.from(i))).toList();
+    final rawInsights =
+        analyticsCtrl.studentAnalytics['personal_insights'] as List<dynamic>? ??
+        [];
+    final insightsList = rawInsights
+        .map((i) => PersonalInsight.fromJson(Map<String, dynamic>.from(i)))
+        .toList();
     final predictions = AIPredictions.fromJson(analyticsCtrl.studentAnalytics);
-    final weekly = analyticsCtrl.studentAnalytics['weekly_trends'] as List<dynamic>? ?? [];
-    final monthly = analyticsCtrl.studentAnalytics['monthly_trends'] as List<dynamic>? ?? [];
-    final heatmap = analyticsCtrl.studentAnalytics['heatmap_data'] as Map<String, dynamic>? ?? {};
-    final rawLeaderboard = analyticsCtrl.studentAnalytics['leaderboard'] as List<dynamic>? ?? [];
-    final leaderboardEntries = rawLeaderboard.map((l) => LeaderboardEntry.fromJson(Map<String, dynamic>.from(l))).toList();
+    final weekly =
+        analyticsCtrl.studentAnalytics['weekly_trends'] as List<dynamic>? ?? [];
+    final monthly =
+        analyticsCtrl.studentAnalytics['monthly_trends'] as List<dynamic>? ??
+        [];
+    final heatmap =
+        analyticsCtrl.studentAnalytics['heatmap_data']
+            as Map<String, dynamic>? ??
+        {};
+    final rawLeaderboard =
+        analyticsCtrl.studentAnalytics['leaderboard'] as List<dynamic>? ?? [];
+    final leaderboardEntries = rawLeaderboard
+        .map((l) => LeaderboardEntry.fromJson(Map<String, dynamic>.from(l)))
+        .toList();
 
     final header = _buildWelcomeHeader(context, isDark, session)
         .animate()
         .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutCubic);
-    
-    final healthGrid = AttendanceScoreCard(
-      scoreValue: _overallPercentage,
-      standing: _standing,
-      departmentRank: _rank,
-      streak: _streak,
-    )
-        .animate()
-        .fadeIn(delay: 60.ms, duration: 400.ms, curve: Curves.easeOutCubic)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutCubic);
+        .slideY(
+          begin: 0.1,
+          end: 0,
+          duration: 400.ms,
+          curve: Curves.easeOutCubic,
+        );
 
-    final aiInsights = Column(
-      children: [
-        PredictionCard(predictions: predictions),
-        const SizedBox(height: 20),
-        PersonalInsightCard(insights: insightsList),
-      ],
-    )
-        .animate()
-        .fadeIn(delay: 120.ms, duration: 400.ms, curve: Curves.easeOutCubic)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutCubic);
+    final healthGrid =
+        AttendanceScoreCard(
+              scoreValue: _overallPercentage,
+              standing: _standing,
+              departmentRank: _rank,
+              streak: _streak,
+            )
+            .animate()
+            .fadeIn(delay: 60.ms, duration: 400.ms, curve: Curves.easeOutCubic)
+            .slideY(
+              begin: 0.1,
+              end: 0,
+              duration: 400.ms,
+              curve: Curves.easeOutCubic,
+            );
 
-    final weeklyMonthlyAnalytics = TrendChart(
-      weeklyTrends: weekly,
-      monthlyTrends: monthly,
-    )
-        .animate()
-        .fadeIn(delay: 180.ms, duration: 400.ms, curve: Curves.easeOutCubic)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutCubic);
+    final aiInsights =
+        Column(
+              children: [
+                PredictionCard(predictions: predictions),
+                const SizedBox(height: 20),
+                PersonalInsightCard(insights: insightsList),
+              ],
+            )
+            .animate()
+            .fadeIn(delay: 120.ms, duration: 400.ms, curve: Curves.easeOutCubic)
+            .slideY(
+              begin: 0.1,
+              end: 0,
+              duration: 400.ms,
+              curve: Curves.easeOutCubic,
+            );
+
+    final weeklyMonthlyAnalytics =
+        TrendChart(weeklyTrends: weekly, monthlyTrends: monthly)
+            .animate()
+            .fadeIn(delay: 180.ms, duration: 400.ms, curve: Curves.easeOutCubic)
+            .slideY(
+              begin: 0.1,
+              end: 0,
+              duration: 400.ms,
+              curve: Curves.easeOutCubic,
+            );
 
     final calendarHistory = HeatmapCard(heatmapData: heatmap)
         .animate()
         .fadeIn(delay: 240.ms, duration: 400.ms, curve: Curves.easeOutCubic)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutCubic);
+        .slideY(
+          begin: 0.1,
+          end: 0,
+          duration: 400.ms,
+          curve: Curves.easeOutCubic,
+        );
 
     final leaderboardCard = LeaderboardCard(entries: leaderboardEntries)
         .animate()
         .fadeIn(delay: 300.ms, duration: 400.ms, curve: Curves.easeOutCubic)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutCubic);
+        .slideY(
+          begin: 0.1,
+          end: 0,
+          duration: 400.ms,
+          curve: Curves.easeOutCubic,
+        );
 
     final activityTimeline = _buildRecentActivity(isDark)
         .animate()
         .fadeIn(delay: 360.ms, duration: 400.ms, curve: Curves.easeOutCubic)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutCubic);
+        .slideY(
+          begin: 0.1,
+          end: 0,
+          duration: 400.ms,
+          curve: Curves.easeOutCubic,
+        );
 
     final quickActions = _buildQuickActions(context)
         .animate()
         .fadeIn(delay: 420.ms, duration: 400.ms, curve: Curves.easeOutCubic)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutCubic);
+        .slideY(
+          begin: 0.1,
+          end: 0,
+          duration: 400.ms,
+          curve: Curves.easeOutCubic,
+        );
 
     final securityCard = _buildSecurityCard(isDark)
         .animate()
         .fadeIn(delay: 480.ms, duration: 400.ms, curve: Curves.easeOutCubic)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutCubic);
+        .slideY(
+          begin: 0.1,
+          end: 0,
+          duration: 400.ms,
+          curve: Curves.easeOutCubic,
+        );
 
     return Container(
       decoration: BoxDecoration(
@@ -680,7 +860,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   backgroundColor: AppColors.bgSurface,
                   child: Text(
                     (session.name ?? 'S').substring(0, 1).toUpperCase(),
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -699,7 +882,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   ),
                   Text(
                     'Semester 6 • B.Tech CSE',
-                    style: AppText.caption(color: isDark ? Colors.white54 : Colors.black54),
+                    style: AppText.caption(
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
                   ),
                 ],
               ),
@@ -818,7 +1003,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
     );
   }
 
-  Widget _buildWelcomeHeader(BuildContext context, bool isDark, SessionManager session) {
+  Widget _buildWelcomeHeader(
+    BuildContext context,
+    bool isDark,
+    SessionManager session,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -850,11 +1039,14 @@ class _StudentDashboardState extends State<StudentDashboard> {
     final timelineItems = _verificationHistory.map((log) {
       final isPresent = log['status'].toString().toLowerCase() == 'present';
       final isFace = log['verified_by'] == 'face';
-      final verificationType = isFace ? 'Face Scanner (Conf: ${log['confidence']})' : 'QR Scan';
+      final verificationType = isFace
+          ? 'Face Scanner (Conf: ${log['confidence']})'
+          : 'QR Scan';
 
       return TimelineItem(
         title: log['subject'] ?? 'Data Science Class',
-        description: 'Status: ${log['status'].toString().toUpperCase()} • Verified via $verificationType',
+        description:
+            'Status: ${log['status'].toString().toUpperCase()} • Verified via $verificationType',
         timestamp: '${log['time']} • ${log['date']}',
         icon: isPresent ? Icons.check_circle_rounded : Icons.cancel_rounded,
         iconColor: isPresent ? AppColors.success : AppColors.error,
@@ -867,7 +1059,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
     );
   }
 
-
   Widget _buildSecurityCard(bool isDark) {
     return GlassContainer(
       child: Column(
@@ -878,10 +1069,19 @@ class _StudentDashboardState extends State<StudentDashboard> {
             children: [
               Text(
                 'ACTIVE DEVICES & SECURITY',
-                style: GoogleFonts.inter(fontSize: 10, letterSpacing: 1.5, color: AppColors.gold, fontWeight: FontWeight.bold),
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  letterSpacing: 1.5,
+                  color: AppColors.gold,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               IconButton(
-                icon: const Icon(Icons.logout_rounded, color: Colors.orangeAccent, size: 18),
+                icon: const Icon(
+                  Icons.logout_rounded,
+                  color: Colors.orangeAccent,
+                  size: 18,
+                ),
                 onPressed: _logoutOtherDevices,
                 tooltip: 'Log out other devices',
               ),
@@ -900,11 +1100,14 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 child: Row(
                   children: [
                     Icon(
-                      s['device'].toString().contains('Windows') || s['device'].toString().contains('Mac')
+                      s['device'].toString().contains('Windows') ||
+                              s['device'].toString().contains('Mac')
                           ? Icons.laptop_chromebook_rounded
                           : Icons.phone_android_rounded,
                       size: 20,
-                      color: isCurrent ? const Color(0xFF76E600) : (isDark ? Colors.white54 : Colors.black54),
+                      color: isCurrent
+                          ? const Color(0xFF76E600)
+                          : (isDark ? Colors.white54 : Colors.black54),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -917,7 +1120,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: isDark ? Colors.white : AppColors.bgDeep,
-                              fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isCurrent
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                               fontSize: 13,
                             ),
                           ),
@@ -933,15 +1138,26 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     ),
                     if (isCurrent)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF76E600).withValues(alpha: 0.1),
-                          border: Border.all(color: const Color(0xFF76E600).withValues(alpha: 0.4)),
+                          border: Border.all(
+                            color: const Color(
+                              0xFF76E600,
+                            ).withValues(alpha: 0.4),
+                          ),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text(
                           'CURRENT',
-                          style: TextStyle(color: Color(0xFF76E600), fontSize: 8, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Color(0xFF76E600),
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                   ],
@@ -985,7 +1201,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
             ),
             ActionTile(
               label: 'Attendance Hub',
-              description: 'Track attendance health, scores, heatmaps, and alerts',
+              description:
+                  'Track attendance health, scores, heatmaps, and alerts',
               icon: Icons.analytics_outlined,
               color: Colors.pinkAccent,
               onTap: () => context.push(AppRoutes.studentAttendanceHubPath),

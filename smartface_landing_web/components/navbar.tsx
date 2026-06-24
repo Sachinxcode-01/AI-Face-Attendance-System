@@ -1,19 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Menu, X, ArrowRight, Fingerprint } from 'lucide-react';
+import { Menu, X, ArrowRight, Fingerprint, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [portalsOpen, setPortalsOpen] = useState(false);
 
-  const navLinks = [
-    { name: 'Core AI', href: '#core' },
-    { name: 'QR Verification', href: '#qr' },
-    { name: 'Command Center', href: '#command' },
-    { name: 'Dashboards', href: '#dashboards' },
-    { name: 'Network', href: '#network' },
+  const portals = [
+    { name: 'Student Portal', href: '/login' },
+    { name: 'Parent Portal', href: '/login' },
+    { name: 'Teacher Portal', href: '/login' },
+    { name: 'Admin Portal', href: '/login' },
   ];
 
   return (
@@ -38,17 +38,67 @@ export default function Navbar() {
           </Link>
 
           {/* Nav Links (Desktop) */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors relative group py-2"
+          <div className="hidden md:flex items-center gap-6 lg:gap-8">
+            <Link href="/" className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors relative group py-2">
+              Home
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
+            </Link>
+            
+            <Link href="/#features" className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors relative group py-2">
+              Features
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
+            </Link>
+
+            {/* Portals Dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setPortalsOpen(true)}
+              onMouseLeave={() => setPortalsOpen(false)}
+            >
+              <button
+                className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors flex items-center gap-1 py-2 cursor-pointer outline-none"
               >
-                {link.name}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
-              </a>
-            ))}
+                <span>Portals</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${portalsOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              <AnimatePresence>
+                {portalsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full left-0 mt-1 w-48 rounded-xl bg-slate-900 border border-white/10 p-2 shadow-2xl backdrop-blur-md z-50 flex flex-col gap-1"
+                  >
+                    {portals.map((portal) => (
+                      <Link
+                        key={portal.name}
+                        href={portal.href}
+                        onClick={() => setPortalsOpen(false)}
+                        className="px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-white/5 transition"
+                      >
+                        {portal.name}
+                      </Link>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <Link href="/#mobile" className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors relative group py-2">
+              Mobile App
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
+            </Link>
+
+            <Link href="/docs" className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors relative group py-2">
+              Documentation
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
+            </Link>
+
+            <Link href="/contact" className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors relative group py-2">
+              Contact
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
+            </Link>
           </div>
 
           {/* Desktop CTAs */}
@@ -60,14 +110,13 @@ export default function Navbar() {
               Sign In
             </Link>
             
-            {/* Magnetic glowing button */}
-            <a
-              href="#demo"
+            <Link
+              href="/login"
               className="relative inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-semibold rounded-xl bg-primary text-white border border-primary/20 overflow-hidden shadow-[0_0_20px_rgba(37,99,235,0.25)] hover:shadow-[0_0_30px_rgba(37,99,235,0.45)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
             >
-              <span>Book Demo</span>
+              <span>Get Started</span>
               <ArrowRight className="w-3.5 h-3.5" />
-            </a>
+            </Link>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -91,24 +140,40 @@ export default function Navbar() {
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-40 bg-slate-950/90 backdrop-blur-lg flex flex-col justify-between p-8 md:hidden"
           >
-            {/* Header placeholder spacer */}
             <div className="h-20" />
 
             {/* Mobile Nav Links */}
-            <div className="flex flex-col gap-6 py-6">
-              {navLinks.map((link, idx) => (
-                <motion.a
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className="text-lg font-bold text-slate-100 hover:text-primary transition-colors py-2 border-b border-white/5"
-                >
-                  {link.name}
-                </motion.a>
-              ))}
+            <div className="flex flex-col gap-4 py-6 overflow-y-auto max-h-[60vh] pr-2">
+              <Link href="/" onClick={() => setIsOpen(false)} className="block text-base font-bold text-slate-100 hover:text-primary transition-colors py-2 border-b border-white/5">
+                Home
+              </Link>
+              <Link href="/#features" onClick={() => setIsOpen(false)} className="block text-base font-bold text-slate-100 hover:text-primary transition-colors py-2 border-b border-white/5">
+                Features
+              </Link>
+              
+              <div className="space-y-2 border-b border-white/5 py-2">
+                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Portals</span>
+                {portals.map((portal) => (
+                  <Link
+                    key={portal.name}
+                    href={portal.href}
+                    onClick={() => setIsOpen(false)}
+                    className="block pl-3 text-sm text-slate-400 hover:text-primary transition"
+                  >
+                    {portal.name}
+                  </Link>
+                ))}
+              </div>
+
+              <Link href="/#mobile" onClick={() => setIsOpen(false)} className="block text-base font-bold text-slate-100 hover:text-primary transition-colors py-2 border-b border-white/5">
+                Mobile App
+              </Link>
+              <Link href="/docs" onClick={() => setIsOpen(false)} className="block text-base font-bold text-slate-100 hover:text-primary transition-colors py-2 border-b border-white/5">
+                Documentation
+              </Link>
+              <Link href="/contact" onClick={() => setIsOpen(false)} className="block text-base font-bold text-slate-100 hover:text-primary transition-colors py-2 border-b border-white/5">
+                Contact
+              </Link>
             </div>
 
             {/* Mobile CTAs */}
@@ -120,13 +185,13 @@ export default function Navbar() {
               >
                 Sign In
               </Link>
-              <a
-                href="#demo"
+              <Link
+                href="/login"
                 onClick={() => setIsOpen(false)}
-                className="w-full text-center py-3.5 rounded-xl bg-primary text-sm font-semibold text-white shadow-lg shadow-primary/20 hover:bg-primary-hover transition"
+                className="w-full text-center py-3.5 rounded-xl bg-primary text-sm font-semibold text-white shadow-lg shadow-primary/20 hover:bg-blue-600 transition"
               >
-                Book Demo
-              </a>
+                Get Started
+              </Link>
             </div>
           </motion.div>
         )}
