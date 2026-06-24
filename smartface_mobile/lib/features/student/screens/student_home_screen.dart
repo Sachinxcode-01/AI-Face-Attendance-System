@@ -307,87 +307,83 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   void _showExportOptionsDialog() {
-    showDialog(
+    showModernSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF070B1A),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Colors.white12),
-        ),
-        title: Text(
-          'Export Report Ledger',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Export Report Ledger',
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 18,
+            ),
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Select preferred layout format to download your biometric verification logs:',
-              style: TextStyle(color: Colors.white70, fontSize: 12),
+          const SizedBox(height: 8),
+          const Text(
+            'Select preferred layout format to download your biometric verification logs:',
+            style: TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+          const SizedBox(height: 20),
+          ListTile(
+            leading: const Icon(
+              Icons.picture_as_pdf_outlined,
+              color: AppColors.gold,
             ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(
-                Icons.picture_as_pdf_outlined,
-                color: AppColors.gold,
-              ),
-              title: const Text(
-                'PDF Document (.pdf)',
-                style: TextStyle(color: Colors.white, fontSize: 13),
-              ),
-              tileColor: Colors.white10,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _exportAttendanceReportPdf();
-              },
+            title: const Text(
+              'PDF Document (.pdf)',
+              style: TextStyle(color: Colors.white, fontSize: 13),
             ),
-            const SizedBox(height: 10),
-            ListTile(
-              leading: const Icon(
-                Icons.grid_on_rounded,
-                color: Colors.cyanAccent,
-              ),
-              title: const Text(
-                'CSV Spreadsheet (.csv)',
-                style: TextStyle(color: Colors.white, fontSize: 13),
-              ),
-              tileColor: Colors.white10,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                await _compileAndSaveCsv();
-              },
+            tileColor: Colors.white10,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 10),
-            ListTile(
-              leading: const Icon(
-                Icons.table_chart_rounded,
-                color: Colors.greenAccent,
-              ),
-              title: const Text(
-                'Excel Ledger (.xlsx)',
-                style: TextStyle(color: Colors.white, fontSize: 13),
-              ),
-              tileColor: Colors.white10,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                await _compileAndSaveExcel();
-              },
+            onTap: () {
+              Navigator.pop(context);
+              _exportAttendanceReportPdf();
+            },
+          ),
+          const SizedBox(height: 10),
+          ListTile(
+            leading: const Icon(
+              Icons.grid_on_rounded,
+              color: Colors.cyanAccent,
             ),
-          ],
-        ),
+            title: const Text(
+              'CSV Spreadsheet (.csv)',
+              style: TextStyle(color: Colors.white, fontSize: 13),
+            ),
+            tileColor: Colors.white10,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            onTap: () async {
+              Navigator.pop(context);
+              await _compileAndSaveCsv();
+            },
+          ),
+          const SizedBox(height: 10),
+          ListTile(
+            leading: const Icon(
+              Icons.table_chart_rounded,
+              color: Colors.greenAccent,
+            ),
+            title: const Text(
+              'Excel Ledger (.xlsx)',
+              style: TextStyle(color: Colors.white, fontSize: 13),
+            ),
+            tileColor: Colors.white10,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            onTap: () async {
+              Navigator.pop(context);
+              await _compileAndSaveExcel();
+            },
+          ),
+        ],
       ),
     );
   }
