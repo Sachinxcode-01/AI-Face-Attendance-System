@@ -40,6 +40,7 @@ import 'dart:async';
 // Core & State Imports
 // ======================================================
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/app/config/app_state.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 
@@ -191,24 +192,8 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
     final appState = context.watch<AppState>();
     final notificationsList = appState.notifications;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.bgDeep, AppColors.bgDark],
-        ),
-        image: DecorationImage(
-          image: const NetworkImage(
-            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
-          ),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black.withValues(alpha: 0.15),
-            BlendMode.dstATop,
-          ),
-        ),
-      ),
+    return AuroraBackground(
+      baseColor: AppColors.bgDeep,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PremiumAppBar(
