@@ -506,4 +506,32 @@ router.post('/sessions/logout-all', authenticate, async (req, res) => {
   }
 });
 
+// ─── POST /auth/logout ─────────────────────────────────────────────
+// Revoke the current session (server-side) for a clean, secure logout.
+router.post('/logout', authenticate, async (req, res) => {
+  try {
+    const currentToken = req.headers['authorization'].split(' ')[1];
+    const currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
+    await UserSession.deleteOne({ userId: req.userEmail, tokenHash: currentTokenHash });
+    res.json({ message: "Logged out successfully" });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// ─── DELETE /auth/sessions/:id ─────────────────────────────────────
+// Revoke a specific device session belonging to the authenticated user.
+router.delete('/sessions/:id', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await UserSession.deleteOne({ _id: id, userId: req.userEmail });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ detail: "Session not found" });
+    }
+    res.json({ message: "Session revoked successfully" });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
 module.exports = router;

@@ -201,7 +201,7 @@ export const api = {
     }),
 
   getSessions: (token: string) =>
-    request("/auth/sessions", {
+    request("/auth/sessions/active", {
       headers: { Authorization: `Bearer ${token}` },
     }),
 
@@ -212,8 +212,8 @@ export const api = {
     }),
 
   logoutAll: (token: string) =>
-    request("/auth/logout-all", {
-      method: "DELETE",
+    request("/auth/sessions/logout-all", {
+      method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     }),
 
