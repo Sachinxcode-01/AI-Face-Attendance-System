@@ -1,4 +1,4 @@
-/*
+﻿/*
 |--------------------------------------------------------------------------
 | File: app_router.dart
 |--------------------------------------------------------------------------
@@ -11,6 +11,7 @@
 */
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
@@ -122,7 +123,7 @@ final GoRouter appRouter = GoRouter(
     ),
   ),
   routes: [
-    // ── GUEST / UNAUTHENTICATED ROUTES ──────────────────────────────────────
+    // â”€â”€ GUEST / UNAUTHENTICATED ROUTES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     GoRoute(
       path: AppRoutes.splashPath,
       name: AppRoutes.splashName,
@@ -178,7 +179,7 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    // ── UNAUTHORIZED ROLE RESOLVER ──────────────────────────────────────────
+    // â”€â”€ UNAUTHORIZED ROLE RESOLVER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     GoRoute(
       path: AppRoutes.unauthorizedPath,
       name: AppRoutes.unauthorizedName,
@@ -189,7 +190,7 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    // ── TEMPORARY COMPONENT SHOWCASE ROUTE ──────────────────────────────
+    // â”€â”€ TEMPORARY COMPONENT SHOWCASE ROUTE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     GoRoute(
       path: '/showcase',
       name: 'showcase',
@@ -200,7 +201,7 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    // ── STUDENT ROLE ROOT STATEFUL SHELL ────────────────────────────────────
+    // â”€â”€ STUDENT ROLE ROOT STATEFUL SHELL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     StatefulShellRoute.indexedStack(
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state, navigationShell) {
@@ -331,7 +332,7 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    // ── TEACHER ROLE ROOT STATEFUL SHELL ────────────────────────────────────
+    // â”€â”€ TEACHER ROLE ROOT STATEFUL SHELL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     StatefulShellRoute.indexedStack(
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state, navigationShell) {
@@ -419,7 +420,7 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    // ── ADMIN ROLE ROOT STATEFUL SHELL ──────────────────────────────────────
+    // â”€â”€ ADMIN ROLE ROOT STATEFUL SHELL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     StatefulShellRoute.indexedStack(
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state, navigationShell) {
@@ -525,10 +526,13 @@ class StudentShell extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
-        onTap: (index) => navigationShell.goBranch(index),
+        onTap: (index) {
+          HapticFeedback.selectionClick();
+          navigationShell.goBranch(index);
+        },
         type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF070B1A),
-        selectedItemColor: const Color(0xFFFFD700),
+        backgroundColor: AppColors.bgDeep,
+        selectedItemColor: AppColors.gold,
         unselectedItemColor: Colors.white38,
         items: const [
           BottomNavigationBarItem(
@@ -569,10 +573,13 @@ class TeacherShell extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
-        onTap: (index) => navigationShell.goBranch(index),
+        onTap: (index) {
+          HapticFeedback.selectionClick();
+          navigationShell.goBranch(index);
+        },
         type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF070B1A),
-        selectedItemColor: const Color(0xFFFFD700),
+        backgroundColor: AppColors.bgDeep,
+        selectedItemColor: AppColors.gold,
         unselectedItemColor: Colors.white38,
         items: const [
           BottomNavigationBarItem(
@@ -613,10 +620,13 @@ class AdminShell extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
-        onTap: (index) => navigationShell.goBranch(index),
+        onTap: (index) {
+          HapticFeedback.selectionClick();
+          navigationShell.goBranch(index);
+        },
         type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF070B1A),
-        selectedItemColor: const Color(0xFFFFD700),
+        backgroundColor: AppColors.bgDeep,
+        selectedItemColor: AppColors.gold,
         unselectedItemColor: Colors.white38,
         items: const [
           BottomNavigationBarItem(
