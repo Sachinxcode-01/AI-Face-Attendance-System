@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -44,14 +44,25 @@ function Particles({ count = 100 }: { count?: number }) {
   const maxLinePoints = count * 6;
   const linePositions = useMemo(() => new Float32Array(maxLinePoints * 3), [maxLinePoints]);
 
+  // Reusable scratch vectors — avoids allocating new THREE.Vector3 objects
+  // every frame (which created heavy GC pressure and frame stutter).
+  const scratch = useMemo(
+    () => ({
+      mouse: new THREE.Vector3(),
+      dir: new THREE.Vector3(),
+      pull: new THREE.Vector3(),
+    }),
+    []
+  );
+
   useFrame(() => {
     const width = viewport.width * 1.5;
     const height = viewport.height * 1.5;
-    
+
     // Project pointer to 3D plane
     const mouseX = pointer.x * viewport.width * 0.5;
     const mouseY = pointer.y * viewport.height * 0.5;
-    const mousePos = new THREE.Vector3(mouseX, mouseY, 0);
+    const mousePos = scratch.mouse.set(mouseX, mouseY, 0);
 
     // Update node positions
     nodes.forEach((node, i) => {
@@ -67,12 +78,12 @@ function Particles({ count = 100 }: { count?: number }) {
       const distToMouse = node.pos.distanceTo(mousePos);
       if (distToMouse < 3.5) {
         const force = (3.5 - distToMouse) * 0.03;
-        const dir = new THREE.Vector3().subVectors(node.pos, mousePos).normalize();
-        node.pos.addScaledVector(dir, force);
+        scratch.dir.subVectors(node.pos, mousePos).normalize();
+        node.pos.addScaledVector(scratch.dir, force);
       } else {
         // Return to natural drift path
-        const pullDir = new THREE.Vector3().subVectors(node.originalPos, node.pos).normalize();
-        node.pos.addScaledVector(pullDir, 0.005);
+        scratch.pull.subVectors(node.originalPos, node.pos).normalize();
+        node.pos.addScaledVector(scratch.pull, 0.005);
       }
 
       // Write coordinates to points array
@@ -161,17 +172,40 @@ function Particles({ count = 100 }: { count?: number }) {
 }
 
 export default function NetworkBackground() {
+  // Only run the WebGL scene where it makes sense: skip it on mobile, on
+  // low-end devices, and when the user prefers reduced motion. Those clients
+  // get the lightweight gradient backdrop instead.
+  const [enabled, setEnabled] = useState(false);
+  const [count, setCount] = useState(90);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isMobile = window.innerWidth < 768;
+    const cores = navigator.hardwareConcurrency || 4;
+
+    if (reduceMotion || isMobile) {
+      setEnabled(false);
+      return;
+    }
+    setCount(cores <= 4 ? 55 : 90);
+    setEnabled(true);
+  }, []);
+
   return (
     <div className="absolute inset-0 -z-10 bg-slate-950 pointer-events-none">
       {/* Sleek radial gradient overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.05),transparent_60%)]" />
-      
-      <Canvas
-        camera={{ position: [0, 0, 8], fov: 60 }}
-        gl={{ alpha: true, antialias: true }}
-      >
-        <Particles count={110} />
-      </Canvas>
+
+      {enabled && (
+        <Canvas
+          camera={{ position: [0, 0, 8], fov: 60 }}
+          dpr={[1, 1.5]}
+          gl={{ alpha: true, antialias: false, powerPreference: 'high-performance' }}
+        >
+          <Particles count={count} />
+        </Canvas>
+      )}
     </div>
   );
 }

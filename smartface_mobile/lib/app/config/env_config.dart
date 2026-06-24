@@ -37,14 +37,17 @@ class EnvConfig {
   static String get wsUrl => _wsUrl ?? 'ws://10.210.101.48:8000';
   static String get groqApiKey => _groqApiKey ?? 'gsk_dev_dummykey12345';
   static String get googleApiKey => _googleApiKey ?? 'AIzaSyDevDummyKey54321';
-  static String get faceScannerToken => _faceScannerToken ?? 'dev_scanner_secret_token_abc';
+  static String get faceScannerToken =>
+      _faceScannerToken ?? 'dev_scanner_secret_token_abc';
 
   // Firebase configurations
   static String get firebaseApiKey => _firebaseApiKey ?? 'AIzaSyDevFirebaseKey';
   static String get firebaseAppId => _firebaseAppId ?? '1:123456:web:dev';
-  static String get firebaseMessagingSenderId => _firebaseMessagingSenderId ?? '123456';
+  static String get firebaseMessagingSenderId =>
+      _firebaseMessagingSenderId ?? '123456';
   static String get firebaseProjectId => _firebaseProjectId ?? 'smartface-dev';
-  static String get firebaseStorageBucket => _firebaseStorageBucket ?? 'smartface-dev.appspot.com';
+  static String get firebaseStorageBucket =>
+      _firebaseStorageBucket ?? 'smartface-dev.appspot.com';
 
   /// Loads configuration depending on the specified environment name.
   ///
@@ -54,8 +57,8 @@ class EnvConfig {
     final String fileName = environment == 'production'
         ? '.env.production'
         : environment == 'staging'
-            ? '.env.staging'
-            : '.env.development';
+        ? '.env.staging'
+        : '.env.development';
 
     debugPrint('[EnvConfig] Starting config load: $fileName');
 
@@ -85,7 +88,9 @@ class EnvConfig {
   static String _getOrThrow(String key) {
     final value = dotenv.env[key];
     if (value == null || value.trim().isEmpty) {
-      throw Exception('Environment variable "$key" is required but is missing or empty.');
+      throw Exception(
+        'Environment variable "$key" is required but is missing or empty.',
+      );
     }
     return value;
   }

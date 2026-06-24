@@ -25,7 +25,8 @@ class AdminLeaveAnalyticsScreen extends StatefulWidget {
   const AdminLeaveAnalyticsScreen({super.key});
 
   @override
-  State<AdminLeaveAnalyticsScreen> createState() => _AdminLeaveAnalyticsScreenState();
+  State<AdminLeaveAnalyticsScreen> createState() =>
+      _AdminLeaveAnalyticsScreenState();
 }
 
 class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
@@ -51,22 +52,14 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
     final ratePercent = (rate * 100).toStringAsFixed(0);
 
     // Department statistics
-    final Map<String, dynamic> deptStats = analytics['department_statistics'] ?? {
-      'CSE': 45.0,
-      'ECE': 25.0,
-      'ME': 15.0,
-      'Civil': 15.0,
-    };
+    final Map<String, dynamic> deptStats =
+        analytics['department_statistics'] ??
+        {'CSE': 45.0, 'ECE': 25.0, 'ME': 15.0, 'Civil': 15.0};
 
     // Monthly trends
-    final Map<String, dynamic> monthlyTrends = analytics['monthly_trends'] ?? {
-      'Jan': 5,
-      'Feb': 8,
-      'Mar': 12,
-      'Apr': 15,
-      'May': 22,
-      'Jun': 18,
-    };
+    final Map<String, dynamic> monthlyTrends =
+        analytics['monthly_trends'] ??
+        {'Jan': 5, 'Feb': 8, 'Mar': 12, 'Apr': 15, 'May': 22, 'Jun': 18};
 
     return Container(
       decoration: BoxDecoration(
@@ -77,7 +70,9 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            isDark ? Colors.black.withValues(alpha: 0.25) : Colors.white.withValues(alpha: 0.9),
+            isDark
+                ? Colors.black.withValues(alpha: 0.25)
+                : Colors.white.withValues(alpha: 0.9),
             isDark ? BlendMode.dstATop : BlendMode.srcOver,
           ),
         ),
@@ -87,18 +82,26 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
         appBar: PremiumAppBar(
           title: 'Leave Analytics Center',
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios, color: isDark ? Colors.white : AppColors.bgDark),
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: isDark ? Colors.white : AppColors.bgDark,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
           actions: [
             IconButton(
-              icon: Icon(Icons.refresh, color: isDark ? Colors.white : AppColors.bgDark),
+              icon: Icon(
+                Icons.refresh,
+                color: isDark ? Colors.white : AppColors.bgDark,
+              ),
               onPressed: () => controller.fetchAnalytics(),
             ),
           ],
         ),
         body: controller.isLoading && analytics.isEmpty
-            ? const Center(child: CircularProgressIndicator(color: AppColors.gold))
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColors.gold),
+              )
             : SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -165,7 +168,9 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
 
   Widget _buildBarChartCard(Map<String, dynamic> monthlyTrends, bool isDark) {
     final entries = monthlyTrends.entries.toList();
-    final maxValue = entries.map((e) => (e.value as num).toDouble()).reduce((a, b) => a > b ? a : b);
+    final maxValue = entries
+        .map((e) => (e.value as num).toDouble())
+        .reduce((a, b) => a > b ? a : b);
 
     return GlassContainer(
       padding: const EdgeInsets.all(20),
@@ -178,9 +183,17 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
             children: [
               Text(
                 'Submissions by Month',
-                style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
-              const Icon(Icons.show_chart_rounded, color: AppColors.gold, size: 20),
+              const Icon(
+                Icons.show_chart_rounded,
+                color: AppColors.gold,
+                size: 20,
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -193,21 +206,26 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  getDrawingHorizontalLine: (value) => const FlLine(
-                    color: Colors.white12,
-                    strokeWidth: 1,
-                  ),
+                  getDrawingHorizontalLine: (value) =>
+                      const FlLine(color: Colors.white12, strokeWidth: 1),
                 ),
                 titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 28,
                       getTitlesWidget: (val, meta) => Text(
                         '${val.toInt()}',
-                        style: const TextStyle(color: Colors.white38, fontSize: 10),
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 10,
+                        ),
                       ),
                     ),
                   ),
@@ -216,12 +234,18 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
                       showTitles: true,
                       getTitlesWidget: (val, meta) {
                         final index = val.toInt();
-                        if (index < 0 || index >= entries.length) return const SizedBox.shrink();
+                        if (index < 0 || index >= entries.length) {
+                          return const SizedBox.shrink();
+                        }
                         return Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             entries[index].key,
-                            style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         );
                       },
@@ -269,9 +293,17 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
             children: [
               Text(
                 'Distribution by Department',
-                style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
-              const Icon(Icons.pie_chart_rounded, color: AppColors.gold, size: 20),
+              const Icon(
+                Icons.pie_chart_rounded,
+                color: AppColors.gold,
+                size: 20,
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -291,7 +323,11 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
                         value: val,
                         title: '${val.toStringAsFixed(0)}%',
                         radius: 36,
-                        titleStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 9),
+                        titleStyle: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 9,
+                        ),
                       );
                     }),
                   ),
@@ -317,11 +353,21 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(entry.key, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                          Text(
+                            entry.key,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
                           const Spacer(),
                           Text(
                             '${(entry.value as num).toStringAsFixed(0)}%',
-                            style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+                            style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),

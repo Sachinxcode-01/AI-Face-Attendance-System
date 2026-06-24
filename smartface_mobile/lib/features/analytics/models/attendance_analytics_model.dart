@@ -77,7 +77,8 @@ class AIPredictions {
 
   factory AIPredictions.fromJson(Map<String, dynamic> json) {
     return AIPredictions(
-      semesterProjection: (json['semester_projection'] as num? ?? 85.0).toDouble(),
+      semesterProjection: (json['semester_projection'] as num? ?? 85.0)
+          .toDouble(),
       trendDirection: json['trend_direction'] as String? ?? 'stable',
       riskLevel: json['risk_level'] as String? ?? 'low',
       missableClasses: json['missable_classes'] as int? ?? 0,
@@ -85,21 +86,18 @@ class AIPredictions {
   }
 
   Map<String, dynamic> toJson() => {
-        'semester_projection': semesterProjection,
-        'trend_direction': trendDirection,
-        'risk_level': riskLevel,
-        'missable_classes': missableClasses,
-      };
+    'semester_projection': semesterProjection,
+    'trend_direction': trendDirection,
+    'risk_level': riskLevel,
+    'missable_classes': missableClasses,
+  };
 }
 
 class PersonalInsight {
   final String text;
   final String type; // 'improving' | 'risk' | 'champion' | 'trend'
 
-  const PersonalInsight({
-    required this.text,
-    required this.type,
-  });
+  const PersonalInsight({required this.text, required this.type});
 
   IconData get icon {
     switch (type.toLowerCase()) {
@@ -136,10 +134,7 @@ class PersonalInsight {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'text': text,
-        'type': type,
-      };
+  Map<String, dynamic> toJson() => {'text': text, 'type': type};
 }
 
 class LeaderboardEntry {
@@ -168,10 +163,10 @@ class LeaderboardEntry {
   }
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'department': department,
-        'rank': rank,
-        'score': score,
-        'is_me': isMe,
-      };
+    'name': name,
+    'department': department,
+    'rank': rank,
+    'score': score,
+    'is_me': isMe,
+  };
 }

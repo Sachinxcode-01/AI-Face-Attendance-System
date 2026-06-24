@@ -104,11 +104,16 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
       final session = context.read<SessionManager>();
       if (session.token == null) return;
 
-      final result = await ApiService.acknowledgeIntruderAlert(logId, session.token!);
+      final result = await ApiService.acknowledgeIntruderAlert(
+        logId,
+        session.token!,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Alert acknowledged successfully'),
+            content: Text(
+              result['message'] ?? 'Alert acknowledged successfully',
+            ),
             backgroundColor: const Color(0xFF0C1033),
           ),
         );
@@ -129,10 +134,7 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
             'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
           ),
           fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black,
-            BlendMode.dstATop,
-          ),
+          colorFilter: ColorFilter.mode(Colors.black, BlendMode.dstATop),
         ),
       ),
       child: Scaffold(
@@ -140,7 +142,10 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
         appBar: PremiumAppBar(
           title: 'Intruder Detection Center',
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
           actions: [
@@ -182,9 +187,11 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.verified_user_rounded, color: Colors.greenAccent, size: 70)
-                .animate(onPlay: (c) => c.repeat())
-                .shimmer(duration: 2.seconds),
+            const Icon(
+              Icons.verified_user_rounded,
+              color: Colors.greenAccent,
+              size: 70,
+            ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 2.seconds),
             const SizedBox(height: 20),
             Text(
               'FACULTY CAMERA NETWORK SECURE',
@@ -214,10 +221,12 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
     final timestamp = log['timestamp'] ?? '';
     final status = log['status'] ?? 'Active';
     final base64Image = log['image_base64'] as String?;
-    
+
     final isAcknow = status == 'Acknowledged';
     final dateStr = timestamp.split('T')[0];
-    final timeStr = timestamp.contains('T') ? timestamp.split('T')[1].substring(0, 5) : '';
+    final timeStr = timestamp.contains('T')
+        ? timestamp.split('T')[1].substring(0, 5)
+        : '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -232,14 +241,18 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
                   children: [
                     Icon(
                       Icons.warning_amber_rounded,
-                      color: isAcknow ? Colors.greenAccent : const Color(0xFFF05050),
+                      color: isAcknow
+                          ? Colors.greenAccent
+                          : const Color(0xFFF05050),
                       size: 20,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       type.toString().toUpperCase(),
                       style: GoogleFonts.inter(
-                        color: isAcknow ? Colors.greenAccent : const Color(0xFFF05050),
+                        color: isAcknow
+                            ? Colors.greenAccent
+                            : const Color(0xFFF05050),
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                         letterSpacing: 1,
@@ -248,16 +261,31 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                    color: (isAcknow ? Colors.greenAccent : const Color(0xFFF05050)).withValues(alpha: 0.1),
-                    border: Border.all(color: (isAcknow ? Colors.greenAccent : const Color(0xFFF05050)).withValues(alpha: 0.3)),
+                    color:
+                        (isAcknow
+                                ? Colors.greenAccent
+                                : const Color(0xFFF05050))
+                            .withValues(alpha: 0.1),
+                    border: Border.all(
+                      color:
+                          (isAcknow
+                                  ? Colors.greenAccent
+                                  : const Color(0xFFF05050))
+                              .withValues(alpha: 0.3),
+                    ),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     status.toString().toUpperCase(),
                     style: TextStyle(
-                      color: isAcknow ? Colors.greenAccent : const Color(0xFFF05050),
+                      color: isAcknow
+                          ? Colors.greenAccent
+                          : const Color(0xFFF05050),
                       fontSize: 8,
                       fontWeight: FontWeight.bold,
                     ),
@@ -266,7 +294,7 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Image Snapshot Preview
             if (base64Image != null && base64Image.isNotEmpty)
               GestureDetector(
@@ -276,7 +304,9 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
@@ -291,18 +321,31 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.02),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.05),
+                  ),
                 ),
                 child: const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.broken_image_rounded, color: Colors.white24, size: 36),
+                    Icon(
+                      Icons.broken_image_rounded,
+                      color: Colors.white24,
+                      size: 36,
+                    ),
                     SizedBox(height: 8),
-                    Text('IMAGE CAPTURE CORRUPTED OR INCOMPLETE', style: TextStyle(color: Colors.white24, fontSize: 8, letterSpacing: 1)),
+                    Text(
+                      'IMAGE CAPTURE CORRUPTED OR INCOMPLETE',
+                      style: TextStyle(
+                        color: Colors.white24,
+                        fontSize: 8,
+                        letterSpacing: 1,
+                      ),
+                    ),
                   ],
                 ),
               ),
-            
+
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -312,12 +355,19 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
                   children: [
                     Text(
                       location,
-                      style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Detected: $dateStr at $timeStr',
-                      style: const TextStyle(color: Colors.white38, fontSize: 10),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 10,
+                      ),
                     ),
                   ],
                 ),
@@ -328,10 +378,21 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
                       backgroundColor: Colors.white.withValues(alpha: 0.05),
                       foregroundColor: AppColors.gold,
                       side: const BorderSide(color: AppColors.gold, width: 1),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                     ),
-                    child: const Text('ACKNOWLEDGE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'ACKNOWLEDGE',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -343,17 +404,23 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
 
   Widget _buildBase64Image(String base64Str) {
     try {
-      final cleanBase64 = base64Str.contains(',') ? base64Str.split(',')[1] : base64Str;
+      final cleanBase64 = base64Str.contains(',')
+          ? base64Str.split(',')[1]
+          : base64Str;
       Uint8List bytes = base64Decode(cleanBase64.trim());
       return Image.memory(
         bytes,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return const Center(child: Icon(Icons.broken_image_rounded, color: Colors.white24));
+          return const Center(
+            child: Icon(Icons.broken_image_rounded, color: Colors.white24),
+          );
         },
       );
     } catch (e) {
-      return const Center(child: Icon(Icons.broken_image_rounded, color: Colors.white24));
+      return const Center(
+        child: Icon(Icons.broken_image_rounded, color: Colors.white24),
+      );
     }
   }
 

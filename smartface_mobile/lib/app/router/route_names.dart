@@ -65,7 +65,8 @@ class AppRoutes {
   static const String studentAttendanceHubPath = '/student/attendance/hub';
 
   static const String teacherAttendanceCommandName = 'teacherAttendanceCommand';
-  static const String teacherAttendanceCommandPath = '/teacher/attendance/command';
+  static const String teacherAttendanceCommandPath =
+      '/teacher/attendance/command';
 
   // Teacher Shell Tab routes
   static const String teacherHomeName = 'teacherHome';

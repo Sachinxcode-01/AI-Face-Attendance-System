@@ -31,7 +31,8 @@ class GlowButton extends StatefulWidget {
   State<GlowButton> createState() => _GlowButtonState();
 }
 
-class _GlowButtonState extends State<GlowButton> with SingleTickerProviderStateMixin {
+class _GlowButtonState extends State<GlowButton>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
   bool _isPressed = false;
@@ -94,9 +95,12 @@ class _GlowButtonState extends State<GlowButton> with SingleTickerProviderStateM
     // Base colors pulling from DarkAppColors or general theme scheme
     final buttonColor = isEnabled
         ? (widget.color ?? appColors?.primary ?? theme.colorScheme.primary)
-        : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.08));
+        : (isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.08));
 
-    final baseGlowColor = widget.glowColor ??
+    final baseGlowColor =
+        widget.glowColor ??
         appColors?.primaryGlow ??
         theme.colorScheme.secondary;
 

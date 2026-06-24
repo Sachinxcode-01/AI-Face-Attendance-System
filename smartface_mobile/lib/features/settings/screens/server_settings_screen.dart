@@ -113,7 +113,8 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _faceMatchingThreshold = prefs.getDouble('sf_face_match_threshold') ?? 0.80;
+      _faceMatchingThreshold =
+          prefs.getDouble('sf_face_match_threshold') ?? 0.80;
       _livenessStrictness = prefs.getDouble('sf_liveness_strictness') ?? 0.85;
       _sessionTimeout = prefs.getString('sf_session_timeout') ?? '15 mins';
       _biometricAppLock = prefs.getBool('sf_biometric_app_lock') ?? false;
@@ -162,7 +163,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
 
       AppToast.show(
         context,
-        message: online ? 'Gateway Server Reachable!' : 'Gateway Connection Failed!',
+        message: online
+            ? 'Gateway Server Reachable!'
+            : 'Gateway Connection Failed!',
         type: online ? ToastType.success : ToastType.error,
       );
     }
@@ -208,7 +211,8 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     if (mounted) {
       AppToast.show(
         context,
-        message: 'Sandbox Security Role changed to ${role.label}! Re-routing app...',
+        message:
+            'Sandbox Security Role changed to ${role.label}! Re-routing app...',
         type: ToastType.success,
       );
     }
@@ -221,7 +225,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     final newAvatar = _avatarController.text.trim();
 
     if (newName.isEmpty) {
-      AppToast.show(context, message: 'Name cannot be empty', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Name cannot be empty',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -284,7 +292,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       'Generating facial embeddings graph...',
       'Optimizing deep learning weights...',
       'Syncing parameters to Nexa AI Cloud...',
-      'Face ID Enrollment Complete!'
+      'Face ID Enrollment Complete!',
     ];
 
     int currentStep = 0;
@@ -345,7 +353,10 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       appBar: PremiumAppBar(
         title: 'System Configurations',
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black87),
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
           onPressed: () => context.pop(),
         ),
         backgroundColor: isDark ? AppColors.bgDeep : AppColors.bgLight,
@@ -380,7 +391,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   // ============================================================================
 
   // Tablet Two-Column Layout (Master Sidebar + Detail Pane)
-  Widget _buildTabletLayout(SessionManager session, ThemeController themeCtrl, bool isDark) {
+  Widget _buildTabletLayout(
+    SessionManager session,
+    ThemeController themeCtrl,
+    bool isDark,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
@@ -391,7 +406,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             width: 240,
             child: GlassContainer(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              borderColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+              borderColor: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.05),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: List.generate(_tabsInfo.length, (index) {
@@ -410,7 +427,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                         color: isSelected
                             ? Colors.white
                             : (isDark ? Colors.white70 : Colors.black87),
-                        weight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        weight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                     tileColor: isSelected
@@ -435,10 +454,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              child: _buildActiveTabContent(session, themeCtrl, isDark)
-                  .animate()
-                  .fadeIn(duration: 300.ms)
-                  .slideX(begin: 0.04, end: 0),
+              child: _buildActiveTabContent(
+                session,
+                themeCtrl,
+                isDark,
+              ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.04, end: 0),
             ),
           ),
         ],
@@ -447,14 +467,21 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   }
 
   // Mobile Swipeable Layout (Horizontal tabs on top + Detail scroll)
-  Widget _buildMobileLayout(SessionManager session, ThemeController themeCtrl, bool isDark) {
+  Widget _buildMobileLayout(
+    SessionManager session,
+    ThemeController themeCtrl,
+    bool isDark,
+  ) {
     return Column(
       children: [
         // Horizontal Scrollable Tabs Selector
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
           child: Row(
             children: List.generate(_tabsInfo.length, (index) {
               final item = _tabsInfo[index];
@@ -467,7 +494,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                       Icon(
                         item['icon'],
                         size: 16,
-                        color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87),
+                        color: isSelected
+                            ? Colors.black
+                            : (isDark ? Colors.white70 : Colors.black87),
                       ),
                       const SizedBox(width: 6),
                       Text(item['label']),
@@ -483,9 +512,13 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                     }
                   },
                   selectedColor: AppColors.gold,
-                  backgroundColor: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.03),
+                  backgroundColor: isDark
+                      ? Colors.white.withValues(alpha: 0.03)
+                      : Colors.black.withValues(alpha: 0.03),
                   labelStyle: AppText.body(
-                    color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87),
+                    color: isSelected
+                        ? Colors.black
+                        : (isDark ? Colors.white70 : Colors.black87),
                     weight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                   shape: RoundedRectangleBorder(
@@ -493,7 +526,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                     side: BorderSide(
                       color: isSelected
                           ? Colors.transparent
-                          : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.08)),
+                          : (isDark
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : Colors.black.withValues(alpha: 0.08)),
                     ),
                   ),
                 ),
@@ -507,10 +542,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.all(AppSpacing.md),
-            child: _buildActiveTabContent(session, themeCtrl, isDark)
-                .animate()
-                .fadeIn(duration: 250.ms)
-                .slideY(begin: 0.05, end: 0),
+            child: _buildActiveTabContent(
+              session,
+              themeCtrl,
+              isDark,
+            ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.05, end: 0),
           ),
         ),
       ],
@@ -518,7 +554,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   }
 
   // Resolves currently selected settings section UI
-  Widget _buildActiveTabContent(SessionManager session, ThemeController themeCtrl, bool isDark) {
+  Widget _buildActiveTabContent(
+    SessionManager session,
+    ThemeController themeCtrl,
+    bool isDark,
+  ) {
     switch (_activeTabIndex) {
       case 0:
         return _buildAccountSettings(session, themeCtrl, isDark);
@@ -540,7 +580,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   // ============================================================================
 
   // 1. Account Settings: Identity, Theme, and Sandbox Roles
-  Widget _buildAccountSettings(SessionManager session, ThemeController themeCtrl, bool isDark) {
+  Widget _buildAccountSettings(
+    SessionManager session,
+    ThemeController themeCtrl,
+    bool isDark,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -556,10 +600,13 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   CircleAvatar(
                     radius: 32,
                     backgroundColor: AppColors.accent,
-                    backgroundImage: session.avatarUrl != null && session.avatarUrl!.isNotEmpty
+                    backgroundImage:
+                        session.avatarUrl != null &&
+                            session.avatarUrl!.isNotEmpty
                         ? NetworkImage(session.avatarUrl!)
                         : null,
-                    child: session.avatarUrl == null || session.avatarUrl!.isEmpty
+                    child:
+                        session.avatarUrl == null || session.avatarUrl!.isEmpty
                         ? Text(
                             (session.name ?? 'U').substring(0, 1).toUpperCase(),
                             style: GoogleFonts.outfit(
@@ -577,11 +624,15 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                       children: [
                         Text(
                           session.name ?? 'Guest User',
-                          style: AppText.subheading(color: isDark ? Colors.white : Colors.black87),
+                          style: AppText.subheading(
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
                         ),
                         Text(
                           session.email ?? 'unregistered@university.edu',
-                          style: AppText.body(color: isDark ? Colors.white38 : Colors.black45),
+                          style: AppText.body(
+                            color: isDark ? Colors.white38 : Colors.black45,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Row(
@@ -590,15 +641,28 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                             if (session.biometricRegistered) ...[
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.success.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                                  border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
+                                  color: AppColors.success.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.sm,
+                                  ),
+                                  border: Border.all(
+                                    color: AppColors.success.withValues(
+                                      alpha: 0.35,
+                                    ),
+                                  ),
                                 ),
                                 child: Text(
                                   'FACE VERIFIED',
-                                  style: AppText.label(color: AppColors.success),
+                                  style: AppText.label(
+                                    color: AppColors.success,
+                                  ),
                                 ),
                               ),
                             ],
@@ -636,7 +700,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.check_circle_outline, size: 18, color: Colors.black),
+                    const Icon(
+                      Icons.check_circle_outline,
+                      size: 18,
+                      color: Colors.black,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'UPDATE PROFILE DATA',
@@ -658,7 +726,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             children: [
               Text(
                 'Light / Dark Mode Toggle',
-                style: AppText.body(color: isDark ? Colors.white : Colors.black87),
+                style: AppText.body(
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
               ),
               Switch(
                 value: isDark,
@@ -676,7 +746,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Hot-swap the active authenticated user role inside the security token environment. Instantly evaluates navigation routing guards.',
-          style: AppText.caption(color: isDark ? Colors.white38 : Colors.black45),
+          style: AppText.caption(
+            color: isDark ? Colors.white38 : Colors.black45,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         GlassContainer(
@@ -703,7 +775,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? role.color.withValues(alpha: 0.15) : Colors.transparent,
+          color: isSelected
+              ? role.color.withValues(alpha: 0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.sm),
           border: Border.all(
             color: isSelected ? role.color : Colors.transparent,
@@ -712,11 +786,17 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
         ),
         child: Column(
           children: [
-            Icon(role.icon, color: isSelected ? role.color : Colors.white38, size: 20),
+            Icon(
+              role.icon,
+              color: isSelected ? role.color : Colors.white38,
+              size: 20,
+            ),
             const SizedBox(height: 4),
             Text(
               role.label,
-              style: AppText.label(color: isSelected ? role.color : Colors.white38),
+              style: AppText.label(
+                color: isSelected ? role.color : Colors.white38,
+              ),
             ),
           ],
         ),
@@ -741,24 +821,37 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 children: [
                   Text(
                     'Session Timeout Duration',
-                    style: AppText.body(color: isDark ? Colors.white : Colors.black87),
+                    style: AppText.body(
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                   ),
                   DropdownButton<String>(
                     value: _sessionTimeout,
-                    dropdownColor: isDark ? AppColors.bgDeep : AppColors.bgLight,
-                    style: AppText.body(color: isDark ? Colors.white : Colors.black87, weight: FontWeight.bold),
+                    dropdownColor: isDark
+                        ? AppColors.bgDeep
+                        : AppColors.bgLight,
+                    style: AppText.body(
+                      color: isDark ? Colors.white : Colors.black87,
+                      weight: FontWeight.bold,
+                    ),
                     underline: const SizedBox.shrink(),
-                    items: ['5 mins', '15 mins', '30 mins', '1 hour', 'Never'].map((String val) {
-                      return DropdownMenuItem<String>(
-                        value: val,
-                        child: Text(val),
-                      );
-                    }).toList(),
+                    items: ['5 mins', '15 mins', '30 mins', '1 hour', 'Never']
+                        .map((String val) {
+                          return DropdownMenuItem<String>(
+                            value: val,
+                            child: Text(val),
+                          );
+                        })
+                        .toList(),
                     onChanged: (newVal) {
                       if (newVal != null) {
                         setState(() => _sessionTimeout = newVal);
                         _savePreference('sf_session_timeout', newVal);
-                        AppToast.show(context, message: 'Session timeout set to $newVal', type: ToastType.success);
+                        AppToast.show(
+                          context,
+                          message: 'Session timeout set to $newVal',
+                          type: ToastType.success,
+                        );
                       }
                     },
                   ),
@@ -774,7 +867,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                     children: [
                       Text(
                         'Biometric App Lock Protection',
-                        style: AppText.body(color: isDark ? Colors.white : Colors.black87),
+                        style: AppText.body(
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                       ),
                       Text(
                         'Requires Face ID verification on launch',
@@ -790,7 +885,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                       _savePreference('sf_biometric_app_lock', val);
                       AppToast.show(
                         context,
-                        message: val ? 'App Lock activated!' : 'App Lock deactivated!',
+                        message: val
+                            ? 'App Lock activated!'
+                            : 'App Lock deactivated!',
                         type: val ? ToastType.success : ToastType.warning,
                       );
                     },
@@ -807,7 +904,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                     children: [
                       Text(
                         'Two-Factor Authentication',
-                        style: AppText.body(color: isDark ? Colors.white : Colors.black87),
+                        style: AppText.body(
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                       ),
                       Text(
                         'Sends secure verification codes on logins',
@@ -846,7 +945,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Tune the underlying face scanning accuracy algorithms. Increasing threshold increases strictness against spoofing/facial mimics.',
-          style: AppText.caption(color: isDark ? Colors.white38 : Colors.black45),
+          style: AppText.caption(
+            color: isDark ? Colors.white38 : Colors.black45,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         GlassContainer(
@@ -860,11 +961,17 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 children: [
                   Text(
                     'Face Matching Threshold',
-                    style: AppText.body(color: isDark ? Colors.white : Colors.black87, weight: FontWeight.bold),
+                    style: AppText.body(
+                      color: isDark ? Colors.white : Colors.black87,
+                      weight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     '${(_faceMatchingThreshold * 100).toInt()}% Confidence',
-                    style: GoogleFonts.robotoMono(color: AppColors.gold, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.robotoMono(
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -881,7 +988,12 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 },
                 onChangeEnd: (val) {
                   _savePreference('sf_face_match_threshold', val);
-                  AppToast.show(context, message: 'Matching threshold updated: ${(val * 100).toInt()}%', type: ToastType.info);
+                  AppToast.show(
+                    context,
+                    message:
+                        'Matching threshold updated: ${(val * 100).toInt()}%',
+                    type: ToastType.info,
+                  );
                 },
               ),
               const Divider(height: AppSpacing.lg),
@@ -891,11 +1003,17 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 children: [
                   Text(
                     'Liveness Guard Strictness',
-                    style: AppText.body(color: isDark ? Colors.white : Colors.black87, weight: FontWeight.bold),
+                    style: AppText.body(
+                      color: isDark ? Colors.white : Colors.black87,
+                      weight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     '${(_livenessStrictness * 100).toInt()}% strict',
-                    style: GoogleFonts.robotoMono(color: AppColors.cyan, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.robotoMono(
+                      color: AppColors.cyan,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -912,7 +1030,12 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 },
                 onChangeEnd: (val) {
                   _savePreference('sf_liveness_strictness', val);
-                  AppToast.show(context, message: 'Liveness strictness set to ${(val * 100).toInt()}%', type: ToastType.info);
+                  AppToast.show(
+                    context,
+                    message:
+                        'Liveness strictness set to ${(val * 100).toInt()}%',
+                    type: ToastType.info,
+                  );
                 },
               ),
             ],
@@ -928,12 +1051,16 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             children: [
               Text(
                 'Enrollment Templates & Models',
-                style: AppText.subheading(color: isDark ? Colors.white : Colors.black87),
+                style: AppText.subheading(
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
                 'Reconstruct your institutional Face ID neural node embeddings. Helpful if your physical profile changes or detection degrades.',
-                style: AppText.body(color: isDark ? Colors.white54 : Colors.black54),
+                style: AppText.body(
+                  color: isDark ? Colors.white54 : Colors.black54,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               GlowButton(
@@ -944,7 +1071,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.model_training_outlined, size: 18, color: Colors.black),
+                    const Icon(
+                      Icons.model_training_outlined,
+                      size: 18,
+                      color: Colors.black,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'RE-OPTIMIZE FACE ID EMBEDDINGS',
@@ -1004,7 +1135,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             children: [
               Text(
                 'Gateway Reachability Ping:',
-                style: AppText.body(color: isDark ? Colors.white : Colors.black87),
+                style: AppText.body(
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
               ),
               _buildStatusIndicator(),
             ],
@@ -1016,8 +1149,12 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             Expanded(
               child: GlowButton(
                 onPressed: _testingConnection ? null : _testPing,
-                color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.06),
-                glowColor: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.black.withValues(alpha: 0.06),
+                glowColor: isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.1),
                 borderRadius: AppRadius.sm,
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 child: Row(
@@ -1027,13 +1164,22 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                         ? const SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.gold,
+                            ),
                           )
-                        : Icon(Icons.network_ping, size: 18, color: isDark ? AppColors.gold : AppColors.indigo),
+                        : Icon(
+                            Icons.network_ping,
+                            size: 18,
+                            color: isDark ? AppColors.gold : AppColors.indigo,
+                          ),
                     const SizedBox(width: 8),
                     Text(
                       'TEST PING',
-                      style: AppText.button(color: isDark ? AppColors.gold : AppColors.indigo),
+                      style: AppText.button(
+                        color: isDark ? AppColors.gold : AppColors.indigo,
+                      ),
                     ),
                   ],
                 ),
@@ -1050,7 +1196,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.save_outlined, size: 18, color: Colors.black),
+                    const Icon(
+                      Icons.save_outlined,
+                      size: 18,
+                      color: Colors.black,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'SAVE CONFIG',
@@ -1075,14 +1225,17 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
         const SizedBox(height: AppSpacing.sm),
         Text(
           'View and revoke device logins that have active credentials authenticated against your institutional token credentials.',
-          style: AppText.caption(color: isDark ? Colors.white38 : Colors.black45),
+          style: AppText.caption(
+            color: isDark ? Colors.white38 : Colors.black45,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: _trustedDevices.length,
-          separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
+          separatorBuilder: (context, index) =>
+              const SizedBox(height: AppSpacing.sm),
           itemBuilder: (context, index) {
             final dev = _trustedDevices[index];
             final isCurrent = dev['isCurrent'] == 'true';
@@ -1090,7 +1243,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
               padding: const EdgeInsets.all(AppSpacing.md),
               borderColor: isCurrent
                   ? AppColors.success.withValues(alpha: 0.3)
-                  : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+                  : (isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.05)),
               child: Row(
                 children: [
                   Container(
@@ -1098,14 +1253,20 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                     decoration: BoxDecoration(
                       color: isCurrent
                           ? AppColors.success.withValues(alpha: 0.12)
-                          : (isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.03)),
+                          : (isDark
+                                ? Colors.white.withValues(alpha: 0.03)
+                                : Colors.black.withValues(alpha: 0.03)),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       dev['name']!.contains('MacBook')
                           ? Icons.laptop_mac_rounded
-                          : (dev['name']!.contains('iPad') ? Icons.tablet_mac_rounded : Icons.phone_android_rounded),
-                      color: isCurrent ? AppColors.success : (isDark ? Colors.white70 : Colors.black87),
+                          : (dev['name']!.contains('iPad')
+                                ? Icons.tablet_mac_rounded
+                                : Icons.phone_android_rounded),
+                      color: isCurrent
+                          ? AppColors.success
+                          : (isDark ? Colors.white70 : Colors.black87),
                       size: 20,
                     ),
                   ),
@@ -1116,7 +1277,10 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                       children: [
                         Text(
                           dev['name']!,
-                          style: AppText.body(color: isDark ? Colors.white : Colors.black87, weight: FontWeight.bold),
+                          style: AppText.body(
+                            color: isDark ? Colors.white : Colors.black87,
+                            weight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           '${dev['location']} • ${dev['lastActive']}',
@@ -1127,13 +1291,20 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   ),
                   if (!isCurrent)
                     IconButton(
-                      icon: const Icon(Icons.remove_circle_outline, color: AppColors.errorLight, size: 20),
+                      icon: const Icon(
+                        Icons.remove_circle_outline,
+                        color: AppColors.errorLight,
+                        size: 20,
+                      ),
                       tooltip: 'Revoke Access',
                       onPressed: () => _revokeDevice(dev['id']!, dev['name']!),
                     )
                   else
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.success.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(4),
@@ -1199,7 +1370,10 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       children: [
         Text(
           label,
-          style: AppText.body(color: isDark ? Colors.white70 : Colors.black54, weight: FontWeight.w600),
+          style: AppText.body(
+            color: isDark ? Colors.white70 : Colors.black54,
+            weight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: AppSpacing.xs),
         TextField(
@@ -1208,17 +1382,25 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black38),
+            hintStyle: TextStyle(
+              color: isDark ? Colors.white38 : Colors.black38,
+            ),
             prefixIcon: Icon(icon, color: AppColors.gold),
             filled: true,
-            fillColor: isDark ? Colors.white.withValues(alpha: 0.02) : Colors.black.withValues(alpha: 0.02),
+            fillColor: isDark
+                ? Colors.white.withValues(alpha: 0.02)
+                : Colors.black.withValues(alpha: 0.02),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.sm),
-              borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+              borderSide: BorderSide(
+                color: isDark ? Colors.white12 : Colors.black12,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.sm),
-              borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+              borderSide: BorderSide(
+                color: isDark ? Colors.white12 : Colors.black12,
+              ),
             ),
           ),
         ),
@@ -1234,13 +1416,13 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
           const SizedBox(
             width: 12,
             height: 12,
-            child: CircularProgressIndicator(strokeWidth: 1.5, color: AppColors.gold),
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: AppColors.gold,
+            ),
           ),
           const SizedBox(width: 8),
-          Text(
-            'TESTING...',
-            style: AppText.label(color: AppColors.gold),
-          ),
+          Text('TESTING...', style: AppText.label(color: AppColors.gold)),
         ],
       );
     }
@@ -1259,10 +1441,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
               ),
             ),
             const SizedBox(width: 6),
-            Text(
-              'ONLINE',
-              style: AppText.label(color: AppColors.success),
-            ),
+            Text('ONLINE', style: AppText.label(color: AppColors.success)),
           ],
         );
       case 'OFFLINE':
@@ -1278,17 +1457,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
               ),
             ),
             const SizedBox(width: 6),
-            Text(
-              'OFFLINE',
-              style: AppText.label(color: AppColors.error),
-            ),
+            Text('OFFLINE', style: AppText.label(color: AppColors.error)),
           ],
         );
       default:
-        return Text(
-          'UNTESTED',
-          style: AppText.label(color: Colors.white38),
-        );
+        return Text('UNTESTED', style: AppText.label(color: Colors.white38));
     }
   }
 
@@ -1309,24 +1482,33 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   alignment: Alignment.center,
                   children: [
                     Container(
-                      height: 150,
-                      width: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.gold.withValues(alpha: 0.15), width: 3),
-                      ),
-                    ).animate(onPlay: (c) => c.repeat()).rotate(duration: 4.seconds),
+                          height: 150,
+                          width: 150,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.gold.withValues(alpha: 0.15),
+                              width: 3,
+                            ),
+                          ),
+                        )
+                        .animate(onPlay: (c) => c.repeat())
+                        .rotate(duration: 4.seconds),
                     CircularProgressIndicator(
                       value: _retrainingProgress,
                       strokeWidth: 4,
                       backgroundColor: Colors.white10,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.gold,
+                      ),
                     ),
                     const Icon(
-                      Icons.blur_on_rounded,
-                      color: AppColors.gold,
-                      size: 60,
-                    ).animate(onPlay: (c) => c.repeat()).shimmer(delay: 500.ms, duration: 1500.ms),
+                          Icons.blur_on_rounded,
+                          color: AppColors.gold,
+                          size: 60,
+                        )
+                        .animate(onPlay: (c) => c.repeat())
+                        .shimmer(delay: 500.ms, duration: 1500.ms),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xl),

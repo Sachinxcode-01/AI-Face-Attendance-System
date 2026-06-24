@@ -1220,7 +1220,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 const SizedBox(width: 18),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'SECURITY & BIOMETRICS',
@@ -1290,13 +1291,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                                       }
                                     },
                                     color: AppColors.gold,
-                                    glowColor: AppColors.gold.withValues(alpha: 0.3),
+                                    glowColor: AppColors.gold.withValues(
+                                      alpha: 0.3,
+                                    ),
                                     borderRadius: 12,
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,
                                     ),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         const Icon(
                                           Icons.face_unlock_outlined,
@@ -1403,7 +1407,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.logout_rounded, size: 20, color: Colors.white),
+                            const Icon(
+                              Icons.logout_rounded,
+                              size: 20,
+                              color: Colors.white,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'LOGOUT SESSION',

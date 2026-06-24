@@ -34,16 +34,22 @@ class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: centerTitle,
       leading: leading,
       leadingWidth: leadingWidth,
-      title: titleWidget ?? Row(
-        children: [
-          SvgPicture.asset('assets/logos/logo.svg', width: 44, height: 44),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.w700, color: Theme.of(context).textTheme.titleLarge?.color),
+      title:
+          titleWidget ??
+          Row(
+            children: [
+              SvgPicture.asset('assets/logos/logo.svg', width: 44, height: 44),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).textTheme.titleLarge?.color,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
       actions: actions,
     );
   }

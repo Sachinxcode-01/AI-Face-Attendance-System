@@ -61,7 +61,11 @@ class NotificationController extends ChangeNotifier {
   }
 
   /// Opens the WebSocket notifications stream and subscribes to events.
-  void startWebSocketStream({String path = '/ws/notifications', String? token, required String email}) {
+  void startWebSocketStream({
+    String path = '/ws/notifications',
+    String? token,
+    required String email,
+  }) {
     _wsSubscription?.cancel();
     _repository.connectWebSocket(path: path, token: token);
     _wsSubscription = _repository.webSocketStream.listen((event) {

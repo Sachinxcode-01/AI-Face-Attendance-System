@@ -25,7 +25,8 @@ class StatusBadge extends StatelessWidget {
     final appColors = theme.extension<DarkAppColors>();
     final isDark = theme.brightness == Brightness.dark;
 
-    final effectiveColor = color ?? appColors?.success ?? const Color(0xFF10B981);
+    final effectiveColor =
+        color ?? appColors?.success ?? const Color(0xFF10B981);
 
     // Subtle background and border colors using opacities of status color
     final bg = effectiveColor.withValues(alpha: isDark ? 0.08 : 0.06);
@@ -74,16 +75,14 @@ class _PulseDot extends StatefulWidget {
   final Color color;
   final double size;
 
-  const _PulseDot({
-    required this.color,
-    required this.size,
-  });
+  const _PulseDot({required this.color, required this.size});
 
   @override
   State<_PulseDot> createState() => _PulseDotState();
 }
 
-class _PulseDotState extends State<_PulseDot> with SingleTickerProviderStateMixin {
+class _PulseDotState extends State<_PulseDot>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
   @override

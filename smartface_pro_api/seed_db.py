@@ -6,11 +6,11 @@ from datetime import datetime, timedelta
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 
-# Ensure we can load modules from the current directory
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Ensure we can load modules from the project workspace
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from auth_service import AuthService
-from db_indexes import create_indexes
+from smartface_pro_api.src.auth.auth_service import AuthService
+from smartface_pro_api.src.config.db_indexes import create_indexes
 
 load_dotenv()
 
@@ -29,6 +29,10 @@ async def seed():
     await db.leaves.delete_many({})
     await db.security_logs.delete_many({})
     await db.login_otps.delete_many({})
+    await db.login_sessions.delete_many({})
+    await db.audit_logs.delete_many({})
+    await db.login_logs.delete_many({})
+    await db.devices.delete_many({})
     
     print("Creating database indexes...")
     await create_indexes(db)
@@ -39,6 +43,14 @@ async def seed():
     # 2. Seed Users
     print("Seeding users...")
     users = [
+        # Super Admin
+        {
+            "email": "superadmin@smartface.pro",
+            "full_name": "Super Administrator",
+            "role": "super_admin",
+            "password": hashed_password,
+            "created_at": datetime.utcnow()
+        },
         # Admin
         {
             "email": "admin@smartface.pro",

@@ -44,11 +44,11 @@ class LeaveBalance {
 
   /// Converts leave balances to a JSON compatible map.
   Map<String, dynamic> toJson() => {
-        'sick': sick,
-        'personal': personal,
-        'emergency': emergency,
-        'academic': academic,
-      };
+    'sick': sick,
+    'personal': personal,
+    'emergency': emergency,
+    'academic': academic,
+  };
 
   /// Returns a copy of LeaveBalance with updated values.
   LeaveBalance copyWith({

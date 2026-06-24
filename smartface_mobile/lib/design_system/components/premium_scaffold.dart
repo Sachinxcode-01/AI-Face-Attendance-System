@@ -11,7 +11,8 @@ class PremiumScaffold extends StatefulWidget {
   State<PremiumScaffold> createState() => _PremiumScaffoldState();
 }
 
-class _PremiumScaffoldState extends State<PremiumScaffold> with SingleTickerProviderStateMixin {
+class _PremiumScaffoldState extends State<PremiumScaffold>
+    with SingleTickerProviderStateMixin {
   Alignment _begin = Alignment.topLeft;
   Alignment _end = Alignment.bottomRight;
   Timer? _timer;
@@ -19,7 +20,10 @@ class _PremiumScaffoldState extends State<PremiumScaffold> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 6), (_) => _toggleGradient());
+    _timer = Timer.periodic(
+      const Duration(seconds: 6),
+      (_) => _toggleGradient(),
+    );
   }
 
   void _toggleGradient() {
@@ -52,7 +56,7 @@ class _PremiumScaffoldState extends State<PremiumScaffold> with SingleTickerProv
               begin: _begin,
               end: _end,
               colors: [
-                const Color(0xFF020617),            // bgDeep
+                const Color(0xFF020617), // bgDeep
                 const Color(0xFF0F172A).withValues(alpha: 0.9), // bgDark
                 const Color(0xFF1E3A8A).withValues(alpha: 0.06), // indigo
               ],

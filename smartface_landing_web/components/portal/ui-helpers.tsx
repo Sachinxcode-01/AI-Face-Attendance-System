@@ -1,27 +1,166 @@
 'use client';
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef } from 'react';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { ShieldAlert, AlertTriangle, CheckCircle, User } from 'lucide-react';
 
-// Reusable Dashboard Card
+// Upgraded Premium Dashboard Card
 interface DashboardCardProps {
   children: React.ReactNode;
   className?: string;
   glow?: boolean;
+  floating?: boolean;
+  delay?: number; // stagger delay in ms
 }
 
-export function DashboardCard({ children, className = '', glow = false }: DashboardCardProps) {
+export function DashboardCard({ 
+  children, 
+  className = '', 
+  glow = false,
+  floating = false,
+  delay = 0
+}: DashboardCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Motion values for tilt tracking
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  // Smooth springs for rotating angles (-8deg to +8deg)
+  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [8, -8]), { stiffness: 150, damping: 25 });
+  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-8, 8]), { stiffness: 150, damping: 25 });
+
+  // Magnetic hover offset springs (-10px to +10px)
+  const translateX = useSpring(useTransform(x, [-0.5, 0.5], [-10, 10]), { stiffness: 120, damping: 22 });
+  const translateY = useSpring(useTransform(y, [-0.5, 0.5], [-10, 10]), { stiffness: 120, damping: 22 });
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    
+    // Normalize coordinates between -0.5 and 0.5 relative to card center
+    const mouseX = (event.clientX - rect.left) / width - 0.5;
+    const mouseY = (event.clientY - rect.top) / height - 0.5;
+    
+    x.set(mouseX);
+    y.set(mouseY);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
   return (
-    <motion.div
-      whileHover={{ y: -4, scale: 1.01 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className={`glass-panel rounded-2xl p-6 relative overflow-hidden backdrop-blur-md ${
-        glow ? 'shadow-[0_0_20px_rgba(37,99,235,0.08)] border-primary/20' : ''
-      } ${className}`}
-    >
-      {children}
-    </motion.div>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes premiumBorderGlow {
+          0%, 100% {
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 10px rgba(37, 99, 235, 0.02);
+          }
+          50% {
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), 0 0 25px rgba(139, 92, 246, 0.12);
+          }
+        }
+        @keyframes premiumFloat {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+        @keyframes premiumLightSweep {
+          0% { left: -100%; }
+          100% { left: 200%; }
+        }
+        .premium-card-glow {
+          animation: premiumBorderGlow 6s infinite ease-in-out;
+        }
+        .premium-card-float {
+          animation: premiumFloat 4s infinite ease-in-out;
+        }
+        .premium-glass-card {
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          transform-style: preserve-3d;
+          perspective: 1500px;
+          transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .premium-glass-card:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.25);
+          box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
+        }
+        /* Icon scaling & rotation on hover */
+        .premium-glass-card:hover .lucide {
+          transform: scale(1.2) rotate(8deg);
+          filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.4));
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+        }
+        .premium-glass-card .lucide {
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+        }
+        /* Reveal animation for content */
+        .premium-glass-card .reveal-title {
+          transition: transform 0.3s ease;
+        }
+        .premium-glass-card:hover .reveal-title {
+          transform: translateY(-3px);
+        }
+        .premium-glass-card .reveal-desc {
+          opacity: 0.7;
+          transition: opacity 0.3s ease;
+        }
+        .premium-glass-card:hover .reveal-desc {
+          opacity: 1;
+        }
+      `}} />
+
+      <motion.div
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        initial={{ opacity: 0, y: 40, scale: 0.95 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ 
+          duration: 0.8, 
+          ease: [0.16, 1, 0.3, 1], // easeOutExpo
+          delay: delay / 1000 
+        }}
+        style={{
+          rotateX,
+          rotateY,
+          x: translateX,
+          y: translateY,
+          transformStyle: 'preserve-3d',
+        }}
+        className={`premium-glass-card rounded-3xl p-6 relative overflow-hidden ${
+          glow ? 'premium-card-glow' : ''
+        } ${
+          floating ? 'premium-card-float' : ''
+        } ${className}`}
+      >
+        {/* Light Sweep Glow overlay */}
+        <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-3xl">
+          <div 
+            className="absolute top-0 bottom-0 w-[45%] bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-20deg]"
+            style={{
+              left: '-100%',
+              animation: 'premiumLightSweep 3.5s infinite linear',
+            }}
+          />
+        </div>
+
+        {/* Inner Card Content */}
+        <div style={{ transform: 'translateZ(10px)' }}>
+          {children}
+        </div>
+      </motion.div>
+    </>
   );
 }
 
@@ -53,11 +192,11 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 // Interactive Dev Role Switcher
 interface DevSwitcherProps {
   currentRole: string;
-  onRoleChange: (role: 'student' | 'parent' | 'teacher' | 'admin') => void;
+  onRoleChange: (role: 'student' | 'parent' | 'teacher' | 'admin' | 'super_admin') => void;
 }
 
 export function DeveloperRoleSwitcher({ currentRole, onRoleChange }: DevSwitcherProps) {
-  const roles: ('student' | 'parent' | 'teacher' | 'admin')[] = ['student', 'parent', 'teacher', 'admin'];
+  const roles: ('student' | 'parent' | 'teacher' | 'admin' | 'super_admin')[] = ['student', 'parent', 'teacher', 'admin', 'super_admin'];
 
   return (
     <div className="bg-slate-950/90 border-b border-white/10 px-4 py-2 flex items-center justify-between gap-4 text-xs z-50">
@@ -78,7 +217,7 @@ export function DeveloperRoleSwitcher({ currentRole, onRoleChange }: DevSwitcher
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            {role}
+            {role === 'super_admin' ? 'Super Admin' : role}
           </button>
         ))}
       </div>

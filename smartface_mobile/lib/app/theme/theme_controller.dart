@@ -141,4 +141,3 @@ class ThemeController extends ChangeNotifier {
     }
   }
 }
-

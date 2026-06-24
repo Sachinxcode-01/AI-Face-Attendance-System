@@ -15,10 +15,11 @@ export interface ApplyLeavePayload {
 
 async function request(path: string, options: RequestInit = {}) {
   const url = `${BASE_URL}${path}`;
+  const isFormData = options.body instanceof FormData;
   const response = await fetch(url, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...options.headers,
     },
   });
@@ -78,6 +79,18 @@ export const api = {
     request("/auth/google", {
       method: "POST",
       body: JSON.stringify({ email, name, role }),
+    }),
+
+  forgotPassword: (email: string) =>
+    request("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  resetPassword: (email: string, newPassword: string) =>
+    request("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ email, new_password: newPassword }),
     }),
 
   // Attendance
@@ -187,8 +200,61 @@ export const api = {
       headers: { Authorization: `Bearer ${token}` },
     }),
 
+  getSessions: (token: string) =>
+    request("/auth/sessions", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  revokeSession: (sessionId: string, token: string) =>
+    request(`/auth/sessions/${sessionId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  logoutAll: (token: string) =>
+    request("/auth/logout-all", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getSystemAuditLogs: (token: string) =>
+    request("/system/audit-logs", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getSystemDbStats: (token: string) =>
+    request("/system/db-stats", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
   getSecurityLogs: (token: string) =>
     request("/security/logs", {
       headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  completeProfile: (data: Record<string, unknown>, token: string) =>
+    request("/auth/complete-profile", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    }),
+
+  registerFaceBiometrics: (images: string[], token: string) =>
+    request("/auth/face-register", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ images }),
+    }),
+
+  getMe: (token: string) =>
+    request("/auth/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  uploadAvatar: (formData: FormData, token: string) =>
+    request("/auth/upload-avatar", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
     }),
 };

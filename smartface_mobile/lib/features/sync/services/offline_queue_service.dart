@@ -87,12 +87,15 @@ class OfflineQueueService {
 
     // Check for duplicates (same student + session)
     final existing = getAll().where(
-      (r) => r.studentEmail == studentEmail &&
-             r.sessionId == sessionId &&
-             r.syncStatus != SyncStatus.failed,
+      (r) =>
+          r.studentEmail == studentEmail &&
+          r.sessionId == sessionId &&
+          r.syncStatus != SyncStatus.failed,
     );
     if (existing.isNotEmpty) {
-      debugPrint('[OfflineQueue] Duplicate detected for $studentEmail/$sessionId');
+      debugPrint(
+        '[OfflineQueue] Duplicate detected for $studentEmail/$sessionId',
+      );
       return existing.first;
     }
 
@@ -122,21 +125,23 @@ class OfflineQueueService {
   List<AttendanceQueueRecord> getAll() {
     _ensureInitialized();
     return _box!.values
-        .map((raw) => AttendanceQueueRecord.fromJson(
-              jsonDecode(raw) as Map<String, dynamic>,
-            ))
+        .map(
+          (raw) => AttendanceQueueRecord.fromJson(
+            jsonDecode(raw) as Map<String, dynamic>,
+          ),
+        )
         .toList();
   }
 
   /// Returns all records eligible for sync (pending + failed with retries left).
   List<AttendanceQueueRecord> getPendingForSync() {
     return getAll().where((r) {
-      if (r.syncStatus == SyncStatus.pending) return true;
-      if (r.syncStatus == SyncStatus.failed && r.retryCount < _maxRetries) {
-        return true;
-      }
-      return false;
-    }).toList()
+        if (r.syncStatus == SyncStatus.pending) return true;
+        if (r.syncStatus == SyncStatus.failed && r.retryCount < _maxRetries) {
+          return true;
+        }
+        return false;
+      }).toList()
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt)); // oldest first
   }
 
@@ -144,10 +149,18 @@ class OfflineQueueService {
   Map<SyncStatus, int> getCounts() {
     final all = getAll();
     return {
-      SyncStatus.pending: all.where((r) => r.syncStatus == SyncStatus.pending).length,
-      SyncStatus.syncing: all.where((r) => r.syncStatus == SyncStatus.syncing).length,
-      SyncStatus.synced: all.where((r) => r.syncStatus == SyncStatus.synced).length,
-      SyncStatus.failed: all.where((r) => r.syncStatus == SyncStatus.failed).length,
+      SyncStatus.pending: all
+          .where((r) => r.syncStatus == SyncStatus.pending)
+          .length,
+      SyncStatus.syncing: all
+          .where((r) => r.syncStatus == SyncStatus.syncing)
+          .length,
+      SyncStatus.synced: all
+          .where((r) => r.syncStatus == SyncStatus.synced)
+          .length,
+      SyncStatus.failed: all
+          .where((r) => r.syncStatus == SyncStatus.failed)
+          .length,
     };
   }
 

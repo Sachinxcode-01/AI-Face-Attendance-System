@@ -34,7 +34,10 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Map<String, dynamic>> loginWithPassword(String email, String password) async {
+  Future<Map<String, dynamic>> loginWithPassword(
+    String email,
+    String password,
+  ) async {
     _setLoading(true);
     _setError(null);
     try {
@@ -56,7 +59,8 @@ class AuthController extends ChangeNotifier {
     _setError(null);
     try {
       final res = await _repository.sendLoginOtp(email);
-      if (res.containsKey('detail') && res['detail'].toString().contains('failed')) {
+      if (res.containsKey('detail') &&
+          res['detail'].toString().contains('failed')) {
         _setError(res['detail'] as String);
       }
       return res;
@@ -94,7 +98,12 @@ class AuthController extends ChangeNotifier {
     _setLoading(true);
     _setError(null);
     try {
-      final res = await _repository.googleLogin(email, name, role, avatarUrl: avatarUrl);
+      final res = await _repository.googleLogin(
+        email,
+        name,
+        role,
+        avatarUrl: avatarUrl,
+      );
       if (res.containsKey('detail') && !res.containsKey('token')) {
         _setError(res['detail'] as String);
       }
@@ -117,7 +126,9 @@ class AuthController extends ChangeNotifier {
     _setError(null);
     try {
       final res = await _repository.register(name, email, password, role);
-      if (res.containsKey('detail') && !res.containsKey('token') && !res.containsKey('email')) {
+      if (res.containsKey('detail') &&
+          !res.containsKey('token') &&
+          !res.containsKey('email')) {
         _setError(res['detail'] as String);
       }
       return res;
@@ -159,7 +170,10 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data, String token) async {
+  Future<Map<String, dynamic>> updateProfile(
+    Map<String, dynamic> data,
+    String token,
+  ) async {
     _setLoading(true);
     _setError(null);
     try {
@@ -185,7 +199,10 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> registerBiometric(String email, String token) async {
+  Future<Map<String, dynamic>> registerBiometric(
+    String email,
+    String token,
+  ) async {
     _setLoading(true);
     try {
       return await _repository.registerBiometric(email, token);

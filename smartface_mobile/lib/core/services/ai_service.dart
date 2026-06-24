@@ -27,7 +27,8 @@ class AIService {
         '/ai/ask',
         headers: {
           'Content-Type': 'application/json',
-          'X-Groq-Api-Key': EnvConfig.groqApiKey, // Secure injection of Groq credential
+          'X-Groq-Api-Key':
+              EnvConfig.groqApiKey, // Secure injection of Groq credential
         },
         body: {'email': email, 'query': query},
       );
@@ -42,7 +43,9 @@ class AIService {
   Future<Map<String, dynamic>> directProviderQuery(String prompt) async {
     try {
       // Stub demonstrating how EnvConfig.groqApiKey is securely used directly
-      debugPrint('[AIService] Performing direct query with secure key prefix: ${EnvConfig.groqApiKey.substring(0, 5)}...');
+      debugPrint(
+        '[AIService] Performing direct query with secure key prefix: ${EnvConfig.groqApiKey.substring(0, 5)}...',
+      );
       return {'message': 'Direct provider query successful'};
     } catch (_) {
       return {'detail': 'Query failed'};

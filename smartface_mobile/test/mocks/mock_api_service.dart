@@ -19,11 +19,7 @@ class MockApiService {
           jsonEncode({
             'access_token': token,
             'token_type': 'bearer',
-            'user': {
-              'email': email,
-              'full_name': name,
-              'role': role,
-            }
+            'user': {'email': email, 'full_name': name, 'role': role},
           }),
           200,
         );

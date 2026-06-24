@@ -56,7 +56,9 @@ class StudentStatsModel {
       rank: json['rank'] as String? ?? 'Ranked #4 in Department',
       streak: json['streak'] as int? ?? 0,
       subjects: subjectsList
-          .map((sub) => SubjectProgressModel.fromJson(sub as Map<String, dynamic>))
+          .map(
+            (sub) => SubjectProgressModel.fromJson(sub as Map<String, dynamic>),
+          )
           .toList(),
     );
   }
@@ -127,4 +129,3 @@ class SubjectProgressModel {
     };
   }
 }
-

@@ -31,7 +31,9 @@ class RouteGuards {
     // 1. Unauthenticated users must be redirected to login unless they are already on an auth route
     if (!isLoggedIn) {
       if (!isAuthRoute) {
-        debugPrint('[RouteGuard] Redirecting guest trying to access "$path" to Login');
+        debugPrint(
+          '[RouteGuard] Redirecting guest trying to access "$path" to Login',
+        );
         return AppRoutes.loginPath;
       }
       return null;
@@ -40,7 +42,9 @@ class RouteGuards {
     // 2. Authenticated users should not access auth pages (splash, login, register, etc.)
     if (isAuthRoute) {
       final dashboard = _getDashboardPathForRole(role);
-      debugPrint('[RouteGuard] Authenticated user on guest route. Redirecting to: $dashboard');
+      debugPrint(
+        '[RouteGuard] Authenticated user on guest route. Redirecting to: $dashboard',
+      );
       return dashboard;
     }
 
@@ -50,7 +54,7 @@ class RouteGuards {
       debugPrint('[RouteGuard] Blocked non-student user ($role) from "$path"');
       return AppRoutes.unauthorizedPath;
     }
-    
+
     // Teacher routes: only teachers allowed
     if (path.startsWith('/teacher') && role != UserRole.teacher) {
       debugPrint('[RouteGuard] Blocked non-teacher user ($role) from "$path"');

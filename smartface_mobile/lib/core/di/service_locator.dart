@@ -64,7 +64,9 @@ Future<void> initServiceLocator() async {
   sl.registerLazySingleton<ApiService>(() => ApiService());
   sl.registerLazySingleton<AuthService>(() => AuthService(sl<ApiService>()));
   sl.registerLazySingleton<AIService>(() => AIService(sl<ApiService>()));
-  sl.registerLazySingleton<AttendanceService>(() => AttendanceService(sl<ApiService>()));
+  sl.registerLazySingleton<AttendanceService>(
+    () => AttendanceService(sl<ApiService>()),
+  );
   sl.registerLazySingleton<NotificationService>(
     () => NotificationService(sl<ApiService>(), sl<WebSocketService>()),
   );
@@ -77,18 +79,25 @@ Future<void> initServiceLocator() async {
   sl.registerLazySingleton<AttendanceRepository>(
     () => AttendanceRepository(sl<AttendanceService>()),
   );
-  sl.registerLazySingleton<AIRepository>(
-    () => AIRepository(sl<AIService>()),
-  );
+  sl.registerLazySingleton<AIRepository>(() => AIRepository(sl<AIService>()));
   sl.registerLazySingleton<NotificationRepository>(
-    () => NotificationRepository(sl<NotificationService>(), sl<WebSocketService>()),
+    () => NotificationRepository(
+      sl<NotificationService>(),
+      sl<WebSocketService>(),
+    ),
   );
 
   // ─── Controllers (Factories) ──────────────────────────────────────
-  sl.registerFactory<AuthController>(() => AuthController(sl<AuthRepository>()));
-  sl.registerFactory<AttendanceController>(() => AttendanceController(sl<AttendanceRepository>()));
+  sl.registerFactory<AuthController>(
+    () => AuthController(sl<AuthRepository>()),
+  );
+  sl.registerFactory<AttendanceController>(
+    () => AttendanceController(sl<AttendanceRepository>()),
+  );
   sl.registerFactory<AIController>(() => AIController(sl<AIRepository>()));
-  sl.registerFactory<NotificationController>(() => NotificationController(sl<NotificationRepository>()));
+  sl.registerFactory<NotificationController>(
+    () => NotificationController(sl<NotificationRepository>()),
+  );
   sl.registerFactory<LeaveController>(() => LeaveController());
   sl.registerFactory<AnalyticsController>(() => AnalyticsController());
 
@@ -101,22 +110,28 @@ Future<void> initServiceLocator() async {
   sl.registerSingleton<OfflineQueueService>(offlineQueueService);
   sl.registerSingleton<ConnectivityService>(connectivityService);
 
-  sl.registerLazySingleton<SyncEngine>(() => SyncEngine(
-    queueService: sl<OfflineQueueService>(),
-    connectivityService: sl<ConnectivityService>(),
-    apiService: sl<ApiService>(),
-    syncState: sl<SyncState>(),
-  ));
+  sl.registerLazySingleton<SyncEngine>(
+    () => SyncEngine(
+      queueService: sl<OfflineQueueService>(),
+      connectivityService: sl<ConnectivityService>(),
+      apiService: sl<ApiService>(),
+      syncState: sl<SyncState>(),
+    ),
+  );
 
-  sl.registerLazySingleton<SyncRepository>(() => SyncRepository(
-    queueService: sl<OfflineQueueService>(),
-    syncEngine: sl<SyncEngine>(),
-  ));
+  sl.registerLazySingleton<SyncRepository>(
+    () => SyncRepository(
+      queueService: sl<OfflineQueueService>(),
+      syncEngine: sl<SyncEngine>(),
+    ),
+  );
 
-  sl.registerFactory<SyncController>(() => SyncController(
-    repository: sl<SyncRepository>(),
-    syncState: sl<SyncState>(),
-  ));
+  sl.registerFactory<SyncController>(
+    () => SyncController(
+      repository: sl<SyncRepository>(),
+      syncState: sl<SyncState>(),
+    ),
+  );
 
   // ─── Core Singletons ──────────────────────────────────────────────
   final sessionManager = SessionManager();

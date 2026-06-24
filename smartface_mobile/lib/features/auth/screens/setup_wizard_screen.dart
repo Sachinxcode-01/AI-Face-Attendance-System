@@ -622,36 +622,42 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 children: [
                   // Rotating tech scanning HUD ring
                   Container(
-                    height: 230,
-                    width: 230,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.cyanAccent.withValues(alpha: 0.3),
-                        width: 1.5,
-                      ),
-                    ),
-                  ).animate(onPlay: (c) => c.repeat())
-                   .rotate(duration: 4.seconds),
-                  
-                  Container(
-                    height: 220,
-                    width: 220,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.success.withValues(alpha: 0.5),
-                        width: 2.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.success.withValues(alpha: 0.15),
-                          blurRadius: 15,
+                        height: 230,
+                        width: 230,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.cyanAccent.withValues(alpha: 0.3),
+                            width: 1.5,
+                          ),
                         ),
-                      ],
-                    ),
-                  ).animate(onPlay: (c) => c.repeat(reverse: true))
-                   .scale(begin: const Offset(0.98, 0.98), end: const Offset(1.02, 1.02), duration: 1200.ms),
+                      )
+                      .animate(onPlay: (c) => c.repeat())
+                      .rotate(duration: 4.seconds),
+
+                  Container(
+                        height: 220,
+                        width: 220,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.success.withValues(alpha: 0.5),
+                            width: 2.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.success.withValues(alpha: 0.15),
+                              blurRadius: 15,
+                            ),
+                          ],
+                        ),
+                      )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scale(
+                        begin: const Offset(0.98, 0.98),
+                        end: const Offset(1.02, 1.02),
+                        duration: 1200.ms,
+                      ),
 
                   // Camera Preview Circle
                   ClipOval(
@@ -671,17 +677,21 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              
+
               // Pulsing verification indicator
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(color: Colors.cyanAccent, shape: BoxShape.circle),
-                  ).animate(onPlay: (c) => c.repeat(reverse: true))
-                   .scale(end: const Offset(1.6, 1.6), duration: 600.ms),
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.cyanAccent,
+                          shape: BoxShape.circle,
+                        ),
+                      )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scale(end: const Offset(1.6, 1.6), duration: 600.ms),
                   const SizedBox(width: 8),
                   Text(
                     'ALIGN FACE WITHIN RADAR TARGET',
@@ -702,67 +712,103 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.02),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.05),
+                  ),
                 ),
                 child: Column(
                   children: [
-                    _buildTelemetryRow('LIGHTING QUALITY', 0.85, '85% (GOOD)', AppColors.success),
+                    _buildTelemetryRow(
+                      'LIGHTING QUALITY',
+                      0.85,
+                      '85% (GOOD)',
+                      AppColors.success,
+                    ),
                     const SizedBox(height: 12),
-                    _buildTelemetryRow('BLUR DETECTION', 0.92, '92% (SHARP)', AppColors.success),
+                    _buildTelemetryRow(
+                      'BLUR DETECTION',
+                      0.92,
+                      '92% (SHARP)',
+                      AppColors.success,
+                    ),
                     const SizedBox(height: 12),
-                    _buildTelemetryRow('LIVENESS STATUS', 1.0, 'PASS (1.0)', Colors.cyanAccent),
+                    _buildTelemetryRow(
+                      'LIVENESS STATUS',
+                      1.0,
+                      'PASS (1.0)',
+                      Colors.cyanAccent,
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
 
               ElevatedButton.icon(
-                onPressed: () async {
-                  final args = ModalRoute.of(context)?.settings.arguments as Map?;
-                  final email = args?['email'] ?? 'test@student.com';
-                  final token = args?['token'] ?? '';
+                    onPressed: () async {
+                      final args =
+                          ModalRoute.of(context)?.settings.arguments as Map?;
+                      final email = args?['email'] ?? 'test@student.com';
+                      final token = args?['token'] ?? '';
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Extracting Facial Vector Signatures...'),
-                      backgroundColor: AppColors.accent,
-                      duration: Duration(seconds: 2),
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Extracting Facial Vector Signatures...',
+                          ),
+                          backgroundColor: AppColors.accent,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+
+                      await Future.delayed(const Duration(milliseconds: 600));
+
+                      final result = await ApiService.registerBiometric(
+                        email,
+                        token,
+                      );
+
+                      if (!mounted) return;
+                      if (result.containsKey('message')) {
+                        AppToast.show(
+                          context,
+                          title: 'Bio ID Registered',
+                          message: 'AI Scan Complete.',
+                          type: ToastType.success,
+                        );
+                        _nextPage();
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.face_unlock_outlined,
+                      color: Colors.white,
                     ),
-                  );
-
-                  await Future.delayed(const Duration(milliseconds: 600));
-
-                  final result = await ApiService.registerBiometric(
-                    email,
-                    token,
-                  );
-
-                  if (!mounted) return;
-                  if (result.containsKey('message')) {
-                    AppToast.show(
-                      context,
-                      title: 'Bio ID Registered',
-                      message: 'AI Scan Complete.',
-                      type: ToastType.success,
-                    );
-                    _nextPage();
-                  }
-                },
-                icon: const Icon(Icons.face_unlock_outlined, color: Colors.white),
-                label: Text(
-                  'START SECURE BIO-SCAN',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, letterSpacing: 0.8),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  shadowColor: AppColors.accent.withValues(alpha: 0.4),
-                  elevation: 8,
-                ),
-              ).animate(onPlay: (c) => c.repeat(reverse: true))
-               .shimmer(delay: 1500.ms, duration: 1500.ms, color: Colors.white30),
+                    label: Text(
+                      'START SECURE BIO-SCAN',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      shadowColor: AppColors.accent.withValues(alpha: 0.4),
+                      elevation: 8,
+                    ),
+                  )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .shimmer(
+                    delay: 1500.ms,
+                    duration: 1500.ms,
+                    color: Colors.white30,
+                  ),
             ],
           ),
         ),
@@ -770,7 +816,12 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     );
   }
 
-  Widget _buildTelemetryRow(String label, double progress, String val, Color barColor) {
+  Widget _buildTelemetryRow(
+    String label,
+    double progress,
+    String val,
+    Color barColor,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -779,11 +830,20 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           children: [
             Text(
               label,
-              style: GoogleFonts.inter(fontSize: 9, color: Colors.white38, fontWeight: FontWeight.bold, letterSpacing: 1),
+              style: GoogleFonts.inter(
+                fontSize: 9,
+                color: Colors.white38,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
             ),
             Text(
               val,
-              style: GoogleFonts.robotoMono(fontSize: 10, color: barColor, fontWeight: FontWeight.bold),
+              style: GoogleFonts.robotoMono(
+                fontSize: 10,
+                color: barColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),

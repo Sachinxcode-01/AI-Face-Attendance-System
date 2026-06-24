@@ -80,7 +80,7 @@ class AnalyticsController extends ChangeNotifier {
     try {
       final res = await ApiService.getAdminStats(token);
       _adminAnalytics = res;
-      
+
       final logs = await ApiService.getActivityLog(token);
       _adminAnalytics['activity_log'] = logs;
     } catch (e) {

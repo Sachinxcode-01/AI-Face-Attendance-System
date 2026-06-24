@@ -22,8 +22,8 @@ class SyncController extends ChangeNotifier {
   SyncController({
     required SyncRepository repository,
     required SyncState syncState,
-  })  : _repository = repository,
-        _syncState = syncState {
+  }) : _repository = repository,
+       _syncState = syncState {
     _syncState.addListener(_onSyncStateChanged);
   }
 

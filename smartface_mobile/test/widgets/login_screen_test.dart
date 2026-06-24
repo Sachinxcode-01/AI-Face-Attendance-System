@@ -19,7 +19,12 @@ class TestFirebasePlatform extends FirebasePlatform {
   FirebaseAppPlatform app([String name = defaultFirebaseAppName]) {
     return FirebaseAppPlatform(
       name,
-      const FirebaseOptions(apiKey: 'mock-key', appId: 'mock-id', messagingSenderId: 'mock-sender', projectId: 'mock-project'),
+      const FirebaseOptions(
+        apiKey: 'mock-key',
+        appId: 'mock-id',
+        messagingSenderId: 'mock-sender',
+        projectId: 'mock-project',
+      ),
     );
   }
 
@@ -30,7 +35,13 @@ class TestFirebasePlatform extends FirebasePlatform {
   }) async {
     return FirebaseAppPlatform(
       name ?? defaultFirebaseAppName,
-      options ?? const FirebaseOptions(apiKey: 'mock-key', appId: 'mock-id', messagingSenderId: 'mock-sender', projectId: 'mock-project'),
+      options ??
+          const FirebaseOptions(
+            apiKey: 'mock-key',
+            appId: 'mock-id',
+            messagingSenderId: 'mock-sender',
+            projectId: 'mock-project',
+          ),
     );
   }
 }
@@ -39,7 +50,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   // Mock method channels for Secure Storage and Firebase Auth
-  const secureStorageChannel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+  const secureStorageChannel = MethodChannel(
+    'plugins.it_nomads.com/flutter_secure_storage',
+  );
   const firebaseAuthChannel = MethodChannel('plugins.flutter.io/firebase_auth');
 
   final Map<String, String> mockSecureStorage = {};
@@ -52,33 +65,37 @@ void main() {
 
     // Secure Storage Mocks
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(secureStorageChannel, (MethodCall methodCall) async {
-      switch (methodCall.method) {
-        case 'read':
-          final key = methodCall.arguments['key'] as String;
-          return mockSecureStorage[key];
-        case 'write':
-          final key = methodCall.arguments['key'] as String;
-          final value = methodCall.arguments['value'] as String;
-          mockSecureStorage[key] = value;
-          return null;
-        case 'delete':
-          final key = methodCall.arguments['key'] as String;
-          mockSecureStorage.remove(key);
-          return null;
-        case 'deleteAll':
-          mockSecureStorage.clear();
-          return null;
-        default:
-          return null;
-      }
-    });
+        .setMockMethodCallHandler(secureStorageChannel, (
+          MethodCall methodCall,
+        ) async {
+          switch (methodCall.method) {
+            case 'read':
+              final key = methodCall.arguments['key'] as String;
+              return mockSecureStorage[key];
+            case 'write':
+              final key = methodCall.arguments['key'] as String;
+              final value = methodCall.arguments['value'] as String;
+              mockSecureStorage[key] = value;
+              return null;
+            case 'delete':
+              final key = methodCall.arguments['key'] as String;
+              mockSecureStorage.remove(key);
+              return null;
+            case 'deleteAll':
+              mockSecureStorage.clear();
+              return null;
+            default:
+              return null;
+          }
+        });
 
     // Firebase Auth Mocks
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(firebaseAuthChannel, (MethodCall methodCall) async {
-      return null;
-    });
+        .setMockMethodCallHandler(firebaseAuthChannel, (
+          MethodCall methodCall,
+        ) async {
+          return null;
+        });
   });
 
   setUp(() {
@@ -90,17 +107,19 @@ void main() {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<SessionManager>(create: (_) => SessionManager()),
-        ChangeNotifierProvider<ThemeController>(create: (_) => ThemeController()),
+        ChangeNotifierProvider<ThemeController>(
+          create: (_) => ThemeController(),
+        ),
         ChangeNotifierProvider<AppState>(create: (_) => AppState()),
       ],
-      child: const MaterialApp(
-        home: LoginScreen(),
-      ),
+      child: const MaterialApp(home: LoginScreen()),
     );
   }
 
   group('LoginScreen Widget Tests', () {
-    testWidgets('renders brand title and access option tabs correctly', (WidgetTester tester) async {
+    testWidgets('renders brand title and access option tabs correctly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pump(const Duration(seconds: 1)); // Let initial frame render
 
@@ -109,31 +128,46 @@ void main() {
       expect(find.text('ENTERPRISE BIOMETRIC INTELLIGENCE'), findsOneWidget);
 
       // Verify form elements exist
-      expect(find.byType(TextField), findsAtLeast(2)); // Email & Password fields
+      expect(
+        find.byType(TextField),
+        findsAtLeast(2),
+      ); // Email & Password fields
     });
 
-    testWidgets('displays server settings overlay dialog on tapping settings icon', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pump(const Duration(seconds: 1)); // Let initial frame render
+    testWidgets(
+      'displays server settings overlay dialog on tapping settings icon',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(createTestWidget());
+        await tester.pump(
+          const Duration(seconds: 1),
+        ); // Let initial frame render
 
-      // Tap settings button
-      final settingsBtnFinder = find.byIcon(Icons.settings_outlined);
-      expect(settingsBtnFinder, findsOneWidget);
-      await tester.tap(settingsBtnFinder);
-      await tester.pump(const Duration(seconds: 1)); // Let dialog animation complete
+        // Tap settings button
+        final settingsBtnFinder = find.byIcon(Icons.settings_outlined);
+        expect(settingsBtnFinder, findsOneWidget);
+        await tester.tap(settingsBtnFinder);
+        await tester.pump(
+          const Duration(seconds: 1),
+        ); // Let dialog animation complete
 
-      // Verify that Server Settings dialog is visible
-      expect(find.text('Server Settings'), findsOneWidget);
-      expect(find.text('Configure backend connection parameters:'), findsOneWidget);
-      expect(find.text('SAVE & APPLY'), findsOneWidget);
+        // Verify that Server Settings dialog is visible
+        expect(find.text('Server Settings'), findsOneWidget);
+        expect(
+          find.text('Configure backend connection parameters:'),
+          findsOneWidget,
+        );
+        expect(find.text('SAVE & APPLY'), findsOneWidget);
 
-      // Close dialog
-      await tester.tap(find.text('SAVE & APPLY'));
-      await tester.idle(); // Allow async save options to execute
-      await tester.pump(const Duration(milliseconds: 500)); // Let dialog close animation complete
+        // Close dialog
+        await tester.tap(find.text('SAVE & APPLY'));
+        await tester.idle(); // Allow async save options to execute
+        await tester.pump(
+          const Duration(milliseconds: 500),
+        ); // Let dialog close animation complete
 
-      // Verify dialog is closed
-      expect(find.text('Server Settings'), findsNothing);
-    });
+        // Verify dialog is closed
+        expect(find.text('Server Settings'), findsNothing);
+      },
+    );
   });
 }

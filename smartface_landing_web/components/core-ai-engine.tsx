@@ -1,5 +1,6 @@
 'use client';
 
+// Neural engine for particle-based visual rendering
 import React, { useRef, useMemo, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Points, PointMaterial } from '@react-three/drei';
@@ -141,7 +142,7 @@ function BrainParticles({ count = 350 }: { count?: number }) {
           depthWrite={false}
           opacity={0.8}
         />
-      </Points> group
+      </Points>
     </group>
   );
 }
@@ -267,7 +268,8 @@ export default function CoreAiEngine() {
           
           <Canvas
             camera={{ position: [0, 0, 2.5], fov: 50 }}
-            gl={{ alpha: true, antialias: true }}
+            dpr={[1, 1.5]}
+            gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
           >
             <ambientLight intensity={0.5} />
             <pointLight position={[5, 5, 5]} intensity={1.5} color="#8B5CF6" />

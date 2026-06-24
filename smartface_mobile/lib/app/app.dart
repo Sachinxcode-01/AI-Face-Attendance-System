@@ -30,7 +30,8 @@ class SmartAttendanceApp extends StatelessWidget {
       darkTheme: ThemeController.darkTheme,
       themeMode: themeCtrl.mode,
       routerConfig: appRouter,
-      builder: (context, child) => PremiumScaffold(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) =>
+          PremiumScaffold(child: child ?? const SizedBox.shrink()),
     );
   }
 }

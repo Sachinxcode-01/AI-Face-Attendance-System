@@ -68,11 +68,7 @@ class AttendanceRing extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             boxShadow: [
-              BoxShadow(
-                color: glowColor,
-                blurRadius: 28,
-                spreadRadius: 1,
-              ),
+              BoxShadow(color: glowColor, blurRadius: 28, spreadRadius: 1),
             ],
           ),
           child: Stack(

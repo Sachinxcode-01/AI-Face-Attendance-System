@@ -21,8 +21,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 
-export 'package:smartface_attendance/shared/widgets/premium_widgets.dart' show MetricCard;
-
+export 'package:smartface_attendance/shared/widgets/premium_widgets.dart'
+    show MetricCard;
 
 // ======================================================
 // Widgets: Glassmorphic Card Container
@@ -92,5 +92,3 @@ class GlassmorphicCard extends StatelessWidget {
     );
   }
 }
-
-
