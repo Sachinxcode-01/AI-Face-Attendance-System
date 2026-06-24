@@ -63,12 +63,20 @@ import 'package:smartface_attendance/features/settings/screens/component_showcas
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 
 // Global Key for root navigator
-final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'root',
+);
 
 // Shell Navigators
-final GlobalKey<NavigatorState> studentShellKey = GlobalKey<NavigatorState>(debugLabel: 'studentShell');
-final GlobalKey<NavigatorState> teacherShellKey = GlobalKey<NavigatorState>(debugLabel: 'teacherShell');
-final GlobalKey<NavigatorState> adminShellKey = GlobalKey<NavigatorState>(debugLabel: 'adminShell');
+final GlobalKey<NavigatorState> studentShellKey = GlobalKey<NavigatorState>(
+  debugLabel: 'studentShell',
+);
+final GlobalKey<NavigatorState> teacherShellKey = GlobalKey<NavigatorState>(
+  debugLabel: 'teacherShell',
+);
+final GlobalKey<NavigatorState> adminShellKey = GlobalKey<NavigatorState>(
+  debugLabel: 'adminShell',
+);
 
 /// Custom horizontal slide + fade transition matching our premium motion specifications (300-350ms, easeOutCubic)
 Page<dynamic> buildPageWithTransition<T>({
@@ -83,13 +91,13 @@ Page<dynamic> buildPageWithTransition<T>({
       return FadeTransition(
         opacity: animation,
         child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0.04, 0.0),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-          )),
+          position:
+              Tween<Offset>(
+                begin: const Offset(0.04, 0.0),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+              ),
           child: child,
         ),
       );
@@ -523,11 +531,26 @@ class StudentShell extends StatelessWidget {
         selectedItemColor: const Color(0xFFFFD700),
         unselectedItemColor: Colors.white38,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner), label: 'Scan'),
-          BottomNavigationBarItem(icon: Icon(Icons.event_busy_outlined), label: 'Leave'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications_none_outlined), label: 'Alerts'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_circle_outlined), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.qr_code_scanner),
+            label: 'Scan',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.event_busy_outlined),
+            label: 'Leave',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_none_outlined),
+            label: 'Alerts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle_outlined),
+            label: 'Profile',
+          ),
         ],
       ),
     );
@@ -552,11 +575,26 @@ class TeacherShell extends StatelessWidget {
         selectedItemColor: const Color(0xFFFFD700),
         unselectedItemColor: Colors.white38,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.videocam_outlined), label: 'Feed'),
-          BottomNavigationBarItem(icon: Icon(Icons.qr_code_rounded), label: 'QR'),
-          BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), label: 'Stats'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_circle_outlined), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.videocam_outlined),
+            label: 'Feed',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.qr_code_rounded),
+            label: 'QR',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics_outlined),
+            label: 'Stats',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle_outlined),
+            label: 'Profile',
+          ),
         ],
       ),
     );
@@ -581,11 +619,26 @@ class AdminShell extends StatelessWidget {
         selectedItemColor: const Color(0xFFFFD700),
         unselectedItemColor: Colors.white38,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.approval_outlined), label: 'Approvals'),
-          BottomNavigationBarItem(icon: Icon(Icons.security_outlined), label: 'Security'),
-          BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), label: 'Analytics'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_circle_outlined), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.approval_outlined),
+            label: 'Approvals',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.security_outlined),
+            label: 'Security',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics_outlined),
+            label: 'Analytics',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle_outlined),
+            label: 'Profile',
+          ),
         ],
       ),
     );
@@ -646,13 +699,13 @@ class UnauthorizedScreen extends StatelessWidget {
                   }
                 },
                 icon: const Icon(Icons.arrow_back, color: Colors.black),
-                label: Text(
-                  'BACK TO DASHBOARD',
-                  style: AppText.button(),
-                ),
+                label: Text('BACK TO DASHBOARD', style: AppText.button()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.gold,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),

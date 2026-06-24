@@ -23,7 +23,10 @@ class AttendanceRepository {
     return await _service.isServerOnline();
   }
 
-  Future<Map<String, dynamic>> startSession(String teacherEmail, String subject) async {
+  Future<Map<String, dynamic>> startSession(
+    String teacherEmail,
+    String subject,
+  ) async {
     return await _service.startSession(teacherEmail, subject);
   }
 
@@ -67,7 +70,10 @@ class AttendanceRepository {
     return await _service.getActivityLog(token);
   }
 
-  Future<Map<String, dynamic>?> getStudentAnalytics(String email, String token) async {
+  Future<Map<String, dynamic>?> getStudentAnalytics(
+    String email,
+    String token,
+  ) async {
     return await _service.getStudentAnalytics(email, token);
   }
 
@@ -105,7 +111,10 @@ class AttendanceRepository {
     return await _service.sendIntruderAlert(cameraId);
   }
 
-  Future<Map<String, dynamic>> acknowledgeIntruderAlert(String logId, String token) async {
+  Future<Map<String, dynamic>> acknowledgeIntruderAlert(
+    String logId,
+    String token,
+  ) async {
     return await _service.acknowledgeIntruderAlert(logId, token);
   }
 }

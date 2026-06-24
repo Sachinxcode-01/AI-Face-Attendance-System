@@ -27,10 +27,12 @@ class StudentLeaveDashboardScreen extends StatefulWidget {
   const StudentLeaveDashboardScreen({super.key});
 
   @override
-  State<StudentLeaveDashboardScreen> createState() => _StudentLeaveDashboardScreenState();
+  State<StudentLeaveDashboardScreen> createState() =>
+      _StudentLeaveDashboardScreenState();
 }
 
-class _StudentLeaveDashboardScreenState extends State<StudentLeaveDashboardScreen> {
+class _StudentLeaveDashboardScreenState
+    extends State<StudentLeaveDashboardScreen> {
   bool _isInit = true;
 
   @override
@@ -77,9 +79,15 @@ class _StudentLeaveDashboardScreenState extends State<StudentLeaveDashboardScree
 
     final balance = controller.balance;
     final leaves = controller.leaves;
-    final pendingCount = leaves.where((l) => l.status.toLowerCase() == 'pending').length;
-    final approvedCount = leaves.where((l) => l.status.toLowerCase() == 'approved').length;
-    final rejectedCount = leaves.where((l) => l.status.toLowerCase() == 'rejected').length;
+    final pendingCount = leaves
+        .where((l) => l.status.toLowerCase() == 'pending')
+        .length;
+    final approvedCount = leaves
+        .where((l) => l.status.toLowerCase() == 'approved')
+        .length;
+    final rejectedCount = leaves
+        .where((l) => l.status.toLowerCase() == 'rejected')
+        .length;
 
     return Container(
       decoration: BoxDecoration(
@@ -90,7 +98,9 @@ class _StudentLeaveDashboardScreenState extends State<StudentLeaveDashboardScree
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            isDark ? Colors.black.withValues(alpha: 0.25) : Colors.white.withValues(alpha: 0.9),
+            isDark
+                ? Colors.black.withValues(alpha: 0.25)
+                : Colors.white.withValues(alpha: 0.9),
             isDark ? BlendMode.dstATop : BlendMode.srcOver,
           ),
         ),
@@ -101,7 +111,10 @@ class _StudentLeaveDashboardScreenState extends State<StudentLeaveDashboardScree
           title: 'Leave Portal',
           actions: [
             IconButton(
-              icon: Icon(Icons.refresh, color: isDark ? Colors.white : AppColors.bgDark),
+              icon: Icon(
+                Icons.refresh,
+                color: isDark ? Colors.white : AppColors.bgDark,
+              ),
               onPressed: _refreshData,
             ),
           ],
@@ -111,10 +124,15 @@ class _StudentLeaveDashboardScreenState extends State<StudentLeaveDashboardScree
           color: AppColors.gold,
           backgroundColor: isDark ? AppColors.bgCard : Colors.white,
           child: controller.isLoading && balance == null
-              ? const Center(child: CircularProgressIndicator(color: AppColors.gold))
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.gold),
+                )
               : SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -122,7 +140,12 @@ class _StudentLeaveDashboardScreenState extends State<StudentLeaveDashboardScree
                       const SizedBox(height: 24),
                       _buildBalancesGrid(balance, isDark),
                       const SizedBox(height: 24),
-                      _buildOverviewSection(pendingCount, approvedCount, rejectedCount, isDark),
+                      _buildOverviewSection(
+                        pendingCount,
+                        approvedCount,
+                        rejectedCount,
+                        isDark,
+                      ),
                       const SizedBox(height: 32),
                       _buildActionButtons(context),
                       const SizedBox(height: 32),
@@ -229,7 +252,12 @@ class _StudentLeaveDashboardScreenState extends State<StudentLeaveDashboardScree
     ).animate().fadeIn(delay: 200.ms, duration: 500.ms);
   }
 
-  Widget _buildOverviewSection(int pending, int approved, int rejected, bool isDark) {
+  Widget _buildOverviewSection(
+    int pending,
+    int approved,
+    int rejected,
+    bool isDark,
+  ) {
     return GlassContainer(
       padding: const EdgeInsets.all(20),
       borderColor: AppColors.gold.withValues(alpha: 0.1),
@@ -356,7 +384,10 @@ class _StudentLeaveDashboardScreenState extends State<StudentLeaveDashboardScree
                 onPressed: () => context.push('/student/leave/history'),
                 child: const Text(
                   'See All',
-                  style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: AppColors.gold,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
           ],
@@ -374,7 +405,9 @@ class _StudentLeaveDashboardScreenState extends State<StudentLeaveDashboardScree
             child: Center(
               child: Text(
                 'No recent leave applications.',
-                style: TextStyle(color: isDark ? Colors.white38 : Colors.black38),
+                style: TextStyle(
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
               ),
             ),
           )
@@ -382,7 +415,9 @@ class _StudentLeaveDashboardScreenState extends State<StudentLeaveDashboardScree
           ...List.generate(recentLeaves.length, (index) {
             final leave = recentLeaves[index];
             final statusColor = _getStatusColor(leave.status);
-            final durationStr = leave.durationDays == 1 ? '1 Day' : '${leave.durationDays} Days';
+            final durationStr = leave.durationDays == 1
+                ? '1 Day'
+                : '${leave.durationDays} Days';
 
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
@@ -404,8 +439,8 @@ class _StudentLeaveDashboardScreenState extends State<StudentLeaveDashboardScree
                         leave.status.toLowerCase() == 'approved'
                             ? Icons.check_circle_outline_rounded
                             : leave.status.toLowerCase() == 'rejected'
-                                ? Icons.cancel_outlined
-                                : Icons.hourglass_empty_rounded,
+                            ? Icons.cancel_outlined
+                            : Icons.hourglass_empty_rounded,
                         color: statusColor,
                         size: 22,
                       ),
@@ -451,7 +486,10 @@ class _StudentLeaveDashboardScreenState extends State<StudentLeaveDashboardScree
                           const SizedBox(height: 4),
                           Text(
                             'Request ID: ${leave.id}',
-                            style: const TextStyle(color: Colors.white38, fontSize: 11),
+                            style: const TextStyle(
+                              color: Colors.white38,
+                              fontSize: 11,
+                            ),
                           ),
                         ],
                       ),

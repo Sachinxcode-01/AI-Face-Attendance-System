@@ -289,7 +289,8 @@ export default function MobilePhoneCanvas() {
         <Canvas
           shadows
           camera={{ position: [0, 0, 4.2], fov: 45 }}
-          gl={{ alpha: true, antialias: true }}
+          dpr={[1, 1.5]}
+          gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
         >
           <ambientLight intensity={0.7} />
           <pointLight position={[5, 10, 5]} intensity={1.5} color="#8B5CF6" />

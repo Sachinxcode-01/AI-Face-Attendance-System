@@ -221,7 +221,8 @@ export default function TechStackOrbit() {
         <CanvasContainer className="w-full h-full">
           <Canvas
             camera={{ position: [0, 4, 6], fov: 45 }}
-            gl={{ alpha: true, antialias: true }}
+            dpr={[1, 1.5]}
+            gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
           >
             <ambientLight intensity={0.65} />
             <pointLight position={[5, 10, 5]} intensity={1.5} color="#8B5CF6" />

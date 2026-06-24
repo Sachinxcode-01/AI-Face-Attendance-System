@@ -107,14 +107,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
     _dobCtrl = TextEditingController(text: d['dob'] ?? '');
     _genderCtrl = TextEditingController(text: d['gender'] ?? '');
     _addressCtrl = TextEditingController(text: d['address'] ?? '');
-    _usnCtrl = TextEditingController(
-        text: d['usn'] ?? d['student_id'] ?? '');
+    _usnCtrl = TextEditingController(text: d['usn'] ?? d['student_id'] ?? '');
     _courseCtrl = TextEditingController(
-        text: d['course'] ?? d['college'] ?? '');
+      text: d['course'] ?? d['college'] ?? '',
+    );
     _sectionCtrl = TextEditingController(
-        text: d['section'] ?? d['department'] ?? '');
+      text: d['section'] ?? d['department'] ?? '',
+    );
     _rollNoCtrl = TextEditingController(
-        text: d['roll_number'] ?? d['semester'] ?? '');
+      text: d['roll_number'] ?? d['semester'] ?? '',
+    );
     _parentCtrl = TextEditingController(text: d['parent_details'] ?? '');
     _collegeCtrl = TextEditingController(text: d['college'] ?? '');
     _semesterCtrl = TextEditingController(text: d['semester'] ?? '');
@@ -182,7 +184,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
       if (res.containsKey('email')) {
         _applyProfileData(res);
       } else {
-        _showError('Could not load profile: ${res['detail'] ?? 'Unknown error'}');
+        _showError(
+          'Could not load profile: ${res['detail'] ?? 'Unknown error'}',
+        );
         setState(() => _isLoading = false);
       }
     } catch (e) {
@@ -232,7 +236,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
         final result = await ApiService.updateProfile(payload, token);
         if (!mounted) return;
 
-        if (result.containsKey('detail') && result['detail'] != null &&
+        if (result.containsKey('detail') &&
+            result['detail'] != null &&
             !result['detail'].toString().contains('success')) {
           _showError('Save failed: ${result['detail']}');
           setState(() => _isSaving = false);
@@ -299,15 +304,27 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
             const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(child: _photoSourceBtn(Icons.photo_library_outlined, 'Gallery', () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.gallery);
-                })),
+                Expanded(
+                  child: _photoSourceBtn(
+                    Icons.photo_library_outlined,
+                    'Gallery',
+                    () {
+                      Navigator.pop(context);
+                      _pickImage(ImageSource.gallery);
+                    },
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Expanded(child: _photoSourceBtn(Icons.camera_alt_outlined, 'Camera', () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.camera);
-                })),
+                Expanded(
+                  child: _photoSourceBtn(
+                    Icons.camera_alt_outlined,
+                    'Camera',
+                    () {
+                      Navigator.pop(context);
+                      _pickImage(ImageSource.camera);
+                    },
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -331,9 +348,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           children: [
             Icon(icon, color: AppColors.gold, size: 30),
             const SizedBox(height: 8),
-            Text(label,
-                style: GoogleFonts.inter(
-                    color: Colors.white, fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -402,30 +423,42 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
   // ── Snack helpers ─────────────────────────────────────────────────────────
   void _showSuccess(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Row(children: [
-        const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
-        const SizedBox(width: 10),
-        Expanded(child: Text(msg, style: GoogleFonts.inter())),
-      ]),
-      backgroundColor: const Color(0xFF1A8F5E),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(
+              Icons.check_circle_outline,
+              color: Colors.white,
+              size: 18,
+            ),
+            const SizedBox(width: 10),
+            Expanded(child: Text(msg, style: GoogleFonts.inter())),
+          ],
+        ),
+        backgroundColor: const Color(0xFF1A8F5E),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
   }
 
   void _showError(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Row(children: [
-        const Icon(Icons.error_outline, color: Colors.white, size: 18),
-        const SizedBox(width: 10),
-        Expanded(child: Text(msg, style: GoogleFonts.inter())),
-      ]),
-      backgroundColor: Colors.redAccent.shade700,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 18),
+            const SizedBox(width: 10),
+            Expanded(child: Text(msg, style: GoogleFonts.inter())),
+          ],
+        ),
+        backgroundColor: Colors.redAccent.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
   }
 
   // ── Computed ─────────────────────────────────────────────────────────────
@@ -458,15 +491,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
         appBar: _buildAppBar(),
         body: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(color: AppColors.gold))
+                child: CircularProgressIndicator(color: AppColors.gold),
+              )
             : RefreshIndicator(
                 onRefresh: _fetchProfile,
                 color: AppColors.gold,
                 backgroundColor: const Color(0xFF070B1A),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -479,7 +515,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                       Text(
                         'Tap photo to update',
                         style: GoogleFonts.inter(
-                            color: Colors.white30, fontSize: 11),
+                          color: Colors.white30,
+                          fontSize: 11,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       // Name + role badge
@@ -488,9 +526,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                             ? _nameCtrl.text
                             : (_profileData['full_name'] ?? 'Student'),
                         style: GoogleFonts.inter(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                         textAlign: TextAlign.center,
                       ).animate().fadeIn(delay: 150.ms),
                       const SizedBox(height: 6),
@@ -510,10 +549,17 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                         color: const Color(0xFF00C6FF),
                         children: [
                           _field('Full Name', Icons.person_outline, _nameCtrl),
-                          _field('Phone Number', Icons.phone_android_outlined, _phoneCtrl,
-                              keyboardType: TextInputType.phone),
-                          _fieldWithDatePicker('Date of Birth',
-                              Icons.calendar_today_outlined, _dobCtrl),
+                          _field(
+                            'Phone Number',
+                            Icons.phone_android_outlined,
+                            _phoneCtrl,
+                            keyboardType: TextInputType.phone,
+                          ),
+                          _fieldWithDatePicker(
+                            'Date of Birth',
+                            Icons.calendar_today_outlined,
+                            _dobCtrl,
+                          ),
                           _dropdownField(
                             'Gender',
                             Icons.wc_outlined,
@@ -524,9 +570,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                               setState(() => _hasUnsavedChanges = true);
                             },
                           ),
-                          _field('Home Address', Icons.home_outlined,
-                              _addressCtrl,
-                              maxLines: 2),
+                          _field(
+                            'Home Address',
+                            Icons.home_outlined,
+                            _addressCtrl,
+                            maxLines: 2,
+                          ),
                           _dropdownField(
                             'Language Preference',
                             Icons.language_outlined,
@@ -547,18 +596,36 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                         title: 'ACADEMIC INFORMATION',
                         color: const Color(0xFFFFD700),
                         children: [
-                          _field('Student ID / USN', Icons.badge_outlined,
-                              _usnCtrl),
-                          _field('Class / Course', Icons.school_outlined,
-                              _courseCtrl),
-                          _field('College / University',
-                              Icons.account_balance_outlined, _collegeCtrl),
-                          _field('Section', Icons.grid_view_outlined,
-                              _sectionCtrl),
-                          _field('Roll Number',
-                              Icons.format_list_numbered_outlined, _rollNoCtrl),
-                          _field('Semester / Year',
-                              Icons.timeline_outlined, _semesterCtrl),
+                          _field(
+                            'Student ID / USN',
+                            Icons.badge_outlined,
+                            _usnCtrl,
+                          ),
+                          _field(
+                            'Class / Course',
+                            Icons.school_outlined,
+                            _courseCtrl,
+                          ),
+                          _field(
+                            'College / University',
+                            Icons.account_balance_outlined,
+                            _collegeCtrl,
+                          ),
+                          _field(
+                            'Section',
+                            Icons.grid_view_outlined,
+                            _sectionCtrl,
+                          ),
+                          _field(
+                            'Roll Number',
+                            Icons.format_list_numbered_outlined,
+                            _rollNoCtrl,
+                          ),
+                          _field(
+                            'Semester / Year',
+                            Icons.timeline_outlined,
+                            _semesterCtrl,
+                          ),
                         ],
                       ),
 
@@ -569,9 +636,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                         title: 'PARENT / GUARDIAN',
                         color: const Color(0xFF7B2FF7),
                         children: [
-                          _field('Parent / Guardian Name & Contact',
-                              Icons.family_restroom_outlined, _parentCtrl,
-                              maxLines: 2),
+                          _field(
+                            'Parent / Guardian Name & Contact',
+                            Icons.family_restroom_outlined,
+                            _parentCtrl,
+                            maxLines: 2,
+                          ),
                         ],
                       ),
 
@@ -601,8 +671,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                             _profileData['biometric_registered'] == true
                                 ? 'Registered ✓'
                                 : 'Not Registered',
-                            valueColor: _profileData['biometric_registered'] ==
-                                    true
+                            valueColor:
+                                _profileData['biometric_registered'] == true
                                 ? const Color(0xFF00FF88)
                                 : Colors.orangeAccent,
                           ),
@@ -612,8 +682,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                       const SizedBox(height: 30),
 
                       // ── Save Button (shown in edit mode) ───────────────
-                      if (_isEditing)
-                        _buildSaveButton(),
+                      if (_isEditing) _buildSaveButton(),
 
                       const SizedBox(height: 50),
                     ],
@@ -740,14 +809,21 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                         strokeWidth: 2.5,
                         valueColor: AlwaysStoppedAnimation<Color>(
                           Color.lerp(
-                              AppColors.gold, Colors.cyanAccent, _pulseCtrl.value)!,
+                            AppColors.gold,
+                            Colors.cyanAccent,
+                            _pulseCtrl.value,
+                          )!,
                         ),
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text('Uploading…',
-                        style: GoogleFonts.inter(
-                            fontSize: 9, color: Colors.white70)),
+                    Text(
+                      'Uploading…',
+                      style: GoogleFonts.inter(
+                        fontSize: 9,
+                        color: Colors.white70,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -768,8 +844,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.camera_alt_rounded,
-                      color: Colors.black, size: 18),
+                  child: const Icon(
+                    Icons.camera_alt_rounded,
+                    color: Colors.black,
+                    size: 18,
+                  ),
                 ),
               ),
           ],
@@ -816,8 +895,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
         decoration: BoxDecoration(
           color: AppColors.gold.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(16),
-          border:
-              Border.all(color: AppColors.gold.withValues(alpha: 0.25)),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.25)),
         ),
         child: Row(
           children: [
@@ -829,8 +907,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                color: AppColors.gold, size: 14),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: AppColors.gold,
+              size: 14,
+            ),
           ],
         ),
       ),
@@ -845,18 +926,24 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
         color: const Color(0xFF003320).withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: const Color(0xFF00FF88).withValues(alpha: 0.3)),
+          color: const Color(0xFF00FF88).withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         children: [
-          const Icon(Icons.edit_note_rounded,
-              color: Color(0xFF00FF88), size: 20),
+          const Icon(
+            Icons.edit_note_rounded,
+            color: Color(0xFF00FF88),
+            size: 20,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Editing mode • Changes saved to server',
               style: GoogleFonts.inter(
-                  color: const Color(0xFF00FF88), fontSize: 12),
+                color: const Color(0xFF00FF88),
+                fontSize: 12,
+              ),
             ),
           ),
         ],
@@ -877,9 +964,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
               width: 22,
               height: 22,
               child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(Colors.black)),
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+              ),
             )
           : Row(
               mainAxisSize: MainAxisSize.min,
@@ -890,9 +977,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 Text(
                   'SAVE PROFILE TO SERVER',
                   style: GoogleFonts.inter(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                      color: Colors.black),
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: Colors.black,
+                  ),
                 ),
               ],
             ),
@@ -960,9 +1048,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           Text(
             label,
             style: GoogleFonts.inter(
-                color: Colors.white38,
-                fontSize: 10,
-                letterSpacing: 1),
+              color: Colors.white38,
+              fontSize: 10,
+              letterSpacing: 1,
+            ),
           ),
           const SizedBox(height: 6),
           if (_isEditing)
@@ -982,11 +1071,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide:
-                      const BorderSide(color: AppColors.gold, width: 1.2),
+                  borderSide: const BorderSide(
+                    color: AppColors.gold,
+                    width: 1.2,
+                  ),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+                  horizontal: 14,
+                  vertical: 12,
+                ),
               ),
             )
           else
@@ -1014,15 +1107,23 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
   }
 
   Widget _fieldWithDatePicker(
-      String label, IconData icon, TextEditingController ctrl) {
+    String label,
+    IconData icon,
+    TextEditingController ctrl,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: GoogleFonts.inter(
-                  color: Colors.white38, fontSize: 10, letterSpacing: 1)),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              color: Colors.white38,
+              fontSize: 10,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 6),
           if (_isEditing)
             TextField(
@@ -1031,8 +1132,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
                 prefixIcon: Icon(icon, color: AppColors.gold, size: 18),
-                suffixIcon: const Icon(Icons.calendar_month_outlined,
-                    color: AppColors.gold, size: 18),
+                suffixIcon: const Icon(
+                  Icons.calendar_month_outlined,
+                  color: AppColors.gold,
+                  size: 18,
+                ),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.04),
                 enabledBorder: OutlineInputBorder(
@@ -1041,11 +1145,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide:
-                      const BorderSide(color: AppColors.gold, width: 1.2),
+                  borderSide: const BorderSide(
+                    color: AppColors.gold,
+                    width: 1.2,
+                  ),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+                  horizontal: 14,
+                  vertical: 12,
+                ),
               ),
               onTap: () async {
                 final picked = await showDatePicker(
@@ -1104,9 +1212,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: GoogleFonts.inter(
-                  color: Colors.white38, fontSize: 10, letterSpacing: 1)),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              color: Colors.white38,
+              fontSize: 10,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 6),
           if (_isEditing)
             DropdownButtonFormField<String>(
@@ -1123,11 +1236,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide:
-                      const BorderSide(color: AppColors.gold, width: 1.2),
+                  borderSide: const BorderSide(
+                    color: AppColors.gold,
+                    width: 1.2,
+                  ),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+                  horizontal: 14,
+                  vertical: 12,
+                ),
               ),
               items: options
                   .map((o) => DropdownMenuItem(value: o, child: Text(o)))
@@ -1156,8 +1273,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
     );
   }
 
-  Widget _readOnlyTile(String label, IconData icon, String value,
-      {Color valueColor = Colors.white70}) {
+  Widget _readOnlyTile(
+    String label,
+    IconData icon,
+    String value, {
+    Color valueColor = Colors.white70,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -1168,22 +1289,31 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: GoogleFonts.inter(
-                        color: Colors.white38,
-                        fontSize: 10,
-                        letterSpacing: 0.8)),
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    color: Colors.white38,
+                    fontSize: 10,
+                    letterSpacing: 0.8,
+                  ),
+                ),
                 const SizedBox(height: 3),
-                Text(value,
-                    style: GoogleFonts.inter(
-                        color: valueColor,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  value,
+                  style: GoogleFonts.inter(
+                    color: valueColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
-          const Icon(Icons.lock_outline_rounded,
-              color: Colors.white24, size: 14),
+          const Icon(
+            Icons.lock_outline_rounded,
+            color: Colors.white24,
+            size: 14,
+          ),
         ],
       ),
     );

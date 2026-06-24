@@ -11,10 +11,7 @@ import 'package:smartface_attendance/app/theme/dark_theme.dart';
 class AnimatedMeshBackground extends StatefulWidget {
   final Widget? child;
 
-  const AnimatedMeshBackground({
-    super.key,
-    this.child,
-  });
+  const AnimatedMeshBackground({super.key, this.child});
 
   @override
   State<AnimatedMeshBackground> createState() => _AnimatedMeshBackgroundState();
@@ -81,10 +78,7 @@ class _MeshPainter extends CustomPainter {
   final double progress;
   final Color gradientColor;
 
-  _MeshPainter({
-    required this.progress,
-    required this.gradientColor,
-  });
+  _MeshPainter({required this.progress, required this.gradientColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -106,7 +100,9 @@ class _MeshPainter extends CustomPainter {
       center: Alignment.center,
       radius: 0.5,
       colors: [
-        gradientColor.withValues(alpha: 0.045), // ~4.5% opacity (3-5% specification range)
+        gradientColor.withValues(
+          alpha: 0.045,
+        ), // ~4.5% opacity (3-5% specification range)
         gradientColor.withValues(alpha: 0.015),
         Colors.transparent,
       ],

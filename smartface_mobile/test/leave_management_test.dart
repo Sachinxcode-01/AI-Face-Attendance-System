@@ -112,12 +112,7 @@ void main() {
     });
 
     test('fromJson and toJson works', () {
-      final json = {
-        'sick': 5,
-        'personal': 8,
-        'emergency': 2,
-        'academic': 6,
-      };
+      final json = {'sick': 5, 'personal': 8, 'emergency': 2, 'academic': 6};
 
       final balance = LeaveBalance.fromJson(json);
       expect(balance.sick, 5);
@@ -232,7 +227,10 @@ void main() {
       });
 
       expect(result['id'], 'LV-3');
-      expect(controller.leaves.length, 2); // state refreshed via mock fetchStudentLeaves
+      expect(
+        controller.leaves.length,
+        2,
+      ); // state refreshed via mock fetchStudentLeaves
     });
 
     test('fetchPendingLeaves fetches reviewable requests', () async {
@@ -241,11 +239,14 @@ void main() {
       expect(controller.pendingLeaves[0].id, 'LV-2');
     });
 
-    test('actionLeave performs update and refreshes pending requests', () async {
-      final res = await controller.actionLeave('LV-2', 'Approved', 'Remarks');
-      expect(res['message'], 'Action recorded successfully');
-      expect(controller.pendingLeaves.length, 1);
-    });
+    test(
+      'actionLeave performs update and refreshes pending requests',
+      () async {
+        final res = await controller.actionLeave('LV-2', 'Approved', 'Remarks');
+        expect(res['message'], 'Action recorded successfully');
+        expect(controller.pendingLeaves.length, 1);
+      },
+    );
 
     test('fetchAnalytics fetches admin statistics', () async {
       await controller.fetchAnalytics();
@@ -253,36 +254,39 @@ void main() {
       expect(controller.analytics['approval_rate'], 0.8);
     });
 
-    test('filteredLeaves correctly applies status filters, searches, and sorts', () async {
-      await controller.fetchStudentLeaves('student@example.com');
-      
-      // Initially 2 leaves
-      expect(controller.filteredLeaves.length, 2);
+    test(
+      'filteredLeaves correctly applies status filters, searches, and sorts',
+      () async {
+        await controller.fetchStudentLeaves('student@example.com');
 
-      // Filter: Approved
-      controller.updateStatusFilter('Approved');
-      expect(controller.filteredLeaves.length, 1);
-      expect(controller.filteredLeaves[0].id, 'LV-1');
+        // Initially 2 leaves
+        expect(controller.filteredLeaves.length, 2);
 
-      // Filter: Pending
-      controller.updateStatusFilter('Pending');
-      expect(controller.filteredLeaves.length, 1);
-      expect(controller.filteredLeaves[0].id, 'LV-2');
+        // Filter: Approved
+        controller.updateStatusFilter('Approved');
+        expect(controller.filteredLeaves.length, 1);
+        expect(controller.filteredLeaves[0].id, 'LV-1');
 
-      // Reset filter and apply search query
-      controller.updateStatusFilter('All');
-      controller.updateSearchQuery('sick');
-      expect(controller.filteredLeaves.length, 1);
-      expect(controller.filteredLeaves[0].id, 'LV-1');
+        // Filter: Pending
+        controller.updateStatusFilter('Pending');
+        expect(controller.filteredLeaves.length, 1);
+        expect(controller.filteredLeaves[0].id, 'LV-2');
 
-      // Sort Date Oldest
-      controller.updateSearchQuery('');
-      controller.updateSortBy('Date (Oldest)');
-      expect(controller.filteredLeaves[0].id, 'LV-1'); // Jun 1 vs Jun 10
+        // Reset filter and apply search query
+        controller.updateStatusFilter('All');
+        controller.updateSearchQuery('sick');
+        expect(controller.filteredLeaves.length, 1);
+        expect(controller.filteredLeaves[0].id, 'LV-1');
 
-      // Sort Date Newest
-      controller.updateSortBy('Date (Newest)');
-      expect(controller.filteredLeaves[0].id, 'LV-2'); // Jun 10 vs Jun 1
-    });
+        // Sort Date Oldest
+        controller.updateSearchQuery('');
+        controller.updateSortBy('Date (Oldest)');
+        expect(controller.filteredLeaves[0].id, 'LV-1'); // Jun 1 vs Jun 10
+
+        // Sort Date Newest
+        controller.updateSortBy('Date (Newest)');
+        expect(controller.filteredLeaves[0].id, 'LV-2'); // Jun 10 vs Jun 1
+      },
+    );
   });
 }

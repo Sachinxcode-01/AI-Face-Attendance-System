@@ -43,7 +43,10 @@ class AttendanceController extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> startSession(String teacherEmail, String subject) async {
+  Future<Map<String, dynamic>> startSession(
+    String teacherEmail,
+    String subject,
+  ) async {
     _setLoading(true);
     _setError(null);
     try {
@@ -68,8 +71,13 @@ class AttendanceController extends ChangeNotifier {
     _setLoading(true);
     _setError(null);
     try {
-      final res = await _repository.markAttendance(studentEmail, sessionId, qrCode);
-      if (res.containsKey('detail') && res['detail'].toString().toLowerCase().contains('failed')) {
+      final res = await _repository.markAttendance(
+        studentEmail,
+        sessionId,
+        qrCode,
+      );
+      if (res.containsKey('detail') &&
+          res['detail'].toString().toLowerCase().contains('failed')) {
         _setError(res['detail'] as String);
       }
       return res;
@@ -149,7 +157,10 @@ class AttendanceController extends ChangeNotifier {
     return await _repository.getActivityLog(token);
   }
 
-  Future<Map<String, dynamic>?> getStudentAnalytics(String email, String token) async {
+  Future<Map<String, dynamic>?> getStudentAnalytics(
+    String email,
+    String token,
+  ) async {
     return await _repository.getStudentAnalytics(email, token);
   }
 
@@ -187,7 +198,10 @@ class AttendanceController extends ChangeNotifier {
     return await _repository.sendIntruderAlert(cameraId);
   }
 
-  Future<Map<String, dynamic>> acknowledgeIntruderAlert(String logId, String token) async {
+  Future<Map<String, dynamic>> acknowledgeIntruderAlert(
+    String logId,
+    String token,
+  ) async {
     return await _repository.acknowledgeIntruderAlert(logId, token);
   }
 }

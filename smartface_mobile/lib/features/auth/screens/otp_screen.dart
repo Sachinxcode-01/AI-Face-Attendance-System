@@ -370,7 +370,10 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
                                 color: Colors.white,
                               ),
                             )
-                          : Text('VERIFY CODE', style: AppText.button(color: Colors.white)),
+                          : Text(
+                              'VERIFY CODE',
+                              style: AppText.button(color: Colors.white),
+                            ),
                     ),
                   ).animate().fadeIn(delay: 350.ms),
 
@@ -394,7 +397,9 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
                                     value: _resendCooldown / 60,
                                     strokeWidth: 2,
                                     color: primaryColor,
-                                    backgroundColor: primaryColor.withValues(alpha: 0.15),
+                                    backgroundColor: primaryColor.withValues(
+                                      alpha: 0.15,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),

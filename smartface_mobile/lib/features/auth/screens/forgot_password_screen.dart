@@ -480,8 +480,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: () =>
-                context.go('/auth/login'),
+            onPressed: () => context.go('/auth/login'),
             child: Text('BACK TO LOGIN', style: AppText.button()),
           ),
         ).animate().fadeIn(delay: 600.ms),

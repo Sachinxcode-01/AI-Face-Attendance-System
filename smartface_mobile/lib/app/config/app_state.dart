@@ -32,7 +32,6 @@ import 'package:flutter/foundation.dart';
 /// - Transient loading spinner messages
 /// - Local session activity logging
 class AppState extends ChangeNotifier {
-  
   // ======================================================
   // State: Profile Details
   // ======================================================
@@ -199,4 +198,3 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 }
-

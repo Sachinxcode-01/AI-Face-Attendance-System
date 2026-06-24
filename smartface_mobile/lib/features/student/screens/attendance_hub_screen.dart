@@ -57,12 +57,23 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
 
       // Parallel API fetches
       final results = await Future.wait([
-        http.get(Uri.parse('${ApiService.baseUrl}/attendance/dashboard'), headers: {'Authorization': 'Bearer $token'}),
-        http.get(Uri.parse('${ApiService.baseUrl}/attendance/heatmap'), headers: {'Authorization': 'Bearer $token'}),
-        http.get(Uri.parse('${ApiService.baseUrl}/attendance/student/$email?limit=10'), headers: {'Authorization': 'Bearer $token'}),
+        http.get(
+          Uri.parse('${ApiService.baseUrl}/attendance/dashboard'),
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+        http.get(
+          Uri.parse('${ApiService.baseUrl}/attendance/heatmap'),
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+        http.get(
+          Uri.parse('${ApiService.baseUrl}/attendance/student/$email?limit=10'),
+          headers: {'Authorization': 'Bearer $token'},
+        ),
       ]);
 
-      if (results[0].statusCode == 200 && results[1].statusCode == 200 && results[2].statusCode == 200) {
+      if (results[0].statusCode == 200 &&
+          results[1].statusCode == 200 &&
+          results[2].statusCode == 200) {
         if (mounted) {
           setState(() {
             _dashboardData = jsonDecode(results[0].body);
@@ -77,7 +88,11 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
     } catch (e) {
       debugPrint('Error fetching attendance hub: $e');
       if (mounted) {
-        AppToast.show(context, message: 'Failed to load attendance intelligence', type: ToastType.error);
+        AppToast.show(
+          context,
+          message: 'Failed to load attendance intelligence',
+          type: ToastType.error,
+        );
         setState(() => _isLoading = false);
       }
     }
@@ -89,7 +104,11 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
       final token = session.token;
       if (token == null) return;
 
-      AppToast.show(context, message: 'Compiling report ($format)...', type: ToastType.info);
+      AppToast.show(
+        context,
+        message: 'Compiling report ($format)...',
+        type: ToastType.info,
+      );
 
       if (format == 'pdf') {
         // Compile beautiful PDF Hall/Ledger Ticket on the fly
@@ -100,44 +119,135 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
             build: (pw.Context context) {
               return pw.Container(
                 padding: const pw.EdgeInsets.all(24),
-                decoration: pw.BoxDecoration(border: pw.Border.all(color: PdfColors.indigo, width: 2)),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(color: PdfColors.indigo, width: 2),
+                ),
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Text('SMARTFACE OFFICIAL ATTENDANCE REPORT', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo900)),
+                    pw.Text(
+                      'SMARTFACE OFFICIAL ATTENDANCE REPORT',
+                      style: pw.TextStyle(
+                        fontSize: 16,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.indigo900,
+                      ),
+                    ),
                     pw.SizedBox(height: 10),
-                    pw.Text('Student: ${session.name}', style: const pw.TextStyle(fontSize: 10)),
-                    pw.Text('Email: ${session.email}', style: const pw.TextStyle(fontSize: 10)),
+                    pw.Text(
+                      'Student: ${session.name}',
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
+                    pw.Text(
+                      'Email: ${session.email}',
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
                     pw.SizedBox(height: 20),
                     pw.Divider(thickness: 1, color: PdfColors.grey300),
                     pw.SizedBox(height: 12),
-                    pw.Text('VERIFIED CHECK-IN HISTORY', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
+                    pw.Text(
+                      'VERIFIED CHECK-IN HISTORY',
+                      style: pw.TextStyle(
+                        fontSize: 11,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
                     pw.SizedBox(height: 10),
                     pw.Table(
                       border: pw.TableBorder.all(color: PdfColors.grey300),
                       children: [
                         pw.TableRow(
-                          decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                          decoration: const pw.BoxDecoration(
+                            color: PdfColors.grey200,
+                          ),
                           children: [
-                            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Date', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold))),
-                            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Time', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold))),
-                            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Subject', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold))),
-                            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Verification', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold))),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Date',
+                                style: pw.TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Time',
+                                style: pw.TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Subject',
+                                style: pw.TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                'Verification',
+                                style: pw.TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
-                        ..._verificationLogs.map((log) => pw.TableRow(
-                          children: [
-                            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(log['date'] ?? '', style: const pw.TextStyle(fontSize: 8))),
-                            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(log['time'] ?? '', style: const pw.TextStyle(fontSize: 8))),
-                            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(log['subject'] ?? '', style: const pw.TextStyle(fontSize: 8))),
-                            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(log['verified_by']?.toUpperCase() ?? 'QR', style: const pw.TextStyle(fontSize: 8))),
-                          ],
-                        ))
+                        ..._verificationLogs.map(
+                          (log) => pw.TableRow(
+                            children: [
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text(
+                                  log['date'] ?? '',
+                                  style: const pw.TextStyle(fontSize: 8),
+                                ),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text(
+                                  log['time'] ?? '',
+                                  style: const pw.TextStyle(fontSize: 8),
+                                ),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text(
+                                  log['subject'] ?? '',
+                                  style: const pw.TextStyle(fontSize: 8),
+                                ),
+                              ),
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.all(6),
+                                child: pw.Text(
+                                  log['verified_by']?.toUpperCase() ?? 'QR',
+                                  style: const pw.TextStyle(fontSize: 8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                     pw.Spacer(),
                     pw.Divider(color: PdfColors.grey300),
-                    pw.Text('SmartFace Secure Digital Signature - SHA256 Verification Approved.', style: const pw.TextStyle(fontSize: 8, color: PdfColors.green))
+                    pw.Text(
+                      'SmartFace Secure Digital Signature - SHA256 Verification Approved.',
+                      style: const pw.TextStyle(
+                        fontSize: 8,
+                        color: PdfColors.green,
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -147,15 +257,29 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
         await Printing.layoutPdf(onLayout: (format) async => pdf.save());
       } else {
         // Trigger direct server file download (mock toast callback)
-        final url = '${ApiService.baseUrl}/attendance/report/generate?format=$format';
-        await http.get(Uri.parse(url), headers: {'Authorization': 'Bearer $token'});
+        final url =
+            '${ApiService.baseUrl}/attendance/report/generate?format=$format';
+        await http.get(
+          Uri.parse(url),
+          headers: {'Authorization': 'Bearer $token'},
+        );
         if (mounted) {
-          AppToast.show(context, message: 'Document compiled. Download link active!', type: ToastType.success);
+          AppToast.show(
+            context,
+            message: 'Document compiled. Download link active!',
+            type: ToastType.success,
+          );
         }
       }
     } catch (e) {
       debugPrint('Export error: $e');
-      if (mounted) AppToast.show(context, message: 'Failed to compile report document', type: ToastType.error);
+      if (mounted) {
+        AppToast.show(
+          context,
+          message: 'Failed to compile report document',
+          type: ToastType.error,
+        );
+      }
     }
   }
 
@@ -173,7 +297,10 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
       return Scaffold(
         backgroundColor: AppColors.bgDark,
         body: Center(
-          child: Text('No attendance metrics found.', style: AppText.body(color: Colors.white38)),
+          child: Text(
+            'No attendance metrics found.',
+            style: AppText.body(color: Colors.white38),
+          ),
         ),
       );
     }
@@ -207,13 +334,17 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
           ),
           title: Text(
             'Attendance Intelligence',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 18,
+            ),
           ),
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh, color: Colors.white),
               onPressed: _fetchHubData,
-            )
+            ),
           ],
         ),
         body: RefreshIndicator(
@@ -265,22 +396,33 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: AppColors.errorLight, size: 20),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.errorLight,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 'ATTENDANCE STANDING ALERTS',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w800, color: AppColors.errorLight, fontSize: 12, letterSpacing: 1.2),
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.errorLight,
+                  fontSize: 12,
+                  letterSpacing: 1.2,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          ...alerts.map((al) => Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Text(
-              al['message'] ?? '',
-              style: AppText.body(color: Colors.white70),
+          ...alerts.map(
+            (al) => Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Text(
+                al['message'] ?? '',
+                style: AppText.body(color: Colors.white70),
+              ),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -291,25 +433,37 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('RECENT VERIFICATION HISTORY', style: AppText.label(color: Colors.white54)),
+          Text(
+            'RECENT VERIFICATION HISTORY',
+            style: AppText.label(color: Colors.white54),
+          ),
           const SizedBox(height: 16),
           if (_verificationLogs.isEmpty)
-            Center(child: Text('No recent check-ins recorded.', style: AppText.body(color: Colors.white38)))
+            Center(
+              child: Text(
+                'No recent check-ins recorded.',
+                style: AppText.body(color: Colors.white38),
+              ),
+            )
           else
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _verificationLogs.length,
-              separatorBuilder: (context, index) => const Divider(color: Colors.white12, height: 16),
+              separatorBuilder: (context, index) =>
+                  const Divider(color: Colors.white12, height: 16),
               itemBuilder: (context, index) {
                 final log = _verificationLogs[index];
                 final isFace = log['verified_by'] == 'face';
-                final isPresent = log['status'].toString().toLowerCase() == 'present';
+                final isPresent =
+                    log['status'].toString().toLowerCase() == 'present';
 
                 return Row(
                   children: [
                     Icon(
-                      isPresent ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                      isPresent
+                          ? Icons.check_circle_rounded
+                          : Icons.cancel_rounded,
                       color: isPresent ? AppColors.success : AppColors.error,
                       size: 20,
                     ),
@@ -320,7 +474,10 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                         children: [
                           Text(
                             log['subject'] ?? 'Lecture Class',
-                            style: AppText.body(color: Colors.white, weight: FontWeight.bold),
+                            style: AppText.body(
+                              color: Colors.white,
+                              weight: FontWeight.bold,
+                            ),
                           ),
                           Text(
                             'Verified via ${isFace ? "Biometric Face Recognition" : "Rotating Classroom QR"}',
@@ -332,7 +489,7 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                     Text(
                       '${log['time']} • ${log['date']}',
                       style: AppText.caption(color: Colors.white38),
-                    )
+                    ),
                   ],
                 );
               },

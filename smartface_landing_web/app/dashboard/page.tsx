@@ -9,13 +9,14 @@ import StudentDashboard from '@/components/portal/dashboards/student-dashboard';
 import ParentDashboard from '@/components/portal/dashboards/parent-dashboard';
 import TeacherDashboard from '@/components/portal/dashboards/teacher-dashboard';
 import AdminDashboard from '@/components/portal/dashboards/admin-dashboard';
+import SuperAdminDashboard from '@/components/portal/dashboards/super-admin-dashboard';
 
 function DashboardHub() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tab = searchParams.get('tab');
 
-  const [role, setRole] = useState<'student' | 'parent' | 'teacher' | 'admin' | null>(null);
+  const [role, setRole] = useState<'student' | 'parent' | 'teacher' | 'admin' | 'super_admin' | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ function DashboardHub() {
     if (!storedRole) {
       router.push('/login');
     } else {
-      setRole(storedRole as 'student' | 'parent' | 'teacher' | 'admin' | null);
+      setRole(storedRole as 'student' | 'parent' | 'teacher' | 'admin' | 'super_admin' | null);
       setLoading(false);
     }
   }, [router, searchParams]); // Reload when query params or roles change
@@ -66,6 +67,10 @@ function DashboardHub() {
     return <AdminDashboard forceTab="users" />;
   }
 
+  if (tab === 'control_panel' && role === 'super_admin') {
+    return <SuperAdminDashboard />;
+  }
+
   // Fallback to default dashboard home views
   switch (role) {
     case 'student':
@@ -74,6 +79,8 @@ function DashboardHub() {
       return <ParentDashboard />;
     case 'teacher':
       return <TeacherDashboard />;
+    case 'super_admin':
+      return <SuperAdminDashboard />;
     case 'admin':
     default:
       return <AdminDashboard />;

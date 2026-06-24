@@ -44,7 +44,8 @@ class TeacherDashboard extends StatefulWidget {
   State<TeacherDashboard> createState() => _TeacherDashboardState();
 }
 
-class _TeacherDashboardState extends State<TeacherDashboard> with TickerProviderStateMixin {
+class _TeacherDashboardState extends State<TeacherDashboard>
+    with TickerProviderStateMixin {
   final NotificationService _notificationService = sl<NotificationService>();
   StreamSubscription? _notifSubscription;
   Timer? _telemetryTimer;
@@ -58,7 +59,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
     'attendance_today': '89%',
     'intruder_alerts': '0',
     'pending_leaves': '0',
-    'present_count': '0'
+    'present_count': '0',
   };
 
   Map<String, dynamic> _telemetry = {
@@ -70,7 +71,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
     'ai_engine_status': 'Healthy',
     'hardware_acceleration': 'CUDA',
     'mongodb_connection': 'Connected',
-    'intruder_count': 0
+    'intruder_count': 0,
   };
 
   @override
@@ -82,11 +83,12 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
     )..repeat(reverse: true);
 
     final session = Provider.of<SessionManager>(context, listen: false);
-    
+
     // Listen for live database changes via Websockets
     _notificationService.connect(token: session.token);
     _notifSubscription = _notificationService.stream.listen((data) {
-      if (data['type'] == 'attendance_update' || data['type'] == 'intruder_alert') {
+      if (data['type'] == 'attendance_update' ||
+          data['type'] == 'intruder_alert') {
         _loadData(silent: true);
       }
     });
@@ -117,7 +119,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
 
       final results = await Future.wait([
         ApiService.getAdminStats(session.token!),
-        ApiService.getSystemTelemetry(session.token!)
+        ApiService.getSystemTelemetry(session.token!),
       ]);
 
       if (mounted) {
@@ -158,7 +160,8 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
       );
     }
 
-    final hasIntruderAlert = int.parse(_stats['intruder_alerts'] ?? '0') > 0 || 
+    final hasIntruderAlert =
+        int.parse(_stats['intruder_alerts'] ?? '0') > 0 ||
         (_telemetry['intruder_count'] as int? ?? 0) > 0;
 
     final header = _buildWelcomeHeader(isDark, session);
@@ -204,7 +207,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
                   backgroundColor: AppColors.bgSurface,
                   child: Text(
                     (session.name ?? 'F').substring(0, 1).toUpperCase(),
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -223,7 +229,9 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
                   ),
                   Text(
                     'Faculty Access Portal',
-                    style: AppText.caption(color: isDark ? Colors.white54 : Colors.black54),
+                    style: AppText.caption(
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
                   ),
                 ],
               ),
@@ -357,15 +365,19 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
         return GlassContainer(
           padding: const EdgeInsets.all(AppSpacing.lg),
           borderColor: isActive
-              ? AppColors.gold.withValues(alpha: 0.3 + 0.4 * _pulsingSessionController.value)
+              ? AppColors.gold.withValues(
+                  alpha: 0.3 + 0.4 * _pulsingSessionController.value,
+                )
               : AppColors.gold.withValues(alpha: 0.25),
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: AppColors.gold.withValues(alpha: 0.15 * _pulsingSessionController.value),
+                    color: AppColors.gold.withValues(
+                      alpha: 0.15 * _pulsingSessionController.value,
+                    ),
                     blurRadius: 12 + 16 * _pulsingSessionController.value,
                     spreadRadius: 1 + 2 * _pulsingSessionController.value,
-                  )
+                  ),
                 ]
               : null,
           gradient: const LinearGradient(
@@ -379,12 +391,21 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
               Row(
                 children: [
                   Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
-                  ).animate(onPlay: (c) => c.repeat(reverse: true))
-                   .scale(end: const Offset(1.5, 1.5), duration: 800.ms)
-                   .boxShadow(end: const BoxShadow(color: Colors.redAccent, blurRadius: 6)),
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.redAccent,
+                          shape: BoxShape.circle,
+                        ),
+                      )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scale(end: const Offset(1.5, 1.5), duration: 800.ms)
+                      .boxShadow(
+                        end: const BoxShadow(
+                          color: Colors.redAccent,
+                          blurRadius: 6,
+                        ),
+                      ),
                   const SizedBox(width: 8),
                   Text(
                     'ACTIVE CLASSROOM SYSTEM',
@@ -411,7 +432,8 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
                 children: [
                   PremiumButton(
                     onPressed: () {
-                      final args = ModalRoute.of(context)?.settings.arguments as Map?;
+                      final args =
+                          ModalRoute.of(context)?.settings.arguments as Map?;
                       Navigator.pushNamed(
                         context,
                         '/attendance/qr-generator',
@@ -421,7 +443,11 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.qr_code_rounded, size: 18, color: Colors.black),
+                        const Icon(
+                          Icons.qr_code_rounded,
+                          size: 18,
+                          color: Colors.black,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'GENERATE QR',
@@ -440,7 +466,11 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.videocam_outlined, size: 18, color: Colors.white),
+                        const Icon(
+                          Icons.videocam_outlined,
+                          size: 18,
+                          color: Colors.white,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'LIVE MONITOR',
@@ -573,7 +603,9 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
               decoration: BoxDecoration(
                 color: AppColors.gold.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.sm),
-                border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.gold.withValues(alpha: 0.3),
+                ),
               ),
               child: Text(
                 '$students Enrolled',
@@ -613,15 +645,27 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
             title: 'AI Inference Engine',
             status: engineStatus,
             subtitle: 'Model: ResNet-101 • Engine: CUDA',
-            statusColor: engineStatus == 'Healthy' ? AppColors.success : AppColors.error,
+            statusColor: engineStatus == 'Healthy'
+                ? AppColors.success
+                : AppColors.error,
             icon: Icons.biotech_outlined,
           ),
           const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildProgressMetric('CPU Load', cpuUsage / 100.0, '$cpuUsage%', Colors.cyanAccent),
-              _buildProgressMetric('GPU Load', gpuUsage / 100.0, '$gpuUsage%', AppColors.gold),
+              _buildProgressMetric(
+                'CPU Load',
+                cpuUsage / 100.0,
+                '$cpuUsage%',
+                Colors.cyanAccent,
+              ),
+              _buildProgressMetric(
+                'GPU Load',
+                gpuUsage / 100.0,
+                '$gpuUsage%',
+                AppColors.gold,
+              ),
             ],
           ),
         ],
@@ -629,7 +673,12 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
     );
   }
 
-  Widget _buildProgressMetric(String label, double val, String text, Color color) {
+  Widget _buildProgressMetric(
+    String label,
+    double val,
+    String text,
+    Color color,
+  ) {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -639,8 +688,18 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(label, style: const TextStyle(color: Colors.white54, fontSize: 11)),
-                Text(text, style: GoogleFonts.robotoMono(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+                Text(
+                  label,
+                  style: const TextStyle(color: Colors.white54, fontSize: 11),
+                ),
+                Text(
+                  text,
+                  style: GoogleFonts.robotoMono(
+                    color: color,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 6),
@@ -697,7 +756,8 @@ class _TeacherDashboardState extends State<TeacherDashboard> with TickerProvider
             ),
             ActionTile(
               label: 'Command Center',
-              description: 'Centralized attendance, risk alerts, live monitor, and audits',
+              description:
+                  'Centralized attendance, risk alerts, live monitor, and audits',
               icon: Icons.admin_panel_settings_outlined,
               color: AppColors.success,
               onTap: () => context.push(AppRoutes.teacherAttendanceCommandPath),

@@ -65,23 +65,23 @@ class BackgroundSyncService {
   /// Initializes and schedules the periodic background sync task.
   static Future<void> initialize() async {
     try {
-      await Workmanager().initialize(
-        callbackDispatcher,
-      );
+      await Workmanager().initialize(callbackDispatcher);
 
       // Register periodic task (every 15 minutes - minimum allowed by Android)
       await Workmanager().registerPeriodicTask(
         uniqueSyncName,
         syncTaskName,
         frequency: const Duration(minutes: 15),
-        constraints: Constraints(
-          networkType: NetworkType.connected,
-        ),
+        constraints: Constraints(networkType: NetworkType.connected),
         existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
       );
-      debugPrint('[BackgroundSyncService] WorkManager registered periodic task.');
+      debugPrint(
+        '[BackgroundSyncService] WorkManager registered periodic task.',
+      );
     } catch (e) {
-      debugPrint('[BackgroundSyncService] Failed to initialize WorkManager: $e');
+      debugPrint(
+        '[BackgroundSyncService] Failed to initialize WorkManager: $e',
+      );
     }
   }
 
@@ -91,9 +91,7 @@ class BackgroundSyncService {
       await Workmanager().registerOneOffTask(
         '${uniqueSyncName}_oneoff_${DateTime.now().millisecondsSinceEpoch}',
         syncTaskName,
-        constraints: Constraints(
-          networkType: NetworkType.connected,
-        ),
+        constraints: Constraints(networkType: NetworkType.connected),
       );
       debugPrint('[BackgroundSyncService] Scheduled one-off sync task.');
     } catch (e) {

@@ -200,4 +200,3 @@ class NotificationShimmer extends StatelessWidget {
     );
   }
 }
-

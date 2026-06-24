@@ -17,7 +17,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="w-full bg-slate-950 border-t border-white/5 pt-16 pb-12 relative z-10">
+    <footer className="w-full bg-slate-950 border-t border-white/5 pt-16 pb-12 relative z-10 font-sans">
       
       {/* Background space blur */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[250px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
@@ -26,21 +26,21 @@ export default function Footer() {
         
         {/* Brand Column */}
         <div className="md:col-span-4 flex flex-col gap-4">
-          <a href="#" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded bg-primary/10 border border-primary/20 flex items-center justify-center">
               <Fingerprint className="w-4.5 h-4.5 text-primary" />
             </div>
-            <span className="text-sm font-bold tracking-wider font-sans text-white">
-              SMARTFACE AI
+            <span className="text-sm font-bold tracking-wider font-sans text-white uppercase">
+              SmartFace AI
             </span>
-          </a>
+          </Link>
           <p className="text-xs text-slate-400 font-sans leading-relaxed max-w-sm">
-            Autonomous biometric classroom attendance and intruder sentinel protection. Built on high-accuracy ArcFace ONNX neural models and active SMTP SMTP alert pipelines.
+            Autonomous biometric classroom attendance and intruder sentinel protection. Built on high-accuracy ArcFace ONNX neural models and active SMTP alert pipelines by Sachin K & Team XCoderz.
           </p>
           <div className="flex items-center gap-4 text-slate-400 mt-2">
             <a href="#" className="hover:text-white transition"><Twitter className="w-4 h-4" /></a>
             <a href="#" className="hover:text-white transition"><Linkedin className="w-4 h-4" /></a>
-            <a href="#" className="hover:text-white transition"><Github className="w-4 h-4" /></a>
+            <a href="https://github.com/Sachinxcode-01/AI-Face-Attendance-System" target="_blank" rel="noopener noreferrer" className="hover:text-white transition"><Github className="w-4 h-4" /></a>
           </div>
         </div>
 
@@ -48,7 +48,7 @@ export default function Footer() {
         <div className="md:col-span-5 grid grid-cols-3 gap-6">
           <div className="flex flex-col gap-3.5">
             <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">
-              Portals Available
+              Portals
             </span>
             <Link href="/login" className="text-xs text-slate-400 hover:text-white transition">Student Portal</Link>
             <Link href="/login" className="text-xs text-slate-400 hover:text-white transition">Parent Portal</Link>
@@ -58,21 +58,22 @@ export default function Footer() {
 
           <div className="flex flex-col gap-3.5">
             <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">
-              Core Systems
+              Product
             </span>
-            <a href="#features" className="text-xs text-slate-400 hover:text-white transition">Attendance Management</a>
-            <a href="#features" className="text-xs text-slate-400 hover:text-white transition">Leave Management</a>
-            <a href="#features" className="text-xs text-slate-400 hover:text-white transition">Analytics & Trends</a>
-            <a href="#features" className="text-xs text-slate-400 hover:text-white transition">Reports Generator</a>
+            <Link href="/#features" className="text-xs text-slate-400 hover:text-white transition">Features</Link>
+            <Link href="/docs" className="text-xs text-slate-400 hover:text-white transition">Documentation</Link>
+            <Link href="/contact" className="text-xs text-slate-400 hover:text-white transition">Contact Us</Link>
+            <a href="https://github.com/Sachinxcode-01/AI-Face-Attendance-System" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-400 hover:text-white transition">GitHub Repo</a>
           </div>
 
           <div className="flex flex-col gap-3.5">
             <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">
-              Infrastructure
+              Legal Policy
             </span>
-            <a href="#features" className="text-xs text-slate-400 hover:text-white transition">Notifications System</a>
-            <a href="#features" className="text-xs text-slate-400 hover:text-white transition">Security Center (RBAC)</a>
-            <a href="#features" className="text-xs text-slate-400 hover:text-white transition">System Monitoring</a>
+            <Link href="/privacy" className="text-xs text-slate-400 hover:text-white transition">Privacy Policy</Link>
+            <Link href="/terms" className="text-xs text-slate-400 hover:text-white transition">Terms & Conditions</Link>
+            <Link href="/cookies" className="text-xs text-slate-400 hover:text-white transition">Cookie Policy</Link>
+            <Link href="/about" className="text-xs text-slate-400 hover:text-white transition font-semibold text-primary">About Creator</Link>
           </div>
         </div>
 
@@ -95,7 +96,7 @@ export default function Footer() {
             />
             <button
               type="submit"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-primary hover:bg-blue-600 text-white transition"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-primary hover:bg-blue-600 text-white transition cursor-pointer"
             >
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
@@ -115,7 +116,7 @@ export default function Footer() {
         {/* Licensing */}
         <div className="flex flex-col gap-1 text-center sm:text-left">
           <span className="text-[11px] text-slate-500 font-mono">
-            © {new Date().getFullYear()} SmartFace AI. MIT Licensed Platform.
+            © {new Date().getFullYear()} SmartFace AI. Developed by Sachin K & Team XCoderz. MIT Licensed.
           </span>
           <span className="text-[9px] text-slate-600 font-mono">
             Designed for next-gen academic biometric automation.

@@ -107,8 +107,13 @@ class _GlowRefreshIndicatorState extends State<GlowRefreshIndicator>
               child: AnimatedBuilder(
                 animation: _pulseController,
                 builder: (context, child) {
-                  final progress = (_dragOffset / triggerThreshold).clamp(0.0, 1.0);
-                  final pulseValue = _isRefreshing ? _pulseController.value : 1.0;
+                  final progress = (_dragOffset / triggerThreshold).clamp(
+                    0.0,
+                    1.0,
+                  );
+                  final pulseValue = _isRefreshing
+                      ? _pulseController.value
+                      : 1.0;
                   final height = _isRefreshing ? 4.0 : (progress * 4.0);
 
                   return Container(

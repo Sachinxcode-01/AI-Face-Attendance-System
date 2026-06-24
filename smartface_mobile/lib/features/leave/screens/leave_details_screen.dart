@@ -67,17 +67,20 @@ class LeaveDetailsScreen extends StatelessWidget {
     if (leave == null) {
       return Scaffold(
         backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
-        appBar: const PremiumAppBar(
-          title: 'Leave Details',
-        ),
+        appBar: const PremiumAppBar(title: 'Leave Details'),
         body: const Center(
-          child: Text('Leave application not found', style: TextStyle(color: Colors.white)),
+          child: Text(
+            'Leave application not found',
+            style: TextStyle(color: Colors.white),
+          ),
         ),
       );
     }
 
     final statusColor = _getStatusColor(leave.status);
-    final durationStr = leave.durationDays == 1 ? '1 Day' : '${leave.durationDays} Days';
+    final durationStr = leave.durationDays == 1
+        ? '1 Day'
+        : '${leave.durationDays} Days';
 
     return Container(
       decoration: BoxDecoration(
@@ -88,7 +91,9 @@ class LeaveDetailsScreen extends StatelessWidget {
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            isDark ? Colors.black.withValues(alpha: 0.25) : Colors.white.withValues(alpha: 0.9),
+            isDark
+                ? Colors.black.withValues(alpha: 0.25)
+                : Colors.white.withValues(alpha: 0.9),
             isDark ? BlendMode.dstATop : BlendMode.srcOver,
           ),
         ),
@@ -98,7 +103,10 @@ class LeaveDetailsScreen extends StatelessWidget {
         appBar: PremiumAppBar(
           title: 'Request #${leave.id}',
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios, color: isDark ? Colors.white : AppColors.bgDark),
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: isDark ? Colors.white : AppColors.bgDark,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -123,7 +131,12 @@ class LeaveDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusHeader(LeaveModel leave, Color statusColor, String durationStr, bool isDark) {
+  Widget _buildStatusHeader(
+    LeaveModel leave,
+    Color statusColor,
+    String durationStr,
+    bool isDark,
+  ) {
     return GlassContainer(
       padding: const EdgeInsets.all(20),
       borderColor: statusColor.withValues(alpha: 0.2),
@@ -201,9 +214,17 @@ class LeaveDetailsScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _buildMetaRow('Student Identity', leave.studentEmail, isDark),
           const Divider(color: Colors.white10),
-          _buildMetaRow('Submission Date', _formatDateString(leave.createdAt), isDark),
+          _buildMetaRow(
+            'Submission Date',
+            _formatDateString(leave.createdAt),
+            isDark,
+          ),
           const Divider(color: Colors.white10),
-          _buildMetaRow('HOD Review Stage', leave.hodStatus.toUpperCase(), isDark),
+          _buildMetaRow(
+            'HOD Review Stage',
+            leave.hodStatus.toUpperCase(),
+            isDark,
+          ),
           const Divider(color: Colors.white10),
           _buildAttachmentRow(leave),
         ],
@@ -217,26 +238,44 @@ class LeaveDetailsScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 13)),
-          Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white54, fontSize: 13),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildAttachmentRow(LeaveModel leave) {
-    final hasAttachment = leave.attachmentName != null && leave.attachmentName!.isNotEmpty;
+    final hasAttachment =
+        leave.attachmentName != null && leave.attachmentName!.isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('Attachment', style: TextStyle(color: Colors.white54, fontSize: 13)),
+          const Text(
+            'Attachment',
+            style: TextStyle(color: Colors.white54, fontSize: 13),
+          ),
           hasAttachment
               ? Row(
                   children: [
-                    const Icon(Icons.picture_as_pdf_rounded, color: Colors.redAccent, size: 16),
+                    const Icon(
+                      Icons.picture_as_pdf_rounded,
+                      color: Colors.redAccent,
+                      size: 16,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       leave.attachmentName!,
@@ -249,7 +288,10 @@ class LeaveDetailsScreen extends StatelessWidget {
                     ),
                   ],
                 )
-              : const Text('None Uploaded', style: TextStyle(color: Colors.white30, fontSize: 13)),
+              : const Text(
+                  'None Uploaded',
+                  style: TextStyle(color: Colors.white30, fontSize: 13),
+                ),
         ],
       ),
     );
@@ -301,7 +343,8 @@ class LeaveDetailsScreen extends StatelessWidget {
     final status = leave.status.toLowerCase();
     final isApproved = status == 'approved';
     final isRejected = status == 'rejected';
-    final isClarification = status == 'clarification' || leave.isClarificationRequested;
+    final isClarification =
+        status == 'clarification' || leave.isClarificationRequested;
 
     final timelineItems = [
       TimelineItem(
@@ -318,14 +361,15 @@ class LeaveDetailsScreen extends StatelessWidget {
         icon: Icons.hourglass_top_rounded,
         iconColor: status == 'pending' ? Colors.amberAccent : Colors.tealAccent,
       ),
-      if (leave.leaveType.toLowerCase() == 'academic' || leave.durationDays >= 3)
+      if (leave.leaveType.toLowerCase() == 'academic' ||
+          leave.durationDays >= 3)
         TimelineItem(
           title: 'HOD Approval Routing',
           description: leave.hodStatus == 'none'
               ? 'Verification skipped (short duration).'
               : leave.hodStatus == 'pending'
-                  ? 'High priority routing to Head of Department.'
-                  : 'Verified by Head of Department (${leave.hodStatus.toUpperCase()}).',
+              ? 'High priority routing to Head of Department.'
+              : 'Verified by Head of Department (${leave.hodStatus.toUpperCase()}).',
           timestamp: leave.hodStatus != 'none' && leave.hodStatus != 'pending'
               ? _formatDateString(leave.approvalDate)
               : 'Pending',
@@ -333,41 +377,41 @@ class LeaveDetailsScreen extends StatelessWidget {
           iconColor: leave.hodStatus == 'none'
               ? Colors.white24
               : leave.hodStatus == 'pending'
-                  ? Colors.amberAccent
-                  : leave.hodStatus == 'approved'
-                      ? Colors.tealAccent
-                      : Colors.redAccent,
+              ? Colors.amberAccent
+              : leave.hodStatus == 'approved'
+              ? Colors.tealAccent
+              : Colors.redAccent,
         ),
       TimelineItem(
         title: isClarification
             ? 'Clarification Required'
             : isRejected
-                ? 'Request Rejected'
-                : isApproved
-                    ? 'Request Approved'
-                    : 'Decision Pending',
+            ? 'Request Rejected'
+            : isApproved
+            ? 'Request Approved'
+            : 'Decision Pending',
         description: isClarification
             ? 'Remarks request additional documents to clear verification.'
             : isRejected
-                ? 'Application denied due to policy violation.'
-                : isApproved
-                    ? 'Request approved. Absence marked in SmartFace calendar.'
-                    : 'Review in progress. Check notifications for decisions.',
+            ? 'Application denied due to policy violation.'
+            : isApproved
+            ? 'Request approved. Absence marked in SmartFace calendar.'
+            : 'Review in progress. Check notifications for decisions.',
         timestamp: _formatDateString(leave.approvalDate),
         icon: isClarification
             ? Icons.help_outline_rounded
             : isRejected
-                ? Icons.cancel_outlined
-                : isApproved
-                    ? Icons.verified_user_outlined
-                    : Icons.check_circle_outline_rounded,
+            ? Icons.cancel_outlined
+            : isApproved
+            ? Icons.verified_user_outlined
+            : Icons.check_circle_outline_rounded,
         iconColor: isClarification
             ? Colors.cyanAccent
             : isRejected
-                ? Colors.redAccent
-                : isApproved
-                    ? Colors.greenAccent
-                    : Colors.white24,
+            ? Colors.redAccent
+            : isApproved
+            ? Colors.greenAccent
+            : Colors.white24,
       ),
     ];
 

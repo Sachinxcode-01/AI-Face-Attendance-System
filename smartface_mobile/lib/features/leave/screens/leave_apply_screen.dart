@@ -78,7 +78,8 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
 
   void _pickAttachment() {
     setState(() {
-      _attachmentName = 'medical_clearance_${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}.pdf';
+      _attachmentName =
+          'medical_clearance_${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}.pdf';
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -170,7 +171,9 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            isDark ? Colors.black.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.9),
+            isDark
+                ? Colors.black.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.9),
             isDark ? BlendMode.dstATop : BlendMode.srcOver,
           ),
         ),
@@ -245,10 +248,16 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
       child: DropdownButtonFormField<String>(
         initialValue: _selectedLeaveType,
         dropdownColor: AppColors.bgModal,
-        style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
         decoration: InputDecoration(
           labelText: 'Leave Category',
-          labelStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
+          labelStyle: TextStyle(
+            color: isDark ? Colors.white54 : Colors.black54,
+          ),
           border: InputBorder.none,
         ),
         items: _leaveTypes.map((type) {
@@ -324,7 +333,9 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
         labelStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
         alignLabelWithHint: true,
         filled: true,
-        fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
+        fillColor: isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : Colors.black.withValues(alpha: 0.03),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,

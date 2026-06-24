@@ -21,8 +21,8 @@ class SyncRepository {
   SyncRepository({
     required OfflineQueueService queueService,
     required SyncEngine syncEngine,
-  })  : _queueService = queueService,
-        _syncEngine = syncEngine;
+  }) : _queueService = queueService,
+       _syncEngine = syncEngine;
 
   /// Enqueues a new attendance marking and schedules an immediate sync run.
   ///
@@ -55,9 +55,15 @@ class SyncRepository {
 
   /// Retries all failed records in the queue by resetting their status to pending.
   Future<void> retryFailedRecords() async {
-    final failed = _queueService.getAll().where((r) => r.syncStatus == SyncStatus.failed);
+    final failed = _queueService.getAll().where(
+      (r) => r.syncStatus == SyncStatus.failed,
+    );
     for (final record in failed) {
-      await _queueService.updateStatus(record.id, SyncStatus.pending, retryCount: 0);
+      await _queueService.updateStatus(
+        record.id,
+        SyncStatus.pending,
+        retryCount: 0,
+      );
     }
     // Trigger sync
     await forceSyncNow();
@@ -65,7 +71,9 @@ class SyncRepository {
 
   /// Clears all permanently failed records from the queue.
   Future<void> clearFailedRecords() async {
-    final failed = _queueService.getAll().where((r) => r.syncStatus == SyncStatus.failed);
+    final failed = _queueService.getAll().where(
+      (r) => r.syncStatus == SyncStatus.failed,
+    );
     for (final record in failed) {
       await _queueService.delete(record.id);
     }

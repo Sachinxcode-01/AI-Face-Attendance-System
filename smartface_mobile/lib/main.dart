@@ -83,16 +83,32 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<SessionManager>.value(value: sl<SessionManager>()),
-        ChangeNotifierProvider<ThemeController>.value(value: sl<ThemeController>()),
+        ChangeNotifierProvider<SessionManager>.value(
+          value: sl<SessionManager>(),
+        ),
+        ChangeNotifierProvider<ThemeController>.value(
+          value: sl<ThemeController>(),
+        ),
         ChangeNotifierProvider<AppState>.value(value: sl<AppState>()),
-        ChangeNotifierProvider<AuthController>(create: (_) => sl<AuthController>()),
-        ChangeNotifierProvider<AttendanceController>(create: (_) => sl<AttendanceController>()),
+        ChangeNotifierProvider<AuthController>(
+          create: (_) => sl<AuthController>(),
+        ),
+        ChangeNotifierProvider<AttendanceController>(
+          create: (_) => sl<AttendanceController>(),
+        ),
         ChangeNotifierProvider<AIController>(create: (_) => sl<AIController>()),
-        ChangeNotifierProvider<NotificationController>(create: (_) => sl<NotificationController>()),
-        ChangeNotifierProvider<SyncController>(create: (_) => sl<SyncController>()),
-        ChangeNotifierProvider<LeaveController>(create: (_) => sl<LeaveController>()),
-        ChangeNotifierProvider<AnalyticsController>(create: (_) => sl<AnalyticsController>()),
+        ChangeNotifierProvider<NotificationController>(
+          create: (_) => sl<NotificationController>(),
+        ),
+        ChangeNotifierProvider<SyncController>(
+          create: (_) => sl<SyncController>(),
+        ),
+        ChangeNotifierProvider<LeaveController>(
+          create: (_) => sl<LeaveController>(),
+        ),
+        ChangeNotifierProvider<AnalyticsController>(
+          create: (_) => sl<AnalyticsController>(),
+        ),
       ],
       child: const SmartAttendanceApp(),
     ),

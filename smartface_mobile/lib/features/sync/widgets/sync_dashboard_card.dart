@@ -67,21 +67,25 @@ class SyncDashboardCard extends StatelessWidget {
                       Row(
                         children: [
                           Icon(
-                            controller.connectivity == ConnectivityStatus.offline
+                            controller.connectivity ==
+                                    ConnectivityStatus.offline
                                 ? Icons.cloud_off_rounded
                                 : Icons.cloud_done_rounded,
-                            color: controller.connectivity == ConnectivityStatus.offline
+                            color:
+                                controller.connectivity ==
+                                    ConnectivityStatus.offline
                                 ? Colors.grey
                                 : AppColors.success,
                             size: 16,
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            controller.connectivity == ConnectivityStatus.offline
+                            controller.connectivity ==
+                                    ConnectivityStatus.offline
                                 ? 'Offline mode active'
                                 : controller.isSyncing
-                                    ? 'Synchronizing...'
-                                    : 'Connected & secure',
+                                ? 'Synchronizing...'
+                                : 'Connected & secure',
                             style: GoogleFonts.outfit(
                               color: isDark ? Colors.white70 : Colors.black87,
                               fontSize: 14,
@@ -205,10 +209,14 @@ class SyncDashboardCard extends StatelessWidget {
     final isSyncing = controller.isSyncing;
     return Container(
       decoration: BoxDecoration(
-        color: isSyncing ? AppColors.accent.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.05),
+        color: isSyncing
+            ? AppColors.accent.withValues(alpha: 0.1)
+            : Colors.white.withValues(alpha: 0.05),
         shape: BoxShape.circle,
         border: Border.all(
-          color: isSyncing ? AppColors.accent.withValues(alpha: 0.3) : Colors.white12,
+          color: isSyncing
+              ? AppColors.accent.withValues(alpha: 0.3)
+              : Colors.white12,
         ),
       ),
       child: IconButton(
@@ -216,7 +224,8 @@ class SyncDashboardCard extends StatelessWidget {
           isSyncing ? Icons.sync_rounded : Icons.refresh_rounded,
           color: isSyncing ? AppColors.accent : Colors.white70,
         ),
-        onPressed: isSyncing || controller.connectivity == ConnectivityStatus.offline
+        onPressed:
+            isSyncing || controller.connectivity == ConnectivityStatus.offline
             ? null
             : () => controller.syncNow(),
       ),

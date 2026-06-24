@@ -116,9 +116,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E21),
-      appBar: const PremiumAppBar(
-        title: 'Dynamic Attendance QR',
-      ),
+      appBar: const PremiumAppBar(title: 'Dynamic Attendance QR'),
       body: _isInitializing
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFFFFD700)),

@@ -171,7 +171,8 @@ export default function AnalyticsGlobe() {
       <div className="w-[280px] h-[280px] md:w-[350px] md:h-[350px]">
         <Canvas
           camera={{ position: [0, 0, 4.2], fov: 60 }}
-          gl={{ alpha: true, antialias: true }}
+          dpr={[1, 1.5]}
+          gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
         >
           <ambientLight intensity={0.6} />
           <directionalLight position={[2, 3, 2]} intensity={1.5} color="#3b82f6" />

@@ -107,7 +107,10 @@ class NotificationService {
       playSound: true,
     );
 
-    final androidImpl = _localNotif.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final androidImpl = _localNotif
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidImpl?.createNotificationChannel(androidChannel);
 
     // Initialize local notifications system

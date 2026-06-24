@@ -57,14 +57,18 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
     return _remarksControllers.putIfAbsent(id, () => TextEditingController());
   }
 
-  Future<void> _handleAction(String leaveId, String status, {bool isClarification = false}) async {
+  Future<void> _handleAction(
+    String leaveId,
+    String status, {
+    bool isClarification = false,
+  }) async {
     final controller = context.read<LeaveController>();
     final remarksText = _getControllerFor(leaveId).text.trim();
     final defaultRemarks = isClarification
         ? 'Clarification requested by department head.'
         : status == 'Approved'
-            ? 'Approved. Absence excused.'
-            : 'Rejected. Request does not meet standard policy guidelines.';
+        ? 'Approved. Absence excused.'
+        : 'Rejected. Request does not meet standard policy guidelines.';
     final remarks = remarksText.isNotEmpty ? remarksText : defaultRemarks;
 
     final result = await controller.actionLeave(
@@ -81,8 +85,8 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
           backgroundColor: isClarification
               ? Colors.cyan
               : status == 'Approved'
-                  ? Colors.green
-                  : Colors.red,
+              ? Colors.green
+              : Colors.red,
         ),
       );
       _remarksControllers[leaveId]?.clear();
@@ -103,7 +107,9 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
   Widget build(BuildContext context) {
     final isDark = context.watch<ThemeController>().isDark;
     final controller = context.watch<LeaveController>();
-    final pending = controller.pendingLeaves.where((l) => l.status.toLowerCase() == 'pending').toList();
+    final pending = controller.pendingLeaves
+        .where((l) => l.status.toLowerCase() == 'pending')
+        .toList();
 
     return Container(
       decoration: BoxDecoration(
@@ -114,7 +120,9 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
           ),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            isDark ? Colors.black.withValues(alpha: 0.25) : Colors.white.withValues(alpha: 0.9),
+            isDark
+                ? Colors.black.withValues(alpha: 0.25)
+                : Colors.white.withValues(alpha: 0.9),
             isDark ? BlendMode.dstATop : BlendMode.srcOver,
           ),
         ),
@@ -124,31 +132,39 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
         appBar: PremiumAppBar(
           title: 'Audit Desk',
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios, color: isDark ? Colors.white : AppColors.bgDark),
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: isDark ? Colors.white : AppColors.bgDark,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
           actions: [
             IconButton(
               onPressed: _refreshData,
-              icon: Icon(Icons.refresh, color: isDark ? Colors.white : AppColors.bgDark),
+              icon: Icon(
+                Icons.refresh,
+                color: isDark ? Colors.white : AppColors.bgDark,
+              ),
             ),
           ],
         ),
         body: controller.isLoading && pending.isEmpty
-            ? const Center(child: CircularProgressIndicator(color: AppColors.gold))
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColors.gold),
+              )
             : pending.isEmpty
-                ? _buildEmptyState(isDark)
-                : ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: pending.length,
-                    itemBuilder: (context, index) {
-                      final request = pending[index];
-                      return _buildReviewCard(request, isDark)
-                          .animate()
-                          .fadeIn(delay: (index * 80).ms)
-                          .slideY(begin: 0.05);
-                    },
-                  ),
+            ? _buildEmptyState(isDark)
+            : ListView.builder(
+                padding: const EdgeInsets.all(20),
+                itemCount: pending.length,
+                itemBuilder: (context, index) {
+                  final request = pending[index];
+                  return _buildReviewCard(request, isDark)
+                      .animate()
+                      .fadeIn(delay: (index * 80).ms)
+                      .slideY(begin: 0.05);
+                },
+              ),
       ),
     );
   }
@@ -166,7 +182,10 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
           const SizedBox(height: 16),
           Text(
             'All caught up!',
-            style: GoogleFonts.inter(fontSize: 18, color: isDark ? Colors.white54 : Colors.black54),
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              color: isDark ? Colors.white54 : Colors.black54,
+            ),
           ),
           const Text(
             'No pending leave requests found.',
@@ -178,8 +197,11 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
   }
 
   Widget _buildReviewCard(LeaveModel request, bool isDark) {
-    final dates = '${_formatDateString(request.startDate)} to ${_formatDateString(request.endDate)}';
-    final durationStr = request.durationDays == 1 ? '1 Day' : '${request.durationDays} Days';
+    final dates =
+        '${_formatDateString(request.startDate)} to ${_formatDateString(request.endDate)}';
+    final durationStr = request.durationDays == 1
+        ? '1 Day'
+        : '${request.durationDays} Days';
     final remarksController = _getControllerFor(request.id!);
 
     return Container(
@@ -196,7 +218,10 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                   backgroundColor: AppColors.gold,
                   child: Text(
                     request.studentEmail[0].toUpperCase(),
-                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -214,21 +239,32 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                       ),
                       Text(
                         'Category: ${request.leaveType.toUpperCase()}',
-                        style: const TextStyle(color: Colors.white54, fontSize: 11),
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Text(
                   durationStr,
-                  style: const TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold, fontSize: 13),
+                  style: const TextStyle(
+                    color: AppColors.gold,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             Text(
               'Absence Window: $dates',
-              style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -243,19 +279,30 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
             TextField(
               controller: remarksController,
               maxLines: 2,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 13),
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 13,
+              ),
               decoration: InputDecoration(
                 labelText: 'Audit Remarks / Clarification Requirements',
-                labelStyle: const TextStyle(color: Colors.white38, fontSize: 11),
+                labelStyle: const TextStyle(
+                  color: Colors.white38,
+                  fontSize: 11,
+                ),
                 filled: true,
-                fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.02),
+                fillColor: isDark
+                    ? Colors.white.withValues(alpha: 0.04)
+                    : Colors.black.withValues(alpha: 0.02),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.gold, width: 1.0),
+                  borderSide: const BorderSide(
+                    color: AppColors.gold,
+                    width: 1.0,
+                  ),
                 ),
               ),
             ),
@@ -264,7 +311,11 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => _handleAction(request.id!, 'Clarification', isClarification: true),
+                    onPressed: () => _handleAction(
+                      request.id!,
+                      'Clarification',
+                      isClarification: true,
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.cyanAccent,
                       side: const BorderSide(color: Colors.cyanAccent),
@@ -273,7 +324,13 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('NEED INFO', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'NEED INFO',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -288,7 +345,13 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('REJECT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'REJECT',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -305,7 +368,10 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                     ),
                     child: const Text(
                       'APPROVE',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ),

@@ -25,8 +25,10 @@ class LeaveController extends ChangeNotifier {
 
   // Filters & Sorting state
   String _searchQuery = '';
-  String _statusFilter = 'All'; // 'All', 'Pending', 'Approved', 'Rejected', 'Clarification'
-  String _sortBy = 'Date (Newest)'; // 'Date (Newest)', 'Date (Oldest)', 'Duration (Ascending)', 'Duration (Descending)'
+  String _statusFilter =
+      'All'; // 'All', 'Pending', 'Approved', 'Rejected', 'Clarification'
+  String _sortBy =
+      'Date (Newest)'; // 'Date (Newest)', 'Date (Oldest)', 'Duration (Ascending)', 'Duration (Descending)'
 
   // Getters
   LeaveBalance? get balance => _balance;
@@ -92,8 +94,10 @@ class LeaveController extends ChangeNotifier {
 
     // Apply sorting
     list.sort((a, b) {
-      final dateA = DateTime.tryParse(a.createdAt ?? a.startDate) ?? DateTime(1970);
-      final dateB = DateTime.tryParse(b.createdAt ?? b.startDate) ?? DateTime(1970);
+      final dateA =
+          DateTime.tryParse(a.createdAt ?? a.startDate) ?? DateTime(1970);
+      final dateB =
+          DateTime.tryParse(b.createdAt ?? b.startDate) ?? DateTime(1970);
 
       switch (_sortBy) {
         case 'Date (Newest)':

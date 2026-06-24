@@ -160,8 +160,9 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF00FF88)
-                          .withValues(alpha: 0.5 * (1 - _pulseController.value)),
+                      color: const Color(
+                        0xFF00FF88,
+                      ).withValues(alpha: 0.5 * (1 - _pulseController.value)),
                       blurRadius: 8,
                       spreadRadius: 2,
                     ),
@@ -243,14 +244,8 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: allGood
-              ? [
-                  const Color(0xFF003320),
-                  const Color(0xFF005533),
-                ]
-              : [
-                  const Color(0xFF330A00),
-                  const Color(0xFF551A00),
-                ],
+              ? [const Color(0xFF003320), const Color(0xFF005533)]
+              : [const Color(0xFF330A00), const Color(0xFF551A00)],
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
@@ -265,13 +260,16 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: (allGood ? const Color(0xFF00FF88) : const Color(0xFFFF5500))
-                  .withValues(alpha: 0.15),
+              color:
+                  (allGood ? const Color(0xFF00FF88) : const Color(0xFFFF5500))
+                      .withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
               allGood ? Icons.verified_rounded : Icons.warning_amber_rounded,
-              color: allGood ? const Color(0xFF00FF88) : const Color(0xFFFF5500),
+              color: allGood
+                  ? const Color(0xFF00FF88)
+                  : const Color(0xFFFF5500),
               size: 28,
             ),
           ),
@@ -293,10 +291,7 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
                   allGood
                       ? 'AI engine running optimally • ${_telemetry['uptime_hours']}h uptime'
                       : 'Check CPU/GPU usage • Performance may degrade',
-                  style: GoogleFonts.inter(
-                    color: Colors.white60,
-                    fontSize: 11,
-                  ),
+                  style: GoogleFonts.inter(color: Colors.white60, fontSize: 11),
                 ),
               ],
             ),
@@ -304,18 +299,24 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: (allGood ? const Color(0xFF00FF88) : const Color(0xFFFF5500))
-                  .withValues(alpha: 0.2),
+              color:
+                  (allGood ? const Color(0xFF00FF88) : const Color(0xFFFF5500))
+                      .withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: (allGood ? const Color(0xFF00FF88) : const Color(0xFFFF5500))
-                    .withValues(alpha: 0.5),
+                color:
+                    (allGood
+                            ? const Color(0xFF00FF88)
+                            : const Color(0xFFFF5500))
+                        .withValues(alpha: 0.5),
               ),
             ),
             child: Text(
               allGood ? 'LIVE' : 'WARN',
               style: GoogleFonts.robotoMono(
-                color: allGood ? const Color(0xFF00FF88) : const Color(0xFFFF5500),
+                color: allGood
+                    ? const Color(0xFF00FF88)
+                    : const Color(0xFFFF5500),
                 fontWeight: FontWeight.bold,
                 fontSize: 10,
               ),
@@ -360,7 +361,11 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
   }
 
   Widget _buildDialGauge(
-      String label, double percent, IconData icon, Color color) {
+    String label,
+    double percent,
+    IconData icon,
+    Color color,
+  ) {
     final clamped = percent.clamp(0, 100).toDouble();
     final isHigh = clamped > 75;
 
@@ -426,8 +431,8 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
     final tempColor = temp > 80
         ? const Color(0xFFFF5555)
         : temp > 65
-            ? const Color(0xFFFF9500)
-            : const Color(0xFF00FF88);
+        ? const Color(0xFFFF9500)
+        : const Color(0xFF00FF88);
 
     return Row(
       children: [
@@ -560,7 +565,10 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
                     ),
                     Text(
                       'Face recognition AI engine • $hwAccel accelerated',
-                      style: const TextStyle(color: Colors.white38, fontSize: 10),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 10,
+                      ),
                     ),
                   ],
                 ),
@@ -606,7 +614,12 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
     ).animate().fadeIn(delay: 300.ms);
   }
 
-  Widget _buildAIMetric(String label, String value, IconData icon, Color color) {
+  Widget _buildAIMetric(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Column(
       children: [
         Icon(icon, color: color, size: 18),
@@ -640,8 +653,8 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
     final latencyColor = latency < 50
         ? const Color(0xFF00FF88)
         : latency < 100
-            ? const Color(0xFFFFD700)
-            : const Color(0xFFFF5555);
+        ? const Color(0xFFFFD700)
+        : const Color(0xFFFF5555);
 
     return Column(
       children: [
@@ -722,8 +735,8 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
     final color = ms < 100
         ? const Color(0xFF00FF88)
         : ms < 200
-            ? const Color(0xFFFFD700)
-            : const Color(0xFFFF5555);
+        ? const Color(0xFFFFD700)
+        : const Color(0xFFFF5555);
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -776,8 +789,8 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
             ms < 100
                 ? 'Excellent response — optimal load'
                 : ms < 200
-                    ? 'Acceptable — slight load'
-                    : 'Degraded — check server resources',
+                ? 'Acceptable — slight load'
+                : 'Degraded — check server resources',
             style: const TextStyle(color: Colors.white38, fontSize: 9),
           ),
         ],
@@ -815,9 +828,7 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
             '$intruders',
             'INTRUDERS',
             Icons.gpp_bad_rounded,
-            intruders > 0
-                ? const Color(0xFFFF5555)
-                : const Color(0xFF00FF88),
+            intruders > 0 ? const Color(0xFFFF5555) : const Color(0xFF00FF88),
           ),
         ),
       ],
@@ -825,7 +836,11 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
   }
 
   Widget _buildMetricTile(
-      String value, String label, IconData icon, Color color) {
+    String value,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

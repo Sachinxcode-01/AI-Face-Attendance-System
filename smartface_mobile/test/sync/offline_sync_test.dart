@@ -31,11 +31,15 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   // Mock Secure Storage Channel
-  const secureStorageChannel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+  const secureStorageChannel = MethodChannel(
+    'plugins.it_nomads.com/flutter_secure_storage',
+  );
   final Map<String, String> mockSecureStorage = {};
 
   // Mock Connectivity Channel
-  const connectivityChannel = MethodChannel('dev.fluttercommunity.plus/connectivity');
+  const connectivityChannel = MethodChannel(
+    'dev.fluttercommunity.plus/connectivity',
+  );
 
   late Directory tempDir;
   late OfflineQueueService queueService;
@@ -48,37 +52,41 @@ void main() {
 
   setUpAll(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(secureStorageChannel, (MethodCall methodCall) async {
-      switch (methodCall.method) {
-        case 'read':
-          final key = methodCall.arguments['key'] as String;
-          return mockSecureStorage[key];
-        case 'write':
-          final key = methodCall.arguments['key'] as String;
-          final value = methodCall.arguments['value'] as String;
-          mockSecureStorage[key] = value;
-          return null;
-        case 'delete':
-          final key = methodCall.arguments['key'] as String;
-          mockSecureStorage.remove(key);
-          return null;
-        case 'deleteAll':
-          mockSecureStorage.clear();
-          return null;
-        case 'readAll':
-          return mockSecureStorage;
-        default:
-          return null;
-      }
-    });
+        .setMockMethodCallHandler(secureStorageChannel, (
+          MethodCall methodCall,
+        ) async {
+          switch (methodCall.method) {
+            case 'read':
+              final key = methodCall.arguments['key'] as String;
+              return mockSecureStorage[key];
+            case 'write':
+              final key = methodCall.arguments['key'] as String;
+              final value = methodCall.arguments['value'] as String;
+              mockSecureStorage[key] = value;
+              return null;
+            case 'delete':
+              final key = methodCall.arguments['key'] as String;
+              mockSecureStorage.remove(key);
+              return null;
+            case 'deleteAll':
+              mockSecureStorage.clear();
+              return null;
+            case 'readAll':
+              return mockSecureStorage;
+            default:
+              return null;
+          }
+        });
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(connectivityChannel, (MethodCall methodCall) async {
-      if (methodCall.method == 'check') {
-        return ['wifi']; // ConnectivityResult.wifi
-      }
-      return null;
-    });
+        .setMockMethodCallHandler(connectivityChannel, (
+          MethodCall methodCall,
+        ) async {
+          if (methodCall.method == 'check') {
+            return ['wifi']; // ConnectivityResult.wifi
+          }
+          return null;
+        });
   });
 
   setUp(() async {
@@ -144,9 +152,7 @@ void main() {
       expect(record.validateHmac(key), isTrue);
       expect(record.validateHmac('wrong-key'), isFalse);
 
-      final tampered = record.copyWith(
-        serverResponse: 'altered',
-      );
+      final tampered = record.copyWith(serverResponse: 'altered');
       expect(tampered.validateHmac(key), isTrue); // ServerResponse not signed
 
       final tamperedRecord = AttendanceQueueRecord(
@@ -219,7 +225,10 @@ void main() {
       );
 
       expect(queueService.getAll().length, 500);
-      final syncedCount = queueService.getAll().where((r) => r.syncStatus == SyncStatus.synced).length;
+      final syncedCount = queueService
+          .getAll()
+          .where((r) => r.syncStatus == SyncStatus.synced)
+          .length;
       expect(syncedCount, 49); // Evicted 1 synced item
     });
   });
@@ -261,7 +270,10 @@ void main() {
 
     test('Conflict resolution - duplicate handling (409)', () async {
       final conflictClient = MockClient((request) async {
-        return http.Response(jsonEncode({'detail': 'Attendance already marked'}), 409);
+        return http.Response(
+          jsonEncode({'detail': 'Attendance already marked'}),
+          409,
+        );
       });
       final conflictApiService = ApiService(client: conflictClient);
 

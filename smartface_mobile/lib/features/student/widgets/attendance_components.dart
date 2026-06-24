@@ -81,7 +81,11 @@ class AttendanceHealthCard extends StatelessWidget {
                 ),
                 child: Text(
                   standing.toUpperCase(),
-                  style: GoogleFonts.outfit(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.outfit(
+                    color: statusColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -104,7 +108,11 @@ class AttendanceHealthCard extends StatelessWidget {
                   ),
                   Text(
                     '$scoreInt%',
-                    style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
+                    style: GoogleFonts.outfit(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -115,13 +123,13 @@ class AttendanceHealthCard extends StatelessWidget {
                   children: [
                     Text(
                       'Index Rating: $standing',
-                      style: AppText.subheading(color: Colors.white, weight: FontWeight.bold),
+                      style: AppText.subheading(
+                        color: Colors.white,
+                        weight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      desc,
-                      style: AppText.caption(color: Colors.white70),
-                    ),
+                    Text(desc, style: AppText.caption(color: Colors.white70)),
                   ],
                 ),
               ),
@@ -133,11 +141,23 @@ class AttendanceHealthCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMiniMetric('Total Present', '${percentage.toInt()}%', AppColors.cyan),
-              _buildMiniMetric('Late Arrivals', '$lates', lates > 2 ? AppColors.warning : AppColors.success),
-              _buildMiniMetric('Consecutive Absence', '$consecutiveAbsences', consecutiveAbsences > 1 ? AppColors.error : AppColors.success),
+              _buildMiniMetric(
+                'Total Present',
+                '${percentage.toInt()}%',
+                AppColors.cyan,
+              ),
+              _buildMiniMetric(
+                'Late Arrivals',
+                '$lates',
+                lates > 2 ? AppColors.warning : AppColors.success,
+              ),
+              _buildMiniMetric(
+                'Consecutive Absence',
+                '$consecutiveAbsences',
+                consecutiveAbsences > 1 ? AppColors.error : AppColors.success,
+              ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -151,7 +171,11 @@ class AttendanceHealthCard extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style: GoogleFonts.robotoMono(color: color, fontWeight: FontWeight.bold, fontSize: 14),
+          style: GoogleFonts.robotoMono(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
         ),
       ],
     );
@@ -170,12 +194,15 @@ class HeatmapGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     // Generate a simple mock grid representing past 4 weeks (4 columns, 7 rows)
     final now = DateTime.now();
-    
+
     return GlassmorphicCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('ATTENDANCE FREQUENCY HEATMAP', style: AppText.label(color: AppColors.cyan)),
+          Text(
+            'ATTENDANCE FREQUENCY HEATMAP',
+            style: AppText.label(color: AppColors.cyan),
+          ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -185,12 +212,16 @@ class HeatmapGrid extends StatelessWidget {
                   // Simulate check-in counts
                   final daysAgo = (3 - weekIndex) * 7 + (6 - dayIndex);
                   final checkDate = now.subtract(Duration(days: daysAgo));
-                  final dateKey = '${checkDate.year}-${checkDate.month.toString().padLeft(2, "0")}-${checkDate.day.toString().padLeft(2, "0")}';
-                  
-                  final int count = heatmapData[dateKey] ?? (daysAgo % 3 == 0 ? 1 : 0);
+                  final dateKey =
+                      '${checkDate.year}-${checkDate.month.toString().padLeft(2, "0")}-${checkDate.day.toString().padLeft(2, "0")}';
+
+                  final int count =
+                      heatmapData[dateKey] ?? (daysAgo % 3 == 0 ? 1 : 0);
                   Color boxColor = Colors.white.withValues(alpha: 0.05);
                   if (count > 0) {
-                    boxColor = AppColors.success.withValues(alpha: count >= 2 ? 0.8 : 0.4);
+                    boxColor = AppColors.success.withValues(
+                      alpha: count >= 2 ? 0.8 : 0.4,
+                    );
                   }
 
                   return Container(
@@ -213,15 +244,36 @@ class HeatmapGrid extends StatelessWidget {
             children: [
               Text('Less', style: AppText.caption()),
               const SizedBox(width: 4),
-              Container(width: 10, height: 10, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(2))),
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               const SizedBox(width: 4),
-              Container(width: 10, height: 10, decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(2))),
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               const SizedBox(width: 4),
-              Container(width: 10, height: 10, decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(2))),
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               const SizedBox(width: 4),
               Text('More', style: AppText.caption()),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -242,17 +294,38 @@ class ExportCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('EXPORT ATTENDANCE LEDGER', style: AppText.label(color: AppColors.gold)),
+          Text(
+            'EXPORT ATTENDANCE LEDGER',
+            style: AppText.label(color: AppColors.gold),
+          ),
           const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: _buildExportButton('PDF', Icons.picture_as_pdf, Colors.redAccent)),
+              Expanded(
+                child: _buildExportButton(
+                  'PDF',
+                  Icons.picture_as_pdf,
+                  Colors.redAccent,
+                ),
+              ),
               const SizedBox(width: 10),
-              Expanded(child: _buildExportButton('EXCEL', Icons.grid_on, Colors.greenAccent)),
+              Expanded(
+                child: _buildExportButton(
+                  'EXCEL',
+                  Icons.grid_on,
+                  Colors.greenAccent,
+                ),
+              ),
               const SizedBox(width: 10),
-              Expanded(child: _buildExportButton('CSV', Icons.list_alt, Colors.cyanAccent)),
+              Expanded(
+                child: _buildExportButton(
+                  'CSV',
+                  Icons.list_alt,
+                  Colors.cyanAccent,
+                ),
+              ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -262,7 +335,10 @@ class ExportCard extends StatelessWidget {
     return ElevatedButton.icon(
       onPressed: () => onExportPressed(format.toLowerCase()),
       icon: Icon(icon, color: Colors.black, size: 16),
-      label: Text(format, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12)),
+      label: Text(
+        format,
+        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
+      ),
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.black,
@@ -289,9 +365,19 @@ class LiveMonitorCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(width: 10, height: 10, decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle)),
+              Container(
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(
+                  color: Colors.redAccent,
+                  shape: BoxShape.circle,
+                ),
+              ),
               const SizedBox(width: 8),
-              Text('LIVE SESSIONS MONITOR', style: AppText.label(color: Colors.redAccent)),
+              Text(
+                'LIVE SESSIONS MONITOR',
+                style: AppText.label(color: Colors.redAccent),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -299,7 +385,10 @@ class LiveMonitorCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Center(
-                child: Text('No active scanning sessions currently.', style: AppText.body(color: Colors.white38)),
+                child: Text(
+                  'No active scanning sessions currently.',
+                  style: AppText.body(color: Colors.white38),
+                ),
               ),
             )
           else
@@ -307,7 +396,8 @@ class LiveMonitorCard extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: activeSessions.length,
-              separatorBuilder: (context, index) => const Divider(color: Colors.white12, height: 16),
+              separatorBuilder: (context, index) =>
+                  const Divider(color: Colors.white12, height: 16),
               itemBuilder: (context, index) {
                 final s = activeSessions[index];
                 return Row(
@@ -318,7 +408,10 @@ class LiveMonitorCard extends StatelessWidget {
                         children: [
                           Text(
                             s['subject'] ?? 'Subject',
-                            style: AppText.body(color: Colors.white, weight: FontWeight.bold),
+                            style: AppText.body(
+                              color: Colors.white,
+                              weight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -337,7 +430,11 @@ class LiveMonitorCard extends StatelessWidget {
                       children: [
                         Text(
                           '${s['students_present'] ?? 0} Present',
-                          style: GoogleFonts.robotoMono(fontWeight: FontWeight.bold, color: AppColors.success, fontSize: 13),
+                          style: GoogleFonts.robotoMono(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.success,
+                            fontSize: 13,
+                          ),
                         ),
                         Text(
                           'Biometric Scans: ${s['face_scans'] ?? 0}',
@@ -348,7 +445,7 @@ class LiveMonitorCard extends StatelessWidget {
                   ],
                 );
               },
-            )
+            ),
         ],
       ),
     );
@@ -381,7 +478,11 @@ class RiskAnalysisCard extends StatelessWidget {
           collapsedIconColor: Colors.white38,
           title: Text(
             title,
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14),
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 14,
+            ),
           ),
           subtitle: Text(
             '${riskStudents.length} Students detected below requirement',
@@ -393,7 +494,10 @@ class RiskAnalysisCard extends StatelessWidget {
             if (riskStudents.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Text('No students in this bracket.', style: AppText.caption()),
+                child: Text(
+                  'No students in this bracket.',
+                  style: AppText.caption(),
+                ),
               )
             else
               ListView.separated(
@@ -410,19 +514,32 @@ class RiskAnalysisCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(st['name'] ?? 'Student Name', style: AppText.body(color: Colors.white, weight: FontWeight.bold)),
-                            Text('ID: ${st['usn']} | Dept: ${st['department']}', style: AppText.caption(color: Colors.white38)),
+                            Text(
+                              st['name'] ?? 'Student Name',
+                              style: AppText.body(
+                                color: Colors.white,
+                                weight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'ID: ${st['usn']} | Dept: ${st['department']}',
+                              style: AppText.caption(color: Colors.white38),
+                            ),
                           ],
                         ),
                       ),
                       Text(
                         '${st['health_score']}%',
-                        style: GoogleFonts.robotoMono(color: themeColor, fontWeight: FontWeight.bold, fontSize: 13),
-                      )
+                        style: GoogleFonts.robotoMono(
+                          color: themeColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                   );
                 },
-              )
+              ),
           ],
         ),
       ),
@@ -444,21 +561,32 @@ class AuditLogList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('SECURITY & TRANSACTION AUDIT LOGS', style: AppText.label(color: AppColors.cyan)),
+          Text(
+            'SECURITY & TRANSACTION AUDIT LOGS',
+            style: AppText.label(color: AppColors.cyan),
+          ),
           const SizedBox(height: 16),
           if (logs.isEmpty)
-            Center(child: Text('No audit logs available.', style: AppText.body(color: Colors.white38)))
+            Center(
+              child: Text(
+                'No audit logs available.',
+                style: AppText.body(color: Colors.white38),
+              ),
+            )
           else
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: logs.length,
-              separatorBuilder: (context, index) => const Divider(color: Colors.white12, height: 14),
+              separatorBuilder: (context, index) =>
+                  const Divider(color: Colors.white12, height: 14),
               itemBuilder: (context, index) {
                 final log = logs[index];
-                final date = DateTime.tryParse(log['timestamp'] ?? '') ?? DateTime.now();
-                final dateStr = '${date.hour.toString().padLeft(2, "0")}:${date.minute.toString().padLeft(2, "0")} • ${date.day}/${date.month}';
-                
+                final date =
+                    DateTime.tryParse(log['timestamp'] ?? '') ?? DateTime.now();
+                final dateStr =
+                    '${date.hour.toString().padLeft(2, "0")}:${date.minute.toString().padLeft(2, "0")} • ${date.day}/${date.month}';
+
                 IconData actionIcon = Icons.info_outline;
                 Color actionColor = Colors.white38;
 
@@ -487,7 +615,10 @@ class AuditLogList extends StatelessWidget {
                         children: [
                           Text(
                             log['action'].toString().replaceAll('_', ' '),
-                            style: AppText.body(color: Colors.white, weight: FontWeight.bold),
+                            style: AppText.body(
+                              color: Colors.white,
+                              weight: FontWeight.bold,
+                            ),
                           ),
                           Text(
                             'User: ${log['actor_email']} • IP: ${log['ip_address']}',
@@ -496,7 +627,10 @@ class AuditLogList extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Text(dateStr, style: AppText.caption(color: Colors.white38)),
+                    Text(
+                      dateStr,
+                      style: AppText.caption(color: Colors.white38),
+                    ),
                   ],
                 );
               },

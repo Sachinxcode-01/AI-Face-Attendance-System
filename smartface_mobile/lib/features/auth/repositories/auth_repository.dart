@@ -20,7 +20,10 @@ class AuthRepository {
 
   AuthRepository(this._authService, this._sessionManager);
 
-  Future<Map<String, dynamic>> loginWithPassword(String email, String password) async {
+  Future<Map<String, dynamic>> loginWithPassword(
+    String email,
+    String password,
+  ) async {
     final result = await _authService.loginWithPassword(email, password);
     if (result.containsKey('token')) {
       final String token = result['token'] as String;
@@ -62,7 +65,12 @@ class AuthRepository {
     String role, {
     String? avatarUrl,
   }) async {
-    final result = await _authService.googleLogin(email, name, role, avatarUrl: avatarUrl);
+    final result = await _authService.googleLogin(
+      email,
+      name,
+      role,
+      avatarUrl: avatarUrl,
+    );
     if (result.containsKey('token')) {
       final String token = result['token'] as String;
       final String userRole = result['role'] as String? ?? role;
@@ -106,7 +114,10 @@ class AuthRepository {
     return await _authService.getUserProfile(token);
   }
 
-  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data, String token) async {
+  Future<Map<String, dynamic>> updateProfile(
+    Map<String, dynamic> data,
+    String token,
+  ) async {
     final result = await _authService.updateProfile(data, token);
     if (result.containsKey('name')) {
       await _sessionManager.saveSession(
@@ -120,7 +131,10 @@ class AuthRepository {
     return result;
   }
 
-  Future<Map<String, dynamic>> registerBiometric(String email, String token) async {
+  Future<Map<String, dynamic>> registerBiometric(
+    String email,
+    String token,
+  ) async {
     return await _authService.registerBiometric(email, token);
   }
 
@@ -146,7 +160,10 @@ class AuthRepository {
     return result;
   }
 
-  Future<Map<String, dynamic>> uploadAvatar(File imageFile, String token) async {
+  Future<Map<String, dynamic>> uploadAvatar(
+    File imageFile,
+    String token,
+  ) async {
     final result = await _authService.uploadAvatar(imageFile, token);
     if (result.containsKey('avatar_url')) {
       await _sessionManager.saveSession(

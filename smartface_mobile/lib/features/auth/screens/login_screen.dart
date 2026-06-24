@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _otpController = TextEditingController();
-  
+
   // Registration controllers
   final _regNameController = TextEditingController();
   final _regEmailController = TextEditingController();
@@ -53,16 +53,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final _regConfirmPassController = TextEditingController();
 
   final _auth = FirebaseAuth.instance;
-  
+
   // Tab index: 0 = Login, 1 = Register, 2 = OTP Login
   int _activeTabIndex = 0;
-  
+
   bool _isLoading = false;
   bool _otpSent = false;
   bool _showPassword = false;
   bool _showRegPassword = false;
   bool _showRegConfirmPassword = false;
-  
+
   String _selectedRole = 'Student'; // Student, Teacher
   double _regPassStrength = 0;
   String _regPassStrengthLabel = '';
@@ -130,7 +130,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      AppToast.show(context, message: 'Please enter both email and password', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please enter both email and password',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -151,15 +155,17 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (!mounted) return;
-        final bool biometricRegistered = result['biometric_registered'] ?? false;
-        
+        final bool biometricRegistered =
+            result['biometric_registered'] ?? false;
+
         final String targetRoute = biometricRegistered
             ? (result['role']?.toString().toLowerCase() == 'admin'
-                ? '/admin/home'
-                : (result['role']?.toString().toLowerCase() == 'teacher' || 
-                   result['role']?.toString().toLowerCase() == 'faculty'
-                    ? '/teacher/home'
-                    : '/student/home'))
+                  ? '/admin/home'
+                  : (result['role']?.toString().toLowerCase() == 'teacher' ||
+                            result['role']?.toString().toLowerCase() ==
+                                'faculty'
+                        ? '/teacher/home'
+                        : '/student/home'))
             : '/auth/setup';
 
         context.go(targetRoute);
@@ -181,23 +187,43 @@ class _LoginScreenState extends State<LoginScreen> {
     final confirmPass = _regConfirmPassController.text.trim();
 
     if (name.length < 2) {
-      AppToast.show(context, message: 'Please enter your full name', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please enter your full name',
+        type: ToastType.warning,
+      );
       return;
     }
     if (!_isValidEmail(email)) {
-      AppToast.show(context, message: 'Invalid email address', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Invalid email address',
+        type: ToastType.warning,
+      );
       return;
     }
     if (password.isEmpty) {
-      AppToast.show(context, message: 'Password cannot be empty', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Password cannot be empty',
+        type: ToastType.warning,
+      );
       return;
     }
     if (_regPassStrength < 0.5) {
-      AppToast.show(context, message: 'Choose a stronger password', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Choose a stronger password',
+        type: ToastType.warning,
+      );
       return;
     }
     if (password != confirmPass) {
-      AppToast.show(context, message: 'Passwords do not match', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'Passwords do not match',
+        type: ToastType.error,
+      );
       return;
     }
 
@@ -205,12 +231,22 @@ class _LoginScreenState extends State<LoginScreen> {
     HapticFeedback.mediumImpact();
 
     try {
-      final result = await ApiService.register(name, email, password, _selectedRole);
+      final result = await ApiService.register(
+        name,
+        email,
+        password,
+        _selectedRole,
+      );
       if (!mounted) return;
 
       if (result.containsKey('id')) {
         HapticFeedback.heavyImpact();
-        AppToast.show(context, title: 'Welcome! 🎉', message: 'Account created. Signing in...', type: ToastType.success);
+        AppToast.show(
+          context,
+          title: 'Welcome! 🎉',
+          message: 'Account created. Signing in...',
+          type: ToastType.success,
+        );
 
         // Auto login after successful registration
         final loginResult = await ApiService.loginWithPassword(email, password);
@@ -231,7 +267,11 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'Registration Error: $e', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'Registration Error: $e',
+        type: ToastType.error,
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -240,7 +280,11 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _sendOtp() async {
     final email = _emailController.text.trim();
     if (!_isValidEmail(email)) {
-      AppToast.show(context, message: 'Please enter a valid institutional email', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please enter a valid institutional email',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -249,9 +293,14 @@ class _LoginScreenState extends State<LoginScreen> {
       final result = await ApiService.requestLoginOtp(email);
       if (!mounted) return;
 
-      if (result.containsKey('detail') && result['detail'].toString().contains('sent')) {
+      if (result.containsKey('detail') &&
+          result['detail'].toString().contains('sent')) {
         setState(() => _otpSent = true);
-        AppToast.show(context, message: 'OTP sent to your email!', type: ToastType.success);
+        AppToast.show(
+          context,
+          message: 'OTP sent to your email!',
+          type: ToastType.success,
+        );
       } else {
         throw Exception(result['detail'] ?? 'Failed to send OTP');
       }
@@ -268,7 +317,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final otp = _otpController.text.trim();
 
     if (otp.length != 6) {
-      AppToast.show(context, message: 'Please enter the 6-digit code', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please enter the 6-digit code',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -287,14 +340,16 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (!mounted) return;
-        final bool biometricRegistered = result['biometric_registered'] ?? false;
+        final bool biometricRegistered =
+            result['biometric_registered'] ?? false;
         final String targetRoute = biometricRegistered
             ? (result['role']?.toString().toLowerCase() == 'admin'
-                ? '/admin/home'
-                : (result['role']?.toString().toLowerCase() == 'teacher' || 
-                   result['role']?.toString().toLowerCase() == 'faculty'
-                    ? '/teacher/home'
-                    : '/student/home'))
+                  ? '/admin/home'
+                  : (result['role']?.toString().toLowerCase() == 'teacher' ||
+                            result['role']?.toString().toLowerCase() ==
+                                'faculty'
+                        ? '/teacher/home'
+                        : '/student/home'))
             : '/auth/setup';
 
         context.go(targetRoute);
@@ -303,7 +358,11 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'Invalid Verification Code: $e', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'Invalid Verification Code: $e',
+        type: ToastType.error,
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -313,20 +372,24 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn(
-        serverClientId: '153684832501-4mikvqi78kam3j1tcmnab7gp1o3e7mnt.apps.googleusercontent.com',
+        serverClientId:
+            '153684832501-4mikvqi78kam3j1tcmnab7gp1o3e7mnt.apps.googleusercontent.com',
       ).signIn();
       if (googleUser == null) {
         setState(() => _isLoading = false);
         return;
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
 
       if (userCredential.user != null) {
         final email = userCredential.user!.email ?? '';
@@ -351,14 +414,16 @@ class _LoginScreenState extends State<LoginScreen> {
           );
 
           if (!mounted) return;
-          final bool biometricRegistered = result['biometric_registered'] ?? false;
+          final bool biometricRegistered =
+              result['biometric_registered'] ?? false;
           final String targetRoute = biometricRegistered
               ? (result['role']?.toString().toLowerCase() == 'admin'
-                  ? '/admin/home'
-                  : (result['role']?.toString().toLowerCase() == 'teacher' || 
-                     result['role']?.toString().toLowerCase() == 'faculty'
-                      ? '/teacher/home'
-                      : '/student/home'))
+                    ? '/admin/home'
+                    : (result['role']?.toString().toLowerCase() == 'teacher' ||
+                              result['role']?.toString().toLowerCase() ==
+                                  'faculty'
+                          ? '/teacher/home'
+                          : '/student/home'))
               : '/auth/setup';
 
           context.go(targetRoute);
@@ -368,7 +433,11 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'Google Auth Error: $e', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'Google Auth Error: $e',
+        type: ToastType.error,
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -398,7 +467,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 title: Row(
                   children: [
-                    const Icon(Icons.dns_outlined, color: AppColors.gold, size: 24),
+                    const Icon(
+                      Icons.dns_outlined,
+                      color: AppColors.gold,
+                      size: 24,
+                    ),
                     const SizedBox(width: 12),
                     Text(
                       'Server Settings',
@@ -433,27 +506,31 @@ class _LoginScreenState extends State<LoginScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Status: ',
-                          style: AppText.caption(),
-                        ),
+                        Text('Status: ', style: AppText.caption()),
                         Row(
                           children: [
                             if (testingStatus)
                               const SizedBox(
                                 width: 12,
                                 height: 12,
-                                child: CircularProgressIndicator(strokeWidth: 1.5, color: AppColors.gold),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  color: AppColors.gold,
+                                ),
                               )
                             else ...[
                               Icon(
                                 connectionStatus == 'ONLINE'
-                                      ? Icons.check_circle
-                                      : (connectionStatus == 'OFFLINE' ? Icons.error_outline : Icons.help_outline),
+                                    ? Icons.check_circle
+                                    : (connectionStatus == 'OFFLINE'
+                                          ? Icons.error_outline
+                                          : Icons.help_outline),
                                 size: 14,
                                 color: connectionStatus == 'ONLINE'
                                     ? AppColors.success
-                                    : (connectionStatus == 'OFFLINE' ? AppColors.error : Colors.white38),
+                                    : (connectionStatus == 'OFFLINE'
+                                          ? AppColors.error
+                                          : Colors.white38),
                               ),
                               const SizedBox(width: 4),
                               Text(
@@ -463,10 +540,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                   fontWeight: FontWeight.bold,
                                   color: connectionStatus == 'ONLINE'
                                       ? AppColors.success
-                                      : (connectionStatus == 'OFFLINE' ? AppColors.error : Colors.white38),
+                                      : (connectionStatus == 'OFFLINE'
+                                            ? AppColors.error
+                                            : Colors.white38),
                                 ),
                               ),
-                            ]
+                            ],
                           ],
                         ),
                       ],
@@ -477,7 +556,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextButton(
                     onPressed: () async {
                       setDialogState(() => testingStatus = true);
-                      final testUrl = 'http://${hostController.text.trim()}:${portController.text.trim()}';
+                      final testUrl =
+                          'http://${hostController.text.trim()}:${portController.text.trim()}';
                       final isOnline = await ApiService.testConnection(testUrl);
                       setDialogState(() {
                         testingStatus = false;
@@ -486,7 +566,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                     child: Text(
                       'TEST',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: AppColors.gold),
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.gold,
+                      ),
                     ),
                   ),
                   ElevatedButton(
@@ -496,16 +579,25 @@ class _LoginScreenState extends State<LoginScreen> {
                         portController.text.trim(),
                       );
                       Navigator.pop(dialogCtx);
-                      AppToast.show(context, message: 'Settings saved & applied!', type: ToastType.success);
+                      AppToast.show(
+                        context,
+                        message: 'Settings saved & applied!',
+                        type: ToastType.success,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.gold,
                       foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: Text(
                       'SAVE & APPLY',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12),
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -562,7 +654,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Center(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 16.0,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -572,15 +667,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // App Title
                     Text(
-                      'SmartFace AI',
-                      style: GoogleFonts.outfit(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -1,
-                        color: Colors.white,
-                      ),
-                    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
-                    
+                          'SmartFace AI',
+                          style: GoogleFonts.outfit(
+                            fontSize: 40,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
+                            color: Colors.white,
+                          ),
+                        )
+                        .animate()
+                        .fadeIn(duration: 400.ms)
+                        .slideY(begin: 0.1, end: 0),
+
                     Text(
                       'ENTERPRISE BIOMETRIC INTELLIGENCE',
                       style: GoogleFonts.inter(
@@ -620,10 +718,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.settings_outlined, color: Colors.white70, size: 22),
+                      icon: const Icon(
+                        Icons.settings_outlined,
+                        color: Colors.white70,
+                        size: 22,
+                      ),
                       onPressed: _showServerSettingsDialog,
                     ),
                   ),
@@ -650,7 +754,10 @@ class _LoginScreenState extends State<LoginScreen> {
             width: 140,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.accent.withValues(alpha: 0.15), width: 1.5),
+              border: Border.all(
+                color: AppColors.accent.withValues(alpha: 0.15),
+                width: 1.5,
+              ),
             ),
           ).animate(onPlay: (c) => c.repeat()).rotate(duration: 8.seconds),
           Container(
@@ -658,7 +765,11 @@ class _LoginScreenState extends State<LoginScreen> {
             width: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.accent.withValues(alpha: 0.25), width: 1, strokeAlign: BorderSide.strokeAlignOutside),
+              border: Border.all(
+                color: AppColors.accent.withValues(alpha: 0.25),
+                width: 1,
+                strokeAlign: BorderSide.strokeAlignOutside,
+              ),
             ),
           ).animate(onPlay: (c) => c.repeat()).rotate(duration: 12.seconds),
           // Central circular brand badge
@@ -677,7 +788,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
             ),
-            child: const Icon(Icons.blur_on_rounded, color: Colors.cyanAccent, size: 42),
+            child: const Icon(
+              Icons.blur_on_rounded,
+              color: Colors.cyanAccent,
+              size: 42,
+            ),
           ),
         ],
       ),
@@ -715,7 +830,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    boxShadow: AppShadows.glow(AppColors.accent, intensity: 0.4),
+                    boxShadow: AppShadows.glow(
+                      AppColors.accent,
+                      intensity: 0.4,
+                    ),
                   ),
                 ),
               ),
@@ -737,7 +855,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           label,
                           style: GoogleFonts.inter(
                             color: isSelected ? Colors.white : Colors.white54,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w600,
                             fontSize: 11,
                             letterSpacing: 0.5,
                           ),
@@ -798,7 +918,9 @@ class _LoginScreenState extends State<LoginScreen> {
           obscureText: !_showPassword,
           suffixIcon: IconButton(
             icon: Icon(
-              _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              _showPassword
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
               color: Colors.white38,
               size: 20,
             ),
@@ -840,11 +962,14 @@ class _LoginScreenState extends State<LoginScreen> {
           obscureText: !_showRegPassword,
           suffixIcon: IconButton(
             icon: Icon(
-              _showRegPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              _showRegPassword
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
               color: Colors.white38,
               size: 20,
             ),
-            onPressed: () => setState(() => _showRegPassword = !_showRegPassword),
+            onPressed: () =>
+                setState(() => _showRegPassword = !_showRegPassword),
           ),
         ),
         // Password Strength indicator bar
@@ -863,7 +988,11 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(width: 8),
               Text(
                 _regPassStrengthLabel,
-                style: GoogleFonts.inter(fontSize: 10, color: _regPassStrengthColor, fontWeight: FontWeight.bold),
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  color: _regPassStrengthColor,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -876,11 +1005,15 @@ class _LoginScreenState extends State<LoginScreen> {
           obscureText: !_showRegConfirmPassword,
           suffixIcon: IconButton(
             icon: Icon(
-              _showRegConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              _showRegConfirmPassword
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
               color: Colors.white38,
               size: 20,
             ),
-            onPressed: () => setState(() => _showRegConfirmPassword = !_showRegConfirmPassword),
+            onPressed: () => setState(
+              () => _showRegConfirmPassword = !_showRegConfirmPassword,
+            ),
           ),
         ),
         const SizedBox(height: 24),
@@ -914,7 +1047,11 @@ class _LoginScreenState extends State<LoginScreen> {
           Text(
             _emailController.text,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+            style: GoogleFonts.inter(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
           ),
           const SizedBox(height: 20),
           _buildTextField(
@@ -934,7 +1071,11 @@ class _LoginScreenState extends State<LoginScreen> {
             onPressed: () => setState(() => _otpSent = false),
             child: Text(
               'Change Email Address',
-              style: GoogleFonts.inter(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.bold),
+              style: GoogleFonts.inter(
+                color: AppColors.accent,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -949,7 +1090,12 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Text(
           'REGISTER AS: ',
-          style: GoogleFonts.inter(fontSize: 10, color: Colors.white38, fontWeight: FontWeight.w800, letterSpacing: 1),
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            color: Colors.white38,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1,
+          ),
         ),
         const Spacer(),
         _buildRoleBadge('Student'),
@@ -970,10 +1116,14 @@ class _LoginScreenState extends State<LoginScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.accent.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.02),
+          color: isSelected
+              ? AppColors.accent.withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.02),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.accent : Colors.white.withValues(alpha: 0.05),
+            color: isSelected
+                ? AppColors.accent
+                : Colors.white.withValues(alpha: 0.05),
             width: 1,
           ),
         ),
@@ -994,15 +1144,30 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Row(
           children: [
-            Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.05), height: 1)),
+            Expanded(
+              child: Divider(
+                color: Colors.white.withValues(alpha: 0.05),
+                height: 1,
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text(
                 'OR AUTHORIZE SECURELY',
-                style: GoogleFonts.inter(color: Colors.white24, fontSize: 8, letterSpacing: 1, fontWeight: FontWeight.w800),
+                style: GoogleFonts.inter(
+                  color: Colors.white24,
+                  fontSize: 8,
+                  letterSpacing: 1,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
-            Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.05), height: 1)),
+            Expanded(
+              child: Divider(
+                color: Colors.white.withValues(alpha: 0.05),
+                height: 1,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 20),
@@ -1014,8 +1179,13 @@ class _LoginScreenState extends State<LoginScreen> {
             onPressed: _signInWithGoogle,
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white,
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1.2),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              side: BorderSide(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 1.2,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1024,7 +1194,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(width: 12),
                 Text(
                   'Continue with Google',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ],
             ),
@@ -1036,15 +1209,25 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 6,
-              height: 6,
-              decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
-            ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-             .scale(end: const Offset(1.5, 1.5), duration: 600.ms),
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: AppColors.success,
+                    shape: BoxShape.circle,
+                  ),
+                )
+                .animate(
+                  onPlay: (controller) => controller.repeat(reverse: true),
+                )
+                .scale(end: const Offset(1.5, 1.5), duration: 600.ms),
             const SizedBox(width: 6),
             Text(
               '🔒 DEVICE SECURE & TRUSTED (256-bit AES)',
-              style: GoogleFonts.robotoMono(fontSize: 8, color: Colors.white38, fontWeight: FontWeight.bold),
+              style: GoogleFonts.robotoMono(
+                fontSize: 8,
+                color: Colors.white38,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -1071,7 +1254,9 @@ class _LoginScreenState extends State<LoginScreen> {
               color: Colors.white.withValues(alpha: 0.02),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isFocused ? AppColors.accent.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.05),
+                color: isFocused
+                    ? AppColors.accent.withValues(alpha: 0.6)
+                    : Colors.white.withValues(alpha: 0.05),
                 width: 1,
               ),
             ),
@@ -1082,12 +1267,22 @@ class _LoginScreenState extends State<LoginScreen> {
               inputFormatters: inputFormatters,
               style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
-                prefixIcon: Icon(icon, color: isFocused ? AppColors.accent : Colors.white38, size: 20),
+                prefixIcon: Icon(
+                  icon,
+                  color: isFocused ? AppColors.accent : Colors.white38,
+                  size: 20,
+                ),
                 hintText: hint,
-                hintStyle: GoogleFonts.inter(color: Colors.white24, fontSize: 14),
+                hintStyle: GoogleFonts.inter(
+                  color: Colors.white24,
+                  fontSize: 14,
+                ),
                 suffixIcon: suffixIcon,
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
               ),
             ),
           );
@@ -1128,7 +1323,10 @@ class _LoginScreenState extends State<LoginScreen> {
             decoration: BoxDecoration(
               color: AppColors.bgDeep.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.accent.withValues(alpha: 0.25), width: 1.5),
+              border: Border.all(
+                color: AppColors.accent.withValues(alpha: 0.25),
+                width: 1.5,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: AppColors.accent.withValues(alpha: 0.1),
