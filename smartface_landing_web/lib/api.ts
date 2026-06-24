@@ -201,7 +201,7 @@ export const api = {
     }),
 
   getSessions: (token: string) =>
-    request("/auth/sessions", {
+    request("/auth/sessions/active", {
       headers: { Authorization: `Bearer ${token}` },
     }),
 
@@ -212,8 +212,8 @@ export const api = {
     }),
 
   logoutAll: (token: string) =>
-    request("/auth/logout-all", {
-      method: "DELETE",
+    request("/auth/sessions/logout-all", {
+      method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     }),
 
@@ -233,21 +233,21 @@ export const api = {
     }),
 
   completeProfile: (data: Record<string, unknown>, token: string) =>
-    request("/auth/complete-profile", {
+    request("/auth/update-profile", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
     }),
 
   registerFaceBiometrics: (images: string[], token: string) =>
-    request("/auth/face-register", {
+    request("/auth/register-biometric", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ images }),
     }),
 
   getMe: (token: string) =>
-    request("/auth/me", {
+    request("/auth/profile", {
       headers: { Authorization: `Bearer ${token}` },
     }),
 
@@ -256,5 +256,21 @@ export const api = {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
+    }),
+
+  // Reports (server-side CSV/Excel/JSON export)
+  getStudentReport: (email: string, token: string, format: string = "json") =>
+    request(`/reports/student/${email}?format=${format}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getClassReport: (sessionId: string, token: string, format: string = "json") =>
+    request(`/reports/class/${sessionId}?format=${format}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getDepartmentReport: (dept: string, token: string, format: string = "json") =>
+    request(`/reports/department/${encodeURIComponent(dept)}?format=${format}`, {
+      headers: { Authorization: `Bearer ${token}` },
     }),
 };
