@@ -18,6 +18,7 @@ const UserSchema = new mongoose.Schema({
   section: { type: String },
   roll_number: { type: String },
   parent_details: { type: String },
+  children: { type: [String], default: [] }, // student emails linked to a parent account
   language_preference: { type: String, default: 'English' },
   employee_id: { type: String },
   designation: { type: String },
