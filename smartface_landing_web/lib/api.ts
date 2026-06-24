@@ -257,4 +257,20 @@ export const api = {
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
     }),
+
+  // Reports (server-side CSV/Excel/JSON export)
+  getStudentReport: (email: string, token: string, format: string = "json") =>
+    request(`/reports/student/${email}?format=${format}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getClassReport: (sessionId: string, token: string, format: string = "json") =>
+    request(`/reports/class/${sessionId}?format=${format}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  getDepartmentReport: (dept: string, token: string, format: string = "json") =>
+    request(`/reports/department/${encodeURIComponent(dept)}?format=${format}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
 };

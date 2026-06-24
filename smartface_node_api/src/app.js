@@ -119,6 +119,7 @@ const telemetryRoutes = require('./routes/telemetry');
 const managementRoutes = require('./routes/management');
 const academicRoutes = require('./routes/academic');
 const parentRoutes = require('./routes/parent');
+const reportRoutes = require('./routes/reports');
 
 app.use('/auth', authRoutes);
 app.use('/sessions', sessionRoutes);
@@ -130,6 +131,7 @@ app.use('/telemetry', telemetryRoutes);
 app.use('/management', managementRoutes);
 app.use('/academic', academicRoutes);
 app.use('/parent', parentRoutes);
+app.use('/reports', reportRoutes);
 app.use('/', aiRoutes);
 
 // Error fallback handler for all routes
