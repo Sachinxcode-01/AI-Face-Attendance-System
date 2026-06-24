@@ -233,21 +233,21 @@ export const api = {
     }),
 
   completeProfile: (data: Record<string, unknown>, token: string) =>
-    request("/auth/complete-profile", {
+    request("/auth/update-profile", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
     }),
 
   registerFaceBiometrics: (images: string[], token: string) =>
-    request("/auth/face-register", {
+    request("/auth/register-biometric", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ images }),
     }),
 
   getMe: (token: string) =>
-    request("/auth/me", {
+    request("/auth/profile", {
       headers: { Authorization: `Bearer ${token}` },
     }),
 
