@@ -41,6 +41,7 @@ import 'package:smartface_attendance/core/services/notification_service.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/analytics/models/student_stats_model.dart';
 import 'package:smartface_attendance/features/analytics/controllers/analytics_controller.dart';
@@ -306,87 +307,83 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   void _showExportOptionsDialog() {
-    showDialog(
+    showModernSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF070B1A),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Colors.white12),
-        ),
-        title: Text(
-          'Export Report Ledger',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Export Report Ledger',
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 18,
+            ),
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Select preferred layout format to download your biometric verification logs:',
-              style: TextStyle(color: Colors.white70, fontSize: 12),
+          const SizedBox(height: 8),
+          const Text(
+            'Select preferred layout format to download your biometric verification logs:',
+            style: TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+          const SizedBox(height: 20),
+          ListTile(
+            leading: const Icon(
+              Icons.picture_as_pdf_outlined,
+              color: AppColors.gold,
             ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(
-                Icons.picture_as_pdf_outlined,
-                color: AppColors.gold,
-              ),
-              title: const Text(
-                'PDF Document (.pdf)',
-                style: TextStyle(color: Colors.white, fontSize: 13),
-              ),
-              tileColor: Colors.white10,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _exportAttendanceReportPdf();
-              },
+            title: const Text(
+              'PDF Document (.pdf)',
+              style: TextStyle(color: Colors.white, fontSize: 13),
             ),
-            const SizedBox(height: 10),
-            ListTile(
-              leading: const Icon(
-                Icons.grid_on_rounded,
-                color: Colors.cyanAccent,
-              ),
-              title: const Text(
-                'CSV Spreadsheet (.csv)',
-                style: TextStyle(color: Colors.white, fontSize: 13),
-              ),
-              tileColor: Colors.white10,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                await _compileAndSaveCsv();
-              },
+            tileColor: Colors.white10,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 10),
-            ListTile(
-              leading: const Icon(
-                Icons.table_chart_rounded,
-                color: Colors.greenAccent,
-              ),
-              title: const Text(
-                'Excel Ledger (.xlsx)',
-                style: TextStyle(color: Colors.white, fontSize: 13),
-              ),
-              tileColor: Colors.white10,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                await _compileAndSaveExcel();
-              },
+            onTap: () {
+              Navigator.pop(context);
+              _exportAttendanceReportPdf();
+            },
+          ),
+          const SizedBox(height: 10),
+          ListTile(
+            leading: const Icon(
+              Icons.grid_on_rounded,
+              color: Colors.cyanAccent,
             ),
-          ],
-        ),
+            title: const Text(
+              'CSV Spreadsheet (.csv)',
+              style: TextStyle(color: Colors.white, fontSize: 13),
+            ),
+            tileColor: Colors.white10,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            onTap: () async {
+              Navigator.pop(context);
+              await _compileAndSaveCsv();
+            },
+          ),
+          const SizedBox(height: 10),
+          ListTile(
+            leading: const Icon(
+              Icons.table_chart_rounded,
+              color: Colors.greenAccent,
+            ),
+            title: const Text(
+              'Excel Ledger (.xlsx)',
+              style: TextStyle(color: Colors.white, fontSize: 13),
+            ),
+            tileColor: Colors.white10,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            onTap: () async {
+              Navigator.pop(context);
+              await _compileAndSaveExcel();
+            },
+          ),
+        ],
       ),
     );
   }
@@ -823,22 +820,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
           curve: Curves.easeOutCubic,
         );
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.bgDark : AppColors.bgLight,
-        image: DecorationImage(
-          image: const NetworkImage(
-            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
-          ),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            isDark
-                ? Colors.black.withValues(alpha: 0.15)
-                : Colors.white.withValues(alpha: 0.85),
-            isDark ? BlendMode.dstATop : BlendMode.srcOver,
-          ),
-        ),
-      ),
+    return AuroraBackground(
+      baseColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+      animate: isDark,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(

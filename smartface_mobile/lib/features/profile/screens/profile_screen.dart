@@ -43,6 +43,7 @@ import 'package:smartface_attendance/shared/widgets/glow_button.dart';
 // ======================================================
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 
 // ======================================================
@@ -932,24 +933,8 @@ class _ProfileScreenState extends State<ProfileScreen>
         .join()
         .toUpperCase();
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.bgDeep, AppColors.bgDark],
-        ),
-        image: DecorationImage(
-          image: const NetworkImage(
-            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
-          ),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black.withValues(alpha: 0.15),
-            BlendMode.dstATop,
-          ),
-        ),
-      ),
+    return AuroraBackground(
+      baseColor: AppColors.bgDeep,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(

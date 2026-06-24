@@ -46,6 +46,7 @@ import 'package:provider/provider.dart';
 // Core State & Constants
 // ======================================================
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 
 // ======================================================
@@ -126,17 +127,8 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.bgDark,
-        image: DecorationImage(
-          image: NetworkImage(
-            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
-          ),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(Colors.black, BlendMode.dstATop),
-        ),
-      ),
+    return AuroraBackground(
+      baseColor: AppColors.bgDark,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PremiumAppBar(

@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:smartface_attendance/features/leave/controllers/leave_controller.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
@@ -61,22 +62,9 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
         analytics['monthly_trends'] ??
         {'Jan': 5, 'Feb': 8, 'Mar': 12, 'Apr': 15, 'May': 22, 'Jun': 18};
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.bgDark : AppColors.bgLight,
-        image: DecorationImage(
-          image: const NetworkImage(
-            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
-          ),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            isDark
-                ? Colors.black.withValues(alpha: 0.25)
-                : Colors.white.withValues(alpha: 0.9),
-            isDark ? BlendMode.dstATop : BlendMode.srcOver,
-          ),
-        ),
-      ),
+    return AuroraBackground(
+      baseColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+      animate: isDark,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PremiumAppBar(
