@@ -21,6 +21,7 @@ import 'package:provider/provider.dart';
 // Core State & Constants
 // ======================================================
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/app/router/route_names.dart';
@@ -171,22 +172,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final commandActionsGrid = _buildQuickActions(context);
     final telemetryInfo = _buildTelemetryDiagnostics(isDark);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.bgDark : AppColors.bgLight,
-        image: DecorationImage(
-          image: const NetworkImage(
-            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
-          ),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            isDark
-                ? Colors.black.withValues(alpha: 0.15)
-                : Colors.white.withValues(alpha: 0.85),
-            isDark ? BlendMode.dstATop : BlendMode.srcOver,
-          ),
-        ),
-      ),
+    return AuroraBackground(
+      baseColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+      animate: isDark,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PremiumAppBar(

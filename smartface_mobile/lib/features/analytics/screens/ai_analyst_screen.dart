@@ -35,6 +35,7 @@ import 'package:provider/provider.dart';
 // ======================================================
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/app/config/cache_service.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
@@ -138,24 +139,8 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.bgDeep, AppColors.bgDark],
-        ),
-        image: DecorationImage(
-          image: const NetworkImage(
-            'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=80',
-          ),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black.withValues(alpha: 0.15),
-            BlendMode.dstATop,
-          ),
-        ),
-      ),
+    return AuroraBackground(
+      baseColor: AppColors.bgDeep,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PremiumAppBar(

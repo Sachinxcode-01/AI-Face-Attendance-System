@@ -20,6 +20,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 
 export 'package:smartface_attendance/shared/widgets/premium_widgets.dart'
     show MetricCard;
@@ -70,25 +71,26 @@ class GlassmorphicCard extends StatelessWidget {
             ? Colors.white.withValues(alpha: 0.04)
             : Colors.white.withValues(alpha: 0.85));
 
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blurRadius, sigmaY: blurRadius),
-          child: Container(
-            padding: padding ?? const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: effectiveBg,
-              borderRadius: BorderRadius.circular(borderRadius),
-              border: Border.all(color: effectiveBorder, width: borderWidth),
-              gradient: gradient ?? AppGradients.cardGlass,
-              boxShadow: boxShadow ?? AppShadows.card,
-            ),
-            child: child,
+    final card = ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blurRadius, sigmaY: blurRadius),
+        child: Container(
+          padding: padding ?? const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: effectiveBg,
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(color: effectiveBorder, width: borderWidth),
+            gradient: gradient ?? AppGradients.cardGlass,
+            boxShadow: boxShadow ?? AppShadows.card,
           ),
+          child: child,
         ),
       ),
     );
+
+    // Tappable cards get a tactile press-scale + haptic; static cards render as-is.
+    if (onTap == null) return card;
+    return PressableScale(onTap: onTap, child: card);
   }
 }
