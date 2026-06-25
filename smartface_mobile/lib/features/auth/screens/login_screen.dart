@@ -30,7 +30,7 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/shared/widgets/glass_container.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
-import 'package:smartface_attendance/shared/widgets/animated_mesh_background.dart';
+import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 
 /// The entry portal widget for user login, registration, and configuration.
 class LoginScreen extends StatefulWidget {
@@ -646,8 +646,8 @@ class _LoginScreenState extends State<LoginScreen> {
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // 🌌 Ambient Glowing Background
-          const AnimatedMeshBackground(),
+          // 🌌 Fluid blob gradient background (project palette)
+          const AuthBlobBackground(),
 
           // 📱 Main Scroll Layout
           SafeArea(
