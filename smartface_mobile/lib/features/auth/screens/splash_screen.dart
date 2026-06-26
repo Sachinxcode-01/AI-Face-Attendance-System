@@ -33,11 +33,9 @@ import 'package:provider/provider.dart';
 // ======================================================
 // Core & State Imports
 // ======================================================
-import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
-import 'package:smartface_attendance/app/theme/dark_theme.dart';
-import 'package:smartface_attendance/shared/widgets/animated_mesh_background.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
+import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 
 /// App startup splash screen widget.
 class SplashScreen extends StatefulWidget {
@@ -103,16 +101,15 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final darkColors = theme.extension<DarkAppColors>();
-    final primaryColor = darkColors?.primary ?? const Color(0xFF2563EB);
-    final primaryGlow = darkColors?.primaryGlow ?? const Color(0x332563EB);
+    const primaryColor = Color(0xFF3559E0);
+    const primaryGlow = Color(0x333559E0);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // 🌌 Unified Breathing Ambient Glow Mesh Background
-          const AnimatedMeshBackground(),
+          // 🌌 Fluid blob gradient background (project palette)
+          const AuthBlobBackground(),
 
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 600),
@@ -162,7 +159,7 @@ class _SplashScreenState extends State<SplashScreen> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: primaryGlow.withValues(alpha: 0.35),
+                                color: primaryGlow.withValues(alpha: 0.25),
                                 blurRadius: 40,
                                 spreadRadius: 6,
                               ),
@@ -198,19 +195,19 @@ class _SplashScreenState extends State<SplashScreen> {
                       child: Container(
                         height: 115,
                         width: 115,
-                        padding: const EdgeInsets.all(22),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.bgDeep,
+                          color: Colors.white,
                           border: Border.all(
-                            color: primaryColor.withValues(alpha: 0.6),
+                            color: primaryColor,
                             width: 2.0,
                           ),
-                          boxShadow: const [
+                          boxShadow: [
                             BoxShadow(
-                              color: Colors.black45,
-                              blurRadius: 10,
-                              offset: Offset(0, 5),
+                              color: primaryColor.withValues(alpha: 0.25),
+                              blurRadius: 15,
+                              spreadRadius: 1,
                             ),
                           ],
                         ),
@@ -235,14 +232,14 @@ class _SplashScreenState extends State<SplashScreen> {
           // --- BRAND TEXT ---
           Text(
                 'SMARTFACE ELITE',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.outfit(
                   fontSize: 34,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 7,
-                  color: primaryColor,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 4,
+                  color: const Color(0xFF1B2C56),
                   shadows: [
                     Shadow(
-                      color: primaryGlow.withValues(alpha: 0.5),
+                      color: primaryGlow.withValues(alpha: 0.2),
                       blurRadius: 18,
                       offset: const Offset(0, 2),
                     ),
@@ -259,8 +256,8 @@ class _SplashScreenState extends State<SplashScreen> {
             'PRECISION ATTENDANCE AI',
             style: GoogleFonts.inter(
               fontSize: 11,
-              color: Colors.white38,
-              letterSpacing: 4,
+              color: const Color(0xFF7F8CA4),
+              letterSpacing: 3,
               fontWeight: FontWeight.bold,
             ),
           ).animate().fadeIn(delay: 600.ms, duration: 400.ms),
@@ -297,7 +294,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.bgDeep,
+                    color: Colors.white,
                     border: Border.all(
                       color: primaryColor.withValues(alpha: 0.5),
                       width: 1.5,
@@ -325,18 +322,11 @@ class _SplashScreenState extends State<SplashScreen> {
               Text(
                     'Welcome to Smart Next-Gen\nAI Face Recognition Attendance',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.outfit(
                       fontSize: 24,
                       height: 1.3,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      shadows: [
-                        const Shadow(
-                          color: Colors.black54,
-                          offset: Offset(0, 3),
-                          blurRadius: 8,
-                        ),
-                      ],
+                      color: const Color(0xFF1B2C56),
                     ),
                   )
                   .animate()
@@ -351,7 +341,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   height: 1.55,
-                  color: Colors.white70,
+                  color: const Color(0xFF7F8CA4),
                   fontWeight: FontWeight.w400,
                 ),
               ).animate().fadeIn(delay: 350.ms, duration: 500.ms),
@@ -364,10 +354,11 @@ class _SplashScreenState extends State<SplashScreen> {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.03),
+                      color: const Color(0xFFF6F8FF),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.05),
+                        color: const Color(0xFFE2E6FF),
+                        width: 1.2,
                       ),
                     ),
                     child: Row(
@@ -395,7 +386,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   height: 1.5,
-                  color: Colors.white38,
+                  color: const Color(0xFF8F9BB3),
                   fontWeight: FontWeight.w500,
                 ),
               ).animate().fadeIn(delay: 650.ms, duration: 500.ms),
@@ -404,18 +395,18 @@ class _SplashScreenState extends State<SplashScreen> {
 
               SizedBox(
                     width: double.infinity,
-                    height: 60,
+                    height: 54,
                     child: GlowButton(
                       onPressed: () => context.go('/auth/login'),
                       color: primaryColor,
                       glowColor: primaryGlow,
-                      borderRadius: 20,
+                      borderRadius: 14,
                       child: Text(
                         'GET STARTED',
                         style: GoogleFonts.inter(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
+                          letterSpacing: 1.5,
                           color: Colors.white,
                         ),
                       ),
@@ -432,14 +423,10 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Widget _buildBadgeItem(String label) {
-    final theme = Theme.of(context);
-    final darkColors = theme.extension<DarkAppColors>();
-    final primaryColor = darkColors?.primary ?? const Color(0xFF2563EB);
-
     return Text(
       label,
       style: GoogleFonts.inter(
-        color: primaryColor,
+        color: const Color(0xFF3559E0),
         fontWeight: FontWeight.bold,
         fontSize: 12,
         letterSpacing: 0.5,
@@ -448,12 +435,12 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Widget _buildBadgeDivider() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 10),
       child: Text(
         '•',
-        style: GoogleFonts.inter(
-          color: Colors.white24,
+        style: TextStyle(
+          color: Color(0xFF8F9BB3),
           fontWeight: FontWeight.bold,
           fontSize: 12,
         ),
@@ -463,9 +450,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   // Futuristic diagnostics & dots loader
   Widget _buildNeuralLoadingIndicator() {
-    final theme = Theme.of(context);
-    final darkColors = theme.extension<DarkAppColors>();
-    final primaryColor = darkColors?.primary ?? const Color(0xFF2563EB);
+    const primaryColor = Color(0xFF3559E0);
 
     return Column(
       children: [
@@ -476,7 +461,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 5),
                   height: 6,
                   width: 6,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     color: primaryColor,
                     boxShadow: [
@@ -508,7 +493,7 @@ class _SplashScreenState extends State<SplashScreen> {
             key: ValueKey<String>(_bootMessage),
             textAlign: TextAlign.center,
             style: GoogleFonts.robotoMono(
-              color: Colors.white38,
+              color: const Color(0xFF7F8CA4),
               fontSize: 10,
               letterSpacing: 1.5,
               fontWeight: FontWeight.bold,

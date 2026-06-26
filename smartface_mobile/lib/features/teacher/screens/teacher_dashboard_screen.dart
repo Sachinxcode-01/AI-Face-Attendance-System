@@ -35,6 +35,7 @@ import 'package:smartface_attendance/core/services/notification_service.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
+import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 
 /// Central hub screen for faculty members to access attendance, live CCTV monitoring, system health, and student stats.
@@ -172,9 +173,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final commandActionsGrid = _buildQuickActions(context);
     final telemetryInfo = _buildTelemetryDiagnostics(isDark);
 
-    return AuroraBackground(
-      baseColor: isDark ? AppColors.bgDark : AppColors.bgLight,
-      animate: isDark,
+    return AuthBlobBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PremiumAppBar(
@@ -188,16 +187,16 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 height: 38,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.gold, width: 1.5),
-                  boxShadow: AppShadows.glow(AppColors.gold, intensity: 0.2),
+                  border: Border.all(color: const Color(0xFF3559E0), width: 1.5),
+                  boxShadow: AppShadows.glow(const Color(0xFF3559E0), intensity: 0.1),
                 ),
                 child: CircleAvatar(
-                  backgroundColor: AppColors.bgSurface,
+                  backgroundColor: const Color(0xFFE5ECFC),
                   child: Text(
                     (session.name ?? 'F').substring(0, 1).toUpperCase(),
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: const Color(0xFF3559E0),
                     ),
                   ),
                 ),
@@ -212,13 +211,14 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.w800,
                       fontSize: 16,
-                      color: isDark ? Colors.white : AppColors.bgDark,
+                      color: const Color(0xFF1B2C56),
                     ),
                   ),
                   Text(
                     'Faculty Access Portal',
-                    style: AppText.caption(
-                      color: isDark ? Colors.white54 : Colors.black54,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: const Color(0xFF7F8CA4),
                     ),
                   ),
                 ],
@@ -227,28 +227,17 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           ),
           actions: [
             IconButton(
-              icon: Icon(
-                isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-                color: AppColors.gold,
-              ),
-              onPressed: () => themeCtrl.toggle(),
-            ),
-            IconButton(
               onPressed: () => context.push('/notifications/nexus'),
-              icon: Icon(
+              icon: const Icon(
                 Icons.notifications_none_rounded,
-                color: isDark ? Colors.white : AppColors.bgDark,
+                color: Color(0xFF1B2C56),
               ),
             ),
             IconButton(
-              onPressed: () => Navigator.pushNamed(
-                context,
-                '/profile/general',
-                arguments: ModalRoute.of(context)?.settings.arguments,
-              ),
-              icon: Icon(
+              onPressed: () => context.push(AppRoutes.teacherProfilePath),
+              icon: const Icon(
                 Icons.account_circle_outlined,
-                color: isDark ? Colors.white : AppColors.bgDark,
+                color: Color(0xFF1B2C56),
               ),
             ),
           ],
@@ -328,7 +317,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: AppColors.gold,
+            color: const Color(0xFF3559E0),
           ),
         ),
         const SizedBox(height: 6),
@@ -337,7 +326,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           style: GoogleFonts.outfit(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppColors.bgDark,
+            color: const Color(0xFF1B2C56),
           ),
         ),
       ],
@@ -539,7 +528,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: AppColors.gold,
+            color: const Color(0xFF3559E0),
           ),
         ),
         const SizedBox(height: 12),
@@ -575,13 +564,16 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: Colors.white,
+                      color: const Color(0xFF1B2C56),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '$time • $room',
-                    style: const TextStyle(color: Colors.white38, fontSize: 11),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: const Color(0xFF7F8CA4),
+                    ),
                   ),
                 ],
               ),
@@ -589,16 +581,16 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.gold.withValues(alpha: 0.1),
+                color: const Color(0xFF3559E0).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.sm),
                 border: Border.all(
-                  color: AppColors.gold.withValues(alpha: 0.3),
+                  color: const Color(0xFF3559E0).withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
                 '$students Enrolled',
-                style: const TextStyle(
-                  color: AppColors.gold,
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF3559E0),
                   fontWeight: FontWeight.bold,
                   fontSize: 10,
                 ),
@@ -625,7 +617,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: 1.5,
-              color: AppColors.gold,
+              color: const Color(0xFF3559E0),
             ),
           ),
           const SizedBox(height: 16),
@@ -646,13 +638,13 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 'CPU Load',
                 cpuUsage / 100.0,
                 '$cpuUsage%',
-                Colors.cyanAccent,
+                Colors.cyan,
               ),
               _buildProgressMetric(
                 'GPU Load',
                 gpuUsage / 100.0,
                 '$gpuUsage%',
-                AppColors.gold,
+                const Color(0xFF3559E0),
               ),
             ],
           ),
@@ -678,7 +670,10 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               children: [
                 Text(
                   label,
-                  style: const TextStyle(color: Colors.white54, fontSize: 11),
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF7F8CA4),
+                    fontSize: 11,
+                  ),
                 ),
                 Text(
                   text,
@@ -696,7 +691,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               child: LinearProgressIndicator(
                 value: val,
                 color: color,
-                backgroundColor: Colors.white.withValues(alpha: 0.05),
+                backgroundColor: const Color(0xFFF1F5FD),
                 minHeight: 4,
               ),
             ),
@@ -716,7 +711,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: AppColors.gold,
+            color: const Color(0xFF3559E0),
           ),
         ),
         const SizedBox(height: 12),

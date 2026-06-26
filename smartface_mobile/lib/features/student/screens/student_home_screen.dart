@@ -43,6 +43,7 @@ import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart'
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
+import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 import 'package:smartface_attendance/features/analytics/models/student_stats_model.dart';
 import 'package:smartface_attendance/features/analytics/controllers/analytics_controller.dart';
 import 'package:smartface_attendance/features/analytics/widgets/analytics_components.dart';
@@ -820,9 +821,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
           curve: Curves.easeOutCubic,
         );
 
-    return AuroraBackground(
-      baseColor: isDark ? AppColors.bgDark : AppColors.bgLight,
-      animate: isDark,
+    return AuthBlobBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -837,16 +836,16 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 height: 38,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.cyan, width: 1.5),
-                  boxShadow: AppShadows.glow(AppColors.cyan, intensity: 0.2),
+                  border: Border.all(color: const Color(0xFF3559E0), width: 1.5),
+                  boxShadow: AppShadows.glow(const Color(0xFF3559E0), intensity: 0.1),
                 ),
                 child: CircleAvatar(
-                  backgroundColor: AppColors.bgSurface,
+                  backgroundColor: const Color(0xFFE5ECFC),
                   child: Text(
                     (session.name ?? 'S').substring(0, 1).toUpperCase(),
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: const Color(0xFF3559E0),
                     ),
                   ),
                 ),
@@ -861,13 +860,14 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.w800,
                       fontSize: 16,
-                      color: isDark ? Colors.white : AppColors.bgDark,
+                      color: const Color(0xFF1B2C56),
                     ),
                   ),
                   Text(
                     'Semester 6 • B.Tech CSE',
-                    style: AppText.caption(
-                      color: isDark ? Colors.white54 : Colors.black54,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: const Color(0xFF7F8CA4),
                     ),
                   ),
                 ],
@@ -876,24 +876,17 @@ class _StudentDashboardState extends State<StudentDashboard> {
           ),
           actions: [
             IconButton(
-              icon: Icon(
-                isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-                color: AppColors.gold,
-              ),
-              onPressed: () => themeCtrl.toggle(),
-            ),
-            IconButton(
               onPressed: () => context.push('/notifications/nexus'),
-              icon: Icon(
+              icon: const Icon(
                 Icons.notifications_none_rounded,
-                color: isDark ? Colors.white : AppColors.bgDark,
+                color: Color(0xFF1B2C56),
               ),
             ),
             IconButton(
-              onPressed: () => context.push('/profile/student'),
-              icon: Icon(
+              onPressed: () => context.push(AppRoutes.studentProfilePath),
+              icon: const Icon(
                 Icons.account_circle_outlined,
-                color: isDark ? Colors.white : AppColors.bgDark,
+                color: Color(0xFF1B2C56),
               ),
             ),
           ],
@@ -979,8 +972,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: _showExportOptionsDialog,
-          backgroundColor: AppColors.gold,
-          foregroundColor: Colors.black,
+          backgroundColor: const Color(0xFF3559E0),
+          foregroundColor: Colors.white,
           child: const Icon(Icons.download_rounded),
         ),
       ),
@@ -1001,7 +994,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: AppColors.gold,
+            color: const Color(0xFF3559E0),
           ),
         ),
         const SizedBox(height: 6),
@@ -1010,7 +1003,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
           style: GoogleFonts.outfit(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppColors.bgDark,
+            color: const Color(0xFF1B2C56),
           ),
         ),
       ],
@@ -1056,7 +1049,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 style: GoogleFonts.inter(
                   fontSize: 10,
                   letterSpacing: 1.5,
-                  color: AppColors.gold,
+                  color: const Color(0xFF3559E0),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1102,8 +1095,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             s['device'] ?? 'Unknown Platform',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: isDark ? Colors.white : AppColors.bgDeep,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF1B2C56),
                               fontWeight: isCurrent
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -1112,8 +1105,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           ),
                           Text(
                             'IP: ${s['ip']} • ${s['location']}',
-                            style: TextStyle(
-                              color: isDark ? Colors.white38 : Colors.black38,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF7F8CA4),
                               fontSize: 10,
                             ),
                           ),
@@ -1164,7 +1157,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: AppColors.gold,
+            color: const Color(0xFF3559E0),
           ),
         ),
         const SizedBox(height: 12),
