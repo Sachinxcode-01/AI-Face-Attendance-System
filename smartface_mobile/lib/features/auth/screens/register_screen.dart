@@ -28,6 +28,7 @@
 |--------------------------------------------------------------------------
 */
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -43,6 +44,8 @@ import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
+import 'package:smartface_attendance/shared/widgets/glow_button.dart';
+import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 
 /// Screen widget for institutional user account registration.
 class RegisterScreen extends StatefulWidget {
@@ -332,401 +335,419 @@ class _RegisterScreenState extends State<RegisterScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // Background gradient blobs
+          // 🌌 Fluid blob gradient background (project palette)
+          const AuthBlobBackground(),
+
+          // Back button at top-left
           Positioned(
-            top: -80,
-            right: -60,
-            child: Container(
-              width: 260,
-              height: 260,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.indigo.withValues(alpha: 0.15),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 80,
-            left: -80,
-            child: Container(
-              width: 220,
-              height: 220,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.gold.withValues(alpha: 0.08),
+            top: 16,
+            left: 16,
+            child: SafeArea(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F4FF).withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: const Color(0xFFE2E6FF),
+                      ),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Color(0xFF1B2C56),
+                        size: 20,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
 
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Back button
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white70,
-                      ),
-                      padding: EdgeInsets.zero,
-                    ),
-                    const SizedBox(height: 12),
+            child: Center(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 48),
+                      // Main Form Card
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF9EAFD8).withValues(alpha: 0.16),
+                              blurRadius: 32,
+                              spreadRadius: 2,
+                              offset: const Offset(0, 16),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header
+                            Text(
+                              'Join the Elite',
+                              style: GoogleFonts.outfit(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF1B2C56),
+                                letterSpacing: -0.5,
+                              ),
+                            ).animate().fadeIn().slideX(begin: -0.1),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Create your institutional account',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: const Color(0xFF7F8CA4),
+                              ),
+                            ).animate().fadeIn(delay: 150.ms),
 
-                    // Header
-                    Text(
-                      'Join the Elite',
-                      style: GoogleFonts.inter(
-                        fontSize: 38,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.gold,
-                      ),
-                    ).animate().fadeIn().slideX(begin: -0.1),
-                    Text(
-                      'Create your institutional account',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        color: Colors.white38,
-                      ),
-                    ).animate().fadeIn(delay: 150.ms),
+                            const SizedBox(height: 28),
 
-                    const SizedBox(height: 36),
+                            // ── Full Name ───────────────────────────────────────
+                            _buildLabel('Full Name'),
+                            _buildInputField(
+                              controller: _nameCtrl,
+                              hint: 'e.g. Sachin Kumar',
+                              icon: Icons.person_outline_rounded,
+                              onFocusLost: () {
+                                setState(() {
+                                  _nameTouched = true;
+                                  _nameValid = _nameCtrl.text.trim().length >= 2;
+                                });
+                              },
+                              errorText: _nameTouched && !_nameValid
+                                  ? 'Enter a valid full name'
+                                  : null,
+                              isValid: _nameTouched && _nameValid,
+                            ).animate().fadeIn(delay: 200.ms),
 
-                    // ── Full Name ───────────────────────────────────────
-                    _buildLabel('Full Name'),
-                    _buildInputField(
-                      controller: _nameCtrl,
-                      hint: 'e.g. Sachin Kumar',
-                      icon: Icons.person_outline,
-                      onFocusLost: () {
-                        setState(() {
-                          _nameTouched = true;
-                          _nameValid = _nameCtrl.text.trim().length >= 2;
-                        });
-                      },
-                      errorText: _nameTouched && !_nameValid
-                          ? 'Enter a valid full name'
-                          : null,
-                      isValid: _nameTouched && _nameValid,
-                    ).animate().fadeIn(delay: 200.ms).slideX(begin: 0.05),
+                            const SizedBox(height: 16),
 
-                    const SizedBox(height: 16),
+                            // ── Email ───────────────────────────────────────────
+                            _buildLabel('Institutional Email'),
+                            _buildInputField(
+                              controller: _emailCtrl,
+                              hint: 'student@college.edu',
+                              icon: Icons.alternate_email_rounded,
+                              keyboardType: TextInputType.emailAddress,
+                              onFocusLost: () {
+                                setState(() {
+                                  _emailTouched = true;
+                                  _emailValid = _isValidEmail(_emailCtrl.text.trim());
+                                });
+                              },
+                              errorText: _emailTouched && !_emailValid
+                                  ? 'Enter a valid email address'
+                                  : null,
+                              isValid: _emailTouched && _emailValid,
+                            ).animate().fadeIn(delay: 250.ms),
 
-                    // ── Email ───────────────────────────────────────────
-                    _buildLabel('Institutional Email'),
-                    _buildInputField(
-                      controller: _emailCtrl,
-                      hint: 'student@college.edu',
-                      icon: Icons.email_outlined,
-                      keyboardType: TextInputType.emailAddress,
-                      onFocusLost: () {
-                        setState(() {
-                          _emailTouched = true;
-                          _emailValid = _isValidEmail(_emailCtrl.text.trim());
-                        });
-                      },
-                      errorText: _emailTouched && !_emailValid
-                          ? 'Enter a valid email address'
-                          : null,
-                      isValid: _emailTouched && _emailValid,
-                    ).animate().fadeIn(delay: 250.ms).slideX(begin: 0.05),
+                            const SizedBox(height: 16),
 
-                    const SizedBox(height: 16),
+                            // ── Password ────────────────────────────────────────
+                            _buildLabel('Secure Password'),
+                            _buildInputField(
+                              controller: _passCtrl,
+                              hint: 'Min 8 chars, upper, number, symbol',
+                              icon: Icons.lock_outline_rounded,
+                              isPassword: true,
+                              showPass: _showPass,
+                              onTogglePass: () =>
+                                  setState(() => _showPass = !_showPass),
+                            ).animate().fadeIn(delay: 300.ms),
 
-                    // ── Password ────────────────────────────────────────
-                    _buildLabel('Secure Password'),
-                    _buildInputField(
-                      controller: _passCtrl,
-                      hint: 'Min 8 chars, upper, number, symbol',
-                      icon: Icons.lock_outline,
-                      isPassword: true,
-                      showPass: _showPass,
-                      onTogglePass: () =>
-                          setState(() => _showPass = !_showPass),
-                    ).animate().fadeIn(delay: 300.ms).slideX(begin: 0.05),
-
-                    // Strength bar
-                    if (_passCtrl.text.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: TweenAnimationBuilder<double>(
-                                tween: Tween(begin: 0, end: _passStrength),
-                                duration: 300.ms,
-                                builder: (ctx, val, _) =>
-                                    LinearProgressIndicator(
-                                      value: val,
-                                      minHeight: 5,
-                                      backgroundColor: Colors.white12,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        _passStrengthColor,
+                            // Strength bar
+                            if (_passCtrl.text.isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: TweenAnimationBuilder<double>(
+                                        tween: Tween(begin: 0, end: _passStrength),
+                                        duration: 300.ms,
+                                        builder: (ctx, val, _) =>
+                                            LinearProgressIndicator(
+                                              value: val,
+                                              minHeight: 5,
+                                              backgroundColor: const Color(0xFFE2E6FF),
+                                              valueColor: AlwaysStoppedAnimation<Color>(
+                                                _passStrengthColor,
+                                              ),
+                                            ),
                                       ),
                                     ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            _passStrengthLabel,
-                            style: GoogleFonts.inter(
-                              color: _passStrengthColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      _buildPasswordHints(),
-                    ],
-
-                    const SizedBox(height: 16),
-
-                    // ── Confirm Password ────────────────────────────────
-                    _buildLabel('Confirm Password'),
-                    _buildInputField(
-                      controller: _confirmPassCtrl,
-                      hint: 'Repeat password',
-                      icon: Icons.lock_outline,
-                      isPassword: true,
-                      showPass: _showConfirmPass,
-                      onTogglePass: () =>
-                          setState(() => _showConfirmPass = !_showConfirmPass),
-                    ).animate().fadeIn(delay: 350.ms).slideX(begin: 0.05),
-
-                    const SizedBox(height: 28),
-
-                    // ── Role selector ───────────────────────────────────
-                    Text(
-                      'I AM A',
-                      style: GoogleFonts.inter(
-                        color: Colors.white38,
-                        fontSize: 11,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: ['Student', 'Teacher'].map((role) {
-                        final isSelected = _selectedRole == role;
-                        return Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              setState(() => _selectedRole = role);
-                            },
-                            child: AnimatedContainer(
-                              duration: 250.ms,
-                              margin: EdgeInsets.only(
-                                right: role == 'Student' ? 10 : 0,
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppColors.gold
-                                    : Colors.white.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? AppColors.gold
-                                      : Colors.white.withValues(alpha: 0.08),
-                                ),
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: AppColors.gold.withValues(
-                                            alpha: 0.3,
-                                          ),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ]
-                                    : [],
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    role == 'Student'
-                                        ? Icons.school_outlined
-                                        : Icons.person_pin_outlined,
-                                    color: isSelected
-                                        ? Colors.black
-                                        : Colors.white54,
-                                    size: 18,
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 12),
                                   Text(
-                                    role,
+                                    _passStrengthLabel,
                                     style: GoogleFonts.inter(
-                                      color: isSelected
-                                          ? Colors.black
-                                          : Colors.white70,
+                                      color: _passStrengthColor,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 14,
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ).animate().fadeIn(delay: 400.ms),
+                              const SizedBox(height: 8),
+                              _buildPasswordHints(),
+                            ],
 
-                    const SizedBox(height: 36),
+                            const SizedBox(height: 16),
 
-                    // ── Register button ─────────────────────────────────
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _handleRegister,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.gold,
-                          foregroundColor: Colors.black,
-                          disabledBackgroundColor: AppColors.gold.withValues(
-                            alpha: 0.4,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          elevation: 8,
-                          shadowColor: AppColors.gold.withValues(alpha: 0.4),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.black,
-                                ),
-                              )
-                            : Text(
-                                'CREATE ACCOUNT',
-                                style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  letterSpacing: 1.5,
-                                ),
-                              ),
-                      ),
-                    ).animate().scale(delay: 500.ms).fadeIn(delay: 500.ms),
+                            // ── Confirm Password ────────────────────────────────
+                            _buildLabel('Confirm Password'),
+                            _buildInputField(
+                              controller: _confirmPassCtrl,
+                              hint: 'Repeat password',
+                              icon: Icons.lock_outline_rounded,
+                              isPassword: true,
+                              showPass: _showConfirmPass,
+                              onTogglePass: () =>
+                                  setState(() => _showConfirmPass = !_showConfirmPass),
+                            ).animate().fadeIn(delay: 350.ms),
 
-                    const SizedBox(height: 20),
+                            const SizedBox(height: 20),
 
-                    // OR divider
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Divider(color: Colors.white12, thickness: 1),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'OR CONTINUE WITH',
-                            style: GoogleFonts.inter(
-                              color: Colors.white38,
-                              fontSize: 11,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ),
-                        const Expanded(
-                          child: Divider(color: Colors.white12, thickness: 1),
-                        ),
-                      ],
-                    ).animate().fadeIn(delay: 550.ms),
-
-                    const SizedBox(height: 20),
-
-                    // Google Sign-In button with customized G icon branding
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: _isLoading ? null : _signInWithGoogle,
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.white12),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Custom hand-drawn High-fidelity colored Google G icon using pure Flutter widgets!
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                'G',
-                                style: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 15,
-                                  color: const Color(0xFF4285F4),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
+                            // ── Role selector ───────────────────────────────────
                             Text(
-                              'Sign Up with Google',
+                              'I AM A',
                               style: GoogleFonts.inter(
-                                color: Colors.white,
+                                color: const Color(0xFF8F9BB3),
+                                fontSize: 10,
+                                letterSpacing: 1.2,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14,
                               ),
                             ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: ['Student', 'Teacher'].map((role) {
+                                final isSelected = _selectedRole == role;
+                                return Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      setState(() => _selectedRole = role);
+                                    },
+                                    child: AnimatedContainer(
+                                      duration: 250.ms,
+                                      margin: EdgeInsets.only(
+                                        right: role == 'Student' ? 10 : 0,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? const Color(0xFF3559E0).withValues(alpha: 0.1)
+                                            : const Color(0xFFF6F8FF),
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? const Color(0xFF3559E0)
+                                              : const Color(0xFFE2E6FF),
+                                          width: 1.2,
+                                        ),
+                                        boxShadow: isSelected
+                                            ? [
+                                                BoxShadow(
+                                                  color: const Color(0xFF3559E0).withValues(
+                                                    alpha: 0.15,
+                                                  ),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ]
+                                            : [],
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            role == 'Student'
+                                                ? Icons.school_outlined
+                                                : Icons.person_pin_outlined,
+                                            color: isSelected
+                                                ? const Color(0xFF3559E0)
+                                                : const Color(0xFF8F9BB3),
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            role,
+                                            style: GoogleFonts.inter(
+                                              color: isSelected
+                                                  ? const Color(0xFF3559E0)
+                                                  : const Color(0xFF8F9BB3),
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ).animate().fadeIn(delay: 400.ms),
+
+                            const SizedBox(height: 28),
+
+                            // ── Register button ─────────────────────────────────
+                            SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: GlowButton(
+                                onPressed: _isLoading ? () {} : _handleRegister,
+                                color: const Color(0xFF3559E0),
+                                glowColor: const Color(0xFF3559E0).withValues(alpha: 0.3),
+                                borderRadius: 14,
+                                padding: EdgeInsets.zero,
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        'CREATE ACCOUNT',
+                                        style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                          letterSpacing: 0.8,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                              ),
+                            ).animate().scale(delay: 500.ms).fadeIn(delay: 500.ms),
+
+                            const SizedBox(height: 24),
+
+                            // OR divider
+                            Row(
+                              children: [
+                                const Expanded(
+                                  child: Divider(color: Color(0xFFE2E6FF), thickness: 1),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: Text(
+                                    'OR CONTINUE WITH',
+                                    style: GoogleFonts.inter(
+                                      color: const Color(0xFF8F9BB3),
+                                      fontSize: 10,
+                                      letterSpacing: 1,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const Expanded(
+                                  child: Divider(color: Color(0xFFE2E6FF), thickness: 1),
+                                ),
+                              ],
+                            ).animate().fadeIn(delay: 550.ms),
+
+                            const SizedBox(height: 20),
+
+                            // Google Sign-In button
+                            SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: OutlinedButton(
+                                onPressed: _isLoading ? null : _signInWithGoogle,
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFF1B2C56),
+                                  side: const BorderSide(color: Color(0xFFE2E6FF), width: 1.2),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        'G',
+                                        style: GoogleFonts.outfit(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 13,
+                                          color: const Color(0xFF4285F4),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Continue with Google',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ).animate().fadeIn(delay: 580.ms),
+
+                            const SizedBox(height: 24),
+
+                            // Login link
+                            Center(
+                              child: GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: GoogleFonts.inter(
+                                      color: const Color(0xFF7F8CA4),
+                                      fontSize: 13,
+                                    ),
+                                    children: const [
+                                      TextSpan(text: 'Already have an account? '),
+                                      TextSpan(
+                                        text: 'Sign In',
+                                        style: TextStyle(
+                                          color: Color(0xFF3559E0),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ).animate().fadeIn(delay: 600.ms),
                           ],
                         ),
-                      ),
-                    ).animate().fadeIn(delay: 580.ms),
-
-                    const SizedBox(height: 24),
-
-                    // Login link
-                    Center(
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: RichText(
-                          text: TextSpan(
-                            style: GoogleFonts.inter(
-                              color: Colors.white38,
-                              fontSize: 13,
-                            ),
-                            children: const [
-                              TextSpan(text: 'Already have an account? '),
-                              TextSpan(
-                                text: 'Sign In',
-                                style: TextStyle(
-                                  color: AppColors.gold,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ).animate().fadeIn(delay: 600.ms),
-
-                    const SizedBox(height: 40),
-                  ],
+                      ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -742,10 +763,10 @@ class _RegisterScreenState extends State<RegisterScreen>
       child: Text(
         label.toUpperCase(),
         style: GoogleFonts.inter(
-          color: Colors.white38,
+          color: const Color(0xFF8F9BB3),
           fontSize: 10,
-          letterSpacing: 1.5,
-          fontWeight: FontWeight.w600,
+          letterSpacing: 1.2,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -775,47 +796,38 @@ class _RegisterScreenState extends State<RegisterScreen>
           final borderCol = hasError
               ? AppColors.error
               : isFocused
-              ? AppColors.gold
+              ? const Color(0xFF3559E0)
               : isValid
               ? AppColors.success
-              : Colors.white.withValues(alpha: 0.08);
+              : const Color(0xFFE2E6FF);
 
           return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              color: const Color(0xFFF6F8FF),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: borderCol,
-                width: isFocused ? 1.5 : 1.0,
+                width: isFocused ? 1.5 : 1.2,
               ),
-              boxShadow: isFocused
-                  ? [
-                      BoxShadow(
-                        color: AppColors.gold.withValues(alpha: 0.06),
-                        blurRadius: 10,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : [],
             ),
             child: TextField(
               controller: controller,
               obscureText: isPassword && !showPass,
               keyboardType: keyboardType,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
+              style: GoogleFonts.inter(
+                color: const Color(0xFF1B2C56),
+                fontSize: 14,
               ),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  fontSize: 13,
+                hintStyle: GoogleFonts.inter(
+                  color: const Color(0xFF8F9BB3),
+                  fontSize: 14,
                 ),
                 prefixIcon: Icon(
                   icon,
-                  color: isFocused ? AppColors.gold : Colors.white38,
+                  color: isFocused ? const Color(0xFF3559E0) : const Color(0xFF8F9BB3),
                   size: 20,
                 ),
                 suffixIcon: isPassword
@@ -824,31 +836,22 @@ class _RegisterScreenState extends State<RegisterScreen>
                           showPass
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
-                          color: Colors.white38,
+                          color: const Color(0xFF8F9BB3),
                           size: 20,
                         ),
                         onPressed: onTogglePass,
                       )
                     : isValid
                     ? const Icon(
-                        Icons.check_circle_outline,
-                        color: AppColors.successLight,
+                        Icons.check_circle_outline_rounded,
+                        color: AppColors.success,
                         size: 20,
                       )
                     : null,
-                filled: true,
-                fillColor: Colors.black.withValues(alpha: 0.15),
                 border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 18,
-                ),
-                errorText: errorText,
-                errorStyle: GoogleFonts.inter(
-                  color: AppColors.errorLight,
-                  fontSize: 11,
+                  horizontal: 16,
+                  vertical: 14,
                 ),
               ),
             ),
@@ -876,29 +879,30 @@ class _RegisterScreenState extends State<RegisterScreen>
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
             color: met
-                ? AppColors.success.withValues(alpha: 0.12)
-                : Colors.white.withValues(alpha: 0.04),
+                ? const Color(0xFFE2FBE9)
+                : const Color(0xFFF6F8FF),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
               color: met
-                  ? AppColors.successLight.withValues(alpha: 0.5)
-                  : Colors.white.withValues(alpha: 0.06),
+                  ? AppColors.success
+                  : const Color(0xFFE2E6FF),
+              width: 1.0,
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                met ? Icons.check_circle : Icons.radio_button_unchecked,
+                met ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
                 size: 12,
-                color: met ? AppColors.successLight : Colors.white24,
+                color: met ? AppColors.success : const Color(0xFF8F9BB3),
               ),
               const SizedBox(width: 5),
               Text(
                 label,
                 style: GoogleFonts.inter(
                   fontSize: 11,
-                  color: met ? AppColors.successLight : Colors.white38,
+                  color: met ? AppColors.success : const Color(0xFF8F9BB3),
                 ),
               ),
             ],

@@ -26,11 +26,11 @@
 |--------------------------------------------------------------------------
 */
 
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:camera/camera.dart';
-import 'dart:math';
 import 'package:provider/provider.dart';
 
 // ======================================================
@@ -40,6 +40,8 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
+import 'package:smartface_attendance/shared/widgets/glow_button.dart';
+import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 
 /// Screen widget for multi-step onboarding and profile setup.
 class SetupWizardScreen extends StatefulWidget {
@@ -161,14 +163,17 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.gold,
-              onPrimary: Colors.black,
-              surface: AppColors.bgModal,
-              onSurface: Colors.white,
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF3559E0),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Color(0xFF1B2C56),
             ),
-            dialogTheme: const DialogThemeData(
-              backgroundColor: AppColors.bgDark,
+            dialogTheme: DialogThemeData(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
             ),
           ),
           child: child!,
@@ -291,39 +296,46 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) => setState(() => _currentPage = index),
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildWelcomeCard(),
-                  _buildPersonalCard(),
-                  _role == 'teacher'
-                      ? _buildProfessionalCard()
-                      : _buildCollegeCard(),
-                  _buildFaceRegistrationCard(),
-                  _buildPermissionsCard(),
-                  _buildThemeCard(),
-                  _buildCompletionCard(),
-                ],
-              ),
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          // Background gradient blobs
+          const AuthBlobBackground(),
+
+          SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) => setState(() => _currentPage = index),
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _buildWelcomeCard(),
+                      _buildPersonalCard(),
+                      _role == 'teacher'
+                          ? _buildProfessionalCard()
+                          : _buildCollegeCard(),
+                      _buildFaceRegistrationCard(),
+                      _buildPermissionsCard(),
+                      _buildThemeCard(),
+                      _buildCompletionCard(),
+                    ],
+                  ),
+                ),
+                _buildFooter(),
+              ],
             ),
-            _buildFooter(),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(25.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
         children: [
           Row(
@@ -331,27 +343,31 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             children: [
               Text(
                 'PROFILE SETUP',
-                style: GoogleFonts.inter(
-                  color: AppColors.gold,
-                  letterSpacing: 2,
+                style: GoogleFonts.outfit(
+                  color: const Color(0xFF1B2C56),
+                  letterSpacing: 1.5,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
                 '${_currentPage + 1} / $_totalPages',
-                style: const TextStyle(color: Colors.white38, fontSize: 12),
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF7F8CA4),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: (_currentPage + 1) / _totalPages,
               minHeight: 6,
-              backgroundColor: Colors.white10,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
+              backgroundColor: const Color(0xFFE2E6FF),
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3559E0)),
             ),
           ),
         ],
@@ -365,28 +381,50 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     required List<Widget> children,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Center(
         child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          physics: const BouncingScrollPhysics(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF9EAFD8).withValues(alpha: 0.16),
+                  blurRadius: 32,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 16),
                 ),
-              ),
-              Text(
-                subtitle,
-                style: const TextStyle(color: Colors.white54, fontSize: 16),
-              ),
-              const SizedBox(height: 40),
-              ...children,
-            ],
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF1B2C56),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF7F8CA4),
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                ...children,
+              ],
+            ),
           ),
         ),
       ),
@@ -401,17 +439,20 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       children: [
         Center(
           child: Container(
-            height: 200,
-            width: 200,
+            height: 180,
+            width: 180,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.gold.withValues(alpha: 0.05),
-              border: Border.all(color: AppColors.gold.withValues(alpha: 0.2)),
+              color: const Color(0xFF3559E0).withValues(alpha: 0.08),
+              border: Border.all(
+                color: const Color(0xFF3559E0).withValues(alpha: 0.2),
+                width: 1.5,
+              ),
             ),
             child: const Icon(
               Icons.rocket_launch_outlined,
-              size: 80,
-              color: AppColors.gold,
+              size: 72,
+              color: Color(0xFF3559E0),
             ),
           ).animate().scale(duration: 1.seconds, curve: Curves.elasticOut),
         ),
@@ -424,23 +465,23 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       title: 'Personal Info',
       subtitle: 'Tell us a bit about yourself.',
       children: [
-        _buildInputField('Full Name', Icons.person_outline, _nameController),
-        const SizedBox(height: 20),
+        _buildInputField('Full Name', Icons.person_outline_rounded, _nameController),
+        const SizedBox(height: 16),
         _buildInputField(
           'Phone Number',
           Icons.phone_android_outlined,
           _phoneController,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _buildInputField(
           'Date of Birth',
           Icons.calendar_today_outlined,
           _dobController,
           onTap: () => _selectDate(context),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _buildInputField('Gender', Icons.wc_outlined, _genderController),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _buildInputField('Address', Icons.home_outlined, _addressController),
         const SizedBox(height: 20),
         _buildLanguageSelector(),
@@ -455,10 +496,10 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         Text(
           'LANGUAGE PREFERENCE',
           style: GoogleFonts.inter(
-            color: Colors.white38,
+            color: const Color(0xFF8F9BB3),
             fontSize: 10,
             fontWeight: FontWeight.bold,
-            letterSpacing: 1.5,
+            letterSpacing: 1.2,
           ),
         ),
         const SizedBox(height: 10),
@@ -468,16 +509,17 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               child: GestureDetector(
                 onTap: () => setState(() => _selectedLang = 'English'),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
                     color: _selectedLang == 'English'
-                        ? AppColors.gold
-                        : Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(16),
+                        ? const Color(0xFF3559E0).withValues(alpha: 0.1)
+                        : const Color(0xFFF6F8FF),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: _selectedLang == 'English'
-                          ? AppColors.gold
-                          : Colors.transparent,
+                          ? const Color(0xFF3559E0)
+                          : const Color(0xFFE2E6FF),
+                      width: 1.2,
                     ),
                   ),
                   child: Center(
@@ -485,8 +527,8 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                       'English',
                       style: GoogleFonts.inter(
                         color: _selectedLang == 'English'
-                            ? Colors.black
-                            : Colors.white70,
+                            ? const Color(0xFF3559E0)
+                            : const Color(0xFF8F9BB3),
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -500,16 +542,17 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               child: GestureDetector(
                 onTap: () => setState(() => _selectedLang = 'Kannada'),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
                     color: _selectedLang == 'Kannada'
-                        ? AppColors.gold
-                        : Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(16),
+                        ? const Color(0xFF3559E0).withValues(alpha: 0.1)
+                        : const Color(0xFFF6F8FF),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: _selectedLang == 'Kannada'
-                          ? AppColors.gold
-                          : Colors.transparent,
+                          ? const Color(0xFF3559E0)
+                          : const Color(0xFFE2E6FF),
+                      width: 1.2,
                     ),
                   ),
                   child: Center(
@@ -517,8 +560,8 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                       'ಕನ್ನಡ (Kannada)',
                       style: GoogleFonts.inter(
                         color: _selectedLang == 'Kannada'
-                            ? Colors.black
-                            : Colors.white70,
+                            ? const Color(0xFF3559E0)
+                            : const Color(0xFF8F9BB3),
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -543,25 +586,25 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           Icons.badge_outlined,
           _employeeIdController,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _buildInputField(
           'Designation',
           Icons.work_outline,
           _designationController,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _buildInputField(
           'Subject Specialization',
           Icons.menu_book_outlined,
           _specializationController,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _buildInputField(
           'Qualification',
           Icons.school_outlined,
           _qualificationController,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _buildInputField(
           'Years of Experience',
           Icons.timeline_outlined,
@@ -581,25 +624,25 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           Icons.badge_outlined,
           _usnController,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _buildInputField(
           'Class / Course',
           Icons.school_outlined,
           _courseController,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _buildInputField(
           'Section',
           Icons.grid_view_outlined,
           _sectionController,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _buildInputField(
           'Roll Number',
           Icons.format_list_numbered_outlined,
           _rollNoController,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _buildInputField(
           'Parent / Guardian Details',
           Icons.family_restroom_outlined,
@@ -610,6 +653,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   }
 
   Widget _buildFaceRegistrationCard() {
+    const primaryColor = Color(0xFF3559E0);
+    const primaryGlow = Color(0x333559E0);
+
     return _buildCardBase(
       title: 'Biometric ID',
       subtitle: 'Register your face for AI attendance.',
@@ -622,12 +668,12 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 children: [
                   // Rotating tech scanning HUD ring
                   Container(
-                        height: 230,
-                        width: 230,
+                        height: 210,
+                        width: 210,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.cyanAccent.withValues(alpha: 0.3),
+                            color: primaryColor.withValues(alpha: 0.3),
                             width: 1.5,
                           ),
                         ),
@@ -636,8 +682,8 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                       .rotate(duration: 4.seconds),
 
                   Container(
-                        height: 220,
-                        width: 220,
+                        height: 200,
+                        width: 200,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
@@ -662,14 +708,14 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                   // Camera Preview Circle
                   ClipOval(
                     child: Container(
-                      height: 200,
-                      width: 200,
+                      height: 180,
+                      width: 180,
                       color: Colors.black,
                       child: _isCameraInitialized
                           ? CameraPreview(_cameraController!)
                           : const Center(
                               child: CircularProgressIndicator(
-                                color: AppColors.accent,
+                                color: primaryColor,
                               ),
                             ),
                     ),
@@ -686,7 +732,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                         width: 8,
                         height: 8,
                         decoration: const BoxDecoration(
-                          color: Colors.cyanAccent,
+                          color: primaryColor,
                           shape: BoxShape.circle,
                         ),
                       )
@@ -697,23 +743,24 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     'ALIGN FACE WITHIN RADAR TARGET',
                     style: GoogleFonts.outfit(
                       fontSize: 10,
-                      letterSpacing: 1.5,
-                      color: Colors.cyanAccent,
+                      letterSpacing: 1.2,
+                      color: primaryColor,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // Telemetry Gauges Card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.02),
+                  color: const Color(0xFFF6F8FF),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: const Color(0xFFE2E6FF),
+                    width: 1.2,
                   ),
                 ),
                 child: Column(
@@ -736,75 +783,76 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                       'LIVENESS STATUS',
                       1.0,
                       'PASS (1.0)',
-                      Colors.cyanAccent,
+                      primaryColor,
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
 
-              ElevatedButton.icon(
-                    onPressed: () async {
-                      final args =
-                          ModalRoute.of(context)?.settings.arguments as Map?;
-                      final email = args?['email'] ?? 'test@student.com';
-                      final token = args?['token'] ?? '';
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: GlowButton(
+                  onPressed: () async {
+                    final args =
+                        ModalRoute.of(context)?.settings.arguments as Map?;
+                    final email = args?['email'] ?? 'test@student.com';
+                    final token = args?['token'] ?? '';
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Extracting Facial Vector Signatures...',
-                          ),
-                          backgroundColor: AppColors.accent,
-                          duration: Duration(seconds: 2),
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Extracting Facial Vector Signatures...',
                         ),
+                        backgroundColor: primaryColor,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+
+                    await Future.delayed(const Duration(milliseconds: 600));
+
+                    final result = await ApiService.registerBiometric(
+                      email,
+                      token,
+                    );
+
+                    if (!mounted) return;
+                    if (result.containsKey('message')) {
+                      AppToast.show(
+                        context,
+                        title: 'Bio ID Registered',
+                        message: 'AI Scan Complete.',
+                        type: ToastType.success,
                       );
-
-                      await Future.delayed(const Duration(milliseconds: 600));
-
-                      final result = await ApiService.registerBiometric(
-                        email,
-                        token,
-                      );
-
-                      if (!mounted) return;
-                      if (result.containsKey('message')) {
-                        AppToast.show(
-                          context,
-                          title: 'Bio ID Registered',
-                          message: 'AI Scan Complete.',
-                          type: ToastType.success,
-                        );
-                        _nextPage();
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.face_unlock_outlined,
-                      color: Colors.white,
-                    ),
-                    label: Text(
-                      'START SECURE BIO-SCAN',
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.8,
+                      _nextPage();
+                    }
+                  },
+                  color: primaryColor,
+                  glowColor: primaryGlow,
+                  borderRadius: 14,
+                  padding: EdgeInsets.zero,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.face_unlock_outlined,
+                        color: Colors.white,
+                        size: 20,
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
+                      const SizedBox(width: 8),
+                      Text(
+                        'START SECURE BIO-SCAN',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      shadowColor: AppColors.accent.withValues(alpha: 0.4),
-                      elevation: 8,
-                    ),
-                  )
-                  .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .shimmer(
+                    ],
+                  ),
+                ),
+              ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(
                     delay: 1500.ms,
                     duration: 1500.ms,
                     color: Colors.white30,
@@ -832,7 +880,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               label,
               style: GoogleFonts.inter(
                 fontSize: 9,
-                color: Colors.white38,
+                color: const Color(0xFF8F9BB3),
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1,
               ),
@@ -853,7 +901,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           child: LinearProgressIndicator(
             value: progress,
             color: barColor,
-            backgroundColor: Colors.white.withValues(alpha: 0.05),
+            backgroundColor: const Color(0xFFE2E6FF),
             minHeight: 4,
           ),
         ),
@@ -895,9 +943,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       children: [
         Row(
           children: [
-            _buildThemeOption('Dark', Icons.dark_mode, true),
+            _buildThemeOption('Dark', Icons.dark_mode_outlined, true),
             const SizedBox(width: 20),
-            _buildThemeOption('Light', Icons.light_mode, false),
+            _buildThemeOption('Light', Icons.light_mode_outlined, false),
           ],
         ),
       ],
@@ -909,13 +957,14 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       title: 'You\'re All Set!',
       subtitle: 'Your Smart Campus profile is ready for action.',
       children: [
-        const Center(
-          child: Icon(
-            Icons.check_circle_outline,
-            size: 120,
-            color: Colors.greenAccent,
-          ),
+        Center(
+          child: const Icon(
+            Icons.check_circle_outline_rounded,
+            size: 100,
+            color: AppColors.success,
+          ).animate().scale(duration: 800.ms, curve: Curves.elasticOut),
         ),
+        const SizedBox(height: 20),
       ],
     );
   }
@@ -926,21 +975,48 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     TextEditingController controller, {
     VoidCallback? onTap,
   }) {
-    return TextField(
-      controller: controller,
-      readOnly: onTap != null,
-      onTap: onTap,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.white38),
-        prefixIcon: Icon(icon, color: AppColors.gold),
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.05),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide.none,
-        ),
+    return Focus(
+      child: Builder(
+        builder: (context) {
+          final isFocused = Focus.of(context).hasFocus;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF6F8FF),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isFocused ? const Color(0xFF3559E0) : const Color(0xFFE2E6FF),
+                width: 1.2,
+              ),
+            ),
+            child: TextField(
+              controller: controller,
+              readOnly: onTap != null,
+              onTap: onTap,
+              style: GoogleFonts.inter(
+                color: const Color(0xFF1B2C56),
+                fontSize: 14,
+              ),
+              decoration: InputDecoration(
+                hintText: label,
+                hintStyle: GoogleFonts.inter(
+                  color: const Color(0xFF8F9BB3),
+                  fontSize: 14,
+                ),
+                prefixIcon: Icon(
+                  icon,
+                  color: isFocused ? const Color(0xFF3559E0) : const Color(0xFF8F9BB3),
+                  size: 20,
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -955,12 +1031,13 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFFF6F8FF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E6FF), width: 1.2),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.gold),
+          Icon(icon, color: const Color(0xFF3559E0)),
           const SizedBox(width: 15),
           Expanded(
             child: Column(
@@ -968,11 +1045,16 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1B2C56),
+                    fontSize: 14,
+                  ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   sub,
-                  style: const TextStyle(color: Colors.white38, fontSize: 10),
+                  style: GoogleFonts.inter(color: const Color(0xFF8F9BB3), fontSize: 10),
                 ),
               ],
             ),
@@ -980,7 +1062,10 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           Switch(
             value: active,
             onChanged: (v) {},
-            activeThumbColor: AppColors.gold,
+            activeThumbColor: const Color(0xFF3559E0),
+            activeTrackColor: const Color(0xFF3559E0).withValues(alpha: 0.2),
+            inactiveThumbColor: const Color(0xFF8F9BB3),
+            inactiveTrackColor: const Color(0xFFE2E6FF),
           ),
         ],
       ),
@@ -993,22 +1078,26 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.gold
-              : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
+              ? const Color(0xFF3559E0).withValues(alpha: 0.1)
+              : const Color(0xFFF6F8FF),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF3559E0) : const Color(0xFFE2E6FF),
+            width: 1.2,
+          ),
         ),
         child: Column(
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.black : Colors.white54,
+              color: isSelected ? const Color(0xFF3559E0) : const Color(0xFF8F9BB3),
               size: 40,
             ),
             const SizedBox(height: 10),
             Text(
               label,
-              style: TextStyle(
-                color: isSelected ? Colors.black : Colors.white70,
+              style: GoogleFonts.inter(
+                color: isSelected ? const Color(0xFF3559E0) : const Color(0xFF8F9BB3),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1020,7 +1109,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
 
   Widget _buildFooter() {
     return Padding(
-      padding: const EdgeInsets.all(25.0),
+      padding: const EdgeInsets.all(24.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -1030,22 +1119,34 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 duration: 400.ms,
                 curve: Curves.easeOut,
               ),
-              child: const Text(
+              child: Text(
                 'BACK',
-                style: TextStyle(color: Colors.white38),
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF8F9BB3),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
             )
           else
             const SizedBox(width: 80),
-          ElevatedButton(
-            onPressed: _nextPage,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-              backgroundColor: AppColors.gold,
-              foregroundColor: Colors.black,
-            ),
-            child: Text(
-              _currentPage == _totalPages - 1 ? 'GET STARTED' : 'CONTINUE',
+          SizedBox(
+            width: 160,
+            height: 52,
+            child: GlowButton(
+              onPressed: _nextPage,
+              color: const Color(0xFF3559E0),
+              glowColor: const Color(0xFF3559E0).withValues(alpha: 0.3),
+              borderRadius: 14,
+              padding: EdgeInsets.zero,
+              child: Text(
+                _currentPage == _totalPages - 1 ? 'GET STARTED' : 'CONTINUE',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+              ),
             ),
           ),
         ],

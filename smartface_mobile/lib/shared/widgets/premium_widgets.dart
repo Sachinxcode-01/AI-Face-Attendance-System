@@ -15,13 +15,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
-import 'package:smartface_attendance/shared/widgets/glassmorphic_card.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 
 // ============================================================================
 // 1. GlassContainer
 // ============================================================================
 
-/// Premium transparent container with BackdropFilter blur and custom border/gradient.
+/// Premium solid white rounded card container with soft drop shadow.
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
@@ -39,7 +39,7 @@ class GlassContainer extends StatelessWidget {
     required this.child,
     this.padding,
     this.blurRadius = 16,
-    this.borderRadius = AppRadius.lg,
+    this.borderRadius = 24.0, // Standardize on border radius 24
     this.borderColor,
     this.backgroundColor,
     this.boxShadow,
@@ -50,18 +50,32 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassmorphicCard(
-      padding: padding,
-      blurRadius: blurRadius,
-      borderRadius: borderRadius,
-      borderColor: borderColor,
-      backgroundColor: backgroundColor,
-      boxShadow: boxShadow,
-      gradient: gradient,
-      borderWidth: borderWidth,
-      onTap: onTap,
+    final cardBgColor = backgroundColor ?? Colors.white;
+    final List<BoxShadow> effectiveBoxShadow = boxShadow ?? [
+      BoxShadow(
+        color: const Color(0xFF9EAFD8).withValues(alpha: 0.16),
+        blurRadius: 16,
+        spreadRadius: 2,
+        offset: const Offset(0, 8),
+      ),
+    ];
+
+    final card = Container(
+      padding: padding ?? const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: cardBgColor,
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(
+          color: borderColor ?? const Color(0xFFE2E8F0),
+          width: borderWidth,
+        ),
+        boxShadow: effectiveBoxShadow,
+      ),
       child: child,
     );
+
+    if (onTap == null) return card;
+    return PressableScale(onTap: onTap, child: card);
   }
 }
 
@@ -92,12 +106,12 @@ class MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = accentColor ?? AppColors.indigoLight;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = accentColor ?? const Color(0xFF3559E0);
 
-    return GlassmorphicCard(
+    return GlassContainer(
       padding: const EdgeInsets.all(AppSpacing.md),
       borderColor: color.withValues(alpha: 0.2),
+      borderRadius: 24.0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -158,19 +172,26 @@ class MetricCard extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : AppColors.bgDeep,
+              color: const Color(0xFF1B2C56),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: AppText.caption(
-              color: isDark ? Colors.white54 : Colors.black54,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: const Color(0xFF7F8CA4),
             ),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 4),
-            Text(subtitle!, style: AppText.caption(color: color)),
+            Text(
+              subtitle!,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: color,
+              ),
+            ),
           ],
         ],
       ),
@@ -217,14 +238,12 @@ class _InsightCardState extends State<InsightCard> {
   @override
   Widget build(BuildContext context) {
     final themeColor = widget.color ?? Colors.cyanAccent;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return GlassmorphicCard(
+    return GlassContainer(
       padding: const EdgeInsets.all(AppSpacing.md),
       borderColor: themeColor.withValues(alpha: 0.3),
-      backgroundColor: isDark
-          ? AppColors.bgCard.withValues(alpha: 0.6)
-          : Colors.white.withValues(alpha: 0.9),
+      backgroundColor: Colors.white,
+      borderRadius: 24.0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -267,7 +286,7 @@ class _InsightCardState extends State<InsightCard> {
                   _isExpanded
                       ? Icons.keyboard_arrow_up
                       : Icons.keyboard_arrow_down,
-                  color: isDark ? Colors.white54 : Colors.black54,
+                  color: const Color(0xFF7F8CA4),
                   size: 20,
                 ),
               ],
@@ -277,16 +296,18 @@ class _InsightCardState extends State<InsightCard> {
             const SizedBox(height: 12),
             Text(
               widget.insight,
-              style: AppText.subheading(
-                color: isDark ? Colors.white : AppColors.bgDeep,
-                weight: FontWeight.w600,
+              style: GoogleFonts.inter(
+                color: const Color(0xFF1B2C56),
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               widget.recommendation,
-              style: AppText.body(
-                color: isDark ? Colors.white54 : Colors.black54,
+              style: GoogleFonts.inter(
+                color: const Color(0xFF7F8CA4),
+                fontSize: 13,
               ),
             ),
           ],
@@ -345,10 +366,10 @@ class StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GlassmorphicCard(
+    return GlassContainer(
       padding: const EdgeInsets.all(AppSpacing.md),
       borderColor: statusColor.withValues(alpha: 0.2),
+      borderRadius: 24.0,
       child: Row(
         children: [
           Container(
@@ -366,16 +387,18 @@ class StatusCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: AppText.subheading(
-                    color: isDark ? Colors.white : AppColors.bgDeep,
-                    weight: FontWeight.bold,
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF1B2C56),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: AppText.caption(
-                    color: isDark ? Colors.white54 : Colors.black54,
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF7F8CA4),
+                    fontSize: 12,
                   ),
                 ),
               ],
@@ -453,10 +476,10 @@ class AnalyticsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final trailingWidget = trailing;
-    return GlassmorphicCard(
+    return GlassContainer(
       padding: const EdgeInsets.all(AppSpacing.md),
+      borderRadius: 24.0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -469,25 +492,26 @@ class AnalyticsCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: AppText.subheading(
-                        color: isDark ? Colors.white : AppColors.bgDeep,
-                        weight: FontWeight.bold,
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFF1B2C56),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: AppText.caption(
-                        color: isDark ? Colors.white54 : Colors.black54,
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFF7F8CA4),
+                        fontSize: 12,
                       ),
                     ),
                   ],
                 ),
               ),
-              ?trailingWidget,
+              if (trailingWidget != null) trailingWidget,
             ],
           ),
-
           const SizedBox(height: 12),
           if (segments.isNotEmpty)
             SingleChildScrollView(
@@ -509,12 +533,12 @@ class AnalyticsCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppColors.accent.withValues(alpha: 0.15)
+                              ? const Color(0xFF3559E0).withValues(alpha: 0.15)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(AppRadius.sm),
                           border: Border.all(
                             color: isSelected
-                                ? AppColors.accent.withValues(alpha: 0.4)
+                                ? const Color(0xFF3559E0).withValues(alpha: 0.4)
                                 : Colors.transparent,
                             width: 1.0,
                           ),
@@ -525,8 +549,8 @@ class AnalyticsCard extends StatelessWidget {
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                             color: isSelected
-                                ? AppColors.accent
-                                : (isDark ? Colors.white54 : Colors.black54),
+                                ? const Color(0xFF3559E0)
+                                : const Color(0xFF7F8CA4),
                           ),
                         ),
                       ),
@@ -573,17 +597,18 @@ class ActivityTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GlassmorphicCard(
+    return GlassContainer(
       padding: const EdgeInsets.all(AppSpacing.md),
+      borderRadius: 24.0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: AppText.subheading(
-              color: isDark ? Colors.white : AppColors.bgDeep,
-              weight: FontWeight.bold,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: const Color(0xFF1B2C56),
+              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 16),
@@ -591,8 +616,9 @@ class ActivityTimeline extends StatelessWidget {
             Center(
               child: Text(
                 'No recent activity',
-                style: AppText.body(
-                  color: isDark ? Colors.white38 : Colors.black38,
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF7F8CA4),
+                  fontSize: 13,
                 ),
               ),
             )
@@ -633,9 +659,7 @@ class ActivityTimeline extends StatelessWidget {
                             Expanded(
                               child: Container(
                                 width: 2,
-                                color: isDark
-                                    ? AppColors.white12
-                                    : Colors.black12,
+                                color: const Color(0xFFE2E8F0),
                               ),
                             ),
                         ],
@@ -658,18 +682,15 @@ class ActivityTimeline extends StatelessWidget {
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark
-                                            ? Colors.white
-                                            : AppColors.bgDeep,
+                                        color: const Color(0xFF1B2C56),
                                       ),
                                     ),
                                   ),
                                   Text(
                                     item.timestamp,
-                                    style: AppText.caption(
-                                      color: isDark
-                                          ? Colors.white38
-                                          : Colors.black38,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      color: const Color(0xFF7F8CA4),
                                     ),
                                   ),
                                 ],
@@ -677,10 +698,9 @@ class ActivityTimeline extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 item.description,
-                                style: AppText.body(
-                                  color: isDark
-                                      ? Colors.white54
-                                      : Colors.black54,
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  color: const Color(0xFF7F8CA4),
                                 ),
                               ),
                             ],
@@ -721,15 +741,13 @@ class ActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Material(
       color: Colors.transparent,
-      child: GlassmorphicCard(
+      child: GlassContainer(
         padding: const EdgeInsets.all(AppSpacing.md),
         borderColor: color.withValues(alpha: 0.15),
-        backgroundColor: isDark
-            ? Colors.white.withValues(alpha: 0.03)
-            : Colors.white.withValues(alpha: 0.8),
+        backgroundColor: Colors.white,
+        borderRadius: 24.0,
         onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -752,14 +770,15 @@ class ActionTile extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : AppColors.bgDeep,
+                    color: const Color(0xFF1B2C56),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: AppText.caption(
-                    color: isDark ? Colors.white54 : Colors.black54,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: const Color(0xFF7F8CA4),
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

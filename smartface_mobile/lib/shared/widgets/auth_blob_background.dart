@@ -1,9 +1,8 @@
-﻿import 'package:flutter/material.dart';
-import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:flutter/material.dart';
 
 /// A modern fluid "blob" gradient backdrop with glossy floating spheres,
 /// inspired by premium onboarding designs. Uses the project palette
-/// (indigo / cobalt) — no new brand colors introduced.
+/// (indigo / cobalt) in a modern light theme adaptation.
 class AuthBlobBackground extends StatelessWidget {
   final Widget? child;
   const AuthBlobBackground({super.key, this.child});
@@ -13,37 +12,42 @@ class AuthBlobBackground extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Base diagonal gradient
+        // Base diagonal light lavender-blue gradient
         const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
               colors: [
-                AppColors.indigoLight, // cobalt (lighter, top-right)
-                AppColors.indigo, // royal navy (mid)
-                AppColors.bgDeep, // deep slate (bottom-left)
+                Color(0xFFE5ECFC), // light lavender-blue
+                Color(0xFFF1F5FD), // light blue-gray
+                Color(0xFFFFFFFF), // solid white
               ],
               stops: [0.0, 0.55, 1.0],
             ),
           ),
         ),
 
-        // Organic translucent wave blobs
+        // Organic translucent wave blobs (liquid style)
         Positioned.fill(
           child: CustomPaint(painter: _BlobPainter()),
         ),
 
-        // Glossy floating spheres
+        // Glossy floating 3D spheres
+        const Positioned(
+          top: -20,
+          left: 40,
+          child: _GlossySphere(size: 80, isDark: true),
+        ),
         const Positioned(
           top: 90,
           right: 40,
-          child: _GlossySphere(size: 120),
+          child: _GlossySphere(size: 110),
         ),
         const Positioned(
           bottom: 140,
           left: 30,
-          child: _GlossySphere(size: 90),
+          child: _GlossySphere(size: 90, isDark: true),
         ),
         const Positioned(
           top: 240,
@@ -51,6 +55,7 @@ class AuthBlobBackground extends StatelessWidget {
           child: _GlossySphere(size: 64, dim: true),
         ),
 
+        // ignore: use_null_aware_elements
         if (child != null) child!,
       ],
     );
@@ -80,7 +85,7 @@ class _BlobPainter extends CustomPainter {
     }
 
     // Light cobalt sweep (top-right)
-    blob(AppColors.accent, 0.30, [
+    blob(const Color(0xFF5970EC), 0.28, [
       Offset(w * 0.45, 0),
       Offset(w * 1.05, h * 0.05),
       Offset(w * 1.05, h * 0.40),
@@ -89,15 +94,15 @@ class _BlobPainter extends CustomPainter {
     ]);
 
     // Pale highlight wave
-    blob(Colors.white, 0.10, [
+    blob(Colors.white, 0.22, [
       Offset(w * 0.55, h * 0.02),
       Offset(w * 1.05, h * 0.18),
       Offset(w * 0.95, h * 0.46),
       Offset(w * 0.62, h * 0.34),
     ]);
 
-    // Deep navy wave (bottom-left)
-    blob(AppColors.indigo, 0.45, [
+    // Deep navy/blue wave (bottom-left)
+    blob(const Color(0xFF3D4EB9), 0.32, [
       Offset(0, h * 0.45),
       Offset(w * 0.45, h * 0.55),
       Offset(w * 0.30, h * 1.05),
@@ -105,7 +110,7 @@ class _BlobPainter extends CustomPainter {
     ]);
 
     // Subtle purple-ish mid accent
-    blob(const Color(0xFF6D5BD0), 0.18, [
+    blob(const Color(0xFF7F6CE4), 0.15, [
       Offset(0, h * 0.30),
       Offset(w * 0.30, h * 0.38),
       Offset(w * 0.20, h * 0.70),
@@ -121,10 +126,36 @@ class _BlobPainter extends CustomPainter {
 class _GlossySphere extends StatelessWidget {
   final double size;
   final bool dim;
-  const _GlossySphere({required this.size, this.dim = false});
+  final bool isDark;
+  const _GlossySphere({
+    required this.size,
+    this.dim = false,
+    this.isDark = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    List<Color> colors;
+    if (isDark) {
+      colors = const [
+        Color(0xFF2C3E75), // highlight reflection
+        Color(0xFF1D2952), // base
+        Color(0xFF0C132E), // shadow gradient
+      ];
+    } else if (dim) {
+      colors = [
+        Colors.white.withValues(alpha: 0.45),
+        const Color(0xFFD1DBF6).withValues(alpha: 0.25),
+        const Color(0xFF9EAFD8).withValues(alpha: 0.10),
+      ];
+    } else {
+      colors = const [
+        Colors.white,
+        Color(0xFFE2EBFE),
+        Color(0xFFB0C3EF),
+      ];
+    }
+
     return Container(
       width: size,
       height: size,
@@ -133,25 +164,16 @@ class _GlossySphere extends StatelessWidget {
         gradient: RadialGradient(
           center: const Alignment(-0.4, -0.5),
           radius: 1.0,
-          colors: dim
-              ? [
-                  Colors.white.withValues(alpha: 0.30),
-                  AppColors.indigoLight.withValues(alpha: 0.20),
-                  AppColors.indigo.withValues(alpha: 0.10),
-                ]
-              : [
-                  Colors.white,
-                  AppColors.indigoLight,
-                  AppColors.indigo,
-                ],
-          stops: const [0.0, 0.55, 1.0],
+          colors: colors,
+          stops: const [0.0, 0.60, 1.0],
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.indigo.withValues(alpha: dim ? 0.15 : 0.35),
-            blurRadius: 30,
+            color: (isDark ? const Color(0xFF0C132E) : const Color(0xFF9EAFD8))
+                .withValues(alpha: dim ? 0.12 : 0.25),
+            blurRadius: 24,
             spreadRadius: 2,
-            offset: const Offset(0, 12),
+            offset: const Offset(0, 10),
           ),
         ],
       ),
