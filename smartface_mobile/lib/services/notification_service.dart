@@ -89,7 +89,7 @@ class NotificationService {
     // Get FCM token
     try {
       _fcmToken = await messaging.getToken();
-      debugPrint('[FCM] Token: $_fcmToken');
+      debugPrint('[FCM] Token registered');
     } catch (e) {
       debugPrint('[FCM] token error: $e');
     }

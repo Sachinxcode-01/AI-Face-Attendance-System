@@ -157,7 +157,7 @@ router.post('/login-otp/send', limitOtpSend, async (req, res) => {
       { upsert: true }
     );
 
-    console.log(`Generated OTP for ${email}: ${otpVal}`);
+    console.log(`Generated login OTP for ${email}`);
 
     // Send OTP email in background
     EmailService.sendOtp(email, otpVal).catch(console.error);
@@ -195,7 +195,8 @@ router.post('/login-otp/verify', limitOtpVerify, async (req, res) => {
       access_token: token,
       token_type: "bearer",
       role,
-      biometric_registered: biometricRegistered
+      biometric_registered: biometricRegistered,
+      setup_completed: user ? (user.setup_completed || user.biometric_registered) : biometricRegistered
     });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -223,7 +224,8 @@ router.post('/login-password', async (req, res) => {
       access_token: token,
       token_type: "bearer",
       role: user.role,
-      biometric_registered: user.biometric_registered
+      biometric_registered: user.biometric_registered,
+      setup_completed: user.setup_completed || user.biometric_registered
     });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -265,7 +267,8 @@ router.post('/google', async (req, res) => {
       access_token: token,
       token_type: "bearer",
       role: userRole,
-      biometric_registered: biometricRegistered
+      biometric_registered: biometricRegistered,
+      setup_completed: user.setup_completed || biometricRegistered
     });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -290,7 +293,7 @@ router.post('/forgot-password', async (req, res) => {
       { upsert: true }
     );
 
-    console.log(`Generated Password Reset OTP for ${email}: ${otpVal}`);
+    console.log(`Generated password reset OTP for ${email}`);
 
     EmailService.sendOtp(email, otpVal).catch(console.error);
 
@@ -355,7 +358,8 @@ router.post('/update-profile', authenticate, async (req, res) => {
     const allowedKeys = [
       'full_name', 'phone', 'department', 'dob', 'college', 'semester', 'student_id',
       'employee_id', 'designation', 'specialization', 'qualification', 'experience', 'gender', 'address',
-      'usn', 'course', 'section', 'roll_number', 'parent_details', 'language_preference'
+      'usn', 'course', 'section', 'roll_number', 'parent_details', 'language_preference',
+      'setup_completed', 'linked_children'
     ];
     
     allowedKeys.forEach(key => {
@@ -501,6 +505,110 @@ router.post('/sessions/logout-all', authenticate, async (req, res) => {
     });
     
     res.json({ message: "Successfully logged out of all other devices" });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// Compatibility aliases for /api/auth/* contract.
+router.post('/send-otp', limitOtpSend, async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ detail: "User not found" });
+    }
+
+    const otpVal = Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join('');
+    const expiry = new Date(Date.now() + 5 * 60 * 1000);
+
+    await Otp.updateOne(
+      { email },
+      { $set: { otp: otpVal, expiry, role: user.role, type: 'login' } },
+      { upsert: true }
+    );
+
+    console.log(`Generated login OTP for ${email}`);
+    EmailService.sendOtp(email, otpVal).catch(console.error);
+    res.json({ message: "OTP sent successfully" });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+router.post('/verify-otp', limitOtpVerify, async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const record = await Otp.findOne({ email, type: 'login' });
+    if (!record || record.otp !== otp) {
+      return res.status(401).json({ detail: "Invalid OTP" });
+    }
+    if (new Date() > record.expiry) {
+      return res.status(401).json({ detail: "OTP expired" });
+    }
+
+    await Otp.deleteOne({ email });
+
+    const user = await User.findOne({ email });
+    const biometricRegistered = user ? user.biometric_registered : false;
+    const setupCompleted = user ? (user.setup_completed || user.biometric_registered) : false;
+    const role = user ? user.role : record.role;
+
+    const token = AuthService.createAccessToken({ sub: email, role });
+    await registerSession(email, token, req);
+
+    res.json({
+      access_token: token,
+      token_type: "bearer",
+      role,
+      biometric_registered: biometricRegistered,
+      setup_completed: setupCompleted
+    });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ detail: "Invalid email or password" });
+    }
+
+    if (!user.password || !(await AuthService.verifyPassword(password, user.password))) {
+      return res.status(401).json({ detail: "Invalid email or password" });
+    }
+
+    const token = AuthService.createAccessToken({ sub: email, role: user.role });
+    await registerSession(email, token, req);
+
+    res.json({
+      access_token: token,
+      token_type: "bearer",
+      role: user.role,
+      biometric_registered: user.biometric_registered,
+      setup_completed: user.setup_completed || user.biometric_registered
+    });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+router.get('/me', authenticate, async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.userEmail }).lean();
+    if (!user) {
+      return res.status(404).json({ detail: "User not found" });
+    }
+
+    user.id = user._id.toString();
+    delete user._id;
+    delete user.password;
+    user.setup_completed = user.setup_completed || user.biometric_registered;
+
+    res.json(user);
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }

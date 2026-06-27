@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/session_manager.dart';
 import 'admin/admin_dashboard.dart';
+import 'parent/parent_dashboard.dart';
 import 'teacher/teacher_dashboard.dart';
 import 'student/student_dashboard.dart';
 
@@ -22,6 +23,8 @@ class DashboardScreen extends StatelessWidget {
       return const AdminDashboard();
     } else if (role == 'teacher' || role == 'faculty' || role == 'lecturer') {
       return const TeacherDashboard();
+    } else if (role == 'parent') {
+      return const ParentDashboard();
     } else {
       return const StudentDashboard();
     }

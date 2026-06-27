@@ -16,6 +16,11 @@ class ApiService {
 
   static String get baseUrl => 'http://$_host:$_port';
 
+  static Map<String, String> jsonHeaders([String? token]) => {
+    'Content-Type': 'application/json',
+    if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+  };
+
   static Future<void> init() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -43,10 +48,15 @@ class ApiService {
   // ─── Health check ─────────────────────────────────────────────────
   static Future<bool> isServerOnline() async {
     try {
-      final res = await http
+      final apiHealth = await http
+          .get(Uri.parse('$baseUrl/api/health'))
+          .timeout(const Duration(seconds: 5));
+      if (apiHealth.statusCode == 200) return true;
+
+      final health = await http
           .get(Uri.parse('$baseUrl/health'))
           .timeout(const Duration(seconds: 5));
-      return res.statusCode == 200;
+      return health.statusCode == 200;
     } catch (_) {
       return false;
     }
@@ -95,6 +105,24 @@ class ApiService {
     } catch (e) {
       return {'detail': 'Connection failed'};
     }
+  }
+
+  static Future<List<dynamic>> getParentWards(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/parent/wards'),
+        headers: jsonHeaders(token),
+      );
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic>) {
+          return decoded['wards'] as List<dynamic>? ?? [];
+        }
+      }
+    } catch (e) {
+      debugPrint('getParentWards error: $e');
+    }
+    return [];
   }
 
   static Future<Map<String, dynamic>> googleLogin(
@@ -156,9 +184,12 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> getSecurityLogs() async {
+  static Future<List<dynamic>> getSecurityLogs([String? token]) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/security/logs'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/security/logs'),
+        headers: jsonHeaders(token),
+      );
       return jsonDecode(response.body);
     } catch (e) {
       return [];
@@ -321,12 +352,13 @@ class ApiService {
 
   static Future<Map<String, dynamic>> startSession(
     String teacherEmail,
-    String subject,
-  ) async {
+    String subject, [
+    String? token,
+  ]) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/sessions/start'),
-        headers: {'Content-Type': 'application/json'},
+        headers: jsonHeaders(token),
         body: jsonEncode({'teacher_email': teacherEmail, 'subject': subject}),
       );
       return jsonDecode(response.body);
@@ -338,12 +370,13 @@ class ApiService {
   static Future<Map<String, dynamic>> markAttendance(
     String studentEmail,
     String sessionId,
-    String qrCode,
-  ) async {
+    String qrCode, [
+    String? token,
+  ]) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/attendance/mark'),
-        headers: {'Content-Type': 'application/json'},
+        headers: jsonHeaders(token),
         body: jsonEncode({
           'student_email': studentEmail,
           'session_id': sessionId,
@@ -443,10 +476,14 @@ class ApiService {
   }
 
   // ─── Notifications Endpoints ─────────────────────────────────────
-  static Future<List<dynamic>> getNotifications(String email) async {
+  static Future<List<dynamic>> getNotifications(
+    String email, [
+    String? token,
+  ]) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/notifications/$email'),
+        headers: jsonHeaders(token),
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as List<dynamic>;
@@ -576,7 +613,7 @@ class ApiService {
       String query = 'page=$page&limit=$limit';
       if (status != null) query += '&status=$status';
       if (month != null) query += '&month=$month';
-      
+
       final response = await http.get(
         Uri.parse('$baseUrl/attendance/student/$email?$query'),
         headers: {
@@ -655,14 +692,125 @@ class ApiService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'log_id': logId,
-          'status': 'Acknowledged',
-        }),
+        body: jsonEncode({'log_id': logId, 'status': 'Acknowledged'}),
       );
       return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'detail': 'Connection failed: $e'};
     }
+  }
+
+  static Future<Map<String, dynamic>> changePassword(
+    String oldPassword,
+    String newPassword,
+    String token,
+  ) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/api/account/password'),
+        headers: jsonHeaders(token),
+        body: jsonEncode({
+          'old_password': oldPassword,
+          'new_password': newPassword,
+        }),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'detail': 'Connection failed'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> deleteAccount(String token) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/account'),
+        headers: jsonHeaders(token),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'detail': 'Connection failed'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getNotificationSettings(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/settings/notifications'),
+        headers: jsonHeaders(token),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'detail': 'Connection failed'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateNotificationSettings(
+    Map<String, bool> settings,
+    String token,
+  ) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/api/settings/notifications'),
+        headers: jsonHeaders(token),
+        body: jsonEncode(settings),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'detail': 'Connection failed'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getChildProfile(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/parent/child-profile'),
+        headers: jsonHeaders(token),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'detail': 'Connection failed'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getChildAttendance(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/parent/child-attendance'),
+        headers: jsonHeaders(token),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'detail': 'Connection failed'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> revokeSession(
+    String sessionId,
+    String token,
+  ) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/auth/sessions/$sessionId'),
+        headers: jsonHeaders(token),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'detail': 'Connection failed'};
+    }
+  }
+
+  static Future<List<dynamic>> getLoginHistory(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/security/login-history'),
+        headers: jsonHeaders(token),
+      );
+      if (response.statusCode == 200) {
+         return jsonDecode(response.body) as List<dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getLoginHistory error: $e');
+    }
+    return [];
   }
 }

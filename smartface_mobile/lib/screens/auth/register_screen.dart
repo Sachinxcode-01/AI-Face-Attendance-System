@@ -166,12 +166,24 @@ class _RegisterScreenState extends State<RegisterScreen>
         );
 
         try {
-          final loginResult = await ApiService.loginWithPassword(
+          final loginResult = await ApiService.sendLoginOtp(
             _emailCtrl.text.trim(),
-            _passCtrl.text.trim(),
           );
 
           if (!mounted) return;
+
+          if (loginResult.containsKey('message')) {
+            Navigator.pushReplacementNamed(
+              context,
+              '/otp',
+              arguments: {
+                'email': _emailCtrl.text.trim(),
+                'role': _selectedRole.toLowerCase(),
+                'nextRoute': '/setup',
+              },
+            );
+            return;
+          }
 
           if (loginResult.containsKey('access_token')) {
             final session = context.read<SessionManager>();
@@ -181,11 +193,10 @@ class _RegisterScreenState extends State<RegisterScreen>
               role: loginResult['role'],
             );
             if (!mounted) return;
-            final bool biometricRegistered =
-                loginResult['biometric_registered'] ?? false;
-            final String targetRoute = biometricRegistered
-                ? '/dashboard'
-                : '/setup';
+            final bool setupComplete =
+                loginResult['setup_completed'] == true ||
+                loginResult['biometric_registered'] == true;
+            final String targetRoute = setupComplete ? '/dashboard' : '/setup';
 
             Navigator.pushNamedAndRemoveUntil(
               context,
@@ -264,11 +275,10 @@ class _RegisterScreenState extends State<RegisterScreen>
             role: result['role'],
           );
           if (!mounted) return;
-          final bool biometricRegistered =
-              result['biometric_registered'] ?? false;
-          final String targetRoute = biometricRegistered
-              ? '/dashboard'
-              : '/setup';
+          final bool setupComplete =
+              result['setup_completed'] == true ||
+              result['biometric_registered'] == true;
+          final String targetRoute = setupComplete ? '/dashboard' : '/setup';
           Navigator.pushReplacementNamed(
             context,
             targetRoute,
@@ -482,7 +492,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                     ),
                     const SizedBox(height: 10),
                     Row(
-                      children: ['Student', 'Teacher'].map((role) {
+                      children: ['Student', 'Parent', 'Teacher', 'Admin'].map((
+                        role,
+                      ) {
                         final isSelected = _selectedRole == role;
                         return Expanded(
                           child: GestureDetector(
@@ -493,7 +505,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                             child: AnimatedContainer(
                               duration: 250.ms,
                               margin: EdgeInsets.only(
-                                right: role == 'Student' ? 10 : 0,
+                                right: role == 'Admin' ? 0 : 8,
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               decoration: BoxDecoration(
@@ -524,6 +536,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                                   Icon(
                                     role == 'Student'
                                         ? Icons.school_outlined
+                                        : role == 'Parent'
+                                        ? Icons.family_restroom_outlined
+                                        : role == 'Admin'
+                                        ? Icons.shield_outlined
                                         : Icons.person_pin_outlined,
                                     color: isSelected
                                         ? Colors.black

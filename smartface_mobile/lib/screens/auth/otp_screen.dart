@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+import '../../core/session_manager.dart';
 import '../../services/api_service.dart';
 import '../../core/constants.dart';
 import '../../widgets/toast_system.dart';
@@ -102,6 +104,18 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
       if (!mounted) return;
 
       if (res.containsKey('access_token')) {
+        final setupComplete =
+            res['setup_completed'] == true ||
+            res['biometric_registered'] == true;
+        final session = context.read<SessionManager>();
+        await session.saveSession(
+          token: res['access_token'],
+          email: _email,
+          role: (res['role'] ?? _extraArgs['role'] ?? 'student').toString(),
+          biometricRegistered: setupComplete,
+        );
+        if (!mounted) return;
+
         HapticFeedback.heavyImpact();
         AppToast.show(
           context,
@@ -111,9 +125,12 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
         );
         await Future.delayed(600.ms);
         if (!mounted) return;
+        final targetRoute = _nextRoute == '/dashboard' && !setupComplete
+            ? '/setup'
+            : _nextRoute;
         Navigator.pushReplacementNamed(
           context,
-          _nextRoute,
+          targetRoute,
           arguments: {
             ..._extraArgs,
             'token': res['access_token'],

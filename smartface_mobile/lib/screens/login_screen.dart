@@ -72,11 +72,10 @@ class _LoginScreenState extends State<LoginScreen> {
             role: result['role'],
           );
           if (!mounted) return;
-          final bool biometricRegistered =
-              result['biometric_registered'] ?? false;
-          final String targetRoute = biometricRegistered
-              ? '/dashboard'
-              : '/setup';
+          final bool setupComplete =
+              result['setup_completed'] == true ||
+              result['biometric_registered'] == true;
+          final String targetRoute = setupComplete ? '/dashboard' : '/setup';
           Navigator.pushReplacementNamed(
             context,
             targetRoute,
@@ -124,11 +123,10 @@ class _LoginScreenState extends State<LoginScreen> {
           role: result['role'],
         );
         if (!mounted) return;
-        final bool biometricRegistered =
-            result['biometric_registered'] ?? false;
-        final String targetRoute = biometricRegistered
-            ? '/dashboard'
-            : '/setup';
+        final bool setupComplete =
+            result['setup_completed'] == true ||
+            result['biometric_registered'] == true;
+        final String targetRoute = setupComplete ? '/dashboard' : '/setup';
         Navigator.pushReplacementNamed(
           context,
           targetRoute,
@@ -211,11 +209,10 @@ class _LoginScreenState extends State<LoginScreen> {
           role: result['role'],
         );
         if (!mounted) return;
-        final bool biometricRegistered =
-            result['biometric_registered'] ?? false;
-        final String targetRoute = biometricRegistered
-            ? '/dashboard'
-            : '/setup';
+        final bool setupComplete =
+            result['setup_completed'] == true ||
+            result['biometric_registered'] == true;
+        final String targetRoute = setupComplete ? '/dashboard' : '/setup';
         Navigator.pushReplacementNamed(
           context,
           targetRoute,
@@ -252,7 +249,9 @@ class _LoginScreenState extends State<LoginScreen> {
             return BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
               child: AlertDialog(
-                backgroundColor: const Color(0xFF0C1033).withValues(alpha: 0.85),
+                backgroundColor: const Color(
+                  0xFF0C1033,
+                ).withValues(alpha: 0.85),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(28),
                   side: BorderSide(
@@ -262,7 +261,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 title: Row(
                   children: [
-                    const Icon(Icons.dns_outlined, color: AppColors.gold, size: 24),
+                    const Icon(
+                      Icons.dns_outlined,
+                      color: AppColors.gold,
+                      size: 24,
+                    ),
                     const SizedBox(width: 12),
                     Text(
                       'Server Settings',
@@ -280,7 +283,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     Text(
                       'Configure backend connection parameters:',
-                      style: GoogleFonts.inter(color: Colors.white54, fontSize: 13),
+                      style: GoogleFonts.inter(
+                        color: Colors.white54,
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     // Host field
@@ -288,7 +294,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.02),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
                       ),
                       child: TextField(
                         controller: hostController,
@@ -296,9 +304,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: const InputDecoration(
                           hintText: 'Server Host IP / Domain',
                           hintStyle: TextStyle(color: Colors.white38),
-                          prefixIcon: Icon(Icons.link_rounded, color: Colors.white38),
+                          prefixIcon: Icon(
+                            Icons.link_rounded,
+                            color: Colors.white38,
+                          ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
                         ),
                       ),
                     ),
@@ -308,7 +322,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.02),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
                       ),
                       child: TextField(
                         controller: portController,
@@ -317,9 +333,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: const InputDecoration(
                           hintText: 'Port (e.g. 8000)',
                           hintStyle: TextStyle(color: Colors.white38),
-                          prefixIcon: Icon(Icons.settings_ethernet_rounded, color: Colors.white38),
+                          prefixIcon: Icon(
+                            Icons.settings_ethernet_rounded,
+                            color: Colors.white38,
+                          ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
                         ),
                       ),
                     ),
@@ -330,7 +352,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Text(
                           'Connection Status:',
-                          style: GoogleFonts.inter(color: Colors.white38, fontSize: 12),
+                          style: GoogleFonts.inter(
+                            color: Colors.white38,
+                            fontSize: 12,
+                          ),
                         ),
                         if (testingStatus)
                           const SizedBox(
@@ -338,7 +363,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 14,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.gold,
+                              ),
                             ),
                           )
                         else if (connectionStatus == 'ONLINE')
@@ -419,9 +446,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               portController.text.trim(),
                             );
                             final online = await ApiService.isServerOnline();
-                            
+
                             // Restore settings so they must explicitly save
-                            await ApiService.saveServerSettings(originalHost, originalPort);
+                            await ApiService.saveServerSettings(
+                              originalHost,
+                              originalPort,
+                            );
 
                             setDialogState(() {
                               testingStatus = false;
@@ -890,7 +920,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // 3. Sliding Premium Roles selection with animated ambient glow capsule
   Widget _buildPremiumRoleSelector() {
-    final roles = ['Student', 'Teacher', 'Admin'];
+    final roles = ['Student', 'Parent', 'Teacher', 'Admin'];
     final selectedIndex = roles.indexOf(selectedRole);
     return Container(
       height: 60,
@@ -902,7 +932,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final tabWidth = constraints.maxWidth / 3;
+          final tabWidth = constraints.maxWidth / roles.length;
           return Stack(
             children: [
               // Beautiful animated soft gold glowing bubble behind the selected tab

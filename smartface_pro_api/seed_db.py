@@ -29,6 +29,8 @@ async def seed():
     await db.leaves.delete_many({})
     await db.security_logs.delete_many({})
     await db.login_otps.delete_many({})
+    await db.user_sessions.delete_many({})
+    await db.login_history.delete_many({})
     
     print("Creating database indexes...")
     await create_indexes(db)
@@ -125,9 +127,89 @@ async def seed():
             "dob": "2004-03-12",
             "biometric_registered": True,
             "created_at": datetime.utcnow()
+        },
+        # Parent
+        {
+            "email": "parent@smartface.pro",
+            "full_name": "Robert Cooper",
+            "role": "parent",
+            "password": hashed_password,
+            "phone": "+1234567899",
+            "child_email": "alice@smartface.pro",
+            "child_name": "Alice Cooper",
+            "created_at": datetime.utcnow()
         }
     ]
     await db.users.insert_many(users)
+
+    # Seed User Sessions (Devices)
+    print("Seeding active user device sessions...")
+    user_sessions = [
+        {
+            "user_email": "student@smartface.pro",
+            "device_name": "Android Device",
+            "ip_address": "192.168.1.15",
+            "last_active": datetime.utcnow(),
+            "created_at": datetime.utcnow() - timedelta(days=2)
+        },
+        {
+            "user_email": "teacher@smartface.pro",
+            "device_name": "Macbook",
+            "ip_address": "192.168.1.22",
+            "last_active": datetime.utcnow(),
+            "created_at": datetime.utcnow() - timedelta(days=5)
+        },
+        {
+            "user_email": "admin@smartface.pro",
+            "device_name": "Windows PC",
+            "ip_address": "192.168.1.100",
+            "last_active": datetime.utcnow(),
+            "created_at": datetime.utcnow() - timedelta(days=10)
+        },
+        {
+            "user_email": "parent@smartface.pro",
+            "device_name": "iPhone",
+            "ip_address": "192.168.1.45",
+            "last_active": datetime.utcnow(),
+            "created_at": datetime.utcnow() - timedelta(days=1)
+        }
+    ]
+    await db.user_sessions.insert_many(user_sessions)
+
+    # Seed Login History
+    print("Seeding login history logs...")
+    login_history = [
+        {
+            "email": "alice@smartface.pro",
+            "device_name": "Android Device",
+            "ip_address": "192.168.1.15",
+            "status": "Success",
+            "timestamp": datetime.utcnow() - timedelta(hours=2)
+        },
+        {
+            "email": "teacher@smartface.pro",
+            "device_name": "Macbook",
+            "ip_address": "192.168.1.22",
+            "status": "Success",
+            "timestamp": datetime.utcnow() - timedelta(hours=4)
+        },
+        {
+            "email": "admin@smartface.pro",
+            "device_name": "Windows PC",
+            "ip_address": "192.168.1.100",
+            "status": "Success",
+            "timestamp": datetime.utcnow() - timedelta(hours=1)
+        },
+        {
+            "email": "parent@smartface.pro",
+            "device_name": "iPhone",
+            "ip_address": "192.168.1.45",
+            "status": "Success",
+            "timestamp": datetime.utcnow() - timedelta(hours=5)
+        }
+    ]
+    await db.login_history.insert_many(login_history)
+
     
     # 3. Seed Sessions (1 active, 4 past)
     print("Seeding attendance sessions...")

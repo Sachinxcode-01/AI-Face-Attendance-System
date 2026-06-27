@@ -81,14 +81,17 @@ const securityRoutes = require('./routes/security');
 const notificationRoutes = require('./routes/notifications');
 const aiRoutes = require('./routes/ai');
 const telemetryRoutes = require('./routes/telemetry');
+const apiCompatRoutes = require('./routes/apiCompat');
 
 app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/sessions', sessionRoutes);
 app.use('/attendance', attendanceRoutes);
 app.use('/leave', leaveRoutes);
 app.use('/security', securityRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/telemetry', telemetryRoutes);
+app.use('/api', apiCompatRoutes);
 app.use('/', aiRoutes);
 
 // Error fallback handler for all routes

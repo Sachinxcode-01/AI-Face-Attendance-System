@@ -192,6 +192,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             'address': _addressController.text.isNotEmpty
                 ? _addressController.text
                 : 'Campus Address',
+            'setup_completed': true,
           }
         : {
             'full_name': _nameController.text.isNotEmpty
@@ -237,12 +238,21 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             'semester': _semController.text.isNotEmpty
                 ? _semController.text
                 : 'Semester 6',
+            'setup_completed': true,
           };
 
     // Sync to MongoDB
     if (_token.isNotEmpty) {
       await ApiService.updateProfile(profileData, _token);
       await ApiService.registerBiometric(_email, _token);
+      final session = context.read<SessionManager>();
+      await session.saveSession(
+        token: _token,
+        email: _email,
+        role: _role,
+        name: profileData['full_name']?.toString(),
+        biometricRegistered: true,
+      );
     }
 
     if (mounted) {

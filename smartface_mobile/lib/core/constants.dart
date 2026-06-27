@@ -190,7 +190,7 @@ class AppRadius {
 // ─────────────────────────────────────────────
 //  ROLES
 // ─────────────────────────────────────────────
-enum UserRole { admin, teacher, student, unknown }
+enum UserRole { admin, teacher, parent, student, unknown }
 
 extension UserRoleExt on UserRole {
   String get label {
@@ -199,6 +199,8 @@ extension UserRoleExt on UserRole {
         return 'Admin';
       case UserRole.teacher:
         return 'Teacher';
+      case UserRole.parent:
+        return 'Parent';
       case UserRole.student:
         return 'Student';
       case UserRole.unknown:
@@ -212,6 +214,8 @@ extension UserRoleExt on UserRole {
         return AppColors.errorLight;
       case UserRole.teacher:
         return AppColors.cyan;
+      case UserRole.parent:
+        return AppColors.info;
       case UserRole.student:
         return AppColors.gold;
       case UserRole.unknown:
@@ -225,6 +229,8 @@ extension UserRoleExt on UserRole {
         return Icons.shield_outlined;
       case UserRole.teacher:
         return Icons.school_outlined;
+      case UserRole.parent:
+        return Icons.family_restroom_outlined;
       case UserRole.student:
         return Icons.person_outline;
       case UserRole.unknown:
@@ -235,11 +241,13 @@ extension UserRoleExt on UserRole {
   String get dashboardRoute {
     switch (this) {
       case UserRole.admin:
-        return '/admin-home';
+        return '/admin/dashboard';
       case UserRole.teacher:
-        return '/teacher-home';
+        return '/teacher/dashboard';
+      case UserRole.parent:
+        return '/parent/dashboard';
       case UserRole.student:
-        return '/student-home';
+        return '/student/dashboard';
       case UserRole.unknown:
         return '/';
     }
@@ -251,6 +259,8 @@ extension UserRoleExt on UserRole {
         return UserRole.admin;
       case 'teacher':
         return UserRole.teacher;
+      case 'parent':
+        return UserRole.parent;
       case 'student':
         return UserRole.student;
       default:

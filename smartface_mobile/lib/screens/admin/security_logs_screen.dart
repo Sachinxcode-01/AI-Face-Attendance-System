@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
+import '../../core/session_manager.dart';
 import '../../services/api_service.dart';
 
 class SecurityLogsScreen extends StatefulWidget {
@@ -21,7 +23,8 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
 
   Future<void> _fetchLogs() async {
     try {
-      final result = await ApiService.getSecurityLogs();
+      final token = context.read<SessionManager>().token;
+      final result = await ApiService.getSecurityLogs(token);
       setState(() {
         logs = result;
         isLoading = false;

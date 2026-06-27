@@ -6,6 +6,8 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, required: true, index: true }, // admin, teacher, student
   password: { type: String },
   biometric_registered: { type: Boolean, default: false },
+  setup_completed: { type: Boolean, default: false },
+  linked_children: [{ email: String, full_name: String, student_id: String }],
   avatar_url: { type: String },
   phone: { type: String },
   dob: { type: String },

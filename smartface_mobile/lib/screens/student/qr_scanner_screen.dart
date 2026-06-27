@@ -55,6 +55,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         studentEmail,
         sessionId,
         token,
+        session.token,
       );
 
       if (!mounted) return;

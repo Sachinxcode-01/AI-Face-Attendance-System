@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../core/session_manager.dart';
+import '../../services/api_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,6 +20,8 @@ class _SplashScreenState extends State<SplashScreen> {
   int _bootIndex = 0;
   late Timer _bootTimer;
   final bool _showWelcome = false;
+  bool _backendOffline = false;
+  bool _isRetrying = false;
   final List<String> _bootChecks = [
     'INITIALIZING SECURE AI SUITE...',
     'PARSING BIOMETRIC MATRIX...',
@@ -41,27 +44,71 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     });
 
-    Future.delayed(const Duration(milliseconds: 1200), () async {
-      if (mounted) {
-        final session = context.read<SessionManager>();
-        if (session.isLoggedIn) {
-          final String targetRoute = session.biometricRegistered
-              ? '/dashboard'
-              : '/setup';
-          Navigator.pushReplacementNamed(
-            context,
-            targetRoute,
-            arguments: {
-              'role': session.role,
-              'email': session.email,
-              'token': session.token,
-            },
-          );
-        } else {
-          Navigator.pushReplacementNamed(context, '/');
-        }
-      }
+    Future.delayed(const Duration(milliseconds: 1200), _runStartupChecks);
+  }
+
+  Future<void> _runStartupChecks() async {
+    if (!mounted) return;
+    setState(() {
+      _backendOffline = false;
+      _isRetrying = true;
+      _bootMessage = 'CHECKING BACKEND HEALTH...';
     });
+
+    final online = await ApiService.isServerOnline();
+    if (!mounted) return;
+
+    if (!online) {
+      setState(() {
+        _backendOffline = true;
+        _isRetrying = false;
+        _bootMessage = 'BACKEND OFFLINE';
+      });
+      return;
+    }
+
+    final session = context.read<SessionManager>();
+    if (!session.isLoggedIn ||
+        session.token == null ||
+        session.token!.isEmpty) {
+      Navigator.pushReplacementNamed(context, '/welcome');
+      return;
+    }
+
+    setState(() => _bootMessage = 'VALIDATING SECURE SESSION...');
+    final profile = await ApiService.getUserProfile(session.token!);
+    if (!mounted) return;
+
+    if (profile.containsKey('detail') && !profile.containsKey('email')) {
+      await session.logout();
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/login');
+      return;
+    }
+
+    final setupComplete =
+        profile['setup_completed'] == true ||
+        profile['biometric_registered'] == true ||
+        session.biometricRegistered;
+    await session.saveSession(
+      token: session.token!,
+      email: (profile['email'] ?? session.email ?? '').toString(),
+      role: (profile['role'] ?? session.role ?? 'student').toString(),
+      name: profile['full_name']?.toString() ?? session.name,
+      avatarUrl: profile['avatar_url']?.toString() ?? session.avatarUrl,
+      biometricRegistered: setupComplete,
+    );
+    if (!mounted) return;
+
+    Navigator.pushReplacementNamed(
+      context,
+      setupComplete ? '/dashboard' : '/setup',
+      arguments: {
+        'role': session.role,
+        'email': session.email,
+        'token': session.token,
+      },
+    );
   }
 
   @override
@@ -234,6 +281,28 @@ class _SplashScreenState extends State<SplashScreen> {
             delay: 900.ms,
             duration: 500.ms,
           ),
+
+          if (_backendOffline) ...[
+            const SizedBox(height: 18),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Text(
+                'Cannot reach the SmartFace backend. Check server settings or try again.',
+                textAlign: TextAlign.center,
+                style: AppText.body(color: AppColors.white70),
+              ),
+            ),
+            const SizedBox(height: 14),
+            ElevatedButton.icon(
+              onPressed: _isRetrying ? null : _runStartupChecks,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pushNamed(context, '/settings'),
+              child: const Text('Server Settings'),
+            ),
+          ],
 
           const SizedBox(height: 35),
         ],
