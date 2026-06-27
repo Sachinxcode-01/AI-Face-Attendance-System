@@ -435,12 +435,17 @@ class ApiService {
 
   static Future<Map<String, dynamic>> startSession(
     String teacherEmail,
-    String subject,
-  ) async {
+    String subject, [
+    String? token,
+  ]) async {
     try {
       final response = await client.post(
         Uri.parse('$baseUrl/sessions/start'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({'teacher_email': teacherEmail, 'subject': subject}),
       );
       return jsonDecode(response.body);
@@ -722,10 +727,17 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> getNotifications(String email) async {
+  static Future<List<dynamic>> getNotifications(
+    String email, [
+    String? token,
+  ]) async {
     try {
       final response = await client.get(
         Uri.parse('$baseUrl/notifications/$email'),
+        headers: {
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
+        },
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as List<dynamic>;

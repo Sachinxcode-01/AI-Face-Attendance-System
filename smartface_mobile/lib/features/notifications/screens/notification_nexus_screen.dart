@@ -89,7 +89,7 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
     }
 
     // Fetch notifications targeting this user/role
-    final notifs = await ApiService.getNotifications(email);
+    final notifs = await ApiService.getNotifications(email, session.token);
     final List<Map<String, dynamic>> parsedNotifs = notifs.map((n) {
       final map = n as Map<String, dynamic>;
       return {

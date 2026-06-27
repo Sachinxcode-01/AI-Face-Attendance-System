@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from datetime import datetime
+
 
 class OTPRequest(BaseModel):
     email: EmailStr
@@ -18,13 +19,55 @@ class AIQuery(BaseModel):
     query: str
 
 class ProfileUpdate(BaseModel):
-    full_name: str = None
-    phone: str = None
-    department: str = None
-    dob: str = None
-    college: str = None
-    semester: str = None
-    student_id: str = None
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    dob: Optional[str] = None
+    gender: Optional[str] = None
+    address: Optional[str] = None
+    language_preference: Optional[str] = None
+    
+    # Student fields
+    usn: Optional[str] = None
+    student_id: Optional[str] = None
+    course: Optional[str] = None
+    section: Optional[str] = None
+    roll_number: Optional[str] = None
+    parent_details: Optional[str] = None
+    parent_email: Optional[str] = None
+    department: Optional[str] = None
+    semester: Optional[str] = None
+    college: Optional[str] = None
+
+    # Teacher fields
+    employee_id: Optional[str] = None
+    designation: Optional[str] = None
+    specialization: Optional[str] = None
+    qualification: Optional[str] = None
+    experience: Optional[str] = None
+
+    # Parent fields
+    child_email: Optional[str] = None
+    child_name: Optional[str] = None
+    alert_preferences: Optional[dict] = None
+
+    # Admin fields
+    institution_name: Optional[str] = None
+    system_access_level: Optional[str] = None
+
+class PasswordChangeRequest(BaseModel):
+    old_password: str
+    new_password: str
+
+class NotificationSettingsUpdate(BaseModel):
+    attendance_alerts: Optional[bool] = None
+    leave_alerts: Optional[bool] = None
+    security_alerts: Optional[bool] = None
+    system_announcements: Optional[bool] = None
+    email_notifications: Optional[bool] = None
+    push_notifications: Optional[bool] = None
+    in_app_notifications: Optional[bool] = Field(None, alias="in_app_notifications")
+
+
 
 class BiometricRequest(BaseModel):
     email: str
