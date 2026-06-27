@@ -157,7 +157,7 @@ router.post('/login-otp/send', limitOtpSend, async (req, res) => {
       { upsert: true }
     );
 
-    console.log(`Generated OTP for ${email}: ${otpVal}`);
+    console.log(`Generated login OTP for ${email}`);
 
     // Send OTP email in background
     EmailService.sendOtp(email, otpVal).catch(console.error);
@@ -195,7 +195,8 @@ router.post('/login-otp/verify', limitOtpVerify, async (req, res) => {
       access_token: token,
       token_type: "bearer",
       role,
-      biometric_registered: biometricRegistered
+      biometric_registered: biometricRegistered,
+      setup_completed: user ? (user.setup_completed || user.biometric_registered) : biometricRegistered
     });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -223,7 +224,8 @@ router.post('/login-password', async (req, res) => {
       access_token: token,
       token_type: "bearer",
       role: user.role,
-      biometric_registered: user.biometric_registered
+      biometric_registered: user.biometric_registered,
+      setup_completed: user.setup_completed || user.biometric_registered
     });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -265,7 +267,8 @@ router.post('/google', async (req, res) => {
       access_token: token,
       token_type: "bearer",
       role: userRole,
-      biometric_registered: biometricRegistered
+      biometric_registered: biometricRegistered,
+      setup_completed: user.setup_completed || biometricRegistered
     });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -290,7 +293,7 @@ router.post('/forgot-password', async (req, res) => {
       { upsert: true }
     );
 
-    console.log(`Generated Password Reset OTP for ${email}: ${otpVal}`);
+    console.log(`Generated password reset OTP for ${email}`);
 
     EmailService.sendOtp(email, otpVal).catch(console.error);
 
@@ -355,7 +358,8 @@ router.post('/update-profile', authenticate, async (req, res) => {
     const allowedKeys = [
       'full_name', 'phone', 'department', 'dob', 'college', 'semester', 'student_id',
       'employee_id', 'designation', 'specialization', 'qualification', 'experience', 'gender', 'address',
-      'usn', 'course', 'section', 'roll_number', 'parent_details', 'language_preference'
+      'usn', 'course', 'section', 'roll_number', 'parent_details', 'language_preference',
+      'setup_completed', 'linked_children'
     ];
     
     allowedKeys.forEach(key => {

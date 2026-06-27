@@ -67,7 +67,11 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         args?['email'] ?? session.email ?? 'teacher@smartface.elite';
     final subject = args?['subject'] ?? 'Advanced AI';
 
-    final result = await ApiService.startSession(teacherEmail, subject);
+    final result = await ApiService.startSession(
+      teacherEmail,
+      subject,
+      session.token,
+    );
     if (result.containsKey('session_id')) {
       setState(() {
         _sessionId = result['session_id'];
