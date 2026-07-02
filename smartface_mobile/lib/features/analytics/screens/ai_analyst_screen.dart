@@ -117,9 +117,17 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
 
     // CALL REAL AI ENGINE
     final session = context.read<SessionManager>();
-    final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    final email = args?['email'] ?? session.email ?? 'student@smartface.elite';
-    final result = await ApiService.askAI(email, userQuery);
+    final token = session.token ?? '';
+
+    final history = _messages
+        .take(_messages.length - 1)
+        .map((m) => {
+              'role': m['isMe'] == true ? 'user' : 'model',
+              'content': m['text'] ?? '',
+            })
+        .toList();
+
+    final result = await ApiService.postAIChat(userQuery, history, token);
 
     if (mounted) {
       setState(() {
@@ -127,8 +135,7 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
         _messages.add({
           'isMe': false,
           'text':
-              result['response'] ??
-              result['answer'] ??
+              result['reply'] ??
               'I apologize, but my neural processing units are currently undergoing maintenance. Please try again in a few minutes.',
           'time': 'Just now',
         });

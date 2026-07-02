@@ -16,6 +16,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
+import 'glassmorphic_card.dart';
 
 // ============================================================================
 // 1. GlassContainer
@@ -509,7 +510,7 @@ class AnalyticsCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (trailingWidget != null) trailingWidget,
+              ?trailingWidget,
             ],
           ),
           const SizedBox(height: 12),

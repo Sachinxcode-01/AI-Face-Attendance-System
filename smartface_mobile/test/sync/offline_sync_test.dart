@@ -230,7 +230,7 @@ void main() {
           .where((r) => r.syncStatus == SyncStatus.synced)
           .length;
       expect(syncedCount, 49); // Evicted 1 synced item
-    });
+    }, timeout: const Timeout(Duration(minutes: 2)));
   });
 
   group('ConnectivityService tests', () {

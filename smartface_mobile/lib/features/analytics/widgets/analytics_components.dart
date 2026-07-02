@@ -14,7 +14,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart'
     hide AttendanceRing;
 import 'package:smartface_attendance/shared/widgets/attendance_ring.dart';
@@ -40,7 +39,6 @@ class AttendanceScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final score = AttendanceScore.fromPercentage(scoreValue);
 
     return GlassContainer(
@@ -348,8 +346,6 @@ class PersonalInsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return GlassContainer(
       padding: const EdgeInsets.all(20),
       borderColor: Colors.white.withValues(alpha: 0.05),
@@ -427,8 +423,6 @@ class _TrendChartState extends State<TrendChart> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return GlassContainer(
       padding: const EdgeInsets.all(20),
       borderColor: Colors.white.withValues(alpha: 0.05),
@@ -643,8 +637,6 @@ class LeaderboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return GlassContainer(
       padding: const EdgeInsets.all(20),
       borderColor: Colors.white.withValues(alpha: 0.05),

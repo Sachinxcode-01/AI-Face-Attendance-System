@@ -20,6 +20,11 @@ const UserSchema = new mongoose.Schema({
   parent_details: { type: String },
   children: { type: [String], default: [] }, // student emails linked to a parent account
   language_preference: { type: String, default: 'English' },
+  notification_preferences: {
+    email: { type: Boolean, default: true },
+    push: { type: Boolean, default: true },
+    in_app: { type: Boolean, default: true }
+  },
   employee_id: { type: String },
   designation: { type: String },
   specialization: { type: String },

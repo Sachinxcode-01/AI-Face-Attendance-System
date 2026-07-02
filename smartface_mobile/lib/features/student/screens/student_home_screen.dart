@@ -48,6 +48,8 @@ import 'package:smartface_attendance/features/analytics/models/student_stats_mod
 import 'package:smartface_attendance/features/analytics/controllers/analytics_controller.dart';
 import 'package:smartface_attendance/features/analytics/widgets/analytics_components.dart';
 import 'package:smartface_attendance/features/analytics/models/attendance_analytics_model.dart';
+import 'package:smartface_attendance/features/student/screens/student_timetable_screen.dart';
+import 'package:smartface_attendance/features/student/screens/attendance_calendar_screen.dart';
 
 /// Screen widget displaying student academic statistics, calendars, and live sessions.
 class StudentDashboard extends StatefulWidget {
@@ -1192,6 +1194,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
               onTap: () => context.push('/analytics/analyst'),
             ),
             ActionTile(
+              label: 'Advanced Analytics',
+              description: 'Trends, heatmaps, risk students & department stats',
+              icon: Icons.bar_chart_rounded,
+              color: Colors.indigoAccent,
+              onTap: () => context.push(AppRoutes.analyticsDashboardPath),
+            ),
+            ActionTile(
               label: 'Register Biometrics',
               description: 'Update and re-train your AI face embeddings',
               icon: Icons.face_retouching_natural_rounded,
@@ -1211,6 +1220,32 @@ class _StudentDashboardState extends State<StudentDashboard> {
               icon: Icons.download_rounded,
               color: Colors.purpleAccent,
               onTap: _showExportOptionsDialog,
+            ),
+            ActionTile(
+              label: 'Class Timetable',
+              description: 'View daily lectures and scheduled rooms',
+              icon: Icons.calendar_view_week_rounded,
+              color: Colors.blueAccent,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const StudentTimetableScreen(),
+                  ),
+                );
+              },
+            ),
+            ActionTile(
+              label: 'Academic Calendar',
+              description: 'Track leaves, holidays and marked attendance',
+              icon: Icons.calendar_month_rounded,
+              color: Colors.deepPurpleAccent,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AttendanceCalendarScreen(),
+                  ),
+                );
+              },
             ),
           ],
         ),
