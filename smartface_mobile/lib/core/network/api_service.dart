@@ -169,9 +169,12 @@ class ApiService {
         Uri.parse('$baseUrl/auth/login-otp/send'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email}),
-      );
+      ).timeout(const Duration(seconds: 15));
       return jsonDecode(response.body);
     } catch (e) {
+      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
+        return {'detail': 'timeout'};
+      }
       return {'detail': 'Connection failed'};
     }
   }
@@ -185,9 +188,12 @@ class ApiService {
         Uri.parse('$baseUrl/auth/login-otp/verify'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'otp': otp}),
-      );
+      ).timeout(const Duration(seconds: 15));
       return jsonDecode(response.body);
     } catch (e) {
+      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
+        return {'detail': 'timeout'};
+      }
       return {'detail': 'Connection failed'};
     }
   }
@@ -201,9 +207,12 @@ class ApiService {
         Uri.parse('$baseUrl/auth/login-password'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
-      );
+      ).timeout(const Duration(seconds: 15));
       return jsonDecode(response.body);
     } catch (e) {
+      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
+        return {'detail': 'timeout'};
+      }
       return {'detail': 'Connection failed'};
     }
   }
@@ -224,9 +233,12 @@ class ApiService {
           'role': role,
           'avatar_url': avatarUrl,
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
       return jsonDecode(response.body);
     } catch (e) {
+      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
+        return {'detail': 'timeout'};
+      }
       return {'detail': 'Connection failed'};
     }
   }
@@ -247,9 +259,12 @@ class ApiService {
           'password': password,
           'role': role.toLowerCase(),
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
       return jsonDecode(response.body);
     } catch (e) {
+      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
+        return {'detail': 'timeout'};
+      }
       return {'detail': 'Connection failed'};
     }
   }
@@ -303,9 +318,12 @@ class ApiService {
           'otp': otp,
           'new_password': newPassword,
         }),
-      );
+      ).timeout(const Duration(seconds: 15));
       return jsonDecode(response.body);
     } catch (e) {
+      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
+        return {'detail': 'timeout'};
+      }
       return {'detail': 'Connection failed'};
     }
   }
@@ -784,6 +802,120 @@ class ApiService {
     }
   }
 
+  static Future<bool> updateNotificationPreferences({
+    required bool email,
+    required bool push,
+    required bool inApp,
+    required String token,
+  }) async {
+    try {
+      final response = await client.patch(
+        Uri.parse('$baseUrl/auth/notification-preferences'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'email': email,
+          'push': push,
+          'in_app': inApp,
+        }),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('updateNotificationPreferences error: $e');
+      return false;
+    }
+  }
+
+  static Future<Map<String, dynamic>> postAnnouncement({
+    required String title,
+    required String message,
+    String? role,
+    String? department,
+    String? priority,
+    String? type,
+    required String token,
+  }) async {
+    try {
+      final Map<String, dynamic> payload = {
+        'title': title,
+        'message': message,
+      };
+      if (role != null) payload['role'] = role;
+      if (department != null) payload['department'] = department;
+      if (priority != null) payload['priority'] = priority;
+      if (type != null) payload['type'] = type;
+
+      final response = await client.post(
+        Uri.parse('$baseUrl/notifications/announcement'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(payload),
+      );
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('postAnnouncement error: $e');
+      return {'detail': 'Connection failed'};
+    }
+  }
+
+  static Future<List<dynamic>> getTimetable(String token) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/academic/timetable'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getTimetable error: $e');
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> getCalendarEvents(String token) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/academic/calendar'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getCalendarEvents error: $e');
+    }
+    return {};
+  }
+
+  static Future<Map<String, dynamic>> postAIChat(
+    String message,
+    List<dynamic> history,
+    String token,
+  ) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$baseUrl/ai/chat'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'message': message,
+          'history': history,
+        }),
+      );
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('postAIChat error: $e');
+      return {'detail': 'Connection failed'};
+    }
+  }
+
   static Future<StudentStatsModel?> getStudentStats(
     String email,
     String token,
@@ -1151,5 +1283,97 @@ class ApiService {
     } catch (e) {
       return {'detail': 'Connection failed: $e'};
     }
+  }
+
+  // ── Phase 4: Advanced Analytics ─────────────────────────────────────────
+
+  /// Monthly attendance trends for the last 6 months.
+  static Future<Map<String, dynamic>> getAnalyticsTrends(String token) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/analytics/trends'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getAnalyticsTrends error: $e');
+    }
+    return {'trends': []};
+  }
+
+  /// Students below a given attendance threshold (default 75%).
+  static Future<Map<String, dynamic>> getRiskStudents(
+    String token, {
+    double threshold = 0.75,
+    String? department,
+  }) async {
+    try {
+      final params = {'threshold': threshold.toString()};
+      if (department != null) params['department'] = department;
+      final uri = Uri.parse('$baseUrl/analytics/risk-students')
+          .replace(queryParameters: params);
+      final response = await client.get(
+        uri,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getRiskStudents error: $e');
+    }
+    return {'riskStudents': []};
+  }
+
+  /// Average attendance rates grouped by department.
+  static Future<Map<String, dynamic>> getDepartmentComparison(
+    String token,
+  ) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/analytics/department-comparison'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getDepartmentComparison error: $e');
+    }
+    return {'departments': []};
+  }
+
+  /// Average attendance rates grouped by subject.
+  static Future<Map<String, dynamic>> getSubjectWise(String token) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/analytics/subject-wise'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getSubjectWise error: $e');
+    }
+    return {'subjects': []};
+  }
+
+  /// Daily check-in heatmap data for the last 30 days.
+  static Future<Map<String, dynamic>> getHeatmap(String token) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/analytics/heatmap'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getHeatmap error: $e');
+    }
+    return {'heatmap': []};
   }
 }

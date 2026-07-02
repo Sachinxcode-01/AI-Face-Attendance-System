@@ -32,6 +32,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 
 // ======================================================
 // State & Core Imports
@@ -463,7 +464,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
 
   // ── Computed ─────────────────────────────────────────────────────────────
   String get _initials {
-    final name = (_profileData['full_name'] ?? _nameCtrl.text).trim();
+    final name = (_profileData['full_name'] ?? _nameCtrl.text).toString().trim();
     return name
         .split(' ')
         .where((w) => w.isNotEmpty)
@@ -683,6 +684,44 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
 
                       // ── Save Button (shown in edit mode) ───────────────
                       if (_isEditing) _buildSaveButton(),
+
+                      // ── Logout Button (shown in read-only mode) ───────────
+                      if (!_isEditing) ...[
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: GlowButton(
+                            onPressed: () async {
+                              await context.read<SessionManager>().logout();
+                              if (context.mounted) {
+                                context.go('/auth/login');
+                              }
+                            },
+                            color: AppColors.error,
+                            glowColor: AppColors.error.withValues(alpha: 0.4),
+                            borderRadius: 16,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.logout_rounded,
+                                  size: 20,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'LOGOUT SESSION',
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
 
                       const SizedBox(height: 50),
                     ],

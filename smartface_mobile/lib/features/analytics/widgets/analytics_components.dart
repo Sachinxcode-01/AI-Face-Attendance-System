@@ -14,7 +14,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart'
     hide AttendanceRing;
 import 'package:smartface_attendance/shared/widgets/attendance_ring.dart';
@@ -40,7 +39,6 @@ class AttendanceScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final score = AttendanceScore.fromPercentage(scoreValue);
 
     return GlassContainer(
@@ -69,7 +67,7 @@ class AttendanceScoreCard extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : AppColors.bgDark,
+                        color: const Color(0xFF1B2C56),
                       ),
                     ),
                     Container(
@@ -98,9 +96,9 @@ class AttendanceScoreCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   departmentRank,
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: isDark ? Colors.white60 : Colors.black54,
+                    color: const Color(0xFF7F8CA4),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -190,7 +188,7 @@ class PredictionCard extends StatelessWidget {
             children: [
               const Icon(
                 Icons.psychology_outlined,
-                color: AppColors.gold,
+                color: Color(0xFF3559E0),
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -199,7 +197,7 @@ class PredictionCard extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.gold,
+                  color: const Color(0xFF3559E0),
                   letterSpacing: 1.5,
                 ),
               ),
@@ -215,15 +213,15 @@ class PredictionCard extends StatelessWidget {
                   isDark,
                 ),
               ),
-              Container(width: 1, height: 40, color: Colors.white12),
+              Container(width: 1, height: 40, color: const Color(0xFFE2E8F0)),
               Expanded(
                 child: Column(
                   children: [
                     Text(
                       'Attendance Trend',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontSize: 10,
-                        color: isDark ? Colors.white38 : Colors.black38,
+                        color: const Color(0xFF7F8CA4),
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -245,15 +243,15 @@ class PredictionCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(width: 1, height: 40, color: Colors.white12),
+              Container(width: 1, height: 40, color: const Color(0xFFE2E8F0)),
               Expanded(
                 child: Column(
                   children: [
                     Text(
                       'AI Risk Level',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontSize: 10,
-                        color: isDark ? Colors.white38 : Colors.black38,
+                        color: const Color(0xFF7F8CA4),
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -284,13 +282,13 @@ class PredictionCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          const Divider(color: Colors.white12, height: 1),
+          const Divider(color: Color(0xFFE2E8F0), height: 1),
           const SizedBox(height: 14),
           Row(
             children: [
               const Icon(
                 Icons.info_outline_rounded,
-                color: Colors.white38,
+                color: Color(0xFF7F8CA4),
                 size: 16,
               ),
               const SizedBox(width: 8),
@@ -299,9 +297,9 @@ class PredictionCard extends StatelessWidget {
                   predictions.missableClasses > 0
                       ? 'You can safely miss up to ${predictions.missableClasses} classes this month while maintaining 75%+'
                       : 'Attention: You cannot miss any classes to avoid dropping below the 75% limit.',
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: isDark ? Colors.white70 : Colors.black87,
+                    color: const Color(0xFF1B2C56),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -318,9 +316,9 @@ class PredictionCard extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: GoogleFonts.inter(
             fontSize: 10,
-            color: isDark ? Colors.white38 : Colors.black38,
+            color: const Color(0xFF7F8CA4),
           ),
         ),
         const SizedBox(height: 4),
@@ -329,7 +327,7 @@ class PredictionCard extends StatelessWidget {
           style: GoogleFonts.outfit(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppColors.bgDark,
+            color: const Color(0xFF1B2C56),
           ),
         ),
       ],
@@ -348,8 +346,6 @@ class PersonalInsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return GlassContainer(
       padding: const EdgeInsets.all(20),
       borderColor: Colors.white.withValues(alpha: 0.05),
@@ -361,7 +357,7 @@ class PersonalInsightCard extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w800,
-              color: isDark ? Colors.white54 : Colors.black54,
+              color: const Color(0xFF7F8CA4),
               letterSpacing: 1.5,
             ),
           ),
@@ -390,7 +386,7 @@ class PersonalInsightCard extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white70 : Colors.black87,
+                        color: const Color(0xFF1B2C56),
                       ),
                     ),
                   ),
@@ -427,8 +423,6 @@ class _TrendChartState extends State<TrendChart> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return GlassContainer(
       padding: const EdgeInsets.all(20),
       borderColor: Colors.white.withValues(alpha: 0.05),
@@ -443,7 +437,7 @@ class _TrendChartState extends State<TrendChart> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppColors.bgDark,
+                  color: const Color(0xFF1B2C56),
                 ),
               ),
               // Segmented controls
@@ -477,12 +471,12 @@ class _TrendChartState extends State<TrendChart> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
           color: active
-              ? AppColors.gold.withValues(alpha: 0.15)
+              ? const Color(0xFF3559E0).withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: active
-                ? AppColors.gold.withValues(alpha: 0.3)
+                ? const Color(0xFF3559E0).withValues(alpha: 0.3)
                 : Colors.transparent,
           ),
         ),
@@ -491,7 +485,7 @@ class _TrendChartState extends State<TrendChart> {
           style: GoogleFonts.inter(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: active ? AppColors.gold : Colors.white38,
+            color: active ? const Color(0xFF3559E0) : const Color(0xFF7F8CA4),
           ),
         ),
       ),
@@ -531,7 +525,7 @@ class _TrendChartState extends State<TrendChart> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     trends[idx]['week'] ?? '',
-                    style: const TextStyle(color: Colors.white38, fontSize: 10),
+                    style: const TextStyle(color: Color(0xFF7F8CA4), fontSize: 10),
                   ),
                 );
               },
@@ -546,7 +540,7 @@ class _TrendChartState extends State<TrendChart> {
             barRods: [
               BarChartRodData(
                 toY: val,
-                color: AppColors.gold,
+                color: const Color(0xFF3559E0),
                 width: 12,
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -586,7 +580,7 @@ class _TrendChartState extends State<TrendChart> {
               reservedSize: 28,
               getTitlesWidget: (val, meta) => Text(
                 '${val.toInt()}',
-                style: const TextStyle(color: Colors.white38, fontSize: 10),
+                style: const TextStyle(color: Color(0xFF7F8CA4), fontSize: 10),
               ),
             ),
           ),
@@ -602,7 +596,7 @@ class _TrendChartState extends State<TrendChart> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     trends[idx]['month'] ?? '',
-                    style: const TextStyle(color: Colors.white38, fontSize: 10),
+                    style: const TextStyle(color: Color(0xFF7F8CA4), fontSize: 10),
                   ),
                 );
               },
@@ -612,13 +606,13 @@ class _TrendChartState extends State<TrendChart> {
         lineBarsData: [
           LineChartBarData(
             isCurved: true,
-            color: Colors.cyanAccent,
+            color: const Color(0xFF3559E0),
             barWidth: 3,
             isStrokeCapRound: true,
             dotData: const FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.cyanAccent.withValues(alpha: 0.1),
+              color: const Color(0xFF3559E0).withValues(alpha: 0.1),
             ),
             spots: List.generate(trends.length, (index) {
               final double val = (trends[index]['percentage'] as num? ?? 0.0)
@@ -643,8 +637,6 @@ class LeaderboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return GlassContainer(
       padding: const EdgeInsets.all(20),
       borderColor: Colors.white.withValues(alpha: 0.05),
@@ -659,13 +651,13 @@ class LeaderboardCard extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white54 : Colors.black54,
+                  color: const Color(0xFF7F8CA4),
                   letterSpacing: 1.5,
                 ),
               ),
               const Icon(
                 Icons.emoji_events_outlined,
-                color: AppColors.gold,
+                color: Color(0xFF3559E0),
                 size: 18,
               ),
             ],
@@ -674,24 +666,24 @@ class LeaderboardCard extends StatelessWidget {
           ...List.generate(entries.length, (index) {
             final entry = entries[index];
             final Color rankColor = entry.rank == 1
-                ? AppColors.gold
+                ? const Color(0xFF3559E0)
                 : entry.rank == 2
                 ? Colors.grey
                 : entry.rank == 3
                 ? Colors.deepOrangeAccent
-                : Colors.white38;
+                : const Color(0xFF7F8CA4);
 
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: entry.isMe
-                    ? AppColors.gold.withValues(alpha: 0.06)
+                    ? const Color(0xFF3559E0).withValues(alpha: 0.06)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: entry.isMe
-                      ? AppColors.gold.withValues(alpha: 0.2)
+                      ? const Color(0xFF3559E0).withValues(alpha: 0.2)
                       : Colors.transparent,
                 ),
               ),
@@ -723,14 +715,14 @@ class LeaderboardCard extends StatelessWidget {
                             fontWeight: entry.isMe
                                 ? FontWeight.bold
                                 : FontWeight.w600,
-                            color: isDark ? Colors.white : AppColors.bgDark,
+                            color: const Color(0xFF1B2C56),
                           ),
                         ),
                         Text(
                           entry.department,
-                          style: const TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 10,
-                            color: Colors.white38,
+                            color: const Color(0xFF7F8CA4),
                           ),
                         ),
                       ],
@@ -743,8 +735,8 @@ class LeaderboardCard extends StatelessWidget {
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: entry.score >= 90.0
-                          ? Colors.greenAccent
-                          : AppColors.gold,
+                          ? Colors.green
+                          : const Color(0xFF3559E0),
                     ),
                   ),
                 ],
@@ -768,8 +760,6 @@ class HeatmapCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     // We render a standard grid representing days of June 2026 (30 days, starts on Monday)
     // 5 rows, 7 columns
     final List<int> days = List.generate(30, (i) => i + 1);
@@ -788,13 +778,13 @@ class HeatmapCard extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white54 : Colors.black54,
+                  color: const Color(0xFF7F8CA4),
                   letterSpacing: 1.5,
                 ),
               ),
               const Icon(
                 Icons.grid_on_rounded,
-                color: Colors.white30,
+                color: Color(0xFF7F8CA4),
                 size: 16,
               ),
             ],
@@ -814,22 +804,20 @@ class HeatmapCard extends StatelessWidget {
               final dateStr = '2026-06-${dayNum.toString().padLeft(2, '0')}';
               final status = heatmapData[dateStr] as String?;
 
-              Color cellColor = isDark
-                  ? Colors.white.withValues(alpha: 0.03)
-                  : Colors.black.withValues(alpha: 0.03);
+              Color cellColor = const Color(0xFFF1F5FD);
               Border border = Border.all(
-                color: Colors.white.withValues(alpha: 0.04),
+                color: const Color(0xFFE2E8F0),
               );
 
               if (status == 'present') {
-                cellColor = Colors.greenAccent.withValues(alpha: 0.25);
+                cellColor = const Color(0xFF10B981).withValues(alpha: 0.25);
                 border = Border.all(
-                  color: Colors.greenAccent.withValues(alpha: 0.4),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.4),
                 );
               } else if (status == 'absent') {
-                cellColor = Colors.redAccent.withValues(alpha: 0.2);
+                cellColor = const Color(0xFFEF4444).withValues(alpha: 0.2);
                 border = Border.all(
-                  color: Colors.redAccent.withValues(alpha: 0.3),
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.3),
                 );
               }
 
@@ -847,9 +835,9 @@ class HeatmapCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: status != null
                         ? (status == 'present'
-                              ? Colors.greenAccent
-                              : Colors.redAccent)
-                        : (isDark ? Colors.white38 : Colors.black38),
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFFEF4444))
+                        : const Color(0xFF7F8CA4),
                   ),
                 ),
               );
@@ -860,11 +848,11 @@ class HeatmapCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              _buildLegendDot(Colors.greenAccent, 'Present'),
+              _buildLegendDot(const Color(0xFF10B981), 'Present'),
               const SizedBox(width: 16),
-              _buildLegendDot(Colors.redAccent, 'Absent'),
+              _buildLegendDot(const Color(0xFFEF4444), 'Absent'),
               const SizedBox(width: 16),
-              _buildLegendDot(Colors.white38, 'No Class'),
+              _buildLegendDot(const Color(0xFFF1F5FD), 'No Class'),
             ],
           ),
         ],
@@ -878,10 +866,14 @@ class HeatmapCard extends StatelessWidget {
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
         ),
         const SizedBox(width: 6),
-        Text(text, style: const TextStyle(fontSize: 10, color: Colors.white38)),
+        Text(text, style: const TextStyle(fontSize: 10, color: Color(0xFF7F8CA4))),
       ],
     );
   }
