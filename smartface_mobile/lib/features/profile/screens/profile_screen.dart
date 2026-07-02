@@ -1385,7 +1385,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                     SizedBox(
                       width: double.infinity,
                       child: GlowButton(
-                        onPressed: () => context.go('/auth/login'),
+                        onPressed: () async {
+                          await context.read<SessionManager>().logout();
+                          if (context.mounted) {
+                            context.go('/auth/login');
+                          }
+                        },
                         color: AppColors.error,
                         glowColor: AppColors.error.withValues(alpha: 0.4),
                         borderRadius: 16,

@@ -6,16 +6,19 @@ from datetime import datetime
 import os
 import pickle
 import winsound
+
 import threading
 import smtplib
 from email.message import EmailMessage
 import pyttsx3
-import queue
+import queue                                                         
 import time
 
 from insightface.app import FaceAnalysis
 from dotenv import load_dotenv  
-from core import ai_analyst
+import ai_analyst
+
+
 import requests
 
 load_dotenv()
@@ -110,20 +113,44 @@ class SmartAttendanceSystem:
         
         # --- GPU INITIALIZATION ---
         print("[INFO] Initializing High-Performance Security Engine...")
-        self.using_gpu = 'CUDAExecutionProvider' in onnxruntime.get_available_providers()
-        
+
+        # 'available' only means the provider is compiled in; it does NOT mean the
+        # required CUDA/cuDNN DLLs can actually be loaded at runtime.
+        cuda_listed = 'CUDAExecutionProvider' in onnxruntime.get_available_providers()
+        if not cuda_listed:
+            print("[WARN] CUDAExecutionProvider is not available in this onnxruntime build.")
+            print("       You likely have the CPU-only 'onnxruntime' package. Install GPU build:")
+            print("       pip uninstall -y onnxruntime onnxruntime-gpu")
+            print("       pip install onnxruntime-gpu==1.17.1   (matches CUDA 11.8 + cuDNN 8)")
+
         # Using Large Model for maximum accuracy
         self.app = FaceAnalysis(name='buffalo_l', providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
         self.app.prepare(ctx_id=0, det_size=(640, 640))
-        
-        # Verify if GPU is actually being used by the session (check one of the models)
+
+        # Verify if GPU is ACTUALLY bound by the loaded session (the real source of truth).
+        self.using_gpu = False
         try:
             actual_providers = self.app.models['detection'].session.get_providers()
             self.using_gpu = 'CUDAExecutionProvider' in actual_providers
-        except:
-            pass
-            
-        print(f"[INFO] Security Engine Loaded. GPU: {'ACTIVE' if self.using_gpu else 'INACTIVE (FALLBACK TO CPU)'}")
+        except Exception as e:
+            print(f"[WARN] Could not read session providers: {e}")
+
+        if self.using_gpu:
+            print("[INFO] Security Engine Loaded. GPU: ACTIVE (CUDA)")
+        else:
+            print("=" * 70)
+            print("[WARNING] GPU ACCELERATION IS NOT ACTIVE - RUNNING ON CPU (SLOW).")
+            if cuda_listed:
+                # Provider was listed but the session still fell back to CPU.
+                # This almost always means a CUDA/cuDNN version mismatch (missing DLLs).
+                print("  CUDA was detected but failed to load at runtime (likely a missing")
+                print("  CUDA/cuDNN DLL, e.g. cublasLt64_*.dll). This is a version mismatch")
+                print("  between onnxruntime-gpu and your installed CUDA toolkit.")
+                print("  Your toolkit is CUDA 11.8 + cuDNN 8 -> use onnxruntime-gpu==1.17.1:")
+                print("     pip install onnxruntime-gpu==1.17.1")
+            print("  Detection will be noticeably laggy until the GPU is fixed.")
+            print("=" * 70)
+
         self.skip_frames = 1 if self.using_gpu else 2
         
         # --- Voice Sequential Queue & Thread Setup ---

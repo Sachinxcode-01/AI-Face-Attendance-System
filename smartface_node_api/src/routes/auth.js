@@ -376,6 +376,22 @@ router.post('/update-profile', authenticate, async (req, res) => {
   }
 });
 
+// ─── PATCH /auth/notification-preferences ─────────────────────────────
+router.patch('/notification-preferences', authenticate, async (req, res) => {
+  try {
+    const { email, push, in_app } = req.body;
+    const updateFields = {};
+    if (email !== undefined) updateFields['notification_preferences.email'] = !!email;
+    if (push !== undefined) updateFields['notification_preferences.push'] = !!push;
+    if (in_app !== undefined) updateFields['notification_preferences.in_app'] = !!in_app;
+
+    await User.updateOne({ email: req.userEmail }, { $set: updateFields });
+    res.json({ message: "Notification preferences updated successfully" });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
 // ─── POST /auth/register-biometric ─────────────────────────────────
 router.post('/register-biometric', authenticate, async (req, res) => {
   try {

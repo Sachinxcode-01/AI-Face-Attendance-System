@@ -1,4 +1,4 @@
-﻿/*
+/*
 |--------------------------------------------------------------------------
 | File: app_router.dart
 |--------------------------------------------------------------------------
@@ -57,6 +57,7 @@ import 'package:smartface_attendance/features/leave/screens/leave_review_screen.
 import 'package:smartface_attendance/features/admin/screens/security_logs_screen.dart';
 import 'package:smartface_attendance/features/analytics/screens/ai_analytics_screen.dart';
 import 'package:smartface_attendance/features/analytics/screens/ai_analyst_screen.dart';
+import 'package:smartface_attendance/features/analytics/screens/analytics_dashboard_screen.dart';
 import 'package:smartface_attendance/features/settings/screens/server_settings_screen.dart';
 import 'package:smartface_attendance/features/settings/screens/component_showcase_screen.dart';
 
@@ -123,7 +124,82 @@ final GoRouter appRouter = GoRouter(
     ),
   ),
   routes: [
-    // â”€â”€ GUEST / UNAUTHENTICATED ROUTES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── ROUTE ALIAS REDIRECTS ──────────────────────────────────────────────
+    GoRoute(
+      path: '/splash',
+      redirect: (context, state) => AppRoutes.splashPath,
+    ),
+    GoRoute(
+      path: '/welcome',
+      redirect: (context, state) => AppRoutes.splashPath,
+    ),
+    GoRoute(
+      path: '/login',
+      redirect: (context, state) => AppRoutes.loginPath,
+    ),
+    GoRoute(
+      path: '/register',
+      redirect: (context, state) => AppRoutes.registerPath,
+    ),
+    GoRoute(
+      path: '/otp',
+      redirect: (context, state) => AppRoutes.otpPath,
+    ),
+    GoRoute(
+      path: '/forgot-password',
+      redirect: (context, state) => AppRoutes.forgotPasswordPath,
+    ),
+    GoRoute(
+      path: '/reset-password',
+      redirect: (context, state) => AppRoutes.forgotPasswordPath,
+    ),
+    GoRoute(
+      path: '/auth/intro',
+      redirect: (context, state) => AppRoutes.setupWizardPath,
+    ),
+    GoRoute(
+      path: '/setup/student',
+      redirect: (context, state) => AppRoutes.setupWizardPath,
+    ),
+    GoRoute(
+      path: '/setup/parent',
+      redirect: (context, state) => AppRoutes.setupWizardPath,
+    ),
+    GoRoute(
+      path: '/setup/teacher',
+      redirect: (context, state) => AppRoutes.setupWizardPath,
+    ),
+    GoRoute(
+      path: '/setup/admin',
+      redirect: (context, state) => AppRoutes.setupWizardPath,
+    ),
+    GoRoute(
+      path: '/student/dashboard',
+      redirect: (context, state) => AppRoutes.studentHomePath,
+    ),
+    GoRoute(
+      path: '/teacher/dashboard',
+      redirect: (context, state) => AppRoutes.teacherHomePath,
+    ),
+    GoRoute(
+      path: '/admin/dashboard',
+      redirect: (context, state) => AppRoutes.adminHomePath,
+    ),
+    GoRoute(
+      path: '/parent/dashboard',
+      redirect: (context, state) => AppRoutes.managementDashboardPath,
+    ),
+    GoRoute(
+      path: '/profile',
+      redirect: (context, state) {
+        final role = Provider.of<SessionManager>(context, listen: false).userRole;
+        if (role == UserRole.student) return AppRoutes.studentProfilePath;
+        if (role == UserRole.teacher) return AppRoutes.teacherProfilePath;
+        return AppRoutes.adminProfilePath;
+      },
+    ),
+
+    // ── GUEST / UNAUTHENTICATED ROUTES ──────────────────────────────────────
     GoRoute(
       path: AppRoutes.splashPath,
       name: AppRoutes.splashName,
@@ -476,7 +552,7 @@ final GoRouter appRouter = GoRouter(
       ],
     ),
 
-    // Sibling fullscreen routes for Admin (AI Analyst)
+    // AI Analyst (shared across roles)
     GoRoute(
       path: AppRoutes.aiAnalystPath,
       name: AppRoutes.aiAnalystName,
@@ -485,6 +561,17 @@ final GoRouter appRouter = GoRouter(
         context: context,
         state: state,
         child: const AIAnalystScreen(),
+      ),
+    ),
+    // Advanced Analytics Dashboard (v1.1 — admin/teacher)
+    GoRoute(
+      path: AppRoutes.analyticsDashboardPath,
+      name: AppRoutes.analyticsDashboardName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const AnalyticsDashboardScreen(),
       ),
     ),
     GoRoute(

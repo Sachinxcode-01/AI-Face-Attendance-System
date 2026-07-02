@@ -24,7 +24,8 @@ from smartface_pro_api.src.models.models import (
     Notification, OTPRequest, OTPVerification, AIQuery, ProfileUpdate,
     BiometricRequest, IntruderAlert, GoogleLoginRequest, FaceAttendanceMark,
     PasswordLoginRequest, SessionStop, LoginSessionResponse, DeviceTrack,
-    CompleteProfileRequest, FaceRegisterRequest
+    CompleteProfileRequest, FaceRegisterRequest, PasswordChangeRequest,
+    NotificationSettingsUpdate
 )
 from smartface_pro_api.src.auth.auth_service import AuthService
 from smartface_pro_api.src.config.database import (
@@ -577,9 +578,22 @@ async def verify_login_otp(request: OTPVerification, req: Request, background_ta
     user = await users_collection.find_one({"email": email})
     biometric_registered = False
     role = record.get("role", "student")
+    setup_completed = False
+    profile_completed = False
+    intro_completed = False
+    wizard_step = 0
+    full_name = "User"
+    avatar_url = None
     
     if user:
         biometric_registered = user.get("biometric_registered", False)
+        role = user.get("role", role)
+        setup_completed = user.get("setup_completed", False)
+        profile_completed = user.get("profile_completed", False)
+        intro_completed = user.get("intro_completed", False)
+        wizard_step = user.get("wizard_step", 0)
+        full_name = user.get("full_name", "User")
+        avatar_url = user.get("avatar_url", None)
         # Activate user account if not already activated
         if not user.get("is_active", False):
             await users_collection.update_one({"email": email}, {"$set": {"is_active": True}})
@@ -603,7 +617,13 @@ async def verify_login_otp(request: OTPVerification, req: Request, background_ta
         "access_token": access_token,
         "token_type": "bearer",
         "role": role,
-        "biometric_registered": biometric_registered
+        "biometric_registered": biometric_registered,
+        "setup_completed": setup_completed,
+        "profile_completed": profile_completed,
+        "intro_completed": intro_completed,
+        "wizard_step": wizard_step,
+        "full_name": full_name,
+        "avatar_url": avatar_url
     }
 
 @app.post("/auth/google-login", response_model=Token)
@@ -611,19 +631,44 @@ async def verify_login_otp(request: OTPVerification, req: Request, background_ta
 async def google_login(request: GoogleLoginRequest, req: Request):
     user = await users_collection.find_one({"email": request.email})
     biometric_registered = False
+    setup_completed = False
+    profile_completed = False
+    intro_completed = False
+    wizard_step = 0
+    full_name = request.name
+    avatar_url = request.avatar_url
+    
     if not user:
         user_dict = {
             "email": request.email,
             "full_name": request.name,
             "role": request.role.lower(),
+            "avatar_url": request.avatar_url,
             "created_at": datetime.utcnow(),
-            "biometric_registered": False
+            "biometric_registered": False,
+            "setup_completed": False,
+            "profile_completed": False,
+            "intro_completed": False,
+            "wizard_step": 0
         }
         await users_collection.insert_one(user_dict)
         role = request.role.lower()
     else:
         role = user.get("role", "student")
         biometric_registered = user.get("biometric_registered", False)
+        setup_completed = user.get("setup_completed", False)
+        profile_completed = user.get("profile_completed", False)
+        intro_completed = user.get("intro_completed", False)
+        wizard_step = user.get("wizard_step", 0)
+        full_name = user.get("full_name", request.name)
+        avatar_url = user.get("avatar_url", request.avatar_url)
+        # Update avatar URL if it is provided and user has no avatar URL
+        if request.avatar_url and not user.get("avatar_url"):
+            await users_collection.update_one(
+                {"email": request.email},
+                {"$set": {"avatar_url": request.avatar_url}}
+            )
+            avatar_url = request.avatar_url
         
     token_expire = timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 1440)))
     access_token = AuthService.create_access_token(
@@ -640,7 +685,13 @@ async def google_login(request: GoogleLoginRequest, req: Request):
         "access_token": access_token,
         "token_type": "bearer",
         "role": role,
-        "biometric_registered": biometric_registered
+        "biometric_registered": biometric_registered,
+        "setup_completed": setup_completed,
+        "profile_completed": profile_completed,
+        "intro_completed": intro_completed,
+        "wizard_step": wizard_step,
+        "full_name": full_name,
+        "avatar_url": avatar_url
     }
 
 @app.post("/auth/login", response_model=Token)
@@ -664,6 +715,12 @@ async def login_password(request: PasswordLoginRequest, req: Request):
     
     role = user.get("role", "student")
     biometric_registered = user.get("biometric_registered", False)
+    setup_completed = user.get("setup_completed", False)
+    profile_completed = user.get("profile_completed", False)
+    intro_completed = user.get("intro_completed", False)
+    wizard_step = user.get("wizard_step", 0)
+    full_name = user.get("full_name", "User")
+    avatar_url = user.get("avatar_url", None)
     
     token_expire = timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 1440)))
     access_token = AuthService.create_access_token(
@@ -680,7 +737,13 @@ async def login_password(request: PasswordLoginRequest, req: Request):
         "access_token": access_token,
         "token_type": "bearer",
         "role": role,
-        "biometric_registered": biometric_registered
+        "biometric_registered": biometric_registered,
+        "setup_completed": setup_completed,
+        "profile_completed": profile_completed,
+        "intro_completed": intro_completed,
+        "wizard_step": wizard_step,
+        "full_name": full_name,
+        "avatar_url": avatar_url
     }
 
 @app.post("/auth/logout")
@@ -847,22 +910,20 @@ async def get_system_db_stats(current_user: str = Depends(AuthService.get_curren
 async def forgot_password(email_data: dict, background_tasks: BackgroundTasks):
     email = email_data.get("email")
     user = await users_collection.find_one({"email": email})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Generate a real random 6-digit OTP
-    otp = "".join([str(random.randint(0, 9)) for _ in range(6)])
-    expiry = datetime.utcnow() + timedelta(minutes=10)
-    await otps_collection.update_one(
-        {"email": email},
-        {"$set": {"otp": otp, "expiry": expiry, "type": "password_reset"}},
-        upsert=True
-    )
-    
-    logger.info(f"Generated Password Reset OTP for {email}: {otp}")
-    print(f"Generated Password Reset OTP for {email}: {otp}")
-    
-    background_tasks.add_task(EmailService.send_otp, email, otp)
+    if user:
+        # Generate a real random 6-digit OTP
+        otp = "".join([str(random.randint(0, 9)) for _ in range(6)])
+        expiry = datetime.utcnow() + timedelta(minutes=10)
+        await otps_collection.update_one(
+            {"email": email},
+            {"$set": {"otp": otp, "expiry": expiry, "type": "password_reset"}},
+            upsert=True
+        )
+        
+        logger.info(f"Generated Password Reset OTP for {email}: {otp}")
+        print(f"Generated Password Reset OTP for {email}: {otp}")
+        background_tasks.add_task(EmailService.send_otp, email, otp)
+        
     return {"message": "OTP sent to email"}
 
 @app.post("/security/intruder-alert")
@@ -910,11 +971,22 @@ async def get_security_logs():
 @app.post("/auth/reset-password")
 async def reset_password(data: dict):
     email = data.get("email")
+    otp = data.get("otp")
     new_password = data.get("new_password")
+    
     user = await users_collection.find_one({"email": email})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+        
+    otp_record = await otps_collection.find_one({"email": email, "type": "password_reset"})
+    if not otp_record or otp_record["otp"] != otp:
+        raise HTTPException(status_code=401, detail="Invalid OTP")
+        
+    if datetime.utcnow() > otp_record["expiry"]:
+        raise HTTPException(status_code=401, detail="OTP expired")
+        
+    # Valid OTP, delete it and update password
+    await otps_collection.delete_one({"email": email, "type": "password_reset"})
     hashed_password = AuthService.get_password_hash(new_password)
     await users_collection.update_one(
         {"email": email}, 
@@ -922,6 +994,30 @@ async def reset_password(data: dict):
     )
     return {"message": "Password updated successfully"}
 
+@app.patch("/setup/complete")
+async def setup_complete(data: dict, current_user: str = Depends(AuthService.get_current_user)):
+    user = await users_collection.find_one({"email": current_user})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    data["setup_completed"] = True
+    data["profile_completed"] = True
+    data["wizard_step"] = 0
+    await users_collection.update_one(
+        {"email": current_user},
+        {"$set": data}
+    )
+    await log_audit_action(current_user, "Complete Setup", "Profile setup completed successfully")
+    return {"message": "Setup completed successfully"}
+
+@app.patch("/setup/progress")
+async def setup_progress(data: dict, current_user: str = Depends(AuthService.get_current_user)):
+    step = data.get("wizardStep", 0)
+    await users_collection.update_one(
+        {"email": current_user},
+        {"$set": {"wizard_step": step}}
+    )
+    return {"message": "Progress updated"}
 @app.get("/api/profile")
 @app.get("/auth/profile")
 async def get_profile(current_user: str = Depends(AuthService.get_current_user)):

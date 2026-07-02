@@ -416,4 +416,113 @@ router.post(['/ask', '/ai/ask'], authenticate, async (req, res) => {
   }
 });
 
+// Helper: Sanitize Prompts against Injection and NoSQL attacks
+const sanitizePrompt = (text) => {
+  if (typeof text !== 'string') return "";
+  
+  const injectionPatterns = [
+    /ignore previous/i,
+    /system prompt/i,
+    /bypass restriction/i,
+    /you are now/i,
+    /acting as/i,
+    /delete all/i,
+    /drop table/i,
+    /find\s*\(.*\)/i
+  ];
+  
+  for (const pattern of injectionPatterns) {
+    if (pattern.test(text)) {
+      throw new Error("Potential prompt injection or security threat detected.");
+    }
+  }
+  
+  let sanitized = text.replace(/[\$\{\}]/g, "");
+  return sanitized.trim();
+};
+
+// ─── POST /ai/chat ───────────────────────────────────────────────
+router.post('/chat', authenticate, async (req, res) => {
+  try {
+    const { message, history } = req.body;
+    if (!message) {
+      return res.status(400).json({ detail: "Message is required." });
+    }
+
+    let cleanMessage;
+    try {
+      cleanMessage = sanitizePrompt(message);
+    } catch (secError) {
+      return res.status(400).json({ detail: secError.message });
+    }
+
+    let systemContext = "You are SmartFace AI, an expert academic assistant.";
+    if (req.userRole === 'student') {
+      const stats = await getStudentAttendanceStats(req.userEmail);
+      systemContext += ` You are chatting with student ${req.userEmail}. Current Stats: Overall Attendance: ${(stats.overall_percentage * 100).toFixed(0)}%, standing: "${stats.standing}", rank: "${stats.rank}", streak: ${stats.streak} days. Subject breakdown: ${stats.subjects.map(s => `${s.subject}: ${(s.percentage*100).toFixed(0)}%`).join(', ')}. Keep replies extremely concise, encouraging, and academic-focused.`;
+    } else if (req.userRole === 'teacher') {
+      systemContext += ` You are chatting with teacher ${req.userEmail}. You can help them analyze classroom participation, session schedules, and student attendance risk levels.`;
+    } else {
+      systemContext += ` You are chatting with administrator ${req.userEmail}. You have access to security logs, intruder telemetry, leave applications, and campus-wide statistics.`;
+    }
+
+    if (groqClient) {
+      const messages = [
+        { role: "system", content: systemContext },
+        ...(history || []).map(h => ({
+          role: h.role === 'user' ? 'user' : 'assistant',
+          content: h.content
+        })),
+        { role: "user", content: cleanMessage }
+      ];
+
+      const response = await groqClient.chat.completions.create({
+        messages,
+        model: MODEL_NAME,
+        temperature: 0.5,
+        max_tokens: 300
+      });
+
+      const reply = response.choices[0].message.content.trim();
+      return res.json({ reply });
+    }
+
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    if (GEMINI_API_KEY) {
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+      
+      const contents = [
+        { role: 'user', parts: [{ text: `System context: ${systemContext}` }] },
+        ...(history || []).map(h => ({
+          role: h.role === 'user' ? 'user' : 'model',
+          parts: [{ text: h.content }]
+        })),
+        { role: 'user', parts: [{ text: cleanMessage }] }
+      ];
+
+      const geminiRes = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents })
+      });
+      const geminiData = await geminiRes.json();
+      if (geminiData.candidates && geminiData.candidates[0].content) {
+        const reply = geminiData.candidates[0].content.parts[0].text.trim();
+        return res.json({ reply });
+      }
+    }
+
+    let fallbackReply = `Hi! I am SmartFace AI. Currently, my live API connection is offline, but I can see you said: "${cleanMessage}". `;
+    if (req.userRole === 'student') {
+      fallbackReply += "Your attendance is strong, keep attending your compiler design classes!";
+    } else {
+      fallbackReply += "How can I assist you with database administration or lecture schedules today?";
+    }
+
+    res.json({ reply: fallbackReply });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
 module.exports = router;

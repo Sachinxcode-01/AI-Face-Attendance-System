@@ -55,8 +55,8 @@ class ProfileUpdate(BaseModel):
     system_access_level: Optional[str] = None
 
 class PasswordChangeRequest(BaseModel):
-    old_password: str
-    new_password: str
+    old_password: str = Field(..., min_length=6)
+    new_password: str = Field(..., min_length=8)
 
 class NotificationSettingsUpdate(BaseModel):
     attendance_alerts: Optional[bool] = None
@@ -66,6 +66,9 @@ class NotificationSettingsUpdate(BaseModel):
     email_notifications: Optional[bool] = None
     push_notifications: Optional[bool] = None
     in_app_notifications: Optional[bool] = Field(None, alias="in_app_notifications")
+    daily_digest: Optional[bool] = None
+    ward_activity: Optional[bool] = None
+    quiet_hours_enabled: Optional[bool] = None
 
 
 
@@ -76,6 +79,7 @@ class GoogleLoginRequest(BaseModel):
     email: EmailStr
     name: str
     role: str = "student"
+    avatar_url: Optional[str] = None
 
 class IntruderAlert(BaseModel):
     location: Optional[str] = None
@@ -102,6 +106,12 @@ class Token(BaseModel):
     token_type: str
     role: str
     biometric_registered: Optional[bool] = False
+    setup_completed: Optional[bool] = False
+    profile_completed: Optional[bool] = False
+    intro_completed: Optional[bool] = False
+    wizard_step: Optional[int] = 0
+    full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 class AttendanceRecord(BaseModel):
     user_id: str

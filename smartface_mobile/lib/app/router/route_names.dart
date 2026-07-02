@@ -124,4 +124,8 @@ class AppRoutes {
   // Management Command Center
   static const String managementDashboardName = 'managementDashboard';
   static const String managementDashboardPath = '/management/dashboard';
+
+  // Advanced Analytics Dashboard (v1.1)
+  static const String analyticsDashboardName = 'analyticsDashboard';
+  static const String analyticsDashboardPath = '/analytics/dashboard';
 }

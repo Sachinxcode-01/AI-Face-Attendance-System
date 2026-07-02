@@ -95,9 +95,7 @@ class AttendanceRing extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: size * 0.20,
                       fontWeight: FontWeight.bold,
-                      color: theme.brightness == Brightness.dark
-                          ? Colors.white.withValues(alpha: 0.87)
-                          : theme.colorScheme.onSurface,
+                      color: const Color(0xFF1B2C56),
                     ),
                   ),
                   Text(
@@ -105,9 +103,7 @@ class AttendanceRing extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: size * 0.08,
                       fontWeight: FontWeight.w500,
-                      color: theme.brightness == Brightness.dark
-                          ? Colors.white.withValues(alpha: 0.60)
-                          : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: const Color(0xFF7F8CA4),
                     ),
                   ),
                 ],

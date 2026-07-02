@@ -32,6 +32,7 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/status_badge.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
+import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
@@ -139,82 +140,75 @@ class _AdminDashboardState extends State<AdminDashboard>
     final alertStatus = _buildSecurityStatus(isDark, hasIntruderAlert);
     final logoutButton = _buildLogoutButton(context);
 
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
-      appBar: PremiumAppBar(
-        title: 'Admin Control Panel',
-        titleWidget: Row(
-          children: [
-            const Icon(Icons.shield_outlined, color: AppColors.gold, size: 22),
-            const SizedBox(width: 8),
-            Text(
-              'Admin Control Panel',
-              style: GoogleFonts.outfit(
-                fontWeight: FontWeight.w800,
-                color: isDark ? Colors.white : AppColors.bgDark,
-                fontSize: 18,
+    return AuthBlobBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: PremiumAppBar(
+          title: 'Admin Control Panel',
+          titleWidget: Row(
+            children: [
+              const Icon(Icons.shield_outlined, color: Color(0xFF3559E0), size: 22),
+              const SizedBox(width: 8),
+              Text(
+                'Admin Control Panel',
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF1B2C56),
+                  fontSize: 18,
+                ),
               ),
+            ],
+          ),
+          actions: [
+            // Server Status Pulse
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              child: StatusBadge(
+                label: _serverOnline ? 'ONLINE' : 'OFFLINE',
+                color: _serverOnline ? AppColors.success : AppColors.error,
+                animateDot: true,
+              ),
+            ),
+            // Notifications Bell
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.notifications_none_rounded,
+                    color: Color(0xFF1B2C56),
+                  ),
+                  onPressed: () => context.push('/notifications/nexus'),
+                ),
+                if (appState.unreadCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: AppColors.error,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 14,
+                        minHeight: 14,
+                      ),
+                      child: Text(
+                        '${appState.unreadCount}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
-        actions: [
-          // Server Status Pulse
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            child: StatusBadge(
-              label: _serverOnline ? 'ONLINE' : 'OFFLINE',
-              color: _serverOnline ? AppColors.success : AppColors.error,
-              animateDot: true,
-            ),
-          ),
-          // Theme Toggle
-          IconButton(
-            icon: Icon(
-              isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-              color: AppColors.gold,
-            ),
-            onPressed: () => themeCtrl.toggle(),
-          ),
-          // Notifications Bell
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              IconButton(
-                icon: Icon(
-                  Icons.notifications_none_rounded,
-                  color: isDark ? Colors.white : AppColors.bgDark,
-                ),
-                onPressed: () => context.push('/notifications/nexus'),
-              ),
-              if (appState.unreadCount > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: AppColors.error,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 14,
-                      minHeight: 14,
-                    ),
-                    child: Text(
-                      '${appState.unreadCount}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
       body: GlowRefreshIndicator(
         onRefresh: _loadDashboard,
         child: SingleChildScrollView(
@@ -276,7 +270,8 @@ class _AdminDashboardState extends State<AdminDashboard>
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildWelcomeHeader(bool isDark, SessionManager session) {
@@ -289,7 +284,7 @@ class _AdminDashboardState extends State<AdminDashboard>
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: AppColors.gold,
+            color: const Color(0xFF3559E0),
           ),
         ),
         const SizedBox(height: 6),
@@ -298,7 +293,7 @@ class _AdminDashboardState extends State<AdminDashboard>
           style: GoogleFonts.outfit(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppColors.bgDark,
+            color: const Color(0xFF1B2C56),
           ),
         ),
       ],
@@ -365,7 +360,7 @@ class _AdminDashboardState extends State<AdminDashboard>
               fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: 1.5,
-              color: AppColors.gold,
+              color: const Color(0xFF3559E0),
             ),
           ),
           const SizedBox(height: 16),
@@ -413,7 +408,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : AppColors.bgDeep,
+                    color: const Color(0xFF1B2C56),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -421,8 +416,9 @@ class _AdminDashboardState extends State<AdminDashboard>
                   hasIntruderAlert
                       ? '$alertCount unknown faces captured on campus CCTV feed.'
                       : 'Zero unauthorized intruder breaches logged today.',
-                  style: AppText.caption(
-                    color: isDark ? Colors.white54 : Colors.black54,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: const Color(0xFF7F8CA4),
                   ),
                 ),
               ],
@@ -444,7 +440,7 @@ class _AdminDashboardState extends State<AdminDashboard>
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: AppColors.gold,
+            color: const Color(0xFF3559E0),
           ),
         ),
         const SizedBox(height: 12),

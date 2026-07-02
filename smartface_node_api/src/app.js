@@ -121,6 +121,7 @@ const academicRoutes = require('./routes/academic');
 const parentRoutes = require('./routes/parent');
 const reportRoutes = require('./routes/reports');
 const apiCompatRoutes = require('./routes/apiCompat');
+const analyticsRoutes = require('./routes/analytics');
 
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
@@ -135,6 +136,7 @@ app.use('/academic', academicRoutes);
 app.use('/parent', parentRoutes);
 app.use('/reports', reportRoutes);
 app.use('/api', apiCompatRoutes);
+app.use('/analytics', analyticsRoutes);
 app.use('/', aiRoutes);
 
 // Error fallback handler for all routes
