@@ -934,7 +934,7 @@ class _LoginScreenState extends State<LoginScreen> {
               _showPassword
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
-              color: Colors.white38,
+              color: const Color(0xFF8F9BB3),
               size: 20,
             ),
             onPressed: () => setState(() => _showPassword = !_showPassword),
@@ -978,7 +978,7 @@ class _LoginScreenState extends State<LoginScreen> {
               _showRegPassword
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
-              color: Colors.white38,
+              color: const Color(0xFF8F9BB3),
               size: 20,
             ),
             onPressed: () =>
@@ -1021,7 +1021,7 @@ class _LoginScreenState extends State<LoginScreen> {
               _showRegConfirmPassword
                   ? Icons.visibility_off_outlined
                   : Icons.visibility_outlined,
-              color: Colors.white38,
+              color: const Color(0xFF8F9BB3),
               size: 20,
             ),
             onPressed: () => setState(
@@ -1054,14 +1054,14 @@ class _LoginScreenState extends State<LoginScreen> {
         ] else ...[
           Text(
             'Verification Code Sent to',
-            style: GoogleFonts.inter(color: Colors.white38, fontSize: 12),
+            style: GoogleFonts.inter(color: const Color(0xFF8F9BB3), fontSize: 12),
           ),
           const SizedBox(height: 4),
           Text(
             _emailController.text,
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              color: Colors.white,
+              color: const Color(0xFF1B2C56),
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),

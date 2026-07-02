@@ -55,6 +55,7 @@ import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
+import 'package:smartface_attendance/features/notifications/screens/notification_preferences_screen.dart';
 
 /// Screen widget displaying historical notifications and listening to WebSocket logs.
 class NotificationNexusScreen extends StatefulWidget {
@@ -199,6 +200,17 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
         appBar: PremiumAppBar(
           title: 'Notification Nexus',
           actions: [
+            IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: 'Preferences',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationPreferencesScreen(),
+                  ),
+                );
+              },
+            ),
             if (notificationsList.isNotEmpty)
               IconButton(
                 onPressed: _clearAll,
@@ -300,6 +312,8 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
     switch (type) {
       case 'session_alert':
         return Icons.sensors_rounded;
+      case 'announcement':
+        return Icons.campaign_rounded;
       case 'intruder_alert':
         return Icons.warning_amber_rounded;
       case 'leave_request':
@@ -318,6 +332,9 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
     switch (notification['priority']) {
       case 'Critical':
         priorityColor = Colors.redAccent;
+        break;
+      case 'Urgent':
+        priorityColor = Colors.orangeAccent;
         break;
       case 'Success':
         priorityColor = Colors.greenAccent;

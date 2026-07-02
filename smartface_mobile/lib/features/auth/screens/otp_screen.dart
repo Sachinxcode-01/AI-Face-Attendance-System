@@ -30,6 +30,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
+
 // ======================================================
 // Services & Core Imports
 // ======================================================
@@ -61,8 +65,6 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
   late Animation<double> _shakeAnimation;
 
   String _email = '';
-  String _nextRoute = '/dashboard';
-  Map<String, dynamic> _extraArgs = {};
 
   @override
   void initState() {
@@ -79,8 +81,6 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
     super.didChangeDependencies();
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
     _email = args?['email'] ?? '';
-    _nextRoute = args?['nextRoute'] ?? '/dashboard';
-    _extraArgs = Map<String, dynamic>.from(args ?? {});
   }
 
   @override
@@ -144,16 +144,27 @@ class _OTPScreenState extends State<OTPScreen> with TickerProviderStateMixin {
         );
         await Future.delayed(600.ms);
         if (!mounted) return;
-        Navigator.pushReplacementNamed(
-          context,
-          _nextRoute,
-          arguments: {
-            ..._extraArgs,
-            'token': res['access_token'],
-            'role': res['role'],
-            'email': _email,
-          },
+        final session = context.read<SessionManager>();
+        await session.saveSession(
+          token: res['access_token'],
+          email: _email,
+          role: res['role'],
         );
+
+        if (!mounted) return;
+        final bool biometricRegistered =
+            res['biometric_registered'] ?? false;
+        final String targetRoute = biometricRegistered
+            ? (res['role']?.toString().toLowerCase() == 'admin'
+                  ? '/admin/home'
+                  : (res['role']?.toString().toLowerCase() == 'teacher' ||
+                            res['role']?.toString().toLowerCase() ==
+                                'faculty'
+                        ? '/teacher/home'
+                        : '/student/home'))
+            : '/auth/setup';
+
+        context.go(targetRoute);
       } else {
         _shakeController.forward(from: 0);
         HapticFeedback.vibrate();

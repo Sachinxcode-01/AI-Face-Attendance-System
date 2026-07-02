@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
 
-dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const MONGODB_URL = process.env.MONGODB_URL || "mongodb://localhost:27017/smartface";
 const API_URL = "http://localhost:8000";
