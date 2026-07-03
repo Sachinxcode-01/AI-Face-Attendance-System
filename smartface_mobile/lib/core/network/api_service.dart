@@ -939,6 +939,130 @@ class ApiService {
     return null;
   }
 
+  // ── Parent Section API Endpoints ──────────────────────────────────────────
+  static Future<List<dynamic>> getParentWards(String token) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/parent/children'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getParentWards error: $e');
+    }
+    // Fallback Mock data for Parent sandbox/testing
+    return [
+      {
+        'email': 'student@example.com',
+        'full_name': 'Sachin K (Ward)',
+        'student_id': 'USN-2026-CSE101',
+        'department': 'Computer Science',
+        'semester': '6th Semester',
+      }
+    ];
+  }
+
+  static Future<Map<String, dynamic>> getWardStats(
+    String wardEmail,
+    String token,
+  ) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/parent/child/stats/$wardEmail'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getWardStats error: $e');
+    }
+    // Fallback Mock stats matching the backend structure
+    return {
+      'overall_percentage': 0.88,
+      'standing': 'Good',
+      'subjects': [
+        {'subject': 'CS-402: Neural Networks', 'present': 18, 'total': 20},
+        {'subject': 'CS-301: Data Structures', 'present': 15, 'total': 18},
+        {'subject': 'CS-303: Operating Systems', 'present': 14, 'total': 15},
+      ],
+    };
+  }
+
+  static Future<List<dynamic>> getWardAttendanceLogs(
+    String wardEmail,
+    String token,
+  ) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/parent/child/attendance-logs/$wardEmail'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      }
+    } catch (e) {
+      debugPrint('getWardAttendanceLogs error: $e');
+    }
+    // Fallback mock logs
+    return [
+      {
+        'date': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String().split('T')[0],
+        'subject': 'CS-402: Neural Networks',
+        'status': 'Present',
+        'verifiedBy': 'Face Scanner AI Node 2',
+      },
+      {
+        'date': DateTime.now().subtract(const Duration(days: 1, hours: 4)).toIso8601String().split('T')[0],
+        'subject': 'CS-301: Data Structures',
+        'status': 'Present',
+        'verifiedBy': 'Face Scanner AI Node 1',
+      },
+      {
+        'date': DateTime.now().subtract(const Duration(days: 2)).toIso8601String().split('T')[0],
+        'subject': 'CS-303: Operating Systems',
+        'status': 'Absent',
+        'verifiedBy': 'Auto Attendance System',
+      },
+    ];
+  }
+
+  static Future<List<LeaveModel>> getWardLeaves(
+    String wardEmail,
+    String token,
+  ) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/parent/child/leaves/$wardEmail'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final List<dynamic> list = jsonDecode(response.body) as List<dynamic>;
+        return list
+            .map((item) => LeaveModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('getWardLeaves error: $e');
+    }
+    // Fallback to ward email mock leaves
+    return _mockLeaves.where((l) => l.studentEmail == wardEmail).toList();
+  }
+
   static Future<Map<String, dynamic>> getAdminStats(String token) async {
     try {
       final response = await client.get(

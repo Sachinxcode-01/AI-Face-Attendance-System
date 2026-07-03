@@ -240,14 +240,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 8),
             Row(
               children: [
-                // Student Card
                 Expanded(
                   child: _buildRoleCard('Student', Icons.school),
                 ),
-                const SizedBox(width: 14),
-                // Teacher Card
+                const SizedBox(width: 8),
                 Expanded(
                   child: _buildRoleCard('Teacher', Icons.co_present),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildRoleCard('Parent', Icons.family_restroom),
                 ),
               ],
             ),

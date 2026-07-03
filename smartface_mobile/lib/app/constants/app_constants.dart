@@ -243,7 +243,7 @@ class AppRadius {
 // ======================================================
 
 /// User Security Actor Role
-enum UserRole { admin, teacher, student, hod, principal, management, unknown }
+enum UserRole { admin, teacher, student, parent, hod, principal, management, unknown }
 
 /// UserRole Mappings Extension
 ///
@@ -258,6 +258,8 @@ extension UserRoleExt on UserRole {
         return 'Teacher';
       case UserRole.student:
         return 'Student';
+      case UserRole.parent:
+        return 'Parent';
       case UserRole.hod:
         return 'HOD';
       case UserRole.principal:
@@ -278,6 +280,8 @@ extension UserRoleExt on UserRole {
         return AppColors.cyan;
       case UserRole.student:
         return AppColors.gold;
+      case UserRole.parent:
+        return const Color(0xFF0EA5E9); // Sky Blue for Parents
       case UserRole.hod:
         return const Color(0xFFA855F7); // Purple
       case UserRole.principal:
@@ -298,6 +302,8 @@ extension UserRoleExt on UserRole {
         return Icons.school_outlined;
       case UserRole.student:
         return Icons.person_outline;
+      case UserRole.parent:
+        return Icons.family_restroom_outlined;
       case UserRole.hod:
         return Icons.badge_outlined;
       case UserRole.principal:
@@ -318,6 +324,8 @@ extension UserRoleExt on UserRole {
         return '/teacher/home';
       case UserRole.student:
         return '/student/home';
+      case UserRole.parent:
+        return '/parent/home';
       case UserRole.hod:
       case UserRole.principal:
       case UserRole.management:
@@ -336,6 +344,8 @@ extension UserRoleExt on UserRole {
         return UserRole.teacher;
       case 'student':
         return UserRole.student;
+      case 'parent':
+        return UserRole.parent;
       case 'hod':
         return UserRole.hod;
       case 'principal':
