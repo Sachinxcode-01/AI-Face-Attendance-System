@@ -8,8 +8,11 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
 
+import 'package:smartface_attendance/design_system/ui/ui.dart' hide PrimaryButton;
+
 class OTPScreen extends StatefulWidget {
-  const OTPScreen({super.key});
+  final String? email;
+  const OTPScreen({super.key, this.email});
 
   @override
   State<OTPScreen> createState() => _OTPScreenState();
@@ -17,8 +20,9 @@ class OTPScreen extends StatefulWidget {
 
 class _OTPScreenState extends State<OTPScreen> {
   final _emailController = TextEditingController();
-  final List<TextEditingController> _digitControllers = List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  String _otpValue = '';
+  int _errorTrigger = 0;
+  bool _success = false;
 
   bool _isLoading = false;
   bool _otpSent = false;
@@ -26,14 +30,19 @@ class _OTPScreenState extends State<OTPScreen> {
   Timer? _timer;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.email != null) {
+      _emailController.text = widget.email!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _sendCode();
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
-    for (var controller in _digitControllers) {
-      controller.dispose();
-    }
-    for (var node in _focusNodes) {
-      node.dispose();
-    }
     _timer?.cancel();
     super.dispose();
   }
@@ -61,25 +70,33 @@ class _OTPScreenState extends State<OTPScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _otpValue = '';
+      _success = false;
+    });
     try {
       final result = await ApiService.requestLoginOtp(email);
       if (!mounted) return;
 
-      if (result.containsKey('detail') && result['detail'].toString().contains('sent')) {
+      if (result.containsKey('detail') && result['detail'].toString().toLowerCase().contains('sent')) {
         setState(() {
           _otpSent = true;
         });
         _startTimer();
         AppToast.show(context, message: 'OTP sent to your email!', type: ToastType.success);
-        // Focus first digit box
-        _focusNodes[0].requestFocus();
+      } else if (result.containsKey('message') && result['message'].toString().toLowerCase().contains('sent')) {
+        setState(() {
+          _otpSent = true;
+        });
+        _startTimer();
+        AppToast.show(context, message: 'OTP sent to your email!', type: ToastType.success);
       } else {
-        throw Exception(result['detail'] ?? 'Failed to send OTP');
+        throw Exception(result['detail'] ?? result['message'] ?? 'Failed to send OTP');
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'OTP Error: $e', type: ToastType.error);
+      AppToast.show(context, message: '$e', type: ToastType.error);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -89,7 +106,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
   Future<void> _verifyCode() async {
     final email = _emailController.text.trim();
-    final otp = _digitControllers.map((c) => c.text).join();
+    final otp = _otpValue;
 
     if (otp.length != 6) {
       AppToast.show(context, message: 'Please enter the 6-digit code', type: ToastType.warning);
@@ -102,9 +119,12 @@ class _OTPScreenState extends State<OTPScreen> {
       if (!mounted) return;
 
       if (result.containsKey('access_token')) {
+        setState(() {
+          _success = true;
+        });
         HapticFeedback.heavyImpact();
+        
         final session = context.read<SessionManager>();
-
         final bool bioRegistered = result['biometric_registered'] ?? false;
         final String role = result['role'] ?? 'student';
         final String name = result['full_name'] ?? result['name'] ?? 'User';
@@ -117,6 +137,12 @@ class _OTPScreenState extends State<OTPScreen> {
           biometricRegistered: bioRegistered,
         );
 
+        if (!mounted) return;
+
+        AppToast.show(context, message: 'Verification successful!', type: ToastType.success);
+
+        // Transition delay for success animation to play
+        await Future.delayed(const Duration(milliseconds: 600));
         if (!mounted) return;
 
         if (bioRegistered) {
@@ -134,11 +160,17 @@ class _OTPScreenState extends State<OTPScreen> {
           context.go('/auth/setup');
         }
       } else {
+        setState(() {
+          _errorTrigger++;
+        });
         throw Exception(result['detail'] ?? 'Invalid code. Please try again.');
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'Verification Error: $e', type: ToastType.error);
+      setState(() {
+        _errorTrigger++;
+      });
+      AppToast.show(context, message: '$e', type: ToastType.error);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -190,61 +222,21 @@ class _OTPScreenState extends State<OTPScreen> {
 
             // OTP Digit Boxes
             Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(6, (index) {
-                  return Container(
-                    width: 44,
-                    height: 44,
-                    margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: _digitControllers[index].text.isNotEmpty
-                            ? AuthDesign.primaryIndigo
-                            : AuthDesign.underlineUnfocused,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Center(
-                      child: TextField(
-                        controller: _digitControllers[index],
-                        focusNode: _focusNodes[index],
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        maxLength: 1,
-                        style: AuthDesign.fontPoppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AuthDesign.textHeading,
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: const InputDecoration(
-                          counterText: '',
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        onChanged: (value) {
-                          if (value.isNotEmpty) {
-                            if (index < 5) {
-                              _focusNodes[index + 1].requestFocus();
-                            } else {
-                              _focusNodes[index].unfocus();
-                            }
-                          } else {
-                            if (index > 0) {
-                              _focusNodes[index - 1].requestFocus();
-                            }
-                          }
-                          setState(() {}); // Update border color
-                        },
-                      ),
-                    ),
-                  );
-                }),
+              child: PremiumOtpField(
+                length: 6,
+                errorTrigger: _errorTrigger,
+                success: _success,
+                onChanged: (val) {
+                  setState(() {
+                    _otpValue = val;
+                  });
+                },
+                onCompleted: (val) {
+                  setState(() {
+                    _otpValue = val;
+                  });
+                  _verifyCode();
+                },
               ),
             ),
             const SizedBox(height: 16),

@@ -266,11 +266,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.otpPath,
       name: AppRoutes.otpName,
-      pageBuilder: (context, state) => buildPageWithTransition(
-        context: context,
-        state: state,
-        child: const OTPScreen(),
-      ),
+      pageBuilder: (context, state) {
+        final email = state.extra as String?;
+        return buildPageWithTransition(
+          context: context,
+          state: state,
+          child: OTPScreen(email: email),
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.setupWizardPath,
