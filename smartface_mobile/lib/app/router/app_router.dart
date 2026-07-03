@@ -54,6 +54,13 @@ import 'package:smartface_attendance/features/profile/screens/profile_screen.dar
 import 'package:smartface_attendance/features/teacher/screens/train_faces_screen.dart';
 import 'package:smartface_attendance/features/teacher/screens/system_health_screen.dart';
 
+// Parent Screens
+import 'package:smartface_attendance/features/parent/screens/parent_dashboard_screen.dart';
+// ignore: duplicate_import
+import 'package:smartface_attendance/features/parent/screens/parent_attendance_logs_screen.dart';
+// ignore: duplicate_import
+import 'package:smartface_attendance/features/parent/screens/parent_leave_status_screen.dart';
+
 // Admin Screens
 import 'package:smartface_attendance/features/admin/screens/admin_home_screen.dart';
 import 'package:smartface_attendance/features/leave/screens/leave_review_screen.dart';
@@ -78,6 +85,9 @@ final GlobalKey<NavigatorState> studentShellKey = GlobalKey<NavigatorState>(
 );
 final GlobalKey<NavigatorState> teacherShellKey = GlobalKey<NavigatorState>(
   debugLabel: 'teacherShell',
+);
+final GlobalKey<NavigatorState> parentShellKey = GlobalKey<NavigatorState>(
+  debugLabel: 'parentShell',
 );
 final GlobalKey<NavigatorState> adminShellKey = GlobalKey<NavigatorState>(
   debugLabel: 'adminShell',
@@ -186,14 +196,14 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/parent/dashboard',
-      redirect: (context, state) => AppRoutes.managementDashboardPath,
+      redirect: (context, state) => AppRoutes.parentHomePath,
     ),
     GoRoute(
       path: '/profile',
       redirect: (context, state) {
         final role = Provider.of<SessionManager>(context, listen: false).userRole;
         if (role == UserRole.student) return AppRoutes.studentProfilePath;
-        if (role == UserRole.teacher) return AppRoutes.teacherProfilePath;
+        if (role == UserRole.teacher || role == UserRole.parent) return AppRoutes.teacherProfilePath;
         return AppRoutes.adminProfilePath;
       },
     ),
@@ -481,6 +491,63 @@ final GoRouter appRouter = GoRouter(
       ],
     ),
 
+    // ── PARENT ROLE ROOT STATEFUL SHELL ──────────────────────────────────────
+    StatefulShellRoute.indexedStack(
+      parentNavigatorKey: rootNavigatorKey,
+      builder: (context, state, navigationShell) {
+        return ParentShell(navigationShell: navigationShell);
+      },
+      branches: [
+        StatefulShellBranch(
+          navigatorKey: parentShellKey,
+          routes: [
+            GoRoute(
+              path: AppRoutes.parentHomePath,
+              name: AppRoutes.parentHomeName,
+              builder: (context, state) => const ParentDashboard(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/parent/profile',
+              name: 'parentProfile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
+          ],
+        ),
+      ],
+    ),
+
+    // Sibling fullscreen routes for Parent (Attendance Logs, Leave Status)
+    GoRoute(
+      path: AppRoutes.parentAttendanceLogsPath,
+      name: AppRoutes.parentAttendanceLogsName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) {
+        final email = state.extra as String? ?? '';
+        return buildPageWithTransition(
+          context: context,
+          state: state,
+          child: ParentAttendanceLogsScreen(wardEmail: email),
+        );
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.parentLeaveStatusPath,
+      name: AppRoutes.parentLeaveStatusName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) {
+        final email = state.extra as String? ?? '';
+        return buildPageWithTransition(
+          context: context,
+          state: state,
+          child: ParentLeaveStatusScreen(wardEmail: email),
+        );
+      },
+    ),
+
     // Sibling fullscreen routes for Teacher (Facial Training, System Health)
     GoRoute(
       path: AppRoutes.teacherTrainFacesPath,
@@ -711,6 +778,38 @@ class TeacherShell extends StatelessWidget {
             icon: Icons.analytics_outlined,
             activeIcon: Icons.analytics_rounded,
             label: 'Stats',
+          ),
+          SmartNavItem(
+            icon: Icons.person_outline_rounded,
+            activeIcon: Icons.person_rounded,
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Parent Shell
+class ParentShell extends StatelessWidget {
+  final StatefulNavigationShell navigationShell;
+
+  const ParentShell({super.key, required this.navigationShell});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBody: true,
+      backgroundColor: Colors.transparent,
+      body: navigationShell,
+      bottomNavigationBar: SmartBottomNav(
+        currentIndex: navigationShell.currentIndex,
+        onTap: navigationShell.goBranch,
+        items: const [
+          SmartNavItem(
+            icon: Icons.home_outlined,
+            activeIcon: Icons.home_rounded,
+            label: 'Home',
           ),
           SmartNavItem(
             icon: Icons.person_outline_rounded,

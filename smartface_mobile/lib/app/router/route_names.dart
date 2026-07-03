@@ -96,6 +96,16 @@ class AppRoutes {
   static const String teacherSystemHealthName = 'teacherSystemHealth';
   static const String teacherSystemHealthPath = '/teacher/system-health';
 
+  // Parent Section routes
+  static const String parentHomeName = 'parentHome';
+  static const String parentHomePath = '/parent/home';
+
+  static const String parentAttendanceLogsName = 'parentAttendanceLogs';
+  static const String parentAttendanceLogsPath = '/parent/attendance-logs';
+
+  static const String parentLeaveStatusName = 'parentLeaveStatus';
+  static const String parentLeaveStatusPath = '/parent/leave-status';
+
   // Admin Shell Tab routes
   static const String adminHomeName = 'adminHome';
   static const String adminHomePath = '/admin/home';

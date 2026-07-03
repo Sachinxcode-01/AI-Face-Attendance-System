@@ -100,6 +100,9 @@ class SessionManager extends ChangeNotifier {
   /// Helper indicating if the user has a Teacher role.
   bool get isTeacher => userRole == UserRole.teacher;
 
+  /// Helper indicating if the user has a Parent role.
+  bool get isParent => userRole == UserRole.parent;
+
   /// Helper indicating if the user has an HOD role.
   bool get isHOD => userRole == UserRole.hod;
 
