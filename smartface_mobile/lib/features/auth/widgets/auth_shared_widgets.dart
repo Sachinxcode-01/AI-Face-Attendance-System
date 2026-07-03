@@ -1,5 +1,7 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // DESIGN SYSTEM CONSTANTS & TOKENS
@@ -19,6 +21,9 @@ class AuthDesign {
   static const Color underlineUnfocused = Color(0xFFE6E6F0);
   static const Color underlineFocused = Color(0xFF3D4AB8);
   static const Color textLink = Color(0xFF3D4AB8);
+
+  // Hero height — fixed portion for the indigo hero band
+  static const double heroHeight = 115.0;
 
   // Typography Helper Functions
   static TextStyle fontPoppins({
@@ -74,7 +79,9 @@ class HeroOrbBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double statusBarHeight = MediaQuery.of(context).padding.top;
-    final double headerHeight = isCompact ? 115.0 + statusBarHeight : MediaQuery.of(context).size.height;
+    final double headerHeight = isCompact
+        ? AuthDesign.heroHeight + statusBarHeight
+        : MediaQuery.of(context).size.height;
 
     return Container(
       width: double.infinity,
@@ -201,77 +208,7 @@ class HeroOrbBackground extends StatelessWidget {
   }
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// REUSABLE FORM CARD COMPONENT
-// ═════════════════════════════════════════════════════════════════════════════
 
-class AuthFormCard extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final Widget? topIcon;
-  final List<Widget> children;
-
-  const AuthFormCard({
-    super.key,
-    required this.title,
-    this.subtitle,
-    this.topIcon,
-    required this.children,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AuthDesign.cardBg,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(28),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x14323C96), // rgba(50, 60, 150, 0.08)
-            blurRadius: 30,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (topIcon != null) ...[
-            Center(child: topIcon!),
-            const SizedBox(height: 12),
-          ],
-          Text(
-            title,
-            style: AuthDesign.fontPoppins(
-              fontSize: 21,
-              fontWeight: FontWeight.w700,
-              color: AuthDesign.textHeading,
-            ),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              subtitle!,
-              style: AuthDesign.fontPoppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: AuthDesign.textLabel,
-              ),
-            ),
-          ],
-          const SizedBox(height: 22),
-          ...children,
-        ],
-      ),
-    );
-  }
-}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // REUSABLE UNDERLINED INPUT FIELD
@@ -439,6 +376,108 @@ class PrimaryButton extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
+// GOOGLE "G" MULTICOLOR LOGO — Custom Painter
+// ═════════════════════════════════════════════════════════════════════════════
+
+class _GoogleGPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double cx = size.width / 2;
+    final double cy = size.height / 2;
+    final double r = size.width / 2;
+
+    // Clip to circle
+    canvas.save();
+    canvas.clipRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCircle(center: Offset(cx, cy), radius: r),
+        Radius.circular(r),
+      ),
+    );
+
+    // -- Draw the 4-color Google "G" using arcs and rectangles --
+    // We use a simplified but accurate representation:
+    // Outer arc (right half): blue top-right, red bottom-right
+    // Inner cutout for the G-shape
+    // Horizontal bar: blue
+
+    final double strokeW = size.width * 0.22;
+    final Rect arcRect = Rect.fromCenter(
+      center: Offset(cx, cy),
+      width: size.width * 0.82,
+      height: size.height * 0.82,
+    );
+
+    // Red arc — bottom (180° to 270°)
+    canvas.drawArc(
+      arcRect,
+      math.pi / 2,  // start at bottom
+      math.pi / 2,  // 90°
+      false,
+      Paint()
+        ..color = const Color(0xFFEA4335)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeW
+        ..strokeCap = StrokeCap.butt,
+    );
+    // Yellow arc — bottom-left (270° to 360°)
+    canvas.drawArc(
+      arcRect,
+      math.pi,
+      math.pi / 2,
+      false,
+      Paint()
+        ..color = const Color(0xFFFBBC05)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeW
+        ..strokeCap = StrokeCap.butt,
+    );
+    // Green arc — top-left (0° to 90° going counter-clockwise, i.e. 270° to 360°)
+    canvas.drawArc(
+      arcRect,
+      3 * math.pi / 2,
+      math.pi / 2,
+      false,
+      Paint()
+        ..color = const Color(0xFF34A853)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeW
+        ..strokeCap = StrokeCap.butt,
+    );
+    // Blue arc — top-right (0° to 90°) and horizontal bar
+    canvas.drawArc(
+      arcRect,
+      -math.pi / 4,          // start ~-45° (top-right)
+      math.pi * 3 / 4,       // sweep to bottom-right
+      false,
+      Paint()
+        ..color = const Color(0xFF4285F4)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeW
+        ..strokeCap = StrokeCap.butt,
+    );
+
+    // Horizontal bar (blue) — the middle crossbar of the G
+    final double barY = cy;
+    final double barLeft = cx - size.width * 0.02; // starts near center
+    final double barRight = cx + size.width * 0.38; // extends right
+    canvas.drawLine(
+      Offset(barLeft, barY),
+      Offset(barRight, barY),
+      Paint()
+        ..color = const Color(0xFF4285F4)
+        ..strokeWidth = strokeW
+        ..strokeCap = StrokeCap.butt,
+    );
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 // REUSABLE SOCIAL OUTLINE ICONS ROW
 // ═════════════════════════════════════════════════════════════════════════════
 
@@ -455,6 +494,7 @@ class SocialIconRow extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Divider row
         Row(
           children: [
             const Expanded(
@@ -483,89 +523,80 @@ class SocialIconRow extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
+
+        // Social icons
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildSocialIcon(Icons.facebook),
+            _buildFacebookIcon(),
             const SizedBox(width: 24),
-            _buildCustomXIcon(),
+            _buildXIcon(),
             const SizedBox(width: 24),
-            _buildCustomGoogleIcon(),
+            _buildGoogleIcon(),
             const SizedBox(width: 24),
-            _buildSocialIcon(Icons.apple),
+            _buildAppleIcon(),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildSocialIcon(IconData icon) {
+  Widget _buildIconShell({required Widget icon}) {
     return Container(
-      width: 36,
-      height: 36,
+      width: 56,
+      height: 56,
       decoration: BoxDecoration(
+        color: Colors.white,
         shape: BoxShape.circle,
         border: Border.all(
-          color: AuthDesign.primaryIndigo,
-          width: 1.5,
+          color: const Color(0xFFE0E0E0),
+          width: 1,
         ),
       ),
-      child: Center(
-        child: Icon(
-          icon,
-          color: AuthDesign.primaryIndigo,
-          size: 18,
-        ),
+      child: Center(child: icon),
+    );
+  }
+
+  // Facebook — official #1877F2 blue
+  Widget _buildFacebookIcon() {
+    return _buildIconShell(
+      icon: const FaIcon(
+        FontAwesomeIcons.facebookF,
+        color: Color(0xFF1877F2),
+        size: 22,
       ),
     );
   }
 
-  Widget _buildCustomXIcon() {
-    // Custom X outline icon
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: AuthDesign.primaryIndigo,
-          width: 1.5,
-        ),
-      ),
-      child: const Center(
-        child: Text(
-          '𝕏',
-          style: TextStyle(
-            color: AuthDesign.primaryIndigo,
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+  // X (Twitter) — black
+  Widget _buildXIcon() {
+    return _buildIconShell(
+      icon: const FaIcon(
+        FontAwesomeIcons.xTwitter,
+        color: Color(0xFF000000),
+        size: 22,
       ),
     );
   }
 
-  Widget _buildCustomGoogleIcon() {
-    // A clean Google logo shape
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: AuthDesign.primaryIndigo,
-          width: 1.5,
-        ),
+  // Google — multicolor custom "G"
+  Widget _buildGoogleIcon() {
+    return _buildIconShell(
+      icon: SizedBox(
+        width: 22,
+        height: 22,
+        child: CustomPaint(painter: _GoogleGPainter()),
       ),
-      child: Center(
-        child: Text(
-          'G',
-          style: AuthDesign.fontPoppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: AuthDesign.primaryIndigo,
-          ),
-        ),
+    );
+  }
+
+  // Apple — black
+  Widget _buildAppleIcon() {
+    return _buildIconShell(
+      icon: const FaIcon(
+        FontAwesomeIcons.apple,
+        color: Color(0xFF000000),
+        size: 22,
       ),
     );
   }
@@ -573,6 +604,17 @@ class SocialIconRow extends StatelessWidget {
 
 // ═════════════════════════════════════════════════════════════════════════════
 // COMPACT SCREEN STRUCTURAL LAYOUT WRAPPER
+//
+// Layout strategy:
+//   • The Scaffold body is wrapped in a full-screen Stack.
+//   • Layer 0: pageBg color fills the entire screen.
+//   • Layer 1: HeroOrbBackground sits at the top with a fixed height
+//              (statusBarHeight + AuthDesign.heroHeight).
+//   • Layer 2: The white AuthFormCard is positioned below the hero using
+//              Positioned.fill with a top offset equal to the hero height
+//              minus the 28-px overlap, so it always touches the bottom edge.
+//   • The card's inner content is scrollable (SingleChildScrollView) so that
+//              when the keyboard appears or content is tall, it remains usable.
 // ═════════════════════════════════════════════════════════════════════════════
 
 class AuthScreenLayout extends StatelessWidget {
@@ -595,39 +637,161 @@ class AuthScreenLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final double statusBarH = mq.padding.top;
+    final double bottomInset = mq.padding.bottom;
+
+    // The hero band: status bar + fixed hero content area
+    final double heroTotalH = statusBarH + AuthDesign.heroHeight;
+
+    // The card overlaps the hero by 28px (the rounded corner visual trick)
+    const double cardOverlap = 28.0;
+
+    // Card top position
+    final double cardTop = heroTotalH - cardOverlap;
+
     return Theme(
       data: AuthDesign.themeData,
       child: Scaffold(
+        // resizeToAvoidBottomInset keeps the layout stable; we handle scroll
+        // inside the card ourselves
+        resizeToAvoidBottomInset: true,
         body: Container(
           color: AuthDesign.pageBg,
+          width: double.infinity,
           height: double.infinity,
-          child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            child: Column(
-              children: [
-                HeroOrbBackground(
+          child: Stack(
+            children: [
+              // ── Hero band ──────────────────────────────────────────────
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: HeroOrbBackground(
                   isCompact: true,
                   onBackTap: onBackTap,
                 ),
-                Transform.translate(
-                  offset: const Offset(0, -28),
-                  child: AuthFormCard(
-                    title: title,
-                    subtitle: subtitle,
-                    topIcon: topIcon,
-                    children: [
-                      child,
-                      if (bottomLink != null) ...[
-                        const SizedBox(height: 24),
-                        Center(child: bottomLink!),
-                      ],
-                    ],
+              ),
+
+              // ── White form card — fills from cardTop to bottom of screen ──
+              Positioned(
+                top: cardTop,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _AuthCardShell(
+                  title: title,
+                  subtitle: subtitle,
+                  topIcon: topIcon,
+                  bottomInset: bottomInset,
+                  bottomLink: bottomLink,
+                  child: child,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Internal shell that draws the rounded-top white card and manages scrollable
+// form content + bottom link pinned to the bottom.
+class _AuthCardShell extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final Widget? topIcon;
+  final Widget child;
+  final Widget? bottomLink;
+  final double bottomInset; // safe area bottom
+
+  const _AuthCardShell({
+    required this.title,
+    this.subtitle,
+    this.topIcon,
+    required this.child,
+    this.bottomLink,
+    required this.bottomInset,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final double hPad = MediaQuery.of(context).size.width * 0.056; // ~22px on 390px
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AuthDesign.cardBg,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(28),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x14323C96),
+            blurRadius: 30,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      // Use a Column with: header (fixed) + scrollable form (Expanded) +
+      // bottom link (fixed, pinned above safe area)
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Card header (icon + title + subtitle) — not scrollable ──
+          Padding(
+            padding: EdgeInsets.fromLTRB(hPad, 22, hPad, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (topIcon != null) ...[
+                  Center(child: topIcon!),
+                  const SizedBox(height: 12),
+                ],
+                Text(
+                  title,
+                  style: AuthDesign.fontPoppins(
+                    fontSize: 21,
+                    fontWeight: FontWeight.w700,
+                    color: AuthDesign.textHeading,
                   ),
                 ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    subtitle!,
+                    style: AuthDesign.fontPoppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: AuthDesign.textLabel,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 22),
               ],
             ),
           ),
-        ),
+
+          // ── Scrollable form content (fills remaining space) ──
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 0),
+              child: child,
+            ),
+          ),
+
+          // ── Bottom link — pinned above safe area, centred ──
+          if (bottomLink != null)
+            Padding(
+              padding: EdgeInsets.only(
+                top: 16,
+                bottom: math.max(bottomInset, 24),
+              ),
+              child: Center(child: bottomLink!),
+            ),
+        ],
       ),
     );
   }
