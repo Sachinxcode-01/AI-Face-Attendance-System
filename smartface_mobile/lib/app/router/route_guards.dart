@@ -61,6 +61,12 @@ class RouteGuards {
       return AppRoutes.unauthorizedPath;
     }
 
+    // Parent routes: only parents allowed
+    if (path.startsWith('/parent') && role != UserRole.parent) {
+      debugPrint('[RouteGuard] Blocked non-parent user ($role) from "$path"');
+      return AppRoutes.unauthorizedPath;
+    }
+
     // Admin routes: only admins allowed
     if (path.startsWith('/admin') && role != UserRole.admin) {
       debugPrint('[RouteGuard] Blocked non-admin user ($role) from "$path"');
@@ -90,6 +96,8 @@ class RouteGuards {
         return AppRoutes.teacherHomePath;
       case UserRole.student:
         return AppRoutes.studentHomePath;
+      case UserRole.parent:
+        return AppRoutes.parentHomePath;
       case UserRole.hod:
       case UserRole.principal:
       case UserRole.management:
