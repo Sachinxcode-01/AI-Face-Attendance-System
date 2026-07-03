@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -38,7 +37,20 @@ class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
           titleWidget ??
           Row(
             children: [
-              SvgPicture.asset('assets/logos/logo.svg', width: 44, height: 44),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) => const Icon(
+                    Icons.face_retouching_natural,
+                    size: 36,
+                    color: Color(0xFF3D4AB8),
+                  ),
+                ),
+              ),
               const SizedBox(width: 12),
               Text(
                 title,

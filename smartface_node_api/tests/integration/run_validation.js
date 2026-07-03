@@ -18,7 +18,7 @@ const TEST_URL = `http://localhost:${TEST_PORT}`;
 const STUDENT_EMAIL = "audit_student@smartface.elite";
 const TEACHER_EMAIL = "audit_teacher@smartface.elite";
 const ADMIN_EMAIL = "audit_admin@smartface.elite";
-const TEST_PASSWORD = "Password123!";
+const TEST_PASSWORD = "Secure123!_@#";
 
 async function runValidation() {
   console.log("======================================================================");

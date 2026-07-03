@@ -48,7 +48,7 @@ async function runTest() {
   const invalidVerifyRes = await fetch(`${API_URL}/auth/reset-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: TEST_EMAIL, otp: "000000", new_password: "new_secure_password_123" })
+    body: JSON.stringify({ email: TEST_EMAIL, otp: "000000", new_password: "NewSecure123!_@#" })
   });
   console.log("Status:", invalidVerifyRes.status);
   const invalidData = await invalidVerifyRes.json();
@@ -63,7 +63,7 @@ async function runTest() {
   const verifyRes = await fetch(`${API_URL}/auth/reset-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: TEST_EMAIL, otp: otpRecord.otp, new_password: "new_secure_password_123" })
+    body: JSON.stringify({ email: TEST_EMAIL, otp: otpRecord.otp, new_password: "NewSecure123!_@#" })
   });
 
   const verifyData = await verifyRes.json();
@@ -82,10 +82,12 @@ async function runTest() {
 
   await mongoose.disconnect();
   console.log("🏁 Test completed successfully.");
-  process.exit(0);
+  setTimeout(() => process.exit(0), 1000);
 }
 
 runTest().catch(err => {
   console.error("\n❌ TEST FAILED:", err.message);
-  mongoose.disconnect().then(() => process.exit(1));
+  mongoose.disconnect().then(() => {
+    setTimeout(() => process.exit(1), 500);
+  }).catch(() => process.exit(1));
 });

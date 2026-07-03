@@ -14,6 +14,9 @@ class AppRoutes {
   static const String splashName = 'splash';
   static const String splashPath = '/auth/splash';
 
+  static const String onboardingName = 'onboarding';
+  static const String onboardingPath = '/auth/onboarding';
+
   static const String loginName = 'login';
   static const String loginPath = '/auth/login';
 
@@ -25,6 +28,9 @@ class AppRoutes {
 
   static const String otpName = 'otp';
   static const String otpPath = '/auth/otp';
+
+  static const String introName = 'intro';
+  static const String introPath = '/auth/intro';
 
   static const String setupWizardName = 'setupWizard';
   static const String setupWizardPath = '/auth/setup';

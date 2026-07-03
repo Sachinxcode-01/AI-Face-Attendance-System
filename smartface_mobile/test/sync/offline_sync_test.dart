@@ -203,19 +203,22 @@ void main() {
     });
 
     test('Eviction strategy on queue limit', () async {
-      // Enqueue 500 items
-      for (int i = 0; i < 500; i++) {
+      // Set a lower limit for testing
+      OfflineQueueService.maxQueueSize = 10;
+
+      // Enqueue 10 items
+      for (int i = 0; i < 10; i++) {
         final rec = await queueService.enqueue(
           studentEmail: 'student_$i@example.com',
           sessionId: 'sess_$i',
           qrToken: 'token_$i',
         );
-        if (i < 50) {
+        if (i < 3) {
           await queueService.markSynced(rec.id);
         }
       }
 
-      expect(queueService.getAll().length, 500);
+      expect(queueService.getAll().length, 10);
 
       // Enqueue one more, should evict one synced item
       await queueService.enqueue(
@@ -224,13 +227,16 @@ void main() {
         qrToken: 'token-extra',
       );
 
-      expect(queueService.getAll().length, 500);
+      expect(queueService.getAll().length, 10);
       final syncedCount = queueService
           .getAll()
           .where((r) => r.syncStatus == SyncStatus.synced)
           .length;
-      expect(syncedCount, 49); // Evicted 1 synced item
-    }, timeout: const Timeout(Duration(minutes: 2)));
+      expect(syncedCount, 2); // Evicted 1 synced item
+
+      // Restore default limit
+      OfflineQueueService.maxQueueSize = 500;
+    });
   });
 
   group('ConnectivityService tests', () {

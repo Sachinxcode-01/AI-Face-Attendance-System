@@ -36,6 +36,10 @@ import 'package:provider/provider.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
 import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
+import 'package:smartface_attendance/core/di/service_locator.dart';
+import 'package:smartface_attendance/features/sync/services/connectivity_service.dart';
+import 'package:smartface_attendance/app/config/cache_service.dart';
+import 'package:smartface_attendance/core/network/api_service.dart';
 
 /// App startup splash screen widget.
 class SplashScreen extends StatefulWidget {
@@ -46,56 +50,136 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  String _bootMessage = 'BOOT SEQUENCE STARTED...';
-  int _bootIndex = 0;
-  late Timer _bootTimer;
+  String _bootMessage = 'BOOT: INITIALIZING SECURE AI SUITE...';
+  Timer? _bootTimer;
   final bool _showWelcome = false;
-  final List<String> _bootChecks = [
-    'INITIALIZING SECURE AI SUITE...',
-    'PARSING BIOMETRIC MATRIX...',
-    'ESTABLISHING ENCRYPTED API HANDSHAKE...',
-    'DECRYPTING HARDWARE SIGNATURE...',
-    'READY FOR SECURE ATTENDANCE FLOW ✓',
-  ];
 
   @override
   void initState() {
     super.initState();
-    _bootTimer = Timer.periodic(const Duration(milliseconds: 150), (timer) {
-      if (mounted && _bootIndex < _bootChecks.length) {
-        setState(() {
-          _bootMessage = _bootChecks[_bootIndex];
-          _bootIndex++;
-        });
-      } else {
-        timer.cancel();
-      }
-    });
+    _runStartupSequence();
+  }
 
-    Future.delayed(const Duration(milliseconds: 1200), () async {
-      if (mounted) {
-        final session = context.read<SessionManager>();
-        if (session.isLoggedIn) {
-          final String targetRoute = session.biometricRegistered
-              ? (session.role?.toLowerCase() == 'admin'
-                    ? '/admin/home'
-                    : (session.role?.toLowerCase() == 'teacher' ||
-                              session.role?.toLowerCase() == 'faculty' ||
-                              session.role?.toLowerCase() == 'lecturer'
-                          ? '/teacher/home'
-                          : '/student/home'))
-              : '/auth/setup';
-          context.go(targetRoute);
-        } else {
-          context.go('/auth/login');
+  Future<void> _runStartupSequence() async {
+    final session = context.read<SessionManager>();
+    
+    Future<void> updateMessage(String msg, int delayMs) async {
+      if (!mounted) return;
+      setState(() {
+        _bootMessage = msg;
+      });
+      await Future.delayed(Duration(milliseconds: delayMs));
+    }
+
+    try {
+      await updateMessage('BOOT: CONFIGURING DIAGNOSTICS...', 200);
+
+      // 1. Internet Check
+      await updateMessage('BOOT: TESTING SYSTEM INTERNET LINK...', 250);
+      final connectivity = sl<ConnectivityService>();
+      final isDeviceOnline = connectivity.isOnline;
+
+      bool isBackendOnline = false;
+      if (isDeviceOnline) {
+        // 2. Backend Health Check
+        await updateMessage('BOOT: PINGING SMARTFACE BACKEND...', 250);
+        isBackendOnline = await ApiService.isServerOnline();
+      }
+
+      // 3. Version Check
+      if (isBackendOnline) {
+        await updateMessage('BOOT: COMPILING API VERSION... OK', 200);
+      } else {
+        await updateMessage('BOOT: OFFLINE CACHE PROTOCOL ENABLED', 300);
+      }
+
+      // 4. Session Validation
+      await updateMessage('SECURITY: RETRIEVING CACHED PROFILE...', 250);
+      final isLoggedIn = session.isLoggedIn;
+
+      if (isLoggedIn) {
+        if (isBackendOnline) {
+          try {
+            final profileResult = await ApiService.getUserProfile(session.token!);
+            if (profileResult.containsKey('detail') && 
+                (profileResult['detail'].toString().toLowerCase().contains('invalid') || 
+                 profileResult['detail'].toString().toLowerCase().contains('expired'))) {
+              await session.logout();
+              await updateMessage('SECURITY: SESSION EXPIRED', 300);
+            } else {
+              if (profileResult.containsKey('email')) {
+                final isBioRegistered = profileResult['biometric_registered'] ?? session.biometricRegistered;
+                await session.saveSession(
+                  token: session.token!,
+                  email: profileResult['email'],
+                  role: profileResult['role'] ?? session.role ?? 'student',
+                  name: profileResult['full_name'] ?? session.name,
+                  biometricRegistered: isBioRegistered,
+                );
+                if (profileResult['setup_completed'] == true || isBioRegistered) {
+                  await CacheService.set('sf_wizard_completed', true, persist: true);
+                }
+              }
+            }
+          } catch (_) {
+            // Bypass to offline mode on profile load failure (like timeout)
+          }
         }
       }
-    });
+
+      // 5. Decision Engine
+      await updateMessage('DECISION ENGINE: RESOLVING ROUTE...', 150);
+
+      final onboardingCompleted = await CacheService.get<bool>('sf_onboarding_completed') ?? false;
+      final introCompleted = await CacheService.get<bool>('sf_intro_completed') ?? false;
+      final wizardCompleted = session.biometricRegistered || (await CacheService.get<bool>('sf_wizard_completed') ?? false);
+
+      if (!mounted) return;
+
+      // • First Install -> Onboarding
+      if (!onboardingCompleted) {
+        context.go('/auth/onboarding');
+        return;
+      }
+
+      // • Returning User (Not Logged In) -> Login
+      if (!session.isLoggedIn) {
+        context.go('/auth/login');
+        return;
+      }
+
+      // • Logged In + Intro Not Completed -> Intro Cards
+      if (!introCompleted) {
+        context.go('/auth/intro');
+        return;
+      }
+
+      // • Intro Completed + Wizard Not Completed -> Role Wizard
+      if (!wizardCompleted) {
+        context.go('/auth/setup');
+        return;
+      }
+
+      // • Everything Completed -> Dashboard
+      final role = session.role?.toLowerCase() ?? 'student';
+      final String targetDashboard = role == 'admin'
+          ? '/admin/home'
+          : (role == 'teacher' || role == 'faculty' || role == 'lecturer'
+              ? '/teacher/home'
+              : (role == 'parent' ? '/parent/dashboard' : '/student/home'));
+
+      context.go(targetDashboard);
+    } catch (e) {
+      debugPrint('[Splash] Boot diagnostic error: $e');
+      if (mounted) {
+        context.go('/auth/login');
+      }
+    }
   }
 
   @override
   void dispose() {
-    _bootTimer.cancel();
+    _bootTimer?.cancel();
     super.dispose();
   }
 
@@ -231,11 +315,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
           // --- BRAND TEXT ---
           Text(
-                'SMARTFACE ELITE',
+                'Smart Attendance AI',
+                textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
-                  fontSize: 34,
+                  fontSize: 28,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 4,
+                  letterSpacing: 1,
                   color: const Color(0xFF1B2C56),
                   shadows: [
                     Shadow(
@@ -253,11 +338,11 @@ class _SplashScreenState extends State<SplashScreen> {
           const SizedBox(height: 8),
 
           Text(
-            'PRECISION ATTENDANCE AI',
+            'PRECISION ATTENDANCE, POWERED BY AI',
             style: GoogleFonts.inter(
-              fontSize: 11,
+              fontSize: 10.5,
               color: const Color(0xFF7F8CA4),
-              letterSpacing: 3,
+              letterSpacing: 2.5,
               fontWeight: FontWeight.bold,
             ),
           ).animate().fadeIn(delay: 600.ms, duration: 400.ms),

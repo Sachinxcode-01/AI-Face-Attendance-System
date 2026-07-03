@@ -42,6 +42,7 @@ class RateLimiter {
 const otpSendLimiter = new RateLimiter(3, 60);
 const otpVerifyLimiter = new RateLimiter(5, 60);
 const registerLimiter = new RateLimiter(3, 300);
+const loginPasswordLimiter = new RateLimiter(5, 60);
 
 const limitOtpSend = (req, res, next) => {
   const key = req.body.email || req.ip;
@@ -70,4 +71,13 @@ const limitRegister = (req, res, next) => {
   next();
 };
 
-module.exports = { limitOtpSend, limitOtpVerify, limitRegister };
+const limitLoginPassword = (req, res, next) => {
+  const key = req.body.email || req.ip;
+  if (!loginPasswordLimiter.isAllowed(key)) {
+    const retryAfter = loginPasswordLimiter.remainingSeconds(key);
+    return res.status(429).json({ detail: `Too many login attempts. Please wait ${retryAfter}s before trying again.` });
+  }
+  next();
+};
+
+module.exports = { limitOtpSend, limitOtpVerify, limitRegister, limitLoginPassword };
