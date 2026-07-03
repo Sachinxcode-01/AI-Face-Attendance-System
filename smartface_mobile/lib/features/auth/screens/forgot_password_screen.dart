@@ -48,7 +48,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'Error: $e', type: ToastType.error);
+      AppToast.show(context, message: '$e', type: ToastType.error);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

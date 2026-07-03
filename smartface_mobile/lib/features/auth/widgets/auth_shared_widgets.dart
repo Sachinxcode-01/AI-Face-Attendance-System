@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // DESIGN SYSTEM CONSTANTS & TOKENS
@@ -483,10 +482,12 @@ class _GoogleGPainter extends CustomPainter {
 
 class SocialIconRow extends StatelessWidget {
   final String actionPrefix; // "Sign in" or "Sign up"
+  final VoidCallback? onGoogleTap;
 
   const SocialIconRow({
     super.key,
     required this.actionPrefix,
+    this.onGoogleTap,
   });
 
   @override
@@ -524,17 +525,14 @@ class SocialIconRow extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Social icons
+        // Social icons — only Google is kept as others are not implemented
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildFacebookIcon(),
-            const SizedBox(width: 24),
-            _buildXIcon(),
-            const SizedBox(width: 24),
-            _buildGoogleIcon(),
-            const SizedBox(width: 24),
-            _buildAppleIcon(),
+            GestureDetector(
+              onTap: onGoogleTap,
+              child: _buildGoogleIcon(),
+            ),
           ],
         ),
       ],
@@ -557,28 +555,6 @@ class SocialIconRow extends StatelessWidget {
     );
   }
 
-  // Facebook — official #1877F2 blue
-  Widget _buildFacebookIcon() {
-    return _buildIconShell(
-      icon: const FaIcon(
-        FontAwesomeIcons.facebookF,
-        color: Color(0xFF1877F2),
-        size: 22,
-      ),
-    );
-  }
-
-  // X (Twitter) — black
-  Widget _buildXIcon() {
-    return _buildIconShell(
-      icon: const FaIcon(
-        FontAwesomeIcons.xTwitter,
-        color: Color(0xFF000000),
-        size: 22,
-      ),
-    );
-  }
-
   // Google — multicolor custom "G"
   Widget _buildGoogleIcon() {
     return _buildIconShell(
@@ -586,17 +562,6 @@ class SocialIconRow extends StatelessWidget {
         width: 22,
         height: 22,
         child: CustomPaint(painter: _GoogleGPainter()),
-      ),
-    );
-  }
-
-  // Apple — black
-  Widget _buildAppleIcon() {
-    return _buildIconShell(
-      icon: const FaIcon(
-        FontAwesomeIcons.apple,
-        color: Color(0xFF000000),
-        size: 22,
       ),
     );
   }
@@ -717,7 +682,8 @@ class _AuthCardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double hPad = MediaQuery.of(context).size.width * 0.056; // ~22px on 390px
+    final double hPad = MediaQuery.of(context).size.width * 0.056;
+    final double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
       decoration: const BoxDecoration(
@@ -734,64 +700,54 @@ class _AuthCardShell extends StatelessWidget {
           ),
         ],
       ),
-      // Use a Column with: header (fixed) + scrollable form (Expanded) +
-      // bottom link (fixed, pinned above safe area)
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Card header (icon + title + subtitle) — not scrollable ──
-          Padding(
-            padding: EdgeInsets.fromLTRB(hPad, 22, hPad, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (topIcon != null) ...[
-                  Center(child: topIcon!),
-                  const SizedBox(height: 12),
-                ],
-                Text(
-                  title,
-                  style: AuthDesign.fontPoppins(
-                    fontSize: 21,
-                    fontWeight: FontWeight.w700,
-                    color: AuthDesign.textHeading,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 6),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: keyboardHeight),
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: hPad),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 22),
+                  if (topIcon != null) ...[
+                    Center(child: topIcon!),
+                    const SizedBox(height: 12),
+                  ],
                   Text(
-                    subtitle!,
+                    title,
                     style: AuthDesign.fontPoppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: AuthDesign.textLabel,
+                      fontSize: 21,
+                      fontWeight: FontWeight.w700,
+                      color: AuthDesign.textHeading,
                     ),
                   ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      subtitle!,
+                      style: AuthDesign.fontPoppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: AuthDesign.textLabel,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 22),
+                  child,
+                  if (bottomLink != null) ...[
+                    const SizedBox(height: 24),
+                    Center(child: bottomLink!),
+                    const SizedBox(height: 24),
+                  ],
                 ],
-                const SizedBox(height: 22),
-              ],
-            ),
-          ),
-
-          // ── Scrollable form content (fills remaining space) ──
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 0),
-              child: child,
-            ),
-          ),
-
-          // ── Bottom link — pinned above safe area, centred ──
-          if (bottomLink != null)
-            Padding(
-              padding: EdgeInsets.only(
-                top: 16,
-                bottom: math.max(bottomInset, 24),
               ),
-              child: Center(child: bottomLink!),
             ),
-        ],
+          ),
+        ),
       ),
     );
   }

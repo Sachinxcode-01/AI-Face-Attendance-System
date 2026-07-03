@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-
-import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
@@ -77,19 +74,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _handleSignUp() async {
-    if (_nameController.text.trim().isEmpty) {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (name.isEmpty) {
       AppToast.show(context, message: 'Please enter your full name', type: ToastType.warning);
       return;
     }
-    final email = _emailController.text.trim();
+    if (name.length < 2) {
+      AppToast.show(context, message: 'Name must be at least 2 characters long', type: ToastType.warning);
+      return;
+    }
     if (email.isEmpty || !_isValidEmail(email)) {
       AppToast.show(context, message: 'Please enter a valid email address', type: ToastType.warning);
       return;
     }
-    if (_passwordController.text.isEmpty) {
+    if (password.isEmpty) {
       AppToast.show(context, message: 'Please enter a password', type: ToastType.warning);
       return;
     }
+    if (password.length < 8) {
+      AppToast.show(context, message: 'Password must be at least 8 characters long', type: ToastType.warning);
+      return;
+    }
+    
+    // Check password strength requirement
+    final hasUpper = RegExp(r'[A-Z]').hasMatch(password);
+    final hasLower = RegExp(r'[a-z]').hasMatch(password);
+    final hasDigit = RegExp(r'[0-9]').hasMatch(password);
+    final hasSpecial = RegExp(r'[^A-Za-z0-9]').hasMatch(password);
+    if (!hasUpper || !hasLower || !hasDigit || !hasSpecial) {
+      AppToast.show(
+        context,
+        message: 'Password must contain uppercase, lowercase, numbers, and special characters',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
     if (!_agreeToTerms) {
       AppToast.show(context, message: 'You must agree to the processing of Personal data', type: ToastType.warning);
       return;
@@ -100,46 +123,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final registerResult = await ApiService.register(
-        _nameController.text.trim(),
+        name,
         email,
-        _passwordController.text,
-        _selectedRole,
+        password,
+        _selectedRole.toLowerCase(),
       );
 
       if (!mounted) return;
 
-      if (registerResult.containsKey('id')) {
+      if (registerResult.containsKey('id') || registerResult.containsKey('email')) {
         HapticFeedback.heavyImpact();
         AppToast.show(
           context,
           title: 'Account Created 🎉',
-          message: 'Signing in...',
+          message: 'An OTP code has been sent to your email.',
           type: ToastType.success,
         );
 
-        // Auto sign-in
-        final loginResult = await ApiService.loginWithPassword(email, _passwordController.text);
-        if (!mounted) return;
-
-        if (loginResult.containsKey('access_token')) {
-          final session = context.read<SessionManager>();
-          await session.saveSession(
-            token: loginResult['access_token'],
-            email: email,
-            role: loginResult['role'] ?? _selectedRole.toLowerCase(),
-            name: _nameController.text.trim(),
-          );
-          if (!mounted) return;
-          context.go('/auth/setup');
-        } else {
-          context.go('/auth/login');
-        }
+        // Go to OTP screen and pass the registered email for auto OTP trigger
+        context.go('/auth/otp', extra: email);
       } else {
         throw Exception(registerResult['detail'] ?? registerResult['message'] ?? 'Sign up failed');
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'Error: $e', type: ToastType.error);
+      AppToast.show(context, message: '$e', type: ToastType.error);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -238,19 +246,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                Expanded(
-                  child: _buildRoleCard('Student', Icons.school),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildRoleCard('Teacher', Icons.co_present),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildRoleCard('Parent', Icons.family_restroom),
-                ),
+                _buildRoleCard('Student', Icons.school, width: (MediaQuery.of(context).size.width - 2 * 22 - 8) / 2),
+                _buildRoleCard('Teacher', Icons.co_present, width: (MediaQuery.of(context).size.width - 2 * 22 - 8) / 2),
+                _buildRoleCard('Parent', Icons.family_restroom, width: (MediaQuery.of(context).size.width - 2 * 22 - 8) / 2),
+                _buildRoleCard('Admin', Icons.admin_panel_settings, width: (MediaQuery.of(context).size.width - 2 * 22 - 8) / 2),
               ],
             ),
             const SizedBox(height: 14),
@@ -309,7 +312,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildRoleCard(String role, IconData icon) {
+  Widget _buildRoleCard(String role, IconData icon, {required double width}) {
     final isSelected = _selectedRole == role;
     return GestureDetector(
       onTap: () {
@@ -318,6 +321,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         });
       },
       child: Container(
+        width: width,
         height: 72,
         decoration: BoxDecoration(
           color: Colors.white,

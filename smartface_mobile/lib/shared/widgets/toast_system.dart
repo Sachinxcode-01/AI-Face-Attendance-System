@@ -19,9 +19,11 @@
 */
 
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 
 /// Available Toast Types
@@ -56,10 +58,30 @@ class AppToast {
     Duration duration = const Duration(seconds: 3),
     VoidCallback? onTap,
   }) {
+    // Sanitize raw Exception / Error prefixes
+    String cleanMessage = message.trim();
+    if (cleanMessage.startsWith('Exception:')) {
+      cleanMessage = cleanMessage.substring(10).trim();
+    } else if (cleanMessage.startsWith('Error: Exception:')) {
+      cleanMessage = cleanMessage.substring(17).trim();
+    } else if (cleanMessage.startsWith('Error:')) {
+      cleanMessage = cleanMessage.substring(6).trim();
+    }
+    
+    // Map network errors to user-friendly statements
+    final lowerMsg = cleanMessage.toLowerCase();
+    if (lowerMsg.contains('connection failed') || 
+        lowerMsg.contains('failed host lookup') || 
+        lowerMsg.contains('socketexception') ||
+        lowerMsg == 'timeout' ||
+        lowerMsg.contains('server not reachable')) {
+      cleanMessage = 'Server not reachable. Check internet or backend.';
+    }
+
     // Suppress overlay insertions in widget test environments to prevent fake_async timer leaks
     try {
       if (Platform.environment.containsKey('FLUTTER_TEST')) {
-        debugPrint('[AppToast] Suppressed Toast in widget test: $message');
+        debugPrint('[AppToast] Suppressed Toast in widget test: $cleanMessage');
         return;
       }
     } catch (_) {}
@@ -68,7 +90,7 @@ class AppToast {
 
     entry = OverlayEntry(
       builder: (_) => _ToastWidget(
-        message: message,
+        message: cleanMessage,
         title: title,
         type: type,
         duration: duration,
@@ -195,72 +217,76 @@ class _ToastWidgetState extends State<_ToastWidget>
             onVerticalDragEnd: (d) {
               if (d.primaryVelocity! < -100) _dismiss();
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFF111528),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: _color.withValues(alpha: 0.4),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _color.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _color.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF111528).withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _color.withValues(alpha: 0.3),
+                      width: 1,
                     ),
-                    child: Icon(_icon, color: _color, size: 22),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _color.withValues(alpha: 0.1),
+                        blurRadius: 16,
+                        spreadRadius: 1,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (widget.title != null)
-                          Text(
-                            widget.title!,
-                            style: AppText.subheading(
-                              color: Colors.white,
-                              weight: FontWeight.bold,
-                            ),
-                          ),
-                        Text(
-                          widget.message,
-                          style: AppText.body(
-                            color: widget.title != null
-                                ? AppColors.white70
-                                : Colors.white,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: _color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ],
-                    ),
+                        child: Icon(_icon, color: _color, size: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (widget.title != null)
+                              Text(
+                                widget.title!,
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            Text(
+                              widget.message,
+                              style: GoogleFonts.inter(
+                                color: widget.title != null
+                                    ? Colors.white70
+                                    : Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white30,
+                        size: 16,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.close_rounded,
-                    color: AppColors.white38,
-                    size: 18,
-                  ),
-                ],
+                ),
               ),
             ),
           ),
