@@ -117,56 +117,32 @@ void main() {
   }
 
   group('LoginScreen Widget Tests', () {
-    testWidgets('renders brand title and access option tabs correctly', (
+    testWidgets('renders welcome title and login form fields correctly', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pump(const Duration(seconds: 1)); // Let initial frame render
 
-      // Verify Brand elements exist
-      expect(find.text('SmartFace AI'), findsOneWidget);
-      expect(find.text('ENTERPRISE BIOMETRIC INTELLIGENCE'), findsOneWidget);
+      // Verify the reference-styled auth card title is present
+      expect(find.text('Welcome back'), findsOneWidget);
 
-      // Verify form elements exist
-      expect(
-        find.byType(TextField),
-        findsAtLeast(2),
-      ); // Email & Password fields
+      // Verify form elements exist (Email & Password fields)
+      expect(find.byType(TextField), findsAtLeast(2));
     });
 
     testWidgets(
-      'displays server settings overlay dialog on tapping settings icon',
+      'shows primary sign-in controls and account options',
       (WidgetTester tester) async {
         await tester.pumpWidget(createTestWidget());
         await tester.pump(
           const Duration(seconds: 1),
         ); // Let initial frame render
 
-        // Tap settings button
-        final settingsBtnFinder = find.byIcon(Icons.settings_outlined);
-        expect(settingsBtnFinder, findsOneWidget);
-        await tester.tap(settingsBtnFinder);
-        await tester.pump(
-          const Duration(seconds: 1),
-        ); // Let dialog animation complete
-
-        // Verify that Server Settings dialog is visible
-        expect(find.text('Server Settings'), findsOneWidget);
-        expect(
-          find.text('Configure backend connection parameters:'),
-          findsOneWidget,
-        );
-        expect(find.text('SAVE & APPLY'), findsOneWidget);
-
-        // Close dialog
-        await tester.tap(find.text('SAVE & APPLY'));
-        await tester.idle(); // Allow async save options to execute
-        await tester.pump(
-          const Duration(milliseconds: 500),
-        ); // Let dialog close animation complete
-
-        // Verify dialog is closed
-        expect(find.text('Server Settings'), findsNothing);
+        // Primary sign-in action and account helpers are present
+        expect(find.text('Sign in'), findsWidgets);
+        expect(find.text('Remember me'), findsOneWidget);
+        expect(find.text('Forgot password?'), findsOneWidget);
+        expect(find.text('Sign in with OTP'), findsOneWidget);
       },
     );
   });

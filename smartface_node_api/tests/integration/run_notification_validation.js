@@ -6,12 +6,12 @@ const express = require('express');
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const MONGODB_URL = process.env.MONGODB_URL || "mongodb://localhost:27017/smartface";
-const TEST_PORT = 8011;
+const TEST_PORT = 8014;
 const TEST_URL = `http://localhost:${TEST_PORT}`;
 
 const STUDENT_EMAIL = "notif_student@smartface.elite";
 const ADMIN_EMAIL = "notif_admin@smartface.elite";
-const TEST_PASSWORD = "Password123!";
+const TEST_PASSWORD = "Secure123!_@#";
 
 async function runNotificationValidation() {
   console.log("======================================================================");

@@ -2,48 +2,35 @@
 |--------------------------------------------------------------------------
 | File: setup_wizard_screen.dart
 |--------------------------------------------------------------------------
-| Project: Nexa AI
+| Project: SmartFace Attendance
 |
 | Purpose:
-| Renders the premium onboarding profile wizard for both student and teacher roles.
-| Incorporates multi-page forms, Camera-based biometric ID scanning, theme preferences,
-| and system permission requests.
-|
-| Responsibilities:
-| - Guides new users through multi-page onboarding configuration cards.
-| - Renders live front-camera preview for AI biometric registration.
-| - Synchronizes user attributes and facial markers with backend database.
+| Renders the onboarding profile wizard for both student and teacher roles.
+| Incorporates multi-page forms, biometric ID registration, styled under
+| the global auth design system.
 |
 | Dependencies:
 | - package:flutter/material.dart
 | - package:flutter_animate/flutter_animate.dart
-| - package:google_fonts/google_fonts.dart
-| - package:camera/camera.dart
 | - package:provider/provider.dart
-| - package:smartface_attendance/core/state/session_manager.dart
-| - package:smartface_attendance/core/constants.dart
-| - package:smartface_attendance/data/services/api_service.dart
+| - package:smartface_attendance/features/auth/controllers/session_manager.dart
+| - package:smartface_attendance/core/network/api_service.dart
+| - package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart
 |--------------------------------------------------------------------------
 */
 
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:camera/camera.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 
-// ======================================================
-// State & Core Imports
-// ======================================================
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
-import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
+import 'package:smartface_attendance/app/config/cache_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
-import 'package:smartface_attendance/shared/widgets/glow_button.dart';
-import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
+import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
 
-/// Screen widget for multi-step onboarding and profile setup.
 class SetupWizardScreen extends StatefulWidget {
   const SetupWizardScreen({super.key});
 
@@ -53,30 +40,26 @@ class SetupWizardScreen extends StatefulWidget {
 
 class _SetupWizardScreenState extends State<SetupWizardScreen> {
   final PageController _pageController = PageController();
-  CameraController? _cameraController;
-  List<CameraDescription>? _cameras;
-  bool _isCameraInitialized = false;
   int _currentPage = 0;
-  final int _totalPages = 7;
 
-  // Form Controllers
+  int get _totalPages {
+    if (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') return 5;
+    if (_role == 'admin') return 3;
+    if (_role == 'parent') return 3;
+    return 5; // student
+  }
+
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _dobController = TextEditingController();
-  final _collegeController = TextEditingController();
   final _deptController = TextEditingController();
   final _semController = TextEditingController();
-  final _idController = TextEditingController();
-
-  // Student Form Controllers
   final _usnController = TextEditingController();
   final _courseController = TextEditingController();
   final _sectionController = TextEditingController();
   final _rollNoController = TextEditingController();
   final _parentController = TextEditingController();
-  String _selectedLang = 'English';
-
-  // Teacher/Common Form Controllers
+  final _collegeController = TextEditingController();
   final _employeeIdController = TextEditingController();
   final _designationController = TextEditingController();
   final _specializationController = TextEditingController();
@@ -85,9 +68,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   final _genderController = TextEditingController();
   final _addressController = TextEditingController();
 
-  String selectedTheme = 'Dark';
-  bool cameraPermission = false;
-  bool locationPermission = false;
+  final String _selectedLang = 'English';
+  bool _isScanLoading = false;
+  bool _scanComplete = false;
 
   String _role = 'student';
   String _email = '';
@@ -98,59 +81,20 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     super.didChangeDependencies();
     final session = Provider.of<SessionManager>(context, listen: false);
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    _role = (args?['role'] ?? session.role ?? 'student')
-        .toString()
-        .toLowerCase();
+    _role = (args?['role'] ?? session.role ?? 'student').toString().toLowerCase();
     _email = args?['email'] ?? session.email ?? '';
     _token = args?['token'] ?? session.token ?? '';
   }
 
   @override
-  void initState() {
-    super.initState();
-    _initCamera();
-  }
-
-  Future<void> _initCamera() async {
-    _cameras = await availableCameras();
-    if (_cameras != null && _cameras!.isNotEmpty) {
-      // Find front camera
-      final front = _cameras!.firstWhere(
-        (camera) => camera.lensDirection == CameraLensDirection.front,
-        orElse: () => _cameras!.first,
-      );
-
-      _cameraController = CameraController(front, ResolutionPreset.medium);
-      await _cameraController!.initialize();
-      if (mounted) {
-        setState(() => _isCameraInitialized = true);
-      }
-    }
-  }
-
-  @override
   void dispose() {
-    _cameraController?.dispose();
     _pageController.dispose();
-    _nameController.dispose();
-    _phoneController.dispose();
-    _dobController.dispose();
-    _collegeController.dispose();
-    _deptController.dispose();
-    _semController.dispose();
-    _idController.dispose();
-    _usnController.dispose();
-    _courseController.dispose();
-    _sectionController.dispose();
-    _rollNoController.dispose();
-    _parentController.dispose();
-    _employeeIdController.dispose();
-    _designationController.dispose();
-    _specializationController.dispose();
-    _qualificationController.dispose();
-    _experienceController.dispose();
-    _genderController.dispose();
-    _addressController.dispose();
+    for (final c in [
+      _nameController, _phoneController, _dobController, _deptController, _semController,
+      _usnController, _courseController, _sectionController, _rollNoController, _parentController,
+      _collegeController, _employeeIdController, _designationController, _specializationController,
+      _qualificationController, _experienceController, _genderController, _addressController,
+    ]) { c.dispose(); }
     super.dispose();
   }
 
@@ -160,1007 +104,696 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       initialDate: DateTime(2005),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF3559E0),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Color(0xFF1B2C56),
-            ),
-            dialogTheme: DialogThemeData(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: AuthDesign.primaryIndigo,
+            onPrimary: Colors.white,
+            surface: Colors.white,
+            onSurface: AuthDesign.textHeading,
           ),
-          child: child!,
-        );
-      },
+        ),
+        child: child!,
+      ),
     );
-    if (picked != null) {
-      setState(() {
-        final day = picked.day.toString().padLeft(2, '0');
-        final month = picked.month.toString().padLeft(2, '0');
-        final year = picked.year;
-        _dobController.text = '$day/$month/$year';
-      });
+    if (picked != null && mounted) {
+      final d = picked.day.toString().padLeft(2, '0');
+      final m = picked.month.toString().padLeft(2, '0');
+      setState(() => _dobController.text = '$d/$m/${picked.year}');
     }
   }
 
+  bool _validateCurrentStep() {
+    if (_currentPage == 0) return true;
+    if (_currentPage == 1) {
+      if (_nameController.text.trim().isEmpty) {
+        AppToast.show(context, message: 'Please enter your Full Name', type: ToastType.warning);
+        return false;
+      }
+      if (_phoneController.text.trim().isEmpty) {
+        AppToast.show(context, message: 'Please enter your Phone Number', type: ToastType.warning);
+        return false;
+      }
+      return true;
+    }
+    if ((_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') && _currentPage == 2) {
+      if (_employeeIdController.text.trim().isEmpty) {
+        AppToast.show(context, message: 'Please enter your Employee ID', type: ToastType.warning);
+        return false;
+      }
+    }
+    if (_role == 'student' && _currentPage == 2) {
+      if (_usnController.text.trim().isEmpty) {
+        AppToast.show(context, message: 'Please enter your Student ID/USN', type: ToastType.warning);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool _isFaceIdPage(int page) {
+    return (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer' || _role == 'student') && page == 3;
+  }
+
   void _nextPage() async {
+    if (!_validateCurrentStep()) return;
+    if (_isFaceIdPage(_currentPage) && !_scanComplete) {
+      AppToast.show(context, message: 'Please complete face scan first', type: ToastType.warning);
+      return;
+    }
     if (_currentPage < _totalPages - 1) {
-      _pageController.nextPage(duration: 600.ms, curve: Curves.easeInOutCubic);
+      _pageController.nextPage(duration: 500.ms, curve: Curves.easeInOutCubic);
     } else {
       await _handleComplete();
     }
   }
 
   Future<void> _handleComplete() async {
-    final profileData = _role == 'teacher'
-        ? {
-            'full_name': _nameController.text.isNotEmpty
-                ? _nameController.text
-                : 'Teacher',
-            'phone': _phoneController.text.isNotEmpty
-                ? _phoneController.text
-                : '1234567890',
-            'dob': _dobController.text.isNotEmpty
-                ? _dobController.text
-                : '1980-01-01',
-            'employee_id': _employeeIdController.text.isNotEmpty
-                ? _employeeIdController.text
-                : 'EMP-${1000 + Random().nextInt(9000)}',
-            'designation': _designationController.text.isNotEmpty
-                ? _designationController.text
-                : 'Professor',
-            'specialization': _specializationController.text.isNotEmpty
-                ? _specializationController.text
-                : 'Computer Science',
-            'qualification': _qualificationController.text.isNotEmpty
-                ? _qualificationController.text
-                : 'Ph.D.',
-            'experience': _experienceController.text.isNotEmpty
-                ? _experienceController.text
-                : '5',
-            'gender': _genderController.text.isNotEmpty
-                ? _genderController.text
-                : 'Other',
-            'address': _addressController.text.isNotEmpty
-                ? _addressController.text
-                : 'Campus Address',
-            'setup_completed': true,
-          }
-        : {
-            'full_name': _nameController.text.isNotEmpty
-                ? _nameController.text
-                : 'Student',
-            'phone': _phoneController.text.isNotEmpty
-                ? _phoneController.text
-                : '1234567890',
-            'dob': _dobController.text.isNotEmpty
-                ? _dobController.text
-                : '2002-01-01',
-            'gender': _genderController.text.isNotEmpty
-                ? _genderController.text
-                : 'Other',
-            'address': _addressController.text.isNotEmpty
-                ? _addressController.text
-                : 'Home Address',
-            'language_preference': _selectedLang,
-            'usn': _usnController.text.isNotEmpty
-                ? _usnController.text
-                : 'USN-${1000 + Random().nextInt(9000)}',
-            'student_id': _usnController.text.isNotEmpty
-                ? _usnController.text
-                : 'USN-${1000 + Random().nextInt(9000)}',
-            'course': _courseController.text.isNotEmpty
-                ? _courseController.text
-                : 'B.E.',
-            'section': _sectionController.text.isNotEmpty
-                ? _sectionController.text
-                : 'A',
-            'roll_number': _rollNoController.text.isNotEmpty
-                ? _rollNoController.text
-                : '1',
-            'parent_details': _parentController.text.isNotEmpty
-                ? _parentController.text
-                : 'Guardian Contact',
-            'college': _collegeController.text.isNotEmpty
-                ? _collegeController.text
-                : 'SmartFace University',
-            'department': _deptController.text.isNotEmpty
-                ? _deptController.text
-                : 'CSE',
-            'semester': _semController.text.isNotEmpty
-                ? _semController.text
-                : 'Semester 6',
-            'setup_completed': true,
-          };
+    final rnd = Random();
+    final Map<String, dynamic> profileData;
+    if (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') {
+      profileData = {
+        'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'Teacher',
+        'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '1234567890',
+        'dob': _dobController.text.isNotEmpty ? _dobController.text : '1980-01-01',
+        'employee_id': _employeeIdController.text.isNotEmpty ? _employeeIdController.text : 'EMP-${1000 + rnd.nextInt(9000)}',
+        'designation': _designationController.text.isNotEmpty ? _designationController.text : 'Professor',
+        'specialization': _specializationController.text.isNotEmpty ? _specializationController.text : 'Computer Science',
+        'qualification': _qualificationController.text.isNotEmpty ? _qualificationController.text : 'Ph.D.',
+        'experience': _experienceController.text.isNotEmpty ? _experienceController.text : '5',
+        'gender': _genderController.text.isNotEmpty ? _genderController.text : 'Other',
+        'address': _addressController.text.isNotEmpty ? _addressController.text : 'Campus Address',
+        'setup_completed': true,
+      };
+    } else if (_role == 'parent') {
+      profileData = {
+        'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'Parent',
+        'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '1234567890',
+        'child_usn': _usnController.text,
+        'relationship': _sectionController.text,
+        'setup_completed': true,
+      };
+    } else if (_role == 'admin') {
+      profileData = {
+        'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'Admin',
+        'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '1234567890',
+        'setup_completed': true,
+      };
+    } else {
+      profileData = {
+        'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'Student',
+        'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '1234567890',
+        'dob': _dobController.text.isNotEmpty ? _dobController.text : '2002-01-01',
+        'gender': _genderController.text.isNotEmpty ? _genderController.text : 'Other',
+        'address': _addressController.text.isNotEmpty ? _addressController.text : 'Home Address',
+        'language_preference': _selectedLang,
+        'usn': _usnController.text.isNotEmpty ? _usnController.text : 'USN-${1000 + rnd.nextInt(9000)}',
+        'student_id': _usnController.text.isNotEmpty ? _usnController.text : 'USN-${1000 + rnd.nextInt(9000)}',
+        'course': _courseController.text.isNotEmpty ? _courseController.text : 'B.E.',
+        'section': _sectionController.text.isNotEmpty ? _sectionController.text : 'A',
+        'roll_number': _rollNoController.text.isNotEmpty ? _rollNoController.text : '1',
+        'parent_details': _parentController.text.isNotEmpty ? _parentController.text : 'Guardian Contact',
+        'college': _collegeController.text.isNotEmpty ? _collegeController.text : 'SmartFace University',
+        'department': _deptController.text.isNotEmpty ? _deptController.text : 'CSE',
+        'semester': _semController.text.isNotEmpty ? _semController.text : 'Semester 6',
+        'setup_completed': true,
+      };
+    }
 
-    // Sync to MongoDB
     if (_token.isNotEmpty) {
-      final session = context.read<SessionManager>();
       await ApiService.updateProfile(profileData, _token);
-      await ApiService.registerBiometric(_email, _token);
+      if (!mounted) return;
+      final session = context.read<SessionManager>();
       await session.saveSession(
         token: _token,
         email: _email,
         role: _role,
         name: profileData['full_name']?.toString(),
-        biometricRegistered: true,
+        biometricRegistered: _scanComplete,
       );
     }
 
-    if (mounted) {
-      Navigator.pushReplacementNamed(
-        context,
-        '/dashboard',
-        arguments: {'email': _email, 'role': _role, 'token': _token},
+    await CacheService.set('sf_wizard_completed', true, persist: true);
+
+    if (!mounted) return;
+    final dashboard = _role == 'admin'
+        ? '/admin/home'
+        : (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer'
+            ? '/teacher/home'
+            : (_role == 'parent' ? '/parent/dashboard' : '/student/home'));
+
+    context.go(dashboard);
+  }
+
+  // ─── BUILD ───────────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AuthDesign.pageBg,
+      body: Column(
+        children: [
+          HeroOrbBackground(
+            isCompact: true,
+            onBackTap: _currentPage > 0
+                ? () => _pageController.previousPage(duration: 400.ms, curve: Curves.easeOut)
+                : null,
+            child: _buildHeroContent(),
+          ),
+          Expanded(
+            child: Transform.translate(
+              offset: const Offset(0, -28),
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (i) => setState(() => _currentPage = i),
+                physics: const NeverScrollableScrollPhysics(),
+                children: _getPagesForRole(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroContent() {
+    final titles = _pageTitles();
+    final title = _currentPage < titles.length ? titles[_currentPage] : 'Setup';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text(
+          'STEP ${_currentPage + 1} OF $_totalPages',
+          style: AuthDesign.fontPoppins(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white, opacity: 0.7),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          title,
+          style: AuthDesign.fontPoppins(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: (_currentPage + 1) / _totalPages,
+            minHeight: 3,
+            backgroundColor: Colors.white.withValues(alpha: 0.25),
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<String> _pageTitles() {
+    if (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') {
+      return ['Welcome', 'Personal Info', 'Professional Info', 'Set up Face ID', 'All Done!'];
+    } else if (_role == 'admin') {
+      return ['Welcome', 'Personal Info', 'All Done!'];
+    } else if (_role == 'parent') {
+      return ['Welcome', 'Personal Info', 'All Done!'];
+    }
+    return ['Welcome', 'Personal Info', 'Campus Details', 'Set up Face ID', 'All Done!'];
+  }
+
+  List<Widget> _getPagesForRole() {
+    if (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') {
+      return [_buildWelcomeCard(), _buildPersonalCard(), _buildProfessionalCard(), _buildFaceIdCard(), _buildCompletionCard()];
+    } else if (_role == 'admin') {
+      return [_buildWelcomeCard(), _buildPersonalCard(), _buildCompletionCard()];
+    } else if (_role == 'parent') {
+      return [_buildWelcomeCard(), _buildPersonalCard(), _buildCompletionCard()];
+    }
+    return [_buildWelcomeCard(), _buildPersonalCard(), _buildCollegeCard(), _buildFaceIdCard(), _buildCompletionCard()];
+  }
+
+  // ─── CARD SHELL ──────────────────────────────────────────────────────────
+
+  Widget _buildCardShell({required List<Widget> children}) {
+    return SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
+          decoration: BoxDecoration(
+            color: AuthDesign.cardBg,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(28),
+              topRight: Radius.circular(28),
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AuthDesign.primaryIndigo.withValues(alpha: 0.10),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          ),
+        ),
+      ),
+    ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.04, end: 0);
+  }
+
+  // ─── WELCOME ─────────────────────────────────────────────────────────────
+
+  Widget _buildWelcomeCard() {
+    final roleLabel = _role[0].toUpperCase() + _role.substring(1);
+    return _buildCardShell(children: [
+      Text('Welcome to SmartFace',
+          style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
+      const SizedBox(height: 6),
+      Text("Let's set up your smart campus profile in a few quick steps.",
+          style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textLabel)),
+      const SizedBox(height: 28),
+      Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            color: AuthDesign.primaryIndigo.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(50),
+            border: Border.all(color: AuthDesign.primaryIndigo.withValues(alpha: 0.18)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.verified_user_outlined, color: AuthDesign.primaryIndigo, size: 18),
+              const SizedBox(width: 8),
+              Text(roleLabel,
+                  style: AuthDesign.fontPoppins(fontSize: 13, fontWeight: FontWeight.w600, color: AuthDesign.primaryIndigo)),
+            ],
+          ),
+        ).animate().scale(duration: 700.ms, curve: Curves.elasticOut),
+      ),
+      const SizedBox(height: 28),
+      _buildNextButton(label: 'Get Started'),
+    ]);
+  }
+
+  // ─── PERSONAL ────────────────────────────────────────────────────────────
+
+  Widget _buildPersonalCard() {
+    return _buildCardShell(children: [
+      Text('Personal Info',
+          style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
+      const SizedBox(height: 4),
+      Text('Tell us a bit about yourself.',
+          style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textLabel)),
+      const SizedBox(height: 24),
+      _field('Full Name', _nameController, hint: 'Enter your full name'),
+      const SizedBox(height: 16),
+      _field('Phone Number', _phoneController, hint: '+91 00000 00000', type: TextInputType.phone),
+      const SizedBox(height: 16),
+      _field('Date of Birth', _dobController, hint: 'DD/MM/YYYY', readOnly: true, onTap: () => _selectDate(context)),
+      const SizedBox(height: 16),
+      _field('Gender', _genderController, hint: 'e.g. Male / Female / Other'),
+      const SizedBox(height: 28),
+      _buildNextButton(),
+    ]);
+  }
+
+  // ─── PROFESSIONAL ────────────────────────────────────────────────────────
+
+  Widget _buildProfessionalCard() {
+    return _buildCardShell(children: [
+      Text('Professional Info',
+          style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
+      const SizedBox(height: 4),
+      Text('Specify your academic background.',
+          style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textLabel)),
+      const SizedBox(height: 24),
+      _field('Employee ID', _employeeIdController, hint: 'e.g. EMP-1001'),
+      const SizedBox(height: 16),
+      _field('Designation', _designationController, hint: 'e.g. Associate Professor'),
+      const SizedBox(height: 16),
+      _field('Specialization', _specializationController, hint: 'e.g. Computer Science'),
+      const SizedBox(height: 16),
+      _field('Qualification', _qualificationController, hint: 'e.g. Ph.D., M.Tech'),
+      const SizedBox(height: 16),
+      _field('Years of Experience', _experienceController, hint: 'e.g. 5', type: TextInputType.number),
+      const SizedBox(height: 28),
+      _buildNextButton(),
+    ]);
+  }
+
+  // ─── CAMPUS ──────────────────────────────────────────────────────────────
+
+  Widget _buildCollegeCard() {
+    return _buildCardShell(children: [
+      Text('Campus Details',
+          style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
+      const SizedBox(height: 4),
+      Text('Connect with your institution.',
+          style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textLabel)),
+      const SizedBox(height: 24),
+      _field('Student ID / USN', _usnController, hint: 'e.g. 1AB22CS001'),
+      const SizedBox(height: 16),
+      _field('Class / Course', _courseController, hint: 'e.g. B.E. Computer Science'),
+      const SizedBox(height: 16),
+      _field('Section', _sectionController, hint: 'e.g. A'),
+      const SizedBox(height: 16),
+      _field('Roll Number', _rollNoController, hint: 'e.g. 23', type: TextInputType.number),
+      const SizedBox(height: 16),
+      _field('Semester', _semController, hint: 'e.g. Semester 6'),
+      const SizedBox(height: 28),
+      _buildNextButton(),
+    ]);
+  }
+
+  // ─── FACE ID ─────────────────────────────────────────────────────────────
+
+  Widget _buildFaceIdCard() {
+    const p = AuthDesign.primaryIndigo;
+    return _buildCardShell(children: [
+      Text('Set up Face ID',
+          style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
+      const SizedBox(height: 4),
+      Text('Last step — register your face for instant attendance.',
+          style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textLabel)),
+      const SizedBox(height: 28),
+
+      // Dashed scan circle
+      Center(child: _DashedScanCircle(isComplete: _scanComplete)),
+      const SizedBox(height: 28),
+
+      // Checklist
+      _buildChecklist(),
+      const SizedBox(height: 28),
+
+      // Button: after scan complete show Continue, else show Start
+      if (_scanComplete)
+        _buildNextButton(label: 'Continue →')
+      else
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton.icon(
+            onPressed: _isScanLoading ? null : _startFaceScan,
+            icon: _isScanLoading
+                ? const SizedBox(
+                    width: 18, height: 18,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                : const Icon(Icons.face_unlock_outlined, color: Colors.white, size: 20),
+            label: Text(
+              _isScanLoading ? 'Scanning...' : 'Start face scan',
+              style: AuthDesign.fontPoppins(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: p,
+              disabledBackgroundColor: p.withValues(alpha: 0.6),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+              elevation: 0,
+            ),
+          ),
+        ),
+    ]);
+  }
+
+  Widget _buildChecklist() {
+    final items = [
+      const _CheckItem('Account created', done: true),
+      const _CheckItem('Role selected', done: true),
+      _CheckItem('Face scan registration', done: _scanComplete, isCurrent: !_scanComplete),
+    ];
+    return Column(children: items.map(_buildChecklistRow).toList());
+  }
+
+  Widget _buildChecklistRow(_CheckItem step) {
+    final color = step.done ? const Color(0xFF22C55E) : (step.isCurrent ? AuthDesign.primaryIndigo : AuthDesign.textPlaceholder);
+    final icon = step.done ? Icons.check_circle_rounded : (step.isCurrent ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(width: 10),
+        Text(
+          step.label,
+          style: AuthDesign.fontPoppins(
+            fontSize: 12,
+            fontWeight: step.isCurrent ? FontWeight.w600 : FontWeight.w400,
+            color: step.done ? AuthDesign.textHeading : (step.isCurrent ? AuthDesign.primaryIndigo : AuthDesign.textLabel),
+          ),
+        ),
+        if (step.isCurrent) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: AuthDesign.primaryIndigo.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(50),
+            ),
+            child: Text('current',
+                style: AuthDesign.fontPoppins(fontSize: 9, fontWeight: FontWeight.w600, color: AuthDesign.primaryIndigo)),
+          ),
+        ],
+      ]),
+    );
+  }
+
+  Future<void> _startFaceScan() async {
+    setState(() => _isScanLoading = true);
+    await Future.delayed(const Duration(milliseconds: 800));
+    final result = await ApiService.registerBiometric(_email.isNotEmpty ? _email : 'test@student.com', _token);
+    if (!mounted) return;
+    setState(() => _isScanLoading = false);
+    if (result.containsKey('message') || result.containsKey('success')) {
+      setState(() => _scanComplete = true);
+      context.read<SessionManager>().setBiometricRegistered(true);
+      AppToast.show(context, title: 'Face ID Registered', message: 'Your face has been registered successfully.', type: ToastType.success);
+    } else {
+      AppToast.show(context, message: 'Face scan failed. Please try again.', type: ToastType.error);
+    }
+  }
+
+  // ─── COMPLETION ──────────────────────────────────────────────────────────
+
+  Widget _buildCompletionCard() {
+    return _buildCardShell(children: [
+      Text("You're all set!",
+          style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
+      const SizedBox(height: 4),
+      Text('Your smart campus profile is ready for action.',
+          style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textLabel)),
+      const SizedBox(height: 32),
+      Center(
+        child: const Icon(Icons.check_circle_outline_rounded, size: 80, color: Color(0xFF22C55E))
+            .animate()
+            .scale(duration: 700.ms, curve: Curves.elasticOut),
+      ),
+      const SizedBox(height: 32),
+      _buildNextButton(label: 'Enter Dashboard →'),
+    ]);
+  }
+
+  // ─── SHARED HELPERS ──────────────────────────────────────────────────────
+
+  Widget _field(
+    String label,
+    TextEditingController controller, {
+    String? hint,
+    bool readOnly = false,
+    VoidCallback? onTap,
+    TextInputType? type,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: AuthDesign.fontPoppins(fontSize: 10.5, fontWeight: FontWeight.w500, color: AuthDesign.textLabel),
+        ),
+        const SizedBox(height: 6),
+        _WizardTextField(controller: controller, hintText: hint ?? label, readOnly: readOnly, onTap: onTap, keyboardType: type),
+      ],
+    );
+  }
+
+  Widget _buildNextButton({String? label}) {
+    final isLast = _currentPage == _totalPages - 1;
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: _nextPage,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AuthDesign.primaryIndigo,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+          elevation: 0,
+        ),
+        child: Text(
+          label ?? (isLast ? 'Enter Dashboard' : 'Continue'),
+          style: AuthDesign.fontPoppins(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dashed scan circle widget
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DashedScanCircle extends StatelessWidget {
+  final bool isComplete;
+  const _DashedScanCircle({required this.isComplete});
+
+  @override
+  Widget build(BuildContext context) {
+    const double size = 140;
+    const p = AuthDesign.primaryIndigo;
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      child: isComplete
+          ? Container(
+              key: const ValueKey('done'),
+              width: size, height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: p.withValues(alpha: 0.08),
+                border: Border.all(color: p, width: 2),
+              ),
+              child: const Icon(Icons.check_circle_outline_rounded, size: 56, color: p)
+                  .animate().scale(duration: 500.ms, curve: Curves.elasticOut),
+            )
+          : CustomPaint(
+              key: const ValueKey('scan'),
+              painter: const _DashedCirclePainter(color: p),
+              child: SizedBox(
+                width: size, height: size,
+                child: Center(
+                  child: const Icon(Icons.face_unlock_outlined, size: 44, color: p)
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scale(begin: const Offset(0.95, 0.95), end: const Offset(1.05, 1.05), duration: 1200.ms),
+                ),
+              ),
+            ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dashed circle painter
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DashedCirclePainter extends CustomPainter {
+  final Color color;
+  const _DashedCirclePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 2;
+    const dashCount = 24;
+    const dashAngle = (2 * 3.14159265) / dashCount;
+    const gapFraction = 0.45;
+
+    for (int i = 0; i < dashCount; i++) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        i * dashAngle,
+        dashAngle * (1 - gapFraction),
+        false,
+        paint,
       );
     }
   }
 
   @override
+  bool shouldRepaint(covariant _DashedCirclePainter old) => old.color != color;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Underline-style text field
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _WizardTextField extends StatefulWidget {
+  final TextEditingController controller;
+  final String hintText;
+  final bool readOnly;
+  final VoidCallback? onTap;
+  final TextInputType? keyboardType;
+
+  const _WizardTextField({
+    required this.controller,
+    required this.hintText,
+    this.readOnly = false,
+    this.onTap,
+    this.keyboardType,
+  });
+
+  @override
+  State<_WizardTextField> createState() => _WizardTextFieldState();
+}
+
+class _WizardTextFieldState extends State<_WizardTextField> {
+  final _focusNode = FocusNode();
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() => setState(() => _isFocused = _focusNode.hasFocus));
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          // Background gradient blobs
-          const AuthBlobBackground(),
-
-          SafeArea(
-            child: Column(
-              children: [
-                _buildHeader(),
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    onPageChanged: (index) => setState(() => _currentPage = index),
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      _buildWelcomeCard(),
-                      _buildPersonalCard(),
-                      _role == 'teacher'
-                          ? _buildProfessionalCard()
-                          : _buildCollegeCard(),
-                      _buildFaceRegistrationCard(),
-                      _buildPermissionsCard(),
-                      _buildThemeCard(),
-                      _buildCompletionCard(),
-                    ],
-                  ),
-                ),
-                _buildFooter(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'PROFILE SETUP',
-                style: GoogleFonts.outfit(
-                  color: const Color(0xFF1B2C56),
-                  letterSpacing: 1.5,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                '${_currentPage + 1} / $_totalPages',
-                style: GoogleFonts.inter(
-                  color: const Color(0xFF7F8CA4),
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: (_currentPage + 1) / _totalPages,
-              minHeight: 6,
-              backgroundColor: const Color(0xFFE2E6FF),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3559E0)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCardBase({
-    required String title,
-    required String subtitle,
-    required List<Widget> children,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Center(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF9EAFD8).withValues(alpha: 0.16),
-                  blurRadius: 32,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 16),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF1B2C56),
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFF7F8CA4),
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 28),
-                ...children,
-              ],
-            ),
-          ),
-        ),
-      ),
-    ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1);
-  }
-
-  Widget _buildWelcomeCard() {
-    return _buildCardBase(
-      title: 'Welcome to SmartFace',
-      subtitle:
-          'Let\'s set up your premium smart campus profile in a few steps.',
-      children: [
-        Center(
-          child: Container(
-            height: 180,
-            width: 180,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF3559E0).withValues(alpha: 0.08),
-              border: Border.all(
-                color: const Color(0xFF3559E0).withValues(alpha: 0.2),
-                width: 1.5,
-              ),
-            ),
-            child: const Icon(
-              Icons.rocket_launch_outlined,
-              size: 72,
-              color: Color(0xFF3559E0),
-            ),
-          ).animate().scale(duration: 1.seconds, curve: Curves.elasticOut),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPersonalCard() {
-    return _buildCardBase(
-      title: 'Personal Info',
-      subtitle: 'Tell us a bit about yourself.',
-      children: [
-        _buildInputField('Full Name', Icons.person_outline_rounded, _nameController),
-        const SizedBox(height: 16),
-        _buildInputField(
-          'Phone Number',
-          Icons.phone_android_outlined,
-          _phoneController,
-        ),
-        const SizedBox(height: 16),
-        _buildInputField(
-          'Date of Birth',
-          Icons.calendar_today_outlined,
-          _dobController,
-          onTap: () => _selectDate(context),
-        ),
-        const SizedBox(height: 16),
-        _buildInputField('Gender', Icons.wc_outlined, _genderController),
-        const SizedBox(height: 16),
-        _buildInputField('Address', Icons.home_outlined, _addressController),
-        const SizedBox(height: 20),
-        _buildLanguageSelector(),
-      ],
-    );
-  }
-
-  Widget _buildLanguageSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'LANGUAGE PREFERENCE',
-          style: GoogleFonts.inter(
-            color: const Color(0xFF8F9BB3),
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _selectedLang = 'English'),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: _selectedLang == 'English'
-                        ? const Color(0xFF3559E0).withValues(alpha: 0.1)
-                        : const Color(0xFFF6F8FF),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: _selectedLang == 'English'
-                          ? const Color(0xFF3559E0)
-                          : const Color(0xFFE2E6FF),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'English',
-                      style: GoogleFonts.inter(
-                        color: _selectedLang == 'English'
-                            ? const Color(0xFF3559E0)
-                            : const Color(0xFF8F9BB3),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _selectedLang = 'Kannada'),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: _selectedLang == 'Kannada'
-                        ? const Color(0xFF3559E0).withValues(alpha: 0.1)
-                        : const Color(0xFFF6F8FF),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: _selectedLang == 'Kannada'
-                          ? const Color(0xFF3559E0)
-                          : const Color(0xFFE2E6FF),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'ಕನ್ನಡ (Kannada)',
-                      style: GoogleFonts.inter(
-                        color: _selectedLang == 'Kannada'
-                            ? const Color(0xFF3559E0)
-                            : const Color(0xFF8F9BB3),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProfessionalCard() {
-    return _buildCardBase(
-      title: 'Professional Info',
-      subtitle: 'Specify your academic background.',
-      children: [
-        _buildInputField(
-          'Employee ID',
-          Icons.badge_outlined,
-          _employeeIdController,
-        ),
-        const SizedBox(height: 16),
-        _buildInputField(
-          'Designation',
-          Icons.work_outline,
-          _designationController,
-        ),
-        const SizedBox(height: 16),
-        _buildInputField(
-          'Subject Specialization',
-          Icons.menu_book_outlined,
-          _specializationController,
-        ),
-        const SizedBox(height: 16),
-        _buildInputField(
-          'Qualification',
-          Icons.school_outlined,
-          _qualificationController,
-        ),
-        const SizedBox(height: 16),
-        _buildInputField(
-          'Years of Experience',
-          Icons.timeline_outlined,
-          _experienceController,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCollegeCard() {
-    return _buildCardBase(
-      title: 'Campus Details',
-      subtitle: 'Connect with your institution.',
-      children: [
-        _buildInputField(
-          'Student ID / USN',
-          Icons.badge_outlined,
-          _usnController,
-        ),
-        const SizedBox(height: 16),
-        _buildInputField(
-          'Class / Course',
-          Icons.school_outlined,
-          _courseController,
-        ),
-        const SizedBox(height: 16),
-        _buildInputField(
-          'Section',
-          Icons.grid_view_outlined,
-          _sectionController,
-        ),
-        const SizedBox(height: 16),
-        _buildInputField(
-          'Roll Number',
-          Icons.format_list_numbered_outlined,
-          _rollNoController,
-        ),
-        const SizedBox(height: 16),
-        _buildInputField(
-          'Parent / Guardian Details',
-          Icons.family_restroom_outlined,
-          _parentController,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFaceRegistrationCard() {
-    const primaryColor = Color(0xFF3559E0);
-    const primaryGlow = Color(0x333559E0);
-
-    return _buildCardBase(
-      title: 'Biometric ID',
-      subtitle: 'Register your face for AI attendance.',
-      children: [
-        Center(
-          child: Column(
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Rotating tech scanning HUD ring
-                  Container(
-                        height: 210,
-                        width: 210,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: primaryColor.withValues(alpha: 0.3),
-                            width: 1.5,
-                          ),
-                        ),
-                      )
-                      .animate(onPlay: (c) => c.repeat())
-                      .rotate(duration: 4.seconds),
-
-                  Container(
-                        height: 200,
-                        width: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.success.withValues(alpha: 0.5),
-                            width: 2.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.success.withValues(alpha: 0.15),
-                              blurRadius: 15,
-                            ),
-                          ],
-                        ),
-                      )
-                      .animate(onPlay: (c) => c.repeat(reverse: true))
-                      .scale(
-                        begin: const Offset(0.98, 0.98),
-                        end: const Offset(1.02, 1.02),
-                        duration: 1200.ms,
-                      ),
-
-                  // Camera Preview Circle
-                  ClipOval(
-                    child: Container(
-                      height: 180,
-                      width: 180,
-                      color: Colors.black,
-                      child: _isCameraInitialized
-                          ? CameraPreview(_cameraController!)
-                          : const Center(
-                              child: CircularProgressIndicator(
-                                color: primaryColor,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Pulsing verification indicator
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: primaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                      )
-                      .animate(onPlay: (c) => c.repeat(reverse: true))
-                      .scale(end: const Offset(1.6, 1.6), duration: 600.ms),
-                  const SizedBox(width: 8),
-                  Text(
-                    'ALIGN FACE WITHIN RADAR TARGET',
-                    style: GoogleFonts.outfit(
-                      fontSize: 10,
-                      letterSpacing: 1.2,
-                      color: primaryColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Telemetry Gauges Card
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF6F8FF),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFFE2E6FF),
-                    width: 1.2,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    _buildTelemetryRow(
-                      'LIGHTING QUALITY',
-                      0.85,
-                      '85% (GOOD)',
-                      AppColors.success,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTelemetryRow(
-                      'BLUR DETECTION',
-                      0.92,
-                      '92% (SHARP)',
-                      AppColors.success,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTelemetryRow(
-                      'LIVENESS STATUS',
-                      1.0,
-                      'PASS (1.0)',
-                      primaryColor,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: GlowButton(
-                  onPressed: () async {
-                    final args =
-                        ModalRoute.of(context)?.settings.arguments as Map?;
-                    final email = args?['email'] ?? 'test@student.com';
-                    final token = args?['token'] ?? '';
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Extracting Facial Vector Signatures...',
-                        ),
-                        backgroundColor: primaryColor,
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-
-                    await Future.delayed(const Duration(milliseconds: 600));
-
-                    final result = await ApiService.registerBiometric(
-                      email,
-                      token,
-                    );
-
-                    if (!mounted) return;
-                    if (result.containsKey('message')) {
-                      AppToast.show(
-                        context,
-                        title: 'Bio ID Registered',
-                        message: 'AI Scan Complete.',
-                        type: ToastType.success,
-                      );
-                      _nextPage();
-                    }
-                  },
-                  color: primaryColor,
-                  glowColor: primaryGlow,
-                  borderRadius: 14,
-                  padding: EdgeInsets.zero,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.face_unlock_outlined,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'START SECURE BIO-SCAN',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(
-                    delay: 1500.ms,
-                    duration: 1500.ms,
-                    color: Colors.white30,
-                  ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTelemetryRow(
-    String label,
-    double progress,
-    String val,
-    Color barColor,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 9,
-                color: const Color(0xFF8F9BB3),
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1,
-              ),
-            ),
-            Text(
-              val,
-              style: GoogleFonts.robotoMono(
-                fontSize: 10,
-                color: barColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(2),
-          child: LinearProgressIndicator(
-            value: progress,
-            color: barColor,
-            backgroundColor: const Color(0xFFE2E6FF),
-            minHeight: 4,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPermissionsCard() {
-    return _buildCardBase(
-      title: 'System Access',
-      subtitle: 'Grant permissions for smart features.',
-      children: [
-        _buildPermissionToggle(
-          'Camera Access',
-          'Required for Face ID & QR',
-          Icons.camera_enhance_outlined,
-          true,
-        ),
-        _buildPermissionToggle(
-          'GPS Location',
-          'Required for Campus Validation',
-          Icons.location_on_outlined,
-          false,
-        ),
-        _buildPermissionToggle(
-          'Notifications',
-          'Get alerts for attendance logs',
-          Icons.notifications_active_outlined,
-          true,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildThemeCard() {
-    return _buildCardBase(
-      title: 'Visual Style',
-      subtitle: 'Choose your preferred interface theme.',
-      children: [
-        Row(
-          children: [
-            _buildThemeOption('Dark', Icons.dark_mode_outlined, true),
-            const SizedBox(width: 20),
-            _buildThemeOption('Light', Icons.light_mode_outlined, false),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCompletionCard() {
-    return _buildCardBase(
-      title: 'You\'re All Set!',
-      subtitle: 'Your Smart Campus profile is ready for action.',
-      children: [
-        Center(
-          child: const Icon(
-            Icons.check_circle_outline_rounded,
-            size: 100,
-            color: AppColors.success,
-          ).animate().scale(duration: 800.ms, curve: Curves.elasticOut),
-        ),
-        const SizedBox(height: 20),
-      ],
-    );
-  }
-
-  Widget _buildInputField(
-    String label,
-    IconData icon,
-    TextEditingController controller, {
-    VoidCallback? onTap,
-  }) {
-    return Focus(
-      child: Builder(
-        builder: (context) {
-          final isFocused = Focus.of(context).hasFocus;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF6F8FF),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isFocused ? const Color(0xFF3559E0) : const Color(0xFFE2E6FF),
-                width: 1.2,
-              ),
-            ),
-            child: TextField(
-              controller: controller,
-              readOnly: onTap != null,
-              onTap: onTap,
-              style: GoogleFonts.inter(
-                color: const Color(0xFF1B2C56),
-                fontSize: 14,
-              ),
-              decoration: InputDecoration(
-                hintText: label,
-                hintStyle: GoogleFonts.inter(
-                  color: const Color(0xFF8F9BB3),
-                  fontSize: 14,
-                ),
-                prefixIcon: Icon(
-                  icon,
-                  color: isFocused ? const Color(0xFF3559E0) : const Color(0xFF8F9BB3),
-                  size: 20,
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildPermissionToggle(
-    String title,
-    String sub,
-    IconData icon,
-    bool active,
-  ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(15),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
       decoration: BoxDecoration(
-        color: const Color(0xFFF6F8FF),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E6FF), width: 1.2),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: const Color(0xFF3559E0)),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1B2C56),
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  sub,
-                  style: GoogleFonts.inter(color: const Color(0xFF8F9BB3), fontSize: 10),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: active,
-            onChanged: (v) {},
-            activeThumbColor: const Color(0xFF3559E0),
-            activeTrackColor: const Color(0xFF3559E0).withValues(alpha: 0.2),
-            inactiveThumbColor: const Color(0xFF8F9BB3),
-            inactiveTrackColor: const Color(0xFFE2E6FF),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildThemeOption(String label, IconData icon, bool isSelected) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF3559E0).withValues(alpha: 0.1)
-              : const Color(0xFFF6F8FF),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF3559E0) : const Color(0xFFE2E6FF),
-            width: 1.2,
+        border: Border(
+          bottom: BorderSide(
+            color: _isFocused ? AuthDesign.underlineFocused : AuthDesign.underlineUnfocused,
+            width: _isFocused ? 1.8 : 1.2,
           ),
         ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? const Color(0xFF3559E0) : const Color(0xFF8F9BB3),
-              size: 40,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                color: isSelected ? const Color(0xFF3559E0) : const Color(0xFF8F9BB3),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+      ),
+      child: TextField(
+        controller: widget.controller,
+        focusNode: _focusNode,
+        readOnly: widget.readOnly,
+        onTap: widget.onTap,
+        keyboardType: widget.keyboardType,
+        style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textHeading),
+        decoration: InputDecoration(
+          hintText: widget.hintText,
+          hintStyle: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textPlaceholder),
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
         ),
       ),
     );
   }
+}
 
-  Widget _buildFooter() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (_currentPage > 0)
-            TextButton(
-              onPressed: () => _pageController.previousPage(
-                duration: 400.ms,
-                curve: Curves.easeOut,
-              ),
-              child: Text(
-                'BACK',
-                style: GoogleFonts.inter(
-                  color: const Color(0xFF8F9BB3),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            )
-          else
-            const SizedBox(width: 80),
-          SizedBox(
-            width: 160,
-            height: 52,
-            child: GlowButton(
-              onPressed: _nextPage,
-              color: const Color(0xFF3559E0),
-              glowColor: const Color(0xFF3559E0).withValues(alpha: 0.3),
-              borderRadius: 14,
-              padding: EdgeInsets.zero,
-              child: Text(
-                _currentPage == _totalPages - 1 ? 'GET STARTED' : 'CONTINUE',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+// ─────────────────────────────────────────────────────────────────────────────
+// Data helper
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CheckItem {
+  final String label;
+  final bool done;
+  final bool isCurrent;
+  const _CheckItem(this.label, {required this.done, this.isCurrent = false});
 }

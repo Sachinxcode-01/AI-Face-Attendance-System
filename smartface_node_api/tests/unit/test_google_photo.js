@@ -79,10 +79,12 @@ async function runTest() {
 
   await mongoose.disconnect();
   console.log("🏁 Test completed successfully.");
-  process.exit(0);
+  setTimeout(() => process.exit(0), 1000);
 }
 
 runTest().catch(err => {
   console.error("\n❌ TEST FAILED:", err.message);
-  mongoose.disconnect().then(() => process.exit(1));
+  mongoose.disconnect().then(() => {
+    setTimeout(() => process.exit(1), 500);
+  }).catch(() => process.exit(1));
 });

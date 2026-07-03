@@ -12,25 +12,53 @@ const UserSession = require('../models/UserSession');
 const AuthService = require('../services/authService');
 const EmailService = require('../services/emailService');
 const { authenticate } = require('../middleware/auth');
-const { limitRegister, limitOtpSend, limitOtpVerify } = require('../middleware/rateLimiter');
+const { limitRegister, limitOtpSend, limitOtpVerify, limitLoginPassword } = require('../middleware/rateLimiter');
 
-async function registerSession(userId, token, req) {
+const AttendanceAuditLog = require('../models/AttendanceAuditLog');
+
+async function logSecurityEvent(email, role, action, details, req) {
+  try {
+    const ip = req ? (req.ip || req.headers['x-forwarded-for'] || '127.0.0.1') : '127.0.0.1';
+    await AttendanceAuditLog.create({
+      actor_email: email,
+      role: role || 'unknown',
+      action,
+      details,
+      ip_address: ip
+    });
+  } catch (err) {
+    console.error("Audit log error:", err);
+  }
+}
+
+async function registerSession(userId, accessToken, req) {
   try {
     const userAgent = req.headers['user-agent'] || 'Unknown Device';
     const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
     
-    // Hash token to identify the session uniquely
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const tokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
+    const refreshToken = crypto.randomBytes(32).toString('hex');
+    const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    
+    // Expiry is 7 days
+    const expiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     
     await UserSession.create({
       userId,
       device: userAgent,
       ip,
       location: "Local Network",
-      tokenHash
+      tokenHash,
+      refreshTokenHash,
+      refreshTokenFamily: crypto.randomUUID(),
+      expiry,
+      created_at: new Date()
     });
+    
+    return refreshToken;
   } catch (err) {
     console.error("Session Registration Error:", err);
+    throw err;
   }
 }
 
@@ -115,6 +143,22 @@ router.post('/register', limitRegister, async (req, res) => {
       return res.status(400).json({ detail: "Email already registered" });
     }
 
+    if (!password || password.length < 8) {
+      return res.status(400).json({ detail: "Password must be at least 8 characters long." });
+    }
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasDigit = /[0-9]/.test(password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+    if (!hasUpper || !hasLower || !hasDigit || !hasSpecial) {
+      return res.status(400).json({ detail: "Password must contain uppercase, lowercase, numbers, and special characters." });
+    }
+    const emailPrefix = email.split('@')[0].toLowerCase();
+    const weakPatterns = ['password', '12345', 'qwerty', 'smartface', emailPrefix];
+    if (weakPatterns.some(p => password.toLowerCase().includes(p))) {
+      return res.status(400).json({ detail: "Weak or common password pattern detected. Please use a stronger password." });
+    }
+
     const hashedPassword = await AuthService.hashPassword(password);
     const newUser = new User({
       email,
@@ -148,16 +192,26 @@ router.post('/login-otp/send', limitOtpSend, async (req, res) => {
       return res.status(404).json({ detail: "User not found" });
     }
 
+    // OTP Resend Cooldown (60 seconds)
+    const existing = await Otp.findOne({ email });
+    if (existing) {
+      const createdTime = existing.expiry.getTime() - 5 * 60 * 1000;
+      const elapsed = (Date.now() - createdTime) / 1000;
+      if (elapsed < 60) {
+        return res.status(429).json({ detail: `Please wait ${Math.ceil(60 - elapsed)}s before requesting a new OTP.` });
+      }
+    }
+
     const otpVal = Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join('');
     const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     await Otp.updateOne(
       { email },
-      { $set: { otp: otpVal, expiry, role: user.role, type: 'login' } },
+      { $set: { otp: otpVal, expiry, role: user.role, type: 'login', attempts: 0 } },
       { upsert: true }
     );
 
-    console.log(`Generated login OTP for ${email}`);
+    console.log(`Generated login OTP for email index hash`); // do not expose email or OTP in production logs
 
     // Send OTP email in background
     EmailService.sendOtp(email, otpVal).catch(console.error);
@@ -174,12 +228,26 @@ router.post('/login-otp/verify', limitOtpVerify, async (req, res) => {
     const { email, otp } = req.body;
     
     const record = await Otp.findOne({ email, type: 'login' });
-    if (!record || record.otp !== otp) {
+    if (!record) {
       return res.status(401).json({ detail: "Invalid OTP" });
     }
 
     if (new Date() > record.expiry) {
+      await Otp.deleteOne({ email });
       return res.status(401).json({ detail: "OTP expired" });
+    }
+
+    if (record.attempts >= 3) {
+      await Otp.deleteOne({ email });
+      await logSecurityEvent(email, record.role, 'LOGIN_FAILED', { reason: 'OTP max attempts exceeded' }, req);
+      return res.status(401).json({ detail: "Too many failed attempts. OTP invalidated." });
+    }
+
+    if (record.otp !== otp) {
+      record.attempts = (record.attempts || 0) + 1;
+      await record.save();
+      await logSecurityEvent(email, record.role, 'LOGIN_FAILED', { reason: 'Invalid OTP attempt', attempts: record.attempts }, req);
+      return res.status(401).json({ detail: `Invalid OTP. ${3 - record.attempts} attempts remaining.` });
     }
 
     await Otp.deleteOne({ email });
@@ -189,10 +257,13 @@ router.post('/login-otp/verify', limitOtpVerify, async (req, res) => {
     const role = user ? user.role : record.role;
 
     const token = AuthService.createAccessToken({ sub: email, role });
-    await registerSession(email, token, req);
+    const refreshToken = await registerSession(email, token, req);
+
+    await logSecurityEvent(email, role, 'LOGIN_EVENT', { method: 'otp', device: req.headers['user-agent'] }, req);
 
     res.json({
       access_token: token,
+      refresh_token: refreshToken,
       token_type: "bearer",
       role,
       biometric_registered: biometricRegistered,
@@ -204,24 +275,71 @@ router.post('/login-otp/verify', limitOtpVerify, async (req, res) => {
 });
 
 // ─── POST /auth/login-password ────────────────────────────────────
-router.post('/login-password', async (req, res) => {
+router.post('/login-password', limitLoginPassword, async (req, res) => {
   try {
     const { email, password } = req.body;
     
     const user = await User.findOne({ email });
     if (!user) {
+      // Return generic message and introduce slight delay to prevent timing analysis
+      await new Promise(resolve => setTimeout(resolve, 1000));
       return res.status(401).json({ detail: "Invalid email or password" });
+    }
+
+    // Check account lockout
+    if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+      const waitSec = Math.ceil((user.lockoutUntil.getTime() - Date.now()) / 1000);
+      return res.status(423).json({ detail: `Account locked due to too many failed attempts. Try again in ${waitSec}s.` });
     }
 
     if (!user.password || !(await AuthService.verifyPassword(password, user.password))) {
+      // Increment failed attempts
+      user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+      
+      // Calculate progressive delay: 1s, 2s, 4s, 8s, 16s... capped at 30s
+      const delay = 1000 * Math.pow(2, user.failedLoginAttempts - 1);
+      user.loginProgressiveDelay = Math.min(delay, 30000);
+
+      // Lock account if attempts >= 5
+      if (user.failedLoginAttempts >= 5) {
+        user.lockoutUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+        EmailService.sendSuspiciousLoginAlert(user.email, req.ip || '127.0.0.1', new Date().toISOString()).catch(console.error);
+      }
+
+      await user.save();
+      await logSecurityEvent(email, user.role, 'LOGIN_FAILED', { reason: 'Password mismatch', attempts: user.failedLoginAttempts }, req);
+      
+      // Wait for progressive delay
+      await new Promise(resolve => setTimeout(resolve, user.loginProgressiveDelay));
       return res.status(401).json({ detail: "Invalid email or password" });
     }
 
+    // Delay response if previously calculated delay exists
+    if (user.loginProgressiveDelay > 0) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+
+    // Reset lockout and failed attempts
+    user.failedLoginAttempts = 0;
+    user.loginProgressiveDelay = 0;
+    user.lockoutUntil = null;
+    await user.save();
+
+    // Check for login from new device
+    const userAgent = req.headers['user-agent'] || 'Unknown Device';
+    const knownDevice = await UserSession.exists({ userId: email, device: userAgent });
+    if (!knownDevice) {
+      EmailService.sendNewDeviceLoginAlert(email, userAgent, req.ip || '127.0.0.1', new Date().toISOString()).catch(console.error);
+    }
+
     const token = AuthService.createAccessToken({ sub: email, role: user.role });
-    await registerSession(email, token, req);
+    const refreshToken = await registerSession(email, token, req);
+
+    await logSecurityEvent(email, user.role, 'LOGIN_EVENT', { method: 'password', device: userAgent }, req);
 
     res.json({
       access_token: token,
+      refresh_token: refreshToken,
       token_type: "bearer",
       role: user.role,
       biometric_registered: user.biometric_registered,
@@ -261,10 +379,20 @@ router.post('/google', async (req, res) => {
     }
 
     const token = AuthService.createAccessToken({ sub: email, role: userRole });
-    await registerSession(email, token, req);
+    const refreshToken = await registerSession(email, token, req);
+
+    // New device check
+    const userAgent = req.headers['user-agent'] || 'Unknown Device';
+    const knownDevice = await UserSession.exists({ userId: email, device: userAgent });
+    if (!knownDevice) {
+      EmailService.sendNewDeviceLoginAlert(email, userAgent, req.ip || '127.0.0.1', new Date().toISOString()).catch(console.error);
+    }
+
+    await logSecurityEvent(email, userRole, 'LOGIN_EVENT', { method: 'google', device: userAgent }, req);
 
     res.json({
       access_token: token,
+      refresh_token: refreshToken,
       token_type: "bearer",
       role: userRole,
       biometric_registered: biometricRegistered,
@@ -284,16 +412,26 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(404).json({ detail: "User not found" });
     }
 
+    // OTP Resend Cooldown (60 seconds)
+    const existing = await Otp.findOne({ email });
+    if (existing) {
+      const createdTime = existing.expiry.getTime() - 5 * 60 * 1000;
+      const elapsed = (Date.now() - createdTime) / 1000;
+      if (elapsed < 60) {
+        return res.status(429).json({ detail: `Please wait ${Math.ceil(60 - elapsed)}s before requesting a new OTP.` });
+      }
+    }
+
     const otpVal = Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join('');
-    const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     await Otp.updateOne(
       { email },
-      { $set: { otp: otpVal, expiry, role: user.role, type: 'password_reset' } },
+      { $set: { otp: otpVal, expiry, role: user.role, type: 'password_reset', attempts: 0 } },
       { upsert: true }
     );
 
-    console.log(`Generated password reset OTP for ${email}`);
+    console.log(`Generated password reset OTP for email index hash`); // do not expose email in logs
 
     EmailService.sendOtp(email, otpVal).catch(console.error);
 
@@ -309,12 +447,43 @@ router.post('/reset-password', async (req, res) => {
     const { email, otp, new_password } = req.body;
 
     const record = await Otp.findOne({ email, type: 'password_reset' });
-    if (!record || record.otp !== otp) {
+    if (!record) {
       return res.status(401).json({ detail: "Invalid OTP" });
     }
 
     if (new Date() > record.expiry) {
+      await Otp.deleteOne({ email });
       return res.status(401).json({ detail: "OTP expired" });
+    }
+
+    if (record.attempts >= 3) {
+      await Otp.deleteOne({ email });
+      await logSecurityEvent(email, record.role, 'PASSWORD_RESET_FAILED', { reason: 'OTP max attempts exceeded' }, req);
+      return res.status(401).json({ detail: "Too many failed attempts. OTP invalidated." });
+    }
+
+    if (record.otp !== otp) {
+      record.attempts = (record.attempts || 0) + 1;
+      await record.save();
+      await logSecurityEvent(email, record.role, 'PASSWORD_RESET_FAILED', { reason: 'Invalid OTP attempt', attempts: record.attempts }, req);
+      return res.status(401).json({ detail: `Invalid OTP. ${3 - record.attempts} attempts remaining.` });
+    }
+
+    // Strong password validation
+    if (!new_password || new_password.length < 8) {
+      return res.status(400).json({ detail: "Password must be at least 8 characters long." });
+    }
+    const hasUpper = /[A-Z]/.test(new_password);
+    const hasLower = /[a-z]/.test(new_password);
+    const hasDigit = /[0-9]/.test(new_password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(new_password);
+    if (!hasUpper || !hasLower || !hasDigit || !hasSpecial) {
+      return res.status(400).json({ detail: "Password must contain uppercase, lowercase, numbers, and special characters." });
+    }
+    const emailPrefix = email.split('@')[0].toLowerCase();
+    const weakPatterns = ['password', '12345', 'qwerty', 'smartface', emailPrefix];
+    if (weakPatterns.some(p => new_password.toLowerCase().includes(p))) {
+      return res.status(400).json({ detail: "Weak or common password pattern detected. Please use a stronger password." });
     }
 
     const user = await User.findOne({ email });
@@ -326,6 +495,8 @@ router.post('/reset-password', async (req, res) => {
 
     const hashedPassword = await AuthService.hashPassword(new_password);
     await User.updateOne({ email }, { $set: { password: hashedPassword } });
+
+    await logSecurityEvent(email, user.role, 'PASSWORD_RESET', { status: 'success' }, req);
 
     res.json({ message: "Password updated successfully" });
   } catch (error) {
@@ -490,6 +661,67 @@ router.post('/train-faces', authenticate, async (req, res) => {
   }
 });
 
+// ─── POST /auth/token/refresh ──────────────────────────────────────
+router.post('/token/refresh', async (req, res) => {
+  try {
+    const { refresh_token } = req.body;
+    if (!refresh_token) {
+      return res.status(400).json({ detail: "Refresh token is required" });
+    }
+
+    const incomingHash = crypto.createHash('sha256').update(refresh_token).digest('hex');
+    
+    // Check active session
+    let session = await UserSession.findOne({ refreshTokenHash: incomingHash });
+    
+    if (!session) {
+      // Reused Refresh Token Detection: check if this hash is in revokedRefreshTokenHashes of any session
+      const compromisedSession = await UserSession.findOne({ revokedRefreshTokenHashes: incomingHash });
+      if (compromisedSession) {
+        // Severe security alert: token reuse detected. Revoke entire session family!
+        await UserSession.deleteOne({ _id: compromisedSession._id });
+        await logSecurityEvent(compromisedSession.userId, 'unknown', 'ROLE_VIOLATION', { reason: 'Refresh token reuse/theft attempt', tokenHash: incomingHash }, req);
+        return res.status(401).json({ detail: "Revoked session family due to token reuse detection." });
+      }
+      return res.status(401).json({ detail: "Invalid refresh token" });
+    }
+
+    // Check expiry
+    if (new Date() > session.expiry) {
+      await UserSession.deleteOne({ _id: session._id });
+      return res.status(401).json({ detail: "Refresh token expired" });
+    }
+
+    const user = await User.findOne({ email: session.userId });
+    if (!user) {
+      await UserSession.deleteOne({ _id: session._id });
+      return res.status(401).json({ detail: "User not found" });
+    }
+
+    const newAccessToken = AuthService.createAccessToken({ sub: user.email, role: user.role });
+    const newRefreshToken = crypto.randomBytes(32).toString('hex');
+    
+    const newTokenHash = crypto.createHash('sha256').update(newAccessToken).digest('hex');
+    const newRefreshTokenHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex');
+
+    session.tokenHash = newTokenHash;
+    session.revokedRefreshTokenHashes.push(incomingHash);
+    session.refreshTokenHash = newRefreshTokenHash;
+    session.lastActive = new Date();
+    session.expiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    
+    await session.save();
+
+    res.json({
+      access_token: newAccessToken,
+      refresh_token: newRefreshToken,
+      token_type: "bearer"
+    });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
 // ─── GET /auth/sessions/active ─────────────────────────────────────
 router.get('/sessions/active', authenticate, async (req, res) => {
   try {
@@ -520,6 +752,8 @@ router.post('/sessions/logout-all', authenticate, async (req, res) => {
       tokenHash: { $ne: currentTokenHash }
     });
     
+    await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: 'all_other_devices' }, req);
+
     res.json({ message: "Successfully logged out of all other devices" });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -533,6 +767,9 @@ router.post('/logout', authenticate, async (req, res) => {
     const currentToken = req.headers['authorization'].split(' ')[1];
     const currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
     await UserSession.deleteOne({ userId: req.userEmail, tokenHash: currentTokenHash });
+    
+    await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: 'current_device' }, req);
+
     res.json({ message: "Logged out successfully" });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -548,6 +785,9 @@ router.delete('/sessions/:id', authenticate, async (req, res) => {
     if (result.deletedCount === 0) {
       return res.status(404).json({ detail: "Session not found" });
     }
+    
+    await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: `device_${id}` }, req);
+
     res.json({ message: "Session revoked successfully" });
   } catch (error) {
     res.status(500).json({ detail: error.message });

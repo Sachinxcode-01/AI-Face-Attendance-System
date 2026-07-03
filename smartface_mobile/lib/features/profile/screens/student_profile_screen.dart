@@ -682,6 +682,71 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
 
                       const SizedBox(height: 30),
 
+                      // ── App About (read-only) ───────────────────────
+                      if (!_isEditing) ...[
+                        _buildSection(
+                          icon: Icons.info_outline_rounded,
+                          title: 'APP INFORMATION',
+                          color: AppColors.cyan,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                showAboutDialog(
+                                  context: context,
+                                  applicationName: 'Smart Attendance AI',
+                                  applicationVersion: '1.0.0',
+                                  applicationIcon: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Image.asset(
+                                      'assets/images/logo.png',
+                                      width: 48,
+                                      height: 48,
+                                    ),
+                                  ),
+                                  applicationLegalese: '© 2026 SmartFace AI Team. All rights reserved.',
+                                );
+                              },
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.logo_dev_rounded, color: AppColors.cyan, size: 18),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'ABOUT SMARTFACE',
+                                          style: GoogleFonts.inter(
+                                            color: Colors.white38,
+                                            fontSize: 10,
+                                            letterSpacing: 0.8,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          'Smart Attendance AI v1.0.0',
+                                          style: GoogleFonts.inter(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: Colors.white38,
+                                    size: 18,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 30),
+                      ],
+
                       // ── Save Button (shown in edit mode) ───────────────
                       if (_isEditing) _buildSaveButton(),
 
@@ -692,9 +757,122 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                           width: double.infinity,
                           child: GlowButton(
                             onPressed: () async {
-                              await context.read<SessionManager>().logout();
-                              if (context.mounted) {
-                                context.go('/auth/login');
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                barrierColor: Colors.black.withValues(alpha: 0.6),
+                                builder: (dialogContext) {
+                                  return Center(
+                                    child: Container(
+                                      margin: const EdgeInsets.all(24),
+                                      padding: const EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF0F172A),
+                                        borderRadius: BorderRadius.circular(28),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(alpha: 0.1),
+                                          width: 1.5,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.4),
+                                            blurRadius: 30,
+                                            spreadRadius: 2,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(16),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.error.withValues(alpha: 0.1),
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: AppColors.error.withValues(alpha: 0.25),
+                                                  width: 1.5,
+                                                ),
+                                              ),
+                                              child: const Icon(
+                                                Icons.logout_rounded,
+                                                color: AppColors.error,
+                                                size: 32,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 20),
+                                            Text(
+                                              'Confirm Logout',
+                                              style: GoogleFonts.outfit(
+                                                color: Colors.white,
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 10),
+                                            Text(
+                                              'Are you sure you want to sign out? Your offline session context will be safely cleared.',
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.inter(
+                                                color: Colors.white70,
+                                                fontSize: 14,
+                                                height: 1.45,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 24),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: TextButton(
+                                                    onPressed: () => Navigator.pop(dialogContext, false),
+                                                    style: TextButton.styleFrom(
+                                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(14),
+                                                        side: const BorderSide(color: Colors.white24),
+                                                      ),
+                                                    ),
+                                                    child: Text(
+                                                      'Cancel',
+                                                      style: GoogleFonts.inter(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: GlowButton(
+                                                    onPressed: () => Navigator.pop(dialogContext, true),
+                                                    color: AppColors.error,
+                                                    glowColor: AppColors.error.withValues(alpha: 0.3),
+                                                    borderRadius: 14,
+                                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                                    child: Text(
+                                                      'Logout',
+                                                      style: GoogleFonts.inter(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                              if (confirmed == true && context.mounted) {
+                                await context.read<SessionManager>().logout();
+                                if (context.mounted) {
+                                  context.go('/auth/login');
+                                }
                               }
                             },
                             color: AppColors.error,

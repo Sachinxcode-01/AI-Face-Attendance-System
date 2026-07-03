@@ -27,6 +27,7 @@ import 'package:path_provider/path_provider.dart';
 // Core & State Imports
 // ======================================================
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/ui/ui.dart' as ds;
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/features/sync/widgets/sync_status_banner.dart';
@@ -823,84 +824,41 @@ class _StudentDashboardState extends State<StudentDashboard> {
           curve: Curves.easeOutCubic,
         );
 
+    final String initials = (session.name ?? 'S')
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .take(2)
+        .map((p) => p[0].toUpperCase())
+        .join();
+
     return AuthBlobBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leadingWidth: 0,
-          leading: const SizedBox.shrink(),
-          title: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF3559E0), width: 1.5),
-                  boxShadow: AppShadows.glow(const Color(0xFF3559E0), intensity: 0.1),
-                ),
-                child: CircleAvatar(
-                  backgroundColor: const Color(0xFFE5ECFC),
-                  child: Text(
-                    (session.name ?? 'S').substring(0, 1).toUpperCase(),
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF3559E0),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    session.name ?? 'Sachin',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                      color: const Color(0xFF1B2C56),
-                    ),
-                  ),
-                  Text(
-                    'Semester 6 • B.Tech CSE',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: const Color(0xFF7F8CA4),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              onPressed: () => context.push('/notifications/nexus'),
-              icon: const Icon(
-                Icons.notifications_none_rounded,
-                color: Color(0xFF1B2C56),
-              ),
-            ),
-            IconButton(
-              onPressed: () => context.push(AppRoutes.studentProfilePath),
-              icon: const Icon(
-                Icons.account_circle_outlined,
-                color: Color(0xFF1B2C56),
-              ),
-            ),
-          ],
-        ),
-        body: GlowRefreshIndicator(
+        body: Column(
+          children: [
+            ds.DashboardHeader(
+              greeting: _greeting(),
+              name: session.name ?? 'Student',
+              subtitle: _todayString(),
+              avatarText: initials.isEmpty ? 'S' : initials,
+              hasUnread: true,
+              onNotifications: () => context.push('/notifications/nexus'),
+              onAvatar: () => context.push(AppRoutes.studentProfilePath),
+            ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1, end: 0),
+            Expanded(
+              child: GlowRefreshIndicator(
           onRefresh: _loadDashboardData,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Transform.translate(
+                  offset: const Offset(0, -20),
+                  child: _buildAttendanceSummaryCard(),
+                ),
                 if (activeSessionBanner != null) ...[
                   activeSessionBanner,
                   const SizedBox(height: 20),
@@ -909,8 +867,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 const SizedBox(height: 10),
                 if (!isTablet) ...[
                   // Mobile view layout: Single column high-density details
-                  header,
-                  const SizedBox(height: 20),
                   healthGrid,
                   const SizedBox(height: 20),
                   aiInsights,
@@ -971,6 +927,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
               ],
             ),
           ),
+              ),
+            ),
+          ],
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: _showExportOptionsDialog,
@@ -980,6 +939,91 @@ class _StudentDashboardState extends State<StudentDashboard> {
         ),
       ),
     );
+  }
+
+  // ── Reference-style helpers ────────────────────────────────────────────────
+
+  String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Good morning,';
+    if (h < 17) return 'Good afternoon,';
+    return 'Good evening,';
+  }
+
+  String _todayString() {
+    const days = [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
+      'Saturday', 'Sunday',
+    ];
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June', 'July',
+      'August', 'September', 'October', 'November', 'December',
+    ];
+    final now = DateTime.now();
+    return '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]}';
+  }
+
+  /// The signature reference "attendance this month" summary card.
+  Widget _buildAttendanceSummaryCard() {
+    final pct = (_overallPercentage * 100).round();
+    return ds.GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          const ds.IconChip(icon: Icons.fact_check_outlined, size: 46),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$pct% attendance',
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF1A1A3A),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Overall this semester • $_standing',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: const Color(0xFF8A90AE),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 44,
+            height: 44,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircularProgressIndicator(
+                  value: _overallPercentage,
+                  strokeWidth: 4,
+                  backgroundColor: const Color(0xFFE6E8F2),
+                  valueColor: const AlwaysStoppedAnimation(Color(0xFF3D4AB8)),
+                ),
+                Text(
+                  '$pct',
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF3D4AB8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
   Widget _buildWelcomeHeader(

@@ -19,9 +19,12 @@ import 'package:smartface_attendance/app/config/env_config.dart';
 import 'package:smartface_attendance/features/leave/models/leave_model.dart';
 import 'package:smartface_attendance/features/leave/models/leave_balance.dart';
 import 'package:smartface_attendance/features/analytics/models/student_stats_model.dart';
+import 'package:smartface_attendance/core/network/secure_token_storage.dart';
 
 class ApiService {
-  static http.Client client = http.Client();
+  static http.Client client = InterceptingClient(http.Client());
+  static VoidCallback? onSessionExpired;
+  static ValueChanged<String>? onTokenRefreshed;
 
   // In-memory mock database for Leave Management System
   static final List<LeaveModel> _mockLeaves = [
@@ -1375,5 +1378,81 @@ class ApiService {
       debugPrint('getHeatmap error: $e');
     }
     return {'heatmap': []};
+  }
+}
+
+class InterceptingClient extends http.BaseClient {
+  final http.Client _inner;
+  bool _isRefreshing = false;
+
+  InterceptingClient(this._inner);
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    // Intercept and inject Authorization header if access token exists
+    final token = await SecureTokenStorage.getAccessToken();
+    if (token != null && token.isNotEmpty && !request.headers.containsKey('Authorization')) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+
+    var response = await _inner.send(request);
+    
+    if (response.statusCode == 401 && !_isRefreshing) {
+      _isRefreshing = true;
+      try {
+        final refreshToken = await SecureTokenStorage.getRefreshToken();
+        if (refreshToken != null && refreshToken.isNotEmpty) {
+          final refreshUri = Uri.parse('${ApiService.baseUrl}/auth/token/refresh');
+          final refreshRes = await _inner.post(
+            refreshUri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'refresh_token': refreshToken}),
+          );
+
+          if (refreshRes.statusCode == 200) {
+            final data = jsonDecode(refreshRes.body);
+            final newAccessToken = data['access_token'] as String;
+            final newRefreshToken = data['refresh_token'] as String;
+
+            await SecureTokenStorage.saveTokens(
+              accessToken: newAccessToken,
+              refreshToken: newRefreshToken,
+            );
+            
+            ApiService.onTokenRefreshed?.call(newAccessToken);
+
+            final newRequest = _cloneRequest(request, newAccessToken);
+            _isRefreshing = false;
+            return await _inner.send(newRequest);
+          }
+        }
+      } catch (e) {
+        debugPrint('[InterceptingClient] Error refreshing token: $e');
+      }
+      
+      _isRefreshing = false;
+      await SecureTokenStorage.clearTokens();
+      ApiService.onSessionExpired?.call();
+    }
+    
+    return response;
+  }
+
+  http.BaseRequest _cloneRequest(http.BaseRequest request, String newAccessToken) {
+    http.BaseRequest newRequest;
+    if (request is http.Request) {
+      newRequest = http.Request(request.method, request.url)
+        ..bodyBytes = request.bodyBytes;
+    } else if (request is http.MultipartRequest) {
+      final multipartRequest = http.MultipartRequest(request.method, request.url)
+        ..fields.addAll(request.fields)
+        ..files.addAll(request.files);
+      newRequest = multipartRequest;
+    } else {
+      newRequest = request; // Fallback
+    }
+    newRequest.headers.addAll(request.headers);
+    newRequest.headers['Authorization'] = 'Bearer $newAccessToken';
+    return newRequest;
   }
 }

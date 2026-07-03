@@ -24,7 +24,7 @@ class SmartAttendanceApp extends StatelessWidget {
     final themeCtrl = context.watch<ThemeController>();
 
     return MaterialApp.router(
-      title: 'SmartAttendance — AI',
+      title: 'Smart Attendance AI',
       debugShowCheckedModeBanner: false,
       theme: ThemeController.lightTheme,
       darkTheme: ThemeController.darkTheme,

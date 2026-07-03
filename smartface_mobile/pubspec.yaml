@@ -83,6 +83,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -98,8 +99,8 @@ flutter:
 
   assets:
     - assets/images/logo.png
-    - assets/images/ai_face_grid.png
-    - assets/logos/logo.svg
+    - assets/images/smartface_logo.png
+    - assets/icon/smartface_blue.png
     - .env
     - .env.development
     - .env.staging
@@ -130,3 +131,10 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/smartface_blue.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true

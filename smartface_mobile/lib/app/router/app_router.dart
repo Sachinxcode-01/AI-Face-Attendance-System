@@ -11,16 +11,19 @@
 */
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/ui/ui.dart'
+    show SmartBottomNav, SmartNavItem;
 import 'package:smartface_attendance/app/router/route_guards.dart';
 import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/core/di/service_locator.dart';
 
 // Guest / Unauthenticated Screens
 import 'package:smartface_attendance/features/auth/screens/splash_screen.dart';
+import 'package:smartface_attendance/features/auth/screens/onboarding_screen.dart';
+import 'package:smartface_attendance/features/auth/screens/intro_screen.dart';
 import 'package:smartface_attendance/features/auth/screens/login_screen.dart';
 import 'package:smartface_attendance/features/auth/screens/register_screen.dart';
 import 'package:smartface_attendance/features/auth/screens/forgot_password_screen.dart';
@@ -131,7 +134,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/welcome',
-      redirect: (context, state) => AppRoutes.splashPath,
+      redirect: (context, state) => AppRoutes.onboardingPath,
     ),
     GoRoute(
       path: '/login',
@@ -152,10 +155,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/reset-password',
       redirect: (context, state) => AppRoutes.forgotPasswordPath,
-    ),
-    GoRoute(
-      path: '/auth/intro',
-      redirect: (context, state) => AppRoutes.setupWizardPath,
     ),
     GoRoute(
       path: '/setup/student',
@@ -207,6 +206,24 @@ final GoRouter appRouter = GoRouter(
         context: context,
         state: state,
         child: const SplashScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.onboardingPath,
+      name: AppRoutes.onboardingName,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const OnboardingScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.introPath,
+      name: AppRoutes.introName,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const IntroScreen(),
       ),
     ),
     GoRoute(
@@ -610,36 +627,35 @@ class StudentShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
+      backgroundColor: Colors.transparent,
       body: navigationShell,
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: SmartBottomNav(
         currentIndex: navigationShell.currentIndex,
-        onTap: (index) {
-          HapticFeedback.selectionClick();
-          navigationShell.goBranch(index);
-        },
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.bgDeep,
-        selectedItemColor: AppColors.gold,
-        unselectedItemColor: Colors.white38,
+        onTap: navigationShell.goBranch,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
+          SmartNavItem(
+            icon: Icons.home_outlined,
+            activeIcon: Icons.home_rounded,
             label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_scanner),
+          SmartNavItem(
+            icon: Icons.qr_code_scanner_rounded,
             label: 'Scan',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.event_busy_outlined),
+          SmartNavItem(
+            icon: Icons.event_busy_outlined,
+            activeIcon: Icons.event_busy_rounded,
             label: 'Leave',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_none_outlined),
+          SmartNavItem(
+            icon: Icons.notifications_none_rounded,
+            activeIcon: Icons.notifications_rounded,
             label: 'Alerts',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle_outlined),
+          SmartNavItem(
+            icon: Icons.person_outline_rounded,
+            activeIcon: Icons.person_rounded,
             label: 'Profile',
           ),
         ],
@@ -657,36 +673,35 @@ class TeacherShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
+      backgroundColor: Colors.transparent,
       body: navigationShell,
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: SmartBottomNav(
         currentIndex: navigationShell.currentIndex,
-        onTap: (index) {
-          HapticFeedback.selectionClick();
-          navigationShell.goBranch(index);
-        },
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.bgDeep,
-        selectedItemColor: AppColors.gold,
-        unselectedItemColor: Colors.white38,
+        onTap: navigationShell.goBranch,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
+          SmartNavItem(
+            icon: Icons.home_outlined,
+            activeIcon: Icons.home_rounded,
             label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.videocam_outlined),
+          SmartNavItem(
+            icon: Icons.videocam_outlined,
+            activeIcon: Icons.videocam_rounded,
             label: 'Feed',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_rounded),
+          SmartNavItem(
+            icon: Icons.qr_code_rounded,
             label: 'QR',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.analytics_outlined),
+          SmartNavItem(
+            icon: Icons.analytics_outlined,
+            activeIcon: Icons.analytics_rounded,
             label: 'Stats',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle_outlined),
+          SmartNavItem(
+            icon: Icons.person_outline_rounded,
+            activeIcon: Icons.person_rounded,
             label: 'Profile',
           ),
         ],
@@ -704,36 +719,36 @@ class AdminShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
+      backgroundColor: Colors.transparent,
       body: navigationShell,
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: SmartBottomNav(
         currentIndex: navigationShell.currentIndex,
-        onTap: (index) {
-          HapticFeedback.selectionClick();
-          navigationShell.goBranch(index);
-        },
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.bgDeep,
-        selectedItemColor: AppColors.gold,
-        unselectedItemColor: Colors.white38,
+        onTap: navigationShell.goBranch,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
+          SmartNavItem(
+            icon: Icons.home_outlined,
+            activeIcon: Icons.home_rounded,
             label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.approval_outlined),
+          SmartNavItem(
+            icon: Icons.fact_check_outlined,
+            activeIcon: Icons.fact_check_rounded,
             label: 'Approvals',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.security_outlined),
+          SmartNavItem(
+            icon: Icons.security_outlined,
+            activeIcon: Icons.security_rounded,
             label: 'Security',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.analytics_outlined),
+          SmartNavItem(
+            icon: Icons.analytics_outlined,
+            activeIcon: Icons.analytics_rounded,
             label: 'Analytics',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle_outlined),
+          SmartNavItem(
+            icon: Icons.person_outline_rounded,
+            activeIcon: Icons.person_rounded,
             label: 'Profile',
           ),
         ],

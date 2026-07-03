@@ -43,6 +43,7 @@ class SessionManager extends ChangeNotifier {
   );
 
   static const _keyToken = 'sf_auth_token';
+  static const _keyRefreshToken = 'sf_refresh_token';
   static const _keyEmail = 'sf_auth_email';
   static const _keyRole = 'sf_auth_role';
   static const _keyName = 'sf_auth_name';
@@ -51,6 +52,7 @@ class SessionManager extends ChangeNotifier {
   static const _keyBiometric = 'sf_biometric_registered';
 
   String? _token;
+  String? _refreshToken;
   String? _email;
   String? _role;
   String? _name;
@@ -64,6 +66,9 @@ class SessionManager extends ChangeNotifier {
 
   /// Gets the currently active JWT token.
   String? get token => _token;
+
+  /// Gets the active refresh token.
+  String? get refreshToken => _refreshToken;
 
   /// Gets the currently authenticated user's email address.
   String? get email => _email;
@@ -115,6 +120,7 @@ class SessionManager extends ChangeNotifier {
   Future<bool> init() async {
     try {
       _token = await _storage.read(key: _keyToken);
+      _refreshToken = await _storage.read(key: _keyRefreshToken);
       _email = await _storage.read(key: _keyEmail);
       _role = await _storage.read(key: _keyRole);
       _name = await _storage.read(key: _keyName);
@@ -134,6 +140,7 @@ class SessionManager extends ChangeNotifier {
   ///
   /// Parameters:
   /// - [token]: Active JWT token from backend
+  /// - [refreshToken]: Active rotatable refresh token from backend
   /// - [email]: Authenticated user email
   /// - [role]: User security role (admin, teacher, student)
   /// - [name]: Optional user display name
@@ -141,6 +148,7 @@ class SessionManager extends ChangeNotifier {
   /// - [biometricRegistered]: Biometric status flag
   Future<void> saveSession({
     required String token,
+    String? refreshToken,
     required String email,
     required String role,
     String? name,
@@ -148,6 +156,9 @@ class SessionManager extends ChangeNotifier {
     bool biometricRegistered = false,
   }) async {
     _token = token;
+    if (refreshToken != null) {
+      _refreshToken = refreshToken;
+    }
     _email = email;
     _role = role;
     _name = name;
@@ -157,6 +168,8 @@ class SessionManager extends ChangeNotifier {
 
     await Future.wait([
       _storage.write(key: _keyToken, value: token),
+      if (refreshToken != null)
+        _storage.write(key: _keyRefreshToken, value: refreshToken),
       _storage.write(key: _keyEmail, value: email),
       _storage.write(key: _keyRole, value: role),
       if (name != null) _storage.write(key: _keyName, value: name),
@@ -222,6 +235,7 @@ class SessionManager extends ChangeNotifier {
   /// Used during user logout or session expiration timeouts.
   Future<void> logout() async {
     _token = null;
+    _refreshToken = null;
     _email = null;
     _role = null;
     _name = null;
@@ -231,7 +245,18 @@ class SessionManager extends ChangeNotifier {
 
     // Clear offline chat caching and all other local caches
     await CacheService.clearAll();
-    await _storage.deleteAll();
+    
+    // Clear only session keys, preserving sf_remember_email
+    await Future.wait([
+      _storage.delete(key: _keyToken),
+      _storage.delete(key: _keyRefreshToken),
+      _storage.delete(key: _keyEmail),
+      _storage.delete(key: _keyRole),
+      _storage.delete(key: _keyName),
+      _storage.delete(key: _keyAvatarUrl),
+      _storage.delete(key: _keyBiometric),
+    ]);
+    
     notifyListeners();
   }
 
@@ -247,4 +272,11 @@ class SessionManager extends ChangeNotifier {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer ${_token ?? ''}',
   };
+
+  /// Sets the biometric registration status locally and persists it.
+  Future<void> setBiometricRegistered(bool value) async {
+    _biometricRegistered = value;
+    await _storage.write(key: _keyBiometric, value: value.toString());
+    notifyListeners();
+  }
 }

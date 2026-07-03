@@ -28,7 +28,7 @@ import 'package:smartface_attendance/features/sync/models/attendance_queue_recor
 class OfflineQueueService {
   static const String _boxName = 'attendance_queue';
   static const String _hmacKeyId = 'sf_queue_hmac_key';
-  static const int _maxQueueSize = 500;
+  static int maxQueueSize = 500;
   static const int _maxRetries = 5;
   static const Duration _staleDuration = Duration(days: 7);
 
@@ -100,7 +100,7 @@ class OfflineQueueService {
     }
 
     // Enforce queue size cap
-    if (_box!.length >= _maxQueueSize) {
+    if (_box!.length >= maxQueueSize) {
       await _evictOldest();
     }
 

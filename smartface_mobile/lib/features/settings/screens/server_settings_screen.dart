@@ -291,7 +291,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       'Extracting facial landmark clusters (68 landmarks)...',
       'Generating facial embeddings graph...',
       'Optimizing deep learning weights...',
-      'Syncing parameters to Nexa AI Cloud...',
+      'Syncing parameters to SmartFace AI Cloud...',
       'Face ID Enrollment Complete!',
     ];
 
@@ -1111,7 +1111,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
               _buildSettingsTextField(
                 controller: _hostController,
                 label: 'Server Host IP / Domain',
-                hint: 'e.g. 192.168.1.100 or api.nexa.ai',
+                hint: 'e.g. 192.168.1.100 or api.smartface.ai',
                 icon: Icons.link,
                 isDark: isDark,
               ),

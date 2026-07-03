@@ -10,7 +10,7 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // Enforce critical environment variable validation
-const requiredEnvVars = ['MONGODB_URL', 'FACE_SCANNER_TOKEN'];
+const requiredEnvVars = ['MONGODB_URL', 'FACE_SCANNER_TOKEN', 'EMAIL_PASSWORD'];
 const missingEnvVars = [];
 requiredEnvVars.forEach(varName => {
   const val = process.env[varName];
@@ -44,16 +44,70 @@ connectDB();
 
 const app = express();
 const server = http.createServer(app);
+app.disable('x-powered-by'); // Disable X-Powered-By header
 
-// ─── Secure HTTP Headers Middleware ─────────────────────────────────
-app.use((req, res, next) => {
+const sanitizeNoSQL = (obj) => {
+  if (obj && typeof obj === 'object') {
+    for (const key in obj) {
+      if (key.startsWith('$') || key.includes('.')) {
+        delete obj[key];
+      } else {
+        sanitizeNoSQL(obj[key]);
+      }
+    }
+  }
+};
+
+const sanitizeXSS = (val) => {
+  if (typeof val === 'string') {
+    return val
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  }
+  if (val && typeof val === 'object') {
+    for (const key in val) {
+      val[key] = sanitizeXSS(val[key]);
+    }
+  }
+  return val;
+};
+
+const inputSanitizer = (req, res, next) => {
+  if (req.body) {
+    sanitizeNoSQL(req.body);
+    req.body = sanitizeXSS(req.body);
+  }
+  if (req.query) {
+    sanitizeNoSQL(req.query);
+    req.query = sanitizeXSS(req.query);
+  }
+  if (req.params) {
+    sanitizeNoSQL(req.params);
+    req.params = sanitizeXSS(req.params);
+  }
+  next();
+};
+
+const httpSecurityHeaders = (req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'no-referrer');
   res.setHeader('Content-Security-Policy', "default-src 'self'");
+  res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
+  res.setHeader('X-Download-Options', 'noopen');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
   next();
-});
+};
+
+app.use(httpSecurityHeaders);
 
 // ─── Middleware Stack ───────────────────────────────────────────────
 const allowedOrigins = process.env.CORS_ORIGINS 
@@ -78,6 +132,7 @@ app.use(cors({
   exposedHeaders: ['X-Request-ID']
 }));
 app.use(express.json());
+app.use(inputSanitizer);
 app.use(securityAndLogger);
 
 // Serve static avatars

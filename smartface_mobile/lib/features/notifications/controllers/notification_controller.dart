@@ -76,7 +76,7 @@ class NotificationController extends ChangeNotifier {
       notifyListeners();
 
       // Trigger local popup alert if it is important
-      final title = event['title'] as String? ?? 'Nexa AI';
+      final title = event['title'] as String? ?? 'SmartFace AI';
       final body = event['message'] as String? ?? '';
       _repository.showAlert(title: title, message: body);
     });

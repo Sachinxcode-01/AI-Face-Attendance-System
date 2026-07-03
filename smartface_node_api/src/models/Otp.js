@@ -5,7 +5,8 @@ const OtpSchema = new mongoose.Schema({
   otp: { type: String, required: true },
   expiry: { type: Date, required: true, index: { expires: 0 } }, // TTL index
   role: { type: String },
-  type: { type: String }
+  type: { type: String },
+  attempts: { type: Number, default: 0 }
 });
 
 module.exports = mongoose.model('Otp', OtpSchema, 'login_otps');

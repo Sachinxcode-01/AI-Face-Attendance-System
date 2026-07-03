@@ -8,11 +8,11 @@ const SECRET_KEY = process.env.JWT_SECRET || process.env.SECRET_KEY;
 if (!SECRET_KEY || SECRET_KEY.trim() === '') {
   throw new Error("CRITICAL SECURITY ERROR: SECRET_KEY/JWT_SECRET environment variable is missing.");
 }
-const EXPIRE_MINUTES = parseInt(process.env.ACCESS_TOKEN_EXPIRE_MINUTES || "1440", 10);
+const EXPIRE_MINUTES = parseInt(process.env.ACCESS_TOKEN_EXPIRE_MINUTES || "15", 10);
 
 class AuthService {
   static async hashPassword(password) {
-    const saltRounds = process.env.NODE_ENV === 'production' ? 12 : 10;
+    const saltRounds = 12;
     const salt = await bcrypt.genSalt(saltRounds);
     return bcrypt.hash(password, salt);
   }

@@ -10,7 +10,7 @@ const TEST_PORT = 8013;
 const TEST_URL = `http://localhost:${TEST_PORT}`;
 
 const STUDENT_EMAIL = "ai_student@smartface.elite";
-const TEST_PASSWORD = "Password123!";
+const TEST_PASSWORD = "Secure123!_@#";
 
 async function runAIValidation() {
   console.log("======================================================================");

@@ -257,6 +257,21 @@ class AuthService {
     }
   }
 
+  Future<Map<String, dynamic>> logout(String token) async {
+    try {
+      final response = await _api.post(
+        '/auth/logout',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      return {'detail': 'Connection failed'};
+    }
+  }
+
   Future<Map<String, dynamic>> uploadAvatar(
     File imageFile,
     String token,

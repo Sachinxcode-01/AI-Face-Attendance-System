@@ -25,6 +25,10 @@ class EmailService {
   }
 
   static async sendEmail(toEmail, subject, textBody, htmlBody) {
+    if (process.env.NODE_ENV === 'test' || !EMAIL_PASSWORD || EMAIL_PASSWORD.trim() === '') {
+      console.log(`[Email Mock] to: ${toEmail} | subject: ${subject}`);
+      return true;
+    }
     try {
       const transporter = this.getTransporter();
       await transporter.sendMail({
@@ -599,6 +603,37 @@ Review details on your mobile student portal.`;
 </html>`;
 
     await this.sendEmail(email, subject, textBody, htmlBody);
+  }
+
+  static async sendSuspiciousLoginAlert(email, ip, timestamp) {
+    const subject = "⚠️ SECURITY ALERT: Suspicious Login Detected";
+    const textBody = `Hello,
+
+A suspicious login attempt was detected on your SmartFace AI account.
+IP Address: ${ip}
+Time: ${timestamp}
+
+If this wasn't you, please reset your password immediately or contact campus support.
+
+Best regards,
+SmartFace Security Team`;
+    await this.sendEmail(email, subject, textBody, textBody);
+  }
+
+  static async sendNewDeviceLoginAlert(email, device, ip, timestamp) {
+    const subject = "📱 SECURITY ALERT: New Device Login";
+    const textBody = `Hello,
+
+Your SmartFace AI account was logged into from a new device.
+Device: ${device}
+IP Address: ${ip}
+Time: ${timestamp}
+
+If this was you, you can safely ignore this email. If not, revoke this session from your active devices profile screen immediately.
+
+Best regards,
+SmartFace Security Team`;
+    await this.sendEmail(email, subject, textBody, textBody);
   }
 }
 

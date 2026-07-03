@@ -160,6 +160,16 @@ class AuthRepository {
     return result;
   }
 
+  Future<Map<String, dynamic>> logout() async {
+    final token = _sessionManager.token;
+    Map<String, dynamic> result = {};
+    if (token != null) {
+      result = await _authService.logout(token);
+    }
+    await _sessionManager.logout();
+    return result;
+  }
+
   Future<Map<String, dynamic>> uploadAvatar(
     File imageFile,
     String token,

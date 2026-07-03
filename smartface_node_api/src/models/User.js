@@ -5,6 +5,9 @@ const UserSchema = new mongoose.Schema({
   full_name: { type: String, required: true },
   role: { type: String, required: true, index: true }, // admin, teacher, student
   password: { type: String },
+  failedLoginAttempts: { type: Number, default: 0 },
+  lockoutUntil: { type: Date },
+  loginProgressiveDelay: { type: Number, default: 0 },
   biometric_registered: { type: Boolean, default: false },
   setup_completed: { type: Boolean, default: false },
   linked_children: [{ email: String, full_name: String, student_id: String }],
