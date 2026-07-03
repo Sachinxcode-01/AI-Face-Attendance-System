@@ -273,33 +273,34 @@ class _SplashScreenState extends State<SplashScreen> {
                         .animate(onPlay: (c) => c.repeat())
                         .rotate(duration: 10.seconds),
 
-                    // Central glass logo case
+                    // Central logo emblem — fills the circle edge-to-edge
                     Hero(
                       tag: 'logo',
                       child: Container(
-                        height: 115,
-                        width: 115,
-                        padding: const EdgeInsets.all(20),
+                        height: 116,
+                        width: 116,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white,
+                          color: const Color(0xFF0A1024),
                           border: Border.all(
                             color: primaryColor,
                             width: 2.0,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: primaryColor.withValues(alpha: 0.25),
-                              blurRadius: 15,
+                              color: primaryColor.withValues(alpha: 0.30),
+                              blurRadius: 22,
                               spreadRadius: 1,
                             ),
                           ],
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(60),
-                          child: Image.asset(
-                            'assets/images/logo.png',
-                            fit: BoxFit.cover,
+                        child: ClipOval(
+                          child: Transform.scale(
+                            scale: 1.2,
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ),
@@ -374,12 +375,11 @@ class _SplashScreenState extends State<SplashScreen> {
               Hero(
                 tag: 'logo',
                 child: Container(
-                  height: 90,
-                  width: 90,
-                  padding: const EdgeInsets.all(16),
+                  height: 92,
+                  width: 92,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white,
+                    color: const Color(0xFF0A1024),
                     border: Border.all(
                       color: primaryColor.withValues(alpha: 0.5),
                       width: 1.5,
@@ -392,11 +392,13 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(50),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.cover,
+                  child: ClipOval(
+                    child: Transform.scale(
+                      scale: 1.2,
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
