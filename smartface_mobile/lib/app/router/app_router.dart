@@ -611,6 +611,19 @@ final GoRouter appRouter = GoRouter(
         child: const NotificationNexusScreen(),
       ),
     ),
+
+    // Management Command Center (hod / principal / management roles).
+    // Guarded by RouteGuards so only elevated roles + admin can reach it.
+    GoRoute(
+      path: AppRoutes.managementDashboardPath,
+      name: AppRoutes.managementDashboardName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const AdminDashboard(),
+      ),
+    ),
   ],
 );
 
