@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/analytics/screens/ai_analyst_screen.dart';
 import 'mocks/mock_api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -66,6 +67,7 @@ void main() {
     late SessionManager sessionManager;
 
     setUp(() async {
+      SharedPreferences.setMockInitialValues({});
       mockSecureStorage.clear();
       sessionManager = SessionManager();
       await sessionManager.saveSession(
@@ -120,6 +122,12 @@ void main() {
 
       // The user's message must appear in the list immediately.
       expect(find.text('Summarize my stats'), findsOneWidget);
+
+      // Resolve the mock HTTP call and complete any resulting UI/state updates
+      await tester.idle();
+      await tester.pump();
+      // Drain any remaining animation timers
+      await tester.pump(const Duration(milliseconds: 500));
     });
 
     // ── Test 3: AI response is appended after the HTTP call completes ─────
@@ -132,11 +140,10 @@ void main() {
       await tester.pump(); // user message appears
       await tester.pump(const Duration(milliseconds: 500)); // drain animate
 
-      // Advance enough time for the async http call to resolve.
-      // Use a fixed duration instead of pumpAndSettle to avoid hanging on
-      // flutter_animate's continuous shimmer timers.
-      await tester.pump(const Duration(seconds: 2));
-      // Drain any new animate timers from the AI reply bubble.
+      // Resolve the mock HTTP call and complete any resulting UI/state updates
+      await tester.idle();
+      await tester.pump();
+      // Drain any remaining animation timers
       await tester.pump(const Duration(milliseconds: 500));
 
       // The mock returns 'This is a mock AI response.'
