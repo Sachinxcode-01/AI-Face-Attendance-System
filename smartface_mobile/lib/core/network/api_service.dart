@@ -132,7 +132,53 @@ class ApiService {
   }
 
   static Future<void> init() async {
-    debugPrint('[ApiService] Initialized with EnvConfig.apiUrl: $baseUrl');
+    if (baseUrl.isEmpty) {
+      debugPrint('[ApiService] ❌ FATAL: API_URL is empty. Check .env file is loaded and ENV dart-define is correct.');
+    } else {
+      debugPrint('[ApiService] ✅ Initialized. Base URL: $baseUrl');
+    }
+  }
+
+  /// Converts a raw network exception into a structured error map.
+  ///
+  /// Returns keys:
+  ///   `error_type`: one of 'no_internet' | 'backend_down' | 'timeout' | 'unknown'
+  ///   `detail`: human-readable message for the UI
+  static Map<String, dynamic> _classifyNetworkError(Object e) {
+    final msg = e.toString().toLowerCase();
+    debugPrint('[ApiService] 🔴 Network error: $e');
+    if (e is TimeoutException || msg.contains('timeoutexception') || msg.contains('timed out')) {
+      return {
+        'error_type': 'timeout',
+        'detail': 'Request timed out. Please try again.',
+      };
+    }
+    if (msg.contains('socketexception') || msg.contains('failed host lookup') ||
+        msg.contains('no address associated') || msg.contains('network is unreachable') ||
+        msg.contains('connection refused') || baseUrl.isEmpty) {
+      // Distinguish: if URL itself is valid-looking, it is backend down;
+      // if it's empty or clearly wrong it is misconfiguration.
+      if (baseUrl.isEmpty) {
+        return {
+          'error_type': 'misconfigured',
+          'detail': 'App is misconfigured (missing API URL). Please reinstall or contact support.',
+        };
+      }
+      return {
+        'error_type': 'backend_down',
+        'detail': 'Server not reachable. Check your internet connection or try again later.',
+      };
+    }
+    if (msg.contains('handshakeexception') || msg.contains('certificate') || msg.contains('tlsexception')) {
+      return {
+        'error_type': 'ssl_error',
+        'detail': 'Secure connection failed. Please try again.',
+      };
+    }
+    return {
+      'error_type': 'unknown',
+      'detail': 'An unexpected error occurred. Please try again.',
+    };
   }
 
   static Future<void> saveServerSettings(String host, String port) async {
@@ -167,18 +213,17 @@ class ApiService {
       sendLoginOtp(email);
 
   static Future<Map<String, dynamic>> sendLoginOtp(String email) async {
+    debugPrint('[ApiService] → POST $baseUrl/auth/login-otp/send');
     try {
       final response = await client.post(
         Uri.parse('$baseUrl/auth/login-otp/send'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email}),
       ).timeout(const Duration(seconds: 15));
-      return jsonDecode(response.body);
+      debugPrint('[ApiService] ← Status ${response.statusCode}');
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
-      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
-        return {'detail': 'timeout'};
-      }
-      return {'detail': 'Connection failed'};
+      return _classifyNetworkError(e);
     }
   }
 
@@ -186,18 +231,17 @@ class ApiService {
     String email,
     String otp,
   ) async {
+    debugPrint('[ApiService] → POST $baseUrl/auth/login-otp/verify');
     try {
       final response = await client.post(
         Uri.parse('$baseUrl/auth/login-otp/verify'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'otp': otp}),
       ).timeout(const Duration(seconds: 15));
-      return normalizeAuthResponse(jsonDecode(response.body));
+      debugPrint('[ApiService] ← Status ${response.statusCode}');
+      return normalizeAuthResponse(jsonDecode(response.body) as Map<String, dynamic>);
     } catch (e) {
-      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
-        return {'detail': 'timeout'};
-      }
-      return {'detail': 'Connection failed'};
+      return _classifyNetworkError(e);
     }
   }
 
@@ -205,18 +249,17 @@ class ApiService {
     String email,
     String password,
   ) async {
+    debugPrint('[ApiService] → POST $baseUrl/auth/login-password');
     try {
       final response = await client.post(
         Uri.parse('$baseUrl/auth/login-password'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       ).timeout(const Duration(seconds: 15));
-      return normalizeAuthResponse(jsonDecode(response.body));
+      debugPrint('[ApiService] ← Status ${response.statusCode}');
+      return normalizeAuthResponse(jsonDecode(response.body) as Map<String, dynamic>);
     } catch (e) {
-      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
-        return {'detail': 'timeout'};
-      }
-      return {'detail': 'Connection failed'};
+      return _classifyNetworkError(e);
     }
   }
 
