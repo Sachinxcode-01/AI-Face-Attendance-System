@@ -64,15 +64,17 @@ class AuthRepository {
     String name,
     String role, {
     String? avatarUrl,
+    String? idToken,
   }) async {
     final result = await _authService.googleLogin(
       email,
       name,
       role,
       avatarUrl: avatarUrl,
+      idToken: idToken,
     );
-    if (result.containsKey('token')) {
-      final String token = result['token'] as String;
+    if (result.containsKey('token') || result.containsKey('access_token')) {
+      final String token = (result['token'] ?? result['access_token']) as String;
       final String userRole = result['role'] as String? ?? role;
       await _sessionManager.saveSession(
         token: token,
@@ -84,6 +86,31 @@ class AuthRepository {
     }
     return result;
   }
+
+  Future<Map<String, dynamic>> githubLogin(
+    String code,
+    String role,
+  ) async {
+    final result = await _authService.githubLogin(code, role);
+    if (result.containsKey('token') || result.containsKey('access_token')) {
+      final String token = (result['token'] ?? result['access_token']) as String;
+      final String email = result['email'] as String? ?? '';
+      final String name = result['full_name'] ?? result['name'] ?? 'User';
+      final String userRole = result['role'] as String? ?? role;
+      final String? avatarUrl = result['avatar_url'] as String?;
+      final bool bioRegistered = result['biometric_registered'] ?? false;
+      await _sessionManager.saveSession(
+        token: token,
+        email: email,
+        name: name,
+        role: userRole,
+        avatarUrl: avatarUrl,
+        biometricRegistered: bioRegistered,
+      );
+    }
+    return result;
+  }
+
 
   Future<Map<String, dynamic>> register(
     String name,

@@ -25,6 +25,8 @@ class EnvConfig {
   static String? _groqApiKey;
   static String? _googleApiKey;
   static String? _faceScannerToken;
+  static String? _githubClientId;
+  static String? _googleClientId;
 
   static String? _firebaseApiKey;
   static String? _firebaseAppId;
@@ -39,6 +41,8 @@ class EnvConfig {
   static String get googleApiKey => _googleApiKey ?? 'AIzaSyDevDummyKey54321';
   static String get faceScannerToken =>
       _faceScannerToken ?? 'dev_scanner_secret_token_abc';
+  static String get githubClientId => _githubClientId ?? 'YOUR_GITHUB_CLIENT_ID';
+  static String get googleClientId => _googleClientId ?? 'YOUR_GOOGLE_CLIENT_ID';
 
   // Firebase configurations
   static String get firebaseApiKey => _firebaseApiKey ?? 'AIzaSyDevFirebaseKey';
@@ -70,6 +74,10 @@ class EnvConfig {
       _groqApiKey = _getOrThrow('GROQ_API_KEY');
       _googleApiKey = _getOrThrow('GOOGLE_API_KEY');
       _faceScannerToken = _getOrThrow('FACE_SCANNER_TOKEN');
+
+      // GitHub & Google OAuth Client IDs (Optional read to prevent boot crashes if not set)
+      _githubClientId = dotenv.env['GITHUB_CLIENT_ID'];
+      _googleClientId = dotenv.env['GOOGLE_CLIENT_ID'];
 
       // Firebase
       _firebaseApiKey = _getOrThrow('FIREBASE_API_KEY');

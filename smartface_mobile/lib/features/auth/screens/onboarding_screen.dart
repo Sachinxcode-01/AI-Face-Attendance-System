@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:smartface_attendance/app/config/cache_service.dart';
+import 'package:smartface_attendance/core/di/service_locator.dart';
+import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -12,9 +13,7 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _navigateTo(String route) async {
-    // Save completion flags in local storage to prevent showing onboarding/intro again
-    await CacheService.set('sf_onboarding_completed', true, persist: true);
-    await CacheService.set('sf_intro_completed', true, persist: true);
+    await sl<SessionManager>().setOnboardingCompleted(true);
     if (mounted) {
       context.go(route);
     }

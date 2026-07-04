@@ -52,10 +52,11 @@ class CacheService {
   static Future<void> set(
     String key,
     dynamic value, {
-    Duration ttl = const Duration(minutes: 5),
+    Duration? ttl,
     bool persist = false,
   }) async {
-    final expiry = DateTime.now().add(ttl);
+    final duration = ttl ?? (persist ? const Duration(days: 36500) : const Duration(minutes: 5));
+    final expiry = DateTime.now().add(duration);
     _memory[key] = _CacheEntry(value: value, expiry: expiry);
 
     // Enforce max entry count limit by removing the earliest expiring entry

@@ -23,11 +23,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
-import 'package:smartface_attendance/app/config/cache_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
 
@@ -220,29 +218,22 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       };
     }
 
+    final session = context.read<SessionManager>();
     if (_token.isNotEmpty) {
       await ApiService.updateProfile(profileData, _token);
       if (!mounted) return;
-      final session = context.read<SessionManager>();
       await session.saveSession(
         token: _token,
         email: _email,
         role: _role,
         name: profileData['full_name']?.toString(),
         biometricRegistered: _scanComplete,
+        introCompleted: true,
+        wizardCompleted: true,
       );
+    } else {
+      await session.setWizardCompleted(true);
     }
-
-    await CacheService.set('sf_wizard_completed', true, persist: true);
-
-    if (!mounted) return;
-    final dashboard = _role == 'admin'
-        ? '/admin/home'
-        : (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer'
-            ? '/teacher/home'
-            : (_role == 'parent' ? '/parent/dashboard' : '/student/home'));
-
-    context.go(dashboard);
   }
 
   // ─── BUILD ───────────────────────────────────────────────────────────────

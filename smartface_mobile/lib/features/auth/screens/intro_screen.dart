@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
-import 'package:smartface_attendance/app/config/cache_service.dart';
+import 'package:smartface_attendance/core/di/service_locator.dart';
+import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
 
@@ -42,10 +42,7 @@ class _IntroScreenState extends State<IntroScreen> {
   ];
 
   Future<void> _completeIntro() async {
-    await CacheService.set('sf_intro_completed', true, persist: true);
-    if (mounted) {
-      context.go('/auth/setup');
-    }
+    await sl<SessionManager>().setIntroCompleted(true);
   }
 
   void _nextPage() {

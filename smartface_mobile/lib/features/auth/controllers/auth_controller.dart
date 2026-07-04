@@ -94,6 +94,7 @@ class AuthController extends ChangeNotifier {
     String name,
     String role, {
     String? avatarUrl,
+    String? idToken,
   }) async {
     _setLoading(true);
     _setError(null);
@@ -103,8 +104,9 @@ class AuthController extends ChangeNotifier {
         name,
         role,
         avatarUrl: avatarUrl,
+        idToken: idToken,
       );
-      if (res.containsKey('detail') && !res.containsKey('token')) {
+      if (res.containsKey('detail') && !res.containsKey('token') && !res.containsKey('access_token')) {
         _setError(res['detail'] as String);
       }
       return res;
@@ -115,6 +117,27 @@ class AuthController extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  Future<Map<String, dynamic>> githubLogin(
+    String code,
+    String role,
+  ) async {
+    _setLoading(true);
+    _setError(null);
+    try {
+      final res = await _repository.githubLogin(code, role);
+      if (res.containsKey('detail') && !res.containsKey('token') && !res.containsKey('access_token')) {
+        _setError(res['detail'] as String);
+      }
+      return res;
+    } catch (e) {
+      _setError(e.toString());
+      return {'detail': e.toString()};
+    } finally {
+      _setLoading(false);
+    }
+  }
+
 
   Future<Map<String, dynamic>> register(
     String name,
