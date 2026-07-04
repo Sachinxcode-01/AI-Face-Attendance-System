@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-
-import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
@@ -77,19 +74,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _handleSignUp() async {
-    if (_nameController.text.trim().isEmpty) {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (name.isEmpty) {
       AppToast.show(context, message: 'Please enter your full name', type: ToastType.warning);
       return;
     }
-    final email = _emailController.text.trim();
+    if (name.length < 2) {
+      AppToast.show(context, message: 'Name must be at least 2 characters long', type: ToastType.warning);
+      return;
+    }
     if (email.isEmpty || !_isValidEmail(email)) {
       AppToast.show(context, message: 'Please enter a valid email address', type: ToastType.warning);
       return;
     }
-    if (_passwordController.text.isEmpty) {
+    if (password.isEmpty) {
       AppToast.show(context, message: 'Please enter a password', type: ToastType.warning);
       return;
     }
+    if (password.length < 8) {
+      AppToast.show(context, message: 'Password must be at least 8 characters long', type: ToastType.warning);
+      return;
+    }
+    
+    // Check password strength requirement
+    final hasUpper = RegExp(r'[A-Z]').hasMatch(password);
+    final hasLower = RegExp(r'[a-z]').hasMatch(password);
+    final hasDigit = RegExp(r'[0-9]').hasMatch(password);
+    final hasSpecial = RegExp(r'[^A-Za-z0-9]').hasMatch(password);
+    if (!hasUpper || !hasLower || !hasDigit || !hasSpecial) {
+      AppToast.show(
+        context,
+        message: 'Password must contain uppercase, lowercase, numbers, and special characters',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
     if (!_agreeToTerms) {
       AppToast.show(context, message: 'You must agree to the processing of Personal data', type: ToastType.warning);
       return;
@@ -100,46 +123,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final registerResult = await ApiService.register(
-        _nameController.text.trim(),
+        name,
         email,
-        _passwordController.text,
-        _selectedRole,
+        password,
+        _selectedRole.toLowerCase(),
       );
 
       if (!mounted) return;
 
-      if (registerResult.containsKey('id')) {
+      if (registerResult.containsKey('id') || registerResult.containsKey('email')) {
         HapticFeedback.heavyImpact();
         AppToast.show(
           context,
           title: 'Account Created 🎉',
-          message: 'Signing in...',
+          message: 'An OTP code has been sent to your email.',
           type: ToastType.success,
         );
 
-        // Auto sign-in
-        final loginResult = await ApiService.loginWithPassword(email, _passwordController.text);
-        if (!mounted) return;
-
-        if (loginResult.containsKey('access_token')) {
-          final session = context.read<SessionManager>();
-          await session.saveSession(
-            token: loginResult['access_token'],
-            email: email,
-            role: loginResult['role'] ?? _selectedRole.toLowerCase(),
-            name: _nameController.text.trim(),
-          );
-          if (!mounted) return;
-          context.go('/auth/setup');
-        } else {
-          context.go('/auth/login');
-        }
+        // Go to OTP screen and pass the registered email for auto OTP trigger
+        context.go('/auth/otp', extra: email);
       } else {
         throw Exception(registerResult['detail'] ?? registerResult['message'] ?? 'Sign up failed');
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'Error: $e', type: ToastType.error);
+      AppToast.show(context, message: '$e', type: ToastType.error);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -238,20 +246,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildRoleCard('Student', Icons.school),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildRoleCard('Teacher', Icons.co_present),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildRoleCard('Parent', Icons.family_restroom),
-                ),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final cardSize = (constraints.maxWidth - 12) / 2;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    _RoleCard(
+                      role: 'Student',
+                      icon: Icons.school,
+                      isSelected: _selectedRole == 'Student',
+                      size: cardSize,
+                      onTap: () => setState(() => _selectedRole = 'Student'),
+                    ),
+                    _RoleCard(
+                      role: 'Teacher',
+                      icon: Icons.co_present,
+                      isSelected: _selectedRole == 'Teacher',
+                      size: cardSize,
+                      onTap: () => setState(() => _selectedRole = 'Teacher'),
+                    ),
+                    _RoleCard(
+                      role: 'Parent',
+                      icon: Icons.family_restroom,
+                      isSelected: _selectedRole == 'Parent',
+                      size: cardSize,
+                      onTap: () => setState(() => _selectedRole = 'Parent'),
+                    ),
+                    _RoleCard(
+                      role: 'Admin',
+                      icon: Icons.admin_panel_settings,
+                      isSelected: _selectedRole == 'Admin',
+                      size: cardSize,
+                      onTap: () => setState(() => _selectedRole = 'Admin'),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 14),
 
@@ -302,51 +334,122 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 22),
 
             // Social divider and row
-            const SocialIconRow(actionPrefix: 'Sign up'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoleCard(String role, IconData icon) {
-    final isSelected = _selectedRole == role;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedRole = role;
-        });
-      },
-      child: Container(
-        height: 72,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(13),
-          border: Border.all(
-            color: isSelected ? AuthDesign.primaryIndigo : AuthDesign.underlineUnfocused,
-            width: 1.5,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? AuthDesign.primaryIndigo : AuthDesign.textLabel,
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              role,
-              style: AuthDesign.fontPoppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? AuthDesign.primaryIndigo : AuthDesign.textLabel,
-              ),
-            ),
+            SocialIconRow(actionPrefix: 'Sign up', role: _selectedRole),
           ],
         ),
       ),
     );
   }
 }
+
+class _RoleCard extends StatefulWidget {
+  final String role;
+  final IconData icon;
+  final bool isSelected;
+  final double size;
+  final VoidCallback onTap;
+
+  const _RoleCard({
+    required this.role,
+    required this.icon,
+    required this.isSelected,
+    required this.size,
+    required this.onTap,
+  });
+
+  @override
+  State<_RoleCard> createState() => _RoleCardState();
+}
+
+class _RoleCardState extends State<_RoleCard> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 80),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.94).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const selectedColor = AuthDesign.primaryIndigo;
+    const unselectedColor = Color(0xFF94A3B8);
+    const selectedBg = Color(0xFFEEF2FF);
+    const unselectedBg = Colors.white;
+    final borderColor = widget.isSelected ? selectedColor : const Color(0xFFE2E8F0);
+
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            color: widget.isSelected ? selectedBg : unselectedBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: borderColor,
+              width: widget.isSelected ? 2.0 : 1.0,
+            ),
+            boxShadow: widget.isSelected
+                ? [
+                    BoxShadow(
+                      color: selectedColor.withValues(alpha: 0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                widget.icon,
+                color: widget.isSelected ? selectedColor : unselectedColor,
+                size: widget.size * 0.28,
+              ),
+              SizedBox(height: widget.size * 0.08),
+              Text(
+                widget.role,
+                style: AuthDesign.fontPoppins(
+                  fontSize: widget.size * 0.09,
+                  fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: widget.isSelected ? selectedColor : unselectedColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+

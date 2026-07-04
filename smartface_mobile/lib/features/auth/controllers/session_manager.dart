@@ -60,6 +60,10 @@ class SessionManager extends ChangeNotifier {
   bool _biometricRegistered = false;
   bool _isLoggedIn = false;
 
+  bool _onboardingCompleted = false;
+  bool _introCompleted = false;
+  bool _wizardCompleted = false;
+
   // ======================================================
   // Getters
   // ======================================================
@@ -87,6 +91,10 @@ class SessionManager extends ChangeNotifier {
 
   /// Indicates whether a user is currently logged in.
   bool get isLoggedIn => _isLoggedIn;
+
+  bool get onboardingCompleted => _onboardingCompleted;
+  bool get introCompleted => _introCompleted;
+  bool get wizardCompleted => _wizardCompleted;
 
   /// Converts the string role to the typed [UserRole] enum.
   UserRole get userRole => UserRoleExt.fromString(_role);
@@ -131,12 +139,35 @@ class SessionManager extends ChangeNotifier {
       final bio = await _storage.read(key: _keyBiometric);
       _biometricRegistered = bio == 'true';
       _isLoggedIn = _token != null && _token!.isNotEmpty;
+
+      _onboardingCompleted = await CacheService.get<bool>('sf_onboarding_completed') ?? false;
+      _introCompleted = await CacheService.get<bool>('sf_intro_completed') ?? false;
+      _wizardCompleted = await CacheService.get<bool>('sf_wizard_completed') ?? false;
+
       notifyListeners();
       return _isLoggedIn;
     } catch (e) {
       debugPrint('[SessionManager] init error: $e');
       return false;
     }
+  }
+
+  Future<void> setOnboardingCompleted(bool value) async {
+    _onboardingCompleted = value;
+    await CacheService.set('sf_onboarding_completed', value, persist: true);
+    notifyListeners();
+  }
+
+  Future<void> setIntroCompleted(bool value) async {
+    _introCompleted = value;
+    await CacheService.set('sf_intro_completed', value, persist: true);
+    notifyListeners();
+  }
+
+  Future<void> setWizardCompleted(bool value) async {
+    _wizardCompleted = value;
+    await CacheService.set('sf_wizard_completed', value, persist: true);
+    notifyListeners();
   }
 
   /// Saves session credentials to local secure storage upon successful login.
@@ -149,6 +180,8 @@ class SessionManager extends ChangeNotifier {
   /// - [name]: Optional user display name
   /// - [avatarUrl]: Optional link to avatar profile image
   /// - [biometricRegistered]: Biometric status flag
+  /// - [introCompleted]: Option to explicitly set introCompleted state
+  /// - [wizardCompleted]: Option to explicitly set wizardCompleted state
   Future<void> saveSession({
     required String token,
     String? refreshToken,
@@ -157,6 +190,8 @@ class SessionManager extends ChangeNotifier {
     String? name,
     String? avatarUrl,
     bool biometricRegistered = false,
+    bool? introCompleted,
+    bool? wizardCompleted,
   }) async {
     _token = token;
     if (refreshToken != null) {
@@ -169,6 +204,14 @@ class SessionManager extends ChangeNotifier {
     _biometricRegistered = biometricRegistered;
     _isLoggedIn = true;
 
+    _onboardingCompleted = true; // Logged in implies onboarding is completed
+    if (introCompleted != null) _introCompleted = introCompleted;
+    if (wizardCompleted != null) {
+      _wizardCompleted = wizardCompleted;
+    } else {
+      _wizardCompleted = biometricRegistered;
+    }
+
     await Future.wait([
       _storage.write(key: _keyToken, value: token),
       if (refreshToken != null)
@@ -179,6 +222,9 @@ class SessionManager extends ChangeNotifier {
       if (avatarUrl != null)
         _storage.write(key: _keyAvatarUrl, value: avatarUrl),
       _storage.write(key: _keyBiometric, value: biometricRegistered.toString()),
+      CacheService.set('sf_onboarding_completed', _onboardingCompleted, persist: true),
+      CacheService.set('sf_intro_completed', _introCompleted, persist: true),
+      CacheService.set('sf_wizard_completed', _wizardCompleted, persist: true),
     ]);
 
     notifyListeners();
@@ -237,6 +283,7 @@ class SessionManager extends ChangeNotifier {
   ///
   /// Used during user logout or session expiration timeouts.
   Future<void> logout() async {
+    final wasOnboardingCompleted = _onboardingCompleted;
     _token = null;
     _refreshToken = null;
     _email = null;
@@ -245,10 +292,12 @@ class SessionManager extends ChangeNotifier {
     _avatarUrl = null;
     _biometricRegistered = false;
     _isLoggedIn = false;
+    _introCompleted = false;
+    _wizardCompleted = false;
 
     // Clear offline chat caching and all other local caches
     await CacheService.clearAll();
-    
+
     // Clear only session keys, preserving sf_remember_email
     await Future.wait([
       _storage.delete(key: _keyToken),
@@ -259,7 +308,12 @@ class SessionManager extends ChangeNotifier {
       _storage.delete(key: _keyAvatarUrl),
       _storage.delete(key: _keyBiometric),
     ]);
-    
+
+    // Restore onboarding completed state if it was true
+    if (wasOnboardingCompleted) {
+      await setOnboardingCompleted(true);
+    }
+
     notifyListeners();
   }
 

@@ -1,7 +1,15 @@
-import 'dart:math' as math;
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:smartface_attendance/shared/widgets/toast_system.dart';
+import 'package:smartface_attendance/app/config/env_config.dart';
+import 'package:smartface_attendance/core/network/api_service.dart';
+import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
+
 
 // ═════════════════════════════════════════════════════════════════════════════
 // DESIGN SYSTEM CONSTANTS & TOKENS
@@ -375,126 +383,386 @@ class PrimaryButton extends StatelessWidget {
   }
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// GOOGLE "G" MULTICOLOR LOGO — Custom Painter
-// ═════════════════════════════════════════════════════════════════════════════
+class SocialAuthButton extends StatefulWidget {
+  final String iconPath;
+  final String label;
+  final VoidCallback? onTap;
+  final bool isLoading;
+  final bool enabled;
 
-class _GoogleGPainter extends CustomPainter {
+  const SocialAuthButton({
+    super.key,
+    required this.iconPath,
+    required this.label,
+    this.onTap,
+    this.isLoading = false,
+    this.enabled = true,
+  });
+
   @override
-  void paint(Canvas canvas, Size size) {
-    final double cx = size.width / 2;
-    final double cy = size.height / 2;
-    final double r = size.width / 2;
+  State<SocialAuthButton> createState() => _SocialAuthButtonState();
+}
 
-    // Clip to circle
-    canvas.save();
-    canvas.clipRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        Radius.circular(r),
-      ),
-    );
+class _SocialAuthButtonState extends State<SocialAuthButton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
 
-    // -- Draw the 4-color Google "G" using arcs and rectangles --
-    // We use a simplified but accurate representation:
-    // Outer arc (right half): blue top-right, red bottom-right
-    // Inner cutout for the G-shape
-    // Horizontal bar: blue
-
-    final double strokeW = size.width * 0.22;
-    final Rect arcRect = Rect.fromCenter(
-      center: Offset(cx, cy),
-      width: size.width * 0.82,
-      height: size.height * 0.82,
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
     );
-
-    // Red arc — bottom (180° to 270°)
-    canvas.drawArc(
-      arcRect,
-      math.pi / 2,  // start at bottom
-      math.pi / 2,  // 90°
-      false,
-      Paint()
-        ..color = const Color(0xFFEA4335)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW
-        ..strokeCap = StrokeCap.butt,
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
     );
-    // Yellow arc — bottom-left (270° to 360°)
-    canvas.drawArc(
-      arcRect,
-      math.pi,
-      math.pi / 2,
-      false,
-      Paint()
-        ..color = const Color(0xFFFBBC05)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW
-        ..strokeCap = StrokeCap.butt,
-    );
-    // Green arc — top-left (0° to 90° going counter-clockwise, i.e. 270° to 360°)
-    canvas.drawArc(
-      arcRect,
-      3 * math.pi / 2,
-      math.pi / 2,
-      false,
-      Paint()
-        ..color = const Color(0xFF34A853)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW
-        ..strokeCap = StrokeCap.butt,
-    );
-    // Blue arc — top-right (0° to 90°) and horizontal bar
-    canvas.drawArc(
-      arcRect,
-      -math.pi / 4,          // start ~-45° (top-right)
-      math.pi * 3 / 4,       // sweep to bottom-right
-      false,
-      Paint()
-        ..color = const Color(0xFF4285F4)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW
-        ..strokeCap = StrokeCap.butt,
-    );
-
-    // Horizontal bar (blue) — the middle crossbar of the G
-    final double barY = cy;
-    final double barLeft = cx - size.width * 0.02; // starts near center
-    final double barRight = cx + size.width * 0.38; // extends right
-    canvas.drawLine(
-      Offset(barLeft, barY),
-      Offset(barRight, barY),
-      Paint()
-        ..color = const Color(0xFF4285F4)
-        ..strokeWidth = strokeW
-        ..strokeCap = StrokeCap.butt,
-    );
-
-    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isInteractive = widget.enabled && !widget.isLoading && widget.onTap != null;
+
+    return GestureDetector(
+      onTapDown: isInteractive ? (_) => _controller.forward() : null,
+      onTapUp: isInteractive ? (_) {
+        _controller.reverse();
+        widget.onTap?.call();
+      } : null,
+      onTapCancel: isInteractive ? () => _controller.reverse() : null,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Opacity(
+          opacity: widget.enabled ? 1.0 : 0.6,
+          child: Container(
+            height: 50,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFFE2E8F0),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Center(
+              child: widget.isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: AuthDesign.primaryIndigo,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          widget.iconPath,
+                          width: 20,
+                          height: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          widget.label,
+                          style: AuthDesign.fontPoppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AuthDesign.textHeading,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
 // REUSABLE SOCIAL OUTLINE ICONS ROW
 // ═════════════════════════════════════════════════════════════════════════════
 
-class SocialIconRow extends StatelessWidget {
+class SocialIconRow extends StatefulWidget {
   final String actionPrefix; // "Sign in" or "Sign up"
+  final String? role; // selected role from RegisterScreen
 
   const SocialIconRow({
     super.key,
     required this.actionPrefix,
+    this.role,
   });
 
   @override
+  State<SocialIconRow> createState() => _SocialIconRowState();
+}
+
+class _SocialIconRowState extends State<SocialIconRow> {
+  bool _isGoogleLoading = false;
+  bool _isGithubLoading = false;
+
+
+
+  Future<void> _handleGoogleLogin() async {
+    if (EnvConfig.googleClientId == 'YOUR_GOOGLE_CLIENT_ID' || EnvConfig.googleClientId.isEmpty) {
+      AppToast.show(context, message: 'Google Authentication is not configured.', type: ToastType.warning);
+      return;
+    }
+
+    setState(() => _isGoogleLoading = true);
+    try {
+      final googleSignIn = GoogleSignIn(
+        clientId: EnvConfig.googleClientId,
+        scopes: ['email', 'profile'],
+      );
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        setState(() => _isGoogleLoading = false);
+        return;
+      }
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+
+      final roleStr = widget.role ?? 'Student';
+      final result = await ApiService.googleLogin(
+        account.email,
+        account.displayName ?? 'Google User',
+        roleStr.toLowerCase(),
+        avatarUrl: account.photoUrl,
+        idToken: idToken,
+      );
+
+      if (!mounted) return;
+
+      if (result.containsKey('access_token')) {
+        await _completeSocialLogin(result, account.email);
+      } else {
+        throw Exception(result['detail'] ?? 'Google login failed');
+      }
+    } catch (e) {
+      if (mounted) {
+        AppToast.show(context, message: '$e', type: ToastType.error);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGoogleLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleGithubLogin() async {
+    if (EnvConfig.githubClientId == 'YOUR_GITHUB_CLIENT_ID' || EnvConfig.githubClientId.isEmpty) {
+      AppToast.show(context, message: 'GitHub Authentication is not configured.', type: ToastType.warning);
+      return;
+    }
+
+    setState(() => _isGithubLoading = true);
+    try {
+      final callbackUrl = '${EnvConfig.apiUrl}/auth/github/callback';
+      final authUrl = Uri.parse(
+        'https://github.com/login/oauth/authorize'
+        '?client_id=${EnvConfig.githubClientId}'
+        '&scope=user:email'
+        '&redirect_uri=${Uri.encodeComponent(callbackUrl)}'
+      );
+
+      if (await canLaunchUrl(authUrl)) {
+        await launchUrl(authUrl, mode: LaunchMode.externalApplication);
+      } else {
+        throw Exception('Could not launch GitHub OAuth page');
+      }
+
+      if (!mounted) return;
+
+      final code = await _showGithubCodeDialog(context);
+      if (code == null || code.isEmpty) {
+        setState(() => _isGithubLoading = false);
+        return;
+      }
+
+      final roleStr = widget.role ?? 'Student';
+      final result = await ApiService.githubLogin(code, roleStr.toLowerCase());
+
+      if (!mounted) return;
+
+      if (result.containsKey('access_token')) {
+        await _completeSocialLogin(result, result['email'] ?? 'github-user@smartface.ai');
+      } else {
+        throw Exception(result['detail'] ?? 'GitHub login failed');
+      }
+    } catch (e) {
+      if (mounted) {
+        AppToast.show(context, message: '$e', type: ToastType.error);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGithubLoading = false);
+      }
+    }
+  }
+
+  Future<void> _completeSocialLogin(Map<String, dynamic> result, String defaultEmail) async {
+    final session = context.read<SessionManager>();
+    final bool bioRegistered = result['biometric_registered'] ?? false;
+    final String role = result['role'] ?? 'student';
+    final String name = result['full_name'] ?? result['name'] ?? 'User';
+    final String email = result['email'] ?? defaultEmail;
+
+    await session.saveSession(
+      token: result['access_token'],
+      email: email,
+      role: role,
+      name: name,
+      biometricRegistered: bioRegistered,
+    );
+
+    if (!mounted) return;
+    AppToast.show(context, message: 'Welcome, $name!', type: ToastType.success);
+
+    // Redirect based on role and setup completion
+    if (bioRegistered) {
+      final roleLower = role.toLowerCase();
+      if (roleLower == 'admin') {
+        context.go('/admin/home');
+      } else if (roleLower == 'teacher' || roleLower == 'faculty' || roleLower == 'lecturer') {
+        context.go('/teacher/home');
+      } else if (roleLower == 'parent') {
+        context.go('/parent/dashboard');
+      } else {
+        context.go('/student/home');
+      }
+    } else {
+      context.go('/auth/setup');
+    }
+  }
+
+  Future<String?> _showGithubCodeDialog(BuildContext context) async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Enter GitHub Code',
+            style: AuthDesign.fontPoppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AuthDesign.textHeading,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Paste the verification code displayed in your browser to complete authentication.',
+                style: AuthDesign.fontPoppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                  color: AuthDesign.textLabel,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'GitHub OAuth Code',
+                  hintStyle: AuthDesign.fontPoppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: AuthDesign.textPlaceholder,
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AuthDesign.primaryIndigo, width: 1.5),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancel',
+                style: AuthDesign.fontPoppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AuthDesign.textLabel,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AuthDesign.primaryIndigo,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                elevation: 0,
+              ),
+              child: Text(
+                'Submit',
+                style: AuthDesign.fontPoppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final bool isGoogleConfigured = EnvConfig.googleClientId.isNotEmpty && 
+        EnvConfig.googleClientId != 'YOUR_GOOGLE_CLIENT_ID';
+        
+    final bool isGithubConfigured = EnvConfig.githubClientId.isNotEmpty && 
+        EnvConfig.githubClientId != 'YOUR_GITHUB_CLIENT_ID';
+
+    if (!isGoogleConfigured && !isGithubConfigured) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Divider row
         Row(
           children: [
             const Expanded(
@@ -506,7 +774,7 @@ class SocialIconRow extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Text(
-                '$actionPrefix with',
+                '${widget.actionPrefix} with',
                 style: AuthDesign.fontPoppins(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
@@ -523,81 +791,33 @@ class SocialIconRow extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-
-        // Social icons
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildFacebookIcon(),
-            const SizedBox(width: 24),
-            _buildXIcon(),
-            const SizedBox(width: 24),
-            _buildGoogleIcon(),
-            const SizedBox(width: 24),
-            _buildAppleIcon(),
+            if (isGoogleConfigured)
+              Expanded(
+                child: SocialAuthButton(
+                  iconPath: 'assets/icons/google.png',
+                  label: 'Google',
+                  isLoading: _isGoogleLoading,
+                  enabled: true,
+                  onTap: _handleGoogleLogin,
+                ),
+              ),
+            if (isGoogleConfigured && isGithubConfigured)
+              const SizedBox(width: 16),
+            if (isGithubConfigured)
+              Expanded(
+                child: SocialAuthButton(
+                  iconPath: 'assets/icons/github.png',
+                  label: 'GitHub',
+                  isLoading: _isGithubLoading,
+                  enabled: true,
+                  onTap: _handleGithubLogin,
+                ),
+              ),
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildIconShell({required Widget icon}) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: const Color(0xFFE0E0E0),
-          width: 1,
-        ),
-      ),
-      child: Center(child: icon),
-    );
-  }
-
-  // Facebook — official #1877F2 blue
-  Widget _buildFacebookIcon() {
-    return _buildIconShell(
-      icon: const FaIcon(
-        FontAwesomeIcons.facebookF,
-        color: Color(0xFF1877F2),
-        size: 22,
-      ),
-    );
-  }
-
-  // X (Twitter) — black
-  Widget _buildXIcon() {
-    return _buildIconShell(
-      icon: const FaIcon(
-        FontAwesomeIcons.xTwitter,
-        color: Color(0xFF000000),
-        size: 22,
-      ),
-    );
-  }
-
-  // Google — multicolor custom "G"
-  Widget _buildGoogleIcon() {
-    return _buildIconShell(
-      icon: SizedBox(
-        width: 22,
-        height: 22,
-        child: CustomPaint(painter: _GoogleGPainter()),
-      ),
-    );
-  }
-
-  // Apple — black
-  Widget _buildAppleIcon() {
-    return _buildIconShell(
-      icon: const FaIcon(
-        FontAwesomeIcons.apple,
-        color: Color(0xFF000000),
-        size: 22,
-      ),
     );
   }
 }
@@ -717,7 +937,8 @@ class _AuthCardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double hPad = MediaQuery.of(context).size.width * 0.056; // ~22px on 390px
+    final double hPad = MediaQuery.of(context).size.width * 0.056;
+    final double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
       decoration: const BoxDecoration(
@@ -734,64 +955,54 @@ class _AuthCardShell extends StatelessWidget {
           ),
         ],
       ),
-      // Use a Column with: header (fixed) + scrollable form (Expanded) +
-      // bottom link (fixed, pinned above safe area)
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Card header (icon + title + subtitle) — not scrollable ──
-          Padding(
-            padding: EdgeInsets.fromLTRB(hPad, 22, hPad, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (topIcon != null) ...[
-                  Center(child: topIcon!),
-                  const SizedBox(height: 12),
-                ],
-                Text(
-                  title,
-                  style: AuthDesign.fontPoppins(
-                    fontSize: 21,
-                    fontWeight: FontWeight.w700,
-                    color: AuthDesign.textHeading,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 6),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: keyboardHeight),
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: hPad),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 22),
+                  if (topIcon != null) ...[
+                    Center(child: topIcon!),
+                    const SizedBox(height: 12),
+                  ],
                   Text(
-                    subtitle!,
+                    title,
                     style: AuthDesign.fontPoppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: AuthDesign.textLabel,
+                      fontSize: 21,
+                      fontWeight: FontWeight.w700,
+                      color: AuthDesign.textHeading,
                     ),
                   ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      subtitle!,
+                      style: AuthDesign.fontPoppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: AuthDesign.textLabel,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 22),
+                  child,
+                  if (bottomLink != null) ...[
+                    const SizedBox(height: 24),
+                    Center(child: bottomLink!),
+                    const SizedBox(height: 24),
+                  ],
                 ],
-                const SizedBox(height: 22),
-              ],
-            ),
-          ),
-
-          // ── Scrollable form content (fills remaining space) ──
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 0),
-              child: child,
-            ),
-          ),
-
-          // ── Bottom link — pinned above safe area, centred ──
-          if (bottomLink != null)
-            Padding(
-              padding: EdgeInsets.only(
-                top: 16,
-                bottom: math.max(bottomInset, 24),
               ),
-              child: Center(child: bottomLink!),
             ),
-        ],
+          ),
+        ),
       ),
     );
   }

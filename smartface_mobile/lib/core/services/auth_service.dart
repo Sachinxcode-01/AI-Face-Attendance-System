@@ -70,6 +70,7 @@ class AuthService {
     String name,
     String role, {
     String? avatarUrl,
+    String? idToken,
   }) async {
     try {
       final response = await _api.post(
@@ -79,6 +80,7 @@ class AuthService {
           'name': name,
           'role': role,
           'avatar_url': avatarUrl,
+          'idToken': idToken,
         },
       );
       return jsonDecode(response.body);
@@ -86,6 +88,25 @@ class AuthService {
       return {'detail': 'Connection failed'};
     }
   }
+
+  Future<Map<String, dynamic>> githubLogin(
+    String code,
+    String role,
+  ) async {
+    try {
+      final response = await _api.post(
+        '/auth/github',
+        body: {
+          'code': code,
+          'role': role,
+        },
+      );
+      return jsonDecode(response.body);
+    } catch (_) {
+      return {'detail': 'Connection failed'};
+    }
+  }
+
 
   Future<Map<String, dynamic>> register(
     String name,

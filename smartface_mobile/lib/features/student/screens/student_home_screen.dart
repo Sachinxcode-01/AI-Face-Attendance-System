@@ -966,6 +966,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
   /// The signature reference "attendance this month" summary card.
   Widget _buildAttendanceSummaryCard() {
     final pct = (_overallPercentage * 100).round();
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
     return ds.GlassCard(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -981,7 +983,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF1A1A3A),
+                    color: isDark ? Colors.white : const Color(0xFF1A1A3A),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -991,7 +993,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: const Color(0xFF8A90AE),
+                    color: isDark ? Colors.white60 : const Color(0xFF8A90AE),
                   ),
                 ),
               ],
@@ -1007,7 +1009,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 CircularProgressIndicator(
                   value: _overallPercentage,
                   strokeWidth: 4,
-                  backgroundColor: const Color(0xFFE6E8F2),
+                  backgroundColor: isDark ? Colors.white12 : const Color(0xFFE6E8F2),
                   valueColor: const AlwaysStoppedAnimation(Color(0xFF3D4AB8)),
                 ),
                 Text(
