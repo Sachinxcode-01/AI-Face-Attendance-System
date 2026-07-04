@@ -79,24 +79,46 @@ class _OTPScreenState extends State<OTPScreen> {
       final result = await ApiService.requestLoginOtp(email);
       if (!mounted) return;
 
-      if (result.containsKey('detail') && result['detail'].toString().toLowerCase().contains('sent')) {
-        setState(() {
-          _otpSent = true;
-        });
-        _startTimer();
-        AppToast.show(context, message: 'OTP sent to your email!', type: ToastType.success);
-      } else if (result.containsKey('message') && result['message'].toString().toLowerCase().contains('sent')) {
+      // Check for classified network/backend errors first
+      final errorType = result['error_type']?.toString();
+      if (errorType != null) {
+        String msg;
+        switch (errorType) {
+          case 'timeout':
+            msg = 'Request timed out. Please try again.';
+            break;
+          case 'backend_down':
+            msg = 'Server not reachable. Check internet or try again later.';
+            break;
+          case 'misconfigured':
+            msg = 'App configuration error. Please reinstall the app.';
+            break;
+          case 'ssl_error':
+            msg = 'Secure connection failed. Please try again.';
+            break;
+          default:
+            msg = result['detail']?.toString() ?? 'Failed to send OTP. Please try again.';
+        }
+        AppToast.show(context, message: msg, type: ToastType.error);
+        return;
+      }
+
+      // Check success indicators in backend response
+      final detail = result['detail']?.toString().toLowerCase() ?? '';
+      final message = result['message']?.toString().toLowerCase() ?? '';
+      if (detail.contains('sent') || message.contains('sent')) {
         setState(() {
           _otpSent = true;
         });
         _startTimer();
         AppToast.show(context, message: 'OTP sent to your email!', type: ToastType.success);
       } else {
-        throw Exception(result['detail'] ?? result['message'] ?? 'Failed to send OTP');
+        final rawMsg = result['detail'] ?? result['message'] ?? 'Failed to send OTP';
+        AppToast.show(context, message: rawMsg.toString(), type: ToastType.error);
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: '$e', type: ToastType.error);
+      AppToast.show(context, message: 'Unexpected error. Please try again.', type: ToastType.error);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

@@ -34,9 +34,11 @@ class EnvConfig {
   static String? _firebaseProjectId;
   static String? _firebaseStorageBucket;
 
-  // Getters with fallbacks for test environments
-  static String get apiUrl => _apiUrl ?? 'http://10.0.2.2:8000';
-  static String get wsUrl => _wsUrl ?? 'ws://10.0.2.2:8000';
+  // Getters with fallbacks for test environments.
+  // WARNING: 10.0.2.2 is an emulator-only address and WILL fail on a real phone.
+  // Release builds load .env.production which must have a valid HTTPS API_URL.
+  static String get apiUrl => _apiUrl ?? '';
+  static String get wsUrl => _wsUrl ?? '';
   static String get groqApiKey => _groqApiKey ?? 'gsk_dev_dummykey12345';
   static String get googleApiKey => _googleApiKey ?? 'AIzaSyDevDummyKey54321';
   static String get faceScannerToken =>
@@ -86,7 +88,9 @@ class EnvConfig {
       _firebaseProjectId = _getOrThrow('FIREBASE_PROJECT_ID');
       _firebaseStorageBucket = _getOrThrow('FIREBASE_STORAGE_BUCKET');
 
-      debugPrint('[EnvConfig] Config load completed successfully.');
+      debugPrint('[EnvConfig] ✅ Config load completed successfully.');
+      debugPrint('[EnvConfig] 🌐 Active API URL: ${_apiUrl ?? "(not set)"}');
+      debugPrint('[EnvConfig] 🔒 Environment: $environment');
     } catch (e) {
       debugPrint('[EnvConfig] ❌ CRITICAL STARTUP ERROR: $e');
       rethrow;
