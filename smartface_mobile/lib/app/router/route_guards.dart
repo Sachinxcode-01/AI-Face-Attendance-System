@@ -18,62 +18,82 @@ import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 
 class RouteGuards {
-  /// Evaluates authentication state and role authorization to redirect users.
   static String? handleRedirect(BuildContext context, GoRouterState state) {
     final session = sl<SessionManager>();
     final isLoggedIn = session.isLoggedIn;
     final role = session.userRole;
     final path = state.uri.path;
 
-    // Check if the route is an auth (guest) route
-    final isAuthRoute = path.startsWith('/auth/');
+    final isGuestOnlyRoute = path == AppRoutes.onboardingPath ||
+        path == AppRoutes.loginPath ||
+        path == AppRoutes.registerPath ||
+        path == AppRoutes.forgotPasswordPath ||
+        path == AppRoutes.otpPath ||
+        path == AppRoutes.splashPath ||
+        path == '/reset-password';
 
-    // 1. Unauthenticated users must be redirected to login unless they are already on an auth route
+    // 1. Unauthenticated users must go to guest-only routes (or splash)
     if (!isLoggedIn) {
-      if (!isAuthRoute) {
-        debugPrint(
-          '[RouteGuard] Redirecting guest trying to access "$path" to Login',
-        );
+      if (!isGuestOnlyRoute) {
+        debugPrint('[RouteGuard] Guest trying to access "$path". Redirecting to Login.');
         return AppRoutes.loginPath;
       }
       return null;
     }
 
-    // 2. Authenticated users should not access auth pages (splash, login, register, etc.)
-    if (isAuthRoute) {
+    // 2. Authenticated users: evaluate flow completion
+    final roleLower = session.role?.toLowerCase() ?? 'student';
+
+    if (!session.introCompleted) {
+      if (path != AppRoutes.introPath) {
+        debugPrint('[RouteGuard] Intro not completed. Redirecting to Intro.');
+        return AppRoutes.introPath;
+      }
+      return null;
+    }
+
+    if (!session.wizardCompleted) {
+      final isOnSetupRoute = path == AppRoutes.setupWizardPath || path.startsWith('/setup/');
+      if (!isOnSetupRoute) {
+        debugPrint('[RouteGuard] Wizard not completed. Redirecting to setup for role: $roleLower');
+        return '/setup/$roleLower';
+      }
+      return null;
+    }
+
+    // 3. User has completed all steps. Prevent accessing auth/setup pages.
+    final isFlowSetupRoute = isGuestOnlyRoute || 
+        path == AppRoutes.introPath || 
+        path == AppRoutes.setupWizardPath || 
+        path.startsWith('/setup/');
+        
+    if (isFlowSetupRoute) {
       final dashboard = _getDashboardPathForRole(role);
-      debugPrint(
-        '[RouteGuard] Authenticated user on guest route. Redirecting to: $dashboard',
-      );
+      debugPrint('[RouteGuard] User completed onboarding, guest route accessed. Redirecting to: $dashboard');
       return dashboard;
     }
 
-    // 3. Prevent cross-role access:
-    // Student routes: only students allowed
+    // 4. Role-based path access control
     if (path.startsWith('/student') && role != UserRole.student) {
       debugPrint('[RouteGuard] Blocked non-student user ($role) from "$path"');
       return AppRoutes.unauthorizedPath;
     }
 
-    // Teacher routes: only teachers allowed
     if (path.startsWith('/teacher') && role != UserRole.teacher) {
       debugPrint('[RouteGuard] Blocked non-teacher user ($role) from "$path"');
       return AppRoutes.unauthorizedPath;
     }
 
-    // Parent routes: only parents allowed
     if (path.startsWith('/parent') && role != UserRole.parent) {
       debugPrint('[RouteGuard] Blocked non-parent user ($role) from "$path"');
       return AppRoutes.unauthorizedPath;
     }
 
-    // Admin routes: only admins allowed
     if (path.startsWith('/admin') && role != UserRole.admin) {
       debugPrint('[RouteGuard] Blocked non-admin user ($role) from "$path"');
       return AppRoutes.unauthorizedPath;
     }
 
-    // Management routes: only management, principal, hod, and admin allowed
     if (path.startsWith('/management') &&
         role != UserRole.hod &&
         role != UserRole.principal &&
@@ -83,7 +103,6 @@ class RouteGuards {
       return AppRoutes.unauthorizedPath;
     }
 
-    // Allow navigation
     return null;
   }
 

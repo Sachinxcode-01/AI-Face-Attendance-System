@@ -192,7 +192,7 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'otp': otp}),
       ).timeout(const Duration(seconds: 15));
-      return jsonDecode(response.body);
+      return normalizeAuthResponse(jsonDecode(response.body));
     } catch (e) {
       if (e is TimeoutException || e.toString().contains('TimeoutException')) {
         return {'detail': 'timeout'};
@@ -211,7 +211,7 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       ).timeout(const Duration(seconds: 15));
-      return jsonDecode(response.body);
+      return normalizeAuthResponse(jsonDecode(response.body));
     } catch (e) {
       if (e is TimeoutException || e.toString().contains('TimeoutException')) {
         return {'detail': 'timeout'};
@@ -225,6 +225,7 @@ class ApiService {
     String name,
     String role, {
     String? avatarUrl,
+    String? idToken,
   }) async {
     try {
       final response = await client.post(
@@ -235,9 +236,10 @@ class ApiService {
           'name': name,
           'role': role,
           'avatar_url': avatarUrl,
+          'idToken': idToken,
         }),
       ).timeout(const Duration(seconds: 15));
-      return jsonDecode(response.body);
+      return normalizeAuthResponse(jsonDecode(response.body));
     } catch (e) {
       if (e is TimeoutException || e.toString().contains('TimeoutException')) {
         return {'detail': 'timeout'};
@@ -245,6 +247,29 @@ class ApiService {
       return {'detail': 'Connection failed'};
     }
   }
+
+  static Future<Map<String, dynamic>> githubLogin(
+    String code,
+    String role,
+  ) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$baseUrl/auth/github'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'code': code,
+          'role': role,
+        }),
+      ).timeout(const Duration(seconds: 15));
+      return normalizeAuthResponse(jsonDecode(response.body));
+    } catch (e) {
+      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
+        return {'detail': 'timeout'};
+      }
+      return {'detail': 'Connection failed'};
+    }
+  }
+
 
   static Future<Map<String, dynamic>> register(
     String name,
@@ -263,7 +288,7 @@ class ApiService {
           'role': role.toLowerCase(),
         }),
       ).timeout(const Duration(seconds: 15));
-      return jsonDecode(response.body);
+      return normalizeAuthResponse(jsonDecode(response.body));
     } catch (e) {
       if (e is TimeoutException || e.toString().contains('TimeoutException')) {
         return {'detail': 'timeout'};
@@ -1579,4 +1604,69 @@ class InterceptingClient extends http.BaseClient {
     newRequest.headers['Authorization'] = 'Bearer $newAccessToken';
     return newRequest;
   }
+}
+
+Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
+  final normalized = Map<String, dynamic>.from(json);
+  
+  if (json.containsKey('data') && json['data'] is Map<String, dynamic>) {
+    final data = json['data'] as Map<String, dynamic>;
+    
+    if (data.containsKey('accessToken') && data['accessToken'] != null) {
+      normalized['access_token'] = data['accessToken'];
+      normalized['token'] = data['accessToken'];
+    }
+    if (data.containsKey('refreshToken') && data['refreshToken'] != null) {
+      normalized['refresh_token'] = data['refreshToken'];
+    }
+    
+    if (data.containsKey('user') && data['user'] is Map<String, dynamic>) {
+      final user = data['user'] as Map<String, dynamic>;
+      if (user.containsKey('id')) normalized['id'] = user['id'];
+      if (user.containsKey('email')) normalized['email'] = user['email'];
+      if (user.containsKey('name')) {
+        normalized['name'] = user['name'];
+        normalized['full_name'] = user['name'];
+      }
+      if (user.containsKey('role')) normalized['role'] = user['role'];
+      
+      final intro = user['introCompleted'] ?? false;
+      final wizard = user['wizardCompleted'] ?? user['setup_completed'] ?? user['biometric_registered'] ?? false;
+      normalized['introCompleted'] = intro;
+      normalized['wizardCompleted'] = wizard;
+      normalized['biometric_registered'] = wizard;
+      normalized['setup_completed'] = wizard;
+    }
+  } else {
+    final userMap = <String, dynamic>{};
+    if (json.containsKey('id')) userMap['id'] = json['id'];
+    if (json.containsKey('email')) userMap['email'] = json['email'];
+    if (json.containsKey('full_name') || json.containsKey('name')) {
+      userMap['name'] = json['full_name'] ?? json['name'];
+    }
+    if (json.containsKey('role')) userMap['role'] = json['role'];
+    
+    final wizard = json['biometric_registered'] ?? json['setup_completed'] ?? false;
+    userMap['introCompleted'] = json['introCompleted'] ?? false;
+    userMap['wizardCompleted'] = wizard;
+    
+    normalized['success'] = json['success'] ?? !json.containsKey('detail');
+    normalized['message'] = json['message'] ?? json['detail'] ?? '';
+    normalized['data'] = {
+      'accessToken': json['access_token'] ?? json['token'],
+      'refreshToken': json['refresh_token'],
+      'user': userMap,
+    };
+    
+    normalized['access_token'] = json['access_token'] ?? json['token'];
+    normalized['token'] = json['access_token'] ?? json['token'];
+    normalized['biometric_registered'] = wizard;
+    normalized['setup_completed'] = wizard;
+    if (json.containsKey('full_name') || json.containsKey('name')) {
+      normalized['full_name'] = json['full_name'] ?? json['name'];
+      normalized['name'] = json['full_name'] ?? json['name'];
+    }
+  }
+  
+  return normalized;
 }

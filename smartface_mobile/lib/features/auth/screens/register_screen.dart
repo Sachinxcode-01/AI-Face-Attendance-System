@@ -246,15 +246,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildRoleCard('Student', Icons.school, width: (MediaQuery.of(context).size.width - 2 * 22 - 8) / 2),
-                _buildRoleCard('Teacher', Icons.co_present, width: (MediaQuery.of(context).size.width - 2 * 22 - 8) / 2),
-                _buildRoleCard('Parent', Icons.family_restroom, width: (MediaQuery.of(context).size.width - 2 * 22 - 8) / 2),
-                _buildRoleCard('Admin', Icons.admin_panel_settings, width: (MediaQuery.of(context).size.width - 2 * 22 - 8) / 2),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final cardSize = (constraints.maxWidth - 12) / 2;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    _RoleCard(
+                      role: 'Student',
+                      icon: Icons.school,
+                      isSelected: _selectedRole == 'Student',
+                      size: cardSize,
+                      onTap: () => setState(() => _selectedRole = 'Student'),
+                    ),
+                    _RoleCard(
+                      role: 'Teacher',
+                      icon: Icons.co_present,
+                      isSelected: _selectedRole == 'Teacher',
+                      size: cardSize,
+                      onTap: () => setState(() => _selectedRole = 'Teacher'),
+                    ),
+                    _RoleCard(
+                      role: 'Parent',
+                      icon: Icons.family_restroom,
+                      isSelected: _selectedRole == 'Parent',
+                      size: cardSize,
+                      onTap: () => setState(() => _selectedRole = 'Parent'),
+                    ),
+                    _RoleCard(
+                      role: 'Admin',
+                      icon: Icons.admin_panel_settings,
+                      isSelected: _selectedRole == 'Admin',
+                      size: cardSize,
+                      onTap: () => setState(() => _selectedRole = 'Admin'),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 14),
 
@@ -305,52 +334,122 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 22),
 
             // Social divider and row
-            const SocialIconRow(actionPrefix: 'Sign up'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoleCard(String role, IconData icon, {required double width}) {
-    final isSelected = _selectedRole == role;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedRole = role;
-        });
-      },
-      child: Container(
-        width: width,
-        height: 72,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(13),
-          border: Border.all(
-            color: isSelected ? AuthDesign.primaryIndigo : AuthDesign.underlineUnfocused,
-            width: 1.5,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? AuthDesign.primaryIndigo : AuthDesign.textLabel,
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              role,
-              style: AuthDesign.fontPoppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? AuthDesign.primaryIndigo : AuthDesign.textLabel,
-              ),
-            ),
+            SocialIconRow(actionPrefix: 'Sign up', role: _selectedRole),
           ],
         ),
       ),
     );
   }
 }
+
+class _RoleCard extends StatefulWidget {
+  final String role;
+  final IconData icon;
+  final bool isSelected;
+  final double size;
+  final VoidCallback onTap;
+
+  const _RoleCard({
+    required this.role,
+    required this.icon,
+    required this.isSelected,
+    required this.size,
+    required this.onTap,
+  });
+
+  @override
+  State<_RoleCard> createState() => _RoleCardState();
+}
+
+class _RoleCardState extends State<_RoleCard> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 80),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.94).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const selectedColor = AuthDesign.primaryIndigo;
+    const unselectedColor = Color(0xFF94A3B8);
+    const selectedBg = Color(0xFFEEF2FF);
+    const unselectedBg = Colors.white;
+    final borderColor = widget.isSelected ? selectedColor : const Color(0xFFE2E8F0);
+
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            color: widget.isSelected ? selectedBg : unselectedBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: borderColor,
+              width: widget.isSelected ? 2.0 : 1.0,
+            ),
+            boxShadow: widget.isSelected
+                ? [
+                    BoxShadow(
+                      color: selectedColor.withValues(alpha: 0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                widget.icon,
+                color: widget.isSelected ? selectedColor : unselectedColor,
+                size: widget.size * 0.28,
+              ),
+              SizedBox(height: widget.size * 0.08),
+              Text(
+                widget.role,
+                style: AuthDesign.fontPoppins(
+                  fontSize: widget.size * 0.09,
+                  fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: widget.isSelected ? selectedColor : unselectedColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
