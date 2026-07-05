@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
-const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'saxhin0708@gmail.com';
+const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'heyyysachiii88@gmail.com';
 const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'AttendAI Security';
 
 // ---------------------------------------------------------------------------
