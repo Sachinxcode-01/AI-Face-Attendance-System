@@ -48,7 +48,7 @@ class AuthBlobBackground extends StatelessWidget {
         ),
 
         // Glossy floating 3D spheres
-        Positioned(
+        const Positioned(
           top: -20,
           left: 40,
           child: _GlossySphere(size: 80, isDark: true),
@@ -58,7 +58,7 @@ class AuthBlobBackground extends StatelessWidget {
           right: 40,
           child: _GlossySphere(size: 110, isDark: isDark),
         ),
-        Positioned(
+        const Positioned(
           bottom: 140,
           left: 30,
           child: _GlossySphere(size: 90, isDark: true),

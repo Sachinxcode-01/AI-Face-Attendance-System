@@ -34,6 +34,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:provider/provider.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
@@ -262,7 +263,28 @@ class _ProfileScreenState extends State<ProfileScreen>
       );
       if (picked == null) return;
 
-      final file = File(picked.path);
+      // Cropping step
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Profile Photo',
+            toolbarColor: const Color(0xFF0F172A),
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+            activeControlsWidgetColor: AppColors.gold,
+          ),
+          IOSUiSettings(
+            title: 'Crop Profile Photo',
+            aspectRatioLockEnabled: true,
+          ),
+        ],
+      );
+      if (croppedFile == null) return;
+
+      final file = File(croppedFile.path);
       final bytes = await file.readAsBytes();
 
       // Client-side size check (5 MB)
@@ -719,20 +741,21 @@ class _ProfileScreenState extends State<ProfileScreen>
     TextEditingController controller, {
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextField(
       controller: controller,
       readOnly: onTap != null,
       onTap: onTap,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+        labelStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black45, fontSize: 13),
         prefixIcon: Icon(icon, color: AppColors.gold, size: 20),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.03),
+        fillColor: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.03),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.white12),
+          borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -934,7 +957,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         .toUpperCase();
 
     return AuroraBackground(
-      baseColor: AppColors.bgDeep,
+      baseColor: isDark ? AppColors.bgDeep : AppColors.bgLight,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
@@ -942,13 +965,13 @@ class _ProfileScreenState extends State<ProfileScreen>
             'My Profile',
             style: GoogleFonts.inter(
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: isDark ? Colors.white : Colors.black87,
             ),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            icon: Icon(Icons.arrow_back_ios, color: isDark ? Colors.white : Colors.black87),
             onPressed: () => Navigator.pop(context),
           ),
           actions: [
@@ -989,7 +1012,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         'Tap or drag an image to update photo',
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          color: Colors.white30,
+                          color: isDark ? Colors.white30 : Colors.black38,
                           letterSpacing: 0.3,
                         ),
                       ),
@@ -1003,7 +1026,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       style: GoogleFonts.inter(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: isDark ? Colors.white : Colors.black87,
                       ),
                     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
 
@@ -1018,7 +1041,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                       ? '${_profileData['department']} • ${_profileData['college']}'
                                       : 'SmartFace Academic Student')),
                       style: GoogleFonts.inter(
-                        color: Colors.white54,
+                        color: isDark ? Colors.white54 : Colors.black54,
                         fontSize: 13,
                       ),
                       textAlign: TextAlign.center,
@@ -1617,6 +1640,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     String value,
     int index,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GlassContainer(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       borderColor: Colors.white.withValues(alpha: 0.05),
@@ -1639,7 +1663,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 Text(
                   label.toUpperCase(),
                   style: GoogleFonts.inter(
-                    color: Colors.white38,
+                    color: isDark ? Colors.white38 : Colors.black45,
                     fontSize: 10,
                     letterSpacing: 1,
                   ),
@@ -1647,8 +1671,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),

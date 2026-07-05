@@ -31,6 +31,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -372,7 +373,28 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
       );
       if (picked == null) return;
 
-      final file = File(picked.path);
+      // Cropping step
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Profile Photo',
+            toolbarColor: const Color(0xFF0F172A),
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+            activeControlsWidgetColor: AppColors.gold,
+          ),
+          IOSUiSettings(
+            title: 'Crop Profile Photo',
+            aspectRatioLockEnabled: true,
+          ),
+        ],
+      );
+      if (croppedFile == null) return;
+
+      final file = File(croppedFile.path);
       final bytes = await file.readAsBytes();
       if (bytes.length > 5 * 1024 * 1024) {
         _showError('Image too large. Max 5 MB allowed.');
@@ -479,13 +501,22 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
   // ─────────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgGradient = isDark
+        ? const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF050915), Color(0xFF0A1628), Color(0xFF070B1A)],
+          )
+        : const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFEEF1FA), Color(0xFFE8EAF6), Color(0xFFEEF1FA)],
+          );
+
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF050915), Color(0xFF0A1628), Color(0xFF070B1A)],
-        ),
+      decoration: BoxDecoration(
+        gradient: bgGradient,
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -516,7 +547,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                       Text(
                         'Tap photo to update',
                         style: GoogleFonts.inter(
-                          color: Colors.white30,
+                          color: isDark ? Colors.white30 : Colors.black38,
                           fontSize: 11,
                         ),
                       ),
@@ -529,7 +560,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                         style: GoogleFonts.inter(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
                         textAlign: TextAlign.center,
                       ).animate().fadeIn(delay: 150.ms),
@@ -717,7 +748,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                                         Text(
                                           'ABOUT SMARTFACE',
                                           style: GoogleFonts.inter(
-                                            color: Colors.white38,
+                                            color: isDark ? Colors.white38 : Colors.black45,
                                             fontSize: 10,
                                             letterSpacing: 0.8,
                                           ),
@@ -726,7 +757,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                                         Text(
                                           'Smart Attendance AI v1.0.0',
                                           style: GoogleFonts.inter(
-                                            color: Colors.white,
+                                            color: isDark ? Colors.white : Colors.black87,
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -1257,6 +1288,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -1265,7 +1297,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           Text(
             label,
             style: GoogleFonts.inter(
-              color: Colors.white38,
+              color: isDark ? Colors.white38 : Colors.black45,
               fontSize: 10,
               letterSpacing: 1,
             ),
@@ -1276,15 +1308,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
               controller: ctrl,
               maxLines: maxLines,
               keyboardType: keyboardType,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
               onChanged: (_) => setState(() => _hasUnsavedChanges = true),
               decoration: InputDecoration(
                 prefixIcon: Icon(icon, color: AppColors.gold, size: 18),
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.04),
+                fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Colors.white12),
+                  borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -1309,8 +1341,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                     ctrl.text.isNotEmpty ? ctrl.text : '—',
                     style: GoogleFonts.inter(
                       color: ctrl.text.isNotEmpty
-                          ? Colors.white
-                          : Colors.white30,
+                          ? (isDark ? Colors.white : Colors.black87)
+                          : (isDark ? Colors.white30 : Colors.black38),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1328,6 +1360,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
     IconData icon,
     TextEditingController ctrl,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -1336,7 +1369,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           Text(
             label,
             style: GoogleFonts.inter(
-              color: Colors.white38,
+              color: isDark ? Colors.white38 : Colors.black45,
               fontSize: 10,
               letterSpacing: 1,
             ),
@@ -1346,7 +1379,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
             TextField(
               controller: ctrl,
               readOnly: true,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
               decoration: InputDecoration(
                 prefixIcon: Icon(icon, color: AppColors.gold, size: 18),
                 suffixIcon: const Icon(
@@ -1355,10 +1388,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                   size: 18,
                 ),
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.04),
+                fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Colors.white12),
+                  borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -1380,11 +1413,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                   lastDate: DateTime.now(),
                   builder: (ctx, child) => Theme(
                     data: Theme.of(ctx).copyWith(
-                      colorScheme: const ColorScheme.dark(
+                      colorScheme: ColorScheme.dark(
                         primary: AppColors.gold,
                         onPrimary: Colors.black,
-                        surface: Color(0xFF0D1130),
-                        onSurface: Colors.white,
+                        surface: isDark ? const Color(0xFF0D1130) : Colors.white,
+                        onSurface: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
                     child: child!,
@@ -1405,7 +1438,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 Text(
                   ctrl.text.isNotEmpty ? ctrl.text : '—',
                   style: GoogleFonts.inter(
-                    color: ctrl.text.isNotEmpty ? Colors.white : Colors.white30,
+                    color: ctrl.text.isNotEmpty
+                        ? (isDark ? Colors.white : Colors.black87)
+                        : (isDark ? Colors.white30 : Colors.black38),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1424,6 +1459,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
     List<String> options,
     ValueChanged<String?> onChanged,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -1432,7 +1468,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           Text(
             label,
             style: GoogleFonts.inter(
-              color: Colors.white38,
+              color: isDark ? Colors.white38 : Colors.black45,
               fontSize: 10,
               letterSpacing: 1,
             ),
@@ -1441,15 +1477,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           if (_isEditing)
             DropdownButtonFormField<String>(
               initialValue: options.contains(value) ? value : null,
-              dropdownColor: const Color(0xFF0D1130),
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              dropdownColor: isDark ? const Color(0xFF0D1130) : Colors.white,
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
               decoration: InputDecoration(
                 prefixIcon: Icon(icon, color: AppColors.gold, size: 18),
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.04),
+                fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Colors.white12),
+                  borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -1477,8 +1513,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                   value != null && value.isNotEmpty ? value : '—',
                   style: GoogleFonts.inter(
                     color: (value != null && value.isNotEmpty)
-                        ? Colors.white
-                        : Colors.white30,
+                        ? (isDark ? Colors.white : Colors.black87)
+                        : (isDark ? Colors.white30 : Colors.black38),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1494,8 +1530,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
     String label,
     IconData icon,
     String value, {
-    Color valueColor = Colors.white70,
+    Color? valueColor,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final resolvedValueColor = valueColor ?? (isDark ? Colors.white70 : Colors.black87);
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -1509,7 +1547,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 Text(
                   label,
                   style: GoogleFonts.inter(
-                    color: Colors.white38,
+                    color: isDark ? Colors.white38 : Colors.black45,
                     fontSize: 10,
                     letterSpacing: 0.8,
                   ),
@@ -1518,7 +1556,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 Text(
                   value,
                   style: GoogleFonts.inter(
-                    color: valueColor,
+                    color: resolvedValueColor,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1526,9 +1564,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
               ],
             ),
           ),
-          const Icon(
+          Icon(
             Icons.lock_outline_rounded,
-            color: Colors.white24,
+            color: isDark ? Colors.white24 : Colors.black26,
             size: 14,
           ),
         ],

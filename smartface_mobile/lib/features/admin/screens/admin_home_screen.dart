@@ -153,7 +153,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                 'Admin Control Panel',
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1B2C56),
+                  color: isDark ? Colors.white : const Color(0xFF1B2C56),
                   fontSize: 18,
                 ),
               ),
@@ -174,9 +174,9 @@ class _AdminDashboardState extends State<AdminDashboard>
               alignment: Alignment.center,
               children: [
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.notifications_none_rounded,
-                    color: Color(0xFF1B2C56),
+                    color: isDark ? Colors.white : const Color(0xFF1B2C56),
                   ),
                   onPressed: () => context.push('/notifications/nexus'),
                 ),
@@ -293,7 +293,7 @@ class _AdminDashboardState extends State<AdminDashboard>
           style: GoogleFonts.outfit(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF1B2C56),
+            color: isDark ? Colors.white : const Color(0xFF1B2C56),
           ),
         ),
       ],
