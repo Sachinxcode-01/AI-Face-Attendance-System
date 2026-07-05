@@ -1,4 +1,6 @@
 const APP_ENV = process.env.APP_ENV || 'development';
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const isProduction = APP_ENV === 'production' || NODE_ENV === 'production';
 
 class RateLimiter {
   constructor(maxCalls, periodSeconds) {
@@ -8,7 +10,7 @@ class RateLimiter {
   }
 
   isAllowed(key) {
-    if (APP_ENV === 'development') {
+    if (!isProduction) {
       return true;
     }
     const now = Date.now();

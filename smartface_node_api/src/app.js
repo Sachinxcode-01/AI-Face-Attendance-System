@@ -10,7 +10,7 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // Enforce critical environment variable validation
-const requiredEnvVars = ['MONGODB_URL', 'FACE_SCANNER_TOKEN', 'EMAIL_PASSWORD'];
+const requiredEnvVars = ['FACE_SCANNER_TOKEN', 'EMAIL_PASSWORD'];
 const missingEnvVars = [];
 requiredEnvVars.forEach(varName => {
   const val = process.env[varName];
@@ -18,6 +18,10 @@ requiredEnvVars.forEach(varName => {
     missingEnvVars.push(varName);
   }
 });
+const mongoUrl = process.env.MONGODB_URL || process.env.MONGO_URI;
+if (!mongoUrl || mongoUrl.trim() === '') {
+  missingEnvVars.push('MONGODB_URL / MONGO_URI');
+}
 const jwtSecret = process.env.SECRET_KEY || process.env.JWT_SECRET;
 if (!jwtSecret || jwtSecret.trim() === '') {
   missingEnvVars.push('SECRET_KEY / JWT_SECRET');
@@ -110,8 +114,9 @@ const httpSecurityHeaders = (req, res, next) => {
 app.use(httpSecurityHeaders);
 
 // ─── Middleware Stack ───────────────────────────────────────────────
-const allowedOrigins = process.env.CORS_ORIGINS 
-  ? process.env.CORS_ORIGINS.split(',') 
+const originsSource = process.env.CORS_ORIGINS || process.env.CORS_ORIGIN;
+const allowedOrigins = originsSource 
+  ? originsSource.split(',').map(o => o.trim()) 
   : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
 app.use(cors({
@@ -144,7 +149,7 @@ app.get('/', (req, res) => {
   res.json({ message: "SmartAttendance - Node.js API is online" });
 });
 
-app.get('/health', async (req, res) => {
+app.get(['/health', '/api/health'], async (req, res) => {
   let dbStatus = "connected";
   try {
     const mongoose = require('mongoose');
@@ -155,7 +160,9 @@ app.get('/health', async (req, res) => {
     dbStatus = "unreachable";
   }
   res.json({
+    success: true,
     status: "ok",
+    message: "Server running",
     database: dbStatus,
     version: "2.0.0",
     timestamp: new Date().toISOString()
@@ -181,18 +188,30 @@ const analyticsRoutes = require('./routes/analytics');
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/sessions', sessionRoutes);
+app.use('/api/sessions', sessionRoutes);
 app.use('/attendance', attendanceRoutes);
+app.use('/api/attendance', attendanceRoutes);
 app.use('/leave', leaveRoutes);
+app.use('/api/leave', leaveRoutes);
 app.use('/security', securityRoutes);
+app.use('/api/security', securityRoutes);
 app.use('/notifications', notificationRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/telemetry', telemetryRoutes);
+app.use('/api/telemetry', telemetryRoutes);
 app.use('/management', managementRoutes);
+app.use('/api/management', managementRoutes);
 app.use('/academic', academicRoutes);
+app.use('/api/academic', academicRoutes);
 app.use('/parent', parentRoutes);
+app.use('/api/parent', parentRoutes);
 app.use('/reports', reportRoutes);
+app.use('/api/reports', reportRoutes);
 app.use('/api', apiCompatRoutes);
 app.use('/analytics', analyticsRoutes);
+app.use('/api/analytics', analyticsRoutes);
 app.use('/', aiRoutes);
+app.use('/api', aiRoutes);
 
 // Error fallback handler for all routes
 app.use((err, req, res, next) => {
@@ -258,6 +277,6 @@ server.on('upgrade', (request, socket, head) => {
 
 // Start HTTP + WS Server
 const PORT = process.env.PORT || 8000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 SmartFace Node.js Server listening on port ${PORT}`);
 });
