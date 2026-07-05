@@ -51,10 +51,11 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardBgColor = backgroundColor ?? Colors.white;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBgColor = backgroundColor ?? (isDark ? const Color(0xFF13182E) : Colors.white);
     final List<BoxShadow> effectiveBoxShadow = boxShadow ?? [
       BoxShadow(
-        color: const Color(0xFF9EAFD8).withValues(alpha: 0.16),
+        color: isDark ? Colors.black.withValues(alpha: 0.3) : const Color(0xFF9EAFD8).withValues(alpha: 0.16),
         blurRadius: 16,
         spreadRadius: 2,
         offset: const Offset(0, 8),
@@ -67,7 +68,7 @@ class GlassContainer extends StatelessWidget {
         color: cardBgColor,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: borderColor ?? const Color(0xFFE2E8F0),
+          color: borderColor ?? (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0)),
           width: borderWidth,
         ),
         boxShadow: effectiveBoxShadow,
@@ -108,6 +109,7 @@ class MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = accentColor ?? const Color(0xFF3559E0);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GlassContainer(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -168,12 +170,16 @@ class MetricCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Text(
-            value,
-            style: GoogleFonts.outfit(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1B2C56),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: GoogleFonts.outfit(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF1B2C56),
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -181,8 +187,10 @@ class MetricCard extends StatelessWidget {
             label,
             style: GoogleFonts.inter(
               fontSize: 11,
-              color: const Color(0xFF7F8CA4),
+              color: isDark ? Colors.white70 : const Color(0xFF7F8CA4),
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 4),
@@ -192,6 +200,8 @@ class MetricCard extends StatelessWidget {
                 fontSize: 11,
                 color: color,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ],
@@ -742,12 +752,14 @@ class ActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
       color: Colors.transparent,
       child: GlassContainer(
         padding: const EdgeInsets.all(AppSpacing.md),
         borderColor: color.withValues(alpha: 0.15),
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF13182E) : Colors.white,
         borderRadius: 24.0,
         onTap: onTap,
         child: Column(
@@ -762,29 +774,38 @@ class ActionTile extends StatelessWidget {
               ),
               child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(height: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1B2C56),
+            const SizedBox(height: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      label,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: const Color(0xFF7F8CA4),
+                  const SizedBox(height: 2),
+                  Flexible(
+                    child: Text(
+                      description,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        color: isDark ? Colors.white54 : const Color(0xFF7F8CA4),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

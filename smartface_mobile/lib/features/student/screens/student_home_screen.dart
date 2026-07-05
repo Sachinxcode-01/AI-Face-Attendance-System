@@ -1051,7 +1051,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
           style: GoogleFonts.outfit(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF1B2C56),
+            color: isDark ? Colors.white : const Color(0xFF1B2C56),
           ),
         ),
       ],
@@ -1144,7 +1144,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
-                              color: const Color(0xFF1B2C56),
+                              color: isDark ? Colors.white : const Color(0xFF1B2C56),
                               fontWeight: isCurrent
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -1154,7 +1154,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           Text(
                             'IP: ${s['ip']} • ${s['location']}',
                             style: GoogleFonts.inter(
-                              color: const Color(0xFF7F8CA4),
+                              color: isDark ? Colors.white60 : const Color(0xFF7F8CA4),
                               fontSize: 10,
                             ),
                           ),
@@ -1215,7 +1215,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
           crossAxisCount: 2,
           crossAxisSpacing: 14,
           mainAxisSpacing: 14,
-          childAspectRatio: 1.3,
+          childAspectRatio: 1.15,
           children: [
             ActionTile(
               label: 'Mark Attendance',
