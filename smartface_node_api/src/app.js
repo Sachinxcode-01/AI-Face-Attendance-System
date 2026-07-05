@@ -10,7 +10,7 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // Enforce critical environment variable validation
-const requiredEnvVars = ['FACE_SCANNER_TOKEN', 'EMAIL_PASSWORD'];
+const requiredEnvVars = ['FACE_SCANNER_TOKEN', 'BREVO_API_KEY'];
 const missingEnvVars = [];
 requiredEnvVars.forEach(varName => {
   const val = process.env[varName];
