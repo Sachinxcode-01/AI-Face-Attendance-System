@@ -1,4 +1,4 @@
-const Brevo = require('@getbrevo/brevo');
+const { BrevoClient } = require('@getbrevo/brevo');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -14,9 +14,7 @@ const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'AttendAI Security';
 // ---------------------------------------------------------------------------
 class EmailService {
   static getClient() {
-    const apiInstance = new Brevo.TransactionalEmailsApi();
-    apiInstance.authentications['api-key'].apiKey = BREVO_API_KEY;
-    return apiInstance;
+    return new BrevoClient({ apiKey: BREVO_API_KEY });
   }
 
   static async sendEmail(toEmail, subject, textBody, htmlBody) {
@@ -26,18 +24,17 @@ class EmailService {
       return true;
     }
     try {
-      const apiInstance = this.getClient();
-      const sendSmtpEmail = new Brevo.SendSmtpEmail();
-      sendSmtpEmail.sender = { name: EMAIL_FROM_NAME, email: EMAIL_FROM_ADDRESS };
-      sendSmtpEmail.to = [{ email: toEmail }];
-      sendSmtpEmail.subject = subject;
-      sendSmtpEmail.textContent = textBody;
-      sendSmtpEmail.htmlContent = htmlBody;
-
-      await apiInstance.sendTransacEmail(sendSmtpEmail);
+      const client = this.getClient();
+      await client.transactionalEmails.sendTransacEmail({
+        sender: { name: EMAIL_FROM_NAME, email: EMAIL_FROM_ADDRESS },
+        to: [{ email: toEmail }],
+        subject: subject,
+        textContent: textBody,
+        htmlContent: htmlBody,
+      });
       return true;
     } catch (error) {
-      console.error(`Failed to send email to ${toEmail}:`, error?.response?.body || error);
+      console.error(`Failed to send email to ${toEmail}:`, error?.response?.body || error?.message || error);
       return false;
     }
   }
