@@ -13,7 +13,11 @@ const EMAIL_FROM = process.env.EMAIL_FROM || 'AttendAI Security <onboarding@rese
 // ---------------------------------------------------------------------------
 class EmailService {
   static getClient() {
-    return new Resend(RESEND_API_KEY);
+    // EU keys (re_eu...) must use the EU regional endpoint.
+    const baseUrl = RESEND_API_KEY && RESEND_API_KEY.startsWith('re_eu')
+      ? 'https://api.eu.resend.com'
+      : 'https://api.resend.com';
+    return new Resend(RESEND_API_KEY, { baseUrl });
   }
 
   static async sendEmail(toEmail, subject, textBody, htmlBody) {
