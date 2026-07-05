@@ -1,52 +1,47 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const SMTP_SERVER = process.env.SMTP_SERVER || "smtp.gmail.com";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
-const EMAIL_USER = process.env.EMAIL_USER || process.env.ADMIN_EMAIL;
-const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const EMAIL_FROM = process.env.EMAIL_FROM || 'AttendAI Security <onboarding@resend.dev>';
 
+// ---------------------------------------------------------------------------
+// EmailService — uses Resend HTTP API (not SMTP) so it works on any cloud
+// host regardless of outbound port restrictions (ports 465/587 are blocked
+// on most container platforms; Resend uses HTTPS port 443).
+// ---------------------------------------------------------------------------
 class EmailService {
-  static getTransporter() {
-    return nodemailer.createTransport({
-      host: SMTP_SERVER,
-      port: SMTP_PORT,
-      secure: SMTP_PORT === 465, // true for 465 (SSL), false for 587 (STARTTLS)
-      family: 4,               // Force IPv4 — prevents ENETUNREACH on IPv6-only resolutions
-      connectionTimeout: 10000, // 10s — fail fast instead of hanging
-      greetingTimeout: 10000,
-      auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASSWORD,
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
+  static getClient() {
+    return new Resend(RESEND_API_KEY);
   }
 
   static async sendEmail(toEmail, subject, textBody, htmlBody) {
-    if (process.env.NODE_ENV === 'test' || !EMAIL_PASSWORD || EMAIL_PASSWORD.trim() === '') {
+    // In test env or when no API key is configured, log and short-circuit.
+    if (process.env.NODE_ENV === 'test' || !RESEND_API_KEY || RESEND_API_KEY.trim() === '') {
       console.log(`[Email Mock] to: ${toEmail} | subject: ${subject}`);
       return true;
     }
     try {
-      const transporter = this.getTransporter();
-      await transporter.sendMail({
-        from: `AttendAI Security <${EMAIL_USER}>`,
-        to: toEmail,
+      const client = this.getClient();
+      const { error } = await client.emails.send({
+        from: EMAIL_FROM,
+        to: [toEmail],
         subject: subject,
         text: textBody,
         html: htmlBody,
       });
+      if (error) {
+        console.error(`Failed to send email to ${toEmail}:`, error);
+        return false;
+      }
       return true;
     } catch (error) {
       console.error(`Failed to send email to ${toEmail}:`, error);
       return false;
     }
   }
+
 
   static async sendRegistrationSuccess(email, name) {
     const subject = "Welcome to SmartFace Elite — Your Smart Campus Access is Ready";
