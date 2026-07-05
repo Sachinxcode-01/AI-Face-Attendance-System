@@ -322,36 +322,44 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   // ─── CARD SHELL ──────────────────────────────────────────────────────────
 
   Widget _buildCardShell({required List<Widget> children}) {
-    return SingleChildScrollView(
-      physics: const ClampingScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
-          decoration: BoxDecoration(
-            color: AuthDesign.cardBg,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(28),
-              topRight: Radius.circular(28),
-              bottomLeft: Radius.circular(20),
-              bottomRight: Radius.circular(20),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: AuthDesign.primaryIndigo.withValues(alpha: 0.10),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
+            child: IntrinsicHeight(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
+                    decoration: BoxDecoration(
+                      color: AuthDesign.cardBg,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AuthDesign.primaryIndigo.withValues(alpha: 0.10),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: children,
+                    ),
+                  ),
+                ),
               ),
-            ],
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: children,
-          ),
-        ),
-      ),
+        );
+      },
     ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.04, end: 0);
   }
 
@@ -393,6 +401,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   // ─── PERSONAL ────────────────────────────────────────────────────────────
 
   Widget _buildPersonalCard() {
+    if (_genderController.text.isEmpty) {
+      _genderController.text = 'Male';
+    }
     return _buildCardShell(children: [
       Text('Personal Info',
           style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
@@ -406,10 +417,67 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       const SizedBox(height: 16),
       _field('Date of Birth', _dobController, hint: 'DD/MM/YYYY', readOnly: true, onTap: () => _selectDate(context)),
       const SizedBox(height: 16),
-      _field('Gender', _genderController, hint: 'e.g. Male / Female / Other'),
+      _buildGenderSelector(),
       const SizedBox(height: 28),
       _buildNextButton(),
     ]);
+  }
+
+  Widget _buildGenderSelector() {
+    final genders = ['Male', 'Female', 'Other'];
+    final current = _genderController.text;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'GENDER',
+          style: AuthDesign.fontPoppins(fontSize: 10.5, fontWeight: FontWeight.w500, color: AuthDesign.textLabel),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: genders.map((g) {
+            final isSelected = current == g;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _genderController.text = g;
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AuthDesign.primaryIndigo.withValues(alpha: 0.08)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected
+                          ? AuthDesign.primaryIndigo
+                          : AuthDesign.textPlaceholder.withValues(alpha: 0.3),
+                      width: isSelected ? 1.8 : 1.0,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      g,
+                      style: AuthDesign.fontPoppins(
+                        fontSize: 12,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected ? AuthDesign.primaryIndigo : AuthDesign.textHeading,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
   }
 
   // ─── PROFESSIONAL ────────────────────────────────────────────────────────
