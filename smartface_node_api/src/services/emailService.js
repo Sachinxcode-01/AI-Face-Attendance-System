@@ -1,47 +1,43 @@
-const { Resend } = require('resend');
+const Brevo = require('@getbrevo/brevo');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const EMAIL_FROM = process.env.EMAIL_FROM || 'AttendAI Security <onboarding@resend.dev>';
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'saxhin0708@gmail.com';
+const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'AttendAI Security';
 
 // ---------------------------------------------------------------------------
-// EmailService — uses Resend HTTP API (not SMTP) so it works on any cloud
-// host regardless of outbound port restrictions (ports 465/587 are blocked
-// on most container platforms; Resend uses HTTPS port 443).
+// EmailService — uses Brevo (Sendinblue) HTTP API.
+// Works on any cloud host (HTTPS/443 only, no SMTP ports needed).
+// Free tier: 300 emails/day. Supports individual Gmail sender verification.
 // ---------------------------------------------------------------------------
 class EmailService {
   static getClient() {
-    // EU keys (re_eu...) must use the EU regional endpoint.
-    const baseUrl = RESEND_API_KEY && RESEND_API_KEY.startsWith('re_eu')
-      ? 'https://api.eu.resend.com'
-      : 'https://api.resend.com';
-    return new Resend(RESEND_API_KEY, { baseUrl });
+    const apiInstance = new Brevo.TransactionalEmailsApi();
+    apiInstance.authentications['api-key'].apiKey = BREVO_API_KEY;
+    return apiInstance;
   }
 
   static async sendEmail(toEmail, subject, textBody, htmlBody) {
     // In test env or when no API key is configured, log and short-circuit.
-    if (process.env.NODE_ENV === 'test' || !RESEND_API_KEY || RESEND_API_KEY.trim() === '') {
+    if (process.env.NODE_ENV === 'test' || !BREVO_API_KEY || BREVO_API_KEY.trim() === '') {
       console.log(`[Email Mock] to: ${toEmail} | subject: ${subject}`);
       return true;
     }
     try {
-      const client = this.getClient();
-      const { error } = await client.emails.send({
-        from: EMAIL_FROM,
-        to: [toEmail],
-        subject: subject,
-        text: textBody,
-        html: htmlBody,
-      });
-      if (error) {
-        console.error(`Failed to send email to ${toEmail}:`, error);
-        return false;
-      }
+      const apiInstance = this.getClient();
+      const sendSmtpEmail = new Brevo.SendSmtpEmail();
+      sendSmtpEmail.sender = { name: EMAIL_FROM_NAME, email: EMAIL_FROM_ADDRESS };
+      sendSmtpEmail.to = [{ email: toEmail }];
+      sendSmtpEmail.subject = subject;
+      sendSmtpEmail.textContent = textBody;
+      sendSmtpEmail.htmlContent = htmlBody;
+
+      await apiInstance.sendTransacEmail(sendSmtpEmail);
       return true;
     } catch (error) {
-      console.error(`Failed to send email to ${toEmail}:`, error);
+      console.error(`Failed to send email to ${toEmail}:`, error?.response?.body || error);
       return false;
     }
   }
