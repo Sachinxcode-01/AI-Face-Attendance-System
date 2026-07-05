@@ -25,17 +25,23 @@ class AuthRepository {
     String password,
   ) async {
     final result = await _authService.loginWithPassword(email, password);
-    if (result.containsKey('token')) {
-      final String token = result['token'] as String;
+    if (result.containsKey('token') || result.containsKey('access_token')) {
+      final String token = (result['token'] ?? result['access_token']) as String;
       final String name = result['name'] as String? ?? 'User';
       final String role = result['role'] as String? ?? 'student';
       final String? avatarUrl = result['avatar_url'] as String?;
+      final bool bioRegistered = result['biometric_registered'] ?? false;
+      final bool introCompleted = result['introCompleted'] ?? false;
+      final bool wizardCompleted = result['wizardCompleted'] ?? bioRegistered;
       await _sessionManager.saveSession(
         token: token,
         email: email,
         name: name,
         role: role,
         avatarUrl: avatarUrl,
+        biometricRegistered: bioRegistered,
+        introCompleted: introCompleted,
+        wizardCompleted: wizardCompleted,
       );
     }
     return result;
@@ -43,17 +49,23 @@ class AuthRepository {
 
   Future<Map<String, dynamic>> verifyLoginOtp(String email, String otp) async {
     final result = await _authService.verifyLoginOtp(email, otp);
-    if (result.containsKey('token')) {
-      final String token = result['token'] as String;
+    if (result.containsKey('token') || result.containsKey('access_token')) {
+      final String token = (result['token'] ?? result['access_token']) as String;
       final String name = result['name'] as String? ?? 'User';
       final String role = result['role'] as String? ?? 'student';
       final String? avatarUrl = result['avatar_url'] as String?;
+      final bool bioRegistered = result['biometric_registered'] ?? false;
+      final bool introCompleted = result['introCompleted'] ?? false;
+      final bool wizardCompleted = result['wizardCompleted'] ?? bioRegistered;
       await _sessionManager.saveSession(
         token: token,
         email: email,
         name: name,
         role: role,
         avatarUrl: avatarUrl,
+        biometricRegistered: bioRegistered,
+        introCompleted: introCompleted,
+        wizardCompleted: wizardCompleted,
       );
     }
     return result;
@@ -76,12 +88,18 @@ class AuthRepository {
     if (result.containsKey('token') || result.containsKey('access_token')) {
       final String token = (result['token'] ?? result['access_token']) as String;
       final String userRole = result['role'] as String? ?? role;
+      final bool bioRegistered = result['biometric_registered'] ?? false;
+      final bool introCompleted = result['introCompleted'] ?? false;
+      final bool wizardCompleted = result['wizardCompleted'] ?? bioRegistered;
       await _sessionManager.saveSession(
         token: token,
         email: email,
         name: name,
         role: userRole,
         avatarUrl: avatarUrl,
+        biometricRegistered: bioRegistered,
+        introCompleted: introCompleted,
+        wizardCompleted: wizardCompleted,
       );
     }
     return result;
@@ -99,6 +117,8 @@ class AuthRepository {
       final String userRole = result['role'] as String? ?? role;
       final String? avatarUrl = result['avatar_url'] as String?;
       final bool bioRegistered = result['biometric_registered'] ?? false;
+      final bool introCompleted = result['introCompleted'] ?? false;
+      final bool wizardCompleted = result['wizardCompleted'] ?? bioRegistered;
       await _sessionManager.saveSession(
         token: token,
         email: email,
@@ -106,6 +126,8 @@ class AuthRepository {
         role: userRole,
         avatarUrl: avatarUrl,
         biometricRegistered: bioRegistered,
+        introCompleted: introCompleted,
+        wizardCompleted: wizardCompleted,
       );
     }
     return result;

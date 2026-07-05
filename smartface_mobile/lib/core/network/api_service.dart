@@ -139,6 +139,72 @@ class ApiService {
     }
   }
 
+  /// Intercepts and parses the HTTP response safely.
+  /// Handles non-JSON contents (like HTML proxy error pages) and formats errors gracefully.
+  static dynamic _processResponse(http.Response response) {
+    final body = response.body;
+    final statusCode = response.statusCode;
+
+    // Inspect Content-Type headers for JSON content
+    final contentType = response.headers['content-type'] ?? '';
+    final isJson = contentType.contains('application/json');
+
+    if (statusCode >= 200 && statusCode < 300) {
+      if (body.isEmpty) return {'success': true};
+      try {
+        return jsonDecode(body);
+      } catch (e) {
+        return {
+          'error_type': 'invalid_json',
+          'detail': 'Invalid response format from server.',
+        };
+      }
+    }
+
+    // Check if error is returned as valid JSON
+    if (isJson && body.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(body);
+        if (decoded is Map) {
+          final Map<String, dynamic> mapDecoded = Map<String, dynamic>.from(decoded);
+          if (mapDecoded.containsKey('detail')) {
+            final detailStr = mapDecoded['detail']?.toString() ?? '';
+            // Translate server proxy timeout/down strings to friendly message
+            if (detailStr.toLowerCase().contains('failed to respond') || 
+                detailStr.toLowerCase().contains('bad gateway') ||
+                detailStr.toLowerCase().contains('service unavailable')) {
+              mapDecoded['detail'] = 'The server is temporarily unavailable. Please try again later.';
+            }
+          }
+          return mapDecoded;
+        }
+      } catch (_) {
+        // Fallback to generic parsing below
+      }
+    }
+
+    // Gateway timeout, down, or bad proxy responses (commonly HTML)
+    if (statusCode == 502 || statusCode == 503 || statusCode == 504) {
+      return {
+        'error_type': 'backend_down',
+        'detail': 'The server is temporarily unavailable. Please check your connection or try again later.',
+      };
+    }
+
+    // Extract HTML body snippet if plain text or html error
+    if (body.toLowerCase().contains('failed to respond') || body.toLowerCase().contains('application failed')) {
+      return {
+        'error_type': 'backend_down',
+        'detail': 'The server is temporarily unavailable. Please try again later.',
+      };
+    }
+
+    return {
+      'error_type': 'server_error',
+      'detail': 'Server error ($statusCode). Please try again.',
+    };
+  }
+
   /// Converts a raw network exception into a structured error map.
   ///
   /// Returns keys:
@@ -147,6 +213,12 @@ class ApiService {
   static Map<String, dynamic> _classifyNetworkError(Object e) {
     final msg = e.toString().toLowerCase();
     debugPrint('[ApiService] 🔴 Network error: $e');
+    if (e is FormatException || msg.contains('format') || msg.contains('json')) {
+      return {
+        'error_type': 'invalid_json',
+        'detail': 'Invalid response format from server.',
+      };
+    }
     if (e is TimeoutException || msg.contains('timeoutexception') || msg.contains('timed out')) {
       return {
         'error_type': 'timeout',
@@ -221,7 +293,7 @@ class ApiService {
         body: jsonEncode({'email': email}),
       ).timeout(const Duration(seconds: 15));
       debugPrint('[ApiService] ← Status ${response.statusCode}');
-      return jsonDecode(response.body) as Map<String, dynamic>;
+      return _processResponse(response);
     } catch (e) {
       return _classifyNetworkError(e);
     }
@@ -239,7 +311,7 @@ class ApiService {
         body: jsonEncode({'email': email, 'otp': otp}),
       ).timeout(const Duration(seconds: 15));
       debugPrint('[ApiService] ← Status ${response.statusCode}');
-      return normalizeAuthResponse(jsonDecode(response.body) as Map<String, dynamic>);
+      return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
       return _classifyNetworkError(e);
     }
@@ -249,15 +321,45 @@ class ApiService {
     String email,
     String password,
   ) async {
-    debugPrint('[ApiService] → POST $baseUrl/auth/login-password');
+    debugPrint('[ApiService] → POST $baseUrl/auth/login');
     try {
       final response = await client.post(
-        Uri.parse('$baseUrl/auth/login-password'),
+        Uri.parse('$baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       ).timeout(const Duration(seconds: 15));
       debugPrint('[ApiService] ← Status ${response.statusCode}');
-      return normalizeAuthResponse(jsonDecode(response.body) as Map<String, dynamic>);
+      return normalizeAuthResponse(_processResponse(response));
+    } catch (e) {
+      return _classifyNetworkError(e);
+    }
+  }
+
+  static Future<Map<String, dynamic>> logout(String token) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$baseUrl/auth/logout'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 4));
+      return _processResponse(response);
+    } catch (e) {
+      return _classifyNetworkError(e);
+    }
+  }
+
+  static Future<Map<String, dynamic>> getUserProfile(String token) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/auth/me'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 15));
+      return _processResponse(response);
     } catch (e) {
       return _classifyNetworkError(e);
     }
@@ -282,12 +384,9 @@ class ApiService {
           'idToken': idToken,
         }),
       ).timeout(const Duration(seconds: 15));
-      return normalizeAuthResponse(jsonDecode(response.body));
+      return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
-      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
-        return {'detail': 'timeout'};
-      }
-      return {'detail': 'Connection failed'};
+      return _classifyNetworkError(e);
     }
   }
 
@@ -304,15 +403,11 @@ class ApiService {
           'role': role,
         }),
       ).timeout(const Duration(seconds: 15));
-      return normalizeAuthResponse(jsonDecode(response.body));
+      return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
-      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
-        return {'detail': 'timeout'};
-      }
-      return {'detail': 'Connection failed'};
+      return _classifyNetworkError(e);
     }
   }
-
 
   static Future<Map<String, dynamic>> register(
     String name,
@@ -331,12 +426,9 @@ class ApiService {
           'role': role.toLowerCase(),
         }),
       ).timeout(const Duration(seconds: 15));
-      return normalizeAuthResponse(jsonDecode(response.body));
+      return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
-      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
-        return {'detail': 'timeout'};
-      }
-      return {'detail': 'Connection failed'};
+      return _classifyNetworkError(e);
     }
   }
 
@@ -346,17 +438,20 @@ class ApiService {
         Uri.parse('$baseUrl/auth/forgot-password'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email}),
-      );
-      return jsonDecode(response.body);
+      ).timeout(const Duration(seconds: 15));
+      return _processResponse(response);
     } catch (e) {
-      return {'detail': 'Connection failed'};
+      return _classifyNetworkError(e);
     }
   }
 
   static Future<List<dynamic>> getSecurityLogs() async {
     try {
-      final response = await client.get(Uri.parse('$baseUrl/security/logs'));
-      return jsonDecode(response.body);
+      final response = await client.get(Uri.parse('$baseUrl/security/logs')).timeout(const Duration(seconds: 15));
+      final result = _processResponse(response);
+      if (result is List) return result;
+      if (result is Map && result.containsKey('data') && result['data'] is List) return result['data'];
+      return [];
     } catch (e) {
       return [];
     }
@@ -368,10 +463,10 @@ class ApiService {
         Uri.parse('$baseUrl/security/intruder-alert'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'camera_id': cameraId, 'type': 'intruder'}),
-      );
-      return jsonDecode(response.body);
+      ).timeout(const Duration(seconds: 15));
+      return _processResponse(response);
     } catch (e) {
-      return {'detail': 'Connection failed'};
+      return _classifyNetworkError(e);
     }
   }
 
@@ -390,29 +485,12 @@ class ApiService {
           'new_password': newPassword,
         }),
       ).timeout(const Duration(seconds: 15));
-      return jsonDecode(response.body);
+      return _processResponse(response);
     } catch (e) {
-      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
-        return {'detail': 'timeout'};
-      }
-      return {'detail': 'Connection failed'};
+      return _classifyNetworkError(e);
     }
   }
 
-  static Future<Map<String, dynamic>> getUserProfile(String token) async {
-    try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/auth/profile'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-      return jsonDecode(response.body);
-    } catch (e) {
-      return {'detail': 'Connection failed'};
-    }
-  }
 
   static Future<Map<String, dynamic>> updateProfile(
     Map<String, dynamic> data,

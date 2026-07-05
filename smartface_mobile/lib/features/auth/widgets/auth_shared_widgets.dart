@@ -231,6 +231,7 @@ class UnderlineTextField extends StatefulWidget {
   final String? Function(String?)? validator;
   final Widget? suffixIcon;
   final ValueChanged<String>? onChanged;
+  final bool readOnly;
 
   const UnderlineTextField({
     super.key,
@@ -242,6 +243,7 @@ class UnderlineTextField extends StatefulWidget {
     this.validator,
     this.suffixIcon,
     this.onChanged,
+    this.readOnly = false,
   });
 
   @override
@@ -283,6 +285,7 @@ class _UnderlineTextFieldState extends State<UnderlineTextField> {
           keyboardType: widget.keyboardType,
           validator: widget.validator,
           onChanged: widget.onChanged,
+          readOnly: widget.readOnly,
           style: AuthDesign.fontPoppins(
             fontSize: 12,
             fontWeight: FontWeight.w400,
@@ -521,8 +524,9 @@ class _SocialIconRowState extends State<SocialIconRow> {
 
 
   Future<void> _handleGoogleLogin() async {
+    if (_isGoogleLoading || _isGithubLoading) return; // Prevent duplicate taps
     if (EnvConfig.googleClientId == 'YOUR_GOOGLE_CLIENT_ID' || EnvConfig.googleClientId.isEmpty) {
-      AppToast.show(context, message: 'Google Authentication is not configured.', type: ToastType.warning);
+      AppToast.show(context, message: 'Google login is not configured yet.', type: ToastType.warning);
       return;
     }
 
@@ -558,7 +562,8 @@ class _SocialIconRowState extends State<SocialIconRow> {
       }
     } catch (e) {
       if (mounted) {
-        AppToast.show(context, message: '$e', type: ToastType.error);
+        final errorMsg = e.toString().replaceFirst('Exception: ', '');
+        AppToast.show(context, message: errorMsg, type: ToastType.error);
       }
     } finally {
       if (mounted) {
@@ -568,8 +573,9 @@ class _SocialIconRowState extends State<SocialIconRow> {
   }
 
   Future<void> _handleGithubLogin() async {
+    if (_isGoogleLoading || _isGithubLoading) return; // Prevent duplicate taps
     if (EnvConfig.githubClientId == 'YOUR_GITHUB_CLIENT_ID' || EnvConfig.githubClientId.isEmpty) {
-      AppToast.show(context, message: 'GitHub Authentication is not configured.', type: ToastType.warning);
+      AppToast.show(context, message: 'GitHub login is not configured yet.', type: ToastType.warning);
       return;
     }
 
@@ -609,7 +615,8 @@ class _SocialIconRowState extends State<SocialIconRow> {
       }
     } catch (e) {
       if (mounted) {
-        AppToast.show(context, message: '$e', type: ToastType.error);
+        final errorMsg = e.toString().replaceFirst('Exception: ', '');
+        AppToast.show(context, message: errorMsg, type: ToastType.error);
       }
     } finally {
       if (mounted) {
@@ -620,6 +627,8 @@ class _SocialIconRowState extends State<SocialIconRow> {
 
   Future<void> _completeSocialLogin(Map<String, dynamic> result, String defaultEmail) async {
     final session = context.read<SessionManager>();
+    final bool introCompleted = result['introCompleted'] ?? false;
+    final bool wizardCompleted = result['wizardCompleted'] ?? result['biometric_registered'] ?? false;
     final bool bioRegistered = result['biometric_registered'] ?? false;
     final String role = result['role'] ?? 'student';
     final String name = result['full_name'] ?? result['name'] ?? 'User';
@@ -627,29 +636,36 @@ class _SocialIconRowState extends State<SocialIconRow> {
 
     await session.saveSession(
       token: result['access_token'],
+      refreshToken: result['refresh_token'] as String?,
       email: email,
       role: role,
       name: name,
       biometricRegistered: bioRegistered,
+      introCompleted: introCompleted,
+      wizardCompleted: wizardCompleted,
     );
 
     if (!mounted) return;
     AppToast.show(context, message: 'Welcome, $name!', type: ToastType.success);
 
-    // Redirect based on role and setup completion
-    if (bioRegistered) {
-      final roleLower = role.toLowerCase();
+    // Redirect based on onboarding/intro and setup completion (matches RouteGuards handleRedirect)
+    final roleLower = role.toLowerCase();
+    if (!introCompleted) {
+      context.go('/auth/intro');
+    } else if (!wizardCompleted) {
+      context.go('/setup/$roleLower');
+    } else {
       if (roleLower == 'admin') {
-        context.go('/admin/home');
+        context.go('/admin/dashboard');
       } else if (roleLower == 'teacher' || roleLower == 'faculty' || roleLower == 'lecturer') {
-        context.go('/teacher/home');
+        context.go('/teacher/dashboard');
       } else if (roleLower == 'parent') {
         context.go('/parent/dashboard');
+      } else if (roleLower == 'hod' || roleLower == 'principal' || roleLower == 'management') {
+        context.go('/management/dashboard');
       } else {
-        context.go('/student/home');
+        context.go('/student/dashboard');
       }
-    } else {
-      context.go('/auth/setup');
     }
   }
 
@@ -750,16 +766,6 @@ class _SocialIconRowState extends State<SocialIconRow> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isGoogleConfigured = EnvConfig.googleClientId.isNotEmpty && 
-        EnvConfig.googleClientId != 'YOUR_GOOGLE_CLIENT_ID';
-        
-    final bool isGithubConfigured = EnvConfig.githubClientId.isNotEmpty && 
-        EnvConfig.githubClientId != 'YOUR_GITHUB_CLIENT_ID';
-
-    if (!isGoogleConfigured && !isGithubConfigured) {
-      return const SizedBox.shrink();
-    }
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -793,28 +799,25 @@ class _SocialIconRowState extends State<SocialIconRow> {
         const SizedBox(height: 16),
         Row(
           children: [
-            if (isGoogleConfigured)
-              Expanded(
-                child: SocialAuthButton(
-                  iconPath: 'assets/icons/google.png',
-                  label: 'Google',
-                  isLoading: _isGoogleLoading,
-                  enabled: true,
-                  onTap: _handleGoogleLogin,
-                ),
+            Expanded(
+              child: SocialAuthButton(
+                iconPath: 'assets/icons/google.png',
+                label: 'Google',
+                isLoading: _isGoogleLoading,
+                enabled: !_isGoogleLoading && !_isGithubLoading,
+                onTap: _handleGoogleLogin,
               ),
-            if (isGoogleConfigured && isGithubConfigured)
-              const SizedBox(width: 16),
-            if (isGithubConfigured)
-              Expanded(
-                child: SocialAuthButton(
-                  iconPath: 'assets/icons/github.png',
-                  label: 'GitHub',
-                  isLoading: _isGithubLoading,
-                  enabled: true,
-                  onTap: _handleGithubLogin,
-                ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: SocialAuthButton(
+                iconPath: 'assets/icons/github.png',
+                label: 'GitHub',
+                isLoading: _isGithubLoading,
+                enabled: !_isGoogleLoading && !_isGithubLoading,
+                onTap: _handleGithubLogin,
               ),
+            ),
           ],
         ),
       ],

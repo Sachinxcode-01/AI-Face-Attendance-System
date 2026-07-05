@@ -13,7 +13,10 @@ class EmailService {
     return nodemailer.createTransport({
       host: SMTP_SERVER,
       port: SMTP_PORT,
-      secure: SMTP_PORT === 465, // true for 465, false for other ports
+      secure: SMTP_PORT === 465, // true for 465 (SSL), false for 587 (STARTTLS)
+      family: 4,               // Force IPv4 — prevents ENETUNREACH on IPv6-only resolutions
+      connectionTimeout: 10000, // 10s — fail fast instead of hanging
+      greetingTimeout: 10000,
       auth: {
         user: EMAIL_USER,
         pass: EMAIL_PASSWORD,

@@ -154,19 +154,20 @@ class _SplashScreenState extends State<SplashScreen> {
         return;
       }
 
+      final role = session.role?.toLowerCase() ?? 'student';
+
       // • Intro Completed + Wizard Not Completed -> Role Wizard
       if (!wizardCompleted) {
-        context.go('/auth/setup');
+        context.go('/setup/$role');
         return;
       }
 
       // • Everything Completed -> Dashboard
-      final role = session.role?.toLowerCase() ?? 'student';
       final String targetDashboard = role == 'admin'
-          ? '/admin/home'
+          ? '/admin/dashboard'
           : (role == 'teacher' || role == 'faculty' || role == 'lecturer'
-              ? '/teacher/home'
-              : (role == 'parent' ? '/parent/dashboard' : '/student/home'));
+              ? '/teacher/dashboard'
+              : (role == 'parent' ? '/parent/dashboard' : '/student/dashboard'));
 
       context.go(targetDashboard);
     } catch (e) {

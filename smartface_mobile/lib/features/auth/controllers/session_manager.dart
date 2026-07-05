@@ -25,6 +25,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/app/config/cache_service.dart';
 
+import 'package:smartface_attendance/core/network/api_service.dart';
+
 // ======================================================
 // State Management: Session Manager
 // ======================================================
@@ -198,7 +200,7 @@ class SessionManager extends ChangeNotifier {
       _refreshToken = refreshToken;
     }
     _email = email;
-    _role = role;
+    _role = role.toLowerCase();
     _name = name;
     _avatarUrl = avatarUrl;
     _biometricRegistered = biometricRegistered;
@@ -217,7 +219,7 @@ class SessionManager extends ChangeNotifier {
       if (refreshToken != null)
         _storage.write(key: _keyRefreshToken, value: refreshToken),
       _storage.write(key: _keyEmail, value: email),
-      _storage.write(key: _keyRole, value: role),
+      _storage.write(key: _keyRole, value: role.toLowerCase()),
       if (name != null) _storage.write(key: _keyName, value: name),
       if (avatarUrl != null)
         _storage.write(key: _keyAvatarUrl, value: avatarUrl),
@@ -227,6 +229,12 @@ class SessionManager extends ChangeNotifier {
       CacheService.set('sf_wizard_completed', _wizardCompleted, persist: true),
     ]);
 
+    notifyListeners();
+  }
+
+  /// Updates only the in-memory JWT token (used during interceptor-triggered refreshes).
+  void updateTokenOnly(String newToken) {
+    _token = newToken;
     notifyListeners();
   }
 
@@ -283,7 +291,16 @@ class SessionManager extends ChangeNotifier {
   ///
   /// Used during user logout or session expiration timeouts.
   Future<void> logout() async {
+    if (_token != null && _token!.isNotEmpty) {
+      try {
+        await ApiService.logout(_token!).timeout(const Duration(seconds: 4));
+      } catch (e) {
+        debugPrint('[SessionManager] Backend logout failed or timed out: $e');
+      }
+    }
+
     final wasOnboardingCompleted = _onboardingCompleted;
+    final wasIntroCompleted = _introCompleted;
     _token = null;
     _refreshToken = null;
     _email = null;
@@ -309,9 +326,13 @@ class SessionManager extends ChangeNotifier {
       _storage.delete(key: _keyBiometric),
     ]);
 
-    // Restore onboarding completed state if it was true
+    // Restore device-level onboarding/intro flags (they are one-time tours,
+    // not session state) so returning users are not forced through them again.
     if (wasOnboardingCompleted) {
       await setOnboardingCompleted(true);
+    }
+    if (wasIntroCompleted) {
+      await setIntroCompleted(true);
     }
 
     notifyListeners();

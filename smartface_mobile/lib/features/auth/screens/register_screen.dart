@@ -74,6 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _handleSignUp() async {
+    if (_isLoading) return; // Guard against double-tap duplicate submissions
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -143,11 +144,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // Go to OTP screen and pass the registered email for auto OTP trigger
         context.go('/auth/otp', extra: email);
       } else {
-        throw Exception(registerResult['detail'] ?? registerResult['message'] ?? 'Sign up failed');
+        final msg = registerResult['detail'] ?? registerResult['message'] ?? 'Sign up failed';
+        AppToast.show(context, message: msg.toString(), type: ToastType.error);
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: '$e', type: ToastType.error);
+      AppToast.show(context, message: 'An unexpected error occurred. Please try again.', type: ToastType.error);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -248,44 +250,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 8),
             LayoutBuilder(
               builder: (context, constraints) {
-                final cardSize = (constraints.maxWidth - 12) / 2;
+                final double cardWidth = (constraints.maxWidth - 10) / 2;
+                const double cardHeight = 95.0;
                 return Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
+                  spacing: 10,
+                  runSpacing: 10,
                   children: [
                     _RoleCard(
                       role: 'Student',
                       icon: Icons.school,
                       isSelected: _selectedRole == 'Student',
-                      size: cardSize,
-                      onTap: () => setState(() => _selectedRole = 'Student'),
+                      width: cardWidth,
+                      height: cardHeight,
+                      onTap: _isLoading ? null : () => setState(() => _selectedRole = 'Student'),
                     ),
                     _RoleCard(
                       role: 'Teacher',
                       icon: Icons.co_present,
                       isSelected: _selectedRole == 'Teacher',
-                      size: cardSize,
-                      onTap: () => setState(() => _selectedRole = 'Teacher'),
+                      width: cardWidth,
+                      height: cardHeight,
+                      onTap: _isLoading ? null : () => setState(() => _selectedRole = 'Teacher'),
                     ),
                     _RoleCard(
                       role: 'Parent',
                       icon: Icons.family_restroom,
                       isSelected: _selectedRole == 'Parent',
-                      size: cardSize,
-                      onTap: () => setState(() => _selectedRole = 'Parent'),
+                      width: cardWidth,
+                      height: cardHeight,
+                      onTap: _isLoading ? null : () => setState(() => _selectedRole = 'Parent'),
                     ),
                     _RoleCard(
                       role: 'Admin',
                       icon: Icons.admin_panel_settings,
                       isSelected: _selectedRole == 'Admin',
-                      size: cardSize,
-                      onTap: () => setState(() => _selectedRole = 'Admin'),
+                      width: cardWidth,
+                      height: cardHeight,
+                      onTap: _isLoading ? null : () => setState(() => _selectedRole = 'Admin'),
                     ),
                   ],
                 );
               },
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Checkbox Row
             Row(
@@ -346,15 +353,17 @@ class _RoleCard extends StatefulWidget {
   final String role;
   final IconData icon;
   final bool isSelected;
-  final double size;
-  final VoidCallback onTap;
+  final double width;
+  final double height;
+  final VoidCallback? onTap;
 
   const _RoleCard({
     required this.role,
     required this.icon,
     required this.isSelected,
-    required this.size,
-    required this.onTap,
+    required this.width,
+    required this.height,
+    this.onTap,
   });
 
   @override
@@ -392,21 +401,28 @@ class _RoleCardState extends State<_RoleCard> with SingleTickerProviderStateMixi
     final borderColor = widget.isSelected ? selectedColor : const Color(0xFFE2E8F0);
 
     return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) {
-        _controller.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _controller.reverse(),
+      onTapDown: widget.onTap == null
+          ? null
+          : (_) {
+              _controller.forward();
+              HapticFeedback.lightImpact();
+            },
+      onTapUp: widget.onTap == null
+          ? null
+          : (_) {
+              _controller.reverse();
+              widget.onTap!();
+            },
+      onTapCancel: widget.onTap == null ? null : () => _controller.reverse(),
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: widget.size,
-          height: widget.size,
+          width: widget.width,
+          height: widget.height,
           decoration: BoxDecoration(
             color: widget.isSelected ? selectedBg : unselectedBg,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: borderColor,
               width: widget.isSelected ? 2.0 : 1.0,
@@ -434,13 +450,13 @@ class _RoleCardState extends State<_RoleCard> with SingleTickerProviderStateMixi
               Icon(
                 widget.icon,
                 color: widget.isSelected ? selectedColor : unselectedColor,
-                size: widget.size * 0.28,
+                size: 28,
               ),
-              SizedBox(height: widget.size * 0.08),
+              const SizedBox(height: 6),
               Text(
                 widget.role,
                 style: AuthDesign.fontPoppins(
-                  fontSize: widget.size * 0.09,
+                  fontSize: 15,
                   fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: widget.isSelected ? selectedColor : unselectedColor,
                 ),

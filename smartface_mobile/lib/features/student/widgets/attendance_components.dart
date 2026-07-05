@@ -11,8 +11,10 @@
 */
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glassmorphic_card.dart';
 
 // ======================================================
@@ -96,23 +98,61 @@ class AttendanceHealthCard extends StatelessWidget {
               Stack(
                 alignment: Alignment.center,
                 children: [
-                  SizedBox(
-                    width: 85,
-                    height: 85,
-                    child: CircularProgressIndicator(
-                      value: score,
-                      strokeWidth: 8,
-                      backgroundColor: Colors.white10,
-                      valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-                    ),
-                  ),
-                  Text(
-                    '$scoreInt%',
-                    style: GoogleFonts.outfit(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
+                  // Soft pulsing glow behind the ring.
+                  Container(
+                        width: 85,
+                        height: 85,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: statusColor.withValues(alpha: 0.45),
+                              blurRadius: 20,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                      )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .fade(
+                        begin: 0.35,
+                        end: 0.85,
+                        duration: 1600.ms,
+                        curve: Curves.easeInOut,
+                      ),
+                  // Ring fills from 0 to score, with the % counting up in sync.
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0, end: score),
+                    duration: const Duration(milliseconds: 1300),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, _) {
+                      return Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: 85,
+                            height: 85,
+                            child: CircularProgressIndicator(
+                              value: value,
+                              strokeWidth: 8,
+                              strokeCap: StrokeCap.round,
+                              backgroundColor: Colors.white10,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                statusColor,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '${(value * 100).toInt()}%',
+                            style: GoogleFonts.outfit(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -143,17 +183,18 @@ class AttendanceHealthCard extends StatelessWidget {
             children: [
               _buildMiniMetric(
                 'Total Present',
-                '${percentage.toInt()}%',
+                percentage,
                 AppColors.cyan,
+                suffix: '%',
               ),
               _buildMiniMetric(
                 'Late Arrivals',
-                '$lates',
+                lates.toDouble(),
                 lates > 2 ? AppColors.warning : AppColors.success,
               ),
               _buildMiniMetric(
                 'Consecutive Absence',
-                '$consecutiveAbsences',
+                consecutiveAbsences.toDouble(),
                 consecutiveAbsences > 1 ? AppColors.error : AppColors.success,
               ),
             ],
@@ -163,14 +204,21 @@ class AttendanceHealthCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMiniMetric(String label, String value, Color color) {
+  Widget _buildMiniMetric(
+    String label,
+    double value,
+    Color color, {
+    String suffix = '',
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: AppText.caption(color: Colors.white38)),
         const SizedBox(height: 4),
-        Text(
-          value,
+        CountUpText(
+          value: value,
+          duration: const Duration(milliseconds: 1100),
+          formatter: (v) => '${v.toInt()}$suffix',
           style: GoogleFonts.robotoMono(
             color: color,
             fontWeight: FontWeight.bold,
@@ -224,16 +272,29 @@ class HeatmapGrid extends StatelessWidget {
                     );
                   }
 
+                  final int flatIndex = weekIndex * 7 + dayIndex;
                   return Container(
-                    width: 26,
-                    height: 26,
-                    margin: const EdgeInsets.symmetric(vertical: 3),
-                    decoration: BoxDecoration(
-                      color: boxColor,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.white10, width: 0.5),
-                    ),
-                  );
+                        width: 26,
+                        height: 26,
+                        margin: const EdgeInsets.symmetric(vertical: 3),
+                        decoration: BoxDecoration(
+                          color: boxColor,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.white10, width: 0.5),
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(
+                        delay: (flatIndex * 18).ms,
+                        duration: 320.ms,
+                      )
+                      .scaleXY(
+                        begin: 0.3,
+                        end: 1,
+                        delay: (flatIndex * 18).ms,
+                        duration: 320.ms,
+                        curve: Curves.easeOutBack,
+                      );
                 }),
               );
             }),
@@ -332,18 +393,36 @@ class ExportCard extends StatelessWidget {
   }
 
   Widget _buildExportButton(String format, IconData icon, Color color) {
-    return ElevatedButton.icon(
-      onPressed: () => onExportPressed(format.toLowerCase()),
-      icon: Icon(icon, color: Colors.black, size: 16),
-      label: Text(
-        format,
-        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.black,
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    return PressableScale(
+      onTap: () => onExportPressed(format.toLowerCase()),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.black, size: 16),
+            const SizedBox(width: 6),
+            Text(
+              format,
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -366,13 +445,28 @@ class LiveMonitorCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 10,
-                height: 10,
-                decoration: const BoxDecoration(
-                  color: Colors.redAccent,
-                  shape: BoxShape.circle,
-                ),
-              ),
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.redAccent.withValues(alpha: 0.6),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .fade(begin: 0.4, end: 1, duration: 800.ms)
+                  .scaleXY(
+                    begin: 0.85,
+                    end: 1.15,
+                    duration: 800.ms,
+                    curve: Curves.easeInOut,
+                  ),
               const SizedBox(width: 8),
               Text(
                 'LIVE SESSIONS MONITOR',

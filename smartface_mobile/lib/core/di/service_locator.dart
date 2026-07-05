@@ -21,6 +21,7 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 
 // Core Services
 import 'package:smartface_attendance/core/services/api_service.dart';
+import 'package:smartface_attendance/core/network/api_service.dart' as net;
 import 'package:smartface_attendance/core/services/auth_service.dart';
 import 'package:smartface_attendance/core/services/ai_service.dart';
 import 'package:smartface_attendance/core/services/attendance_service.dart';
@@ -149,4 +150,18 @@ Future<void> initServiceLocator() async {
   sl.registerSingleton<SessionManager>(sessionManager);
   sl.registerSingleton<ThemeController>(themeController);
   sl.registerSingleton<AppState>(appState);
+
+  // Set up ApiService callbacks to SessionManager
+  ApiService.onSessionExpired = () {
+    sessionManager.logout();
+  };
+  ApiService.onTokenRefreshed = (newToken) {
+    sessionManager.updateTokenOnly(newToken);
+  };
+  net.ApiService.onSessionExpired = () {
+    sessionManager.logout();
+  };
+  net.ApiService.onTokenRefreshed = (newToken) {
+    sessionManager.updateTokenOnly(newToken);
+  };
 }

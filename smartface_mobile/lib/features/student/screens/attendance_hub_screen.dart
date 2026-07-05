@@ -12,6 +12,7 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -54,7 +55,10 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
       final session = Provider.of<SessionManager>(context, listen: false);
       final token = session.token;
       final email = session.email;
-      if (token == null || email == null) return;
+      if (token == null || email == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
 
       // Parallel API fetches
       final results = await Future.wait([
@@ -257,18 +261,25 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
         );
         await Printing.layoutPdf(onLayout: (format) async => pdf.save());
       } else {
-        // Trigger direct server file download (mock toast callback)
+        // Trigger server-side report generation and confirm honestly.
         final url =
             '${ApiService.baseUrl}/attendance/report/generate?format=$format';
-        await http.get(
+        final res = await http.get(
           Uri.parse(url),
           headers: {'Authorization': 'Bearer $token'},
         );
-        if (mounted) {
+        if (!mounted) return;
+        if (res.statusCode == 200) {
           AppToast.show(
             context,
-            message: 'Document compiled. Download link active!',
+            message: 'Report ready. Check your email or downloads.',
             type: ToastType.success,
+          );
+        } else {
+          AppToast.show(
+            context,
+            message: 'Report service unavailable. Try again shortly.',
+            type: ToastType.error,
           );
         }
       }
@@ -344,35 +355,41 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
           color: AppColors.gold,
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            children: [
-              // 1. Health Score Card
-              AttendanceHealthCard(
-                score: healthScore,
-                percentage: percentage,
-                lates: lates,
-                consecutiveAbsences: consecutiveAbsences,
-                standing: standing,
-              ),
-              const SizedBox(height: 20),
+            children:
+                [
+                  // 1. Health Score Card
+                  AttendanceHealthCard(
+                    score: healthScore,
+                    percentage: percentage,
+                    lates: lates,
+                    consecutiveAbsences: consecutiveAbsences,
+                    standing: standing,
+                  ),
+                  const SizedBox(height: 20),
 
-              // 2. Risk Alerts Panel
-              if (alerts.isNotEmpty) ...[
-                _buildAlertsPanel(alerts),
-                const SizedBox(height: 20),
-              ],
+                  // 2. Risk Alerts Panel
+                  if (alerts.isNotEmpty) ...[
+                    _buildAlertsPanel(alerts),
+                    const SizedBox(height: 20),
+                  ],
 
-              // 3. Heatmap Matrix Card
-              HeatmapGrid(heatmapData: _heatmapData),
-              const SizedBox(height: 20),
+                  // 3. Heatmap Matrix Card
+                  HeatmapGrid(heatmapData: _heatmapData),
+                  const SizedBox(height: 20),
 
-              // 4. Export Controls Card
-              ExportCard(onExportPressed: _exportLedger),
-              const SizedBox(height: 20),
+                  // 4. Export Controls Card
+                  ExportCard(onExportPressed: _exportLedger),
+                  const SizedBox(height: 20),
 
-              // 5. Recent Logs List
-              _buildRecentLogsLedger(),
-              const SizedBox(height: 40),
-            ],
+                  // 5. Recent Logs List
+                  _buildRecentLogsLedger(),
+                  const SizedBox(height: 40),
+                ].animate(interval: 80.ms).fadeIn(duration: 350.ms).slideY(
+                  begin: 0.12,
+                  end: 0,
+                  duration: 350.ms,
+                  curve: Curves.easeOutCubic,
+                ),
           ),
         ),
       ),
@@ -389,10 +406,18 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
           Row(
             children: [
               const Icon(
-                Icons.warning_amber_rounded,
-                color: AppColors.errorLight,
-                size: 20,
-              ),
+                    Icons.warning_amber_rounded,
+                    color: AppColors.errorLight,
+                    size: 20,
+                  )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .fade(begin: 0.5, end: 1, duration: 900.ms)
+                  .scaleXY(
+                    begin: 0.9,
+                    end: 1.12,
+                    duration: 900.ms,
+                    curve: Curves.easeInOut,
+                  ),
               const SizedBox(width: 8),
               Text(
                 'ATTENDANCE STANDING ALERTS',
@@ -406,13 +431,19 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          ...alerts.map(
-            (al) => Padding(
+          ...alerts.asMap().entries.map(
+            (entry) => Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Text(
-                al['message'] ?? '',
+                entry.value['message'] ?? '',
                 style: AppText.body(color: Colors.white70),
               ),
+            ).animate().fadeIn(delay: (entry.key * 90).ms, duration: 350.ms).slideX(
+              begin: 0.1,
+              end: 0,
+              delay: (entry.key * 90).ms,
+              duration: 350.ms,
+              curve: Curves.easeOut,
             ),
           ),
         ],
@@ -448,7 +479,8 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                 final log = _verificationLogs[index];
                 final isFace = log['verified_by'] == 'face';
                 final isPresent =
-                    log['status'].toString().toLowerCase() == 'present';
+                    (log['status'] ?? '').toString().toLowerCase() ==
+                    'present';
 
                 return Row(
                   children: [
@@ -483,6 +515,12 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                       style: AppText.caption(color: Colors.white38),
                     ),
                   ],
+                ).animate().fadeIn(delay: (index * 70).ms, duration: 350.ms).slideX(
+                  begin: 0.12,
+                  end: 0,
+                  delay: (index * 70).ms,
+                  duration: 350.ms,
+                  curve: Curves.easeOut,
                 );
               },
             ),

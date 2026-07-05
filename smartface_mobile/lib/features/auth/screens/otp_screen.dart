@@ -26,7 +26,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
   bool _isLoading = false;
   bool _otpSent = false;
-  int _countdownSeconds = 45;
+  int _countdownSeconds = 60; // Matches backend OTP resend cooldown
   Timer? _timer;
 
   @override
@@ -50,7 +50,7 @@ class _OTPScreenState extends State<OTPScreen> {
   void _startTimer() {
     _timer?.cancel();
     setState(() {
-      _countdownSeconds = 45;
+      _countdownSeconds = 60;
     });
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_countdownSeconds == 0) {
@@ -64,6 +64,7 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 
   Future<void> _sendCode() async {
+    if (_isLoading) return; // Guard against double-tap duplicate submissions
     final email = _emailController.text.trim();
     if (email.isEmpty || !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
       AppToast.show(context, message: 'Please enter a valid email address', type: ToastType.warning);
@@ -127,6 +128,7 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 
   Future<void> _verifyCode() async {
+    if (_isLoading) return; // Guard against double-tap duplicate submissions
     final email = _emailController.text.trim();
     final otp = _otpValue;
 
@@ -146,17 +148,22 @@ class _OTPScreenState extends State<OTPScreen> {
         });
         HapticFeedback.heavyImpact();
         
-        final session = context.read<SessionManager>();
+        final bool introCompleted = result['introCompleted'] ?? false;
+        final bool wizardCompleted = result['wizardCompleted'] ?? result['biometric_registered'] ?? false;
         final bool bioRegistered = result['biometric_registered'] ?? false;
         final String role = result['role'] ?? 'student';
         final String name = result['full_name'] ?? result['name'] ?? 'User';
 
+        final session = context.read<SessionManager>();
         await session.saveSession(
           token: result['access_token'],
+          refreshToken: result['refresh_token'] as String?,
           email: email,
           role: role,
           name: name,
           biometricRegistered: bioRegistered,
+          introCompleted: introCompleted,
+          wizardCompleted: wizardCompleted,
         );
 
         if (!mounted) return;
@@ -167,32 +174,38 @@ class _OTPScreenState extends State<OTPScreen> {
         await Future.delayed(const Duration(milliseconds: 600));
         if (!mounted) return;
 
-        if (bioRegistered) {
-          final roleLower = role.toLowerCase();
+        // Redirect based on onboarding/intro and setup completion (matches RouteGuards handleRedirect)
+        final roleLower = role.toLowerCase();
+        if (!introCompleted) {
+          context.go('/auth/intro');
+        } else if (!wizardCompleted) {
+          context.go('/setup/$roleLower');
+        } else {
           if (roleLower == 'admin') {
-            context.go('/admin/home');
+            context.go('/admin/dashboard');
           } else if (roleLower == 'teacher' || roleLower == 'faculty' || roleLower == 'lecturer') {
-            context.go('/teacher/home');
+            context.go('/teacher/dashboard');
           } else if (roleLower == 'parent') {
             context.go('/parent/dashboard');
+          } else if (roleLower == 'hod' || roleLower == 'principal' || roleLower == 'management') {
+            context.go('/management/dashboard');
           } else {
-            context.go('/student/home');
+            context.go('/student/dashboard');
           }
-        } else {
-          context.go('/auth/setup');
         }
       } else {
         setState(() {
           _errorTrigger++;
         });
-        throw Exception(result['detail'] ?? 'Invalid code. Please try again.');
+        final msg = result['detail'] ?? result['message'] ?? 'Invalid code. Please try again.';
+        AppToast.show(context, message: msg.toString(), type: ToastType.error);
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _errorTrigger++;
       });
-      AppToast.show(context, message: '$e', type: ToastType.error);
+      AppToast.show(context, message: 'An unexpected error occurred. Please try again.', type: ToastType.error);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

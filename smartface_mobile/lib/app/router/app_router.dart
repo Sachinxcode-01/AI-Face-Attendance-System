@@ -183,19 +183,19 @@ final GoRouter appRouter = GoRouter(
       redirect: (context, state) => AppRoutes.setupWizardPath,
     ),
     GoRoute(
-      path: '/student/dashboard',
+      path: '/student/home',
       redirect: (context, state) => AppRoutes.studentHomePath,
     ),
     GoRoute(
-      path: '/teacher/dashboard',
+      path: '/teacher/home',
       redirect: (context, state) => AppRoutes.teacherHomePath,
     ),
     GoRoute(
-      path: '/admin/dashboard',
+      path: '/admin/home',
       redirect: (context, state) => AppRoutes.adminHomePath,
     ),
     GoRoute(
-      path: '/parent/dashboard',
+      path: '/parent/home',
       redirect: (context, state) => AppRoutes.parentHomePath,
     ),
     GoRoute(

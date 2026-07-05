@@ -40,7 +40,7 @@ class AppRoutes {
 
   // Student Shell Tab routes
   static const String studentHomeName = 'studentHome';
-  static const String studentHomePath = '/student/home';
+  static const String studentHomePath = '/student/dashboard';
 
   static const String studentScanName = 'studentScan';
   static const String studentScanPath = '/student/scan';
@@ -76,7 +76,7 @@ class AppRoutes {
 
   // Teacher Shell Tab routes
   static const String teacherHomeName = 'teacherHome';
-  static const String teacherHomePath = '/teacher/home';
+  static const String teacherHomePath = '/teacher/dashboard';
 
   static const String teacherFeedName = 'teacherFeed';
   static const String teacherFeedPath = '/teacher/feed';
@@ -98,7 +98,7 @@ class AppRoutes {
 
   // Parent Section routes
   static const String parentHomeName = 'parentHome';
-  static const String parentHomePath = '/parent/home';
+  static const String parentHomePath = '/parent/dashboard';
 
   static const String parentAttendanceLogsName = 'parentAttendanceLogs';
   static const String parentAttendanceLogsPath = '/parent/attendance-logs';
@@ -108,7 +108,7 @@ class AppRoutes {
 
   // Admin Shell Tab routes
   static const String adminHomeName = 'adminHome';
-  static const String adminHomePath = '/admin/home';
+  static const String adminHomePath = '/admin/dashboard';
 
   static const String adminApprovalsName = 'adminApprovals';
   static const String adminApprovalsPath = '/admin/approvals';

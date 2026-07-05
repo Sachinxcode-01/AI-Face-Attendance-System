@@ -44,7 +44,7 @@ class AuthService {
         '/auth/login-otp/verify',
         body: {'email': email, 'otp': otp},
       );
-      return jsonDecode(response.body);
+      return normalizeAuthResponse(jsonDecode(response.body));
     } catch (_) {
       return {'detail': 'Connection failed'};
     }
@@ -59,7 +59,7 @@ class AuthService {
         '/auth/login-password',
         body: {'email': email, 'password': password},
       );
-      return jsonDecode(response.body);
+      return normalizeAuthResponse(jsonDecode(response.body));
     } catch (_) {
       return {'detail': 'Connection failed'};
     }
@@ -83,7 +83,7 @@ class AuthService {
           'idToken': idToken,
         },
       );
-      return jsonDecode(response.body);
+      return normalizeAuthResponse(jsonDecode(response.body));
     } catch (_) {
       return {'detail': 'Connection failed'};
     }
@@ -101,7 +101,7 @@ class AuthService {
           'role': role,
         },
       );
-      return jsonDecode(response.body);
+      return normalizeAuthResponse(jsonDecode(response.body));
     } catch (_) {
       return {'detail': 'Connection failed'};
     }
@@ -124,7 +124,7 @@ class AuthService {
           'role': role.toLowerCase(),
         },
       );
-      return jsonDecode(response.body);
+      return normalizeAuthResponse(jsonDecode(response.body));
     } catch (_) {
       return {'detail': 'Connection failed'};
     }

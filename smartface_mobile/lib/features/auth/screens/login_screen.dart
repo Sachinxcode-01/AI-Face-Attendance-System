@@ -48,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleSignIn() async {
+    if (_isLoading) return; // Guard against double-tap duplicate submissions
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
@@ -77,41 +78,51 @@ class _LoginScreenState extends State<LoginScreen> {
           await session.clearRememberedEmail();
         }
 
+        final bool introCompleted = result['introCompleted'] ?? false;
+        final bool wizardCompleted = result['wizardCompleted'] ?? result['biometric_registered'] ?? false;
         final bool bioRegistered = result['biometric_registered'] ?? false;
         final String role = result['role'] ?? 'student';
         final String name = result['full_name'] ?? result['name'] ?? 'User';
 
         await session.saveSession(
           token: result['access_token'],
+          refreshToken: result['refresh_token'] as String?,
           email: email,
           role: role,
           name: name,
           biometricRegistered: bioRegistered,
+          introCompleted: introCompleted,
+          wizardCompleted: wizardCompleted,
         );
 
         if (!mounted) return;
 
-        // Redirect based on biometric registration status and role
-        if (bioRegistered) {
-          final roleLower = role.toLowerCase();
+        // Redirect based on onboarding/intro and setup completion (matches RouteGuards handleRedirect)
+        final roleLower = role.toLowerCase();
+        if (!introCompleted) {
+          context.go('/auth/intro');
+        } else if (!wizardCompleted) {
+          context.go('/setup/$roleLower');
+        } else {
           if (roleLower == 'admin') {
-            context.go('/admin/home');
+            context.go('/admin/dashboard');
           } else if (roleLower == 'teacher' || roleLower == 'faculty' || roleLower == 'lecturer') {
-            context.go('/teacher/home');
+            context.go('/teacher/dashboard');
           } else if (roleLower == 'parent') {
             context.go('/parent/dashboard');
+          } else if (roleLower == 'hod' || roleLower == 'principal' || roleLower == 'management') {
+            context.go('/management/dashboard');
           } else {
-            context.go('/student/home');
+            context.go('/student/dashboard');
           }
-        } else {
-          context.go('/auth/setup');
         }
       } else {
-        throw Exception(result['detail'] ?? 'Login failed');
+        final msg = result['detail'] ?? result['message'] ?? 'Login failed';
+        AppToast.show(context, message: msg.toString(), type: ToastType.error);
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: '$e', type: ToastType.error);
+      AppToast.show(context, message: 'An unexpected error occurred. Please try again.', type: ToastType.error);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
