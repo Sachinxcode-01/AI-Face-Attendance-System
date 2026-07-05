@@ -155,7 +155,10 @@ class LeaveDetailsScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'Duration: $durationStr (${_formatDateString(leave.startDate)} - ${_formatDateString(leave.endDate)})',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black87,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
@@ -214,7 +217,7 @@ class LeaveDetailsScreen extends StatelessWidget {
             isDark,
           ),
           const Divider(color: Colors.white10),
-          _buildAttachmentRow(leave),
+          _buildAttachmentRow(leave, isDark),
         ],
       ),
     ).animate().fadeIn(delay: 150.ms, duration: 500.ms);
@@ -228,12 +231,15 @@ class LeaveDetailsScreen extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
+            style: TextStyle(
+              color: isDark ? Colors.white54 : Colors.black54,
+              fontSize: 13,
+            ),
           ),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),
@@ -243,7 +249,7 @@ class LeaveDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAttachmentRow(LeaveModel leave) {
+  Widget _buildAttachmentRow(LeaveModel leave, bool isDark) {
     final hasAttachment =
         leave.attachmentName != null && leave.attachmentName!.isNotEmpty;
 
@@ -252,9 +258,12 @@ class LeaveDetailsScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
+          Text(
             'Attachment',
-            style: TextStyle(color: Colors.white54, fontSize: 13),
+            style: TextStyle(
+              color: isDark ? Colors.white54 : Colors.black54,
+              fontSize: 13,
+            ),
           ),
           hasAttachment
               ? Row(
@@ -276,9 +285,12 @@ class LeaveDetailsScreen extends StatelessWidget {
                     ),
                   ],
                 )
-              : const Text(
+              : Text(
                   'None Uploaded',
-                  style: TextStyle(color: Colors.white30, fontSize: 13),
+                  style: TextStyle(
+                    color: isDark ? Colors.white30 : Colors.black38,
+                    fontSize: 13,
+                  ),
                 ),
         ],
       ),
@@ -320,7 +332,10 @@ class LeaveDetailsScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Processed on: ${_formatDateString(leave.approvalDate)}',
-            style: const TextStyle(color: Colors.white38, fontSize: 11),
+            style: TextStyle(
+              color: isDark ? Colors.white38 : Colors.black45,
+              fontSize: 11,
+            ),
           ),
         ],
       ),

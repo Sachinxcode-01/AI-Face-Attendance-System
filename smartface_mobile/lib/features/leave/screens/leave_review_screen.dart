@@ -175,9 +175,12 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
               color: isDark ? Colors.white54 : Colors.black54,
             ),
           ),
-          const Text(
+          Text(
             'No pending leave requests found.',
-            style: TextStyle(color: Colors.white24, fontSize: 12),
+            style: TextStyle(
+              color: isDark ? Colors.white24 : Colors.black38,
+              fontSize: 12,
+            ),
           ),
         ],
       ),
@@ -219,16 +222,16 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                     children: [
                       Text(
                         request.studentEmail,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : AppColors.bgDark,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
                       ),
                       Text(
                         'Category: ${request.leaveType.toUpperCase()}',
-                        style: const TextStyle(
-                          color: Colors.white54,
+                        style: TextStyle(
+                          color: isDark ? Colors.white54 : Colors.black54,
                           fontSize: 11,
                         ),
                       ),
@@ -248,8 +251,8 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
             const SizedBox(height: 16),
             Text(
               'Absence Window: $dates',
-              style: const TextStyle(
-                color: Colors.white70,
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black87,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -273,8 +276,8 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
               ),
               decoration: InputDecoration(
                 labelText: 'Audit Remarks / Clarification Requirements',
-                labelStyle: const TextStyle(
-                  color: Colors.white38,
+                labelStyle: TextStyle(
+                  color: isDark ? Colors.white38 : Colors.black45,
                   fontSize: 11,
                 ),
                 filled: true,
@@ -305,8 +308,10 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                       isClarification: true,
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.cyanAccent,
-                      side: const BorderSide(color: Colors.cyanAccent),
+                      foregroundColor: isDark ? Colors.cyanAccent : Colors.cyan.shade700,
+                      side: BorderSide(
+                        color: isDark ? Colors.cyanAccent : Colors.cyan.shade700,
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -326,8 +331,10 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                   child: OutlinedButton(
                     onPressed: () => _handleAction(request.id!, 'Rejected'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                      side: const BorderSide(color: Colors.redAccent),
+                      foregroundColor: isDark ? Colors.redAccent : Colors.red.shade700,
+                      side: BorderSide(
+                        color: isDark ? Colors.redAccent : Colors.red.shade700,
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -347,8 +354,8 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                   child: ElevatedButton(
                     onPressed: () => _handleAction(request.id!, 'Approved'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.greenAccent,
-                      foregroundColor: Colors.black,
+                      backgroundColor: isDark ? Colors.greenAccent : Colors.green.shade600,
+                      foregroundColor: isDark ? Colors.black : Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

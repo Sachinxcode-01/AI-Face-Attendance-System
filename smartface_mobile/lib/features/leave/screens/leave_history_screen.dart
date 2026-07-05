@@ -183,8 +183,8 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                     ),
                     decoration: InputDecoration(
                       hintText: 'Search by reason or category...',
-                      hintStyle: const TextStyle(
-                        color: Colors.white38,
+                      hintStyle: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.black45,
                         fontSize: 13,
                       ),
                       border: InputBorder.none,
@@ -377,7 +377,10 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
               children: [
                 Text(
                   'Category: ${leave.leaveType.toUpperCase()}',
-                  style: const TextStyle(color: Colors.white38, fontSize: 11),
+                  style: TextStyle(
+                    color: isDark ? Colors.white38 : Colors.black45,
+                    fontSize: 11,
+                  ),
                 ),
                 Text(
                   durationStr,

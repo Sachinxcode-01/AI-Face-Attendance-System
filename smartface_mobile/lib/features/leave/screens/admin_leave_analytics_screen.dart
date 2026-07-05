@@ -172,7 +172,7 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
               Text(
                 'Submissions by Month',
                 style: GoogleFonts.inter(
-                  color: Colors.white,
+                  color: isDark ? Colors.white : AppColors.bgDark,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -195,7 +195,10 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (value) =>
-                      const FlLine(color: Colors.white12, strokeWidth: 1),
+                      FlLine(
+                        color: isDark ? Colors.white12 : Colors.black12,
+                        strokeWidth: 1,
+                      ),
                 ),
                 titlesData: FlTitlesData(
                   topTitles: const AxisTitles(
@@ -210,8 +213,8 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
                       reservedSize: 28,
                       getTitlesWidget: (val, meta) => Text(
                         '${val.toInt()}',
-                        style: const TextStyle(
-                          color: Colors.white38,
+                        style: TextStyle(
+                          color: isDark ? Colors.white38 : Colors.black38,
                           fontSize: 10,
                         ),
                       ),
@@ -229,8 +232,8 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             entries[index].key,
-                            style: const TextStyle(
-                              color: Colors.white54,
+                            style: TextStyle(
+                              color: isDark ? Colors.white54 : Colors.black54,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -263,12 +266,19 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
 
   Widget _buildPieChartCard(Map<String, dynamic> deptStats, bool isDark) {
     final entries = deptStats.entries.toList();
-    final colors = [
-      Colors.cyanAccent,
-      Colors.tealAccent,
-      Colors.purpleAccent,
-      Colors.orangeAccent,
-    ];
+    final colors = isDark
+        ? [
+            Colors.cyanAccent,
+            Colors.tealAccent,
+            Colors.purpleAccent,
+            Colors.orangeAccent,
+          ]
+        : [
+            Colors.cyan.shade600,
+            Colors.teal.shade600,
+            Colors.purple.shade600,
+            Colors.orange.shade600,
+          ];
 
     return GlassContainer(
       padding: const EdgeInsets.all(20),
@@ -282,7 +292,7 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
               Text(
                 'Distribution by Department',
                 style: GoogleFonts.inter(
-                  color: Colors.white,
+                  color: isDark ? Colors.white : AppColors.bgDark,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -343,8 +353,8 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
                           const SizedBox(width: 8),
                           Text(
                             entry.key,
-                            style: const TextStyle(
-                              color: Colors.white70,
+                            style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black87,
                               fontSize: 12,
                             ),
                           ),

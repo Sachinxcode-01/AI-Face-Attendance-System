@@ -608,6 +608,11 @@ class ActivityTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? Colors.white : const Color(0xFF1B2C56);
+    final descColor = isDark ? Colors.white60 : const Color(0xFF7F8CA4);
+    final dividerColor = isDark ? Colors.white10 : const Color(0xFFE2E8F0);
+
     return GlassContainer(
       padding: const EdgeInsets.all(AppSpacing.md),
       borderRadius: 24.0,
@@ -618,7 +623,7 @@ class ActivityTimeline extends StatelessWidget {
             title,
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: const Color(0xFF1B2C56),
+              color: titleColor,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -628,7 +633,7 @@ class ActivityTimeline extends StatelessWidget {
               child: Text(
                 'No recent activity',
                 style: GoogleFonts.inter(
-                  color: const Color(0xFF7F8CA4),
+                  color: descColor,
                   fontSize: 13,
                 ),
               ),
@@ -670,7 +675,7 @@ class ActivityTimeline extends StatelessWidget {
                             Expanded(
                               child: Container(
                                 width: 2,
-                                color: const Color(0xFFE2E8F0),
+                                color: dividerColor,
                               ),
                             ),
                         ],
@@ -693,7 +698,7 @@ class ActivityTimeline extends StatelessWidget {
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         fontWeight: FontWeight.bold,
-                                        color: const Color(0xFF1B2C56),
+                                        color: titleColor,
                                       ),
                                     ),
                                   ),
@@ -701,7 +706,7 @@ class ActivityTimeline extends StatelessWidget {
                                     item.timestamp,
                                     style: GoogleFonts.inter(
                                       fontSize: 11,
-                                      color: const Color(0xFF7F8CA4),
+                                      color: descColor,
                                     ),
                                   ),
                                 ],
@@ -711,7 +716,7 @@ class ActivityTimeline extends StatelessWidget {
                                 item.description,
                                 style: GoogleFonts.inter(
                                   fontSize: 13,
-                                  color: const Color(0xFF7F8CA4),
+                                  color: descColor,
                                 ),
                               ),
                             ],

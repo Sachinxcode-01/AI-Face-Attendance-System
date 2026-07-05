@@ -265,9 +265,9 @@ class _StudentLeaveDashboardScreenState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildOverviewItem('Pending', '$pending', Colors.amberAccent),
-              _buildOverviewItem('Approved', '$approved', Colors.greenAccent),
-              _buildOverviewItem('Rejected', '$rejected', Colors.redAccent),
+              _buildOverviewItem('Pending', '$pending', Colors.amberAccent, isDark),
+              _buildOverviewItem('Approved', '$approved', Colors.greenAccent, isDark),
+              _buildOverviewItem('Rejected', '$rejected', Colors.redAccent, isDark),
             ],
           ),
         ],
@@ -275,15 +275,18 @@ class _StudentLeaveDashboardScreenState
     ).animate().fadeIn(delay: 350.ms, duration: 500.ms);
   }
 
-  Widget _buildOverviewItem(String label, String count, Color color) {
+  Widget _buildOverviewItem(String label, String count, Color color, bool isDark) {
     return Column(
       children: [
-        Text(
-          count,
-          style: GoogleFonts.outfit(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: color,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            count,
+            style: GoogleFonts.outfit(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ),
         const SizedBox(height: 4),
@@ -291,7 +294,7 @@ class _StudentLeaveDashboardScreenState
           label,
           style: GoogleFonts.inter(
             fontSize: 12,
-            color: Colors.white54,
+            color: isDark ? Colors.white54 : Colors.black54,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -441,19 +444,24 @@ class _StudentLeaveDashboardScreenState
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                leave.leaveType.toUpperCase(),
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                  color: statusColor,
-                                  letterSpacing: 0.5,
+                              Expanded(
+                                child: Text(
+                                  leave.leaveType.toUpperCase(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: statusColor,
+                                    letterSpacing: 0.5,
+                                  ),
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               Text(
                                 durationStr,
-                                style: const TextStyle(
-                                  color: Colors.white70,
+                                style: TextStyle(
+                                  color: isDark ? Colors.white70 : Colors.black87,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -474,8 +482,8 @@ class _StudentLeaveDashboardScreenState
                           const SizedBox(height: 4),
                           Text(
                             'Request ID: ${leave.id}',
-                            style: const TextStyle(
-                              color: Colors.white38,
+                            style: TextStyle(
+                              color: isDark ? Colors.white38 : Colors.black45,
                               fontSize: 11,
                             ),
                           ),
@@ -483,9 +491,9 @@ class _StudentLeaveDashboardScreenState
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Icon(
+                    Icon(
                       Icons.arrow_forward_ios_rounded,
-                      color: Colors.white30,
+                      color: isDark ? Colors.white30 : Colors.black38,
                       size: 16,
                     ),
                   ],

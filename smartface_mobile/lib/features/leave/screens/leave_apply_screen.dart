@@ -300,9 +300,9 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios_rounded,
-              color: Colors.white24,
+              color: isDark ? Colors.white24 : Colors.black26,
               size: 16,
             ),
           ],
@@ -370,9 +370,12 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const Text(
+                Text(
                   'Upload medical certificate or event letters',
-                  style: TextStyle(color: Colors.white38, fontSize: 11),
+                  style: TextStyle(
+                    color: isDark ? Colors.white38 : Colors.black45,
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),

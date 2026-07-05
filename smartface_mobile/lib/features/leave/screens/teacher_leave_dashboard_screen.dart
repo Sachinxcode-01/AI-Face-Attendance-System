@@ -570,22 +570,22 @@ class _TeacherLeaveDashboardScreenState
                   children: [
                     Text(
                       'Type: ${request.leaveType.toUpperCase()}',
-                      style: const TextStyle(
-                        color: Colors.white38,
+                      style: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.black45,
                         fontSize: 11,
                       ),
                     ),
                     Text(
                       'Dates: ${_formatDateString(request.startDate)} to ${_formatDateString(request.endDate)}',
-                      style: const TextStyle(
-                        color: Colors.white38,
+                      style: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.black45,
                         fontSize: 11,
                       ),
                     ),
                   ],
                 ),
                 if (!isPending && request.remarks != null) ...[
-                  const Divider(color: Colors.white10, height: 20),
+                  Divider(color: isDark ? Colors.white10 : Colors.black12, height: 20),
                   Text(
                     'Remarks: ${request.remarks}',
                     style: const TextStyle(
