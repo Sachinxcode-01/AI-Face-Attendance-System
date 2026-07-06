@@ -4,8 +4,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
-const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM_ADDRESS || 'heyyysachiii88@gmail.com';
-const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'AttendAI Security';
+const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM || process.env.EMAIL_FROM_ADDRESS || 'heyyysachiii88@gmail.com';
+const EMAIL_FROM_NAME = process.env.EMAIL_SENDER_NAME || process.env.EMAIL_FROM_NAME || 'AttendAI Security';
 
 // ---------------------------------------------------------------------------
 // EmailService — uses Brevo (Sendinblue) HTTP API.
@@ -14,12 +14,13 @@ const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || 'AttendAI Security';
 // ---------------------------------------------------------------------------
 class EmailService {
   static getClient() {
-    return new BrevoClient({ apiKey: BREVO_API_KEY });
+    return new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
   }
 
   static async sendEmail(toEmail, subject, textBody, htmlBody) {
+    const apiKey = process.env.BREVO_API_KEY;
     // In test env or when no API key is configured, log and short-circuit.
-    if (process.env.NODE_ENV === 'test' || !BREVO_API_KEY || BREVO_API_KEY.trim() === '') {
+    if (process.env.NODE_ENV === 'test' || !apiKey || apiKey.trim() === '') {
       console.log(`[Email Mock] to: ${toEmail} | subject: ${subject}`);
       return true;
     }
@@ -34,7 +35,9 @@ class EmailService {
       });
       return true;
     } catch (error) {
-      console.error(`Failed to send email to ${toEmail}:`, error?.response?.body || error?.message || error);
+      const statusCode = error.statusCode || error.status || (error.response && error.response.status) || 'N/A';
+      const brevoMessage = error.body?.message || (typeof error.body === 'string' ? error.body : null) || error.message || 'Unknown error';
+      console.error(`[EmailService] Provider: Brevo | Status Code: ${statusCode} | Error Message: ${brevoMessage}`);
       return false;
     }
   }
@@ -377,7 +380,7 @@ AttendAI Core Security`;
 </body>
 </html>`;
 
-    await this.sendEmail(email, subject, textBody, htmlBody);
+    return await this.sendEmail(email, subject, textBody, htmlBody);
   }
 
   static async sendIntruderAlert(adminEmail, timestamp, location) {

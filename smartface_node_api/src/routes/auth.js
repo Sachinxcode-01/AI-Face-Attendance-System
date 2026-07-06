@@ -252,14 +252,20 @@ router.post('/login-otp/send', limitOtpSend, async (req, res) => {
 
     await Otp.updateOne(
       { email },
-      { $set: { otp: otpVal, expiry, role: user.role, type: 'login', attempts: 0 } },
+      { $set: { otp: otpVal, expiry, role: user.role, type: 'login', attempts: 0, deliveryStatus: 'pending' } },
       { upsert: true }
     );
 
     console.log(`Generated login OTP for email index hash`); // do not expose email or OTP in production logs
 
-    // Send OTP email in background
-    EmailService.sendOtp(email, otpVal).catch(console.error);
+    // Send OTP email
+    const emailSent = await EmailService.sendOtp(email, otpVal);
+    if (!emailSent) {
+      await Otp.updateOne({ email }, { $set: { deliveryStatus: 'failed' } });
+      return res.status(400).json({ detail: "OTP generated but email service is blocked. Contact admin." });
+    }
+
+    await Otp.updateOne({ email }, { $set: { deliveryStatus: 'sent' } });
 
     res.json({ message: "OTP sent successfully" });
   } catch (error) {
@@ -275,6 +281,10 @@ router.post('/login-otp/verify', limitOtpVerify, async (req, res) => {
     const record = await Otp.findOne({ email, type: 'login' });
     if (!record) {
       return res.status(401).json({ detail: "Invalid OTP" });
+    }
+
+    if (record.deliveryStatus === 'failed') {
+      return res.status(401).json({ detail: "OTP delivery failed. Please request a new OTP." });
     }
 
     if (new Date() > record.expiry) {
@@ -703,13 +713,20 @@ router.post('/forgot-password', async (req, res) => {
 
     await Otp.updateOne(
       { email },
-      { $set: { otp: otpVal, expiry, role: user.role, type: 'password_reset', attempts: 0 } },
+      { $set: { otp: otpVal, expiry, role: user.role, type: 'password_reset', attempts: 0, deliveryStatus: 'pending' } },
       { upsert: true }
     );
 
     console.log(`Generated password reset OTP for email index hash`); // do not expose email in logs
 
-    EmailService.sendOtp(email, otpVal).catch(console.error);
+    // Send OTP email
+    const emailSent = await EmailService.sendOtp(email, otpVal);
+    if (!emailSent) {
+      await Otp.updateOne({ email }, { $set: { deliveryStatus: 'failed' } });
+      return res.status(400).json({ detail: "OTP generated but email service is blocked. Contact admin." });
+    }
+
+    await Otp.updateOne({ email }, { $set: { deliveryStatus: 'sent' } });
 
     res.json({ message: "OTP sent to email" });
   } catch (error) {
@@ -725,6 +742,10 @@ router.post('/reset-password', async (req, res) => {
     const record = await Otp.findOne({ email, type: 'password_reset' });
     if (!record) {
       return res.status(401).json({ detail: "Invalid OTP" });
+    }
+
+    if (record.deliveryStatus === 'failed') {
+      return res.status(401).json({ detail: "OTP delivery failed. Please request a new OTP." });
     }
 
     if (new Date() > record.expiry) {
