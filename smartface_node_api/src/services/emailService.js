@@ -1,44 +1,289 @@
-const { BrevoClient } = require('@getbrevo/brevo');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const BREVO_API_KEY = process.env.BREVO_API_KEY;
-const EMAIL_FROM_ADDRESS = process.env.EMAIL_FROM || process.env.EMAIL_FROM_ADDRESS || 'heyyysachiii88@gmail.com';
-const EMAIL_FROM_NAME = process.env.EMAIL_SENDER_NAME || process.env.EMAIL_FROM_NAME || 'AttendAI Security';
+const templates = {
+  loginOtpTemplate(otp) {
+    const text = `Smart Attendance AI Verification\n\nYour secure passcode is: ${otp}\nThis code will expire in 5 minutes.\n\nSmart Attendance AI Security Team`;
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance AI Verification Code</title>
+    <style>
+        body { background-color: #0A0E21; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 500px; margin: 40px auto; background: linear-gradient(135deg, #1A1F38 0%, #0F142C 100%); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .header { background: #050714; padding: 25px; text-align: center; border-bottom: 1px solid rgba(255, 215, 0, 0.15); }
+        .logo { color: #FFD700; font-size: 22px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; margin: 0; }
+        .content { padding: 35px 30px; text-align: center; }
+        .code-container { background: rgba(255, 215, 0, 0.05); border: 2px dashed rgba(255, 215, 0, 0.3); border-radius: 16px; padding: 20px; margin: 25px auto; max-width: 250px; }
+        .code-digits { font-family: monospace; font-size: 32px; font-weight: bold; color: #FFD700; letter-spacing: 6px; }
+        .footer { background: #050714; padding: 20px; text-align: center; font-size: 11px; color: #718096; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header"><h1 class="logo">⚡ Smart Attendance AI</h1></div>
+        <div class="content">
+            <h2 style="margin-top:0;">Secure One-Time Passcode</h2>
+            <p style="color: #E2E8F0; font-size: 15px; line-height: 1.5;">Use the verification passcode below to authorize your active session:</p>
+            <div class="code-container"><div class="code-digits">${otp}</div></div>
+            <p style="color: #EF4444; font-size: 13px; font-weight: bold; margin-top: 15px;">⏳ This security passcode will expire in 5 minutes</p>
+        </div>
+        <div class="footer"><p>© 2026 Smart Attendance AI Security Operations Center</p></div>
+    </div>
+</body>
+</html>`;
+    return { text, html };
+  },
 
-// ---------------------------------------------------------------------------
-// EmailService — uses Brevo (Sendinblue) HTTP API.
-// Works on any cloud host (HTTPS/443 only, no SMTP ports needed).
-// Free tier: 300 emails/day. Supports individual Gmail sender verification.
-// ---------------------------------------------------------------------------
+  registerOtpTemplate(otp) {
+    const text = `Welcome to Smart Attendance AI!\n\nYour registration verification code is: ${otp}\nThis code will expire in 5 minutes.\n\nSmart Attendance AI Security Team`;
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance AI Registration</title>
+    <style>
+        body { background-color: #0A0E21; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 500px; margin: 40px auto; background: linear-gradient(135deg, #1A1F38 0%, #0F142C 100%); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .header { background: #050714; padding: 25px; text-align: center; border-bottom: 1px solid rgba(255, 215, 0, 0.15); }
+        .logo { color: #FFD700; font-size: 22px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; margin: 0; }
+        .content { padding: 35px 30px; text-align: center; }
+        .code-container { background: rgba(255, 215, 0, 0.05); border: 2px dashed rgba(255, 215, 0, 0.3); border-radius: 16px; padding: 20px; margin: 25px auto; max-width: 250px; }
+        .code-digits { font-family: monospace; font-size: 32px; font-weight: bold; color: #FFD700; letter-spacing: 6px; }
+        .footer { background: #050714; padding: 20px; text-align: center; font-size: 11px; color: #718096; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header"><h1 class="logo">⚡ Smart Attendance AI</h1></div>
+        <div class="content">
+            <h2 style="margin-top:0;">Welcome & Verification</h2>
+            <p style="color: #E2E8F0; font-size: 15px; line-height: 1.5;">Thank you for signing up. Please verify your registration using this passcode:</p>
+            <div class="code-container"><div class="code-digits">${otp}</div></div>
+            <p style="color: #EF4444; font-size: 13px; font-weight: bold; margin-top: 15px;">⏳ This security passcode will expire in 5 minutes</p>
+        </div>
+        <div class="footer"><p>© 2026 Smart Attendance AI Security Operations Center</p></div>
+    </div>
+</body>
+</html>`;
+    return { text, html };
+  },
+
+  forgotPasswordOtpTemplate(otp) {
+    const text = `Smart Attendance AI Password Reset\n\nYour password reset verification code is: ${otp}\nThis code will expire in 5 minutes.\n\nSmart Attendance AI Security Team`;
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance AI Reset Password</title>
+    <style>
+        body { background-color: #0A0E21; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 500px; margin: 40px auto; background: linear-gradient(135deg, #1A1F38 0%, #0F142C 100%); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .header { background: #050714; padding: 25px; text-align: center; border-bottom: 1px solid rgba(255, 215, 0, 0.15); }
+        .logo { color: #FFD700; font-size: 22px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; margin: 0; }
+        .content { padding: 35px 30px; text-align: center; }
+        .code-container { background: rgba(255, 215, 0, 0.05); border: 2px dashed rgba(255, 215, 0, 0.3); border-radius: 16px; padding: 20px; margin: 25px auto; max-width: 250px; }
+        .code-digits { font-family: monospace; font-size: 32px; font-weight: bold; color: #FFD700; letter-spacing: 6px; }
+        .footer { background: #050714; padding: 20px; text-align: center; font-size: 11px; color: #718096; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header"><h1 class="logo">⚡ Smart Attendance AI</h1></div>
+        <div class="content">
+            <h2 style="margin-top:0;">Reset Your Password</h2>
+            <p style="color: #E2E8F0; font-size: 15px; line-height: 1.5;">You requested a password reset. Use this verification passcode to continue:</p>
+            <div class="code-container"><div class="code-digits">${otp}</div></div>
+            <p style="color: #EF4444; font-size: 13px; font-weight: bold; margin-top: 15px;">⏳ This security passcode will expire in 5 minutes</p>
+        </div>
+        <div class="footer"><p>© 2026 Smart Attendance AI Security Operations Center</p></div>
+    </div>
+</body>
+</html>`;
+    return { text, html };
+  },
+
+  resetPasswordSuccessTemplate() {
+    const text = `Security Notification: Password Changed\n\nYour password for Smart Attendance AI was successfully reset.\nIf you did not perform this action, contact support immediately.\n\nSmart Attendance AI Security Team`;
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance AI Password Reset Success</title>
+    <style>
+        body { background-color: #0A0E21; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 500px; margin: 40px auto; background: linear-gradient(135deg, #1A1F38 0%, #0F142C 100%); border: 1px solid #10B981; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .header { background: #050714; padding: 25px; text-align: center; border-bottom: 1px solid #10B981; }
+        .logo { color: #10B981; font-size: 22px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; margin: 0; }
+        .content { padding: 35px 30px; text-align: center; }
+        .success-box { background: rgba(16, 185, 129, 0.05); border: 2px dashed rgba(16, 185, 129, 0.3); border-radius: 16px; padding: 20px; margin: 25px auto; max-width: 250px; }
+        .footer { background: #050714; padding: 20px; text-align: center; font-size: 11px; color: #718096; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header"><h1 class="logo">⚡ Smart Attendance AI</h1></div>
+        <div class="content">
+            <h2 style="margin-top:0; color: #10B981;">Password Updated Successfully</h2>
+            <div class="success-box"><strong style="color: #10B981; font-size: 18px;">🔒 SECURED</strong></div>
+            <p style="color: #E2E8F0; font-size: 15px; line-height: 1.5;">The password for your Smart Attendance AI account has been successfully updated.</p>
+            <p style="color: #EF4444; font-size: 13px; font-weight: bold;">If you did not make this change, please contact administration immediately.</p>
+        <div class="footer"><p>© 2026 Smart Attendance AI Security Operations Center</p></div>
+    </div>
+</body>
+</html>`;
+    return { text, html };
+  }
+};
+
 class EmailService {
   static getClient() {
+    const { BrevoClient } = require('@getbrevo/brevo');
     return new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
   }
 
-  static async sendEmail(toEmail, subject, textBody, htmlBody) {
-    const apiKey = process.env.BREVO_API_KEY;
-    // In test env or when no API key is configured, log and short-circuit.
-    if (process.env.NODE_ENV === 'test' || !apiKey || apiKey.trim() === '') {
-      console.log(`[Email Mock] to: ${toEmail} | subject: ${subject}`);
-      return true;
+  static async sendEmail(param1, param2, param3, param4) {
+    let to, subject, html, text;
+    if (typeof param1 === 'object' && param1 !== null && !Array.isArray(param1)) {
+      to = param1.to;
+      subject = param1.subject;
+      html = param1.html;
+      text = param1.text;
+    } else {
+      to = param1;
+      subject = param2;
+      text = param3;
+      html = param4;
     }
-    try {
-      const client = this.getClient();
-      await client.transactionalEmails.sendTransacEmail({
-        sender: { name: EMAIL_FROM_NAME, email: EMAIL_FROM_ADDRESS },
-        to: [{ email: toEmail }],
-        subject: subject,
-        textContent: textBody,
-        htmlContent: htmlBody,
-      });
-      return true;
-    } catch (error) {
-      const statusCode = error.statusCode || error.status || (error.response && error.response.status) || 'N/A';
-      const brevoMessage = error.body?.message || (typeof error.body === 'string' ? error.body : null) || error.message || 'Unknown error';
-      console.error(`[EmailService] Provider: Brevo | Status Code: ${statusCode} | Error Message: ${brevoMessage}`);
-      return false;
+
+    const provider = process.env.EMAIL_PROVIDER || 'resend';
+    const emailFrom = process.env.EMAIL_FROM || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+    const emailSenderName = process.env.EMAIL_SENDER_NAME || process.env.EMAIL_FROM_NAME || 'Smart Attendance AI';
+
+    if (process.env.NODE_ENV === 'test' || provider === 'test') {
+      console.log(`[Email Mock] to: ${to} | subject: ${subject}`);
+      return {
+        success: true,
+        provider: "mock",
+        messageId: "mock-message-id",
+        status: "sent"
+      };
+    }
+
+    if (provider === 'resend') {
+      const apiKey = process.env.RESEND_API_KEY;
+      if (!apiKey || apiKey.trim() === '' || apiKey === 'your_resend_api_key') {
+        console.error("[EmailService] Provider: Resend | Error: RESEND_API_KEY is missing or invalid.");
+        return {
+          success: false,
+          provider: "resend",
+          statusCode: 401,
+          message: "RESEND_API_KEY is missing or invalid"
+        };
+      }
+
+      try {
+        const { Resend } = require('resend');
+        const resendClient = new Resend(apiKey);
+
+        let fromField = `${emailSenderName} <${emailFrom}>`;
+
+        let response = await resendClient.emails.send({
+          from: fromField,
+          to: [to],
+          subject: subject,
+          html: html,
+          text: text,
+        });
+
+        if (response.error) {
+          const errorMsg = response.error.message || '';
+          if (emailFrom !== 'onboarding@resend.dev' && (errorMsg.includes('verify') || errorMsg.includes('domain') || errorMsg.includes('sender') || errorMsg.includes('from'))) {
+            console.warn(`[EmailService] Warning: Custom domain ${emailFrom} might not be verified in Resend. Falling back to onboarding@resend.dev temporarily. Error was: ${errorMsg}`);
+            
+            response = await resendClient.emails.send({
+              from: `${emailSenderName} <onboarding@resend.dev>`,
+              to: [to],
+              subject: subject,
+              html: html,
+              text: text,
+            });
+          }
+        }
+
+        if (response.error) {
+          const statusCode = response.error.statusCode || 400;
+          const errorMsg = response.error.message || 'Unknown Resend error';
+          const maskedEmail = to.replace(/^(.)(.*)(@.*)$/, (_, a, b, c) => a + '*'.repeat(b.length) + c);
+          console.error(`[EmailService] Provider: Resend | Status Code: ${statusCode} | Error Message: ${errorMsg} | Recipient: ${maskedEmail}`);
+          return {
+            success: false,
+            provider: "resend",
+            statusCode: statusCode,
+            message: errorMsg
+          };
+        }
+
+        return {
+          success: true,
+          provider: "resend",
+          messageId: response.data?.id || "unknown",
+          status: "sent"
+        };
+      } catch (err) {
+        const maskedEmail = to.replace(/^(.)(.*)(@.*)$/, (_, a, b, c) => a + '*'.repeat(b.length) + c);
+        console.error(`[EmailService] Provider: Resend | Status Code: 500 | Error Message: ${err.message} | Recipient: ${maskedEmail}`);
+        return {
+          success: false,
+          provider: "resend",
+          statusCode: 500,
+          message: err.message
+        };
+      }
+    } else {
+      // Fallback to Brevo
+      const brevoKey = process.env.BREVO_API_KEY;
+      if (!brevoKey || brevoKey.trim() === '') {
+        return {
+          success: false,
+          provider: "brevo",
+          statusCode: 401,
+          message: "BREVO_API_KEY is missing and provider is set to brevo"
+        };
+      }
+      try {
+        const client = this.getClient();
+        await client.transactionalEmails.sendTransacEmail({
+          sender: { name: emailSenderName, email: emailFrom },
+          to: [{ email: to }],
+          subject: subject,
+          textContent: text,
+          htmlContent: html,
+        });
+        return {
+          success: true,
+          provider: "brevo",
+          messageId: "brevo-success",
+          status: "sent"
+        };
+      } catch (error) {
+        const statusCode = error.statusCode || error.status || 500;
+        const errMsg = error.body?.message || error.message || 'Unknown Brevo error';
+        const maskedEmail = to.replace(/^(.)(.*)(@.*)$/, (_, a, b, c) => a + '*'.repeat(b.length) + c);
+        console.error(`[EmailService] Provider: Brevo | Status Code: ${statusCode} | Error Message: ${errMsg} | Recipient: ${maskedEmail}`);
+        return {
+          success: false,
+          provider: "brevo",
+          statusCode: statusCode,
+          message: errMsg
+        };
+      }
     }
   }
 
@@ -259,128 +504,28 @@ SmartFace Security Team`;
     await this.sendEmail(email, subject, textBody, htmlBody);
   }
 
-  static async sendOtp(email, otp) {
-    const subject = "AttendAI Security: One-Time Verification Passcode";
-    
-    const textBody = `AttendAI Security Authorization
+  static async sendOtp(email, otp, type = 'login') {
+    let subject = "Smart Attendance AI: One-Time Verification Passcode";
+    let template;
+    if (type === 'forgot_password' || type === 'password_reset') {
+      subject = "Smart Attendance AI: Password Reset Passcode";
+      template = templates.forgotPasswordOtpTemplate(otp);
+    } else if (type === 'register') {
+      subject = "Smart Attendance AI: Registration Verification Passcode";
+      template = templates.registerOtpTemplate(otp);
+    } else {
+      template = templates.loginOtpTemplate(otp);
+    }
 
-Your secure passcode to authorize access or reset credentials is: ${otp}
+    const res = await this.sendEmail(email, subject, template.text, template.html);
+    return res.success;
+  }
 
-This code will expire in 5 minutes. If you did not request this, please change your security settings immediately.
-
-Best regards,
-AttendAI Core Security`;
-
-    const htmlBody = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AttendAI Verification Code</title>
-    <style>
-        body {
-            background-color: #0A0E21;
-            color: #FFFFFF;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 500px;
-            margin: 40px auto;
-            background: linear-gradient(135deg, #1A1F38 0%, #0F142C 100%);
-            border: 1px solid rgba(255, 215, 0, 0.25);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-        }
-        .header {
-            background: #050714;
-            padding: 25px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 215, 0, 0.15);
-        }
-        .logo {
-            color: #FFD700;
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            margin: 0;
-        }
-        .content {
-            padding: 35px 30px;
-            text-align: center;
-        }
-        .title {
-            font-size: 20px;
-            color: #FFFFFF;
-            margin-top: 0;
-            font-weight: 600;
-        }
-        .code-container {
-            background: rgba(255, 215, 0, 0.05);
-            border: 2px dashed rgba(255, 215, 0, 0.3);
-            border-radius: 16px;
-            padding: 20px;
-            margin: 25px auto;
-            max-width: 250px;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.05);
-        }
-        .code-digits {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 32px;
-            font-weight: bold;
-            letter-spacing: 6px;
-            color: #FFD700;
-            margin: 0;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-        }
-        .timer-warning {
-            color: #EF4444;
-            font-size: 13px;
-            margin-top: 15px;
-            font-weight: bold;
-        }
-        .footer {
-            background: #050714;
-            padding: 20px;
-            text-align: center;
-            font-size: 11px;
-            color: #718096;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1 class="logo">⚡ AttendAI SECURITY</h1>
-        </div>
-        <div class="content">
-            <h2 class="title">Secure One-Time Passcode</h2>
-            <p style="color: #E2E8F0; font-size: 15px; line-height: 1.5; margin: 0;">Use the verification token below to authorize your active session or reset credentials:</p>
-            
-            <div class="code-container">
-                <div class="code-digits">${otp}</div>
-            </div>
-            
-            <div class="timer-warning">
-                ⏳ This security passcode will expire in 5 minutes
-            </div>
-            
-            <p style="color: #718096; font-size: 12px; margin-top: 25px; line-height: 1.4;">
-                If you did not request this authorization, a security audit trigger has logged this action. Please safeguard your account.
-            </p>
-        </div>
-        <div class="footer">
-            <p>© 2026 AttendAI Security Operations Center</p>
-        </div>
-    </div>
-</body>
-</html>`;
-
-    return await this.sendEmail(email, subject, textBody, htmlBody);
+  static async sendResetPasswordSuccess(email) {
+    const subject = "Smart Attendance AI: Password Successfully Reset";
+    const template = templates.resetPasswordSuccessTemplate();
+    const res = await this.sendEmail(email, subject, template.text, template.html);
+    return res.success;
   }
 
   static async sendIntruderAlert(adminEmail, timestamp, location) {

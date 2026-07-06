@@ -259,15 +259,22 @@ router.post('/login-otp/send', limitOtpSend, async (req, res) => {
     console.log(`Generated login OTP for email index hash`); // do not expose email or OTP in production logs
 
     // Send OTP email
-    const emailSent = await EmailService.sendOtp(email, otpVal);
+    const emailSent = await EmailService.sendOtp(email, otpVal, 'login');
     if (!emailSent) {
       await Otp.updateOne({ email }, { $set: { deliveryStatus: 'failed' } });
-      return res.status(400).json({ detail: "OTP generated but email service is blocked. Contact admin." });
+      return res.status(400).json({
+        success: false,
+        message: "Email service failed. Please try again.",
+        detail: "Email service failed. Please try again."
+      });
     }
 
     await Otp.updateOne({ email }, { $set: { deliveryStatus: 'sent' } });
 
-    res.json({ message: "OTP sent successfully" });
+    res.json({
+      success: true,
+      message: "OTP sent successfully"
+    });
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }
@@ -720,15 +727,22 @@ router.post('/forgot-password', async (req, res) => {
     console.log(`Generated password reset OTP for email index hash`); // do not expose email in logs
 
     // Send OTP email
-    const emailSent = await EmailService.sendOtp(email, otpVal);
+    const emailSent = await EmailService.sendOtp(email, otpVal, 'password_reset');
     if (!emailSent) {
       await Otp.updateOne({ email }, { $set: { deliveryStatus: 'failed' } });
-      return res.status(400).json({ detail: "OTP generated but email service is blocked. Contact admin." });
+      return res.status(400).json({
+        success: false,
+        message: "Email service failed. Please try again.",
+        detail: "Email service failed. Please try again."
+      });
     }
 
     await Otp.updateOne({ email }, { $set: { deliveryStatus: 'sent' } });
 
-    res.json({ message: "OTP sent to email" });
+    res.json({
+      success: true,
+      message: "OTP sent to email"
+    });
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }
@@ -792,6 +806,9 @@ router.post('/reset-password', async (req, res) => {
 
     const hashedPassword = await AuthService.hashPassword(new_password);
     await User.updateOne({ email }, { $set: { password: hashedPassword } });
+
+    // Send password reset success email
+    EmailService.sendResetPasswordSuccess(email).catch(console.error);
 
     await logSecurityEvent(email, user.role, 'PASSWORD_RESET', { status: 'success' }, req);
 

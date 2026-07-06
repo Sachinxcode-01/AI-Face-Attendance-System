@@ -10,7 +10,7 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // Enforce critical environment variable validation
-const requiredEnvVars = ['FACE_SCANNER_TOKEN', 'BREVO_API_KEY'];
+const requiredEnvVars = ['FACE_SCANNER_TOKEN'];
 const missingEnvVars = [];
 requiredEnvVars.forEach(varName => {
   const val = process.env[varName];
@@ -18,6 +18,22 @@ requiredEnvVars.forEach(varName => {
     missingEnvVars.push(varName);
   }
 });
+
+const emailProvider = process.env.EMAIL_PROVIDER || 'resend';
+if (emailProvider === 'resend') {
+  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.trim() === '') {
+    missingEnvVars.push('RESEND_API_KEY');
+  }
+} else {
+  if (!process.env.BREVO_API_KEY || process.env.BREVO_API_KEY.trim() === '') {
+    missingEnvVars.push('BREVO_API_KEY');
+  }
+}
+
+if (!process.env.EMAIL_FROM && !process.env.EMAIL_FROM_ADDRESS) {
+  missingEnvVars.push('EMAIL_FROM');
+}
+
 const mongoUrl = process.env.MONGODB_URL || process.env.MONGO_URI;
 if (!mongoUrl || mongoUrl.trim() === '') {
   missingEnvVars.push('MONGODB_URL / MONGO_URI');
