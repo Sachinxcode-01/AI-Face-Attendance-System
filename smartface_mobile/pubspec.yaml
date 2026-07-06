@@ -105,6 +105,7 @@ flutter:
     - assets/icon/smartface_blue.png
     - assets/icons/google.png
     - assets/icons/github.png
+    - assets/background/splash_background.jpeg
     - .env
     - .env.development
     - .env.staging

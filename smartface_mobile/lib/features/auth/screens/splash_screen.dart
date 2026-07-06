@@ -35,7 +35,6 @@ import 'package:provider/provider.dart';
 // ======================================================
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
-import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/features/sync/services/connectivity_service.dart';
 import 'package:smartface_attendance/app/config/cache_service.dart';
@@ -193,8 +192,33 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // 🌌 Fluid blob gradient background (project palette)
-          const AuthBlobBackground(),
+          // 🌌 Full-screen background image
+          Image.asset(
+            'assets/background/splash_background.jpeg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          ),
+          // Adaptive contrast overlay to support both light and dark mode text colors
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: Theme.of(context).brightness == Brightness.dark
+                    ? [
+                        const Color(0xFF141B3A).withValues(alpha: 0.65),
+                        const Color(0xFF090D1C).withValues(alpha: 0.85),
+                      ]
+                    : [
+                        const Color(0xFFE5ECFC).withValues(alpha: 0.5),
+                        const Color(0xFFFFFFFF).withValues(alpha: 0.8),
+                      ],
+              ),
+            ),
+          ),
 
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 600),
