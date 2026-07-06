@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const { trackJob } = require('../utils/jobTracker');
 
 // Models
 const Session = require('../models/Session');
@@ -148,16 +149,16 @@ router.post('/mark', authenticate, async (req, res) => {
     await auditLog(student_email, 'student', 'ATTENDANCE_MARKED', { method: 'qr', session_id, subject: session.subject }, req);
 
     // Broadcast update to live-logs WebSockets
-    notificationService.broadcast({
+    trackJob(notificationService.broadcast({
       type: "attendance_update",
       student_email,
       session_id,
       status: "Present",
       timestamp: timestamp.toISOString()
-    }).catch(console.error);
+    }).catch(console.error));
 
     // Recalculate health score cache in background
-    calculateHealthScore(student_email).catch(console.error);
+    trackJob(calculateHealthScore(student_email).catch(console.error));
 
     res.json({ status: "success", message: "Attendance marked successfully" });
   } catch (error) {
@@ -209,7 +210,7 @@ router.post('/mark/face', async (req, res) => {
     await auditLog(student_email, 'student', 'ATTENDANCE_MARKED', { method: 'face', session_id: session._id.toString(), confidence }, req);
 
     // Broadcast update to live-logs WebSockets
-    notificationService.broadcast({
+    trackJob(notificationService.broadcast({
       type: "attendance_update",
       student_email,
       session_id: session._id.toString(),
@@ -217,10 +218,10 @@ router.post('/mark/face', async (req, res) => {
       timestamp: timestamp.toISOString(),
       verified_by: "face",
       confidence
-    }).catch(console.error);
+    }).catch(console.error));
 
     // Recalculate health score cache in background
-    calculateHealthScore(student_email).catch(console.error);
+    trackJob(calculateHealthScore(student_email).catch(console.error));
 
     res.json({ status: "success", message: "Face attendance marked successfully" });
   } catch (error) {

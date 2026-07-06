@@ -5,6 +5,7 @@ const Leave = require('../models/Leave');
 const EmailService = require('../services/emailService');
 const notificationService = require('../services/notificationService');
 const { authenticate, requireRole } = require('../middleware/auth');
+const { trackJob } = require('../utils/jobTracker');
 
 // ─── POST /leave/apply ──────────────────────────────────────────
 router.post('/apply', authenticate, async (req, res) => {
@@ -26,14 +27,14 @@ router.post('/apply', authenticate, async (req, res) => {
     await newLeave.save();
 
     // Notify admin
-    notificationService.createNotification(
+    trackJob(notificationService.createNotification(
       "admin",
       "New Leave Request",
       `${user_id} has requested leave from ${start_date} to ${end_date}`,
       "leave_request",
       "High",
       { leave_id: newLeave._id.toString(), user_id }
-    ).catch(console.error);
+    ).catch(console.error));
 
     res.json({ message: "Leave application submitted", id: newLeave._id.toString() });
   } catch (error) {
@@ -94,17 +95,17 @@ router.patch('/action', authenticate, requireRole(['admin', 'teacher']), async (
     const leave = await Leave.findById(leave_id);
     if (leave) {
       // Send email in background
-      EmailService.sendLeaveStatusUpdate(leave.user_id, status, remarks).catch(console.error);
+      trackJob(EmailService.sendLeaveStatusUpdate(leave.user_id, status, remarks).catch(console.error));
       
       // Save notification for the student
-      notificationService.createNotification(
+      trackJob(notificationService.createNotification(
         leave.user_id,
         "Leave Application Status",
         `Your leave request from ${leave.start_date} to ${leave.end_date} has been ${status.toLowerCase()}.`,
         "leave_status",
         "High",
         { leave_id, status }
-      ).catch(console.error);
+      ).catch(console.error));
     }
 
     res.json({ message: `Leave ${status.toLowerCase()} successfully` });

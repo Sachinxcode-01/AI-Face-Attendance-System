@@ -6,6 +6,7 @@ const Session = require('../models/Session');
 const User = require('../models/User');
 const notificationService = require('../services/notificationService');
 const { authenticate, requireRole } = require('../middleware/auth');
+const { trackJob } = require('../utils/jobTracker');
 
 router.post('/start', authenticate, requireRole(['teacher', 'admin']), async (req, res) => {
   try {
@@ -30,20 +31,21 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin']), async (re
     await newSession.save();
 
     // Notify all students about the active session in the background
-    User.find({ role: 'student' }).then(students => {
-      students.forEach(student => {
+    trackJob(User.find({ role: 'student' }).then(students => {
+      const promises = students.map(student => {
         if (student.email) {
-          notificationService.createNotification(
+          return notificationService.createNotification(
             student.email,
             "Live Session Alert",
             `New attendance session active for ${subject}`,
             "session_alert",
             "High",
             { session_id: sessionId.toString(), subject }
-          ).catch(console.error);
+          );
         }
       });
-    }).catch(console.error);
+      return Promise.all(promises);
+    }).catch(console.error));
 
     res.json({
       session_id: sessionId.toString(),

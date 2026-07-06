@@ -12,6 +12,7 @@ const UserSession = require('../models/UserSession');
 const AuthService = require('../services/authService');
 const EmailService = require('../services/emailService');
 const { authenticate } = require('../middleware/auth');
+const { trackJob } = require('../utils/jobTracker');
 const { limitRegister, limitOtpSend, limitOtpVerify, limitLoginPassword } = require('../middleware/rateLimiter');
 
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
@@ -196,7 +197,7 @@ router.post('/register', limitRegister, async (req, res) => {
     await newUser.save();
 
     // Send Welcome Email in background
-    EmailService.sendRegistrationSuccess(email, full_name).catch(console.error);
+    trackJob(EmailService.sendRegistrationSuccess(email, full_name).catch(console.error));
 
     const response = newUser.toObject();
     delete response.password;
@@ -358,7 +359,7 @@ router.post(['/login-password', '/login'], limitLoginPassword, async (req, res) 
       // Lock account if attempts >= 5
       if (user.failedLoginAttempts >= 5) {
         user.lockoutUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
-        EmailService.sendSuspiciousLoginAlert(user.email, req.ip || '127.0.0.1', new Date().toISOString()).catch(console.error);
+        trackJob(EmailService.sendSuspiciousLoginAlert(user.email, req.ip || '127.0.0.1', new Date().toISOString()).catch(console.error));
       }
 
       await user.save();
@@ -384,7 +385,7 @@ router.post(['/login-password', '/login'], limitLoginPassword, async (req, res) 
     const userAgent = req.headers['user-agent'] || 'Unknown Device';
     const knownDevice = await UserSession.exists({ userId: email, device: userAgent });
     if (!knownDevice) {
-      EmailService.sendNewDeviceLoginAlert(email, userAgent, req.ip || '127.0.0.1', new Date().toISOString()).catch(console.error);
+      trackJob(EmailService.sendNewDeviceLoginAlert(email, userAgent, req.ip || '127.0.0.1', new Date().toISOString()).catch(console.error));
     }
 
     const token = AuthService.createAccessToken({ sub: email, role: user.role });
@@ -441,7 +442,7 @@ router.post('/google', async (req, res) => {
       });
       await user.save();
       // Send Welcome Email in background
-      EmailService.sendRegistrationSuccess(email, name || 'Google User').catch(console.error);
+      trackJob(EmailService.sendRegistrationSuccess(email, name || 'Google User').catch(console.error));
     } else {
       userRole = user.role;
       biometricRegistered = user.biometric_registered;
@@ -458,7 +459,7 @@ router.post('/google', async (req, res) => {
     const userAgent = req.headers['user-agent'] || 'Unknown Device';
     const knownDevice = await UserSession.exists({ userId: email, device: userAgent });
     if (!knownDevice) {
-      EmailService.sendNewDeviceLoginAlert(email, userAgent, req.ip || '127.0.0.1', new Date().toISOString()).catch(console.error);
+      trackJob(EmailService.sendNewDeviceLoginAlert(email, userAgent, req.ip || '127.0.0.1', new Date().toISOString()).catch(console.error));
     }
 
     await logSecurityEvent(email, userRole, 'LOGIN_EVENT', { method: 'google', device: userAgent }, req);
@@ -675,7 +676,7 @@ router.post('/github', async (req, res) => {
         avatar_url: userData.avatar_url || null,
       });
       await user.save();
-      EmailService.sendRegistrationSuccess(email, user.full_name).catch(console.error);
+      trackJob(EmailService.sendRegistrationSuccess(email, user.full_name).catch(console.error));
     } else {
       userRole = user.role;
       biometricRegistered = user.biometric_registered;
@@ -808,7 +809,7 @@ router.post('/reset-password', async (req, res) => {
     await User.updateOne({ email }, { $set: { password: hashedPassword } });
 
     // Send password reset success email
-    EmailService.sendResetPasswordSuccess(email).catch(console.error);
+    trackJob(EmailService.sendResetPasswordSuccess(email).catch(console.error));
 
     await logSecurityEvent(email, user.role, 'PASSWORD_RESET', { status: 'success' }, req);
 

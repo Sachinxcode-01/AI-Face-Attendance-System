@@ -162,6 +162,8 @@ async function runAcademicValidation() {
     console.log("======================================================================");
   } finally {
     // Shutdown test server
+    const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+    await awaitPendingJobs();
     testServer.close();
     await mongoose.disconnect();
   }
@@ -169,5 +171,6 @@ async function runAcademicValidation() {
 
 runAcademicValidation().catch(err => {
   console.error("\n❌ ACADEMIC INTEGRITY TESTING FAILURE:", err.message);
-  mongoose.disconnect().then(() => process.exit(1));
+  const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+  awaitPendingJobs().then(() => mongoose.disconnect().then(() => process.exit(1)));
 });

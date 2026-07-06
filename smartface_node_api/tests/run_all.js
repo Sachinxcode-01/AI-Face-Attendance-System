@@ -3,6 +3,7 @@ const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const { awaitPendingJobs } = require('../src/utils/jobTracker');
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -80,7 +81,8 @@ async function main() {
     }
   } finally {
     // 4. Close sandboxed server and disconnect mongoose
-    console.log("\n🔌 Closing sandboxed server and disconnecting DB...");
+    console.log("\n🔌 Awaiting pending background jobs, closing sandboxed server and disconnecting DB...");
+    await awaitPendingJobs();
     server.close();
     await mongoose.disconnect();
     console.log("✅ Server closed and DB disconnected.");

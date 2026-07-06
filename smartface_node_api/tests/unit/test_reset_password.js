@@ -80,14 +80,19 @@ async function runTest() {
   await User.updateOne({ email: TEST_EMAIL }, { $set: { password: ORIGINAL_HASH } });
   console.log("✅ Original password hash restored.");
 
+  const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+  await awaitPendingJobs();
   await mongoose.disconnect();
   console.log("🏁 Test completed successfully.");
-  setTimeout(() => process.exit(0), 1000);
+  process.exit(0);
 }
 
 runTest().catch(err => {
   console.error("\n❌ TEST FAILED:", err.message);
-  mongoose.disconnect().then(() => {
-    setTimeout(() => process.exit(1), 500);
-  }).catch(() => process.exit(1));
+  const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+  awaitPendingJobs().then(() => {
+    mongoose.disconnect().then(() => {
+      process.exit(1);
+    }).catch(() => process.exit(1));
+  });
 });

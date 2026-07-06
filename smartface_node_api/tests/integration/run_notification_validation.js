@@ -171,6 +171,8 @@ async function runNotificationValidation() {
     console.log("🎉 ALL NOTIFICATION SYSTEM AUDITS PASSED SUCCESSFULLY!");
     console.log("======================================================================");
   } finally {
+    const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+    await awaitPendingJobs();
     testServer.close();
     await mongoose.disconnect();
   }
@@ -179,7 +181,8 @@ async function runNotificationValidation() {
 if (require.main === module) {
   runNotificationValidation().catch(err => {
     console.error("\n❌ AUDIT INTEGRITY FAILURE:", err.message);
-    process.exit(1);
+    const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+    awaitPendingJobs().then(() => mongoose.disconnect().then(() => process.exit(1)));
   });
 }
 

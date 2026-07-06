@@ -281,12 +281,15 @@ async function runAttendanceIntelValidation() {
       Session.deleteOne({ _id: testSession._id })
     ]);
 
-    testServer.close();
-    await mongoose.disconnect();
+     const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+     await awaitPendingJobs();
+     testServer.close();
+     await mongoose.disconnect();
   }
 }
 
 runAttendanceIntelValidation().catch(err => {
   console.error("\n❌ VALIDATION FAILURE:", err.message);
-  mongoose.disconnect().then(() => process.exit(1));
+  const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+  awaitPendingJobs().then(() => mongoose.disconnect().then(() => process.exit(1)));
 });

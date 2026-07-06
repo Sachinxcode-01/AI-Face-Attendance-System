@@ -5,6 +5,7 @@ const SecurityLog = require('../models/SecurityLog');
 const EmailService = require('../services/emailService');
 const notificationService = require('../services/notificationService');
 const { authenticate, requireRole } = require('../middleware/auth');
+const { trackJob } = require('../utils/jobTracker');
 
 // ─── POST /security/intruder-alert ────────────────────────────────
 router.post('/intruder-alert', async (req, res) => {
@@ -48,19 +49,19 @@ router.post('/intruder-alert', async (req, res) => {
     await newLog.save();
 
     // Create admin notification
-    notificationService.createNotification(
+    trackJob(notificationService.createNotification(
       "admin",
       "SECURITY ALERT",
       `Unknown person detected at ${alertLocation}`,
       "intruder_alert",
       "Critical",
       { location: alertLocation }
-    ).catch(console.error);
+    ).catch(console.error));
 
     // Send email to admin in background
     const adminEmail = process.env.ADMIN_EMAIL || "saxhin0708@gmail.com";
     const formattedDate = timestamp.toISOString().replace('T', ' ').substring(0, 19);
-    EmailService.sendIntruderAlert(adminEmail, formattedDate, alertLocation).catch(console.error);
+    trackJob(EmailService.sendIntruderAlert(adminEmail, formattedDate, alertLocation).catch(console.error));
 
     res.json({ status: "alert_sent" });
   } catch (error) {

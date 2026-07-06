@@ -188,6 +188,8 @@ async function runCalendarValidation() {
     console.log("🎉 ALL CALENDAR & TIMETABLE SYSTEM AUDITS PASSED SUCCESSFULLY!");
     console.log("======================================================================");
   } finally {
+    const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+    await awaitPendingJobs();
     testServer.close();
     await mongoose.disconnect();
   }
@@ -196,7 +198,8 @@ async function runCalendarValidation() {
 if (require.main === module) {
   runCalendarValidation().catch(err => {
     console.error("\n❌ AUDIT INTEGRITY FAILURE:", err.message);
-    process.exit(1);
+    const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+    awaitPendingJobs().then(() => mongoose.disconnect().then(() => process.exit(1)));
   });
 }
 

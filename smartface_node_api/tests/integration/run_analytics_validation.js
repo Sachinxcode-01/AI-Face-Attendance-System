@@ -175,6 +175,8 @@ async function runTests() {
     console.error('\n💥  Unexpected test error:', err.message || err);
     failed++;
   } finally {
+    const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+    await awaitPendingJobs();
     if (server) await new Promise((res) => server.close(res));
     await mongoose.disconnect();
 

@@ -244,6 +244,8 @@ async function runValidation() {
     console.log("======================================================================");
   } finally {
     // Shutdown test server
+    const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+    await awaitPendingJobs();
     testServer.close();
     await mongoose.disconnect();
   }
@@ -251,5 +253,6 @@ async function runValidation() {
 
 runValidation().catch(err => {
   console.error("\n❌ AUDIT INTEGRITY FAILURE:", err.message);
-  mongoose.disconnect().then(() => process.exit(1));
+  const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+  awaitPendingJobs().then(() => mongoose.disconnect().then(() => process.exit(1)));
 });
