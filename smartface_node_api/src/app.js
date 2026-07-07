@@ -159,6 +159,7 @@ app.use(securityAndLogger);
 // Serve static avatars
 const avatarsDir = path.join(__dirname, '../../data/avatars');
 app.use('/static/avatars', express.static(avatarsDir));
+app.use('/static', express.static(path.join(__dirname, '../public')));
 
 // ─── HTTP Endpoints ─────────────────────────────────────────────────
 app.get('/', (req, res) => {

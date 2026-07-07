@@ -15,7 +15,8 @@ const PORT = 8000;
 const unitTests = [
   'tests/unit/test_google_photo.js',
   'tests/unit/test_otp.js',
-  'tests/unit/test_reset_password.js'
+  'tests/unit/test_reset_password.js',
+  'tests/unit/test_email_templates.js'
 ];
 
 const integrationTests = [
