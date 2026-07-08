@@ -32,6 +32,7 @@ import 'package:smartface_attendance/core/services/notification_service.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
+import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 
@@ -533,15 +534,12 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final totalSessions = _analytics['total_sessions']?.toString() ?? '0';
     final lowCount = (_analytics['low_attendance_students'] as List?)?.length ?? 0;
 
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+    return DashboardGrid(
       crossAxisCount: 2,
-      crossAxisSpacing: 14,
-      mainAxisSpacing: 14,
-      childAspectRatio: 1.4,
+      spacing: 14,
+      runSpacing: 14,
       children: [
-        MetricCard(
+        StatCard(
           label: 'Class Attendance',
           value: '${classRate.toStringAsFixed(1)}%',
           icon: Icons.check_circle_outline_rounded,
@@ -549,7 +547,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           trend: classRate >= 75 ? 'ON TRACK' : 'NEEDS ATTENTION',
           isTrendPositive: classRate >= 75,
         ),
-        MetricCard(
+        StatCard(
           label: 'Sessions Held',
           value: totalSessions,
           icon: Icons.bolt_rounded,
@@ -557,7 +555,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           trend: 'THIS SEMESTER',
           isTrendPositive: true,
         ),
-        MetricCard(
+        StatCard(
           label: 'Pending Leaves',
           value: _pendingLeaves.toString(),
           icon: Icons.event_busy_rounded,
@@ -565,7 +563,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           trend: _pendingLeaves > 0 ? 'REQUIRES ACTION' : 'ALL CLEAR',
           isTrendPositive: _pendingLeaves == 0,
         ),
-        MetricCard(
+        StatCard(
           label: 'At-Risk Students',
           value: lowCount.toString(),
           icon: Icons.warning_amber_rounded,
@@ -629,8 +627,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final time = cls['time'] as String? ?? '';
     final room = cls['room'] as String? ?? '';
     final enrolled = cls['enrolled_count'] as int? ?? cls['students'] as int? ?? 0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return GlassContainer(
+    return ModernDashboardCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
@@ -654,19 +653,23 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               children: [
                 Text(
                   name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
-                    color: const Color(0xFF1B2C56),
+                    color: isDark ? Colors.white : const Color(0xFF1B2C56),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   [if (time.isNotEmpty) time, if (room.isNotEmpty) room]
                       .join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: const Color(0xFF7F8CA4),
+                    color: isDark ? Colors.white60 : const Color(0xFF7F8CA4),
                   ),
                 ),
               ],
@@ -711,50 +714,47 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           ),
         ),
         const SizedBox(height: 12),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+        DashboardGrid(
           crossAxisCount: 2,
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-          childAspectRatio: 1.25,
+          spacing: 14,
+          runSpacing: 14,
           children: [
-            ActionTile(
+            QuickActionCard(
               label: 'Live Monitor',
               description: 'Real-time face scan feed',
               icon: Icons.videocam_outlined,
               color: AppColors.accent,
               onTap: () => context.push(AppRoutes.teacherFeedPath),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Leave Requests',
               description: 'Approve / reject leave',
               icon: Icons.approval_rounded,
               color: Colors.orangeAccent,
               onTap: () => context.push(AppRoutes.teacherLeaveDashboardPath),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Command Center',
               description: 'Attendance & risk analysis',
               icon: Icons.dashboard_customize_outlined,
               color: AppColors.success,
               onTap: () => context.push(AppRoutes.teacherAttendanceCommandPath),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'My Stats',
               description: 'Analytics & reports',
               icon: Icons.analytics_outlined,
               color: AppColors.gold,
               onTap: () => context.push(AppRoutes.teacherStatsPath),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Train AI',
               description: 'Retrain face embeddings',
               icon: Icons.face_retouching_natural_outlined,
               color: AppColors.cyan,
               onTap: () => context.push(AppRoutes.teacherTrainFacesPath),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'System Health',
               description: 'Server & AI diagnostics',
               icon: Icons.health_and_safety_outlined,

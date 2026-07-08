@@ -18,6 +18,7 @@ import 'package:smartface_attendance/shared/widgets/premium_widgets.dart'
     hide AttendanceRing;
 import 'package:smartface_attendance/shared/widgets/attendance_ring.dart';
 import 'package:smartface_attendance/features/analytics/models/attendance_analytics_model.dart';
+import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
 
 // ============================================================================
 // 1. AttendanceScoreCard
@@ -39,9 +40,10 @@ class AttendanceScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final score = AttendanceScore.fromPercentage(scoreValue);
 
-    return GlassContainer(
+    return ModernDashboardCard(
       padding: const EdgeInsets.all(20),
       borderColor: score.color.withValues(alpha: 0.15),
       child: Row(
@@ -67,7 +69,7 @@ class AttendanceScoreCard extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF1B2C56),
+                        color: isDark ? Colors.white : const Color(0xFF1B2C56),
                       ),
                     ),
                     Container(
@@ -98,7 +100,7 @@ class AttendanceScoreCard extends StatelessWidget {
                   departmentRank,
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: const Color(0xFF7F8CA4),
+                    color: isDark ? Colors.white70 : const Color(0xFF7F8CA4),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -178,7 +180,7 @@ class PredictionCard extends StatelessWidget {
       riskColor = Colors.redAccent;
     }
 
-    return GlassContainer(
+    return ModernDashboardCard(
       padding: const EdgeInsets.all(20),
       borderColor: Colors.white.withValues(alpha: 0.05),
       child: Column(
@@ -299,7 +301,7 @@ class PredictionCard extends StatelessWidget {
                       : 'Attention: You cannot miss any classes to avoid dropping below the 75% limit.',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: const Color(0xFF1B2C56),
+                    color: isDark ? Colors.white70 : const Color(0xFF1B2C56),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -327,7 +329,7 @@ class PredictionCard extends StatelessWidget {
           style: GoogleFonts.outfit(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF1B2C56),
+            color: isDark ? Colors.white : const Color(0xFF1B2C56),
           ),
         ),
       ],
@@ -346,7 +348,8 @@ class PersonalInsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ModernDashboardCard(
       padding: const EdgeInsets.all(20),
       borderColor: Colors.white.withValues(alpha: 0.05),
       child: Column(
@@ -386,7 +389,7 @@ class PersonalInsightCard extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1B2C56),
+                        color: isDark ? Colors.white70 : const Color(0xFF1B2C56),
                       ),
                     ),
                   ),
@@ -423,6 +426,7 @@ class _TrendChartState extends State<TrendChart> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GlassContainer(
       padding: const EdgeInsets.all(20),
       borderColor: Colors.white.withValues(alpha: 0.05),
@@ -437,7 +441,7 @@ class _TrendChartState extends State<TrendChart> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1B2C56),
+                  color: isDark ? Colors.white : const Color(0xFF1B2C56),
                 ),
               ),
               // Segmented controls
@@ -637,7 +641,8 @@ class LeaderboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ModernDashboardCard(
       padding: const EdgeInsets.all(20),
       borderColor: Colors.white.withValues(alpha: 0.05),
       child: Column(
@@ -715,7 +720,7 @@ class LeaderboardCard extends StatelessWidget {
                             fontWeight: entry.isMe
                                 ? FontWeight.bold
                                 : FontWeight.w600,
-                            color: const Color(0xFF1B2C56),
+                            color: isDark ? Colors.white70 : const Color(0xFF1B2C56),
                           ),
                         ),
                         Text(
@@ -760,11 +765,12 @@ class HeatmapCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     // We render a standard grid representing days of June 2026 (30 days, starts on Monday)
     // 5 rows, 7 columns
     final List<int> days = List.generate(30, (i) => i + 1);
 
-    return GlassContainer(
+    return ModernDashboardCard(
       padding: const EdgeInsets.all(20),
       borderColor: Colors.white.withValues(alpha: 0.05),
       child: Column(
@@ -804,9 +810,9 @@ class HeatmapCard extends StatelessWidget {
               final dateStr = '2026-06-${dayNum.toString().padLeft(2, '0')}';
               final status = heatmapData[dateStr] as String?;
 
-              Color cellColor = const Color(0xFFF1F5FD);
+              Color cellColor = isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF1F5FD);
               Border border = Border.all(
-                color: const Color(0xFFE2E8F0),
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFE2E8F0),
               );
 
               if (status == 'present') {
@@ -848,11 +854,11 @@ class HeatmapCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              _buildLegendDot(const Color(0xFF10B981), 'Present'),
+              _buildLegendDot(context, const Color(0xFF10B981), 'Present'),
               const SizedBox(width: 16),
-              _buildLegendDot(const Color(0xFFEF4444), 'Absent'),
+              _buildLegendDot(context, const Color(0xFFEF4444), 'Absent'),
               const SizedBox(width: 16),
-              _buildLegendDot(const Color(0xFFF1F5FD), 'No Class'),
+              _buildLegendDot(context, const Color(0xFFF1F5FD), 'No Class'),
             ],
           ),
         ],
@@ -860,7 +866,8 @@ class HeatmapCard extends StatelessWidget {
     );
   }
 
-  Widget _buildLegendDot(Color color, String text) {
+  Widget _buildLegendDot(BuildContext context, Color color, String text) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
         Container(
@@ -869,7 +876,7 @@ class HeatmapCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFE2E8F0)),
           ),
         ),
         const SizedBox(width: 6),

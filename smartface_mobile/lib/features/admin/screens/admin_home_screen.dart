@@ -32,6 +32,7 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/status_badge.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
+import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
@@ -301,56 +302,49 @@ class _AdminDashboardState extends State<AdminDashboard>
   }
 
   Widget _buildStatsGrid(bool isDark) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-          childAspectRatio: 1.4,
-          children: [
-            MetricCard(
-              label: 'Students Enrolled',
-              value: _stats['total_students']?.toString() ?? '--',
-              icon: Icons.people_alt_outlined,
-              accentColor: AppColors.cyan,
-              trend: 'TOTAL',
-              isTrendPositive: true,
-            ),
-            MetricCard(
-              label: 'Faculty Members',
-              value: _stats['total_teachers']?.toString() ?? '--',
-              icon: Icons.school_outlined,
-              accentColor: AppColors.gold,
-              trend: 'ACTIVE',
-              isTrendPositive: true,
-            ),
-            MetricCard(
-              label: 'Active Class Sessions',
-              value: _stats['active_sessions']?.toString() ?? '--',
-              icon: Icons.sensors_rounded,
-              accentColor: AppColors.successLight,
-              trend: 'LIVE NOW',
-              isTrendPositive: true,
-            ),
-            MetricCard(
-              label: 'Daily Attendance Rate',
-              value: _stats['attendance_today']?.toString() ?? '--',
-              icon: Icons.check_circle_outline_rounded,
-              accentColor: AppColors.indigoLight,
-              trend: 'STABLE',
-              isTrendPositive: true,
-            ),
-          ],
-        );
-      },
+    return DashboardGrid(
+      crossAxisCount: 2,
+      spacing: 14,
+      runSpacing: 14,
+      children: [
+        StatCard(
+          label: 'Students Enrolled',
+          value: _stats['total_students']?.toString() ?? '--',
+          icon: Icons.people_alt_outlined,
+          accentColor: AppColors.cyan,
+          trend: 'TOTAL',
+          isTrendPositive: true,
+        ),
+        StatCard(
+          label: 'Faculty Members',
+          value: _stats['total_teachers']?.toString() ?? '--',
+          icon: Icons.school_outlined,
+          accentColor: AppColors.gold,
+          trend: 'ACTIVE',
+          isTrendPositive: true,
+        ),
+        StatCard(
+          label: 'Active Class Sessions',
+          value: _stats['active_sessions']?.toString() ?? '--',
+          icon: Icons.sensors_rounded,
+          accentColor: AppColors.successLight,
+          trend: 'LIVE NOW',
+          isTrendPositive: true,
+        ),
+        StatCard(
+          label: 'Daily Attendance Rate',
+          value: _stats['attendance_today']?.toString() ?? '--',
+          icon: Icons.check_circle_outline_rounded,
+          accentColor: AppColors.indigoLight,
+          trend: 'STABLE',
+          isTrendPositive: true,
+        ),
+      ],
     );
   }
 
   Widget _buildDiagnostics(bool isDark) {
-    return GlassContainer(
+    return ModernDashboardCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -381,7 +375,7 @@ class _AdminDashboardState extends State<AdminDashboard>
     final statusLabel = hasIntruderAlert ? 'THREAT DETECTED' : 'SYSTEM SECURED';
     final alertCount = _stats['intruder_alerts']?.toString() ?? '0';
 
-    return GlassContainer(
+    return ModernDashboardCard(
       child: Row(
         children: [
           Container(
@@ -408,7 +402,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1B2C56),
+                    color: isDark ? Colors.white : const Color(0xFF1B2C56),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -418,7 +412,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                       : 'Zero unauthorized intruder breaches logged today.',
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: const Color(0xFF7F8CA4),
+                    color: isDark ? Colors.white60 : const Color(0xFF7F8CA4),
                   ),
                 ),
               ],
@@ -444,50 +438,47 @@ class _AdminDashboardState extends State<AdminDashboard>
           ),
         ),
         const SizedBox(height: 12),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+        DashboardGrid(
           crossAxisCount: 2,
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-          childAspectRatio: 1.3,
+          spacing: 14,
+          runSpacing: 14,
           children: [
-            ActionTile(
+            QuickActionCard(
               label: 'Student Database',
               description: 'Configure and register profile photos',
               icon: Icons.people_alt_outlined,
               color: AppColors.cyan,
               onTap: () => context.push('/settings'),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Faculty Management',
               description: 'Verify roles, permissions & schedules',
               icon: Icons.school_outlined,
               color: AppColors.gold,
               onTap: () => context.push('/settings'),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Leave Approvals',
               description: 'Process official pending leaves logs',
               icon: Icons.approval_outlined,
               color: Colors.orangeAccent,
               onTap: () => context.go('/admin/approvals'),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Security Center',
               description: 'Analyze real-time intruder telemetry',
               icon: Icons.security_outlined,
               color: AppColors.errorLight,
               onTap: () => context.go('/admin/security'),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Advanced Analytics',
               description: 'Generate institution attendance insights',
               icon: Icons.analytics_outlined,
               color: AppColors.successLight,
               onTap: () => context.go('/admin/analytics'),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'System Settings',
               description: 'Define camera thresholds & parameters',
               icon: Icons.settings_applications_outlined,

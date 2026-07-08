@@ -42,6 +42,7 @@ import 'package:smartface_attendance/core/services/notification_service.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
+import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
@@ -963,69 +964,17 @@ class _StudentDashboardState extends State<StudentDashboard> {
     return '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]}';
   }
 
-  /// The signature reference "attendance this month" summary card.
   Widget _buildAttendanceSummaryCard() {
-    final pct = (_overallPercentage * 100).round();
-    final brightness = Theme.of(context).brightness;
-    final isDark = brightness == Brightness.dark;
-    return ds.GlassCard(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          const ds.IconChip(icon: Icons.fact_check_outlined, size: 46),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$pct% attendance',
-                  style: GoogleFonts.outfit(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : const Color(0xFF1A1A3A),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Overall this semester • $_standing',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: isDark ? Colors.white60 : const Color(0xFF8A90AE),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 44,
-            height: 44,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CircularProgressIndicator(
-                  value: _overallPercentage,
-                  strokeWidth: 4,
-                  backgroundColor: isDark ? Colors.white12 : const Color(0xFFE6E8F2),
-                  valueColor: const AlwaysStoppedAnimation(Color(0xFF3D4AB8)),
-                ),
-                Text(
-                  '$pct',
-                  style: GoogleFonts.outfit(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D4AB8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    return AnimatedCardWrapper(
+      delay: 100.ms,
+      child: ProgressCard(
+        title: '${(_overallPercentage * 100).round()}% attendance',
+        subtitle: 'Overall this semester • $_standing',
+        percentage: _overallPercentage,
+        progressColor: const Color(0xFF3D4AB8),
+        leadingIcon: Icons.fact_check_outlined,
       ),
-    ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
+    );
   }
 
   Widget _buildWelcomeHeader(
@@ -1085,7 +1034,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Widget _buildSecurityCard(bool isDark) {
-    return GlassContainer(
+    return ModernDashboardCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1209,22 +1158,19 @@ class _StudentDashboardState extends State<StudentDashboard> {
           ),
         ),
         const SizedBox(height: 12),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+        DashboardGrid(
           crossAxisCount: 2,
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-          childAspectRatio: 1.15,
+          spacing: 14,
+          runSpacing: 14,
           children: [
-            ActionTile(
+            QuickActionCard(
               label: 'Mark Attendance',
               description: 'Scan active classroom QR and verify face ID',
               icon: Icons.qr_code_scanner_rounded,
               color: AppColors.accent,
               onTap: () => context.go('/student/scan'),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Attendance Hub',
               description:
                   'Track attendance health, scores, heatmaps, and alerts',
@@ -1232,42 +1178,42 @@ class _StudentDashboardState extends State<StudentDashboard> {
               color: Colors.pinkAccent,
               onTap: () => context.push(AppRoutes.studentAttendanceHubPath),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'AI Analyst',
               description: 'Get deep predictions & advice on your grades',
               icon: Icons.psychology_outlined,
               color: AppColors.gold,
               onTap: () => context.push('/analytics/analyst'),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Advanced Analytics',
               description: 'Trends, heatmaps, risk students & department stats',
               icon: Icons.bar_chart_rounded,
               color: Colors.indigoAccent,
               onTap: () => context.push(AppRoutes.analyticsDashboardPath),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Register Biometrics',
               description: 'Update and re-train your AI face embeddings',
               icon: Icons.face_retouching_natural_rounded,
               color: Colors.tealAccent,
               onTap: _showFaceRegistrationDialog,
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Leave Applications',
               description: 'Apply for leave and check approval status',
               icon: Icons.event_busy_outlined,
               color: Colors.orangeAccent,
               onTap: () => context.push('/student/leave'),
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Reports Center',
               description: 'Export digital PDF/CSV/Excel reports',
               icon: Icons.download_rounded,
               color: Colors.purpleAccent,
               onTap: _showExportOptionsDialog,
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Class Timetable',
               description: 'View daily lectures and scheduled rooms',
               icon: Icons.calendar_view_week_rounded,
@@ -1280,7 +1226,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 );
               },
             ),
-            ActionTile(
+            QuickActionCard(
               label: 'Academic Calendar',
               description: 'Track leaves, holidays and marked attendance',
               icon: Icons.calendar_month_rounded,
