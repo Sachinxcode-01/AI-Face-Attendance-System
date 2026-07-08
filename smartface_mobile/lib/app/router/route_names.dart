@@ -17,6 +17,9 @@ class AppRoutes {
   static const String onboardingName = 'onboarding';
   static const String onboardingPath = '/auth/onboarding';
 
+  static const String introImagesName = 'introImages';
+  static const String introImagesPath = '/intro-images';
+
   static const String loginName = 'login';
   static const String loginPath = '/auth/login';
 

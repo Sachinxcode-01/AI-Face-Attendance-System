@@ -23,6 +23,7 @@ import 'package:smartface_attendance/core/di/service_locator.dart';
 // Guest / Unauthenticated Screens
 import 'package:smartface_attendance/features/auth/screens/splash_screen.dart';
 import 'package:smartface_attendance/features/auth/screens/onboarding_screen.dart';
+import 'package:smartface_attendance/features/auth/screens/intro_image_screen.dart';
 import 'package:smartface_attendance/features/auth/screens/intro_screen.dart';
 import 'package:smartface_attendance/features/auth/screens/login_screen.dart';
 import 'package:smartface_attendance/features/auth/screens/register_screen.dart';
@@ -225,6 +226,15 @@ final GoRouter appRouter = GoRouter(
         context: context,
         state: state,
         child: const OnboardingScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.introImagesPath,
+      name: AppRoutes.introImagesName,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const IntroImageScreen(),
       ),
     ),
     GoRoute(

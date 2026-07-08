@@ -118,5 +118,17 @@ void main() {
       expect(session.role, isNull);
       expect(mockSecureStorage.isEmpty, isTrue);
     });
+
+    test('Manages introImagesCompleted state correctly', () async {
+      final session = SessionManager();
+      expect(session.introImagesCompleted, isFalse);
+
+      await session.setIntroImagesCompleted(true);
+      expect(session.introImagesCompleted, isTrue);
+
+      // On logout, introImagesCompleted state must be preserved
+      await session.logout();
+      expect(session.introImagesCompleted, isTrue);
+    });
   });
 }

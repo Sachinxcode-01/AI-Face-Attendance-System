@@ -106,6 +106,9 @@ flutter:
     - assets/icons/google.png
     - assets/icons/github.png
     - assets/background/splash_background.jpeg
+    - assets/background/Intro_1.jpeg
+    - assets/background/Intro_2.jpeg
+    - assets/background/Intro_3.jpeg
     - .env
     - .env.development
     - .env.staging

@@ -63,6 +63,7 @@ class SessionManager extends ChangeNotifier {
   bool _isLoggedIn = false;
 
   bool _onboardingCompleted = false;
+  bool _introImagesCompleted = false;
   bool _introCompleted = false;
   bool _wizardCompleted = false;
 
@@ -95,6 +96,7 @@ class SessionManager extends ChangeNotifier {
   bool get isLoggedIn => _isLoggedIn;
 
   bool get onboardingCompleted => _onboardingCompleted;
+  bool get introImagesCompleted => _introImagesCompleted;
   bool get introCompleted => _introCompleted;
   bool get wizardCompleted => _wizardCompleted;
 
@@ -143,6 +145,7 @@ class SessionManager extends ChangeNotifier {
       _isLoggedIn = _token != null && _token!.isNotEmpty;
 
       _onboardingCompleted = await CacheService.get<bool>('sf_onboarding_completed') ?? false;
+      _introImagesCompleted = await CacheService.get<bool>('sf_intro_images_completed') ?? false;
       _introCompleted = await CacheService.get<bool>('sf_intro_completed') ?? false;
       _wizardCompleted = await CacheService.get<bool>('sf_wizard_completed') ?? false;
 
@@ -157,6 +160,12 @@ class SessionManager extends ChangeNotifier {
   Future<void> setOnboardingCompleted(bool value) async {
     _onboardingCompleted = value;
     await CacheService.set('sf_onboarding_completed', value, persist: true);
+    notifyListeners();
+  }
+
+  Future<void> setIntroImagesCompleted(bool value) async {
+    _introImagesCompleted = value;
+    await CacheService.set('sf_intro_images_completed', value, persist: true);
     notifyListeners();
   }
 
@@ -207,6 +216,7 @@ class SessionManager extends ChangeNotifier {
     _isLoggedIn = true;
 
     _onboardingCompleted = true; // Logged in implies onboarding is completed
+    _introImagesCompleted = true; // Logged in implies intro images are completed
     if (introCompleted != null) _introCompleted = introCompleted;
     if (wizardCompleted != null) {
       _wizardCompleted = wizardCompleted;
@@ -225,6 +235,7 @@ class SessionManager extends ChangeNotifier {
         _storage.write(key: _keyAvatarUrl, value: avatarUrl),
       _storage.write(key: _keyBiometric, value: biometricRegistered.toString()),
       CacheService.set('sf_onboarding_completed', _onboardingCompleted, persist: true),
+      CacheService.set('sf_intro_images_completed', _introImagesCompleted, persist: true),
       CacheService.set('sf_intro_completed', _introCompleted, persist: true),
       CacheService.set('sf_wizard_completed', _wizardCompleted, persist: true),
     ]);
@@ -300,6 +311,7 @@ class SessionManager extends ChangeNotifier {
     }
 
     final wasOnboardingCompleted = _onboardingCompleted;
+    final wasIntroImagesCompleted = _introImagesCompleted;
     final wasIntroCompleted = _introCompleted;
     _token = null;
     _refreshToken = null;
@@ -309,6 +321,7 @@ class SessionManager extends ChangeNotifier {
     _avatarUrl = null;
     _biometricRegistered = false;
     _isLoggedIn = false;
+    _introImagesCompleted = false;
     _introCompleted = false;
     _wizardCompleted = false;
 
@@ -330,6 +343,9 @@ class SessionManager extends ChangeNotifier {
     // not session state) so returning users are not forced through them again.
     if (wasOnboardingCompleted) {
       await setOnboardingCompleted(true);
+    }
+    if (wasIntroImagesCompleted) {
+      await setIntroImagesCompleted(true);
     }
     if (wasIntroCompleted) {
       await setIntroCompleted(true);

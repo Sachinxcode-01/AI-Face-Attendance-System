@@ -30,10 +30,27 @@ class RouteGuards {
         path == AppRoutes.forgotPasswordPath ||
         path == AppRoutes.otpPath ||
         path == AppRoutes.splashPath ||
+        path == AppRoutes.introImagesPath ||
         path == '/reset-password';
 
     // 1. Unauthenticated users must go to guest-only routes (or splash)
     if (!isLoggedIn) {
+      if (!session.onboardingCompleted) {
+        if (path != AppRoutes.onboardingPath && path != AppRoutes.splashPath) {
+          debugPrint('[RouteGuard] Onboarding not completed. Redirecting to Onboarding.');
+          return AppRoutes.onboardingPath;
+        }
+        return null;
+      }
+
+      if (!session.introImagesCompleted) {
+        if (path != AppRoutes.introImagesPath && path != AppRoutes.splashPath) {
+          debugPrint('[RouteGuard] Intro images not completed. Redirecting to Intro Images.');
+          return AppRoutes.introImagesPath;
+        }
+        return null;
+      }
+
       if (!isGuestOnlyRoute) {
         debugPrint('[RouteGuard] Guest trying to access "$path". Redirecting to Login.');
         return AppRoutes.loginPath;

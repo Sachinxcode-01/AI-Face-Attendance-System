@@ -130,6 +130,7 @@ class _SplashScreenState extends State<SplashScreen> {
       await updateMessage('DECISION ENGINE: RESOLVING ROUTE...', 150);
 
       final onboardingCompleted = await CacheService.get<bool>('sf_onboarding_completed') ?? false;
+      final introImagesCompleted = await CacheService.get<bool>('sf_intro_images_completed') ?? false;
       final introCompleted = await CacheService.get<bool>('sf_intro_completed') ?? false;
       final wizardCompleted = session.biometricRegistered || (await CacheService.get<bool>('sf_wizard_completed') ?? false);
 
@@ -138,6 +139,12 @@ class _SplashScreenState extends State<SplashScreen> {
       // • First Install -> Onboarding
       if (!onboardingCompleted) {
         context.go('/auth/onboarding');
+        return;
+      }
+
+      // • Intro Images not completed -> Intro Images Screen
+      if (!introImagesCompleted) {
+        context.go('/intro-images');
         return;
       }
 
