@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // Pin workspace root to THIS project dir to silence the "multiple lockfiles"
+  // warning that appears when there is also a lockfile in the monorepo root.
+  outputFileTracingRoot: path.join(__dirname, "../../"),
   // Strip the framework header and ship gzip/br-compressed responses.
   poweredByHeader: false,
   compress: true,

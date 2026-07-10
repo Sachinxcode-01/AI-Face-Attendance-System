@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
+import 'package:smartface_attendance/design_system/design_system.dart' hide PrimaryButton;
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -156,7 +157,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: Icon(
               _otpSent ? Icons.lock_reset : Icons.mail_outline,
               size: 36,
-              color: AuthDesign.primaryIndigo,
+              color: AppColors.primary,
             ),
           ),
           Positioned(
@@ -171,7 +172,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               child: Icon(
                 _otpSent ? Icons.verified : Icons.help,
                 size: 15,
-                color: AuthDesign.primaryIndigo,
+                color: AppColors.primary,
               ),
             ),
           ),
@@ -201,10 +202,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         onTap: () => context.go('/auth/login'),
         child: Text(
           'Back to sign in',
-          style: AuthDesign.fontPoppins(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: AuthDesign.primaryIndigo,
+          style: AppTextStyles.body(
+            context,
+            weight: FontWeight.w700,
+            color: AppColors.primaryBright,
           ),
         ),
       ),
@@ -279,10 +280,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 onTap: _isLoading ? null : _handleSendOtp,
                 child: Text(
                   'Resend code',
-                  style: AuthDesign.fontPoppins(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AuthDesign.primaryIndigo,
+                  style: AppTextStyles.body(
+                    context,
+                    weight: FontWeight.w700,
+                    color: AppColors.primaryBright,
                   ),
                 ),
               ),

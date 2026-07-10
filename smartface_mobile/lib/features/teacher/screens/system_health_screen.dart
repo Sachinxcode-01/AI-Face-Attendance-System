@@ -132,14 +132,8 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF050915), Color(0xFF0A1628), Color(0xFF070B1A)],
-        ),
-      ),
+    return PremiumBackground(
+      immersive: false,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PremiumAppBar(

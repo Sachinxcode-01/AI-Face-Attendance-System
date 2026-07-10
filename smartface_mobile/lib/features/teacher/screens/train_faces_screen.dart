@@ -44,7 +44,6 @@ import 'package:provider/provider.dart';
 // Core State & Constants
 // ======================================================
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
-import 'package:smartface_attendance/app/constants/app_constants.dart';
 
 // ======================================================
 // Services Imports
@@ -246,9 +245,11 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bgDark,
-      appBar: PremiumAppBar(
+    return PremiumBackground(
+      immersive: false,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: PremiumAppBar(
         title: 'Train AI Faces',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
@@ -533,6 +534,7 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
                 ],
               ),
             ),
+      ),
     );
   }
 

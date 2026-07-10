@@ -39,7 +39,6 @@ import 'dart:async';
 // ======================================================
 // Core & State Imports
 // ======================================================
-import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/app/config/app_state.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';

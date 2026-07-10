@@ -28,6 +28,7 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
+import 'package:smartface_attendance/design_system/design_system.dart';
 
 class SetupWizardScreen extends StatefulWidget {
   const SetupWizardScreen({super.key});
@@ -241,28 +242,31 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AuthDesign.pageBg,
-      body: Column(
-        children: [
-          HeroOrbBackground(
-            isCompact: true,
-            onBackTap: _currentPage > 0
-                ? () => _pageController.previousPage(duration: 400.ms, curve: Curves.easeOut)
-                : null,
-            child: _buildHeroContent(),
-          ),
-          Expanded(
-            child: Transform.translate(
-              offset: const Offset(0, -28),
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (i) => setState(() => _currentPage = i),
-                physics: const NeverScrollableScrollPhysics(),
-                children: _getPagesForRole(),
+      backgroundColor: Colors.transparent,
+      body: PremiumBackground(
+        immersive: false,
+        child: Column(
+          children: [
+            HeroOrbBackground(
+              isCompact: true,
+              onBackTap: _currentPage > 0
+                  ? () => _pageController.previousPage(duration: 400.ms, curve: Curves.easeOut)
+                  : null,
+              child: _buildHeroContent(),
+            ),
+            Expanded(
+              child: Transform.translate(
+                offset: const Offset(0, -28),
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: (i) => setState(() => _currentPage = i),
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: _getPagesForRole(),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -338,11 +342,21 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
                     decoration: BoxDecoration(
-                      color: AuthDesign.cardBg,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.cardDark
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.borderDark
+                            : AppColors.borderLight,
+                        width: 1,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: AuthDesign.primaryIndigo.withValues(alpha: 0.10),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.black38
+                              : AppColors.primary.withValues(alpha: 0.08),
                           blurRadius: 24,
                           offset: const Offset(0, 8),
                         ),

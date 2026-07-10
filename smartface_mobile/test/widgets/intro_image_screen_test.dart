@@ -96,15 +96,15 @@ void main() {
       await tester.tap(find.text('NEXT'));
       await tester.pumpAndSettle();
 
-      // On page 3 (last page), button should show "LET'S GET STARTED" instead of "NEXT"
+      // On page 3 (last page), button should show "LET'S START" instead of "NEXT"
       expect(find.text('NEXT'), findsNothing);
-      expect(find.text("LET'S GET STARTED"), findsOneWidget);
+      expect(find.text("LET'S START"), findsOneWidget);
 
       // Tap BACK to go back to page 2
       await tester.tap(find.text('BACK'));
       await tester.pumpAndSettle();
       expect(find.text('NEXT'), findsOneWidget);
-      expect(find.text("LET'S GET STARTED"), findsNothing);
+      expect(find.text("LET'S START"), findsNothing);
     });
 
     testWidgets('clicking SKIP completes intro and redirects to login', (WidgetTester tester) async {
@@ -137,8 +137,8 @@ void main() {
 
       expect(mockSessionManager.introImagesCompleted, isFalse);
 
-      // Tap "LET'S GET STARTED"
-      await tester.tap(find.text("LET'S GET STARTED"));
+      // Tap "LET'S START"
+      await tester.tap(find.text("LET'S START"));
       await tester.pumpAndSettle();
 
       // Verify session state updated

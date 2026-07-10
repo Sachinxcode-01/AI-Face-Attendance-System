@@ -25,7 +25,13 @@ class AuthService {
     const minutes = expiresDeltaMinutes !== null ? expiresDeltaMinutes : EXPIRE_MINUTES;
     const expiresIn = minutes * 60; // in seconds
     
-    return jwt.sign(payload, SECRET_KEY, { expiresIn });
+    const crypto = require('crypto');
+    const enrichedPayload = {
+      ...payload,
+      jti: crypto.randomUUID()
+    };
+    
+    return jwt.sign(enrichedPayload, SECRET_KEY, { expiresIn });
   }
 
   static decodeToken(token) {

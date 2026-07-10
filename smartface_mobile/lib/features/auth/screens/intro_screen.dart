@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
-import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
-import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
-import 'package:smartface_attendance/shared/widgets/glow_button.dart';
 
 class IntroScreen extends StatefulWidget {
   const IntroScreen({super.key});
@@ -25,13 +21,13 @@ class _IntroScreenState extends State<IntroScreen> {
       title: 'AI Face Recognition',
       subtitle: 'Our advanced neural network registers your facial profile parameters locally and matches it securely with the institution database in milliseconds.',
       icon: Icons.face_unlock_outlined,
-      iconColor: AppColors.gold,
+      iconColor: AppColors.warning,
     ),
     IntroPageData(
       title: 'Dynamic QR Attendance',
       subtitle: 'Anti-spoofing dynamic rotating QR codes prevent location sharing and attendance proxy check-ins. Keep your app scanner active near the terminal.',
       icon: Icons.qr_code_2_outlined,
-      iconColor: const Color(0xFF3559E0),
+      iconColor: AppColors.primaryBright,
     ),
     IntroPageData(
       title: 'Reports & Analytics',
@@ -74,37 +70,32 @@ class _IntroScreenState extends State<IntroScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          const AuthBlobBackground(),
-          SafeArea(
+      body: PremiumBackground(
+        immersive: false,
+        child: AnimatedPageWrapper(
+          child: SafeArea(
             child: Column(
               children: [
                 // Header with Skip Button
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'GETTING STARTED',
-                        style: GoogleFonts.outfit(
+                        style: AppTextStyles.label(
+                          context,
                           color: Colors.white60,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2.0,
                         ),
                       ),
                       TextButton(
                         onPressed: _completeIntro,
                         child: Text(
                           'SKIP',
-                          style: GoogleFonts.inter(
+                          style: AppTextStyles.label(
+                            context,
                             color: Colors.white70,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                            letterSpacing: 1.5,
                           ),
                         ),
                       ),
@@ -131,7 +122,7 @@ class _IntroScreenState extends State<IntroScreen> {
 
                 // Bottom Indicators and Navigation buttons
                 Padding(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  padding: const EdgeInsets.all(24),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -142,11 +133,9 @@ class _IntroScreenState extends State<IntroScreen> {
                           onPressed: _currentPage > 0 ? _prevPage : null,
                           child: Text(
                             'BACK',
-                            style: GoogleFonts.inter(
+                            style: AppTextStyles.label(
+                              context,
                               color: Colors.white70,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              letterSpacing: 1.5,
                             ),
                           ),
                         ),
@@ -162,7 +151,7 @@ class _IntroScreenState extends State<IntroScreen> {
                             height: 6,
                             width: isSelected ? 24 : 6,
                             decoration: BoxDecoration(
-                              color: isSelected ? AppColors.gold : Colors.white38,
+                              color: isSelected ? AppColors.warning : Colors.white38,
                               borderRadius: BorderRadius.circular(3),
                             ),
                           );
@@ -172,22 +161,10 @@ class _IntroScreenState extends State<IntroScreen> {
                       // Next or Get Started Button
                       SizedBox(
                         height: 48,
-                        width: _currentPage == _totalPages - 1 ? 140 : 110,
-                        child: GlowButton(
+                        width: _currentPage == _totalPages - 1 ? 140 : 100,
+                        child: PrimaryButton(
                           onPressed: _nextPage,
-                          color: const Color(0xFF3559E0),
-                          glowColor: const Color(0x663559E0),
-                          borderRadius: 12,
-                          padding: EdgeInsets.zero,
-                          child: Text(
-                            _currentPage == _totalPages - 1 ? 'GET STARTED' : 'NEXT',
-                            style: GoogleFonts.inter(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
+                          text: _currentPage == _totalPages - 1 ? 'START' : 'NEXT',
                         ),
                       ),
                     ],
@@ -196,18 +173,18 @@ class _IntroScreenState extends State<IntroScreen> {
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildIntroPage(IntroPageData page) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Center(
         child: GlassCard(
-          borderRadius: 28,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.xxl),
+          radius: 28,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -236,12 +213,7 @@ class _IntroScreenState extends State<IntroScreen> {
               Text(
                 page.title,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.5,
-                ),
+                style: AppTextStyles.display(context, color: Colors.white),
               ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
 
               const SizedBox(height: 16),
@@ -250,11 +222,7 @@ class _IntroScreenState extends State<IntroScreen> {
               Text(
                 page.subtitle,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  height: 1.5,
-                ),
+                style: AppTextStyles.body(context, color: Colors.white70),
               ).animate().fadeIn(delay: 350.ms),
             ],
           ),

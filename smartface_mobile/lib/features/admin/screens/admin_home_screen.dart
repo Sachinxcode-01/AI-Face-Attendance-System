@@ -33,10 +33,9 @@ import 'package:smartface_attendance/shared/widgets/status_badge.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
-import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
-import 'package:smartface_attendance/design_system/design_system.dart';
+import 'package:smartface_attendance/design_system/design_system.dart' hide StatCard;
 
 /// The administrative dashboard command center widget.
 class AdminDashboard extends StatefulWidget {
@@ -141,7 +140,8 @@ class _AdminDashboardState extends State<AdminDashboard>
     final alertStatus = _buildSecurityStatus(isDark, hasIntruderAlert);
     final logoutButton = _buildLogoutButton(context);
 
-    return AuthBlobBackground(
+    return PremiumBackground(
+      immersive: false,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PremiumAppBar(

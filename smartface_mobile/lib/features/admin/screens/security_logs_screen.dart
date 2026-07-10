@@ -45,7 +45,6 @@ import 'package:provider/provider.dart';
 // ======================================================
 // Core State & Constants
 // ======================================================
-import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 

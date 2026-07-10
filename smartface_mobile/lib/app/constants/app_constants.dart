@@ -21,65 +21,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:smartface_attendance/design_system/ui/app_colors.dart';
 
 // ======================================================
 // Color Palette Design System
 // ======================================================
 
-/// Global Color Palette
-///
-/// Contains:
-/// - Brand colors (gold accents)
-/// - Midnight Navy theme background colors
-/// - Status and alert warning levels
-class AppColors {
-  // Brand accents
-  static const gold = Color(0xFFFFB703); // Classic gold accent
-  static const goldLight = Color(0xFFFFD166);
-  static const goldDark = Color(0xFFD48C00);
-
-  // Dark backgrounds (Slate Dark-Void / Frosted Steel Gray)
-  static const bgDeep = Color(0xFF020617); // Slate Dark-Void base background
-  static const bgDark = Color(0xFF0F172A); // Slate Primary Dark mode primary
-  static const bgCard = Color(0xFF111827); // Frosted Card surface
-  static const bgSurface = Color(
-    0xFF1E293B,
-  ); // Border lines / inner surface slate
-  static const bgModal = Color(0xFF0F172A); // Clean modal slate
-
-  // Cobalt primary accents
-  static const indigo = Color(0xFF1E3A8A); // Royal premium navy
-  static const indigoLight = Color(
-    0xFF2563EB,
-  ); // High-fidelity cobalt primary accent
-  static const accent = Color(
-    0xFF2563EB,
-  ); // High-fidelity cobalt primary accent
-
-  // Light backgrounds
-  static const bgLight = Color(0xFFF8FAFC); // Clean neutral slate light
-  static const bgCardLight = Color(0xFFFFFFFF); // Clean white card
-  static const bgSurfaceLight = Color(0xFFF1F5F9); // Light slate container
-
-  // Semantic
-  static const success = Color(0xFF10B981); // Emerald Green Present
-  static const successLight = Color(0xFF34D399); // Soft emerald green
-  static const error = Color(0xFFEF4444); // Coral Red Absent / Danger
-  static const errorLight = Color(0xFFF87171); // Soft coral red
-  static const warning = Color(0xFFF59E0B); // Amber warning Late
-  static const info = Color(0xFF3B82F6); // Modern Blue
-
-  // Neutrals
-  static const white = Colors.white;
-  static const white70 = Color(0xB3FFFFFF);
-  static const white38 = Color(0x61FFFFFF);
-  static const white12 = Color(0x1FFFFFFF);
-  static const white06 = Color(0x0FFFFFFF);
-
-  // Cyan accent for scan animations
-  static const cyan = Color(0xFF06B6D4); // Cyber Cyan
-  static const cyanGlow = Color(0x3306B6D4);
-}
+export 'package:smartface_attendance/design_system/ui/app_colors.dart';
 
 // ======================================================
 // Gradients Design System

@@ -10,6 +10,29 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
+  // ── Legacy Accents & Backgrounds (for backwards compatibility) ───────────
+  static const Color gold = Color(0xFFFFB703); 
+  static const Color goldLight = Color(0xFFFFD166);
+  static const Color goldDark = Color(0xFFD48C00);
+  static const Color bgDeep = Color(0xFF020617);
+  static const Color bgCard = Color(0xFF111827);
+  static const Color bgSurface = Color(0xFF1E293B);
+  static const Color bgModal = Color(0xFF0F172A);
+  static const Color indigo = Color(0xFF1E3A8A);
+  static const Color indigoLight = Color(0xFF2563EB);
+  static const Color accent = Color(0xFF2563EB);
+  static const Color bgCardLight = Color(0xFFFFFFFF);
+  static const Color bgSurfaceLight = Color(0xFFF1F5F9);
+  static const Color successLight = Color(0xFF34D399);
+  static const Color errorLight = Color(0xFFF87171);
+  static const Color white = Colors.white;
+  static const Color white70 = Color(0xB3FFFFFF);
+  static const Color white38 = Color(0x61FFFFFF);
+  static const Color white12 = Color(0x1FFFFFFF);
+  static const Color white06 = Color(0x0FFFFFFF);
+  static const Color cyan = Color(0xFF06B6D4);
+  static const Color cyanGlow = Color(0x3306B6D4);
+
   // ── Brand / Primary ──────────────────────────────────────────────────────
   /// Royal indigo-blue used for headers, primary buttons, active icons.
   static const Color primary = Color(0xFF3D4AB8);

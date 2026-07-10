@@ -504,10 +504,10 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode(data),
-      );
-      return jsonDecode(response.body);
+      ).timeout(const Duration(seconds: 15));
+      return _processResponse(response);
     } catch (e) {
-      return {'detail': 'Connection failed'};
+      return _classifyNetworkError(e);
     }
   }
 
@@ -523,10 +523,10 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode({'email': email}),
-      );
-      return jsonDecode(response.body);
+      ).timeout(const Duration(seconds: 15));
+      return _processResponse(response);
     } catch (e) {
-      return {'detail': 'Connection failed'};
+      return _classifyNetworkError(e);
     }
   }
 
@@ -538,9 +538,11 @@ class ApiService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-      );
+      ).timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
-        return jsonDecode(response.body) as List<dynamic>;
+        final decoded = jsonDecode(response.body);
+        if (decoded is List) return decoded;
+        if (decoded is Map && decoded['data'] is List) return decoded['data'] as List;
       }
     } catch (e) {
       debugPrint('getStudents error: $e');
@@ -577,10 +579,10 @@ class ApiService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-      );
-      return jsonDecode(response.body);
+      ).timeout(const Duration(seconds: 30));
+      return _processResponse(response);
     } catch (e) {
-      return {'detail': 'Connection failed'};
+      return _classifyNetworkError(e);
     }
   }
 
@@ -590,13 +592,15 @@ class ApiService {
         Uri.parse('$baseUrl/ai/ask'),
         headers: {
           'Content-Type': 'application/json',
-          'X-Groq-Api-Key': EnvConfig.groqApiKey, // Secure injection
+          // NOTE: The Groq API key is injected server-side by the backend.
+          // It MUST NOT be sent from the Flutter client for security reasons.
+          'Authorization': 'Bearer ${await SecureTokenStorage.getAccessToken() ?? ""}',
         },
         body: jsonEncode({'email': email, 'query': query}),
-      );
-      return jsonDecode(response.body);
+      ).timeout(const Duration(seconds: 30));
+      return _processResponse(response);
     } catch (e) {
-      return {'detail': 'AI Engine offline'};
+      return _classifyNetworkError(e);
     }
   }
 

@@ -45,7 +45,6 @@ import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
-import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 import 'package:smartface_attendance/features/analytics/models/student_stats_model.dart';
 import 'package:smartface_attendance/features/analytics/controllers/analytics_controller.dart';
 import 'package:smartface_attendance/features/analytics/widgets/analytics_components.dart';
@@ -833,7 +832,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
         .map((p) => p[0].toUpperCase())
         .join();
 
-    return AuthBlobBackground(
+    return ds.PremiumBackground(
+      immersive: false,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Column(

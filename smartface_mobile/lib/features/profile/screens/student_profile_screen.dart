@@ -38,7 +38,6 @@ import 'package:go_router/go_router.dart';
 // ======================================================
 // State & Core Imports
 // ======================================================
-import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
@@ -502,22 +501,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgGradient = isDark
-        ? const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF050915), Color(0xFF0A1628), Color(0xFF070B1A)],
-          )
-        : const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFEEF1FA), Color(0xFFE8EAF6), Color(0xFFEEF1FA)],
-          );
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: bgGradient,
-      ),
+    return PremiumBackground(
+      immersive: false,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: _buildAppBar(),

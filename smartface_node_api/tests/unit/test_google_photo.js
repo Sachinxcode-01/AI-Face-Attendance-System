@@ -81,7 +81,7 @@ async function runTest() {
   await awaitPendingJobs();
   await mongoose.disconnect();
   console.log("🏁 Test completed successfully.");
-  process.exit(0);
+  setTimeout(() => process.exit(0), 100);
 }
 
 runTest().catch(err => {
@@ -89,7 +89,8 @@ runTest().catch(err => {
   const { awaitPendingJobs } = require('../../src/utils/jobTracker');
   awaitPendingJobs().then(() => {
     mongoose.disconnect().then(() => {
-      process.exit(1);
-    }).catch(() => process.exit(1));
+      setTimeout(() => process.exit(1), 100);
+    }).catch(() => setTimeout(() => process.exit(1), 100));
   });
 });
+

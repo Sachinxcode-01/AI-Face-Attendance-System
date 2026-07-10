@@ -7,6 +7,7 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
+import 'package:smartface_attendance/design_system/design_system.dart' hide PrimaryButton;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -142,11 +143,11 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Text.rich(
               TextSpan(
                 text: "Don't have an account? ",
-                style: AuthDesign.fontPoppins(fontSize: 11, fontWeight: FontWeight.w500, color: AuthDesign.textLabel),
+                style: AppTextStyles.body(context, weight: FontWeight.w500, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textMutedDark : AppColors.textMuted),
                 children: [
                   TextSpan(
                     text: 'Sign up',
-                    style: AuthDesign.fontPoppins(fontSize: 11, fontWeight: FontWeight.w700, color: AuthDesign.primaryIndigo),
+                    style: AppTextStyles.body(context, weight: FontWeight.w700, color: AppColors.primaryBright),
                   ),
                 ],
               ),
@@ -157,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
             onTap: () => context.go('/auth/otp'),
             child: Text(
               'Sign in with OTP',
-              style: AuthDesign.fontPoppins(fontSize: 11, fontWeight: FontWeight.w700, color: AuthDesign.primaryIndigo),
+              style: AppTextStyles.body(context, weight: FontWeight.w700, color: AppColors.primaryBright),
             ),
           ),
         ],
@@ -201,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             _rememberMe = val ?? false;
                           });
                         },
-                        activeColor: AuthDesign.primaryIndigo,
+                        activeColor: AppColors.primaryBright,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -210,10 +211,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(width: 8),
                     Text(
                       'Remember me',
-                      style: AuthDesign.fontPoppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AuthDesign.textLabel,
+                      style: AppTextStyles.caption(
+                        context,
+                        weight: FontWeight.w500,
+                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.textMutedDark : AppColors.textMuted,
                       ),
                     ),
                   ],
@@ -222,10 +223,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   onTap: () => context.go('/auth/forgot-password'),
                   child: Text(
                     'Forgot password?',
-                    style: AuthDesign.fontPoppins(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AuthDesign.primaryIndigo,
+                    style: AppTextStyles.caption(
+                      context,
+                      weight: FontWeight.w600,
+                      color: AppColors.primaryBright,
                     ),
                   ),
                 ),

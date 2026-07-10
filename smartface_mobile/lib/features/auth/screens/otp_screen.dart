@@ -8,7 +8,7 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
 
-import 'package:smartface_attendance/design_system/ui/ui.dart' hide PrimaryButton;
+import 'package:smartface_attendance/design_system/design_system.dart' hide PrimaryButton;
 
 class OTPScreen extends StatefulWidget {
   final String? email;
@@ -215,6 +215,8 @@ class _OTPScreenState extends State<OTPScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return AuthScreenLayout(
       title: 'Sign in with OTP',
       subtitle: "No password needed. We'll email you a 6-digit code.",
@@ -223,10 +225,10 @@ class _OTPScreenState extends State<OTPScreen> {
         onTap: () => context.go('/auth/login'),
         child: Text(
           'Back to sign in',
-          style: AuthDesign.fontPoppins(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: AuthDesign.primaryIndigo,
+          style: AppTextStyles.body(
+            context,
+            weight: FontWeight.w700,
+            color: AppColors.primaryBright,
           ),
         ),
       ),
@@ -252,7 +254,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
           if (_otpSent) ...[
             const SizedBox(height: 8),
-            const Divider(color: AuthDesign.underlineUnfocused, thickness: 1),
+            Divider(color: isDark ? AppColors.borderDark : AppColors.borderLight, thickness: 1),
             const SizedBox(height: 16),
 
             // OTP Digit Boxes
@@ -282,11 +284,19 @@ class _OTPScreenState extends State<OTPScreen> {
                   ? Text.rich(
                       TextSpan(
                         text: 'Resend code in ',
-                        style: AuthDesign.fontPoppins(fontSize: 11, fontWeight: FontWeight.w500, color: AuthDesign.textLabel),
+                        style: AppTextStyles.caption(
+                          context,
+                          weight: FontWeight.w500,
+                          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                        ),
                         children: [
                           TextSpan(
                             text: '0:${_countdownSeconds.toString().padLeft(2, '0')}',
-                            style: AuthDesign.fontPoppins(fontSize: 11, fontWeight: FontWeight.w700, color: AuthDesign.primaryIndigo),
+                            style: AppTextStyles.caption(
+                              context,
+                              weight: FontWeight.w700,
+                              color: AppColors.primaryBright,
+                            ),
                           ),
                         ],
                       ),
@@ -295,7 +305,11 @@ class _OTPScreenState extends State<OTPScreen> {
                       onTap: _sendCode,
                       child: Text(
                         'Resend code',
-                        style: AuthDesign.fontPoppins(fontSize: 11, fontWeight: FontWeight.w700, color: AuthDesign.primaryIndigo),
+                        style: AppTextStyles.caption(
+                          context,
+                          weight: FontWeight.w700,
+                          color: AppColors.primaryBright,
+                        ),
                       ),
                     ),
             ),

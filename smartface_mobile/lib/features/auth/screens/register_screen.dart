@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
+import 'package:smartface_attendance/design_system/design_system.dart' hide PrimaryButton;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -394,11 +395,12 @@ class _RoleCardState extends State<_RoleCard> with SingleTickerProviderStateMixi
 
   @override
   Widget build(BuildContext context) {
-    const selectedColor = AuthDesign.primaryIndigo;
-    const unselectedColor = Color(0xFF94A3B8);
-    const selectedBg = Color(0xFFEEF2FF);
-    const unselectedBg = Colors.white;
-    final borderColor = widget.isSelected ? selectedColor : const Color(0xFFE2E8F0);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const selectedColor = AppColors.primaryBright;
+    final unselectedColor = isDark ? AppColors.textMutedDark : const Color(0xFF94A3B8);
+    final selectedBg = isDark ? AppColors.surfaceDark : const Color(0xFFEEF2FF);
+    final unselectedBg = isDark ? AppColors.cardDark : Colors.white;
+    final borderColor = widget.isSelected ? selectedColor : (isDark ? AppColors.borderDark : const Color(0xFFE2E8F0));
 
     return GestureDetector(
       onTapDown: widget.onTap == null
@@ -455,9 +457,9 @@ class _RoleCardState extends State<_RoleCard> with SingleTickerProviderStateMixi
               const SizedBox(height: 6),
               Text(
                 widget.role,
-                style: AuthDesign.fontPoppins(
-                  fontSize: 15,
-                  fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                style: AppTextStyles.body(
+                  context,
+                  weight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: widget.isSelected ? selectedColor : unselectedColor,
                 ),
               ),

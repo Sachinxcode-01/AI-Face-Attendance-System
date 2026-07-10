@@ -251,6 +251,14 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Widget _buildBootUI(Color primaryColor, Color primaryGlow) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Dynamic responsive font sizes and styling properties
+    final double titleFontSize = (MediaQuery.of(context).size.width * 0.08).clamp(28.0, 36.0);
+    final titleColor = isDark ? const Color(0xFFF4F7FF) : const Color(0xFF0B1028);
+    final subtitleColor = isDark ? const Color(0xFFDCE6FF) : const Color(0xFF4E659E);
+    final shadowColor = isDark ? const Color(0xFF0B1028) : const Color(0xFF4F7BFF);
+
     return SafeArea(
       key: const ValueKey('boot_ui'),
       child: Column(
@@ -347,38 +355,81 @@ class _SplashScreenState extends State<SplashScreen> {
           const SizedBox(height: 45),
 
           // --- BRAND TEXT ---
-          Text(
-                'Smart Attendance AI',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1,
-                  color: const Color(0xFF1B2C56),
-                  shadows: [
-                    Shadow(
-                      color: primaryGlow.withValues(alpha: 0.2),
-                      blurRadius: 18,
-                      offset: const Offset(0, 2),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Text(
+              'Smart Attendance AI',
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.outfit(
+                fontSize: titleFontSize,
+                fontWeight: FontWeight.w800, // weight: 700-800
+                letterSpacing: 0.5, // letter spacing: 0.3-0.8
+                color: titleColor,
+                shadows: [
+                  Shadow(
+                    color: shadowColor.withValues(alpha: isDark ? 0.6 : 0.3),
+                    blurRadius: isDark ? 14 : 8,
+                    offset: const Offset(0, 2),
+                  ),
+                  if (isDark)
+                    BoxShadow(
+                      color: const Color(0xFF4F7BFF).withValues(alpha: 0.3),
+                      blurRadius: 20,
                     ),
-                  ],
-                ),
-              )
-              .animate()
-              .fadeIn(delay: 300.ms, duration: 500.ms)
-              .slideY(begin: 0.25, end: 0, duration: 500.ms),
-
-          const SizedBox(height: 8),
-
-          Text(
-            'PRECISION ATTENDANCE, POWERED BY AI',
-            style: GoogleFonts.inter(
-              fontSize: 10.5,
-              color: const Color(0xFF7F8CA4),
-              letterSpacing: 2.5,
-              fontWeight: FontWeight.bold,
+                ],
+              ),
+            )
+            .animate()
+            .fadeIn(
+              delay: 400.ms,
+              duration: 800.ms,
+              curve: Curves.easeOutCubic,
+            )
+            .slideY(
+              begin: 0.15,
+              end: 0,
+              duration: 800.ms,
+              curve: Curves.easeOutCubic,
+            )
+            .scale(
+              begin: const Offset(0.96, 0.96),
+              end: const Offset(1.0, 1.0),
+              duration: 800.ms,
+              curve: Curves.easeOutCubic,
             ),
-          ).animate().fadeIn(delay: 600.ms, duration: 400.ms),
+          ),
+
+          const SizedBox(height: 12),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Text(
+              'Face Recognition Attendance System',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(
+                fontSize: 14, // font size: 13-15
+                fontWeight: FontWeight.w500, // weight: 500
+                color: subtitleColor,
+                letterSpacing: 0.5,
+              ),
+            )
+            .animate()
+            .fadeIn(
+              delay: 1000.ms,
+              duration: 600.ms,
+              curve: Curves.easeOutCubic,
+            )
+            .slideY(
+              begin: 0.1,
+              end: 0,
+              duration: 600.ms,
+              curve: Curves.easeOutCubic,
+            ),
+          ),
 
           const Spacer(),
 

@@ -9,6 +9,8 @@ import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/app/config/env_config.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
+import 'package:smartface_attendance/design_system/design_system.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -267,17 +269,20 @@ class _UnderlineTextFieldState extends State<UnderlineTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final focused = _focusNode.hasFocus;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           widget.label,
-          style: AuthDesign.fontPoppins(
-            fontSize: 10.5,
-            fontWeight: FontWeight.w500,
-            color: AuthDesign.textLabel,
+          style: AppTextStyles.label(
+            context,
+            color: focused ? AppColors.primary : (isDark ? AppColors.textMutedDark : AppColors.textMuted),
           ),
         ),
+        const SizedBox(height: 6),
         TextFormField(
           focusNode: _focusNode,
           controller: widget.controller,
@@ -286,35 +291,35 @@ class _UnderlineTextFieldState extends State<UnderlineTextField> {
           validator: widget.validator,
           onChanged: widget.onChanged,
           readOnly: widget.readOnly,
-          style: AuthDesign.fontPoppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: AuthDesign.textHeading,
+          style: AppTextStyles.body(
+            context,
+            color: isDark ? AppColors.textHeadingDark : AppColors.textHeading,
           ),
           decoration: InputDecoration(
             hintText: widget.placeholder,
-            hintStyle: AuthDesign.fontPoppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: AuthDesign.textPlaceholder,
+            hintStyle: AppTextStyles.caption(
+              context,
+              color: isDark ? AppColors.textMutedDark : AppColors.textPlaceholder,
             ),
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(vertical: 8),
-            border: const UnderlineInputBorder(
+            filled: true,
+            fillColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: AuthDesign.underlineUnfocused,
-                width: 1.5,
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                width: 1,
               ),
             ),
-            enabledBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(
-                color: AuthDesign.underlineUnfocused,
-                width: 1.5,
-              ),
-            ),
-            focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(
-                color: AuthDesign.underlineFocused,
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
                 width: 1.5,
               ),
             ),
@@ -349,44 +354,51 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AuthDesign.primaryIndigo,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(13),
-          ),
-          padding: EdgeInsets.zero,
+    final enabled = onPressed != null && !isLoading;
+
+    return PressableScale(
+      onTap: enabled ? onPressed : null,
+      child: Container(
+        width: double.infinity,
+        height: 52,
+        decoration: BoxDecoration(
+          gradient: enabled
+              ? AppColors.primaryGradient
+              : LinearGradient(
+                  colors: [Colors.grey.shade400, Colors.grey.shade300],
+                ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.28),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : null,
         ),
-        child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
+        child: Center(
+          child: isLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.4,
+                  ),
+                )
+              : Text(
+                  text,
+                  style: AppTextStyles.button(context, color: Colors.white),
                 ),
-              )
-            : Text(
-                text,
-                style: AuthDesign.fontPoppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
+        ),
       ),
     );
   }
 }
 
-class SocialAuthButton extends StatefulWidget {
+class SocialAuthButton extends StatelessWidget {
   final String iconPath;
   final String label;
   final VoidCallback? onTap;
@@ -403,95 +415,62 @@ class SocialAuthButton extends StatefulWidget {
   });
 
   @override
-  State<SocialAuthButton> createState() => _SocialAuthButtonState();
-}
-
-class _SocialAuthButtonState extends State<SocialAuthButton> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final bool isInteractive = widget.enabled && !widget.isLoading && widget.onTap != null;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isInteractive = enabled && !isLoading && onTap != null;
 
-    return GestureDetector(
-      onTapDown: isInteractive ? (_) => _controller.forward() : null,
-      onTapUp: isInteractive ? (_) {
-        _controller.reverse();
-        widget.onTap?.call();
-      } : null,
-      onTapCancel: isInteractive ? () => _controller.reverse() : null,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Opacity(
-          opacity: widget.enabled ? 1.0 : 0.6,
-          child: Container(
-            height: 50,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: const Color(0xFFE2E8F0),
-                width: 1.5,
+    return PressableScale(
+      onTap: isInteractive ? onTap : null,
+      child: Opacity(
+        opacity: enabled ? 1.0 : 0.6,
+        child: Container(
+          height: 50,
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.cardDark : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark ? AppColors.borderDark : const Color(0xFFE2E8F0),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Center(
-              child: widget.isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: AuthDesign.primaryIndigo,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          widget.iconPath,
-                          width: 20,
-                          height: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          widget.label,
-                          style: AuthDesign.fontPoppins(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AuthDesign.textHeading,
-                          ),
-                        ),
-                      ],
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Center(
+            child: isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
+                      strokeWidth: 2,
                     ),
-            ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        iconPath,
+                        width: 20,
+                        height: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        label,
+                        style: AppTextStyles.body(
+                          context,
+                          weight: FontWeight.w600,
+                          color: isDark ? AppColors.textHeadingDark : AppColors.textHeading,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ),
       ),
@@ -876,42 +855,43 @@ class AuthScreenLayout extends StatelessWidget {
     return Theme(
       data: AuthDesign.themeData,
       child: Scaffold(
-        // resizeToAvoidBottomInset keeps the layout stable; we handle scroll
-        // inside the card ourselves
         resizeToAvoidBottomInset: true,
         body: Container(
           color: AuthDesign.pageBg,
           width: double.infinity,
           height: double.infinity,
-          child: Stack(
-            children: [
-              // ── Hero band ──────────────────────────────────────────────
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: HeroOrbBackground(
-                  isCompact: true,
-                  onBackTap: onBackTap,
+          child: PremiumBackground(
+            immersive: false,
+            child: Stack(
+              children: [
+                // ── Hero band ──────────────────────────────────────────────
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: HeroOrbBackground(
+                    isCompact: true,
+                    onBackTap: onBackTap,
+                  ),
                 ),
-              ),
 
-              // ── White form card — fills from cardTop to bottom of screen ──
-              Positioned(
-                top: cardTop,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _AuthCardShell(
-                  title: title,
-                  subtitle: subtitle,
-                  topIcon: topIcon,
-                  bottomInset: bottomInset,
-                  bottomLink: bottomLink,
-                  child: child,
+                // ── White form card — fills from cardTop to bottom of screen ──
+                Positioned(
+                  top: cardTop,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: _AuthCardShell(
+                    title: title,
+                    subtitle: subtitle,
+                    topIcon: topIcon,
+                    bottomInset: bottomInset,
+                    bottomLink: bottomLink,
+                    child: child,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -919,8 +899,6 @@ class AuthScreenLayout extends StatelessWidget {
   }
 }
 
-// Internal shell that draws the rounded-top white card and manages scrollable
-// form content + bottom link pinned to the bottom.
 class _AuthCardShell extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -942,19 +920,24 @@ class _AuthCardShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final double hPad = MediaQuery.of(context).size.width * 0.056;
     final double keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AuthDesign.cardBg,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.cardDark : Colors.white,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(28),
           topRight: Radius.circular(28),
         ),
+        border: Border.all(
+          color: isDark ? AppColors.borderDark.withValues(alpha: 0.4) : AppColors.borderLight.withValues(alpha: 0.4),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Color(0x14323C96),
+            color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
             blurRadius: 30,
-            offset: Offset(0, 10),
+            offset: const Offset(0, -5),
           ),
         ],
       ),
@@ -977,20 +960,19 @@ class _AuthCardShell extends StatelessWidget {
                   ],
                   Text(
                     title,
-                    style: AuthDesign.fontPoppins(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w700,
-                      color: AuthDesign.textHeading,
+                    style: AppTextStyles.heading(
+                      context,
+                      weight: FontWeight.w700,
+                      color: isDark ? AppColors.textHeadingDark : AppColors.textHeading,
                     ),
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 6),
                     Text(
                       subtitle!,
-                      style: AuthDesign.fontPoppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: AuthDesign.textLabel,
+                      style: AppTextStyles.body(
+                        context,
+                        color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
                       ),
                     ),
                   ],
