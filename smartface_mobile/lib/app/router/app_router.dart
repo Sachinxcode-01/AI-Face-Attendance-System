@@ -15,10 +15,12 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/design_system/ui/ui.dart'
-    show SmartBottomNav, SmartNavItem;
+    show SmartBottomNav, BottomNavItemData, TabTransitionWrapper;
 import 'package:smartface_attendance/app/router/route_guards.dart';
 import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/core/di/service_locator.dart';
+import 'package:smartface_attendance/features/student/screens/student_timetable_screen.dart';
+import 'package:smartface_attendance/features/admin/screens/admin_users_screen.dart';
 
 // Guest / Unauthenticated Screens
 import 'package:smartface_attendance/features/auth/screens/splash_screen.dart';
@@ -64,7 +66,6 @@ import 'package:smartface_attendance/features/parent/screens/parent_leave_status
 
 // Admin Screens
 import 'package:smartface_attendance/features/admin/screens/admin_home_screen.dart';
-import 'package:smartface_attendance/features/leave/screens/leave_review_screen.dart';
 import 'package:smartface_attendance/features/admin/screens/security_logs_screen.dart';
 import 'package:smartface_attendance/features/analytics/screens/ai_analytics_screen.dart';
 import 'package:smartface_attendance/features/analytics/screens/ai_analyst_screen.dart';
@@ -306,7 +307,7 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    // â”€â”€ TEMPORARY COMPONENT SHOWCASE ROUTE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── TEMPORARY COMPONENT SHOWCASE ROUTE ──────────────────────────────────
     GoRoute(
       path: '/showcase',
       name: 'showcase',
@@ -317,7 +318,7 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    // â”€â”€ STUDENT ROLE ROOT STATEFUL SHELL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── STUDENT ROLE ROOT STATEFUL SHELL ──────────────────────────────────────
     StatefulShellRoute.indexedStack(
       parentNavigatorKey: rootNavigatorKey,
       builder: (context, state, navigationShell) {
@@ -332,10 +333,14 @@ final GoRouter appRouter = GoRouter(
               name: AppRoutes.studentHomeName,
               builder: (context, state) => const StudentDashboard(),
             ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
             GoRoute(
-              path: AppRoutes.studentAttendanceHubPath,
-              name: AppRoutes.studentAttendanceHubName,
-              builder: (context, state) => const AttendanceHubScreen(),
+              path: AppRoutes.studentTimetablePath,
+              name: AppRoutes.studentTimetableName,
+              builder: (context, state) => const StudentTimetableScreen(),
             ),
           ],
         ),
@@ -351,25 +356,9 @@ final GoRouter appRouter = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: AppRoutes.studentLeavePath,
-              name: AppRoutes.studentLeaveName,
-              builder: (context, state) => const StudentLeaveDashboardScreen(),
-              routes: [
-                GoRoute(
-                  path: 'history',
-                  name: AppRoutes.studentLeaveHistoryName,
-                  builder: (context, state) => const LeaveHistoryScreen(),
-                ),
-              ],
-            ),
-          ],
-        ),
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: AppRoutes.studentAlertsPath,
-              name: AppRoutes.studentAlertsName,
-              builder: (context, state) => const NotificationNexusScreen(),
+              path: AppRoutes.studentAttendanceHubPath,
+              name: AppRoutes.studentAttendanceHubName,
+              builder: (context, state) => const AttendanceHubScreen(),
             ),
           ],
         ),
@@ -383,6 +372,35 @@ final GoRouter appRouter = GoRouter(
           ],
         ),
       ],
+    ),
+
+    // Sibling fullscreen routes for Student (Leave, Alerts)
+    GoRoute(
+      path: AppRoutes.studentLeavePath,
+      name: AppRoutes.studentLeaveName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const StudentLeaveDashboardScreen(),
+      ),
+      routes: [
+        GoRoute(
+          path: 'history',
+          name: AppRoutes.studentLeaveHistoryName,
+          builder: (context, state) => const LeaveHistoryScreen(),
+        ),
+      ],
+    ),
+    GoRoute(
+      path: AppRoutes.studentAlertsPath,
+      name: AppRoutes.studentAlertsName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const NotificationNexusScreen(),
+      ),
     ),
 
     // Sibling fullscreen route for Student (Leave Application)
@@ -524,6 +542,33 @@ final GoRouter appRouter = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
+              path: AppRoutes.parentLeaveStatusPath,
+              name: AppRoutes.parentLeaveStatusName,
+              builder: (context, state) => const ParentLeaveStatusScreen(wardEmail: null),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.parentAttendanceLogsPath,
+              name: AppRoutes.parentAttendanceLogsName,
+              builder: (context, state) => const ParentAttendanceLogsScreen(wardEmail: null),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.parentAlertsPath,
+              name: AppRoutes.parentAlertsName,
+              builder: (context, state) => const NotificationNexusScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
               path: '/parent/profile',
               name: 'parentProfile',
               builder: (context, state) => const ProfileScreen(),
@@ -531,34 +576,6 @@ final GoRouter appRouter = GoRouter(
           ],
         ),
       ],
-    ),
-
-    // Sibling fullscreen routes for Parent (Attendance Logs, Leave Status)
-    GoRoute(
-      path: AppRoutes.parentAttendanceLogsPath,
-      name: AppRoutes.parentAttendanceLogsName,
-      parentNavigatorKey: rootNavigatorKey,
-      pageBuilder: (context, state) {
-        final email = state.extra as String? ?? '';
-        return buildPageWithTransition(
-          context: context,
-          state: state,
-          child: ParentAttendanceLogsScreen(wardEmail: email),
-        );
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.parentLeaveStatusPath,
-      name: AppRoutes.parentLeaveStatusName,
-      parentNavigatorKey: rootNavigatorKey,
-      pageBuilder: (context, state) {
-        final email = state.extra as String? ?? '';
-        return buildPageWithTransition(
-          context: context,
-          state: state,
-          child: ParentLeaveStatusScreen(wardEmail: email),
-        );
-      },
     ),
 
     // Sibling fullscreen routes for Teacher (Facial Training, System Health)
@@ -615,7 +632,7 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: AppRoutes.adminApprovalsPath,
               name: AppRoutes.adminApprovalsName,
-              builder: (context, state) => const LeaveReviewScreen(),
+              builder: (context, state) => const AdminUsersScreen(),
             ),
           ],
         ),
@@ -642,7 +659,7 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: AppRoutes.adminProfilePath,
               name: AppRoutes.adminProfileName,
-              builder: (context, state) => const ProfileScreen(),
+              builder: (context, state) => const ServerSettingsScreen(),
             ),
           ],
         ),
@@ -722,34 +739,47 @@ class StudentShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      body: navigationShell,
+      body: TabTransitionWrapper(
+        index: navigationShell.currentIndex,
+        child: navigationShell,
+      ),
       bottomNavigationBar: SmartBottomNav(
         currentIndex: navigationShell.currentIndex,
         onTap: navigationShell.goBranch,
+        role: 'student',
+        showLabels: true,
+        isGlass: true,
+        animationEnabled: true,
         items: const [
-          SmartNavItem(
+          BottomNavItemData(
             icon: Icons.home_outlined,
             activeIcon: Icons.home_rounded,
             label: 'Home',
+            route: AppRoutes.studentHomePath,
           ),
-          SmartNavItem(
+          BottomNavItemData(
+            icon: Icons.calendar_view_week_rounded,
+            activeIcon: Icons.calendar_view_week_rounded,
+            label: 'Schedule',
+            route: AppRoutes.studentTimetablePath,
+          ),
+          BottomNavItemData(
             icon: Icons.qr_code_scanner_rounded,
+            activeIcon: Icons.qr_code_scanner_rounded,
             label: 'Scan',
+            route: AppRoutes.studentScanPath,
           ),
-          SmartNavItem(
-            icon: Icons.event_busy_outlined,
-            activeIcon: Icons.event_busy_rounded,
-            label: 'Leave',
+          BottomNavItemData(
+            icon: Icons.analytics_outlined,
+            activeIcon: Icons.analytics_rounded,
+            label: 'Reports',
+            route: AppRoutes.studentAttendanceHubPath,
           ),
-          SmartNavItem(
-            icon: Icons.notifications_none_rounded,
-            activeIcon: Icons.notifications_rounded,
-            label: 'Alerts',
-          ),
-          SmartNavItem(
+          BottomNavItemData(
             icon: Icons.person_outline_rounded,
             activeIcon: Icons.person_rounded,
             label: 'Profile',
+            route: AppRoutes.studentProfilePath,
           ),
         ],
       ),
@@ -768,34 +798,47 @@ class TeacherShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      body: navigationShell,
+      body: TabTransitionWrapper(
+        index: navigationShell.currentIndex,
+        child: navigationShell,
+      ),
       bottomNavigationBar: SmartBottomNav(
         currentIndex: navigationShell.currentIndex,
         onTap: navigationShell.goBranch,
+        role: 'teacher',
+        showLabels: true,
+        isGlass: true,
+        animationEnabled: true,
         items: const [
-          SmartNavItem(
+          BottomNavItemData(
             icon: Icons.home_outlined,
             activeIcon: Icons.home_rounded,
             label: 'Home',
+            route: AppRoutes.teacherHomePath,
           ),
-          SmartNavItem(
-            icon: Icons.videocam_outlined,
-            activeIcon: Icons.videocam_rounded,
-            label: 'Feed',
+          BottomNavItemData(
+            icon: Icons.school_outlined,
+            activeIcon: Icons.school_rounded,
+            label: 'Classes',
+            route: AppRoutes.teacherFeedPath,
           ),
-          SmartNavItem(
+          BottomNavItemData(
             icon: Icons.qr_code_rounded,
-            label: 'QR',
+            activeIcon: Icons.qr_code_rounded,
+            label: 'Scan',
+            route: AppRoutes.teacherQrPath,
           ),
-          SmartNavItem(
+          BottomNavItemData(
             icon: Icons.analytics_outlined,
             activeIcon: Icons.analytics_rounded,
-            label: 'Stats',
+            label: 'Reports',
+            route: AppRoutes.teacherStatsPath,
           ),
-          SmartNavItem(
+          BottomNavItemData(
             icon: Icons.person_outline_rounded,
             activeIcon: Icons.person_rounded,
             label: 'Profile',
+            route: AppRoutes.teacherProfilePath,
           ),
         ],
       ),
@@ -814,20 +857,47 @@ class ParentShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      body: navigationShell,
+      body: TabTransitionWrapper(
+        index: navigationShell.currentIndex,
+        child: navigationShell,
+      ),
       bottomNavigationBar: SmartBottomNav(
         currentIndex: navigationShell.currentIndex,
         onTap: navigationShell.goBranch,
+        role: 'parent',
+        showLabels: true,
+        isGlass: true,
+        animationEnabled: true,
         items: const [
-          SmartNavItem(
+          BottomNavItemData(
             icon: Icons.home_outlined,
             activeIcon: Icons.home_rounded,
             label: 'Home',
+            route: AppRoutes.parentHomePath,
           ),
-          SmartNavItem(
+          BottomNavItemData(
+            icon: Icons.event_busy_outlined,
+            activeIcon: Icons.event_busy_rounded,
+            label: 'Ward',
+            route: AppRoutes.parentLeaveStatusPath,
+          ),
+          BottomNavItemData(
+            icon: Icons.analytics_outlined,
+            activeIcon: Icons.analytics_rounded,
+            label: 'Reports',
+            route: AppRoutes.parentAttendanceLogsPath,
+          ),
+          BottomNavItemData(
+            icon: Icons.notifications_none_rounded,
+            activeIcon: Icons.notifications_rounded,
+            label: 'Alerts',
+            route: AppRoutes.parentAlertsPath,
+          ),
+          BottomNavItemData(
             icon: Icons.person_outline_rounded,
             activeIcon: Icons.person_rounded,
             label: 'Profile',
+            route: '/parent/profile',
           ),
         ],
       ),
@@ -846,35 +916,47 @@ class AdminShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      body: navigationShell,
+      body: TabTransitionWrapper(
+        index: navigationShell.currentIndex,
+        child: navigationShell,
+      ),
       bottomNavigationBar: SmartBottomNav(
         currentIndex: navigationShell.currentIndex,
         onTap: navigationShell.goBranch,
+        role: 'admin',
+        showLabels: true,
+        isGlass: true,
+        animationEnabled: true,
         items: const [
-          SmartNavItem(
+          BottomNavItemData(
             icon: Icons.home_outlined,
             activeIcon: Icons.home_rounded,
             label: 'Home',
+            route: AppRoutes.adminHomePath,
           ),
-          SmartNavItem(
-            icon: Icons.fact_check_outlined,
-            activeIcon: Icons.fact_check_rounded,
-            label: 'Approvals',
+          BottomNavItemData(
+            icon: Icons.people_alt_outlined,
+            activeIcon: Icons.people_alt_rounded,
+            label: 'Users',
+            route: AppRoutes.adminApprovalsPath,
           ),
-          SmartNavItem(
+          BottomNavItemData(
             icon: Icons.security_outlined,
             activeIcon: Icons.security_rounded,
-            label: 'Security',
+            label: 'Monitor',
+            route: AppRoutes.adminSecurityPath,
           ),
-          SmartNavItem(
+          BottomNavItemData(
             icon: Icons.analytics_outlined,
             activeIcon: Icons.analytics_rounded,
-            label: 'Analytics',
+            label: 'Reports',
+            route: AppRoutes.adminAnalyticsPath,
           ),
-          SmartNavItem(
-            icon: Icons.person_outline_rounded,
-            activeIcon: Icons.person_rounded,
-            label: 'Profile',
+          BottomNavItemData(
+            icon: Icons.settings_applications_outlined,
+            activeIcon: Icons.settings_applications_rounded,
+            label: 'Settings',
+            route: AppRoutes.adminProfilePath,
           ),
         ],
       ),

@@ -73,6 +73,9 @@ class AppRoutes {
   static const String studentAttendanceHubName = 'studentAttendanceHub';
   static const String studentAttendanceHubPath = '/student/attendance/hub';
 
+  static const String studentTimetableName = 'studentTimetable';
+  static const String studentTimetablePath = '/student/timetable';
+
   static const String teacherAttendanceCommandName = 'teacherAttendanceCommand';
   static const String teacherAttendanceCommandPath =
       '/teacher/attendance/command';
@@ -108,6 +111,9 @@ class AppRoutes {
 
   static const String parentLeaveStatusName = 'parentLeaveStatus';
   static const String parentLeaveStatusPath = '/parent/leave-status';
+
+  static const String parentAlertsName = 'parentAlerts';
+  static const String parentAlertsPath = '/parent/alerts';
 
   // Admin Shell Tab routes
   static const String adminHomeName = 'adminHome';

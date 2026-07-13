@@ -22,7 +22,8 @@ import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 
 class LeaveReviewScreen extends StatefulWidget {
-  const LeaveReviewScreen({super.key});
+  final bool showAppBar;
+  const LeaveReviewScreen({super.key, this.showAppBar = true});
 
   @override
   State<LeaveReviewScreen> createState() => _LeaveReviewScreenState();
@@ -116,42 +117,48 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
       animate: isDark,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: PremiumAppBar(
-          title: 'Audit Desk',
-          leading: IconButton(
-            icon: Icon(
-              Icons.arrow_back_ios,
-              color: isDark ? Colors.white : AppColors.bgDark,
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-          actions: [
-            IconButton(
-              onPressed: _refreshData,
-              icon: Icon(
-                Icons.refresh,
-                color: isDark ? Colors.white : AppColors.bgDark,
-              ),
-            ),
-          ],
-        ),
-        body: controller.isLoading && pending.isEmpty
-            ? const Center(
-                child: CircularProgressIndicator(color: AppColors.gold),
+        appBar: widget.showAppBar
+            ? PremiumAppBar(
+                title: 'Audit Desk',
+                leading: IconButton(
+                  icon: Icon(
+                    Icons.arrow_back_ios,
+                    color: isDark ? Colors.white : AppColors.bgDark,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                actions: [
+                  IconButton(
+                    onPressed: _refreshData,
+                    icon: Icon(
+                      Icons.refresh,
+                      color: isDark ? Colors.white : AppColors.bgDark,
+                    ),
+                  ),
+                ],
               )
-            : pending.isEmpty
-            ? _buildEmptyState(isDark)
-            : ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: pending.length,
-                itemBuilder: (context, index) {
-                  final request = pending[index];
-                  return _buildReviewCard(request, isDark)
-                      .animate()
-                      .fadeIn(delay: (index * 80).ms)
-                      .slideY(begin: 0.05);
-                },
-              ),
+            : null,
+        body: RefreshIndicator(
+          onRefresh: _refreshData,
+          color: AppColors.primary,
+          child: controller.isLoading && pending.isEmpty
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.gold),
+                )
+              : pending.isEmpty
+                  ? _buildEmptyState(isDark)
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(20),
+                      itemCount: pending.length,
+                      itemBuilder: (context, index) {
+                        final request = pending[index];
+                        return _buildReviewCard(request, isDark)
+                            .animate()
+                            .fadeIn(delay: (index * 80).ms)
+                            .slideY(begin: 0.05);
+                      },
+                    ),
+        ),
       ),
     );
   }

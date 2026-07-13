@@ -61,6 +61,7 @@ class SessionManager extends ChangeNotifier {
   String? _avatarUrl;
   bool _biometricRegistered = false;
   bool _isLoggedIn = false;
+  Map<String, dynamic>? _selectedWard;
 
   bool _onboardingCompleted = false;
   bool _introImagesCompleted = false;
@@ -94,6 +95,15 @@ class SessionManager extends ChangeNotifier {
 
   /// Indicates whether a user is currently logged in.
   bool get isLoggedIn => _isLoggedIn;
+
+  /// Gets the currently active selected ward details (Parent scope).
+  Map<String, dynamic>? get selectedWard => _selectedWard;
+
+  /// Sets the active selected ward details and notifies UI.
+  void setSelectedWard(Map<String, dynamic>? ward) {
+    _selectedWard = ward;
+    notifyListeners();
+  }
 
   bool get onboardingCompleted => _onboardingCompleted;
   bool get introImagesCompleted => _introImagesCompleted;
@@ -324,6 +334,7 @@ class SessionManager extends ChangeNotifier {
     _introImagesCompleted = false;
     _introCompleted = false;
     _wizardCompleted = false;
+    _selectedWard = null;
 
     // Clear offline chat caching and all other local caches
     await CacheService.clearAll();

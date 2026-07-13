@@ -22,9 +22,9 @@ import 'package:smartface_attendance/shared/widgets/auth_blob_background.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 
 class ParentAttendanceLogsScreen extends StatefulWidget {
-  final String wardEmail;
+  final String? wardEmail;
 
-  const ParentAttendanceLogsScreen({super.key, required this.wardEmail});
+  const ParentAttendanceLogsScreen({super.key, this.wardEmail});
 
   @override
   State<ParentAttendanceLogsScreen> createState() =>
@@ -49,7 +49,13 @@ class _ParentAttendanceLogsScreenState extends State<ParentAttendanceLogsScreen>
       final token = session.token;
       if (token == null) return;
 
-      final logs = await ApiService.getWardAttendanceLogs(widget.wardEmail, token);
+      final email = widget.wardEmail ?? session.selectedWard?['email'];
+      if (email == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final logs = await ApiService.getWardAttendanceLogs(email, token);
       if (mounted) {
         setState(() {
           _logs = logs;

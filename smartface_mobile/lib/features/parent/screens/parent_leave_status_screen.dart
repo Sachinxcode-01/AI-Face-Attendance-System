@@ -23,9 +23,9 @@ import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/features/leave/models/leave_model.dart';
 
 class ParentLeaveStatusScreen extends StatefulWidget {
-  final String wardEmail;
+  final String? wardEmail;
 
-  const ParentLeaveStatusScreen({super.key, required this.wardEmail});
+  const ParentLeaveStatusScreen({super.key, this.wardEmail});
 
   @override
   State<ParentLeaveStatusScreen> createState() => _ParentLeaveStatusScreenState();
@@ -48,7 +48,13 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
       final token = session.token;
       if (token == null) return;
 
-      final leaves = await ApiService.getWardLeaves(widget.wardEmail, token);
+      final email = widget.wardEmail ?? session.selectedWard?['email'];
+      if (email == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final leaves = await ApiService.getWardLeaves(email, token);
       if (mounted) {
         setState(() {
           _leaves = leaves;

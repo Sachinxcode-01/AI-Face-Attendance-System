@@ -86,10 +86,11 @@ class _ParentDashboardState extends State<ParentDashboard> {
         setState(() {
           _wards = wards;
           if (wards.isNotEmpty) {
-            _selectedWard = wards.first;
+            _selectedWard = session.selectedWard ?? wards.first;
           }
         });
         if (_selectedWard != null) {
+          session.setSelectedWard(_selectedWard);
           await _loadWardData(_selectedWard!['email']);
         } else {
           setState(() => _isLoading = false);
@@ -403,6 +404,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
               setState(() {
                 _selectedWard = val;
               });
+              context.read<SessionManager>().setSelectedWard(val);
               _loadWardData(val['email']);
             }
           },
