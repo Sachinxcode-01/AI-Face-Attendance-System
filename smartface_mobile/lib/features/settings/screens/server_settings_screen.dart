@@ -37,7 +37,7 @@ class ServerSettingsScreen extends StatefulWidget {
 }
 
 class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
-  // Tab index: 0=Account, 1=Security, 2=Biometrics, 3=Gateway, 4=Devices
+  // Tab index: 0=Account, 1=Security, 2=Notifications, 3=Appearance, 4=Help & Support, 5=About App
   int _activeTabIndex = 0;
 
   // Controllers
@@ -56,6 +56,12 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   String _sessionTimeout = '15 mins';
   bool _biometricAppLock = false;
   bool _twoFactorAuth = false;
+
+  // Notification states
+  bool _pushNotifications = true;
+  bool _checkInAlerts = true;
+  bool _weeklySummaries = false;
+  bool _diagnosticAlerts = false;
 
   // Simulated Face Retraining State
   bool _isRetraining = false;
@@ -119,6 +125,10 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       _sessionTimeout = prefs.getString('sf_session_timeout') ?? '15 mins';
       _biometricAppLock = prefs.getBool('sf_biometric_app_lock') ?? false;
       _twoFactorAuth = prefs.getBool('sf_two_factor_auth') ?? false;
+      _pushNotifications = prefs.getBool('sf_push_notifications') ?? true;
+      _checkInAlerts = prefs.getBool('sf_check_in_alerts') ?? true;
+      _weeklySummaries = prefs.getBool('sf_weekly_summaries') ?? false;
+      _diagnosticAlerts = prefs.getBool('sf_diagnostic_alerts') ?? false;
     });
   }
 
@@ -144,7 +154,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     final originalHost = ApiService.serverHost;
     final originalPort = ApiService.serverPort;
 
-    // Temporarily save to test
     await ApiService.saveServerSettings(
       _hostController.text.trim(),
       _portController.text.trim(),
@@ -152,7 +161,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
 
     final online = await ApiService.isServerOnline();
 
-    // Revert settings until explicit save
     await ApiService.saveServerSettings(originalHost, originalPort);
 
     if (mounted) {
@@ -171,7 +179,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     }
   }
 
-  // Save Gateway configurations permanently
   Future<void> _saveGatewayConfig() async {
     if (_hostController.text.isEmpty || _portController.text.isEmpty) {
       AppToast.show(
@@ -196,7 +203,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     }
   }
 
-  // Sandbox Role Switcher Action
   Future<void> _switchRoleSandbox(UserRole role) async {
     final session = context.read<SessionManager>();
     await session.saveSession(
@@ -218,7 +224,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     }
   }
 
-  // Update Profile parameters
   Future<void> _updateProfileIdentity() async {
     final session = context.read<SessionManager>();
     final newName = _nameController.text.trim();
@@ -247,45 +252,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     }
   }
 
-  // Revoke device credentials
-  void _revokeDevice(String deviceId, String deviceName) {
-    setState(() {
-      _trustedDevices.removeWhere((d) => d['id'] == deviceId);
-    });
-    AppToast.show(
-      context,
-      message: 'Access revoked for $deviceName',
-      type: ToastType.warning,
-    );
-  }
-
-  // Revoke all other sessions
-  Future<void> _revokeAllSessions() async {
-    final session = context.read<SessionManager>();
-    if (session.token == null) return;
-
-    setState(() {
-      _trustedDevices.removeWhere((d) => d['isCurrent'] != 'true');
-    });
-
-    await ApiService.logoutAllSessions(session.token!);
-    if (mounted) {
-      AppToast.show(
-        context,
-        message: 'All other active sessions revoked successfully.',
-        type: ToastType.success,
-      );
-    }
-  }
-
-  // Simulate Face Retraining Pipeline
-  void _runFaceRetrainingSimulation() {
-    setState(() {
-      _isRetraining = true;
-      _retrainingProgress = 0.0;
-      _retrainingStatusText = 'Initializing Enrollment...';
-    });
-
+  void _simulateFaceRetraining() {
     final steps = [
       'Normalizing biometric frames...',
       'Extracting facial landmark clusters (68 landmarks)...',
@@ -331,15 +298,13 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     });
   }
 
-  // ============================================================================
-  // Tab Metadata Definitions
-  // ============================================================================
   final List<Map<String, dynamic>> _tabsInfo = [
     {'label': 'Account', 'icon': Icons.person_outline_rounded},
     {'label': 'Security', 'icon': Icons.security_rounded},
-    {'label': 'Biometrics', 'icon': Icons.fingerprint_rounded},
-    {'label': 'Gateway', 'icon': Icons.dns_outlined},
-    {'label': 'Devices', 'icon': Icons.devices_other_rounded},
+    {'label': 'Notifications', 'icon': Icons.notifications_none_rounded},
+    {'label': 'Appearance', 'icon': Icons.dark_mode_outlined},
+    {'label': 'Help & Support', 'icon': Icons.contact_support_outlined},
+    {'label': 'About App', 'icon': Icons.info_outline_rounded},
   ];
 
   @override
@@ -363,9 +328,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       ),
       body: Stack(
         children: [
-          // Background Gradient Mesh for Slate-Dark Mode
           if (isDark) _buildGlowMeshBackground(),
-
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -378,19 +341,12 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
               },
             ),
           ),
-
-          // High Fidelity Retraining Dialog Overlay
           if (_isRetraining) _buildRetrainingOverlay(),
         ],
       ),
     );
   }
 
-  // ============================================================================
-  // Layout Templates
-  // ============================================================================
-
-  // Tablet Two-Column Layout (Master Sidebar + Detail Pane)
   Widget _buildTabletLayout(
     SessionManager session,
     ThemeController themeCtrl,
@@ -401,7 +357,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left Side: Vertical Sidebar
           SizedBox(
             width: 240,
             child: GlassContainer(
@@ -450,7 +405,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             ),
           ),
           const SizedBox(width: AppSpacing.lg),
-          // Right Side: Active Settings Panel Content
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -466,7 +420,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     );
   }
 
-  // Mobile Swipeable Layout (Horizontal tabs on top + Detail scroll)
   Widget _buildMobileLayout(
     SessionManager session,
     ThemeController themeCtrl,
@@ -474,7 +427,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   ) {
     return Column(
       children: [
-        // Horizontal Scrollable Tabs Selector
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
@@ -537,7 +489,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        // Settings panel contents
         Expanded(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -553,7 +504,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     );
   }
 
-  // Resolves currently selected settings section UI
   Widget _buildActiveTabContent(
     SessionManager session,
     ThemeController themeCtrl,
@@ -563,23 +513,20 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       case 0:
         return _buildAccountSettings(session, themeCtrl, isDark);
       case 1:
-        return _buildSecuritySettings(isDark);
+        return _buildSecuritySettings(session, isDark);
       case 2:
-        return _buildBiometricsSettings(isDark);
+        return _buildNotificationsSettings(isDark);
       case 3:
-        return _buildGatewaySettings(isDark);
+        return _buildAppearanceSettings(themeCtrl, isDark);
       case 4:
-        return _buildDevicesSettings(session, isDark);
+        return _buildHelpSettings(isDark);
+      case 5:
+        return _buildAboutSettings(isDark);
       default:
         return const SizedBox.shrink();
     }
   }
 
-  // ============================================================================
-  // Settings Tab Panels
-  // ============================================================================
-
-  // 1. Account Settings: Identity, Theme, and Sandbox Roles
   Widget _buildAccountSettings(
     SessionManager session,
     ThemeController themeCtrl,
@@ -594,7 +541,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             children: [
-              // Avatar circle with details
               Row(
                 children: [
                   CircleAvatar(
@@ -674,7 +620,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
-              // Name Edit Textfield
               _buildSettingsTextField(
                 controller: _nameController,
                 label: 'Display Name',
@@ -683,7 +628,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 isDark: isDark,
               ),
               const SizedBox(height: AppSpacing.md),
-              // Avatar URL Textfield
               _buildSettingsTextField(
                 controller: _avatarController,
                 label: 'Avatar URL',
@@ -717,31 +661,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
-        _buildSectionHeader('APPEARANCE THEME'),
-        const SizedBox(height: AppSpacing.sm),
-        GlassContainer(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Light / Dark Mode Toggle',
-                style: AppText.body(
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              Switch(
-                value: isDark,
-                onChanged: (val) {
-                  HapticFeedback.lightImpact();
-                  themeCtrl.toggle();
-                },
-                activeThumbColor: AppColors.gold,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xl),
         _buildSectionHeader('DEVELOPER SANDBOX ROLE picker'),
         const SizedBox(height: AppSpacing.sm),
         Text(
@@ -766,7 +685,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     );
   }
 
-  // Helper chip button for role switching
   Widget _buildRoleSandboxButton(UserRole role, UserRole currentRole) {
     final isSelected = role == currentRole;
     return InkWell(
@@ -804,18 +722,17 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     );
   }
 
-  // 2. Security Settings: timeouts & applock
-  Widget _buildSecuritySettings(bool isDark) {
+  // 2. Security Settings: timeouts & applock & biometrics & devices
+  Widget _buildSecuritySettings(SessionManager session, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('APP LOCK & SECURITY'),
+        _buildSectionHeader('SECURITY & AUTHLOCK PARAMETERS'),
         const SizedBox(height: AppSpacing.sm),
         GlassContainer(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             children: [
-              // Timeout dropdown/choice chips
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -858,7 +775,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 ],
               ),
               const Divider(height: AppSpacing.lg),
-              // Biometric App Lock Switch
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -886,16 +802,15 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                       AppToast.show(
                         context,
                         message: val
-                            ? 'App Lock activated!'
-                            : 'App Lock deactivated!',
-                        type: val ? ToastType.success : ToastType.warning,
+                            ? 'Biometric App Lock Enabled'
+                            : 'Biometric App Lock Disabled',
+                        type: ToastType.info,
                       );
                     },
                   ),
                 ],
               ),
               const Divider(height: AppSpacing.lg),
-              // Two-Factor Authentication Switch
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -903,13 +818,13 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Two-Factor Authentication',
+                        'Two-Factor Authentication (2FA)',
                         style: AppText.body(
                           color: isDark ? Colors.white : Colors.black87,
                         ),
                       ),
                       Text(
-                        'Sends secure verification codes on logins',
+                        'Forces OTP prompt on unrecognized IP',
                         style: AppText.caption(),
                       ),
                     ],
@@ -922,8 +837,8 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                       _savePreference('sf_two_factor_auth', val);
                       AppToast.show(
                         context,
-                        message: val ? '2FA enabled!' : '2FA disabled!',
-                        type: val ? ToastType.success : ToastType.warning,
+                        message: val ? '2FA Protection Armed' : '2FA Protection Disarmed',
+                        type: ToastType.info,
                       );
                     },
                   ),
@@ -932,15 +847,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             ],
           ),
         ),
-      ],
-    );
-  }
-
-  // 3. Biometrics Settings: Sliders & Face ID retraining dialog
-  Widget _buildBiometricsSettings(bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+        const SizedBox(height: AppSpacing.lg),
         _buildSectionHeader('AI BIOMETRIC TELEMETRY'),
         const SizedBox(height: AppSpacing.sm),
         Text(
@@ -955,7 +862,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Face Match Threshold
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -997,7 +903,6 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 },
               ),
               const Divider(height: AppSpacing.lg),
-              // Liveness Strictness
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1009,9 +914,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                     ),
                   ),
                   Text(
-                    '${(_livenessStrictness * 100).toInt()}% strict',
+                    '${(_livenessStrictness * 100).toInt()}% Strictness',
                     style: GoogleFonts.robotoMono(
-                      color: AppColors.cyan,
+                      color: AppColors.gold,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1023,7 +928,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 min: 0.50,
                 max: 0.95,
                 divisions: 9,
-                activeColor: AppColors.cyan,
+                activeColor: AppColors.gold,
                 inactiveColor: isDark ? Colors.white10 : Colors.black12,
                 onChanged: (val) {
                   setState(() => _livenessStrictness = val);
@@ -1032,77 +937,295 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   _savePreference('sf_liveness_strictness', val);
                   AppToast.show(
                     context,
-                    message:
-                        'Liveness strictness set to ${(val * 100).toInt()}%',
+                    message: 'Liveness strictness updated: ${(val * 100).toInt()}%',
                     type: ToastType.info,
                   );
                 },
               ),
+              const Divider(height: AppSpacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: GlowButton(
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    setState(() {
+                      _isRetraining = true;
+                      _retrainingProgress = 0.0;
+                      _retrainingStatusText = 'Initializing Enrollment...';
+                    });
+                    _simulateFaceRetraining();
+                  },
+                  color: AppColors.primary,
+                  glowColor: AppColors.primary.withValues(alpha: 0.35),
+                  borderRadius: AppRadius.sm,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.face_retouching_natural_rounded, color: Colors.white, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        'OPTIMIZE NEURAL PROFILE',
+                        style: AppText.button(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.xl),
-        _buildSectionHeader('FACIAL MODEL RECONSTRUCTION'),
+        const SizedBox(height: AppSpacing.lg),
+        _buildSectionHeader('TRUSTED HARDWARE DEVICES'),
         const SizedBox(height: AppSpacing.sm),
-        GlassContainer(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Enrollment Templates & Models',
-                style: AppText.subheading(
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Reconstruct your institutional Face ID neural node embeddings. Helpful if your physical profile changes or detection degrades.',
-                style: AppText.body(
-                  color: isDark ? Colors.white54 : Colors.black54,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              GlowButton(
-                onPressed: _runFaceRetrainingSimulation,
-                color: AppColors.gold,
-                glowColor: AppColors.gold.withValues(alpha: 0.3),
-                borderRadius: AppRadius.sm,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.model_training_outlined,
-                      size: 18,
-                      color: Colors.black,
+        _buildDevicesSettingsPanel(session, isDark),
+      ],
+    );
+  }
+
+  Widget _buildDevicesSettingsPanel(SessionManager session, bool isDark) {
+    return GlassContainer(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'The following devices are currently logged into your account and are authorized to submit verified face logs.',
+            style: AppText.caption(
+              color: isDark ? Colors.white54 : Colors.black45,
+            ),
+          ),
+          const Divider(height: AppSpacing.lg),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _trustedDevices.length,
+            separatorBuilder: (context, index) => const Divider(
+              height: AppSpacing.lg,
+              color: Colors.white12,
+            ),
+            itemBuilder: (context, index) {
+              final device = _trustedDevices[index];
+              final isCurrent = device['isCurrent'] == 'true';
+              return Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isCurrent
+                          ? AppColors.gold.withValues(alpha: 0.15)
+                          : Colors.white10,
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'RE-OPTIMIZE FACE ID EMBEDDINGS',
-                      style: AppText.button(color: Colors.black),
+                    child: Icon(
+                      device['name']!.contains('MacBook')
+                          ? Icons.laptop_mac_rounded
+                          : device['name']!.contains('iPad')
+                              ? Icons.tablet_mac_rounded
+                              : Icons.phone_android_rounded,
+                      color: isCurrent ? AppColors.gold : Colors.white70,
+                      size: 20,
                     ),
-                  ],
-                ),
-              ),
-            ],
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              device['name']!,
+                              style: AppText.body(
+                                color: isDark ? Colors.white : Colors.black87,
+                                weight: FontWeight.bold,
+                              ),
+                            ),
+                            if (isCurrent) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.gold.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'THIS DEVICE',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 8,
+                                    color: AppColors.gold,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${device['location']} · ${device['lastActive']}',
+                          style: AppText.caption(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!isCurrent)
+                    IconButton(
+                      icon: const Icon(
+                        Icons.remove_circle_outline_rounded,
+                        color: AppColors.error,
+                        size: 20,
+                      ),
+                      onPressed: () async {
+                        final confirmed = await PremiumDialogs.showConfirmDialog(
+                          context,
+                          title: 'Revoke Authorization',
+                          message: 'Are you sure you want to terminate this device\'s active session? They will need to verify and log in again.',
+                          confirmLabel: 'REVOKE',
+                          cancelLabel: 'CANCEL',
+                          isDestructive: true,
+                        );
+                        if (confirmed == true) {
+                          if (!context.mounted) return;
+                          setState(() {
+                            _trustedDevices.removeAt(index);
+                          });
+                          AppToast.show(
+                            context,
+                            message: 'Device session terminated',
+                            type: ToastType.success,
+                          );
+                        }
+                      },
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationsSettings(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('PUSH & BROADCAST NOTIFICATIONS'),
+        const SizedBox(height: AppSpacing.sm),
+        PremiumSettingRow(
+          icon: Icons.notifications_active_rounded,
+          title: 'Push Notifications',
+          subtitle: 'Receive real-time push alerts on your device',
+          trailing: Switch(
+            value: _pushNotifications,
+            activeThumbColor: AppColors.gold,
+            onChanged: (val) {
+              setState(() => _pushNotifications = val);
+              _savePreference('sf_push_notifications', val);
+            },
+          ),
+        ),
+        PremiumSettingRow(
+          icon: Icons.check_circle_outline_rounded,
+          title: 'Check-in Alerts',
+          subtitle: 'Notify immediately on facial identification confirmation',
+          trailing: Switch(
+            value: _checkInAlerts,
+            activeThumbColor: AppColors.gold,
+            onChanged: (val) {
+              setState(() => _checkInAlerts = val);
+              _savePreference('sf_check_in_alerts', val);
+            },
+          ),
+        ),
+        PremiumSettingRow(
+          icon: Icons.summarize_rounded,
+          title: 'Weekly Status Email',
+          subtitle: 'Receive weekly automated attendance summary report',
+          trailing: Switch(
+            value: _weeklySummaries,
+            activeThumbColor: AppColors.gold,
+            onChanged: (val) {
+              setState(() => _weeklySummaries = val);
+              _savePreference('sf_weekly_summaries', val);
+            },
+          ),
+        ),
+        PremiumSettingRow(
+          icon: Icons.bug_report_rounded,
+          title: 'System Diagnostics Logs',
+          subtitle: 'Receive notification for sync conflicts and API timeouts',
+          trailing: Switch(
+            value: _diagnosticAlerts,
+            activeThumbColor: AppColors.gold,
+            onChanged: (val) {
+              setState(() => _diagnosticAlerts = val);
+              _savePreference('sf_diagnostic_alerts', val);
+            },
           ),
         ),
       ],
     );
   }
 
-  // 4. Gateway Settings: Server host & port connection
-  Widget _buildGatewaySettings(bool isDark) {
+  Widget _buildAppearanceSettings(ThemeController themeCtrl, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('SYSTEM ENDPOINT PARAMETERS'),
+        _buildSectionHeader('VISUAL THEME & APPEARANCE'),
+        const SizedBox(height: AppSpacing.sm),
+        PremiumSettingRow(
+          icon: Icons.light_mode_rounded,
+          title: 'Light Theme Mode',
+          subtitle: 'Optimal for outdoor and bright office usage',
+          iconColor: Colors.orange,
+          iconBgColor: Colors.orange.withValues(alpha: 0.15),
+          trailing: themeCtrl.mode == ThemeMode.light
+              ? const Icon(Icons.radio_button_checked_rounded, color: AppColors.gold)
+              : const Icon(Icons.radio_button_off_rounded, color: Colors.white30),
+          onTap: () => themeCtrl.setMode(ThemeMode.light),
+        ),
+        PremiumSettingRow(
+          icon: Icons.dark_mode_rounded,
+          title: 'Slate-Dark Theme Mode',
+          subtitle: 'Saves battery life and reduces eye strain in dark environments',
+          iconColor: AppColors.indigoLight,
+          iconBgColor: AppColors.indigoLight.withValues(alpha: 0.15),
+          trailing: themeCtrl.mode == ThemeMode.dark
+              ? const Icon(Icons.radio_button_checked_rounded, color: AppColors.gold)
+              : const Icon(Icons.radio_button_off_rounded, color: Colors.white30),
+          onTap: () => themeCtrl.setMode(ThemeMode.dark),
+        ),
+        PremiumSettingRow(
+          icon: Icons.settings_brightness_rounded,
+          title: 'Sync with System Theme',
+          subtitle: 'Dynamically adapts colors to matching platform configs',
+          iconColor: AppColors.gold,
+          iconBgColor: AppColors.gold.withValues(alpha: 0.15),
+          trailing: themeCtrl.mode == ThemeMode.system
+              ? const Icon(Icons.radio_button_checked_rounded, color: AppColors.gold)
+              : const Icon(Icons.radio_button_off_rounded, color: Colors.white30),
+          onTap: () => themeCtrl.setMode(ThemeMode.system),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHelpSettings(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('SYSTEM ENDPOINT & BACKEND PARAMETERS'),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Base API endpoints for remote institutional analytics, WebSocket verification nodes, and database triggers.',
-          style: AppText.body(color: isDark ? Colors.white54 : Colors.black54),
+          'Configure base API gateway endpoints for remote institutional sync and WebSocket verification nodes.',
+          style: AppText.caption(color: isDark ? Colors.white38 : Colors.black45),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.md),
         GlassContainer(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
@@ -1134,7 +1257,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Gateway Reachability Ping:',
+                'Gateway Reachability:',
                 style: AppText.body(
                   color: isDark ? Colors.white : Colors.black87,
                 ),
@@ -1143,7 +1266,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
             Expanded(
@@ -1212,62 +1335,92 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             ),
           ],
         ),
+        const SizedBox(height: AppSpacing.lg),
+        _buildSectionHeader('HELP & SUPPORT DESK'),
+        const SizedBox(height: AppSpacing.sm),
+        GlassContainer(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.mail_outline_rounded, color: AppColors.gold, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Institutional Support Email',
+                          style: AppText.body(
+                            color: isDark ? Colors.white : Colors.black87,
+                            weight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'support@smartface-attendance.edu',
+                          style: AppText.caption(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(height: AppSpacing.lg),
+              Row(
+                children: [
+                  const Icon(Icons.help_center_outlined, color: AppColors.gold, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Frequently Asked Questions',
+                          style: AppText.body(
+                            color: isDark ? Colors.white : Colors.black87,
+                            weight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Read quick start guides and sync recovery steps',
+                          style: AppText.caption(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  // 5. Devices Settings: active access sessions list
-  Widget _buildDevicesSettings(SessionManager session, bool isDark) {
+  Widget _buildAboutSettings(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('AUTHORIZED ACCESS SESSIONS'),
+        _buildSectionHeader('ABOUT SMARTFACE AI CLIENT'),
         const SizedBox(height: AppSpacing.sm),
-        Text(
-          'View and revoke device logins that have active credentials authenticated against your institutional token credentials.',
-          style: AppText.caption(
-            color: isDark ? Colors.white38 : Colors.black45,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _trustedDevices.length,
-          separatorBuilder: (context, index) =>
-              const SizedBox(height: AppSpacing.sm),
-          itemBuilder: (context, index) {
-            final dev = _trustedDevices[index];
-            final isCurrent = dev['isCurrent'] == 'true';
-            return GlassContainer(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              borderColor: isCurrent
-                  ? AppColors.success.withValues(alpha: 0.3)
-                  : (isDark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.black.withValues(alpha: 0.05)),
-              child: Row(
+        GlassContainer(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            children: [
+              Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
-                      color: isCurrent
-                          ? AppColors.success.withValues(alpha: 0.12)
-                          : (isDark
-                                ? Colors.white.withValues(alpha: 0.03)
-                                : Colors.black.withValues(alpha: 0.03)),
-                      shape: BoxShape.circle,
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
                     ),
-                    child: Icon(
-                      dev['name']!.contains('MacBook')
-                          ? Icons.laptop_mac_rounded
-                          : (dev['name']!.contains('iPad')
-                                ? Icons.tablet_mac_rounded
-                                : Icons.phone_android_rounded),
-                      color: isCurrent
-                          ? AppColors.success
-                          : (isDark ? Colors.white70 : Colors.black87),
-                      size: 20,
+                    child: const Center(
+                      child: Icon(Icons.school_rounded, color: AppColors.indigoLight, size: 24),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -1276,63 +1429,51 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          dev['name']!,
-                          style: AppText.body(
-                            color: isDark ? Colors.white : Colors.black87,
-                            weight: FontWeight.bold,
+                          'Smart Attendance AI',
+                          style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF1B2C56),
                           ),
                         ),
                         Text(
-                          '${dev['location']} • ${dev['lastActive']}',
+                          'Version 1.2.0-Alpha (Build 2026.07)',
                           style: AppText.caption(),
                         ),
                       ],
                     ),
                   ),
-                  if (!isCurrent)
-                    IconButton(
-                      icon: const Icon(
-                        Icons.remove_circle_outline,
-                        color: AppColors.errorLight,
-                        size: 20,
-                      ),
-                      tooltip: 'Revoke Access',
-                      onPressed: () => _revokeDevice(dev['id']!, dev['name']!),
-                    )
-                  else
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'CURRENT',
-                        style: AppText.label(color: AppColors.success),
-                      ),
-                    ),
                 ],
               ),
-            );
-          },
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        GlowButton(
-          onPressed: _revokeAllSessions,
-          color: AppColors.error,
-          glowColor: AppColors.error.withValues(alpha: 0.4),
-          borderRadius: AppRadius.sm,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.logout_rounded, size: 18, color: Colors.white),
-              const SizedBox(width: 8),
+              const Divider(height: AppSpacing.lg),
               Text(
-                'REVOKE ALL OTHER ACCESS TOKENS',
-                style: AppText.button(color: Colors.white),
+                'Nexa/SmartFace AI Attendance is an enterprise-grade academic verification console leveraging Deep Learning face embeddings (ArcFace-v2) for seamless institutional attendance logging.',
+                style: AppText.body(color: isDark ? Colors.white70 : Colors.black54),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        _buildSectionHeader('LEGAL & TERMS'),
+        const SizedBox(height: AppSpacing.sm),
+        GlassContainer(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.description_outlined, color: AppColors.gold),
+                title: Text('Terms of Service', style: AppText.body(color: isDark ? Colors.white : Colors.black87)),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                onTap: () {},
+              ),
+              const Divider(height: AppSpacing.xs),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.privacy_tip_outlined, color: AppColors.gold),
+                title: Text('Privacy Policy & Telemetry', style: AppText.body(color: isDark ? Colors.white : Colors.black87)),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                onTap: () {},
               ),
             ],
           ),

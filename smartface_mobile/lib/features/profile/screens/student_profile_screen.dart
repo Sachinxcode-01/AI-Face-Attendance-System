@@ -41,6 +41,7 @@ import 'package:go_router/go_router.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
+import 'package:smartface_attendance/app/constants/app_constants.dart';
 
 // ======================================================
 // Services Imports
@@ -552,6 +553,40 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                       ).animate().fadeIn(delay: 150.ms),
                       const SizedBox(height: 6),
                       _buildRoleBadge(),
+                      const SizedBox(height: 20),
+
+                      // ── Quick Stats Row ──────────────────────────────────────
+                      const Row(
+                        children: [
+                          Expanded(
+                            child: MetricCard(
+                              label: 'Attendance Rate',
+                              value: '92.4%',
+                              icon: Icons.done_all_rounded,
+                              accentColor: Color(0xFF00C6FF),
+                            ),
+                          ),
+                          SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: MetricCard(
+                              label: 'Attended',
+                              value: '120/130',
+                              icon: Icons.assignment_turned_in_rounded,
+                              accentColor: Color(0xFFFFD700),
+                            ),
+                          ),
+                          SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: MetricCard(
+                              label: 'Leave Days',
+                              value: '2 Days',
+                              icon: Icons.time_to_leave_rounded,
+                              accentColor: Color(0xFF7B2FF7),
+                            ),
+                          ),
+                        ],
+                      ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+
                       const SizedBox(height: 28),
 
                       // Edit / Save banner
@@ -774,116 +809,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                           width: double.infinity,
                           child: GlowButton(
                             onPressed: () async {
-                              final confirmed = await showDialog<bool>(
-                                context: context,
-                                barrierColor: Colors.black.withValues(alpha: 0.6),
-                                builder: (dialogContext) {
-                                  return Center(
-                                    child: Container(
-                                      margin: const EdgeInsets.all(24),
-                                      padding: const EdgeInsets.all(24),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF0F172A),
-                                        borderRadius: BorderRadius.circular(28),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(alpha: 0.1),
-                                          width: 1.5,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.4),
-                                            blurRadius: 30,
-                                            spreadRadius: 2,
-                                          ),
-                                        ],
-                                      ),
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(16),
-                                              decoration: BoxDecoration(
-                                                color: AppColors.error.withValues(alpha: 0.1),
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                  color: AppColors.error.withValues(alpha: 0.25),
-                                                  width: 1.5,
-                                                ),
-                                              ),
-                                              child: const Icon(
-                                                Icons.logout_rounded,
-                                                color: AppColors.error,
-                                                size: 32,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 20),
-                                            Text(
-                                              'Confirm Logout',
-                                              style: GoogleFonts.outfit(
-                                                color: Colors.white,
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w800,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            Text(
-                                              'Are you sure you want to sign out? Your offline session context will be safely cleared.',
-                                              textAlign: TextAlign.center,
-                                              style: GoogleFonts.inter(
-                                                color: Colors.white70,
-                                                fontSize: 14,
-                                                height: 1.45,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 24),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: TextButton(
-                                                    onPressed: () => Navigator.pop(dialogContext, false),
-                                                    style: TextButton.styleFrom(
-                                                      padding: const EdgeInsets.symmetric(vertical: 14),
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.circular(14),
-                                                        side: const BorderSide(color: Colors.white24),
-                                                      ),
-                                                    ),
-                                                    child: Text(
-                                                      'Cancel',
-                                                      style: GoogleFonts.inter(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 12),
-                                                Expanded(
-                                                  child: GlowButton(
-                                                    onPressed: () => Navigator.pop(dialogContext, true),
-                                                    color: AppColors.error,
-                                                    glowColor: AppColors.error.withValues(alpha: 0.3),
-                                                    borderRadius: 14,
-                                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                                    child: Text(
-                                                      'Logout',
-                                                      style: GoogleFonts.inter(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
+                              final confirmed = await PremiumDialogs.showConfirmDialog(
+                                context,
+                                title: 'Confirm Logout',
+                                message: 'Are you sure you want to sign out? Your offline session context will be safely cleared.',
+                                confirmLabel: 'LOGOUT',
+                                cancelLabel: 'CANCEL',
+                                isDestructive: true,
+                                icon: Icons.logout_rounded,
                               );
                               if (confirmed == true && context.mounted) {
                                 await context.read<SessionManager>().logout();

@@ -1,3 +1,4 @@
+
 # SmartFace AI — Feature Status
 
 Legend: ✅ Done · 🟡 Partial · ❌ Missing · ⚠ Broken
