@@ -137,33 +137,82 @@ class SyncDashboardScreen extends StatelessWidget {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 32),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.02),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Column(
         children: [
-          const Icon(
-            Icons.cloud_queue_rounded,
-            color: Colors.white24,
-            size: 48,
+          // Animated cloud icon with glow
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.success.withValues(alpha: 0.08),
+              border: Border.all(
+                color: AppColors.success.withValues(alpha: 0.15),
+              ),
+            ),
+            child: const Icon(
+              Icons.cloud_done_rounded,
+              color: AppColors.success,
+              size: 40,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text(
-            'Sync Queue is Empty',
+            'All Synced Up!',
             style: GoogleFonts.outfit(
-              color: Colors.white70,
-              fontSize: 16,
+              color: Colors.white,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
-            'Offline scans will appear here automatically.',
+            'Your attendance queue is clear. Offline scans\nwill appear here automatically when captured.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(color: Colors.white38, fontSize: 13),
+            style: GoogleFonts.inter(
+              color: Colors.white38,
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Status pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.success.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: AppColors.success,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Engine Ready',
+                  style: GoogleFonts.inter(
+                    color: AppColors.success,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

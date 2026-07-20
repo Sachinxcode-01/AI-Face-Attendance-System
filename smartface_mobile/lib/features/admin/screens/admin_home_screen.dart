@@ -148,13 +148,13 @@ class _AdminDashboardState extends State<AdminDashboard>
           title: 'Admin Control Panel',
           titleWidget: Row(
             children: [
-              const Icon(Icons.shield_outlined, color: Color(0xFF3559E0), size: 22),
+              const Icon(Icons.shield_outlined, color: AppColors.primary, size: 22),
               const SizedBox(width: 8),
               Text(
                 'Admin Control Panel',
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                  color: isDark ? Colors.white : AppColors.textHeading,
                   fontSize: 18,
                 ),
               ),
@@ -177,7 +177,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                 IconButton(
                   icon: Icon(
                     Icons.notifications_none_rounded,
-                    color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                    color: isDark ? Colors.white : AppColors.textHeading,
                   ),
                   onPressed: () => context.push('/notifications/nexus'),
                 ),
@@ -285,7 +285,7 @@ class _AdminDashboardState extends State<AdminDashboard>
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: const Color(0xFF3559E0),
+            color: AppColors.primary,
           ),
         ),
         const SizedBox(height: 6),
@@ -294,7 +294,7 @@ class _AdminDashboardState extends State<AdminDashboard>
           style: GoogleFonts.outfit(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : const Color(0xFF1B2C56),
+            color: isDark ? Colors.white : AppColors.textHeading,
           ),
         ),
       ],
@@ -354,7 +354,7 @@ class _AdminDashboardState extends State<AdminDashboard>
               fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: 1.5,
-              color: const Color(0xFF3559E0),
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(height: 16),
@@ -374,6 +374,8 @@ class _AdminDashboardState extends State<AdminDashboard>
     final statusColor = hasIntruderAlert ? AppColors.error : AppColors.success;
     final statusLabel = hasIntruderAlert ? 'THREAT DETECTED' : 'SYSTEM SECURED';
     final alertCount = _stats['intruder_alerts']?.toString() ?? '0';
+    final textColor = isDark ? Colors.white : AppColors.textHeading;
+    final mutedTextColor = isDark ? Colors.white60 : AppColors.textMuted;
 
     return ModernDashboardCard(
       child: Row(
@@ -383,6 +385,10 @@ class _AdminDashboardState extends State<AdminDashboard>
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(
+                color: statusColor.withValues(alpha: 0.2),
+                width: 1.0,
+              ),
             ),
             child: Icon(
               hasIntruderAlert
@@ -402,7 +408,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -412,7 +418,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                       : 'Zero unauthorized intruder breaches logged today.',
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: isDark ? Colors.white60 : const Color(0xFF7F8CA4),
+                    color: mutedTextColor,
                   ),
                 ),
               ],
@@ -434,7 +440,7 @@ class _AdminDashboardState extends State<AdminDashboard>
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: const Color(0xFF3559E0),
+            color: AppColors.primary,
           ),
         ),
         const SizedBox(height: 12),
@@ -508,7 +514,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                   margin: const EdgeInsets.all(24),
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F172A),
+                    color: AppColors.bgDark,
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.1),

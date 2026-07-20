@@ -88,7 +88,7 @@ class _ParentAttendanceLogsScreenState extends State<ParentAttendanceLogsScreen>
           title: 'Attendance History',
           actions: [
             IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: Color(0xFF1B2C56)),
+              icon: const Icon(Icons.refresh_rounded, color: AppColors.textHeading),
               onPressed: _fetchLogs,
             ),
           ],
@@ -116,7 +116,7 @@ class _ParentAttendanceLogsScreenState extends State<ParentAttendanceLogsScreen>
                     ? Center(
                         child: Text(
                           'No check-in logs found for this filter.',
-                          style: GoogleFonts.inter(color: const Color(0xFF7F8CA4)),
+                          style: GoogleFonts.inter(color: AppColors.textMuted),
                         ),
                       )
                     : ListView.builder(
@@ -157,7 +157,7 @@ class _ParentAttendanceLogsScreenState extends State<ParentAttendanceLogsScreen>
                                           style: GoogleFonts.inter(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
-                                            color: const Color(0xFF1B2C56),
+                                            color: AppColors.textHeading,
                                           ),
                                         ),
                                         const SizedBox(height: 2),
@@ -165,7 +165,7 @@ class _ParentAttendanceLogsScreenState extends State<ParentAttendanceLogsScreen>
                                           'Verified via: ${log['verifiedBy'] ?? 'AI Engine'}',
                                           style: GoogleFonts.inter(
                                             fontSize: 11,
-                                            color: const Color(0xFF7F8CA4),
+                                            color: AppColors.textMuted,
                                           ),
                                         ),
                                       ],
@@ -176,7 +176,7 @@ class _ParentAttendanceLogsScreenState extends State<ParentAttendanceLogsScreen>
                                     style: GoogleFonts.robotoMono(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF1B2C56),
+                                      color: AppColors.textHeading,
                                     ),
                                   ),
                                 ],
@@ -203,11 +203,11 @@ class _ParentAttendanceLogsScreenState extends State<ParentAttendanceLogsScreen>
           setState(() => _selectedFilter = label);
         }
       },
-      selectedColor: const Color(0xFF0EA5E9).withValues(alpha: 0.2),
+      selectedColor: AppColors.cyan.withValues(alpha: 0.2),
       labelStyle: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.bold,
-        color: isSelected ? const Color(0xFF0EA5E9) : const Color(0xFF7F8CA4),
+        color: isSelected ? AppColors.cyan : AppColors.textMuted,
       ),
     );
   }

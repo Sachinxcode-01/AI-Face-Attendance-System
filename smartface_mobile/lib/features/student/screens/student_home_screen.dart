@@ -173,7 +173,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
           content: Text(
             result['message'] ?? 'Successfully logged out other devices',
           ),
-          backgroundColor: const Color(0xFF0C1033),
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.surfaceDark
+              : AppColors.surfaceElevatedLight,
         ),
       );
       _loadDashboardData();
@@ -460,11 +462,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1F38),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.surfaceElevated
+              : AppColors.surfaceDark,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const Icon(Icons.bolt, color: Color(0xFFFFD700)),
+            const Icon(Icons.bolt, color: AppColors.gold),
             const SizedBox(width: 10),
             Text(
               'Live Session Alert',
@@ -489,7 +493,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFFFD700),
+                color: AppColors.gold,
               ),
             ),
           ],
@@ -520,7 +524,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            backgroundColor: const Color(0xFF070B1A),
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.surfaceElevated
+              : AppColors.bgDark,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
               side: BorderSide(color: AppColors.gold.withValues(alpha: 0.2)),
@@ -554,19 +560,19 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   Icons.light_mode_outlined,
                   'Lighting Quality',
                   'Good',
-                  const Color(0xFF76E600),
+                  AppColors.success,
                 ),
                 _buildRegistrationGuideItem(
                   Icons.blur_off_rounded,
                   'Blur Level Detection',
                   'Excellent',
-                  const Color(0xFF76E600),
+                  AppColors.success,
                 ),
                 _buildRegistrationGuideItem(
                   Icons.portrait_rounded,
                   'Face Angle Alignment',
                   'Aligned (0° yaw)',
-                  const Color(0xFF76E600),
+                  AppColors.success,
                 ),
                 const SizedBox(height: 20),
                 Container(
@@ -618,7 +624,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('AI re-training queue requested!'),
-                        backgroundColor: Color(0xFF0C1033),
+                        backgroundColor: AppColors.surfaceElevated,
                       ),
                     );
                   }
@@ -934,7 +940,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: _showExportOptionsDialog,
-          backgroundColor: const Color(0xFF3559E0),
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           child: const Icon(Icons.download_rounded),
         ),
@@ -971,7 +977,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         title: '${(_overallPercentage * 100).round()}% attendance',
         subtitle: 'Overall this semester • $_standing',
         percentage: _overallPercentage,
-        progressColor: const Color(0xFF3D4AB8),
+        progressColor: AppColors.primary,
         leadingIcon: Icons.fact_check_outlined,
       ),
     );
@@ -991,7 +997,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: const Color(0xFF3559E0),
+            color: AppColors.primary,
           ),
         ),
         const SizedBox(height: 6),
@@ -1000,7 +1006,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
           style: GoogleFonts.outfit(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : const Color(0xFF1B2C56),
+            color: isDark ? Colors.white : AppColors.textHeading,
           ),
         ),
       ],
@@ -1046,7 +1052,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 style: GoogleFonts.inter(
                   fontSize: 10,
                   letterSpacing: 1.5,
-                  color: const Color(0xFF3559E0),
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1080,7 +1086,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           : Icons.phone_android_rounded,
                       size: 20,
                       color: isCurrent
-                          ? const Color(0xFF76E600)
+                          ? AppColors.success
                           : (isDark ? Colors.white54 : Colors.black54),
                     ),
                     const SizedBox(width: 12),
@@ -1093,7 +1099,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
-                              color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                              color: isDark ? Colors.white : AppColors.textHeading,
                               fontWeight: isCurrent
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -1103,7 +1109,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           Text(
                             'IP: ${s['ip']} • ${s['location']}',
                             style: GoogleFonts.inter(
-                              color: isDark ? Colors.white60 : const Color(0xFF7F8CA4),
+                              color: isDark ? Colors.white60 : AppColors.textMuted,
                               fontSize: 10,
                             ),
                           ),
@@ -1117,18 +1123,16 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF76E600).withValues(alpha: 0.1),
+                          color: AppColors.success.withValues(alpha: 0.1),
                           border: Border.all(
-                            color: const Color(
-                              0xFF76E600,
-                            ).withValues(alpha: 0.4),
+                            color: AppColors.success.withValues(alpha: 0.4),
                           ),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text(
                           'CURRENT',
                           style: TextStyle(
-                            color: Color(0xFF76E600),
+                            color: AppColors.success,
                             fontSize: 8,
                             fontWeight: FontWeight.bold,
                           ),
@@ -1154,7 +1158,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: const Color(0xFF3559E0),
+            color: AppColors.primary,
           ),
         ),
         const SizedBox(height: 12),

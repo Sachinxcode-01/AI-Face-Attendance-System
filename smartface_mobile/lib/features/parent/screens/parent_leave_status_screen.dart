@@ -82,7 +82,7 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
           title: 'Leave Applications',
           actions: [
             IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: Color(0xFF1B2C56)),
+              icon: const Icon(Icons.refresh_rounded, color: AppColors.textHeading),
               onPressed: _fetchLeaves,
             ),
           ],
@@ -93,7 +93,7 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
               ? Center(
                   child: Text(
                     'No leave applications submitted by this student.',
-                    style: GoogleFonts.inter(color: const Color(0xFF7F8CA4)),
+                    style: GoogleFonts.inter(color: AppColors.textMuted),
                   ),
                 )
               : ListView.builder(
@@ -171,11 +171,11 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1B2C56),
+                                color: AppColors.textHeading,
                               ),
                             ),
                             const SizedBox(height: 10),
-                            const Divider(color: Color(0xFFF1F5FD)),
+                            const Divider(color: AppColors.surfaceLight),
                             const SizedBox(height: 6),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -184,7 +184,7 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
                                   'Duration: ${leave.startDate.split('T')[0]} to ${leave.endDate.split('T')[0]}',
                                   style: GoogleFonts.inter(
                                     fontSize: 11,
-                                    color: const Color(0xFF7F8CA4),
+                                    color: AppColors.textMuted,
                                   ),
                                 ),
                                 Text(
@@ -192,7 +192,7 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
                                   style: GoogleFonts.robotoMono(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF1B2C56),
+                                    color: AppColors.textHeading,
                                   ),
                                 ),
                               ],
@@ -203,9 +203,9 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF8FAFC),
+                                  color: AppColors.surfaceLight,
                                   borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,7 +215,7 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 9,
                                         fontWeight: FontWeight.w800,
-                                        color: const Color(0xFF475569),
+                                        color: AppColors.textMuted,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -223,7 +223,7 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
                                       leave.remarks!,
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
-                                        color: const Color(0xFF1B2C56),
+                                        color: AppColors.textHeading,
                                       ),
                                     ),
                                   ],

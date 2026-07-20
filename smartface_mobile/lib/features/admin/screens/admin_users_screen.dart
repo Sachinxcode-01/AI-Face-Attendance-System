@@ -138,14 +138,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 20,
-              color: isDark ? Colors.white : const Color(0xFF1B2C56),
+              color: isDark ? Colors.white : AppColors.textHeading,
             ),
           ),
           bottom: TabBar(
             controller: _tabController,
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
-            unselectedLabelColor: isDark ? Colors.white38 : const Color(0xFF7F8CA4),
+            unselectedLabelColor: isDark ? Colors.white38 : AppColors.textMuted,
             labelStyle: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13),
             tabs: const [
               Tab(text: 'Students'),
@@ -209,7 +209,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                         labelStyle: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? AppColors.primary : (isDark ? Colors.white54 : const Color(0xFF7F8CA4)),
+                          color: isSelected ? AppColors.primary : (isDark ? Colors.white54 : AppColors.textMuted),
                         ),
                         onSelected: (selected) {
                           if (selected) {
@@ -260,14 +260,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                                     style: GoogleFonts.inter(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
-                                      color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                                      color: isDark ? Colors.white : AppColors.textHeading,
                                     ),
                                   ),
                                   Text(
                                     s['email'],
                                     style: GoogleFonts.inter(
                                       fontSize: 11,
-                                      color: isDark ? Colors.white54 : const Color(0xFF7F8CA4),
+                                      color: isDark ? Colors.white54 : AppColors.textMuted,
                                     ),
                                   ),
                                   const SizedBox(height: 6),
@@ -276,7 +276,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: isDark ? Colors.white10 : const Color(0xFFEDF0FC),
+                                          color: isDark ? Colors.white10 : AppColors.surfaceLight,
                                           borderRadius: BorderRadius.circular(6),
                                         ),
                                         child: Text(
@@ -375,14 +375,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                                     style: GoogleFonts.inter(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
-                                      color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                                      color: isDark ? Colors.white : AppColors.textHeading,
                                     ),
                                   ),
                                   Text(
                                     f['email'],
                                     style: GoogleFonts.inter(
                                       fontSize: 11,
-                                      color: isDark ? Colors.white54 : const Color(0xFF7F8CA4),
+                                      color: isDark ? Colors.white54 : AppColors.textMuted,
                                     ),
                                   ),
                                   const SizedBox(height: 6),
@@ -391,7 +391,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: isDark ? Colors.white10 : const Color(0xFFEDF0FC),
+                                          color: isDark ? Colors.white10 : AppColors.surfaceLight,
                                           borderRadius: BorderRadius.circular(6),
                                         ),
                                         child: Text(
@@ -408,7 +408,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                                         f['role'],
                                         style: GoogleFonts.inter(
                                           fontSize: 12,
-                                          color: isDark ? Colors.white38 : const Color(0xFF7F8CA4),
+                                          color: isDark ? Colors.white38 : AppColors.textMuted,
                                         ),
                                       ),
                                     ],

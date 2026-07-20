@@ -283,16 +283,16 @@ class _ParentDashboardState extends State<ParentDashboard> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(
-                colors: [Color(0xFF0EA5E9), Color(0xFF1D4ED8)],
+                colors: [AppColors.cyan, AppColors.primaryDark],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               border: Border.all(
-                color: const Color(0xFF0EA5E9).withValues(alpha: 0.4),
+                color: AppColors.cyan.withValues(alpha: 0.4),
                 width: 1.5,
               ),
               boxShadow: AppShadows.glow(
-                const Color(0xFF0EA5E9),
+                AppColors.cyan,
                 intensity: 0.15,
               ),
             ),
@@ -314,14 +314,14 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.w800,
                   fontSize: 15,
-                  color: const Color(0xFF1B2C56),
+                  color: AppColors.textHeading,
                 ),
               ),
               Text(
                 'Guardian Access Portal',
                 style: GoogleFonts.inter(
                   fontSize: 10,
-                  color: const Color(0xFF7F8CA4),
+                  color: AppColors.textMuted,
                 ),
               ),
             ],
@@ -333,7 +333,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
           onPressed: () => context.push(AppRoutes.alertsNexusPath),
           icon: const Icon(
             Icons.notifications_none_rounded,
-            color: Color(0xFF1B2C56),
+            color: AppColors.textHeading,
           ),
           tooltip: 'Notifications',
         ),
@@ -341,7 +341,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
           onPressed: () => context.push(AppRoutes.settingsPath),
           icon: const Icon(
             Icons.settings_outlined,
-            color: Color(0xFF1B2C56),
+            color: AppColors.textHeading,
           ),
           tooltip: 'Settings',
         ),
@@ -360,7 +360,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
           style: GoogleFonts.outfit(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF1B2C56),
+            color: AppColors.textHeading,
           ),
         ),
         const SizedBox(height: 4),
@@ -369,7 +369,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
             'Monitoring attendance for: ${_selectedWard!['full_name']}',
             style: GoogleFonts.inter(
               fontSize: 12,
-              color: const Color(0xFF7F8CA4),
+              color: AppColors.textMuted,
             ),
           ),
       ],
@@ -381,11 +381,11 @@ class _ParentDashboardState extends State<ParentDashboard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return ModernDashboardCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      backgroundColor: isDark ? const Color(0xFF13182E) : Colors.white,
+      backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
       child: DropdownButtonHideUnderline(
         child: DropdownButton<Map<String, dynamic>>(
           value: _selectedWard,
-          dropdownColor: isDark ? const Color(0xFF13182E) : Colors.white,
+          dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
           items: _wards.map((ward) {
             return DropdownMenuItem<Map<String, dynamic>>(
               value: ward as Map<String, dynamic>,
@@ -394,7 +394,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                  color: isDark ? Colors.white : AppColors.textHeading,
                 ),
               ),
             );
@@ -423,7 +423,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
       title: _selectedWard?['full_name'] ?? 'Ward Status',
       subtitle: 'Rate: ${(overall * 100).toStringAsFixed(0)}% • ${standing.toUpperCase()}',
       percentage: overall,
-      progressColor: isGood ? const Color(0xFF0EA5E9) : AppColors.error,
+      progressColor: isGood ? AppColors.cyan : AppColors.error,
       leadingIcon: Icons.family_restroom_rounded,
     );
   }
@@ -444,7 +444,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: const Color(0xFF3559E0),
+            color: AppColors.primary,
           ),
         ),
         const SizedBox(height: 12),
@@ -453,7 +453,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Text(
               'No class subjects statistics recorded.',
-              style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white60 : const Color(0xFF7F8CA4)),
+              style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textMuted),
             ),
           )
         else
@@ -479,7 +479,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                             style: GoogleFonts.inter(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
-                              color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                              color: isDark ? Colors.white : AppColors.textHeading,
                             ),
                           ),
                         ),
@@ -488,7 +488,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                           style: GoogleFonts.robotoMono(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white54 : const Color(0xFF7F8CA4),
+                            color: isDark ? Colors.white54 : AppColors.textMuted,
                           ),
                         ),
                       ],
@@ -498,8 +498,8 @@ class _ParentDashboardState extends State<ParentDashboard> {
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: rate,
-                        color: isGood ? const Color(0xFF0EA5E9) : AppColors.error,
-                        backgroundColor: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF1F5FD),
+                        color: isGood ? AppColors.cyan : AppColors.error,
+                        backgroundColor: isDark ? Colors.white.withValues(alpha: 0.08) : AppColors.surfaceLight,
                         minHeight: 6,
                       ),
                     ),
@@ -511,7 +511,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                           '${(rate * 100).toStringAsFixed(0)}% attendance rate',
                           style: GoogleFonts.inter(
                             fontSize: 10,
-                            color: isGood ? const Color(0xFF0EA5E9) : AppColors.error,
+                            color: isGood ? AppColors.cyan : AppColors.error,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -555,7 +555,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: const Color(0xFF3559E0),
+            color: AppColors.primary,
           ),
         ),
         const SizedBox(height: 12),
@@ -568,7 +568,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
               label: 'Attendance logs',
               description: 'Chronological check-in histories',
               icon: Icons.assignment_turned_in_outlined,
-              color: const Color(0xFF0EA5E9),
+              color: AppColors.cyan,
               onTap: () => context.push('/parent/attendance-logs', extra: wardEmail),
             ),
             QuickActionCard(
@@ -631,7 +631,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: const Color(0xFF3559E0),
+            color: AppColors.primary,
           ),
         ),
         const SizedBox(height: 12),
@@ -640,7 +640,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Text(
               'No leave requests recorded for this ward.',
-              style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white60 : const Color(0xFF7F8CA4)),
+              style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textMuted),
             ),
           )
         else
@@ -685,7 +685,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                              color: isDark ? Colors.white : AppColors.textHeading,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -695,7 +695,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
                               fontSize: 11,
-                              color: isDark ? Colors.white60 : const Color(0xFF7F8CA4),
+                              color: isDark ? Colors.white60 : AppColors.textMuted,
                             ),
                           ),
                         ],
@@ -741,7 +741,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
             fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 2,
-            color: const Color(0xFF3559E0),
+            color: AppColors.primary,
           ),
         ),
         const SizedBox(height: 12),
@@ -750,7 +750,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Text(
               'No recent check-in activities.',
-              style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white60 : const Color(0xFF7F8CA4)),
+              style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textMuted),
             ),
           )
         else
@@ -783,7 +783,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                              color: isDark ? Colors.white : AppColors.textHeading,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -793,7 +793,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
                               fontSize: 11,
-                              color: isDark ? Colors.white60 : const Color(0xFF7F8CA4),
+                              color: isDark ? Colors.white60 : AppColors.textMuted,
                             ),
                           ),
                         ],
@@ -803,7 +803,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                       log['date'] as String? ?? '',
                       style: GoogleFonts.robotoMono(
                         fontSize: 11,
-                        color: isDark ? Colors.white60 : const Color(0xFF7F8CA4),
+                        color: isDark ? Colors.white60 : AppColors.textMuted,
                       ),
                     ),
                   ],

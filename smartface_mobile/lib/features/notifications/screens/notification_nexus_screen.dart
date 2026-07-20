@@ -430,7 +430,7 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
                         child: GlowButton(
                           onPressed: () =>
                               _handleLeaveAction(notification, 'Rejected'),
-                          color: const Color(0xFF1E293B),
+                          color: AppColors.surfaceElevated,
                           glowColor: Colors.redAccent.withValues(alpha: 0.2),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           borderRadius: 10,
