@@ -53,15 +53,20 @@ class GlassContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBgColor = backgroundColor ?? (isDark ? const Color(0xFF13182E) : Colors.white);
-    final List<BoxShadow> effectiveBoxShadow = boxShadow ?? [
-      BoxShadow(
-        color: isDark ? Colors.black.withValues(alpha: 0.3) : const Color(0xFF9EAFD8).withValues(alpha: 0.16),
-        blurRadius: 16,
-        spreadRadius: 2,
-        offset: const Offset(0, 8),
-      ),
-    ];
+    final cardBgColor =
+        backgroundColor ?? (isDark ? const Color(0xFF13182E) : Colors.white);
+    final List<BoxShadow> effectiveBoxShadow =
+        boxShadow ??
+        [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.3)
+                : const Color(0xFF9EAFD8).withValues(alpha: 0.16),
+            blurRadius: 16,
+            spreadRadius: 2,
+            offset: const Offset(0, 8),
+          ),
+        ];
 
     final card = Container(
       padding: padding ?? const EdgeInsets.all(AppSpacing.md),
@@ -69,7 +74,11 @@ class GlassContainer extends StatelessWidget {
         color: cardBgColor,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: borderColor ?? (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0)),
+          color:
+              borderColor ??
+              (isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : const Color(0xFFE2E8F0)),
           width: borderWidth,
         ),
         boxShadow: effectiveBoxShadow,
@@ -197,10 +206,7 @@ class MetricCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle!,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                color: color,
-              ),
+              style: GoogleFonts.inter(fontSize: 11, color: color),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -633,10 +639,7 @@ class ActivityTimeline extends StatelessWidget {
             Center(
               child: Text(
                 'No recent activity',
-                style: GoogleFonts.inter(
-                  color: descColor,
-                  fontSize: 13,
-                ),
+                style: GoogleFonts.inter(color: descColor, fontSize: 13),
               ),
             )
           else
@@ -674,10 +677,7 @@ class ActivityTimeline extends StatelessWidget {
                           ),
                           if (!isLast)
                             Expanded(
-                              child: Container(
-                                width: 2,
-                                color: dividerColor,
-                              ),
+                              child: Container(width: 2, color: dividerColor),
                             ),
                         ],
                       ),
@@ -804,7 +804,9 @@ class ActionTile extends StatelessWidget {
                       description,
                       style: GoogleFonts.inter(
                         fontSize: 10,
-                        color: isDark ? Colors.white54 : const Color(0xFF7F8CA4),
+                        color: isDark
+                            ? Colors.white54
+                            : const Color(0xFF7F8CA4),
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -1280,20 +1282,17 @@ class PremiumSettingRow extends StatelessWidget {
             vertical: AppSpacing.sm + 4,
           ),
           borderRadius: 20,
-          borderColor: isDark 
-              ? Colors.white.withValues(alpha: 0.04) 
+          borderColor: isDark
+              ? Colors.white.withValues(alpha: 0.04)
               : Colors.black.withValues(alpha: 0.04),
-          backgroundColor: isDark 
-              ? const Color(0xFF161E3D).withValues(alpha: 0.6) 
+          backgroundColor: isDark
+              ? const Color(0xFF161E3D).withValues(alpha: 0.6)
               : Colors.white,
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: bg,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
                 child: Icon(icon, color: fg, size: 20),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -1398,8 +1397,8 @@ class PremiumDialogs {
             color: isDark ? const Color(0xFF0F172A) : Colors.white,
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: isDark 
-                  ? Colors.white.withValues(alpha: 0.08) 
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
                   : Colors.black.withValues(alpha: 0.08),
               width: 1.5,
             ),
@@ -1426,11 +1425,7 @@ class PremiumDialogs {
                       width: 1.5,
                     ),
                   ),
-                  child: Icon(
-                    icon,
-                    color: colorAccent,
-                    size: 32,
-                  ),
+                  child: Icon(icon, color: colorAccent, size: 32),
                 ),
                 const SizedBox(height: 20),
                 Text(
@@ -1523,8 +1518,8 @@ class PremiumDialogs {
             color: isDark ? const Color(0xFF0F172A) : Colors.white,
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: isDark 
-                  ? Colors.white.withValues(alpha: 0.08) 
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
                   : Colors.black.withValues(alpha: 0.08),
               width: 1.5,
             ),
@@ -1622,8 +1617,8 @@ class PremiumDialogs {
             color: isDark ? const Color(0xFF0F172A) : Colors.white,
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: isDark 
-                  ? Colors.white.withValues(alpha: 0.08) 
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
                   : Colors.black.withValues(alpha: 0.08),
               width: 1.5,
             ),

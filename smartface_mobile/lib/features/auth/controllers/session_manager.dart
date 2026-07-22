@@ -154,10 +154,14 @@ class SessionManager extends ChangeNotifier {
       _biometricRegistered = bio == 'true';
       _isLoggedIn = _token != null && _token!.isNotEmpty;
 
-      _onboardingCompleted = await CacheService.get<bool>('sf_onboarding_completed') ?? false;
-      _introImagesCompleted = await CacheService.get<bool>('sf_intro_images_completed') ?? false;
-      _introCompleted = await CacheService.get<bool>('sf_intro_completed') ?? false;
-      _wizardCompleted = await CacheService.get<bool>('sf_wizard_completed') ?? false;
+      _onboardingCompleted =
+          await CacheService.get<bool>('sf_onboarding_completed') ?? false;
+      _introImagesCompleted =
+          await CacheService.get<bool>('sf_intro_images_completed') ?? false;
+      _introCompleted =
+          await CacheService.get<bool>('sf_intro_completed') ?? false;
+      _wizardCompleted =
+          await CacheService.get<bool>('sf_wizard_completed') ?? false;
 
       notifyListeners();
       return _isLoggedIn;
@@ -226,7 +230,8 @@ class SessionManager extends ChangeNotifier {
     _isLoggedIn = true;
 
     _onboardingCompleted = true; // Logged in implies onboarding is completed
-    _introImagesCompleted = true; // Logged in implies intro images are completed
+    _introImagesCompleted =
+        true; // Logged in implies intro images are completed
     if (introCompleted != null) _introCompleted = introCompleted;
     if (wizardCompleted != null) {
       _wizardCompleted = wizardCompleted;
@@ -244,8 +249,16 @@ class SessionManager extends ChangeNotifier {
       if (avatarUrl != null)
         _storage.write(key: _keyAvatarUrl, value: avatarUrl),
       _storage.write(key: _keyBiometric, value: biometricRegistered.toString()),
-      CacheService.set('sf_onboarding_completed', _onboardingCompleted, persist: true),
-      CacheService.set('sf_intro_images_completed', _introImagesCompleted, persist: true),
+      CacheService.set(
+        'sf_onboarding_completed',
+        _onboardingCompleted,
+        persist: true,
+      ),
+      CacheService.set(
+        'sf_intro_images_completed',
+        _introImagesCompleted,
+        persist: true,
+      ),
       CacheService.set('sf_intro_completed', _introCompleted, persist: true),
       CacheService.set('sf_wizard_completed', _wizardCompleted, persist: true),
     ]);

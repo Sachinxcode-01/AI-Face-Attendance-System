@@ -78,15 +78,17 @@ void main() {
       );
 
       // Wire up mock HTTP client so ApiService.postAIChat returns a canned reply.
-      MockApiService.setupCustom(MockClient((request) async {
-        if (request.url.path.endsWith('/ai/chat')) {
-          return http.Response(
-            jsonEncode({'reply': 'This is a mock AI response.'}),
-            200,
-          );
-        }
-        return http.Response(jsonEncode({'detail': 'Not found'}), 404);
-      }));
+      MockApiService.setupCustom(
+        MockClient((request) async {
+          if (request.url.path.endsWith('/ai/chat')) {
+            return http.Response(
+              jsonEncode({'reply': 'This is a mock AI response.'}),
+              200,
+            );
+          }
+          return http.Response(jsonEncode({'detail': 'Not found'}), 404);
+        }),
+      );
     });
 
     tearDown(() {
@@ -94,8 +96,9 @@ void main() {
     });
 
     // ── Test 1: screen renders correctly ─────────────────────────────────
-    testWidgets('AIAnalystScreen renders chat area and input',
-        (WidgetTester tester) async {
+    testWidgets('AIAnalystScreen renders chat area and input', (
+      WidgetTester tester,
+    ) async {
       await pumpScreen(tester, buildTestApp(sessionManager));
 
       // Header text is present (may appear more than once in the AppBar widget tree).
@@ -107,8 +110,9 @@ void main() {
     });
 
     // ── Test 2: sending a message shows user text and AI reply ────────────
-    testWidgets('Sending a message displays the user query in the chat list',
-        (WidgetTester tester) async {
+    testWidgets('Sending a message displays the user query in the chat list', (
+      WidgetTester tester,
+    ) async {
       await pumpScreen(tester, buildTestApp(sessionManager));
 
       // Type a query and hit send.
@@ -131,8 +135,9 @@ void main() {
     });
 
     // ── Test 3: AI response is appended after the HTTP call completes ─────
-    testWidgets('AI response is appended after network call',
-        (WidgetTester tester) async {
+    testWidgets('AI response is appended after network call', (
+      WidgetTester tester,
+    ) async {
       await pumpScreen(tester, buildTestApp(sessionManager));
 
       await tester.enterText(find.byType(TextField), 'What is my GPA?');

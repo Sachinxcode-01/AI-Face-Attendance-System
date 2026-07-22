@@ -130,20 +130,17 @@ void main() {
       expect(find.byType(TextField), findsAtLeast(2));
     });
 
-    testWidgets(
-      'shows primary sign-in controls and account options',
-      (WidgetTester tester) async {
-        await tester.pumpWidget(createTestWidget());
-        await tester.pump(
-          const Duration(seconds: 1),
-        ); // Let initial frame render
+    testWidgets('shows primary sign-in controls and account options', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(createTestWidget());
+      await tester.pump(const Duration(seconds: 1)); // Let initial frame render
 
-        // Primary sign-in action and account helpers are present
-        expect(find.text('Sign in'), findsWidgets);
-        expect(find.text('Remember me'), findsOneWidget);
-        expect(find.text('Forgot password?'), findsOneWidget);
-        expect(find.text('Sign in with OTP'), findsOneWidget);
-      },
-    );
+      // Primary sign-in action and account helpers are present
+      expect(find.text('Sign in'), findsWidgets);
+      expect(find.text('Remember me'), findsOneWidget);
+      expect(find.text('Forgot password?'), findsOneWidget);
+      expect(find.text('Sign in with OTP'), findsOneWidget);
+    });
   });
 }

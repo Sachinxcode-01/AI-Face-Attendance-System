@@ -77,11 +77,8 @@ async function runTest() {
   await User.deleteOne({ email: TEST_EMAIL });
   console.log("✅ Cleanup complete.");
 
-  const { awaitPendingJobs } = require('../../src/utils/jobTracker');
-  await awaitPendingJobs();
-  await mongoose.disconnect();
+  await mongoose.connection.close();
   console.log("🏁 Test completed successfully.");
-  setTimeout(() => process.exit(0), 100);
 }
 
 runTest().catch(err => {

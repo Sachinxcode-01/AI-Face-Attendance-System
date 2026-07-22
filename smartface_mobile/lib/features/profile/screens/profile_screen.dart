@@ -749,13 +749,20 @@ class _ProfileScreenState extends State<ProfileScreen>
       style: TextStyle(color: isDark ? Colors.white : Colors.black87),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black45, fontSize: 13),
+        labelStyle: TextStyle(
+          color: isDark ? Colors.white38 : Colors.black45,
+          fontSize: 13,
+        ),
         prefixIcon: Icon(icon, color: AppColors.gold, size: 20),
         filled: true,
-        fillColor: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.03),
+        fillColor: isDark
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.black.withValues(alpha: 0.03),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+          borderSide: BorderSide(
+            color: isDark ? Colors.white12 : Colors.black12,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -971,7 +978,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios, color: isDark ? Colors.white : Colors.black87),
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
           actions: [
@@ -1056,7 +1066,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                           child: MetricCard(
                             label: isTeacher ? 'Classes' : 'Active Sessions',
                             value: isTeacher ? '48' : '3',
-                            icon: isTeacher ? Icons.class_rounded : Icons.devices_rounded,
+                            icon: isTeacher
+                                ? Icons.class_rounded
+                                : Icons.devices_rounded,
                             accentColor: AppColors.primary,
                           ),
                         ),
@@ -1065,7 +1077,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                           child: MetricCard(
                             label: isTeacher ? 'Enrolled' : 'System Health',
                             value: isTeacher ? '120' : '99.9%',
-                            icon: isTeacher ? Icons.people_alt_rounded : Icons.speed_rounded,
+                            icon: isTeacher
+                                ? Icons.people_alt_rounded
+                                : Icons.speed_rounded,
                             accentColor: AppColors.gold,
                           ),
                         ),
@@ -1074,7 +1088,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                           child: MetricCard(
                             label: isTeacher ? 'Avg Attendance' : 'Diagnostics',
                             value: isTeacher ? '89.6%' : 'Optimal',
-                            icon: isTeacher ? Icons.analytics_rounded : Icons.insights_rounded,
+                            icon: isTeacher
+                                ? Icons.analytics_rounded
+                                : Icons.insights_rounded,
                             accentColor: AppColors.cyan,
                           ),
                         ),
@@ -1459,7 +1475,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 height: 48,
                               ),
                             ),
-                            applicationLegalese: '© 2026 SmartFace AI Team. All rights reserved.',
+                            applicationLegalese:
+                                '© 2026 SmartFace AI Team. All rights reserved.',
                           );
                         },
                         child: Row(
@@ -1520,7 +1537,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                           final confirmed = await PremiumDialogs.showConfirmDialog(
                             context,
                             title: 'Confirm Logout',
-                            message: 'Are you sure you want to sign out? Your offline session context will be safely cleared.',
+                            message:
+                                'Are you sure you want to sign out? Your offline session context will be safely cleared.',
                             confirmLabel: 'LOGOUT',
                             cancelLabel: 'CANCEL',
                             isDestructive: true,

@@ -120,10 +120,12 @@ class _AIAnalystScreenState extends State<AIAnalystScreen> {
 
     final history = _messages
         .take(_messages.length - 1)
-        .map((m) => {
-              'role': m['isMe'] == true ? 'user' : 'model',
-              'content': m['text'] ?? '',
-            })
+        .map(
+          (m) => {
+            'role': m['isMe'] == true ? 'user' : 'model',
+            'content': m['text'] ?? '',
+          },
+        )
         .toList();
 
     final result = await ApiService.postAIChat(userQuery, history, token);

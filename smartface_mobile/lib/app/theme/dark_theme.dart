@@ -112,8 +112,11 @@ class DarkAppColors extends ThemeExtension<DarkAppColors> {
     return DarkAppColors(
       backgroundBase: Color.lerp(backgroundBase, other.backgroundBase, t)!,
       surfaceCard: Color.lerp(surfaceCard, other.surfaceCard, t)!,
-      surfaceCardElevated:
-          Color.lerp(surfaceCardElevated, other.surfaceCardElevated, t)!,
+      surfaceCardElevated: Color.lerp(
+        surfaceCardElevated,
+        other.surfaceCardElevated,
+        t,
+      )!,
       primary: Color.lerp(primary, other.primary, t)!,
       primaryGlow: Color.lerp(primaryGlow, other.primaryGlow, t)!,
       success: Color.lerp(success, other.success, t)!,
@@ -124,8 +127,11 @@ class DarkAppColors extends ThemeExtension<DarkAppColors> {
       errorGlow: Color.lerp(errorGlow, other.errorGlow, t)!,
       glassBorder: Color.lerp(glassBorder, other.glassBorder, t)!,
       navBarSurface: Color.lerp(navBarSurface, other.navBarSurface, t)!,
-      navBarActivePill:
-          Color.lerp(navBarActivePill, other.navBarActivePill, t)!,
+      navBarActivePill: Color.lerp(
+        navBarActivePill,
+        other.navBarActivePill,
+        t,
+      )!,
     );
   }
 }
@@ -246,37 +252,41 @@ ThemeData getDarkTheme() {
 
     // ── Elevated Buttons: gradient with glow shadow ─────────────────────────
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: d.primary,
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: Colors.white.withValues(alpha: 0.08),
-        disabledForegroundColor: Colors.white.withValues(alpha: 0.38),
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        textStyle: GoogleFonts.inter(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-        ),
-      ).copyWith(
-        backgroundColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.pressed)) return const Color(0xFF3730A3);
-          if (states.contains(WidgetState.disabled)) return Colors.white.withValues(alpha: 0.08);
-          return d.primary;
-        }),
-        elevation: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.pressed)) return 2;
-          return 6;
-        }),
-        shadowColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.pressed)) return Colors.transparent;
-          return d.primaryGlow.withValues(alpha: 0.25);
-        }),
-      ),
+      style:
+          ElevatedButton.styleFrom(
+            backgroundColor: d.primary,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: Colors.white.withValues(alpha: 0.08),
+            disabledForegroundColor: Colors.white.withValues(alpha: 0.38),
+            elevation: 0,
+            shadowColor: Colors.transparent,
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            textStyle: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ).copyWith(
+            backgroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed))
+                return const Color(0xFF3730A3);
+              if (states.contains(WidgetState.disabled))
+                return Colors.white.withValues(alpha: 0.08);
+              return d.primary;
+            }),
+            elevation: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed)) return 2;
+              return 6;
+            }),
+            shadowColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed))
+                return Colors.transparent;
+              return d.primaryGlow.withValues(alpha: 0.25);
+            }),
+          ),
     ),
 
     // ── Outlined Buttons ─────────────────────────────────────────────────────
@@ -287,9 +297,7 @@ ThemeData getDarkTheme() {
         disabledForegroundColor: Colors.white.withValues(alpha: 0.38),
 
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         textStyle: GoogleFonts.inter(
           fontSize: 15,
           fontWeight: FontWeight.w600,
@@ -303,13 +311,8 @@ ThemeData getDarkTheme() {
       style: TextButton.styleFrom(
         foregroundColor: d.primaryGlow,
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        textStyle: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
       ),
     ),
 
@@ -318,10 +321,7 @@ ThemeData getDarkTheme() {
       filled: true,
       fillColor: Colors.white.withValues(alpha: 0.04),
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 16,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       labelStyle: GoogleFonts.inter(
         color: Colors.white.withValues(alpha: 0.50),
         fontSize: 14,
@@ -384,14 +384,8 @@ ThemeData getDarkTheme() {
       scrolledUnderElevation: 0,
       centerTitle: false,
       titleSpacing: 0,
-      iconTheme: const IconThemeData(
-        color: Colors.white,
-        size: 24,
-      ),
-      actionsIconTheme: const IconThemeData(
-        color: Colors.white,
-        size: 24,
-      ),
+      iconTheme: const IconThemeData(color: Colors.white, size: 24),
+      actionsIconTheme: const IconThemeData(color: Colors.white, size: 24),
       titleTextStyle: GoogleFonts.inter(
         color: Colors.white.withValues(alpha: 0.92),
         fontSize: 18,
@@ -407,10 +401,7 @@ ThemeData getDarkTheme() {
       shadowColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: d.glassBorder,
-          width: 1,
-        ),
+        side: BorderSide(color: d.glassBorder, width: 1),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
     ),
@@ -431,10 +422,7 @@ ThemeData getDarkTheme() {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: d.glassBorder,
-          width: 1,
-        ),
+        side: BorderSide(color: d.glassBorder, width: 1),
       ),
     ),
 
@@ -452,10 +440,7 @@ ThemeData getDarkTheme() {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: d.glassBorder,
-          width: 1,
-        ),
+        side: BorderSide(color: d.glassBorder, width: 1),
       ),
       contentTextStyle: GoogleFonts.inter(
         color: Colors.white.withValues(alpha: 0.87),
@@ -480,9 +465,7 @@ ThemeData getDarkTheme() {
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-          color: Colors.white.withValues(alpha: 0.10),
-        ),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
       ),
       elevation: 0,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -539,9 +522,7 @@ ThemeData getDarkTheme() {
       todayBackgroundColor: WidgetStateProperty.all(
         d.primary.withValues(alpha: 0.15),
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
 
     // ── Floating Action Button ─────────────────────────────────────────────
@@ -550,9 +531,7 @@ ThemeData getDarkTheme() {
       foregroundColor: Colors.white,
       elevation: 4,
       highlightElevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
 
     // ── Tab Bar ─────────────────────────────────────────────────────────────
@@ -575,12 +554,8 @@ ThemeData getDarkTheme() {
 
     // ── Scrollbar ──────────────────────────────────────────────────────────
     scrollbarTheme: ScrollbarThemeData(
-      thumbColor: WidgetStateProperty.all(
-        Colors.white.withValues(alpha: 0.15),
-      ),
-      trackColor: WidgetStateProperty.all(
-        Colors.white.withValues(alpha: 0.04),
-      ),
+      thumbColor: WidgetStateProperty.all(Colors.white.withValues(alpha: 0.15)),
+      trackColor: WidgetStateProperty.all(Colors.white.withValues(alpha: 0.04)),
       thickness: WidgetStateProperty.all(4),
       radius: const Radius.circular(8),
     ),

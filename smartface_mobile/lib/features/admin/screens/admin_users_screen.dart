@@ -15,8 +15,10 @@ class AdminUsersScreen extends StatefulWidget {
 class _AdminUsersScreenState extends State<AdminUsersScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final TextEditingController _studentSearchController = TextEditingController();
-  final TextEditingController _facultySearchController = TextEditingController();
+  final TextEditingController _studentSearchController =
+      TextEditingController();
+  final TextEditingController _facultySearchController =
+      TextEditingController();
 
   String _selectedStudentDept = 'All';
   String _studentSearchQuery = '';
@@ -146,7 +148,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
             unselectedLabelColor: isDark ? Colors.white38 : AppColors.textMuted,
-            labelStyle: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13),
+            labelStyle: GoogleFonts.inter(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
             tabs: const [
               Tab(text: 'Students'),
               Tab(text: 'Faculty'),
@@ -168,9 +173,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
 
   Widget _buildStudentsTab(bool isDark) {
     final filtered = _students.where((s) {
-      final matchesSearch = s['name'].toString().toLowerCase().contains(_studentSearchQuery.toLowerCase()) ||
-          s['email'].toString().toLowerCase().contains(_studentSearchQuery.toLowerCase());
-      final matchesDept = _selectedStudentDept == 'All' || s['dept'] == _selectedStudentDept;
+      final matchesSearch =
+          s['name'].toString().toLowerCase().contains(
+            _studentSearchQuery.toLowerCase(),
+          ) ||
+          s['email'].toString().toLowerCase().contains(
+            _studentSearchQuery.toLowerCase(),
+          );
+      final matchesDept =
+          _selectedStudentDept == 'All' || s['dept'] == _selectedStudentDept;
       return matchesSearch && matchesDept;
     }).toList();
 
@@ -205,11 +216,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                       child: ChoiceChip(
                         label: Text(dept),
                         selected: isSelected,
-                        selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                        selectedColor: AppColors.primary.withValues(
+                          alpha: 0.15,
+                        ),
                         labelStyle: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? AppColors.primary : (isDark ? Colors.white54 : AppColors.textMuted),
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark ? Colors.white54 : AppColors.textMuted),
                         ),
                         onSelected: (selected) {
                           if (selected) {
@@ -229,87 +244,112 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
         // Student List
         Expanded(
           child: filtered.isEmpty
-              ? _buildEmptyState('No students found matching your search query.')
+              ? _buildEmptyState(
+                  'No students found matching your search query.',
+                )
               : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     final s = filtered[index];
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: GlassCard(
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                              child: Text(
-                                s['name'][0],
-                                style: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    s['name'],
-                                    style: GoogleFonts.inter(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: GlassCard(
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  child: Text(
+                                    s['name'][0],
+                                    style: GoogleFonts.outfit(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      color: isDark ? Colors.white : AppColors.textHeading,
+                                      color: AppColors.primary,
                                     ),
                                   ),
-                                  Text(
-                                    s['email'],
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11,
-                                      color: isDark ? Colors.white54 : AppColors.textMuted,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Row(
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: isDark ? Colors.white10 : AppColors.surfaceLight,
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          s['dept'],
-                                          style: GoogleFonts.robotoMono(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.primary,
-                                          ),
+                                      Text(
+                                        s['name'],
+                                        style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                          color: isDark
+                                              ? Colors.white
+                                              : AppColors.textHeading,
                                         ),
                                       ),
-                                      const SizedBox(width: 10),
                                       Text(
-                                        'Attendance: ${s['attendance']}',
+                                        s['email'],
                                         style: GoogleFonts.inter(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: s['isRisk'] ? AppColors.error : AppColors.success,
+                                          fontSize: 11,
+                                          color: isDark
+                                              ? Colors.white54
+                                              : AppColors.textMuted,
                                         ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isDark
+                                                  ? Colors.white10
+                                                  : AppColors.surfaceLight,
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              s['dept'],
+                                              style: GoogleFonts.robotoMono(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            'Attendance: ${s['attendance']}',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: s['isRisk']
+                                                  ? AppColors.error
+                                                  : AppColors.success,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                StatusBadge(
+                                  label: s['status'],
+                                  color: s['isRisk']
+                                      ? AppColors.error
+                                      : AppColors.success,
+                                ),
+                              ],
                             ),
-                            StatusBadge(
-                              label: s['status'],
-                              color: s['isRisk'] ? AppColors.error : AppColors.success,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ).animate(delay: (index * 60).ms).fadeIn().slideY(begin: 0.1, end: 0);
+                          ),
+                        )
+                        .animate(delay: (index * 60).ms)
+                        .fadeIn()
+                        .slideY(begin: 0.1, end: 0);
                   },
                 ),
         ),
@@ -319,9 +359,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
 
   Widget _buildFacultyTab(bool isDark) {
     final filtered = _faculty.where((f) {
-      return f['name'].toString().toLowerCase().contains(_facultySearchQuery.toLowerCase()) ||
-          f['email'].toString().toLowerCase().contains(_facultySearchQuery.toLowerCase()) ||
-          f['role'].toString().toLowerCase().contains(_facultySearchQuery.toLowerCase());
+      return f['name'].toString().toLowerCase().contains(
+            _facultySearchQuery.toLowerCase(),
+          ) ||
+          f['email'].toString().toLowerCase().contains(
+            _facultySearchQuery.toLowerCase(),
+          ) ||
+          f['role'].toString().toLowerCase().contains(
+            _facultySearchQuery.toLowerCase(),
+          );
     }).toList();
 
     return Column(
@@ -346,84 +392,107 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
           child: filtered.isEmpty
               ? _buildEmptyState('No faculty members found.')
               : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     final f = filtered[index];
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: GlassCard(
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: AppColors.gold.withValues(alpha: 0.1),
-                              child: Text(
-                                f['name'][0],
-                                style: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.gold,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    f['name'],
-                                    style: GoogleFonts.inter(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: GlassCard(
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: AppColors.gold.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  child: Text(
+                                    f['name'][0],
+                                    style: GoogleFonts.outfit(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      color: isDark ? Colors.white : AppColors.textHeading,
+                                      color: AppColors.gold,
                                     ),
                                   ),
-                                  Text(
-                                    f['email'],
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11,
-                                      color: isDark ? Colors.white54 : AppColors.textMuted,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Row(
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: isDark ? Colors.white10 : AppColors.surfaceLight,
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          f['dept'],
-                                          style: GoogleFonts.robotoMono(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.primary,
-                                          ),
+                                      Text(
+                                        f['name'],
+                                        style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                          color: isDark
+                                              ? Colors.white
+                                              : AppColors.textHeading,
                                         ),
                                       ),
-                                      const SizedBox(width: 10),
                                       Text(
-                                        f['role'],
+                                        f['email'],
                                         style: GoogleFonts.inter(
-                                          fontSize: 12,
-                                          color: isDark ? Colors.white38 : AppColors.textMuted,
+                                          fontSize: 11,
+                                          color: isDark
+                                              ? Colors.white54
+                                              : AppColors.textMuted,
                                         ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isDark
+                                                  ? Colors.white10
+                                                  : AppColors.surfaceLight,
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              f['dept'],
+                                              style: GoogleFonts.robotoMono(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            f['role'],
+                                            style: GoogleFonts.inter(
+                                              fontSize: 12,
+                                              color: isDark
+                                                  ? Colors.white38
+                                                  : AppColors.textMuted,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                StatusBadge(
+                                  label: f['status'],
+                                  color: f['isOnLeave']
+                                      ? AppColors.warning
+                                      : AppColors.success,
+                                ),
+                              ],
                             ),
-                            StatusBadge(
-                              label: f['status'],
-                              color: f['isOnLeave'] ? AppColors.warning : AppColors.success,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ).animate(delay: (index * 60).ms).fadeIn().slideY(begin: 0.1, end: 0);
+                          ),
+                        )
+                        .animate(delay: (index * 60).ms)
+                        .fadeIn()
+                        .slideY(begin: 0.1, end: 0);
                   },
                 ),
         ),

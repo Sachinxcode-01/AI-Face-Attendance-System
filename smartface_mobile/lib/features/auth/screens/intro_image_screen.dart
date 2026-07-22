@@ -150,7 +150,9 @@ class _IntroImageScreenState extends State<IntroImageScreen> {
                               height: 6,
                               width: isSelected ? 24 : 6,
                               decoration: BoxDecoration(
-                                color: isSelected ? Colors.white : Colors.white38,
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.white38,
                                 borderRadius: BorderRadius.circular(3),
                               ),
                             );
@@ -181,7 +183,9 @@ class _IntroImageScreenState extends State<IntroImageScreen> {
                             // Next or Let's Get Started Button
                             SizedBox(
                               height: 48,
-                              width: _currentPage == _totalPages - 1 ? 190 : 110,
+                              width: _currentPage == _totalPages - 1
+                                  ? 190
+                                  : 110,
                               child: PrimaryButton(
                                 onPressed: _nextPage,
                                 text: _currentPage == _totalPages - 1

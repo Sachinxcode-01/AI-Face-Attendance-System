@@ -19,19 +19,22 @@ class _IntroScreenState extends State<IntroScreen> {
   final List<IntroPageData> _introPages = [
     IntroPageData(
       title: 'AI Face Recognition',
-      subtitle: 'Our advanced neural network registers your facial profile parameters locally and matches it securely with the institution database in milliseconds.',
+      subtitle:
+          'Our advanced neural network registers your facial profile parameters locally and matches it securely with the institution database in milliseconds.',
       icon: Icons.face_unlock_outlined,
       iconColor: AppColors.warning,
     ),
     IntroPageData(
       title: 'Dynamic QR Attendance',
-      subtitle: 'Anti-spoofing dynamic rotating QR codes prevent location sharing and attendance proxy check-ins. Keep your app scanner active near the terminal.',
+      subtitle:
+          'Anti-spoofing dynamic rotating QR codes prevent location sharing and attendance proxy check-ins. Keep your app scanner active near the terminal.',
       icon: Icons.qr_code_2_outlined,
       iconColor: AppColors.primaryBright,
     ),
     IntroPageData(
       title: 'Reports & Analytics',
-      subtitle: 'Gain detailed insights into your attendance trends. Generate and export official reports directly to PDF, CSV, or Excel formats anytime.',
+      subtitle:
+          'Gain detailed insights into your attendance trends. Generate and export official reports directly to PDF, CSV, or Excel formats anytime.',
       icon: Icons.bar_chart_outlined,
       iconColor: AppColors.success,
     ),
@@ -78,7 +81,10 @@ class _IntroScreenState extends State<IntroScreen> {
               children: [
                 // Header with Skip Button
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -151,7 +157,9 @@ class _IntroScreenState extends State<IntroScreen> {
                             height: 6,
                             width: isSelected ? 24 : 6,
                             decoration: BoxDecoration(
-                              color: isSelected ? AppColors.warning : Colors.white38,
+                              color: isSelected
+                                  ? AppColors.warning
+                                  : Colors.white38,
                               borderRadius: BorderRadius.circular(3),
                             ),
                           );
@@ -164,7 +172,9 @@ class _IntroScreenState extends State<IntroScreen> {
                         width: _currentPage == _totalPages - 1 ? 140 : 100,
                         child: PrimaryButton(
                           onPressed: _nextPage,
-                          text: _currentPage == _totalPages - 1 ? 'START' : 'NEXT',
+                          text: _currentPage == _totalPages - 1
+                              ? 'START'
+                              : 'NEXT',
                         ),
                       ),
                     ],
@@ -200,11 +210,7 @@ class _IntroScreenState extends State<IntroScreen> {
                     width: 1.5,
                   ),
                 ),
-                child: Icon(
-                  page.icon,
-                  size: 48,
-                  color: page.iconColor,
-                ),
+                child: Icon(page.icon, size: 48, color: page.iconColor),
               ).animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
 
               const SizedBox(height: 32),

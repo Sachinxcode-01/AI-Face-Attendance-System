@@ -250,290 +250,303 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: PremiumAppBar(
-        title: 'Train AI Faces',
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          title: 'Train AI Faces',
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
-      ),
-      body: _isLoadingStudents
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.gold),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ONBOARD STUDENT FACE',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      letterSpacing: 2,
-                      color: AppColors.gold,
-                      fontWeight: FontWeight.bold,
+        body: _isLoadingStudents
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColors.gold),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ONBOARD STUDENT FACE',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        letterSpacing: 2,
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 15),
+                    const SizedBox(height: 15),
 
-                  // Search Autocomplete Card
-                  _buildGlassCard(
-                    child: Autocomplete<Map<String, dynamic>>(
-                      displayStringForOption: (Map<String, dynamic> option) =>
-                          "${option['full_name']} (${option['student_id']})",
-                      optionsBuilder: (TextEditingValue textEditingValue) {
-                        if (textEditingValue.text.isEmpty) {
-                          return const Iterable<Map<String, dynamic>>.empty();
-                        }
-                        return _students.where((student) {
-                          final name = student['full_name']
-                              .toString()
-                              .toLowerCase();
-                          final id = student['student_id']
-                              .toString()
-                              .toLowerCase();
-                          final search = textEditingValue.text.toLowerCase();
-                          return name.contains(search) || id.contains(search);
-                        });
-                      },
-                      onSelected: (Map<String, dynamic> selection) {
-                        setState(() {
-                          _selectedStudent = selection;
-                        });
-                      },
-                      fieldViewBuilder:
-                          (context, controller, focusNode, onFieldSubmitted) {
-                            // Store the controller reference to clear it later
-                            if (_autocompleteController.text.isEmpty &&
-                                controller.text.isNotEmpty) {
-                              _autocompleteController.text = controller.text;
-                            }
-                            return TextField(
-                              controller: controller,
-                              focusNode: focusNode,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                              decoration: InputDecoration(
-                                labelText: 'Select Student',
-                                labelStyle: const TextStyle(
-                                  color: Colors.white38,
-                                  fontSize: 13,
+                    // Search Autocomplete Card
+                    _buildGlassCard(
+                      child: Autocomplete<Map<String, dynamic>>(
+                        displayStringForOption: (Map<String, dynamic> option) =>
+                            "${option['full_name']} (${option['student_id']})",
+                        optionsBuilder: (TextEditingValue textEditingValue) {
+                          if (textEditingValue.text.isEmpty) {
+                            return const Iterable<Map<String, dynamic>>.empty();
+                          }
+                          return _students.where((student) {
+                            final name = student['full_name']
+                                .toString()
+                                .toLowerCase();
+                            final id = student['student_id']
+                                .toString()
+                                .toLowerCase();
+                            final search = textEditingValue.text.toLowerCase();
+                            return name.contains(search) || id.contains(search);
+                          });
+                        },
+                        onSelected: (Map<String, dynamic> selection) {
+                          setState(() {
+                            _selectedStudent = selection;
+                          });
+                        },
+                        fieldViewBuilder:
+                            (context, controller, focusNode, onFieldSubmitted) {
+                              // Store the controller reference to clear it later
+                              if (_autocompleteController.text.isEmpty &&
+                                  controller.text.isNotEmpty) {
+                                _autocompleteController.text = controller.text;
+                              }
+                              return TextField(
+                                controller: controller,
+                                focusNode: focusNode,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
                                 ),
-                                prefixIcon: const Icon(
-                                  Icons.person_search_outlined,
-                                  color: AppColors.gold,
-                                  size: 20,
+                                decoration: InputDecoration(
+                                  labelText: 'Select Student',
+                                  labelStyle: const TextStyle(
+                                    color: Colors.white38,
+                                    fontSize: 13,
+                                  ),
+                                  prefixIcon: const Icon(
+                                    Icons.person_search_outlined,
+                                    color: AppColors.gold,
+                                    size: 20,
+                                  ),
+                                  suffixIcon: _selectedStudent != null
+                                      ? const Icon(
+                                          Icons.check_circle_outline,
+                                          color: AppColors.success,
+                                          size: 20,
+                                        )
+                                      : null,
+                                  filled: true,
+                                  fillColor: Colors.black.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                 ),
-                                suffixIcon: _selectedStudent != null
-                                    ? const Icon(
-                                        Icons.check_circle_outline,
-                                        color: AppColors.success,
-                                        size: 20,
+                              );
+                            },
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+
+                    Text(
+                      'CAPTURE BIOMETRIC SHIELD',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        letterSpacing: 2,
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+
+                    // Image Selection Zone
+                    _buildGlassCard(
+                      child: Column(
+                        children: [
+                          Center(
+                            child: Container(
+                              height: 220,
+                              width: 220,
+                              decoration: BoxDecoration(
+                                color: Colors.black26,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: _imageFile != null
+                                      ? AppColors.gold
+                                      : Colors.white10,
+                                  width: 1.5,
+                                ),
+                                image: _imageFile != null
+                                    ? DecorationImage(
+                                        image: FileImage(
+                                          File(_imageFile!.path),
+                                        ),
+                                        fit: BoxFit.cover,
                                       )
                                     : null,
-                                filled: true,
-                                fillColor: Colors.black.withValues(alpha: 0.15),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide.none,
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
                               ),
-                            );
-                          },
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-
-                  Text(
-                    'CAPTURE BIOMETRIC SHIELD',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      letterSpacing: 2,
-                      color: AppColors.gold,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-
-                  // Image Selection Zone
-                  _buildGlassCard(
-                    child: Column(
-                      children: [
-                        Center(
-                          child: Container(
-                            height: 220,
-                            width: 220,
-                            decoration: BoxDecoration(
-                              color: Colors.black26,
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                color: _imageFile != null
-                                    ? AppColors.gold
-                                    : Colors.white10,
-                                width: 1.5,
-                              ),
-                              image: _imageFile != null
-                                  ? DecorationImage(
-                                      image: FileImage(File(_imageFile!.path)),
-                                      fit: BoxFit.cover,
+                              child: _imageFile == null
+                                  ? Icon(
+                                      Icons.face_retouching_natural_outlined,
+                                      size: 60,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.15,
+                                      ),
                                     )
                                   : null,
                             ),
-                            child: _imageFile == null
-                                ? Icon(
-                                    Icons.face_retouching_natural_outlined,
-                                    size: 60,
-                                    color: Colors.white.withValues(alpha: 0.15),
-                                  )
-                                : null,
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () =>
+                                      _pickImage(ImageSource.camera),
+                                  icon: const Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 18,
+                                  ),
+                                  label: const Text(
+                                    'CAMERA',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    side: const BorderSide(
+                                      color: Colors.white12,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () =>
+                                      _pickImage(ImageSource.gallery),
+                                  icon: const Icon(
+                                    Icons.photo_library_outlined,
+                                    size: 18,
+                                  ),
+                                  label: const Text(
+                                    'GALLERY',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    side: const BorderSide(
+                                      color: Colors.white12,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+
+                    // Action Buttons
+                    SizedBox(
+                      width: double.infinity,
+                      height: 58,
+                      child: ElevatedButton.icon(
+                        onPressed: (_isUploading || _isTraining)
+                            ? null
+                            : _uploadFace,
+                        icon: _isUploading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.black,
+                                ),
+                              )
+                            : const Icon(Icons.cloud_upload_outlined),
+                        label: Text(
+                          _isUploading ? 'UPLOADING...' : 'UPLOAD FACE PHOTO',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
                           ),
                         ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () => _pickImage(ImageSource.camera),
-                                icon: const Icon(
-                                  Icons.camera_alt_outlined,
-                                  size: 18,
-                                ),
-                                label: const Text(
-                                  'CAMERA',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  side: const BorderSide(color: Colors.white12),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 14,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 15),
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () =>
-                                    _pickImage(ImageSource.gallery),
-                                icon: const Icon(
-                                  Icons.photo_library_outlined,
-                                  size: 18,
-                                ),
-                                label: const Text(
-                                  'GALLERY',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  side: const BorderSide(color: Colors.white12),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 14,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.gold,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 4,
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 30),
+                    const SizedBox(height: 15),
 
-                  // Action Buttons
-                  SizedBox(
-                    width: double.infinity,
-                    height: 58,
-                    child: ElevatedButton.icon(
-                      onPressed: (_isUploading || _isTraining)
-                          ? null
-                          : _uploadFace,
-                      icon: _isUploading
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.black,
-                              ),
-                            )
-                          : const Icon(Icons.cloud_upload_outlined),
-                      label: Text(
-                        _isUploading ? 'UPLOADING...' : 'UPLOAD FACE PHOTO',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
+                    // Train button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 58,
+                      child: OutlinedButton.icon(
+                        onPressed: (_isUploading || _isTraining)
+                            ? null
+                            : _startTraining,
+                        icon: _isTraining
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.gold,
+                                ),
+                              )
+                            : const Icon(Icons.bolt_rounded),
+                        label: Text(
+                          _isTraining
+                              ? 'TRAINING...'
+                              : 'RE-TRAIN NEURAL ENGINE',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.gold,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        elevation: 4,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-
-                  // Train button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 58,
-                    child: OutlinedButton.icon(
-                      onPressed: (_isUploading || _isTraining)
-                          ? null
-                          : _startTraining,
-                      icon: _isTraining
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.gold,
-                              ),
-                            )
-                          : const Icon(Icons.bolt_rounded),
-                      label: Text(
-                        _isTraining ? 'TRAINING...' : 'RE-TRAIN NEURAL ENGINE',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.gold,
-                        side: const BorderSide(
-                          color: AppColors.gold,
-                          width: 1.5,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.gold,
+                          side: const BorderSide(
+                            color: AppColors.gold,
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
       ),
     );
   }

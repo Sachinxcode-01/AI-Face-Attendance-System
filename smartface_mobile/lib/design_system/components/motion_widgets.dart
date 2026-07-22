@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
@@ -117,7 +117,8 @@ class _AuroraBackgroundState extends State<AuroraBackground>
   Widget build(BuildContext context) {
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    final colors = widget.blobColors ??
+    final colors =
+        widget.blobColors ??
         const [AppColors.indigoLight, Color(0xFF7C3AED), AppColors.cyan];
 
     return RepaintBoundary(
@@ -160,10 +161,7 @@ class _AuroraPainter extends CustomPainter {
       final rect = Rect.fromCircle(center: Offset(cx, cy), radius: radius);
       final paint = Paint()
         ..shader = RadialGradient(
-          colors: [
-            color.withValues(alpha: 0.34),
-            color.withValues(alpha: 0.0),
-          ],
+          colors: [color.withValues(alpha: 0.34), color.withValues(alpha: 0.0)],
         ).createShader(rect)
         ..blendMode = BlendMode.plus;
       canvas.drawRect(rect, paint);

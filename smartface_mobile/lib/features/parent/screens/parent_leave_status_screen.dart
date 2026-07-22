@@ -28,7 +28,8 @@ class ParentLeaveStatusScreen extends StatefulWidget {
   const ParentLeaveStatusScreen({super.key, this.wardEmail});
 
   @override
-  State<ParentLeaveStatusScreen> createState() => _ParentLeaveStatusScreenState();
+  State<ParentLeaveStatusScreen> createState() =>
+      _ParentLeaveStatusScreenState();
 }
 
 class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
@@ -82,7 +83,10 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
           title: 'Leave Applications',
           actions: [
             IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: AppColors.textHeading),
+              icon: const Icon(
+                Icons.refresh_rounded,
+                color: AppColors.textHeading,
+              ),
               onPressed: _fetchLeaves,
             ),
           ],
@@ -115,11 +119,18 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: (leave.leaveType == 'sick')
-                                        ? Colors.redAccent.withValues(alpha: 0.1)
-                                        : Colors.blueAccent.withValues(alpha: 0.1),
+                                        ? Colors.redAccent.withValues(
+                                            alpha: 0.1,
+                                          )
+                                        : Colors.blueAccent.withValues(
+                                            alpha: 0.1,
+                                          ),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -134,20 +145,34 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
                                   ),
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: isApproved
-                                        ? AppColors.success.withValues(alpha: 0.1)
+                                        ? AppColors.success.withValues(
+                                            alpha: 0.1,
+                                          )
                                         : (isPending
-                                            ? Colors.orangeAccent.withValues(alpha: 0.1)
-                                            : AppColors.error.withValues(alpha: 0.1)),
+                                              ? Colors.orangeAccent.withValues(
+                                                  alpha: 0.1,
+                                                )
+                                              : AppColors.error.withValues(
+                                                  alpha: 0.1,
+                                                )),
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
                                       color: isApproved
-                                          ? AppColors.success.withValues(alpha: 0.3)
+                                          ? AppColors.success.withValues(
+                                              alpha: 0.3,
+                                            )
                                           : (isPending
-                                              ? Colors.orangeAccent.withValues(alpha: 0.3)
-                                              : AppColors.error.withValues(alpha: 0.3)),
+                                                ? Colors.orangeAccent
+                                                      .withValues(alpha: 0.3)
+                                                : AppColors.error.withValues(
+                                                    alpha: 0.3,
+                                                  )),
                                     ),
                                   ),
                                   child: Text(
@@ -158,8 +183,8 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
                                       color: isApproved
                                           ? AppColors.success
                                           : (isPending
-                                              ? Colors.orangeAccent
-                                              : AppColors.error),
+                                                ? Colors.orangeAccent
+                                                : AppColors.error),
                                     ),
                                   ),
                                 ),
@@ -197,7 +222,8 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
                                 ),
                               ],
                             ),
-                            if (leave.remarks != null && leave.remarks!.isNotEmpty) ...[
+                            if (leave.remarks != null &&
+                                leave.remarks!.isNotEmpty) ...[
                               const SizedBox(height: 10),
                               Container(
                                 width: double.infinity,
@@ -205,7 +231,9 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
                                 decoration: BoxDecoration(
                                   color: AppColors.surfaceLight,
                                   borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.08),
+                                  ),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,

@@ -11,7 +11,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   const channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
-  const notifChannel = MethodChannel('dexterous.com/flutter_local_notifications');
+  const notifChannel = MethodChannel(
+    'dexterous.com/flutter_local_notifications',
+  );
   final Map<String, String> mockSecureStorage = {};
 
   setUpAll(() {
@@ -60,8 +62,9 @@ void main() {
       );
     });
 
-    testWidgets('StudentTimetableScreen renders layout and tab bar',
-        (WidgetTester tester) async {
+    testWidgets('StudentTimetableScreen renders layout and tab bar', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: ChangeNotifierProvider<SessionManager>.value(
@@ -76,8 +79,9 @@ void main() {
       expect(find.text('Class Timetable'), findsOneWidget);
     });
 
-    testWidgets('AttendanceCalendarScreen renders calendar successfully',
-        (WidgetTester tester) async {
+    testWidgets('AttendanceCalendarScreen renders calendar successfully', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: ChangeNotifierProvider<SessionManager>.value(
@@ -91,18 +95,20 @@ void main() {
       expect(find.text('Attendance Calendar'), findsOneWidget);
     });
 
-    test('CalendarReminderService schedules reminder successfully without throwing',
-        () async {
-      expect(
-        () => CalendarReminderService.scheduleClassReminder(
-          id: 999,
-          title: 'Test Lecture',
-          body: 'Lecture starts in 10 mins',
-          hour: 9,
-          minute: 0,
-        ),
-        returnsNormally,
-      );
-    });
+    test(
+      'CalendarReminderService schedules reminder successfully without throwing',
+      () async {
+        expect(
+          () => CalendarReminderService.scheduleClassReminder(
+            id: 999,
+            title: 'Test Lecture',
+            body: 'Lecture starts in 10 mins',
+            hour: 9,
+            minute: 0,
+          ),
+          returnsNormally,
+        );
+      },
+    );
   });
 }

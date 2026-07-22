@@ -41,7 +41,12 @@ class ModernCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color ?? AppColors.card(brightness),
         borderRadius: BorderRadius.circular(radius),
-        border: border ?? Border.all(color: AppColors.border(brightness).withValues(alpha: 0.6), width: 1),
+        border:
+            border ??
+            Border.all(
+              color: AppColors.border(brightness).withValues(alpha: 0.6),
+              width: 1,
+            ),
         boxShadow: [
           BoxShadow(
             color: isDark

@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
-import 'package:smartface_attendance/design_system/design_system.dart' hide PrimaryButton;
+import 'package:smartface_attendance/design_system/design_system.dart'
+    hide PrimaryButton;
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -36,8 +37,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _handleSendOtp() async {
     if (_isLoading) return; // Guard against double-tap duplicate submissions
     final email = _emailController.text.trim();
-    if (email.isEmpty || !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      AppToast.show(context, message: 'Please enter a valid email address', type: ToastType.warning);
+    if (email.isEmpty ||
+        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      AppToast.show(
+        context,
+        message: 'Please enter a valid email address',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -48,23 +54,36 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final result = await ApiService.forgotPassword(email);
       if (!mounted) return;
 
-      final isSuccess = !result.containsKey('error_type') &&
-                        !result.containsKey('detail') &&
-                        (result.containsKey('message') || result['success'] == true);
+      final isSuccess =
+          !result.containsKey('error_type') &&
+          !result.containsKey('detail') &&
+          (result.containsKey('message') || result['success'] == true);
 
       if (isSuccess) {
-        final msg = result['message'] ?? 'Verification code sent to your email!';
-        AppToast.show(context, message: msg.toString(), type: ToastType.success);
+        final msg =
+            result['message'] ?? 'Verification code sent to your email!';
+        AppToast.show(
+          context,
+          message: msg.toString(),
+          type: ToastType.success,
+        );
         setState(() {
           _otpSent = true;
         });
       } else {
-        final msg = result['detail'] ?? result['message'] ?? 'Failed to send verification code. Please try again.';
+        final msg =
+            result['detail'] ??
+            result['message'] ??
+            'Failed to send verification code. Please try again.';
         AppToast.show(context, message: msg.toString(), type: ToastType.error);
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'An unexpected error occurred. Please try again.', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'An unexpected error occurred. Please try again.',
+        type: ToastType.error,
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -80,15 +99,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final confirmPassword = _confirmPasswordController.text.trim();
 
     if (otp.length != 6) {
-      AppToast.show(context, message: 'Please enter the 6-digit code', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please enter the 6-digit code',
+        type: ToastType.warning,
+      );
       return;
     }
     if (newPassword.isEmpty) {
-      AppToast.show(context, message: 'Please enter a new password', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please enter a new password',
+        type: ToastType.warning,
+      );
       return;
     }
     if (newPassword.length < 8) {
-      AppToast.show(context, message: 'Password must be at least 8 characters long', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Password must be at least 8 characters long',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -100,14 +131,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!hasUpper || !hasLower || !hasDigit || !hasSpecial) {
       AppToast.show(
         context,
-        message: 'Password must contain uppercase, lowercase, numbers, and special characters',
+        message:
+            'Password must contain uppercase, lowercase, numbers, and special characters',
         type: ToastType.warning,
       );
       return;
     }
 
     if (newPassword != confirmPassword) {
-      AppToast.show(context, message: 'Passwords do not match', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Passwords do not match',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -118,26 +154,38 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final result = await ApiService.resetPassword(email, otp, newPassword);
       if (!mounted) return;
 
-      final isSuccess = !result.containsKey('error_type') &&
-                        !result.containsKey('detail') &&
-                        (result.containsKey('message') || result['success'] == true);
+      final isSuccess =
+          !result.containsKey('error_type') &&
+          !result.containsKey('detail') &&
+          (result.containsKey('message') || result['success'] == true);
 
       if (isSuccess) {
         HapticFeedback.heavyImpact();
         final msg = result['message'] ?? 'Password reset successful!';
-        AppToast.show(context, message: msg.toString(), type: ToastType.success);
+        AppToast.show(
+          context,
+          message: msg.toString(),
+          type: ToastType.success,
+        );
 
         await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
           context.go('/auth/login');
         }
       } else {
-        final msg = result['detail'] ?? result['message'] ?? 'Password reset failed. Please try again.';
+        final msg =
+            result['detail'] ??
+            result['message'] ??
+            'Password reset failed. Please try again.';
         AppToast.show(context, message: msg.toString(), type: ToastType.error);
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'An unexpected error occurred. Please try again.', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'An unexpected error occurred. Please try again.',
+        type: ToastType.error,
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -185,7 +233,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return AuthScreenLayout(
       title: _otpSent ? 'Reset password' : 'Reset your password',
-      subtitle: _otpSent 
+      subtitle: _otpSent
           ? 'Enter the 6-digit code sent to your email and your new password.'
           : "Enter your email and we'll send a verification code.",
       topIcon: _buildMailQuestionIcon(),
@@ -239,7 +287,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               controller: _passwordController,
               obscureText: !_isPasswordVisible,
               suffixIcon: GestureDetector(
-                onTap: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                onTap: () =>
+                    setState(() => _isPasswordVisible = !_isPasswordVisible),
                 child: Icon(
                   _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                   color: AuthDesign.textLabel,
@@ -256,9 +305,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               controller: _confirmPasswordController,
               obscureText: !_isConfirmPasswordVisible,
               suffixIcon: GestureDetector(
-                onTap: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+                onTap: () => setState(
+                  () => _isConfirmPasswordVisible = !_isConfirmPasswordVisible,
+                ),
                 child: Icon(
-                  _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  _isConfirmPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off,
                   color: AuthDesign.textLabel,
                   size: 18,
                 ),
@@ -273,7 +326,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               onPressed: _handleResetPassword,
             ),
             const SizedBox(height: 12),
-            
+
             // Resend OTP Trigger
             Center(
               child: GestureDetector(

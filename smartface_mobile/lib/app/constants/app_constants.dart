@@ -191,7 +191,16 @@ class AppRadius {
 // ======================================================
 
 /// User Security Actor Role
-enum UserRole { admin, teacher, student, parent, hod, principal, management, unknown }
+enum UserRole {
+  admin,
+  teacher,
+  student,
+  parent,
+  hod,
+  principal,
+  management,
+  unknown,
+}
 
 /// UserRole Mappings Extension
 ///

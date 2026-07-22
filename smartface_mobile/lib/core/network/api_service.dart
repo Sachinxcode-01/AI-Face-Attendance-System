@@ -133,7 +133,9 @@ class ApiService {
 
   static Future<void> init() async {
     if (baseUrl.isEmpty) {
-      debugPrint('[ApiService] ❌ FATAL: API_URL is empty. Check .env file is loaded and ENV dart-define is correct.');
+      debugPrint(
+        '[ApiService] ❌ FATAL: API_URL is empty. Check .env file is loaded and ENV dart-define is correct.',
+      );
     } else {
       debugPrint('[ApiService] ✅ Initialized. Base URL: $baseUrl');
     }
@@ -166,14 +168,17 @@ class ApiService {
       try {
         final decoded = jsonDecode(body);
         if (decoded is Map) {
-          final Map<String, dynamic> mapDecoded = Map<String, dynamic>.from(decoded);
+          final Map<String, dynamic> mapDecoded = Map<String, dynamic>.from(
+            decoded,
+          );
           if (mapDecoded.containsKey('detail')) {
             final detailStr = mapDecoded['detail']?.toString() ?? '';
             // Translate server proxy timeout/down strings to friendly message
-            if (detailStr.toLowerCase().contains('failed to respond') || 
+            if (detailStr.toLowerCase().contains('failed to respond') ||
                 detailStr.toLowerCase().contains('bad gateway') ||
                 detailStr.toLowerCase().contains('service unavailable')) {
-              mapDecoded['detail'] = 'The server is temporarily unavailable. Please try again later.';
+              mapDecoded['detail'] =
+                  'The server is temporarily unavailable. Please try again later.';
             }
           }
           return mapDecoded;
@@ -187,15 +192,18 @@ class ApiService {
     if (statusCode == 502 || statusCode == 503 || statusCode == 504) {
       return {
         'error_type': 'backend_down',
-        'detail': 'The server is temporarily unavailable. Please check your connection or try again later.',
+        'detail':
+            'The server is temporarily unavailable. Please check your connection or try again later.',
       };
     }
 
     // Extract HTML body snippet if plain text or html error
-    if (body.toLowerCase().contains('failed to respond') || body.toLowerCase().contains('application failed')) {
+    if (body.toLowerCase().contains('failed to respond') ||
+        body.toLowerCase().contains('application failed')) {
       return {
         'error_type': 'backend_down',
-        'detail': 'The server is temporarily unavailable. Please try again later.',
+        'detail':
+            'The server is temporarily unavailable. Please try again later.',
       };
     }
 
@@ -213,35 +221,46 @@ class ApiService {
   static Map<String, dynamic> _classifyNetworkError(Object e) {
     final msg = e.toString().toLowerCase();
     debugPrint('[ApiService] 🔴 Network error: $e');
-    if (e is FormatException || msg.contains('format') || msg.contains('json')) {
+    if (e is FormatException ||
+        msg.contains('format') ||
+        msg.contains('json')) {
       return {
         'error_type': 'invalid_json',
         'detail': 'Invalid response format from server.',
       };
     }
-    if (e is TimeoutException || msg.contains('timeoutexception') || msg.contains('timed out')) {
+    if (e is TimeoutException ||
+        msg.contains('timeoutexception') ||
+        msg.contains('timed out')) {
       return {
         'error_type': 'timeout',
         'detail': 'Request timed out. Please try again.',
       };
     }
-    if (msg.contains('socketexception') || msg.contains('failed host lookup') ||
-        msg.contains('no address associated') || msg.contains('network is unreachable') ||
-        msg.contains('connection refused') || baseUrl.isEmpty) {
+    if (msg.contains('socketexception') ||
+        msg.contains('failed host lookup') ||
+        msg.contains('no address associated') ||
+        msg.contains('network is unreachable') ||
+        msg.contains('connection refused') ||
+        baseUrl.isEmpty) {
       // Distinguish: if URL itself is valid-looking, it is backend down;
       // if it's empty or clearly wrong it is misconfiguration.
       if (baseUrl.isEmpty) {
         return {
           'error_type': 'misconfigured',
-          'detail': 'App is misconfigured (missing API URL). Please reinstall or contact support.',
+          'detail':
+              'App is misconfigured (missing API URL). Please reinstall or contact support.',
         };
       }
       return {
         'error_type': 'backend_down',
-        'detail': 'Server not reachable. Check your internet connection or try again later.',
+        'detail':
+            'Server not reachable. Check your internet connection or try again later.',
       };
     }
-    if (msg.contains('handshakeexception') || msg.contains('certificate') || msg.contains('tlsexception')) {
+    if (msg.contains('handshakeexception') ||
+        msg.contains('certificate') ||
+        msg.contains('tlsexception')) {
       return {
         'error_type': 'ssl_error',
         'detail': 'Secure connection failed. Please try again.',
@@ -287,11 +306,13 @@ class ApiService {
   static Future<Map<String, dynamic>> sendLoginOtp(String email) async {
     debugPrint('[ApiService] → POST $baseUrl/auth/login-otp/send');
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/auth/login-otp/send'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email}),
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/auth/login-otp/send'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(const Duration(seconds: 15));
       debugPrint('[ApiService] ← Status ${response.statusCode}');
       return _processResponse(response);
     } catch (e) {
@@ -305,11 +326,13 @@ class ApiService {
   ) async {
     debugPrint('[ApiService] → POST $baseUrl/auth/login-otp/verify');
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/auth/login-otp/verify'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'otp': otp}),
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/auth/login-otp/verify'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email, 'otp': otp}),
+          )
+          .timeout(const Duration(seconds: 15));
       debugPrint('[ApiService] ← Status ${response.statusCode}');
       return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
@@ -323,11 +346,13 @@ class ApiService {
   ) async {
     debugPrint('[ApiService] → POST $baseUrl/auth/login');
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/auth/login'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(const Duration(seconds: 15));
       debugPrint('[ApiService] ← Status ${response.statusCode}');
       return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
@@ -337,13 +362,15 @@ class ApiService {
 
   static Future<Map<String, dynamic>> logout(String token) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/auth/logout'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 4));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/auth/logout'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 4));
       return _processResponse(response);
     } catch (e) {
       return _classifyNetworkError(e);
@@ -352,13 +379,15 @@ class ApiService {
 
   static Future<Map<String, dynamic>> getUserProfile(String token) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/auth/me'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .get(
+            Uri.parse('$baseUrl/auth/me'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
       return _processResponse(response);
     } catch (e) {
       return _classifyNetworkError(e);
@@ -373,17 +402,19 @@ class ApiService {
     String? idToken,
   }) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/auth/google'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'name': name,
-          'role': role,
-          'avatar_url': avatarUrl,
-          'idToken': idToken,
-        }),
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/auth/google'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email,
+              'name': name,
+              'role': role,
+              'avatar_url': avatarUrl,
+              'idToken': idToken,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
       return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
       return _classifyNetworkError(e);
@@ -395,14 +426,13 @@ class ApiService {
     String role,
   ) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/auth/github'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'code': code,
-          'role': role,
-        }),
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/auth/github'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'code': code, 'role': role}),
+          )
+          .timeout(const Duration(seconds: 15));
       return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
       return _classifyNetworkError(e);
@@ -416,16 +446,18 @@ class ApiService {
     String role,
   ) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/auth/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'full_name': name,
-          'email': email,
-          'password': password,
-          'role': role.toLowerCase(),
-        }),
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/auth/register'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'full_name': name,
+              'email': email,
+              'password': password,
+              'role': role.toLowerCase(),
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
       return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
       return _classifyNetworkError(e);
@@ -434,11 +466,13 @@ class ApiService {
 
   static Future<Map<String, dynamic>> forgotPassword(String email) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/auth/forgot-password'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email}),
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/auth/forgot-password'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(const Duration(seconds: 15));
       return _processResponse(response);
     } catch (e) {
       return _classifyNetworkError(e);
@@ -447,10 +481,13 @@ class ApiService {
 
   static Future<List<dynamic>> getSecurityLogs() async {
     try {
-      final response = await client.get(Uri.parse('$baseUrl/security/logs')).timeout(const Duration(seconds: 15));
+      final response = await client
+          .get(Uri.parse('$baseUrl/security/logs'))
+          .timeout(const Duration(seconds: 15));
       final result = _processResponse(response);
       if (result is List) return result;
-      if (result is Map && result.containsKey('data') && result['data'] is List) return result['data'];
+      if (result is Map && result.containsKey('data') && result['data'] is List)
+        return result['data'];
       return [];
     } catch (e) {
       return [];
@@ -459,11 +496,13 @@ class ApiService {
 
   static Future<Map<String, dynamic>> sendIntruderAlert(String cameraId) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/security/intruder-alert'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'camera_id': cameraId, 'type': 'intruder'}),
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/security/intruder-alert'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'camera_id': cameraId, 'type': 'intruder'}),
+          )
+          .timeout(const Duration(seconds: 15));
       return _processResponse(response);
     } catch (e) {
       return _classifyNetworkError(e);
@@ -476,35 +515,38 @@ class ApiService {
     String newPassword,
   ) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/auth/reset-password'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'otp': otp,
-          'new_password': newPassword,
-        }),
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/auth/reset-password'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'email': email,
+              'otp': otp,
+              'new_password': newPassword,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
       return _processResponse(response);
     } catch (e) {
       return _classifyNetworkError(e);
     }
   }
 
-
   static Future<Map<String, dynamic>> updateProfile(
     Map<String, dynamic> data,
     String token,
   ) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/auth/update-profile'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(data),
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/auth/update-profile'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode(data),
+          )
+          .timeout(const Duration(seconds: 15));
       return _processResponse(response);
     } catch (e) {
       return _classifyNetworkError(e);
@@ -516,14 +558,16 @@ class ApiService {
     String token,
   ) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/auth/register-biometric'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'email': email}),
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/auth/register-biometric'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(const Duration(seconds: 15));
       return _processResponse(response);
     } catch (e) {
       return _classifyNetworkError(e);
@@ -532,17 +576,20 @@ class ApiService {
 
   static Future<List<dynamic>> getStudents(String token) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/auth/students'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 15));
+      final response = await client
+          .get(
+            Uri.parse('$baseUrl/auth/students'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         if (decoded is List) return decoded;
-        if (decoded is Map && decoded['data'] is List) return decoded['data'] as List;
+        if (decoded is Map && decoded['data'] is List)
+          return decoded['data'] as List;
       }
     } catch (e) {
       debugPrint('getStudents error: $e');
@@ -573,13 +620,15 @@ class ApiService {
 
   static Future<Map<String, dynamic>> triggerTrainFaces(String token) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/auth/train-faces'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 30));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/auth/train-faces'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 30));
       return _processResponse(response);
     } catch (e) {
       return _classifyNetworkError(e);
@@ -588,16 +637,19 @@ class ApiService {
 
   static Future<Map<String, dynamic>> askAI(String email, String query) async {
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl/ai/ask'),
-        headers: {
-          'Content-Type': 'application/json',
-          // NOTE: The Groq API key is injected server-side by the backend.
-          // It MUST NOT be sent from the Flutter client for security reasons.
-          'Authorization': 'Bearer ${await SecureTokenStorage.getAccessToken() ?? ""}',
-        },
-        body: jsonEncode({'email': email, 'query': query}),
-      ).timeout(const Duration(seconds: 30));
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/ai/ask'),
+            headers: {
+              'Content-Type': 'application/json',
+              // NOTE: The Groq API key is injected server-side by the backend.
+              // It MUST NOT be sent from the Flutter client for security reasons.
+              'Authorization':
+                  'Bearer ${await SecureTokenStorage.getAccessToken() ?? ""}',
+            },
+            body: jsonEncode({'email': email, 'query': query}),
+          )
+          .timeout(const Duration(seconds: 30));
       return _processResponse(response);
     } catch (e) {
       return _classifyNetworkError(e);
@@ -968,11 +1020,7 @@ class ApiService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'email': email,
-          'push': push,
-          'in_app': inApp,
-        }),
+        body: jsonEncode({'email': email, 'push': push, 'in_app': inApp}),
       );
       return response.statusCode == 200;
     } catch (e) {
@@ -991,10 +1039,7 @@ class ApiService {
     required String token,
   }) async {
     try {
-      final Map<String, dynamic> payload = {
-        'title': title,
-        'message': message,
-      };
+      final Map<String, dynamic> payload = {'title': title, 'message': message};
       if (role != null) payload['role'] = role;
       if (department != null) payload['department'] = department;
       if (priority != null) payload['priority'] = priority;
@@ -1057,10 +1102,7 @@ class ApiService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'message': message,
-          'history': history,
-        }),
+        body: jsonEncode({'message': message, 'history': history}),
       );
       return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
@@ -1092,13 +1134,15 @@ class ApiService {
   // ── Parent Section API Endpoints ──────────────────────────────────────────
   static Future<List<dynamic>> getParentWards(String token) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/parent/children'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 5));
+      final response = await client
+          .get(
+            Uri.parse('$baseUrl/parent/children'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as List<dynamic>;
       }
@@ -1113,7 +1157,7 @@ class ApiService {
         'student_id': 'USN-2026-CSE101',
         'department': 'Computer Science',
         'semester': '6th Semester',
-      }
+      },
     ];
   }
 
@@ -1122,13 +1166,15 @@ class ApiService {
     String token,
   ) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/parent/child/stats/$wardEmail'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 5));
+      final response = await client
+          .get(
+            Uri.parse('$baseUrl/parent/child/stats/$wardEmail'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
@@ -1152,13 +1198,15 @@ class ApiService {
     String token,
   ) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/parent/child/attendance-logs/$wardEmail'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 5));
+      final response = await client
+          .get(
+            Uri.parse('$baseUrl/parent/child/attendance-logs/$wardEmail'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as List<dynamic>;
       }
@@ -1168,19 +1216,28 @@ class ApiService {
     // Fallback mock logs
     return [
       {
-        'date': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String().split('T')[0],
+        'date': DateTime.now()
+            .subtract(const Duration(hours: 2))
+            .toIso8601String()
+            .split('T')[0],
         'subject': 'CS-402: Neural Networks',
         'status': 'Present',
         'verifiedBy': 'Face Scanner AI Node 2',
       },
       {
-        'date': DateTime.now().subtract(const Duration(days: 1, hours: 4)).toIso8601String().split('T')[0],
+        'date': DateTime.now()
+            .subtract(const Duration(days: 1, hours: 4))
+            .toIso8601String()
+            .split('T')[0],
         'subject': 'CS-301: Data Structures',
         'status': 'Present',
         'verifiedBy': 'Face Scanner AI Node 1',
       },
       {
-        'date': DateTime.now().subtract(const Duration(days: 2)).toIso8601String().split('T')[0],
+        'date': DateTime.now()
+            .subtract(const Duration(days: 2))
+            .toIso8601String()
+            .split('T')[0],
         'subject': 'CS-303: Operating Systems',
         'status': 'Absent',
         'verifiedBy': 'Auto Attendance System',
@@ -1193,13 +1250,15 @@ class ApiService {
     String token,
   ) async {
     try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/parent/child/leaves/$wardEmail'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 5));
+      final response = await client
+          .get(
+            Uri.parse('$baseUrl/parent/child/leaves/$wardEmail'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final List<dynamic> list = jsonDecode(response.body) as List<dynamic>;
         return list
@@ -1589,8 +1648,9 @@ class ApiService {
     try {
       final params = {'threshold': threshold.toString()};
       if (department != null) params['department'] = department;
-      final uri = Uri.parse('$baseUrl/analytics/risk-students')
-          .replace(queryParameters: params);
+      final uri = Uri.parse(
+        '$baseUrl/analytics/risk-students',
+      ).replace(queryParameters: params);
       final response = await client.get(
         uri,
         headers: {'Authorization': 'Bearer $token'},
@@ -1665,18 +1725,22 @@ class InterceptingClient extends http.BaseClient {
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     // Intercept and inject Authorization header if access token exists
     final token = await SecureTokenStorage.getAccessToken();
-    if (token != null && token.isNotEmpty && !request.headers.containsKey('Authorization')) {
+    if (token != null &&
+        token.isNotEmpty &&
+        !request.headers.containsKey('Authorization')) {
       request.headers['Authorization'] = 'Bearer $token';
     }
 
     var response = await _inner.send(request);
-    
+
     if (response.statusCode == 401 && !_isRefreshing) {
       _isRefreshing = true;
       try {
         final refreshToken = await SecureTokenStorage.getRefreshToken();
         if (refreshToken != null && refreshToken.isNotEmpty) {
-          final refreshUri = Uri.parse('${ApiService.baseUrl}/auth/token/refresh');
+          final refreshUri = Uri.parse(
+            '${ApiService.baseUrl}/auth/token/refresh',
+          );
           final refreshRes = await _inner.post(
             refreshUri,
             headers: {'Content-Type': 'application/json'},
@@ -1692,7 +1756,7 @@ class InterceptingClient extends http.BaseClient {
               accessToken: newAccessToken,
               refreshToken: newRefreshToken,
             );
-            
+
             ApiService.onTokenRefreshed?.call(newAccessToken);
 
             final newRequest = _cloneRequest(request, newAccessToken);
@@ -1703,24 +1767,28 @@ class InterceptingClient extends http.BaseClient {
       } catch (e) {
         debugPrint('[InterceptingClient] Error refreshing token: $e');
       }
-      
+
       _isRefreshing = false;
       await SecureTokenStorage.clearTokens();
       ApiService.onSessionExpired?.call();
     }
-    
+
     return response;
   }
 
-  http.BaseRequest _cloneRequest(http.BaseRequest request, String newAccessToken) {
+  http.BaseRequest _cloneRequest(
+    http.BaseRequest request,
+    String newAccessToken,
+  ) {
     http.BaseRequest newRequest;
     if (request is http.Request) {
       newRequest = http.Request(request.method, request.url)
         ..bodyBytes = request.bodyBytes;
     } else if (request is http.MultipartRequest) {
-      final multipartRequest = http.MultipartRequest(request.method, request.url)
-        ..fields.addAll(request.fields)
-        ..files.addAll(request.files);
+      final multipartRequest =
+          http.MultipartRequest(request.method, request.url)
+            ..fields.addAll(request.fields)
+            ..files.addAll(request.files);
       newRequest = multipartRequest;
     } else {
       newRequest = request; // Fallback
@@ -1733,10 +1801,10 @@ class InterceptingClient extends http.BaseClient {
 
 Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
   final normalized = Map<String, dynamic>.from(json);
-  
+
   if (json.containsKey('data') && json['data'] is Map<String, dynamic>) {
     final data = json['data'] as Map<String, dynamic>;
-    
+
     if (data.containsKey('accessToken') && data['accessToken'] != null) {
       normalized['access_token'] = data['accessToken'];
       normalized['token'] = data['accessToken'];
@@ -1744,7 +1812,7 @@ Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
     if (data.containsKey('refreshToken') && data['refreshToken'] != null) {
       normalized['refresh_token'] = data['refreshToken'];
     }
-    
+
     if (data.containsKey('user') && data['user'] is Map<String, dynamic>) {
       final user = data['user'] as Map<String, dynamic>;
       if (user.containsKey('id')) normalized['id'] = user['id'];
@@ -1754,9 +1822,13 @@ Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
         normalized['full_name'] = user['name'];
       }
       if (user.containsKey('role')) normalized['role'] = user['role'];
-      
+
       final intro = user['introCompleted'] ?? false;
-      final wizard = user['wizardCompleted'] ?? user['setup_completed'] ?? user['biometric_registered'] ?? false;
+      final wizard =
+          user['wizardCompleted'] ??
+          user['setup_completed'] ??
+          user['biometric_registered'] ??
+          false;
       normalized['introCompleted'] = intro;
       normalized['wizardCompleted'] = wizard;
       normalized['biometric_registered'] = wizard;
@@ -1770,11 +1842,12 @@ Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
       userMap['name'] = json['full_name'] ?? json['name'];
     }
     if (json.containsKey('role')) userMap['role'] = json['role'];
-    
-    final wizard = json['biometric_registered'] ?? json['setup_completed'] ?? false;
+
+    final wizard =
+        json['biometric_registered'] ?? json['setup_completed'] ?? false;
     userMap['introCompleted'] = json['introCompleted'] ?? false;
     userMap['wizardCompleted'] = wizard;
-    
+
     normalized['success'] = json['success'] ?? !json.containsKey('detail');
     normalized['message'] = json['message'] ?? json['detail'] ?? '';
     normalized['data'] = {
@@ -1782,7 +1855,7 @@ Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
       'refreshToken': json['refresh_token'],
       'user': userMap,
     };
-    
+
     normalized['access_token'] = json['access_token'] ?? json['token'];
     normalized['token'] = json['access_token'] ?? json['token'];
     normalized['biometric_registered'] = wizard;
@@ -1792,6 +1865,6 @@ Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
       normalized['name'] = json['full_name'] ?? json['name'];
     }
   }
-  
+
   return normalized;
 }

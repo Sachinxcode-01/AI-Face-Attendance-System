@@ -81,11 +81,66 @@ class GoogleLoginRequest(BaseModel):
     role: str = "student"
     avatar_url: Optional[str] = None
 
+import base64
+import re
+from pydantic import validator
+
+MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB limit
+
+
+def validate_base64_image(v: Optional[str]) -> Optional[str]:
+    if v is None:
+        return v
+    if not isinstance(v, str):
+        raise ValueError("Image payload must be a string")
+
+    max_b64_len = int(MAX_IMAGE_SIZE_BYTES * 1.4) + 200
+    if len(v) > max_b64_len:
+        raise ValueError("Image payload size exceeds maximum allowed limit of 5MB")
+
+    data = v
+    if "," in v:
+        header, data = v.split(",", 1)
+        if not re.match(r"^data:image/(jpeg|png|webp|jpg);base64$", header, re.IGNORECASE):
+            raise ValueError("Unsupported or invalid image MIME type")
+
+    try:
+        decoded = base64.b64decode(data)
+        if len(decoded) > MAX_IMAGE_SIZE_BYTES:
+            raise ValueError("Decoded image payload exceeds 5MB size limit")
+    except Exception as exc:
+        raise ValueError("Malformed base64 image data") from exc
+
+    return v
+
+
+from pydantic import field_validator
+
 class IntruderAlert(BaseModel):
     location: Optional[str] = None
     camera_id: Optional[str] = None
     type: Optional[str] = None
     image_base64: Optional[str] = None
+
+    @field_validator("image_base64")
+    @classmethod
+    def validate_image(cls, v):
+        return validate_base64_image(v)
+
+
+class FaceRegisterRequest(BaseModel):
+    images: List[str] = Field(..., min_length=1, max_length=10)
+
+    @field_validator("images", mode="before")
+    @classmethod
+    def validate_images_list(cls, v):
+        if not v or len(v) == 0:
+            raise ValueError("At least one face image is required")
+        if isinstance(v, list):
+            for img in v:
+                validate_base64_image(img)
+        return v
+
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -121,9 +176,9 @@ class AttendanceRecord(BaseModel):
     verified_by: str # face, qr, manual
 
 class AttendanceMark(BaseModel):
-    student_email: str
-    session_id: str
-    qr_code: str
+    student_email: EmailStr
+    session_id: str = Field(..., min_length=1)
+    qr_code: str = Field(..., min_length=1)
 
 class SessionCreate(BaseModel):
     teacher_email: str
@@ -195,9 +250,5 @@ class CompleteProfileRequest(BaseModel):
     semester: Optional[str] = None
     student_id: Optional[str] = None
     phone: Optional[str] = None
-
-
-class FaceRegisterRequest(BaseModel):
-    images: List[str]  # Base64 string data of scanned angles
 
 

@@ -35,8 +35,8 @@ class LoadingShimmer extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: shape,
-          borderRadius: shape == BoxShape.circle 
-              ? null 
+          borderRadius: shape == BoxShape.circle
+              ? null
               : BorderRadius.circular(radius),
         ),
       ),

@@ -60,26 +60,26 @@ class _PremiumBackgroundState extends State<PremiumBackground>
             stops: [0.0, 0.5, 1.0],
           )
         : (widget.soft
-            ? const LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [
-                  Color(0xFFF0F3FF),
-                  Color(0xFFF5F7FF),
-                  Color(0xFFFAFBFF),
-                ],
-                stops: [0.0, 0.5, 1.0],
-              )
-            : const LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [
-                  Color(0xFFE8ECFA),
-                  Color(0xFFF0F3FD),
-                  Color(0xFFF8FAFF),
-                ],
-                stops: [0.0, 0.5, 1.0],
-              ));
+              ? const LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  colors: [
+                    Color(0xFFF0F3FF),
+                    Color(0xFFF5F7FF),
+                    Color(0xFFFAFBFF),
+                  ],
+                  stops: [0.0, 0.5, 1.0],
+                )
+              : const LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  colors: [
+                    Color(0xFFE8ECFA),
+                    Color(0xFFF0F3FD),
+                    Color(0xFFF8FAFF),
+                  ],
+                  stops: [0.0, 0.5, 1.0],
+                ));
 
     return Stack(
       fit: StackFit.expand,

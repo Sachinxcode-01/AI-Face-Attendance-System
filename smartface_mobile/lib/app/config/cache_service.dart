@@ -55,7 +55,9 @@ class CacheService {
     Duration? ttl,
     bool persist = false,
   }) async {
-    final duration = ttl ?? (persist ? const Duration(days: 36500) : const Duration(minutes: 5));
+    final duration =
+        ttl ??
+        (persist ? const Duration(days: 36500) : const Duration(minutes: 5));
     final expiry = DateTime.now().add(duration);
     _memory[key] = _CacheEntry(value: value, expiry: expiry);
 

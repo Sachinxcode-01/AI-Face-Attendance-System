@@ -486,7 +486,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
 
   // ── Computed ─────────────────────────────────────────────────────────────
   String get _initials {
-    final name = (_profileData['full_name'] ?? _nameCtrl.text).toString().trim();
+    final name = (_profileData['full_name'] ?? _nameCtrl.text)
+        .toString()
+        .trim();
     return name
         .split(' ')
         .where((w) => w.isNotEmpty)
@@ -755,21 +757,29 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                                       height: 48,
                                     ),
                                   ),
-                                  applicationLegalese: '© 2026 SmartFace AI Team. All rights reserved.',
+                                  applicationLegalese:
+                                      '© 2026 SmartFace AI Team. All rights reserved.',
                                 );
                               },
                               child: Row(
                                 children: [
-                                  const Icon(Icons.logo_dev_rounded, color: AppColors.cyan, size: 18),
+                                  const Icon(
+                                    Icons.logo_dev_rounded,
+                                    color: AppColors.cyan,
+                                    size: 18,
+                                  ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'ABOUT SMARTFACE',
                                           style: GoogleFonts.inter(
-                                            color: isDark ? Colors.white38 : Colors.black45,
+                                            color: isDark
+                                                ? Colors.white38
+                                                : Colors.black45,
                                             fontSize: 10,
                                             letterSpacing: 0.8,
                                           ),
@@ -778,7 +788,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                                         Text(
                                           'Smart Attendance AI v1.0.0',
                                           style: GoogleFonts.inter(
-                                            color: isDark ? Colors.white : Colors.black87,
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black87,
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -809,15 +821,17 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                           width: double.infinity,
                           child: GlowButton(
                             onPressed: () async {
-                              final confirmed = await PremiumDialogs.showConfirmDialog(
-                                context,
-                                title: 'Confirm Logout',
-                                message: 'Are you sure you want to sign out? Your offline session context will be safely cleared.',
-                                confirmLabel: 'LOGOUT',
-                                cancelLabel: 'CANCEL',
-                                isDestructive: true,
-                                icon: Icons.logout_rounded,
-                              );
+                              final confirmed =
+                                  await PremiumDialogs.showConfirmDialog(
+                                    context,
+                                    title: 'Confirm Logout',
+                                    message:
+                                        'Are you sure you want to sign out? Your offline session context will be safely cleared.',
+                                    confirmLabel: 'LOGOUT',
+                                    cancelLabel: 'CANCEL',
+                                    isDestructive: true,
+                                    icon: Icons.logout_rounded,
+                                  );
                               if (confirmed == true && context.mounted) {
                                 await context.read<SessionManager>().logout();
                                 if (context.mounted) {
@@ -1227,15 +1241,22 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
               controller: ctrl,
               maxLines: maxLines,
               keyboardType: keyboardType,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 14,
+              ),
               onChanged: (_) => setState(() => _hasUnsavedChanges = true),
               decoration: InputDecoration(
                 prefixIcon: Icon(icon, color: AppColors.gold, size: 18),
                 filled: true,
-                fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
+                fillColor: isDark
+                    ? Colors.white.withValues(alpha: 0.04)
+                    : Colors.black.withValues(alpha: 0.03),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.white12 : Colors.black12,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -1298,7 +1319,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
             TextField(
               controller: ctrl,
               readOnly: true,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 14,
+              ),
               decoration: InputDecoration(
                 prefixIcon: Icon(icon, color: AppColors.gold, size: 18),
                 suffixIcon: const Icon(
@@ -1307,10 +1331,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                   size: 18,
                 ),
                 filled: true,
-                fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
+                fillColor: isDark
+                    ? Colors.white.withValues(alpha: 0.04)
+                    : Colors.black.withValues(alpha: 0.03),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.white12 : Colors.black12,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -1335,7 +1363,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                       colorScheme: ColorScheme.dark(
                         primary: AppColors.gold,
                         onPrimary: Colors.black,
-                        surface: isDark ? const Color(0xFF0D1130) : Colors.white,
+                        surface: isDark
+                            ? const Color(0xFF0D1130)
+                            : Colors.white,
                         onSurface: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
@@ -1397,14 +1427,21 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
             DropdownButtonFormField<String>(
               initialValue: options.contains(value) ? value : null,
               dropdownColor: isDark ? const Color(0xFF0D1130) : Colors.white,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 14,
+              ),
               decoration: InputDecoration(
                 prefixIcon: Icon(icon, color: AppColors.gold, size: 18),
                 filled: true,
-                fillColor: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03),
+                fillColor: isDark
+                    ? Colors.white.withValues(alpha: 0.04)
+                    : Colors.black.withValues(alpha: 0.03),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.white12 : Colors.black12,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -1452,7 +1489,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
     Color? valueColor,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final resolvedValueColor = valueColor ?? (isDark ? Colors.white70 : Colors.black87);
+    final resolvedValueColor =
+        valueColor ?? (isDark ? Colors.white70 : Colors.black87);
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(

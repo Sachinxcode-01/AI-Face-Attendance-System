@@ -357,39 +357,42 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             children:
                 [
-                  // 1. Health Score Card
-                  AttendanceHealthCard(
-                    score: healthScore,
-                    percentage: percentage,
-                    lates: lates,
-                    consecutiveAbsences: consecutiveAbsences,
-                    standing: standing,
-                  ),
-                  const SizedBox(height: 20),
+                      // 1. Health Score Card
+                      AttendanceHealthCard(
+                        score: healthScore,
+                        percentage: percentage,
+                        lates: lates,
+                        consecutiveAbsences: consecutiveAbsences,
+                        standing: standing,
+                      ),
+                      const SizedBox(height: 20),
 
-                  // 2. Risk Alerts Panel
-                  if (alerts.isNotEmpty) ...[
-                    _buildAlertsPanel(alerts),
-                    const SizedBox(height: 20),
-                  ],
+                      // 2. Risk Alerts Panel
+                      if (alerts.isNotEmpty) ...[
+                        _buildAlertsPanel(alerts),
+                        const SizedBox(height: 20),
+                      ],
 
-                  // 3. Heatmap Matrix Card
-                  HeatmapGrid(heatmapData: _heatmapData),
-                  const SizedBox(height: 20),
+                      // 3. Heatmap Matrix Card
+                      HeatmapGrid(heatmapData: _heatmapData),
+                      const SizedBox(height: 20),
 
-                  // 4. Export Controls Card
-                  ExportCard(onExportPressed: _exportLedger),
-                  const SizedBox(height: 20),
+                      // 4. Export Controls Card
+                      ExportCard(onExportPressed: _exportLedger),
+                      const SizedBox(height: 20),
 
-                  // 5. Recent Logs List
-                  _buildRecentLogsLedger(),
-                  const SizedBox(height: 40),
-                ].animate(interval: 80.ms).fadeIn(duration: 350.ms).slideY(
-                  begin: 0.12,
-                  end: 0,
-                  duration: 350.ms,
-                  curve: Curves.easeOutCubic,
-                ),
+                      // 5. Recent Logs List
+                      _buildRecentLogsLedger(),
+                      const SizedBox(height: 40),
+                    ]
+                    .animate(interval: 80.ms)
+                    .fadeIn(duration: 350.ms)
+                    .slideY(
+                      begin: 0.12,
+                      end: 0,
+                      duration: 350.ms,
+                      curve: Curves.easeOutCubic,
+                    ),
           ),
         ),
       ),
@@ -432,19 +435,23 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
           ),
           const SizedBox(height: 12),
           ...alerts.asMap().entries.map(
-            (entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Text(
-                entry.value['message'] ?? '',
-                style: AppText.body(color: Colors.white70),
-              ),
-            ).animate().fadeIn(delay: (entry.key * 90).ms, duration: 350.ms).slideX(
-              begin: 0.1,
-              end: 0,
-              delay: (entry.key * 90).ms,
-              duration: 350.ms,
-              curve: Curves.easeOut,
-            ),
+            (entry) =>
+                Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        entry.value['message'] ?? '',
+                        style: AppText.body(color: Colors.white70),
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(delay: (entry.key * 90).ms, duration: 350.ms)
+                    .slideX(
+                      begin: 0.1,
+                      end: 0,
+                      delay: (entry.key * 90).ms,
+                      duration: 350.ms,
+                      curve: Curves.easeOut,
+                    ),
           ),
         ],
       ),
@@ -479,49 +486,53 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                 final log = _verificationLogs[index];
                 final isFace = log['verified_by'] == 'face';
                 final isPresent =
-                    (log['status'] ?? '').toString().toLowerCase() ==
-                    'present';
+                    (log['status'] ?? '').toString().toLowerCase() == 'present';
 
                 return Row(
-                  children: [
-                    Icon(
-                      isPresent
-                          ? Icons.check_circle_rounded
-                          : Icons.cancel_rounded,
-                      color: isPresent ? AppColors.success : AppColors.error,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            log['subject'] ?? 'Lecture Class',
-                            style: AppText.body(
-                              color: Colors.white,
-                              weight: FontWeight.bold,
-                            ),
+                      children: [
+                        Icon(
+                          isPresent
+                              ? Icons.check_circle_rounded
+                              : Icons.cancel_rounded,
+                          color: isPresent
+                              ? AppColors.success
+                              : AppColors.error,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                log['subject'] ?? 'Lecture Class',
+                                style: AppText.body(
+                                  color: Colors.white,
+                                  weight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Verified via ${isFace ? "Biometric Face Recognition" : "Rotating Classroom QR"}',
+                                style: AppText.caption(color: Colors.white54),
+                              ),
+                            ],
                           ),
-                          Text(
-                            'Verified via ${isFace ? "Biometric Face Recognition" : "Rotating Classroom QR"}',
-                            style: AppText.caption(color: Colors.white54),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '${log['time']} • ${log['date']}',
-                      style: AppText.caption(color: Colors.white38),
-                    ),
-                  ],
-                ).animate().fadeIn(delay: (index * 70).ms, duration: 350.ms).slideX(
-                  begin: 0.12,
-                  end: 0,
-                  delay: (index * 70).ms,
-                  duration: 350.ms,
-                  curve: Curves.easeOut,
-                );
+                        ),
+                        Text(
+                          '${log['time']} • ${log['date']}',
+                          style: AppText.caption(color: Colors.white38),
+                        ),
+                      ],
+                    )
+                    .animate()
+                    .fadeIn(delay: (index * 70).ms, duration: 350.ms)
+                    .slideX(
+                      begin: 0.12,
+                      end: 0,
+                      delay: (index * 70).ms,
+                      duration: 350.ms,
+                      curve: Curves.easeOut,
+                    );
               },
             ),
         ],

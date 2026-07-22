@@ -58,10 +58,7 @@ class DashboardHeader extends StatelessWidget {
           const Positioned(
             right: 40,
             bottom: -14,
-            child: Opacity(
-              opacity: 0.5,
-              child: GlossySphere(size: 46),
-            ),
+            child: Opacity(opacity: 0.5, child: GlossySphere(size: 46)),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,8 +135,11 @@ class _NotificationButton extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              const Icon(Icons.notifications_none_rounded,
-                  color: Colors.white, size: 22),
+              const Icon(
+                Icons.notifications_none_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
               if (hasUnread)
                 Positioned(
                   top: 12,

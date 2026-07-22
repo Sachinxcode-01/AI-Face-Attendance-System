@@ -12,7 +12,6 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 
-
 // ═════════════════════════════════════════════════════════════════════════════
 // DESIGN SYSTEM CONSTANTS & TOKENS
 // ═════════════════════════════════════════════════════════════════════════════
@@ -60,11 +59,31 @@ class AuthDesign {
       scaffoldBackgroundColor: pageBg,
       primaryColor: primaryIndigo,
       textTheme: TextTheme(
-        headlineLarge: fontPoppins(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white),
-        titleLarge: fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: textHeading),
-        bodyLarge: fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: textHeading),
-        bodyMedium: fontPoppins(fontSize: 10.5, fontWeight: FontWeight.w500, color: textLabel),
-        labelLarge: fontPoppins(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+        headlineLarge: fontPoppins(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+        titleLarge: fontPoppins(
+          fontSize: 21,
+          fontWeight: FontWeight.w700,
+          color: textHeading,
+        ),
+        bodyLarge: fontPoppins(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: textHeading,
+        ),
+        bodyMedium: fontPoppins(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w500,
+          color: textLabel,
+        ),
+        labelLarge: fontPoppins(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
       ),
     );
   }
@@ -128,35 +147,15 @@ class HeroOrbBackground extends StatelessWidget {
             ),
           ] else ...[
             // Orb 1 (Top-Right Big)
-            Positioned(
-              right: -60,
-              top: -40,
-              child: _buildOrb(280),
-            ),
+            Positioned(right: -60, top: -40, child: _buildOrb(280)),
             // Orb 2 (Mid Overlapping)
-            Positioned(
-              right: -20,
-              top: 140,
-              child: _buildOrb(190),
-            ),
+            Positioned(right: -20, top: 140, child: _buildOrb(190)),
             // Orb 3 (Left Mid)
-            Positioned(
-              left: -30,
-              top: 280,
-              child: _buildOrb(140),
-            ),
+            Positioned(left: -30, top: 280, child: _buildOrb(140)),
             // Orb 4 (Lower Right Scattered)
-            Positioned(
-              right: 40,
-              bottom: 180,
-              child: _buildOrb(90),
-            ),
+            Positioned(right: 40, bottom: 180, child: _buildOrb(90)),
             // Orb 5 (Lower Left Scattered)
-            Positioned(
-              left: 50,
-              bottom: 260,
-              child: _buildOrb(55),
-            ),
+            Positioned(left: 50, bottom: 260, child: _buildOrb(55)),
           ],
 
           // Back Button for Compact Hero
@@ -168,7 +167,10 @@ class HeroOrbBackground extends StatelessWidget {
                 onTap: onBackTap,
                 borderRadius: BorderRadius.circular(4),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8.0,
+                    vertical: 4.0,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -208,17 +210,12 @@ class HeroOrbBackground extends StatelessWidget {
         gradient: RadialGradient(
           center: Alignment.center,
           radius: 0.5,
-          colors: [
-            AuthDesign.orbLight,
-            AuthDesign.orbDark,
-          ],
+          colors: [AuthDesign.orbLight, AuthDesign.orbDark],
         ),
       ),
     );
   }
 }
-
-
 
 // ═════════════════════════════════════════════════════════════════════════════
 // REUSABLE UNDERLINED INPUT FIELD
@@ -279,7 +276,9 @@ class _UnderlineTextFieldState extends State<UnderlineTextField> {
           widget.label,
           style: AppTextStyles.label(
             context,
-            color: focused ? AppColors.primary : (isDark ? AppColors.textMutedDark : AppColors.textMuted),
+            color: focused
+                ? AppColors.primary
+                : (isDark ? AppColors.textMutedDark : AppColors.textMuted),
           ),
         ),
         const SizedBox(height: 6),
@@ -299,12 +298,17 @@ class _UnderlineTextFieldState extends State<UnderlineTextField> {
             hintText: widget.placeholder,
             hintStyle: AppTextStyles.caption(
               context,
-              color: isDark ? AppColors.textMutedDark : AppColors.textPlaceholder,
+              color: isDark
+                  ? AppColors.textMutedDark
+                  : AppColors.textPlaceholder,
             ),
             isDense: true,
             filled: true,
             fillColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
@@ -455,18 +459,16 @@ class SocialAuthButton extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Image.asset(
-                        iconPath,
-                        width: 20,
-                        height: 20,
-                      ),
+                      Image.asset(iconPath, width: 20, height: 20),
                       const SizedBox(width: 8),
                       Text(
                         label,
                         style: AppTextStyles.body(
                           context,
                           weight: FontWeight.w600,
-                          color: isDark ? AppColors.textHeadingDark : AppColors.textHeading,
+                          color: isDark
+                              ? AppColors.textHeadingDark
+                              : AppColors.textHeading,
                         ),
                       ),
                     ],
@@ -486,11 +488,7 @@ class SocialIconRow extends StatefulWidget {
   final String actionPrefix; // "Sign in" or "Sign up"
   final String? role; // selected role from RegisterScreen
 
-  const SocialIconRow({
-    super.key,
-    required this.actionPrefix,
-    this.role,
-  });
+  const SocialIconRow({super.key, required this.actionPrefix, this.role});
 
   @override
   State<SocialIconRow> createState() => _SocialIconRowState();
@@ -500,12 +498,15 @@ class _SocialIconRowState extends State<SocialIconRow> {
   bool _isGoogleLoading = false;
   bool _isGithubLoading = false;
 
-
-
   Future<void> _handleGoogleLogin() async {
     if (_isGoogleLoading || _isGithubLoading) return; // Prevent duplicate taps
-    if (EnvConfig.googleClientId == 'YOUR_GOOGLE_CLIENT_ID' || EnvConfig.googleClientId.isEmpty) {
-      AppToast.show(context, message: 'Google login is not configured yet.', type: ToastType.warning);
+    if (EnvConfig.googleClientId == 'YOUR_GOOGLE_CLIENT_ID' ||
+        EnvConfig.googleClientId.isEmpty) {
+      AppToast.show(
+        context,
+        message: 'Google login is not configured yet.',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -553,8 +554,13 @@ class _SocialIconRowState extends State<SocialIconRow> {
 
   Future<void> _handleGithubLogin() async {
     if (_isGoogleLoading || _isGithubLoading) return; // Prevent duplicate taps
-    if (EnvConfig.githubClientId == 'YOUR_GITHUB_CLIENT_ID' || EnvConfig.githubClientId.isEmpty) {
-      AppToast.show(context, message: 'GitHub login is not configured yet.', type: ToastType.warning);
+    if (EnvConfig.githubClientId == 'YOUR_GITHUB_CLIENT_ID' ||
+        EnvConfig.githubClientId.isEmpty) {
+      AppToast.show(
+        context,
+        message: 'GitHub login is not configured yet.',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -565,7 +571,7 @@ class _SocialIconRowState extends State<SocialIconRow> {
         'https://github.com/login/oauth/authorize'
         '?client_id=${EnvConfig.githubClientId}'
         '&scope=user:email'
-        '&redirect_uri=${Uri.encodeComponent(callbackUrl)}'
+        '&redirect_uri=${Uri.encodeComponent(callbackUrl)}',
       );
 
       if (await canLaunchUrl(authUrl)) {
@@ -588,7 +594,10 @@ class _SocialIconRowState extends State<SocialIconRow> {
       if (!mounted) return;
 
       if (result.containsKey('access_token')) {
-        await _completeSocialLogin(result, result['email'] ?? 'github-user@smartface.ai');
+        await _completeSocialLogin(
+          result,
+          result['email'] ?? 'github-user@smartface.ai',
+        );
       } else {
         throw Exception(result['detail'] ?? 'GitHub login failed');
       }
@@ -604,10 +613,14 @@ class _SocialIconRowState extends State<SocialIconRow> {
     }
   }
 
-  Future<void> _completeSocialLogin(Map<String, dynamic> result, String defaultEmail) async {
+  Future<void> _completeSocialLogin(
+    Map<String, dynamic> result,
+    String defaultEmail,
+  ) async {
     final session = context.read<SessionManager>();
     final bool introCompleted = result['introCompleted'] ?? false;
-    final bool wizardCompleted = result['wizardCompleted'] ?? result['biometric_registered'] ?? false;
+    final bool wizardCompleted =
+        result['wizardCompleted'] ?? result['biometric_registered'] ?? false;
     final bool bioRegistered = result['biometric_registered'] ?? false;
     final String role = result['role'] ?? 'student';
     final String name = result['full_name'] ?? result['name'] ?? 'User';
@@ -636,11 +649,15 @@ class _SocialIconRowState extends State<SocialIconRow> {
     } else {
       if (roleLower == 'admin') {
         context.go('/admin/dashboard');
-      } else if (roleLower == 'teacher' || roleLower == 'faculty' || roleLower == 'lecturer') {
+      } else if (roleLower == 'teacher' ||
+          roleLower == 'faculty' ||
+          roleLower == 'lecturer') {
         context.go('/teacher/dashboard');
       } else if (roleLower == 'parent') {
         context.go('/parent/dashboard');
-      } else if (roleLower == 'hod' || roleLower == 'principal' || roleLower == 'management') {
+      } else if (roleLower == 'hod' ||
+          roleLower == 'principal' ||
+          roleLower == 'management') {
         context.go('/management/dashboard');
       } else {
         context.go('/student/dashboard');
@@ -692,7 +709,10 @@ class _SocialIconRowState extends State<SocialIconRow> {
                   ),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -703,7 +723,10 @@ class _SocialIconRowState extends State<SocialIconRow> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AuthDesign.primaryIndigo, width: 1.5),
+                    borderSide: const BorderSide(
+                      color: AuthDesign.primaryIndigo,
+                      width: 1.5,
+                    ),
                   ),
                 ),
               ),
@@ -725,7 +748,9 @@ class _SocialIconRowState extends State<SocialIconRow> {
               onPressed: () => Navigator.pop(context, controller.text.trim()),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AuthDesign.primaryIndigo,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 elevation: 0,
               ),
               child: Text(
@@ -930,12 +955,16 @@ class _AuthCardShell extends StatelessWidget {
           topRight: Radius.circular(28),
         ),
         border: Border.all(
-          color: isDark ? AppColors.borderDark.withValues(alpha: 0.4) : AppColors.borderLight.withValues(alpha: 0.4),
+          color: isDark
+              ? AppColors.borderDark.withValues(alpha: 0.4)
+              : AppColors.borderLight.withValues(alpha: 0.4),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
+            color: isDark
+                ? Colors.black38
+                : const Color(0xFF8B98CE).withValues(alpha: 0.15),
             blurRadius: 30,
             offset: const Offset(0, -5),
           ),
@@ -963,7 +992,9 @@ class _AuthCardShell extends StatelessWidget {
                     style: AppTextStyles.heading(
                       context,
                       weight: FontWeight.w700,
-                      color: isDark ? AppColors.textHeadingDark : AppColors.textHeading,
+                      color: isDark
+                          ? AppColors.textHeadingDark
+                          : AppColors.textHeading,
                     ),
                   ),
                   if (subtitle != null) ...[
@@ -972,7 +1003,9 @@ class _AuthCardShell extends StatelessWidget {
                       subtitle!,
                       style: AppTextStyles.body(
                         context,
-                        color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                        color: isDark
+                            ? AppColors.textMutedDark
+                            : AppColors.textMuted,
                       ),
                     ),
                   ],

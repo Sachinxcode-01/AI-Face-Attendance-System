@@ -17,12 +17,16 @@ class AppColors {
   // ── Brand Core ───────────────────────────────────────────────────────────
   /// Primary brand — rich royal blue
   static const Color primary = Color(0xFF4F46E5);
+
   /// Primary brighter — for hover/active glow states
   static const Color primaryBright = Color(0xFF6366F1);
+
   /// Primary lighter — for soft backgrounds
   static const Color primaryLight = Color(0xFF818CF8);
+
   /// Primary darkest — for pressed states
   static const Color primaryDark = Color(0xFF3730A3);
+
   /// Primary subtle — for badges, chips
   static const Color primarySoft = Color(0xFFA5B4FC);
 
@@ -42,16 +46,22 @@ class AppColors {
   // ── Dark Mode Surface Hierarchy (Elevation-based) ───────────────────────
   /// Deepest background — base canvas (#0B0E1A with subtle indigo tint)
   static const Color bgDeep = Color(0xFF070A14);
+
   /// Default page background
   static const Color bgDark = Color(0xFF0D1225);
+
   /// Slightly elevated surface (e.g., cards, sheets)
   static const Color surfaceDark = Color(0xFF131A33);
+
   /// Elevated surface (e.g., dialogs, modals)
   static const Color surfaceElevated = Color(0xFF1A2340);
+
   /// Card default
   static const Color cardDark = Color(0xFF141D38);
+
   /// Higher card
   static const Color cardElevated = Color(0xFF1C2648);
+
   /// Modal bottom sheets, dropdowns
   static const Color bgModal = Color(0xFF0F162E);
 
@@ -174,22 +184,14 @@ class AppColors {
   static const LinearGradient darkBgGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [
-      Color(0xFF070A14),
-      Color(0xFF0D1225),
-      Color(0xFF0A0F20),
-    ],
+    colors: [Color(0xFF070A14), Color(0xFF0D1225), Color(0xFF0A0F20)],
     stops: [0.0, 0.5, 1.0],
   );
 
   static const LinearGradient lightBgGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [
-      Color(0xFFF4F6FC),
-      Color(0xFFEEF1FA),
-      Color(0xFFF8FAFF),
-    ],
+    colors: [Color(0xFFF4F6FC), Color(0xFFEEF1FA), Color(0xFFF8FAFF)],
     stops: [0.0, 0.5, 1.0],
   );
 

@@ -117,11 +117,7 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.menu_book_outlined,
-            color: Colors.white24,
-            size: 64,
-          ),
+          const Icon(Icons.menu_book_outlined, color: Colors.white24, size: 64),
           const SizedBox(height: 16),
           Text(
             'No classes scheduled',
@@ -161,7 +157,11 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
                   ),
                   child: Column(
                     children: [
-                      const Icon(Icons.access_time, color: AppColors.gold, size: 20),
+                      const Icon(
+                        Icons.access_time,
+                        color: AppColors.gold,
+                        size: 20,
+                      ),
                       const SizedBox(height: 4),
                       Text(
                         slot['time'].toString().split(' ')[0],
@@ -190,7 +190,11 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.room_outlined, color: Colors.white38, size: 14),
+                          const Icon(
+                            Icons.room_outlined,
+                            color: Colors.white38,
+                            size: 14,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             slot['room'] ?? 'TBA',

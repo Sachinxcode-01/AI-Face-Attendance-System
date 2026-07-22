@@ -36,11 +36,7 @@ class AuthBlobBackground extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: baseGradient,
-          ),
-        ),
+        DecoratedBox(decoration: BoxDecoration(gradient: baseGradient)),
 
         // Organic translucent wave blobs (liquid style)
         Positioned.fill(
@@ -138,7 +134,8 @@ class _BlobPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _BlobPainter oldDelegate) => oldDelegate.isDark != isDark;
+  bool shouldRepaint(covariant _BlobPainter oldDelegate) =>
+      oldDelegate.isDark != isDark;
 }
 
 /// A glossy 3D-style sphere with a soft highlight and drop shadow.
@@ -168,11 +165,7 @@ class _GlossySphere extends StatelessWidget {
         const Color(0xFF9EAFD8).withValues(alpha: 0.10),
       ];
     } else {
-      colors = const [
-        Colors.white,
-        Color(0xFFE2EBFE),
-        Color(0xFFB0C3EF),
-      ];
+      colors = const [Colors.white, Color(0xFFE2EBFE), Color(0xFFB0C3EF)];
     }
 
     return Container(

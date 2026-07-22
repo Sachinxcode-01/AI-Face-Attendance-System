@@ -146,18 +146,18 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                   child: CircularProgressIndicator(color: AppColors.gold),
                 )
               : pending.isEmpty
-                  ? _buildEmptyState(isDark)
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(20),
-                      itemCount: pending.length,
-                      itemBuilder: (context, index) {
-                        final request = pending[index];
-                        return _buildReviewCard(request, isDark)
-                            .animate()
-                            .fadeIn(delay: (index * 80).ms)
-                            .slideY(begin: 0.05);
-                      },
-                    ),
+              ? _buildEmptyState(isDark)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(20),
+                  itemCount: pending.length,
+                  itemBuilder: (context, index) {
+                    final request = pending[index];
+                    return _buildReviewCard(request, isDark)
+                        .animate()
+                        .fadeIn(delay: (index * 80).ms)
+                        .slideY(begin: 0.05);
+                  },
+                ),
         ),
       ),
     );
@@ -314,9 +314,13 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                       isClarification: true,
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: isDark ? Colors.cyanAccent : Colors.cyan.shade700,
+                      foregroundColor: isDark
+                          ? Colors.cyanAccent
+                          : Colors.cyan.shade700,
                       side: BorderSide(
-                        color: isDark ? Colors.cyanAccent : Colors.cyan.shade700,
+                        color: isDark
+                            ? Colors.cyanAccent
+                            : Colors.cyan.shade700,
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -337,7 +341,9 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                   child: OutlinedButton(
                     onPressed: () => _handleAction(request.id!, 'Rejected'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: isDark ? Colors.redAccent : Colors.red.shade700,
+                      foregroundColor: isDark
+                          ? Colors.redAccent
+                          : Colors.red.shade700,
                       side: BorderSide(
                         color: isDark ? Colors.redAccent : Colors.red.shade700,
                       ),
@@ -360,7 +366,9 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
                   child: ElevatedButton(
                     onPressed: () => _handleAction(request.id!, 'Approved'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark ? Colors.greenAccent : Colors.green.shade600,
+                      backgroundColor: isDark
+                          ? Colors.greenAccent
+                          : Colors.green.shade600,
                       foregroundColor: isDark ? Colors.black : Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(

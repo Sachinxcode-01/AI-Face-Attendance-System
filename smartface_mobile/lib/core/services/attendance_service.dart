@@ -15,8 +15,10 @@
 |--------------------------------------------------------------------------
 */
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:smartface_attendance/app/config/env_config.dart';
 import 'package:smartface_attendance/core/services/api_service.dart';
 import 'package:smartface_attendance/features/leave/models/leave_model.dart';
@@ -70,9 +72,95 @@ class AttendanceService {
           'qr_code': qrCode,
         },
       );
+      if (response.statusCode == 409) {
+        return {
+          'status': 'conflict',
+          'detail': 'Attendance already marked for this session',
+          'message': 'Attendance already marked for this session',
+        };
+      }
       return jsonDecode(response.body);
     } catch (_) {
       return {'detail': 'Connection failed'};
+    }
+  }
+
+  Future<Map<String, dynamic>> markAttendanceWithFace({
+    required String token,
+    required String sessionId,
+    required List<int> imageBytes,
+    required String fileName,
+    http.Client? client,
+  }) async {
+    try {
+      final uri = Uri.parse('${EnvConfig.apiUrl}/attendance/mark/face');
+      final request = http.MultipartRequest('POST', uri);
+
+      request.headers['Authorization'] = 'Bearer $token';
+      request.fields['session_id'] = sessionId;
+
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image',
+          imageBytes,
+          filename: fileName.isNotEmpty ? fileName : 'face_scan.jpg',
+        ),
+      );
+
+      final httpClient = client ?? http.Client();
+      final streamedResponse = await httpClient.send(request).timeout(
+        const Duration(seconds: 20),
+      );
+
+      final response = await http.Response.fromStream(streamedResponse);
+      if (client == null) {
+        httpClient.close();
+      }
+
+      if (response.statusCode == 409) {
+        return {
+          'status': 'conflict',
+          'matched': false,
+          'detail': 'Attendance already marked for this session',
+          'message': 'Attendance already marked for this session',
+        };
+      }
+
+      if (response.statusCode == 503) {
+        return {
+          'status': 'unavailable',
+          'matched': false,
+          'detail': 'AI face recognition service is currently unavailable',
+          'message': 'AI face recognition service is currently unavailable',
+        };
+      }
+
+      if (response.statusCode == 504) {
+        return {
+          'status': 'timeout',
+          'matched': false,
+          'detail': 'AI face recognition request timed out',
+          'message': 'AI face recognition request timed out',
+        };
+      }
+
+      final Map<String, dynamic> jsonMap =
+          jsonDecode(response.body) as Map<String, dynamic>;
+      return jsonMap;
+    } on TimeoutException {
+      return {
+        'status': 'timeout',
+        'matched': false,
+        'detail': 'Face verification request timed out',
+        'message': 'Face verification request timed out',
+      };
+    } catch (e) {
+      return {
+        'status': 'error',
+        'matched': false,
+        'detail': 'Connection failed: $e',
+        'message': 'Connection failed',
+      };
     }
   }
 

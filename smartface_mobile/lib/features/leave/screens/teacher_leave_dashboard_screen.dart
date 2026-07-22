@@ -584,7 +584,10 @@ class _TeacherLeaveDashboardScreenState
                   ],
                 ),
                 if (!isPending && request.remarks != null) ...[
-                  Divider(color: isDark ? Colors.white10 : Colors.black12, height: 20),
+                  Divider(
+                    color: isDark ? Colors.white10 : Colors.black12,
+                    height: 20,
+                  ),
                   Text(
                     'Remarks: ${request.remarks}',
                     style: const TextStyle(

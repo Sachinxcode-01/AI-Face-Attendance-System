@@ -837,7 +837,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                       _savePreference('sf_two_factor_auth', val);
                       AppToast.show(
                         context,
-                        message: val ? '2FA Protection Armed' : '2FA Protection Disarmed',
+                        message: val
+                            ? '2FA Protection Armed'
+                            : '2FA Protection Disarmed',
                         type: ToastType.info,
                       );
                     },
@@ -937,7 +939,8 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   _savePreference('sf_liveness_strictness', val);
                   AppToast.show(
                     context,
-                    message: 'Liveness strictness updated: ${(val * 100).toInt()}%',
+                    message:
+                        'Liveness strictness updated: ${(val * 100).toInt()}%',
                     type: ToastType.info,
                   );
                 },
@@ -962,7 +965,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.face_retouching_natural_rounded, color: Colors.white, size: 18),
+                      const Icon(
+                        Icons.face_retouching_natural_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'OPTIMIZE NEURAL PROFILE',
@@ -1000,10 +1007,8 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _trustedDevices.length,
-            separatorBuilder: (context, index) => const Divider(
-              height: AppSpacing.lg,
-              color: Colors.white12,
-            ),
+            separatorBuilder: (context, index) =>
+                const Divider(height: AppSpacing.lg, color: Colors.white12),
             itemBuilder: (context, index) {
               final device = _trustedDevices[index];
               final isCurrent = device['isCurrent'] == 'true';
@@ -1021,8 +1026,8 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                       device['name']!.contains('MacBook')
                           ? Icons.laptop_mac_rounded
                           : device['name']!.contains('iPad')
-                              ? Icons.tablet_mac_rounded
-                              : Icons.phone_android_rounded,
+                          ? Icons.tablet_mac_rounded
+                          : Icons.phone_android_rounded,
                       color: isCurrent ? AppColors.gold : Colors.white70,
                       size: 20,
                     ),
@@ -1083,7 +1088,8 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                         final confirmed = await PremiumDialogs.showConfirmDialog(
                           context,
                           title: 'Revoke Authorization',
-                          message: 'Are you sure you want to terminate this device\'s active session? They will need to verify and log in again.',
+                          message:
+                              'Are you sure you want to terminate this device\'s active session? They will need to verify and log in again.',
                           confirmLabel: 'REVOKE',
                           cancelLabel: 'CANCEL',
                           isDestructive: true,
@@ -1185,19 +1191,32 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
           iconColor: Colors.orange,
           iconBgColor: Colors.orange.withValues(alpha: 0.15),
           trailing: themeCtrl.mode == ThemeMode.light
-              ? const Icon(Icons.radio_button_checked_rounded, color: AppColors.gold)
-              : const Icon(Icons.radio_button_off_rounded, color: Colors.white30),
+              ? const Icon(
+                  Icons.radio_button_checked_rounded,
+                  color: AppColors.gold,
+                )
+              : const Icon(
+                  Icons.radio_button_off_rounded,
+                  color: Colors.white30,
+                ),
           onTap: () => themeCtrl.setMode(ThemeMode.light),
         ),
         PremiumSettingRow(
           icon: Icons.dark_mode_rounded,
           title: 'Slate-Dark Theme Mode',
-          subtitle: 'Saves battery life and reduces eye strain in dark environments',
+          subtitle:
+              'Saves battery life and reduces eye strain in dark environments',
           iconColor: AppColors.indigoLight,
           iconBgColor: AppColors.indigoLight.withValues(alpha: 0.15),
           trailing: themeCtrl.mode == ThemeMode.dark
-              ? const Icon(Icons.radio_button_checked_rounded, color: AppColors.gold)
-              : const Icon(Icons.radio_button_off_rounded, color: Colors.white30),
+              ? const Icon(
+                  Icons.radio_button_checked_rounded,
+                  color: AppColors.gold,
+                )
+              : const Icon(
+                  Icons.radio_button_off_rounded,
+                  color: Colors.white30,
+                ),
           onTap: () => themeCtrl.setMode(ThemeMode.dark),
         ),
         PremiumSettingRow(
@@ -1207,8 +1226,14 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
           iconColor: AppColors.gold,
           iconBgColor: AppColors.gold.withValues(alpha: 0.15),
           trailing: themeCtrl.mode == ThemeMode.system
-              ? const Icon(Icons.radio_button_checked_rounded, color: AppColors.gold)
-              : const Icon(Icons.radio_button_off_rounded, color: Colors.white30),
+              ? const Icon(
+                  Icons.radio_button_checked_rounded,
+                  color: AppColors.gold,
+                )
+              : const Icon(
+                  Icons.radio_button_off_rounded,
+                  color: Colors.white30,
+                ),
           onTap: () => themeCtrl.setMode(ThemeMode.system),
         ),
       ],
@@ -1223,7 +1248,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Configure base API gateway endpoints for remote institutional sync and WebSocket verification nodes.',
-          style: AppText.caption(color: isDark ? Colors.white38 : Colors.black45),
+          style: AppText.caption(
+            color: isDark ? Colors.white38 : Colors.black45,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         GlassContainer(
@@ -1345,7 +1372,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.mail_outline_rounded, color: AppColors.gold, size: 20),
+                  const Icon(
+                    Icons.mail_outline_rounded,
+                    color: AppColors.gold,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -1370,7 +1401,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
               const Divider(height: AppSpacing.lg),
               Row(
                 children: [
-                  const Icon(Icons.help_center_outlined, color: AppColors.gold, size: 20),
+                  const Icon(
+                    Icons.help_center_outlined,
+                    color: AppColors.gold,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -1417,10 +1452,16 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.25),
+                      ),
                     ),
                     child: const Center(
-                      child: Icon(Icons.school_rounded, color: AppColors.indigoLight, size: 24),
+                      child: Icon(
+                        Icons.school_rounded,
+                        color: AppColors.indigoLight,
+                        size: 24,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -1433,7 +1474,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF1B2C56),
                           ),
                         ),
                         Text(
@@ -1448,7 +1491,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
               const Divider(height: AppSpacing.lg),
               Text(
                 'Nexa/SmartFace AI Attendance is an enterprise-grade academic verification console leveraging Deep Learning face embeddings (ArcFace-v2) for seamless institutional attendance logging.',
-                style: AppText.body(color: isDark ? Colors.white70 : Colors.black54),
+                style: AppText.body(
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
               ),
             ],
           ),
@@ -1462,16 +1507,32 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             children: [
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.description_outlined, color: AppColors.gold),
-                title: Text('Terms of Service', style: AppText.body(color: isDark ? Colors.white : Colors.black87)),
+                leading: const Icon(
+                  Icons.description_outlined,
+                  color: AppColors.gold,
+                ),
+                title: Text(
+                  'Terms of Service',
+                  style: AppText.body(
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
                 trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
                 onTap: () {},
               ),
               const Divider(height: AppSpacing.xs),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.privacy_tip_outlined, color: AppColors.gold),
-                title: Text('Privacy Policy & Telemetry', style: AppText.body(color: isDark ? Colors.white : Colors.black87)),
+                leading: const Icon(
+                  Icons.privacy_tip_outlined,
+                  color: AppColors.gold,
+                ),
+                title: Text(
+                  'Privacy Policy & Telemetry',
+                  style: AppText.body(
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
                 trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
                 onTap: () {},
               ),

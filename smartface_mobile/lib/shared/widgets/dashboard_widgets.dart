@@ -58,16 +58,21 @@ class ModernDashboardCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBgColor = backgroundColor ?? (isDark ? const Color(0xFF13182E) : Colors.white);
-    
-    final List<BoxShadow> effectiveBoxShadow = boxShadow ?? [
-      BoxShadow(
-        color: isDark ? Colors.black.withValues(alpha: 0.3) : const Color(0xFF9EAFD8).withValues(alpha: 0.14),
-        blurRadius: 16,
-        spreadRadius: 2,
-        offset: const Offset(0, 8),
-      ),
-    ];
+    final cardBgColor =
+        backgroundColor ?? (isDark ? const Color(0xFF13182E) : Colors.white);
+
+    final List<BoxShadow> effectiveBoxShadow =
+        boxShadow ??
+        [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.3)
+                : const Color(0xFF9EAFD8).withValues(alpha: 0.14),
+            blurRadius: 16,
+            spreadRadius: 2,
+            offset: const Offset(0, 8),
+          ),
+        ];
 
     final card = Container(
       padding: padding ?? const EdgeInsets.all(AppSpacing.md),
@@ -75,7 +80,11 @@ class ModernDashboardCard extends StatelessWidget {
         color: cardBgColor,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: borderColor ?? (isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFE2E8F0)),
+          color:
+              borderColor ??
+              (isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : const Color(0xFFE2E8F0)),
           width: borderWidth,
         ),
         boxShadow: effectiveBoxShadow,
@@ -151,8 +160,12 @@ class StatCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isTrendPositive ? Icons.arrow_upward : Icons.arrow_downward,
-                        color: isTrendPositive ? AppColors.success : AppColors.error,
+                        isTrendPositive
+                            ? Icons.arrow_upward
+                            : Icons.arrow_downward,
+                        color: isTrendPositive
+                            ? AppColors.success
+                            : AppColors.error,
                         size: 10,
                       ),
                       const SizedBox(width: 4),
@@ -161,7 +174,9 @@ class StatCard extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: isTrendPositive ? AppColors.success : AppColors.error,
+                          color: isTrendPositive
+                              ? AppColors.success
+                              : AppColors.error,
                         ),
                       ),
                     ],
@@ -263,7 +278,9 @@ class AnalyticsCard extends StatelessWidget {
                     Text(
                       subtitle,
                       style: GoogleFonts.inter(
-                        color: isDark ? Colors.white60 : const Color(0xFF7F8CA4),
+                        color: isDark
+                            ? Colors.white60
+                            : const Color(0xFF7F8CA4),
                         fontSize: 12,
                       ),
                       maxLines: 1,
@@ -285,7 +302,9 @@ class AnalyticsCard extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: InkWell(
-                      onTap: onSegmentChanged != null ? () => onSegmentChanged!(index) : null,
+                      onTap: onSegmentChanged != null
+                          ? () => onSegmentChanged!(index)
+                          : null,
                       borderRadius: BorderRadius.circular(8),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -309,7 +328,9 @@ class AnalyticsCard extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: isSelected ? const Color(0xFF3559E0) : const Color(0xFF7F8CA4),
+                            color: isSelected
+                                ? const Color(0xFF3559E0)
+                                : const Color(0xFF7F8CA4),
                           ),
                         ),
                       ),
@@ -470,7 +491,9 @@ class ProgressCard extends StatelessWidget {
                 CircularProgressIndicator(
                   value: percentage,
                   strokeWidth: 4.5,
-                  backgroundColor: isDark ? Colors.white12 : const Color(0xFFE6E8F2),
+                  backgroundColor: isDark
+                      ? Colors.white12
+                      : const Color(0xFFE6E8F2),
                   valueColor: AlwaysStoppedAnimation(color),
                 ),
                 Text(
@@ -522,14 +545,16 @@ class AlertCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
-              )
-                  .animate(onPlay: (controller) => controller.repeat(reverse: true))
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                  .animate(
+                    onPlay: (controller) => controller.repeat(reverse: true),
+                  )
                   .scale(end: const Offset(1.5, 1.5), duration: 750.ms)
                   .boxShadow(
                     end: BoxShadow(
@@ -566,10 +591,7 @@ class AlertCard extends StatelessWidget {
             maxLines: 4,
             overflow: TextOverflow.ellipsis,
           ),
-          if (action != null) ...[
-            const SizedBox(height: 12),
-            action!,
-          ],
+          if (action != null) ...[const SizedBox(height: 12), action!],
         ],
       ),
     );
@@ -581,11 +603,7 @@ class SectionHeader extends StatelessWidget {
   final String title;
   final Widget? trailing;
 
-  const SectionHeader({
-    super.key,
-    required this.title,
-    this.trailing,
-  });
+  const SectionHeader({super.key, required this.title, this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -637,10 +655,12 @@ class DashboardGrid extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: children
-                .map((child) => Padding(
-                      padding: EdgeInsets.only(bottom: runSpacing),
-                      child: child,
-                    ))
+                .map(
+                  (child) => Padding(
+                    padding: EdgeInsets.only(bottom: runSpacing),
+                    child: child,
+                  ),
+                )
                 .toList(),
           );
         }
@@ -651,10 +671,7 @@ class DashboardGrid extends StatelessWidget {
           spacing: spacing,
           runSpacing: runSpacing,
           children: children
-              .map((child) => SizedBox(
-                    width: itemWidth,
-                    child: child,
-                  ))
+              .map((child) => SizedBox(width: itemWidth, child: child))
               .toList(),
         );
       },

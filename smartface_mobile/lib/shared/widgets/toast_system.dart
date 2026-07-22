@@ -67,11 +67,11 @@ class AppToast {
     } else if (cleanMessage.startsWith('Error:')) {
       cleanMessage = cleanMessage.substring(6).trim();
     }
-    
+
     // Map network errors to user-friendly statements
     final lowerMsg = cleanMessage.toLowerCase();
-    if (lowerMsg.contains('connection failed') || 
-        lowerMsg.contains('failed host lookup') || 
+    if (lowerMsg.contains('connection failed') ||
+        lowerMsg.contains('failed host lookup') ||
         lowerMsg.contains('socketexception') ||
         lowerMsg == 'timeout' ||
         lowerMsg.contains('server not reachable')) {
@@ -222,7 +222,10 @@ class _ToastWidgetState extends State<_ToastWidget>
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF111528).withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(12),

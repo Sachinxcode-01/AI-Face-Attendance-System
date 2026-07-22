@@ -42,7 +42,8 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   int _currentPage = 0;
 
   int get _totalPages {
-    if (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') return 5;
+    if (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer')
+      return 5;
     if (_role == 'admin') return 3;
     if (_role == 'parent') return 3;
     return 5; // student
@@ -80,7 +81,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     super.didChangeDependencies();
     final session = Provider.of<SessionManager>(context, listen: false);
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    _role = (args?['role'] ?? session.role ?? 'student').toString().toLowerCase();
+    _role = (args?['role'] ?? session.role ?? 'student')
+        .toString()
+        .toLowerCase();
     _email = args?['email'] ?? session.email ?? '';
     _token = args?['token'] ?? session.token ?? '';
   }
@@ -89,11 +92,27 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   void dispose() {
     _pageController.dispose();
     for (final c in [
-      _nameController, _phoneController, _dobController, _deptController, _semController,
-      _usnController, _courseController, _sectionController, _rollNoController, _parentController,
-      _collegeController, _employeeIdController, _designationController, _specializationController,
-      _qualificationController, _experienceController, _genderController, _addressController,
-    ]) { c.dispose(); }
+      _nameController,
+      _phoneController,
+      _dobController,
+      _deptController,
+      _semController,
+      _usnController,
+      _courseController,
+      _sectionController,
+      _rollNoController,
+      _parentController,
+      _collegeController,
+      _employeeIdController,
+      _designationController,
+      _specializationController,
+      _qualificationController,
+      _experienceController,
+      _genderController,
+      _addressController,
+    ]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -126,24 +145,41 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     if (_currentPage == 0) return true;
     if (_currentPage == 1) {
       if (_nameController.text.trim().isEmpty) {
-        AppToast.show(context, message: 'Please enter your Full Name', type: ToastType.warning);
+        AppToast.show(
+          context,
+          message: 'Please enter your Full Name',
+          type: ToastType.warning,
+        );
         return false;
       }
       if (_phoneController.text.trim().isEmpty) {
-        AppToast.show(context, message: 'Please enter your Phone Number', type: ToastType.warning);
+        AppToast.show(
+          context,
+          message: 'Please enter your Phone Number',
+          type: ToastType.warning,
+        );
         return false;
       }
       return true;
     }
-    if ((_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') && _currentPage == 2) {
+    if ((_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') &&
+        _currentPage == 2) {
       if (_employeeIdController.text.trim().isEmpty) {
-        AppToast.show(context, message: 'Please enter your Employee ID', type: ToastType.warning);
+        AppToast.show(
+          context,
+          message: 'Please enter your Employee ID',
+          type: ToastType.warning,
+        );
         return false;
       }
     }
     if (_role == 'student' && _currentPage == 2) {
       if (_usnController.text.trim().isEmpty) {
-        AppToast.show(context, message: 'Please enter your Student ID/USN', type: ToastType.warning);
+        AppToast.show(
+          context,
+          message: 'Please enter your Student ID/USN',
+          type: ToastType.warning,
+        );
         return false;
       }
     }
@@ -151,13 +187,21 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   }
 
   bool _isFaceIdPage(int page) {
-    return (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer' || _role == 'student') && page == 3;
+    return (_role == 'teacher' ||
+            _role == 'faculty' ||
+            _role == 'lecturer' ||
+            _role == 'student') &&
+        page == 3;
   }
 
   void _nextPage() async {
     if (!_validateCurrentStep()) return;
     if (_isFaceIdPage(_currentPage) && !_scanComplete) {
-      AppToast.show(context, message: 'Please complete face scan first', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please complete face scan first',
+        type: ToastType.warning,
+      );
       return;
     }
     if (_currentPage < _totalPages - 1) {
@@ -172,49 +216,105 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     final Map<String, dynamic> profileData;
     if (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') {
       profileData = {
-        'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'Teacher',
-        'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '1234567890',
-        'dob': _dobController.text.isNotEmpty ? _dobController.text : '1980-01-01',
-        'employee_id': _employeeIdController.text.isNotEmpty ? _employeeIdController.text : 'EMP-${1000 + rnd.nextInt(9000)}',
-        'designation': _designationController.text.isNotEmpty ? _designationController.text : 'Professor',
-        'specialization': _specializationController.text.isNotEmpty ? _specializationController.text : 'Computer Science',
-        'qualification': _qualificationController.text.isNotEmpty ? _qualificationController.text : 'Ph.D.',
-        'experience': _experienceController.text.isNotEmpty ? _experienceController.text : '5',
-        'gender': _genderController.text.isNotEmpty ? _genderController.text : 'Other',
-        'address': _addressController.text.isNotEmpty ? _addressController.text : 'Campus Address',
+        'full_name': _nameController.text.isNotEmpty
+            ? _nameController.text
+            : 'Teacher',
+        'phone': _phoneController.text.isNotEmpty
+            ? _phoneController.text
+            : '1234567890',
+        'dob': _dobController.text.isNotEmpty
+            ? _dobController.text
+            : '1980-01-01',
+        'employee_id': _employeeIdController.text.isNotEmpty
+            ? _employeeIdController.text
+            : 'EMP-${1000 + rnd.nextInt(9000)}',
+        'designation': _designationController.text.isNotEmpty
+            ? _designationController.text
+            : 'Professor',
+        'specialization': _specializationController.text.isNotEmpty
+            ? _specializationController.text
+            : 'Computer Science',
+        'qualification': _qualificationController.text.isNotEmpty
+            ? _qualificationController.text
+            : 'Ph.D.',
+        'experience': _experienceController.text.isNotEmpty
+            ? _experienceController.text
+            : '5',
+        'gender': _genderController.text.isNotEmpty
+            ? _genderController.text
+            : 'Other',
+        'address': _addressController.text.isNotEmpty
+            ? _addressController.text
+            : 'Campus Address',
         'setup_completed': true,
       };
     } else if (_role == 'parent') {
       profileData = {
-        'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'Parent',
-        'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '1234567890',
+        'full_name': _nameController.text.isNotEmpty
+            ? _nameController.text
+            : 'Parent',
+        'phone': _phoneController.text.isNotEmpty
+            ? _phoneController.text
+            : '1234567890',
         'child_usn': _usnController.text,
         'relationship': _sectionController.text,
         'setup_completed': true,
       };
     } else if (_role == 'admin') {
       profileData = {
-        'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'Admin',
-        'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '1234567890',
+        'full_name': _nameController.text.isNotEmpty
+            ? _nameController.text
+            : 'Admin',
+        'phone': _phoneController.text.isNotEmpty
+            ? _phoneController.text
+            : '1234567890',
         'setup_completed': true,
       };
     } else {
       profileData = {
-        'full_name': _nameController.text.isNotEmpty ? _nameController.text : 'Student',
-        'phone': _phoneController.text.isNotEmpty ? _phoneController.text : '1234567890',
-        'dob': _dobController.text.isNotEmpty ? _dobController.text : '2002-01-01',
-        'gender': _genderController.text.isNotEmpty ? _genderController.text : 'Other',
-        'address': _addressController.text.isNotEmpty ? _addressController.text : 'Home Address',
+        'full_name': _nameController.text.isNotEmpty
+            ? _nameController.text
+            : 'Student',
+        'phone': _phoneController.text.isNotEmpty
+            ? _phoneController.text
+            : '1234567890',
+        'dob': _dobController.text.isNotEmpty
+            ? _dobController.text
+            : '2002-01-01',
+        'gender': _genderController.text.isNotEmpty
+            ? _genderController.text
+            : 'Other',
+        'address': _addressController.text.isNotEmpty
+            ? _addressController.text
+            : 'Home Address',
         'language_preference': _selectedLang,
-        'usn': _usnController.text.isNotEmpty ? _usnController.text : 'USN-${1000 + rnd.nextInt(9000)}',
-        'student_id': _usnController.text.isNotEmpty ? _usnController.text : 'USN-${1000 + rnd.nextInt(9000)}',
-        'course': _courseController.text.isNotEmpty ? _courseController.text : 'B.E.',
-        'section': _sectionController.text.isNotEmpty ? _sectionController.text : 'A',
-        'roll_number': _rollNoController.text.isNotEmpty ? _rollNoController.text : '1',
-        'parent_details': _parentController.text.isNotEmpty ? _parentController.text : 'Guardian Contact',
-        'college': _collegeController.text.isNotEmpty ? _collegeController.text : 'SmartFace University',
-        'department': _deptController.text.isNotEmpty ? _deptController.text : 'CSE',
-        'semester': _semController.text.isNotEmpty ? _semController.text : 'Semester 6',
+        'usn': _usnController.text.isNotEmpty
+            ? _usnController.text
+            : 'USN-${1000 + rnd.nextInt(9000)}',
+        'student_id': _usnController.text.isNotEmpty
+            ? _usnController.text
+            : 'USN-${1000 + rnd.nextInt(9000)}',
+        'course': _courseController.text.isNotEmpty
+            ? _courseController.text
+            : 'B.E.',
+        'section': _sectionController.text.isNotEmpty
+            ? _sectionController.text
+            : 'A',
+        'roll_number': _rollNoController.text.isNotEmpty
+            ? _rollNoController.text
+            : '1',
+        'parent_details': _parentController.text.isNotEmpty
+            ? _parentController.text
+            : 'Guardian Contact',
+        'college': _collegeController.text.isNotEmpty
+            ? _collegeController.text
+            : 'SmartFace University',
+        'department': _deptController.text.isNotEmpty
+            ? _deptController.text
+            : 'CSE',
+        'semester': _semController.text.isNotEmpty
+            ? _semController.text
+            : 'Semester 6',
         'setup_completed': true,
       };
     }
@@ -250,7 +350,10 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             HeroOrbBackground(
               isCompact: true,
               onBackTap: _currentPage > 0
-                  ? () => _pageController.previousPage(duration: 400.ms, curve: Curves.easeOut)
+                  ? () => _pageController.previousPage(
+                      duration: 400.ms,
+                      curve: Curves.easeOut,
+                    )
                   : null,
               child: _buildHeroContent(),
             ),
@@ -280,12 +383,21 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       children: [
         Text(
           'STEP ${_currentPage + 1} OF $_totalPages',
-          style: AuthDesign.fontPoppins(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white, opacity: 0.7),
+          style: AuthDesign.fontPoppins(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            opacity: 0.7,
+          ),
         ),
         const SizedBox(height: 2),
         Text(
           title,
-          style: AuthDesign.fontPoppins(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+          style: AuthDesign.fontPoppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 8),
         ClipRRect(
@@ -303,24 +415,56 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
 
   List<String> _pageTitles() {
     if (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') {
-      return ['Welcome', 'Personal Info', 'Professional Info', 'Set up Face ID', 'All Done!'];
+      return [
+        'Welcome',
+        'Personal Info',
+        'Professional Info',
+        'Set up Face ID',
+        'All Done!',
+      ];
     } else if (_role == 'admin') {
       return ['Welcome', 'Personal Info', 'All Done!'];
     } else if (_role == 'parent') {
       return ['Welcome', 'Personal Info', 'All Done!'];
     }
-    return ['Welcome', 'Personal Info', 'Campus Details', 'Set up Face ID', 'All Done!'];
+    return [
+      'Welcome',
+      'Personal Info',
+      'Campus Details',
+      'Set up Face ID',
+      'All Done!',
+    ];
   }
 
   List<Widget> _getPagesForRole() {
     if (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') {
-      return [_buildWelcomeCard(), _buildPersonalCard(), _buildProfessionalCard(), _buildFaceIdCard(), _buildCompletionCard()];
+      return [
+        _buildWelcomeCard(),
+        _buildPersonalCard(),
+        _buildProfessionalCard(),
+        _buildFaceIdCard(),
+        _buildCompletionCard(),
+      ];
     } else if (_role == 'admin') {
-      return [_buildWelcomeCard(), _buildPersonalCard(), _buildCompletionCard()];
+      return [
+        _buildWelcomeCard(),
+        _buildPersonalCard(),
+        _buildCompletionCard(),
+      ];
     } else if (_role == 'parent') {
-      return [_buildWelcomeCard(), _buildPersonalCard(), _buildCompletionCard()];
+      return [
+        _buildWelcomeCard(),
+        _buildPersonalCard(),
+        _buildCompletionCard(),
+      ];
     }
-    return [_buildWelcomeCard(), _buildPersonalCard(), _buildCollegeCard(), _buildFaceIdCard(), _buildCompletionCard()];
+    return [
+      _buildWelcomeCard(),
+      _buildPersonalCard(),
+      _buildCollegeCard(),
+      _buildFaceIdCard(),
+      _buildCompletionCard(),
+    ];
   }
 
   // ─── CARD SHELL ──────────────────────────────────────────────────────────
@@ -331,13 +475,14 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: constraints.maxHeight,
-            ),
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: IntrinsicHeight(
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
@@ -381,35 +526,61 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
 
   Widget _buildWelcomeCard() {
     final roleLabel = _role[0].toUpperCase() + _role.substring(1);
-    return _buildCardShell(children: [
-      Text('Welcome to SmartFace',
-          style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
-      const SizedBox(height: 6),
-      Text("Let's set up your smart campus profile in a few quick steps.",
-          style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textLabel)),
-      const SizedBox(height: 28),
-      Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          decoration: BoxDecoration(
-            color: AuthDesign.primaryIndigo.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(50),
-            border: Border.all(color: AuthDesign.primaryIndigo.withValues(alpha: 0.18)),
+    return _buildCardShell(
+      children: [
+        Text(
+          'Welcome to SmartFace',
+          style: AuthDesign.fontPoppins(
+            fontSize: 21,
+            fontWeight: FontWeight.w700,
+            color: AuthDesign.textHeading,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.verified_user_outlined, color: AuthDesign.primaryIndigo, size: 18),
-              const SizedBox(width: 8),
-              Text(roleLabel,
-                  style: AuthDesign.fontPoppins(fontSize: 13, fontWeight: FontWeight.w600, color: AuthDesign.primaryIndigo)),
-            ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          "Let's set up your smart campus profile in a few quick steps.",
+          style: AuthDesign.fontPoppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: AuthDesign.textLabel,
           ),
-        ).animate().scale(duration: 700.ms, curve: Curves.elasticOut),
-      ),
-      const SizedBox(height: 28),
-      _buildNextButton(label: 'Get Started'),
-    ]);
+        ),
+        const SizedBox(height: 28),
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: AuthDesign.primaryIndigo.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(50),
+              border: Border.all(
+                color: AuthDesign.primaryIndigo.withValues(alpha: 0.18),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.verified_user_outlined,
+                  color: AuthDesign.primaryIndigo,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  roleLabel,
+                  style: AuthDesign.fontPoppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AuthDesign.primaryIndigo,
+                  ),
+                ),
+              ],
+            ),
+          ).animate().scale(duration: 700.ms, curve: Curves.elasticOut),
+        ),
+        const SizedBox(height: 28),
+        _buildNextButton(label: 'Get Started'),
+      ],
+    );
   }
 
   // ─── PERSONAL ────────────────────────────────────────────────────────────
@@ -418,23 +589,48 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     if (_genderController.text.isEmpty) {
       _genderController.text = 'Male';
     }
-    return _buildCardShell(children: [
-      Text('Personal Info',
-          style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
-      const SizedBox(height: 4),
-      Text('Tell us a bit about yourself.',
-          style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textLabel)),
-      const SizedBox(height: 24),
-      _field('Full Name', _nameController, hint: 'Enter your full name'),
-      const SizedBox(height: 16),
-      _field('Phone Number', _phoneController, hint: '+91 00000 00000', type: TextInputType.phone),
-      const SizedBox(height: 16),
-      _field('Date of Birth', _dobController, hint: 'DD/MM/YYYY', readOnly: true, onTap: () => _selectDate(context)),
-      const SizedBox(height: 16),
-      _buildGenderSelector(),
-      const SizedBox(height: 28),
-      _buildNextButton(),
-    ]);
+    return _buildCardShell(
+      children: [
+        Text(
+          'Personal Info',
+          style: AuthDesign.fontPoppins(
+            fontSize: 21,
+            fontWeight: FontWeight.w700,
+            color: AuthDesign.textHeading,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Tell us a bit about yourself.',
+          style: AuthDesign.fontPoppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: AuthDesign.textLabel,
+          ),
+        ),
+        const SizedBox(height: 24),
+        _field('Full Name', _nameController, hint: 'Enter your full name'),
+        const SizedBox(height: 16),
+        _field(
+          'Phone Number',
+          _phoneController,
+          hint: '+91 00000 00000',
+          type: TextInputType.phone,
+        ),
+        const SizedBox(height: 16),
+        _field(
+          'Date of Birth',
+          _dobController,
+          hint: 'DD/MM/YYYY',
+          readOnly: true,
+          onTap: () => _selectDate(context),
+        ),
+        const SizedBox(height: 16),
+        _buildGenderSelector(),
+        const SizedBox(height: 28),
+        _buildNextButton(),
+      ],
+    );
   }
 
   Widget _buildGenderSelector() {
@@ -446,7 +642,11 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       children: [
         Text(
           'GENDER',
-          style: AuthDesign.fontPoppins(fontSize: 10.5, fontWeight: FontWeight.w500, color: AuthDesign.textLabel),
+          style: AuthDesign.fontPoppins(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w500,
+            color: AuthDesign.textLabel,
+          ),
         ),
         const SizedBox(height: 10),
         Row(
@@ -480,8 +680,12 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                       g,
                       style: AuthDesign.fontPoppins(
                         fontSize: 12,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected ? AuthDesign.primaryIndigo : AuthDesign.textHeading,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? AuthDesign.primaryIndigo
+                            : AuthDesign.textHeading,
                       ),
                     ),
                   ),
@@ -497,174 +701,309 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   // ─── PROFESSIONAL ────────────────────────────────────────────────────────
 
   Widget _buildProfessionalCard() {
-    return _buildCardShell(children: [
-      Text('Professional Info',
-          style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
-      const SizedBox(height: 4),
-      Text('Specify your academic background.',
-          style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textLabel)),
-      const SizedBox(height: 24),
-      _field('Employee ID', _employeeIdController, hint: 'e.g. EMP-1001'),
-      const SizedBox(height: 16),
-      _field('Designation', _designationController, hint: 'e.g. Associate Professor'),
-      const SizedBox(height: 16),
-      _field('Specialization', _specializationController, hint: 'e.g. Computer Science'),
-      const SizedBox(height: 16),
-      _field('Qualification', _qualificationController, hint: 'e.g. Ph.D., M.Tech'),
-      const SizedBox(height: 16),
-      _field('Years of Experience', _experienceController, hint: 'e.g. 5', type: TextInputType.number),
-      const SizedBox(height: 28),
-      _buildNextButton(),
-    ]);
+    return _buildCardShell(
+      children: [
+        Text(
+          'Professional Info',
+          style: AuthDesign.fontPoppins(
+            fontSize: 21,
+            fontWeight: FontWeight.w700,
+            color: AuthDesign.textHeading,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Specify your academic background.',
+          style: AuthDesign.fontPoppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: AuthDesign.textLabel,
+          ),
+        ),
+        const SizedBox(height: 24),
+        _field('Employee ID', _employeeIdController, hint: 'e.g. EMP-1001'),
+        const SizedBox(height: 16),
+        _field(
+          'Designation',
+          _designationController,
+          hint: 'e.g. Associate Professor',
+        ),
+        const SizedBox(height: 16),
+        _field(
+          'Specialization',
+          _specializationController,
+          hint: 'e.g. Computer Science',
+        ),
+        const SizedBox(height: 16),
+        _field(
+          'Qualification',
+          _qualificationController,
+          hint: 'e.g. Ph.D., M.Tech',
+        ),
+        const SizedBox(height: 16),
+        _field(
+          'Years of Experience',
+          _experienceController,
+          hint: 'e.g. 5',
+          type: TextInputType.number,
+        ),
+        const SizedBox(height: 28),
+        _buildNextButton(),
+      ],
+    );
   }
 
   // ─── CAMPUS ──────────────────────────────────────────────────────────────
 
   Widget _buildCollegeCard() {
-    return _buildCardShell(children: [
-      Text('Campus Details',
-          style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
-      const SizedBox(height: 4),
-      Text('Connect with your institution.',
-          style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textLabel)),
-      const SizedBox(height: 24),
-      _field('Student ID / USN', _usnController, hint: 'e.g. 1AB22CS001'),
-      const SizedBox(height: 16),
-      _field('Class / Course', _courseController, hint: 'e.g. B.E. Computer Science'),
-      const SizedBox(height: 16),
-      _field('Section', _sectionController, hint: 'e.g. A'),
-      const SizedBox(height: 16),
-      _field('Roll Number', _rollNoController, hint: 'e.g. 23', type: TextInputType.number),
-      const SizedBox(height: 16),
-      _field('Semester', _semController, hint: 'e.g. Semester 6'),
-      const SizedBox(height: 28),
-      _buildNextButton(),
-    ]);
+    return _buildCardShell(
+      children: [
+        Text(
+          'Campus Details',
+          style: AuthDesign.fontPoppins(
+            fontSize: 21,
+            fontWeight: FontWeight.w700,
+            color: AuthDesign.textHeading,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Connect with your institution.',
+          style: AuthDesign.fontPoppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: AuthDesign.textLabel,
+          ),
+        ),
+        const SizedBox(height: 24),
+        _field('Student ID / USN', _usnController, hint: 'e.g. 1AB22CS001'),
+        const SizedBox(height: 16),
+        _field(
+          'Class / Course',
+          _courseController,
+          hint: 'e.g. B.E. Computer Science',
+        ),
+        const SizedBox(height: 16),
+        _field('Section', _sectionController, hint: 'e.g. A'),
+        const SizedBox(height: 16),
+        _field(
+          'Roll Number',
+          _rollNoController,
+          hint: 'e.g. 23',
+          type: TextInputType.number,
+        ),
+        const SizedBox(height: 16),
+        _field('Semester', _semController, hint: 'e.g. Semester 6'),
+        const SizedBox(height: 28),
+        _buildNextButton(),
+      ],
+    );
   }
 
   // ─── FACE ID ─────────────────────────────────────────────────────────────
 
   Widget _buildFaceIdCard() {
     const p = AuthDesign.primaryIndigo;
-    return _buildCardShell(children: [
-      Text('Set up Face ID',
-          style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
-      const SizedBox(height: 4),
-      Text('Last step — register your face for instant attendance.',
-          style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textLabel)),
-      const SizedBox(height: 28),
-
-      // Dashed scan circle
-      Center(child: _DashedScanCircle(isComplete: _scanComplete)),
-      const SizedBox(height: 28),
-
-      // Checklist
-      _buildChecklist(),
-      const SizedBox(height: 28),
-
-      // Button: after scan complete show Continue, else show Start
-      if (_scanComplete)
-        _buildNextButton(label: 'Continue →')
-      else
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton.icon(
-            onPressed: _isScanLoading ? null : _startFaceScan,
-            icon: _isScanLoading
-                ? const SizedBox(
-                    width: 18, height: 18,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : const Icon(Icons.face_unlock_outlined, color: Colors.white, size: 20),
-            label: Text(
-              _isScanLoading ? 'Scanning...' : 'Start face scan',
-              style: AuthDesign.fontPoppins(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: p,
-              disabledBackgroundColor: p.withValues(alpha: 0.6),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-              elevation: 0,
-            ),
+    return _buildCardShell(
+      children: [
+        Text(
+          'Set up Face ID',
+          style: AuthDesign.fontPoppins(
+            fontSize: 21,
+            fontWeight: FontWeight.w700,
+            color: AuthDesign.textHeading,
           ),
         ),
-    ]);
+        const SizedBox(height: 4),
+        Text(
+          'Last step — register your face for instant attendance.',
+          style: AuthDesign.fontPoppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: AuthDesign.textLabel,
+          ),
+        ),
+        const SizedBox(height: 28),
+
+        // Dashed scan circle
+        Center(child: _DashedScanCircle(isComplete: _scanComplete)),
+        const SizedBox(height: 28),
+
+        // Checklist
+        _buildChecklist(),
+        const SizedBox(height: 28),
+
+        // Button: after scan complete show Continue, else show Start
+        if (_scanComplete)
+          _buildNextButton(label: 'Continue →')
+        else
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: _isScanLoading ? null : _startFaceScan,
+              icon: _isScanLoading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.face_unlock_outlined,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+              label: Text(
+                _isScanLoading ? 'Scanning...' : 'Start face scan',
+                style: AuthDesign.fontPoppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: p,
+                disabledBackgroundColor: p.withValues(alpha: 0.6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildChecklist() {
     final items = [
       const _CheckItem('Account created', done: true),
       const _CheckItem('Role selected', done: true),
-      _CheckItem('Face scan registration', done: _scanComplete, isCurrent: !_scanComplete),
+      _CheckItem(
+        'Face scan registration',
+        done: _scanComplete,
+        isCurrent: !_scanComplete,
+      ),
     ];
     return Column(children: items.map(_buildChecklistRow).toList());
   }
 
   Widget _buildChecklistRow(_CheckItem step) {
-    final color = step.done ? const Color(0xFF22C55E) : (step.isCurrent ? AuthDesign.primaryIndigo : AuthDesign.textPlaceholder);
-    final icon = step.done ? Icons.check_circle_rounded : (step.isCurrent ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded);
+    final color = step.done
+        ? const Color(0xFF22C55E)
+        : (step.isCurrent
+              ? AuthDesign.primaryIndigo
+              : AuthDesign.textPlaceholder);
+    final icon = step.done
+        ? Icons.check_circle_rounded
+        : (step.isCurrent
+              ? Icons.radio_button_checked_rounded
+              : Icons.radio_button_unchecked_rounded);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 10),
-        Text(
-          step.label,
-          style: AuthDesign.fontPoppins(
-            fontSize: 12,
-            fontWeight: step.isCurrent ? FontWeight.w600 : FontWeight.w400,
-            color: step.done ? AuthDesign.textHeading : (step.isCurrent ? AuthDesign.primaryIndigo : AuthDesign.textLabel),
-          ),
-        ),
-        if (step.isCurrent) ...[
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: AuthDesign.primaryIndigo.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(50),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 10),
+          Text(
+            step.label,
+            style: AuthDesign.fontPoppins(
+              fontSize: 12,
+              fontWeight: step.isCurrent ? FontWeight.w600 : FontWeight.w400,
+              color: step.done
+                  ? AuthDesign.textHeading
+                  : (step.isCurrent
+                        ? AuthDesign.primaryIndigo
+                        : AuthDesign.textLabel),
             ),
-            child: Text('current',
-                style: AuthDesign.fontPoppins(fontSize: 9, fontWeight: FontWeight.w600, color: AuthDesign.primaryIndigo)),
           ),
+          if (step.isCurrent) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AuthDesign.primaryIndigo.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(50),
+              ),
+              child: Text(
+                'current',
+                style: AuthDesign.fontPoppins(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: AuthDesign.primaryIndigo,
+                ),
+              ),
+            ),
+          ],
         ],
-      ]),
+      ),
     );
   }
 
   Future<void> _startFaceScan() async {
     setState(() => _isScanLoading = true);
     await Future.delayed(const Duration(milliseconds: 800));
-    final result = await ApiService.registerBiometric(_email.isNotEmpty ? _email : 'test@student.com', _token);
+    final result = await ApiService.registerBiometric(
+      _email.isNotEmpty ? _email : 'test@student.com',
+      _token,
+    );
     if (!mounted) return;
     setState(() => _isScanLoading = false);
     if (result.containsKey('message') || result.containsKey('success')) {
       setState(() => _scanComplete = true);
       context.read<SessionManager>().setBiometricRegistered(true);
-      AppToast.show(context, title: 'Face ID Registered', message: 'Your face has been registered successfully.', type: ToastType.success);
+      AppToast.show(
+        context,
+        title: 'Face ID Registered',
+        message: 'Your face has been registered successfully.',
+        type: ToastType.success,
+      );
     } else {
-      AppToast.show(context, message: 'Face scan failed. Please try again.', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'Face scan failed. Please try again.',
+        type: ToastType.error,
+      );
     }
   }
 
   // ─── COMPLETION ──────────────────────────────────────────────────────────
 
   Widget _buildCompletionCard() {
-    return _buildCardShell(children: [
-      Text("You're all set!",
-          style: AuthDesign.fontPoppins(fontSize: 21, fontWeight: FontWeight.w700, color: AuthDesign.textHeading)),
-      const SizedBox(height: 4),
-      Text('Your smart campus profile is ready for action.',
-          style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textLabel)),
-      const SizedBox(height: 32),
-      Center(
-        child: const Icon(Icons.check_circle_outline_rounded, size: 80, color: Color(0xFF22C55E))
-            .animate()
-            .scale(duration: 700.ms, curve: Curves.elasticOut),
-      ),
-      const SizedBox(height: 32),
-      _buildNextButton(label: 'Enter Dashboard →'),
-    ]);
+    return _buildCardShell(
+      children: [
+        Text(
+          "You're all set!",
+          style: AuthDesign.fontPoppins(
+            fontSize: 21,
+            fontWeight: FontWeight.w700,
+            color: AuthDesign.textHeading,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Your smart campus profile is ready for action.',
+          style: AuthDesign.fontPoppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: AuthDesign.textLabel,
+          ),
+        ),
+        const SizedBox(height: 32),
+        Center(
+          child: const Icon(
+            Icons.check_circle_outline_rounded,
+            size: 80,
+            color: Color(0xFF22C55E),
+          ).animate().scale(duration: 700.ms, curve: Curves.elasticOut),
+        ),
+        const SizedBox(height: 32),
+        _buildNextButton(label: 'Enter Dashboard →'),
+      ],
+    );
   }
 
   // ─── SHARED HELPERS ──────────────────────────────────────────────────────
@@ -682,10 +1021,20 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       children: [
         Text(
           label.toUpperCase(),
-          style: AuthDesign.fontPoppins(fontSize: 10.5, fontWeight: FontWeight.w500, color: AuthDesign.textLabel),
+          style: AuthDesign.fontPoppins(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w500,
+            color: AuthDesign.textLabel,
+          ),
         ),
         const SizedBox(height: 6),
-        _WizardTextField(controller: controller, hintText: hint ?? label, readOnly: readOnly, onTap: onTap, keyboardType: type),
+        _WizardTextField(
+          controller: controller,
+          hintText: hint ?? label,
+          readOnly: readOnly,
+          onTap: onTap,
+          keyboardType: type,
+        ),
       ],
     );
   }
@@ -699,12 +1048,18 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         onPressed: _nextPage,
         style: ElevatedButton.styleFrom(
           backgroundColor: AuthDesign.primaryIndigo,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(13),
+          ),
           elevation: 0,
         ),
         child: Text(
           label ?? (isLast ? 'Enter Dashboard' : 'Continue'),
-          style: AuthDesign.fontPoppins(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+          style: AuthDesign.fontPoppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -729,24 +1084,34 @@ class _DashedScanCircle extends StatelessWidget {
       child: isComplete
           ? Container(
               key: const ValueKey('done'),
-              width: size, height: size,
+              width: size,
+              height: size,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: p.withValues(alpha: 0.08),
                 border: Border.all(color: p, width: 2),
               ),
-              child: const Icon(Icons.check_circle_outline_rounded, size: 56, color: p)
-                  .animate().scale(duration: 500.ms, curve: Curves.elasticOut),
+              child: const Icon(
+                Icons.check_circle_outline_rounded,
+                size: 56,
+                color: p,
+              ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
             )
           : CustomPaint(
               key: const ValueKey('scan'),
               painter: const _DashedCirclePainter(color: p),
               child: SizedBox(
-                width: size, height: size,
+                width: size,
+                height: size,
                 child: Center(
-                  child: const Icon(Icons.face_unlock_outlined, size: 44, color: p)
-                      .animate(onPlay: (c) => c.repeat(reverse: true))
-                      .scale(begin: const Offset(0.95, 0.95), end: const Offset(1.05, 1.05), duration: 1200.ms),
+                  child:
+                      const Icon(Icons.face_unlock_outlined, size: 44, color: p)
+                          .animate(onPlay: (c) => c.repeat(reverse: true))
+                          .scale(
+                            begin: const Offset(0.95, 0.95),
+                            end: const Offset(1.05, 1.05),
+                            duration: 1200.ms,
+                          ),
                 ),
               ),
             ),
@@ -820,7 +1185,9 @@ class _WizardTextFieldState extends State<_WizardTextField> {
   @override
   void initState() {
     super.initState();
-    _focusNode.addListener(() => setState(() => _isFocused = _focusNode.hasFocus));
+    _focusNode.addListener(
+      () => setState(() => _isFocused = _focusNode.hasFocus),
+    );
   }
 
   @override
@@ -836,7 +1203,9 @@ class _WizardTextFieldState extends State<_WizardTextField> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: _isFocused ? AuthDesign.underlineFocused : AuthDesign.underlineUnfocused,
+            color: _isFocused
+                ? AuthDesign.underlineFocused
+                : AuthDesign.underlineUnfocused,
             width: _isFocused ? 1.8 : 1.2,
           ),
         ),
@@ -847,10 +1216,18 @@ class _WizardTextFieldState extends State<_WizardTextField> {
         readOnly: widget.readOnly,
         onTap: widget.onTap,
         keyboardType: widget.keyboardType,
-        style: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textHeading),
+        style: AuthDesign.fontPoppins(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: AuthDesign.textHeading,
+        ),
         decoration: InputDecoration(
           hintText: widget.hintText,
-          hintStyle: AuthDesign.fontPoppins(fontSize: 12, fontWeight: FontWeight.w400, color: AuthDesign.textPlaceholder),
+          hintStyle: AuthDesign.fontPoppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: AuthDesign.textPlaceholder,
+          ),
           border: InputBorder.none,
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(vertical: 8),

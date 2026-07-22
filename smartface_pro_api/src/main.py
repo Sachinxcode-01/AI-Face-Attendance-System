@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, status, WebSocket, WebSocketDisconnect, File, UploadFile, Header, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -380,6 +381,8 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info('"SmartFace API shutting down gracefully"')
 
+import asyncio
+
 app = FastAPI(
     title="SmartAttendance Enterprise API",
     version=APP_VERSION,
@@ -388,6 +391,22 @@ app = FastAPI(
     docs_url="/api/docs" if APP_ENV != "production" else None,
     redoc_url="/api/redoc" if APP_ENV != "production" else None,
 )
+
+# ── Concurrency & Internal Security Controls ────────────────────────────────
+INFERENCE_SEMAPHORE = asyncio.Semaphore(5)
+INFERENCE_TIMEOUT_SECONDS = 10.0
+INTERNAL_SERVICE_SECRET = os.getenv("INTERNAL_SERVICE_KEY", "sf_internal_secret_key_2026")
+
+
+async def verify_internal_service_key(
+    x_internal_key: Optional[str] = Header(None, alias="X-Internal-Service-Key")
+):
+    if not x_internal_key or x_internal_key != INTERNAL_SERVICE_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized internal service access",
+        )
+    return x_internal_key
 
 # ── Middleware stack (order matters: outermost first) ────────────────────────
 app.add_middleware(SecurityHeadersMiddleware)

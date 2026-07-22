@@ -13,30 +13,62 @@ export interface ApplyLeavePayload {
   status: string;
 }
 
-async function request(path: string, options: RequestInit = {}) {
+const DEFAULT_TIMEOUT_MS = 15000;
+
+export function safeRedirect(target: string): string {
+  if (!target || typeof target !== "string") return "/login";
+  const trimmed = target.trim();
+  if (trimmed.startsWith("/") && !trimmed.startsWith("//") && !trimmed.startsWith("/\\")) {
+    return trimmed;
+  }
+  return "/login";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function request<T = any>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${BASE_URL}${path}`;
   const isFormData = options.body instanceof FormData;
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...(isFormData ? {} : { "Content-Type": "application/json" }),
-      ...options.headers,
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
-  const text = await response.text();
-  let data;
   try {
-    data = text ? JSON.parse(text) : {};
-  } catch {
-    data = { detail: text };
-  }
+    const response = await fetch(url, {
+      ...options,
+      signal: options.signal || controller.signal,
+      headers: {
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+        ...options.headers,
+      },
+    });
 
-  if (!response.ok) {
-    throw new Error(data.detail || `HTTP Error ${response.status}`);
-  }
+    const text = await response.text();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let data: Record<string, any>;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { detail: text || "Invalid response format" };
+    }
 
-  return data;
+    if (!response.ok) {
+      const errorMsg =
+        typeof data.detail === "string"
+          ? data.detail
+          : typeof data.message === "string"
+          ? data.message
+          : `HTTP Error ${response.status}`;
+      throw new Error(errorMsg);
+    }
+
+    return data;
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Request timed out after ${DEFAULT_TIMEOUT_MS}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export const api = {

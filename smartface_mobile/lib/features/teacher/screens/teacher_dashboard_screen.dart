@@ -33,7 +33,8 @@ import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
-import 'package:smartface_attendance/design_system/design_system.dart' hide StatCard;
+import 'package:smartface_attendance/design_system/design_system.dart'
+    hide StatCard;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Greeting helper
@@ -108,7 +109,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   // ── Data loading (teacher-only endpoints) ─────────────────────────────────
   Future<void> _loadData({bool silent = false}) async {
     if (!mounted) return;
-    if (!silent) setState(() { _isLoading = true; _error = null; });
+    if (!silent)
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
 
     try {
       final session = context.read<SessionManager>();
@@ -118,20 +123,26 @@ class _TeacherDashboardState extends State<TeacherDashboard>
 
       // Parallel teacher-scoped calls — no admin endpoint touched
       final results = await Future.wait([
-        ApiService.getTeacherAnalytics(email, token),   // /attendance/teacher/analytics/:email
-        ApiService.getPendingLeaves(),                   // /leave/admin/pending (returns count visible to teacher)
-        ApiService.getTimetable(token),                  // /academic/timetable
+        ApiService.getTeacherAnalytics(
+          email,
+          token,
+        ), // /attendance/teacher/analytics/:email
+        ApiService.getPendingLeaves(), // /leave/admin/pending (returns count visible to teacher)
+        ApiService.getTimetable(token), // /academic/timetable
       ]);
 
       final analytics = results[0] as Map<String, dynamic>;
-      final pending   = results[1] as List<dynamic>;
+      final pending = results[1] as List<dynamic>;
       final timetable = results[2] as List<dynamic>;
 
       // Filter timetable to today's classes only
       final today = _weekdayLabel(DateTime.now().weekday);
       final todayClasses = timetable
-          .where((c) =>
-              (c['day'] as String? ?? '').toLowerCase() == today.toLowerCase())
+          .where(
+            (c) =>
+                (c['day'] as String? ?? '').toLowerCase() ==
+                today.toLowerCase(),
+          )
           .toList();
 
       if (mounted) {
@@ -139,7 +150,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           _analytics = analytics;
           _pendingLeaves = pending.length;
           _todayClasses = todayClasses;
-          _activeSessions = (analytics['total_sessions'] as int? ?? 0) > 0 ? 1 : 0;
+          _activeSessions = (analytics['total_sessions'] as int? ?? 0) > 0
+              ? 1
+              : 0;
           _isLoading = false;
         });
       }
@@ -155,7 +168,15 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   }
 
   String _weekdayLabel(int weekday) {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
     return days[weekday - 1];
   }
 
@@ -195,10 +216,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 if (_error != null) _buildErrorBanner(_error!),
 
                 // ── Greeting ──────────────────────────────────────────────
-                _buildGreetingHeader(session)
-                    .animate()
-                    .fadeIn(duration: 400.ms)
-                    .slideY(begin: -0.1),
+                _buildGreetingHeader(
+                  session,
+                ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
 
                 const SizedBox(height: 20),
 
@@ -212,9 +232,10 @@ class _TeacherDashboardState extends State<TeacherDashboard>
 
                 // ── Stats grid ────────────────────────────────────────────
                 if (!isTablet)
-                  _buildStatsGrid()
-                      .animate()
-                      .fadeIn(delay: 180.ms, duration: 400.ms)
+                  _buildStatsGrid().animate().fadeIn(
+                    delay: 180.ms,
+                    duration: 400.ms,
+                  )
                 else
                   Row(
                     children: [
@@ -227,24 +248,26 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 const SizedBox(height: 20),
 
                 // ── Today's classes ───────────────────────────────────────
-                _buildTodayClasses()
-                    .animate()
-                    .fadeIn(delay: 250.ms, duration: 400.ms),
+                _buildTodayClasses().animate().fadeIn(
+                  delay: 250.ms,
+                  duration: 400.ms,
+                ),
 
                 const SizedBox(height: 20),
 
                 // ── Quick actions (mobile only) ───────────────────────────
                 if (!isTablet)
-                  _buildQuickActions(context)
-                      .animate()
-                      .fadeIn(delay: 300.ms, duration: 400.ms),
+                  _buildQuickActions(
+                    context,
+                  ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
 
                 const SizedBox(height: 20),
 
                 // ── Recent activity ───────────────────────────────────────
-                _buildRecentActivity()
-                    .animate()
-                    .fadeIn(delay: 360.ms, duration: 400.ms),
+                _buildRecentActivity().animate().fadeIn(
+                  delay: 360.ms,
+                  duration: 400.ms,
+                ),
 
                 const SizedBox(height: 40),
               ],
@@ -278,10 +301,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 color: AppColors.primary.withValues(alpha: 0.4),
                 width: 1.5,
               ),
-              boxShadow: AppShadows.glow(
-                AppColors.primary,
-                intensity: 0.15,
-              ),
+              boxShadow: AppShadows.glow(AppColors.primary, intensity: 0.15),
             ),
             child: Center(
               child: Text(
@@ -321,18 +341,12 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       actions: [
         IconButton(
           onPressed: () => context.push(AppRoutes.alertsNexusPath),
-          icon: Icon(
-            Icons.notifications_none_rounded,
-            color: textColor,
-          ),
+          icon: Icon(Icons.notifications_none_rounded, color: textColor),
           tooltip: 'Notifications',
         ),
         IconButton(
           onPressed: () => context.push(AppRoutes.settingsPath),
-          icon: Icon(
-            Icons.settings_outlined,
-            color: textColor,
-          ),
+          icon: Icon(Icons.settings_outlined, color: textColor),
           tooltip: 'Settings',
         ),
       ],
@@ -382,7 +396,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         ),
         child: Row(
           children: [
-            const Icon(Icons.wifi_off_rounded, color: AppColors.error, size: 18),
+            const Icon(
+              Icons.wifi_off_rounded,
+              color: AppColors.error,
+              size: 18,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -399,7 +417,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   // ── Session hero card ──────────────────────────────────────────────────────
   Widget _buildSessionHeroCard(BuildContext context) {
     final isActive = _activeSessions > 0;
-    final rate = (_analytics['class_attendance_rate'] as num?)?.toDouble() ?? 0.0;
+    final rate =
+        (_analytics['class_attendance_rate'] as num?)?.toDouble() ?? 0.0;
 
     return AnimatedBuilder(
       animation: _pulsingController,
@@ -434,18 +453,22 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               Row(
                 children: [
                   Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: isActive ? Colors.greenAccent : Colors.redAccent,
-                      shape: BoxShape.circle,
-                    ),
-                  )
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? Colors.greenAccent
+                              : Colors.redAccent,
+                          shape: BoxShape.circle,
+                        ),
+                      )
                       .animate(onPlay: (c) => c.repeat(reverse: true))
                       .scale(end: const Offset(1.5, 1.5), duration: 900.ms)
                       .boxShadow(
                         end: BoxShadow(
-                          color: isActive ? Colors.greenAccent : Colors.redAccent,
+                          color: isActive
+                              ? Colors.greenAccent
+                              : Colors.redAccent,
                           blurRadius: 6,
                         ),
                       ),
@@ -473,10 +496,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               const SizedBox(height: 4),
               Text(
                 'Class avg: ${rate.toStringAsFixed(1)}% attendance',
-                style: GoogleFonts.inter(
-                  color: Colors.white60,
-                  fontSize: 12,
-                ),
+                style: GoogleFonts.inter(color: Colors.white60, fontSize: 12),
               ),
               const SizedBox(height: 20),
 
@@ -490,7 +510,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.qr_code_rounded, size: 16, color: Colors.black),
+                        const Icon(
+                          Icons.qr_code_rounded,
+                          size: 16,
+                          color: Colors.black,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'GENERATE QR',
@@ -508,7 +532,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.videocam_outlined, size: 16, color: Colors.white),
+                        const Icon(
+                          Icons.videocam_outlined,
+                          size: 16,
+                          color: Colors.white,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'LIVE MONITOR',
@@ -532,9 +560,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
 
   // ── Stats grid ─────────────────────────────────────────────────────────────
   Widget _buildStatsGrid() {
-    final classRate = (_analytics['class_attendance_rate'] as num?)?.toDouble() ?? 0.0;
+    final classRate =
+        (_analytics['class_attendance_rate'] as num?)?.toDouble() ?? 0.0;
     final totalSessions = _analytics['total_sessions']?.toString() ?? '0';
-    final lowCount = (_analytics['low_attendance_students'] as List?)?.length ?? 0;
+    final lowCount =
+        (_analytics['low_attendance_students'] as List?)?.length ?? 0;
 
     return DashboardGrid(
       crossAxisCount: 2,
@@ -561,7 +591,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           label: 'Pending Leaves',
           value: _pendingLeaves.toString(),
           icon: Icons.event_busy_rounded,
-          accentColor: _pendingLeaves > 0 ? Colors.orangeAccent : AppColors.success,
+          accentColor: _pendingLeaves > 0
+              ? Colors.orangeAccent
+              : AppColors.success,
           trend: _pendingLeaves > 0 ? 'REQUIRES ACTION' : 'ALL CLEAR',
           isTrendPositive: _pendingLeaves == 0,
         ),
@@ -598,15 +630,20 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
               children: [
-                const Icon(Icons.event_available_rounded,
-                    color: AppColors.success, size: 22),
+                const Icon(
+                  Icons.event_available_rounded,
+                  color: AppColors.success,
+                  size: 22,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'No classes scheduled for today. Enjoy your break!',
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                      color: isDark
+                          ? AppColors.textMutedDark
+                          : AppColors.textMuted,
                     ),
                   ),
                 ),
@@ -629,7 +666,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final name = cls['subject'] as String? ?? cls['name'] as String? ?? 'Class';
     final time = cls['time'] as String? ?? '';
     final room = cls['room'] as String? ?? '';
-    final enrolled = cls['enrolled_count'] as int? ?? cls['students'] as int? ?? 0;
+    final enrolled =
+        cls['enrolled_count'] as int? ?? cls['students'] as int? ?? 0;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ModernDashboardCard(
@@ -666,8 +704,10 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  [if (time.isNotEmpty) time, if (room.isNotEmpty) room]
-                      .join(' · '),
+                  [
+                    if (time.isNotEmpty) time,
+                    if (room.isNotEmpty) room,
+                  ].join(' · '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
@@ -799,8 +839,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.warning_rounded,
-                        color: Colors.orangeAccent, size: 18),
+                    const Icon(
+                      Icons.warning_rounded,
+                      color: Colors.orangeAccent,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Students Below 75% Attendance',
@@ -829,8 +872,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                           child: Center(
                             child: Text(
                               ((m['name'] as String? ?? 'S')
-                                      .substring(0, 1)
-                                      .toUpperCase()),
+                                  .substring(0, 1)
+                                  .toUpperCase()),
                               style: GoogleFonts.outfit(
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.error,
@@ -849,14 +892,20 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: isDark ? Colors.white : AppColors.textHeading,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.textHeading,
                                 ),
                               ),
                               Text(
-                                m['subject'] as String? ?? m['id'] as String? ?? '',
+                                m['subject'] as String? ??
+                                    m['id'] as String? ??
+                                    '',
                                 style: GoogleFonts.inter(
                                   fontSize: 10,
-                                  color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                                  color: isDark
+                                      ? AppColors.textMutedDark
+                                      : AppColors.textMuted,
                                 ),
                               ),
                             ],
@@ -864,7 +913,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.error.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
@@ -897,8 +948,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.emoji_events_rounded,
-                        color: AppColors.gold, size: 18),
+                    const Icon(
+                      Icons.emoji_events_rounded,
+                      color: AppColors.gold,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Top Performers',
@@ -941,7 +995,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                             m['name'] as String? ?? 'Student',
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              color: isDark ? Colors.white : AppColors.textHeading,
+                              color: isDark
+                                  ? Colors.white
+                                  : AppColors.textHeading,
                             ),
                           ),
                         ),

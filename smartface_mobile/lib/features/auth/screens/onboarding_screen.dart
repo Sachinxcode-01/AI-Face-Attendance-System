@@ -80,7 +80,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Text(
                     'AI-powered attendance, marked in seconds',
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.subheading(context, color: Colors.white.withValues(alpha: 0.8)),
+                    style: AppTextStyles.subheading(
+                      context,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
                   ),
                 ),
                 const Spacer(flex: 4),
@@ -103,7 +106,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             child: Center(
                               child: Text(
                                 'Sign in',
-                                style: AppTextStyles.button(context, color: Colors.white),
+                                style: AppTextStyles.button(
+                                  context,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
@@ -131,7 +137,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             child: Center(
                               child: Text(
                                 'Sign up',
-                                style: AppTextStyles.button(context, color: AppColors.primary),
+                                style: AppTextStyles.button(
+                                  context,
+                                  color: AppColors.primary,
+                                ),
                               ),
                             ),
                           ),

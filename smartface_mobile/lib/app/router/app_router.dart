@@ -148,18 +148,12 @@ final GoRouter appRouter = GoRouter(
       path: '/welcome',
       redirect: (context, state) => AppRoutes.onboardingPath,
     ),
-    GoRoute(
-      path: '/login',
-      redirect: (context, state) => AppRoutes.loginPath,
-    ),
+    GoRoute(path: '/login', redirect: (context, state) => AppRoutes.loginPath),
     GoRoute(
       path: '/register',
       redirect: (context, state) => AppRoutes.registerPath,
     ),
-    GoRoute(
-      path: '/otp',
-      redirect: (context, state) => AppRoutes.otpPath,
-    ),
+    GoRoute(path: '/otp', redirect: (context, state) => AppRoutes.otpPath),
     GoRoute(
       path: '/forgot-password',
       redirect: (context, state) => AppRoutes.forgotPasswordPath,
@@ -203,9 +197,13 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/profile',
       redirect: (context, state) {
-        final role = Provider.of<SessionManager>(context, listen: false).userRole;
+        final role = Provider.of<SessionManager>(
+          context,
+          listen: false,
+        ).userRole;
         if (role == UserRole.student) return AppRoutes.studentProfilePath;
-        if (role == UserRole.teacher || role == UserRole.parent) return AppRoutes.teacherProfilePath;
+        if (role == UserRole.teacher || role == UserRole.parent)
+          return AppRoutes.teacherProfilePath;
         return AppRoutes.adminProfilePath;
       },
     ),
@@ -544,7 +542,8 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: AppRoutes.parentLeaveStatusPath,
               name: AppRoutes.parentLeaveStatusName,
-              builder: (context, state) => const ParentLeaveStatusScreen(wardEmail: null),
+              builder: (context, state) =>
+                  const ParentLeaveStatusScreen(wardEmail: null),
             ),
           ],
         ),
@@ -553,7 +552,8 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: AppRoutes.parentAttendanceLogsPath,
               name: AppRoutes.parentAttendanceLogsName,
-              builder: (context, state) => const ParentAttendanceLogsScreen(wardEmail: null),
+              builder: (context, state) =>
+                  const ParentAttendanceLogsScreen(wardEmail: null),
             ),
           ],
         ),

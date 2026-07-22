@@ -59,20 +59,20 @@ class StatusPill extends StatelessWidget {
   });
 
   factory StatusPill.present() => const StatusPill(
-        label: 'Present',
-        color: AppColors.success,
-        background: AppColors.successSoft,
-      );
+    label: 'Present',
+    color: AppColors.success,
+    background: AppColors.successSoft,
+  );
   factory StatusPill.upcoming() => const StatusPill(
-        label: 'Upcoming',
-        color: AppColors.upcoming,
-        background: AppColors.upcomingSoft,
-      );
+    label: 'Upcoming',
+    color: AppColors.upcoming,
+    background: AppColors.upcomingSoft,
+  );
   factory StatusPill.absent() => const StatusPill(
-        label: 'Absent',
-        color: AppColors.error,
-        background: AppColors.errorSoft,
-      );
+    label: 'Absent',
+    color: AppColors.error,
+    background: AppColors.errorSoft,
+  );
 
   @override
   Widget build(BuildContext context) {

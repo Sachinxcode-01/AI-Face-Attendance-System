@@ -121,16 +121,28 @@ class OfflineQueueService {
     return record;
   }
 
-  /// Returns all records currently in the queue.
+  /// Returns all records currently in the queue with automatic corruption recovery.
   List<AttendanceQueueRecord> getAll() {
     _ensureInitialized();
-    return _box!.values
-        .map(
-          (raw) => AttendanceQueueRecord.fromJson(
-            jsonDecode(raw) as Map<String, dynamic>,
-          ),
-        )
-        .toList();
+    final records = <AttendanceQueueRecord>[];
+    final corruptedKeys = <dynamic>[];
+    for (final key in _box!.keys) {
+      final raw = _box!.get(key);
+      if (raw == null) continue;
+      try {
+        final json = jsonDecode(raw) as Map<String, dynamic>;
+        records.add(AttendanceQueueRecord.fromJson(json));
+      } catch (e) {
+        debugPrint(
+          '[OfflineQueue] Corrupted record detected for key $key: $e. Evicting.',
+        );
+        corruptedKeys.add(key);
+      }
+    }
+    for (final key in corruptedKeys) {
+      _box!.delete(key);
+    }
+    return records;
   }
 
   /// Returns all records eligible for sync (pending + failed with retries left).

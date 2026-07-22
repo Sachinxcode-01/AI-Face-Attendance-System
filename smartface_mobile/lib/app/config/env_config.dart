@@ -43,8 +43,10 @@ class EnvConfig {
   static String get googleApiKey => _googleApiKey ?? 'AIzaSyDevDummyKey54321';
   static String get faceScannerToken =>
       _faceScannerToken ?? 'dev_scanner_secret_token_abc';
-  static String get githubClientId => _githubClientId ?? 'YOUR_GITHUB_CLIENT_ID';
-  static String get googleClientId => _googleClientId ?? 'YOUR_GOOGLE_CLIENT_ID';
+  static String get githubClientId =>
+      _githubClientId ?? 'YOUR_GITHUB_CLIENT_ID';
+  static String get googleClientId =>
+      _googleClientId ?? 'YOUR_GOOGLE_CLIENT_ID';
 
   // Firebase configurations
   static String get firebaseApiKey => _firebaseApiKey ?? 'AIzaSyDevFirebaseKey';

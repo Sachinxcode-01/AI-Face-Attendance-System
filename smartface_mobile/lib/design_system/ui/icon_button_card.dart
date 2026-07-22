@@ -66,11 +66,7 @@ class IconButtonCard extends StatelessWidget {
                     color: themeIconColor.withValues(alpha: 0.10),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    icon,
-                    color: themeIconColor,
-                    size: 26,
-                  ),
+                  child: Icon(icon, color: themeIconColor, size: 26),
                 ),
                 const SizedBox(height: 10),
                 Text(

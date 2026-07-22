@@ -24,7 +24,8 @@ class RouteGuards {
     final role = session.userRole;
     final path = state.uri.path;
 
-    final isGuestOnlyRoute = path == AppRoutes.onboardingPath ||
+    final isGuestOnlyRoute =
+        path == AppRoutes.onboardingPath ||
         path == AppRoutes.loginPath ||
         path == AppRoutes.registerPath ||
         path == AppRoutes.forgotPasswordPath ||
@@ -37,7 +38,9 @@ class RouteGuards {
     if (!isLoggedIn) {
       if (!session.onboardingCompleted) {
         if (path != AppRoutes.onboardingPath && path != AppRoutes.splashPath) {
-          debugPrint('[RouteGuard] Onboarding not completed. Redirecting to Onboarding.');
+          debugPrint(
+            '[RouteGuard] Onboarding not completed. Redirecting to Onboarding.',
+          );
           return AppRoutes.onboardingPath;
         }
         return null;
@@ -45,14 +48,18 @@ class RouteGuards {
 
       if (!session.introImagesCompleted) {
         if (path != AppRoutes.introImagesPath && path != AppRoutes.splashPath) {
-          debugPrint('[RouteGuard] Intro images not completed. Redirecting to Intro Images.');
+          debugPrint(
+            '[RouteGuard] Intro images not completed. Redirecting to Intro Images.',
+          );
           return AppRoutes.introImagesPath;
         }
         return null;
       }
 
       if (!isGuestOnlyRoute) {
-        debugPrint('[RouteGuard] Guest trying to access "$path". Redirecting to Login.');
+        debugPrint(
+          '[RouteGuard] Guest trying to access "$path". Redirecting to Login.',
+        );
         return AppRoutes.loginPath;
       }
       return null;
@@ -70,23 +77,29 @@ class RouteGuards {
     }
 
     if (!session.wizardCompleted) {
-      final isOnSetupRoute = path == AppRoutes.setupWizardPath || path.startsWith('/setup/');
+      final isOnSetupRoute =
+          path == AppRoutes.setupWizardPath || path.startsWith('/setup/');
       if (!isOnSetupRoute) {
-        debugPrint('[RouteGuard] Wizard not completed. Redirecting to setup for role: $roleLower');
+        debugPrint(
+          '[RouteGuard] Wizard not completed. Redirecting to setup for role: $roleLower',
+        );
         return '/setup/$roleLower';
       }
       return null;
     }
 
     // 3. User has completed all steps. Prevent accessing auth/setup pages.
-    final isFlowSetupRoute = isGuestOnlyRoute || 
-        path == AppRoutes.introPath || 
-        path == AppRoutes.setupWizardPath || 
+    final isFlowSetupRoute =
+        isGuestOnlyRoute ||
+        path == AppRoutes.introPath ||
+        path == AppRoutes.setupWizardPath ||
         path.startsWith('/setup/');
-        
+
     if (isFlowSetupRoute) {
       final dashboard = _getDashboardPathForRole(role);
-      debugPrint('[RouteGuard] User completed onboarding, guest route accessed. Redirecting to: $dashboard');
+      debugPrint(
+        '[RouteGuard] User completed onboarding, guest route accessed. Redirecting to: $dashboard',
+      );
       return dashboard;
     }
 

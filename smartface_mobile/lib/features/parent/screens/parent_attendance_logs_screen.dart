@@ -31,7 +31,8 @@ class ParentAttendanceLogsScreen extends StatefulWidget {
       _ParentAttendanceLogsScreenState();
 }
 
-class _ParentAttendanceLogsScreenState extends State<ParentAttendanceLogsScreen> {
+class _ParentAttendanceLogsScreenState
+    extends State<ParentAttendanceLogsScreen> {
   bool _isLoading = true;
   List<dynamic> _logs = [];
   String _selectedFilter = 'All';
@@ -78,7 +79,8 @@ class _ParentAttendanceLogsScreenState extends State<ParentAttendanceLogsScreen>
 
     final filteredLogs = _logs.where((log) {
       if (_selectedFilter == 'All') return true;
-      return (log['status'] as String).toLowerCase() == _selectedFilter.toLowerCase();
+      return (log['status'] as String).toLowerCase() ==
+          _selectedFilter.toLowerCase();
     }).toList();
 
     return AuthBlobBackground(
@@ -88,7 +90,10 @@ class _ParentAttendanceLogsScreenState extends State<ParentAttendanceLogsScreen>
           title: 'Attendance History',
           actions: [
             IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: AppColors.textHeading),
+              icon: const Icon(
+                Icons.refresh_rounded,
+                color: AppColors.textHeading,
+              ),
               onPressed: _fetchLogs,
             ),
           ],
@@ -124,7 +129,9 @@ class _ParentAttendanceLogsScreenState extends State<ParentAttendanceLogsScreen>
                         physics: const BouncingScrollPhysics(),
                         itemBuilder: (context, index) {
                           final log = filteredLogs[index];
-                          final isPresent = (log['status'] as String).toLowerCase() == 'present';
+                          final isPresent =
+                              (log['status'] as String).toLowerCase() ==
+                              'present';
 
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 10.0),
@@ -137,23 +144,33 @@ class _ParentAttendanceLogsScreenState extends State<ParentAttendanceLogsScreen>
                                     height: 38,
                                     decoration: BoxDecoration(
                                       color: isPresent
-                                          ? AppColors.success.withValues(alpha: 0.12)
-                                          : AppColors.error.withValues(alpha: 0.12),
+                                          ? AppColors.success.withValues(
+                                              alpha: 0.12,
+                                            )
+                                          : AppColors.error.withValues(
+                                              alpha: 0.12,
+                                            ),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
-                                      isPresent ? Icons.check_circle_outline_rounded : Icons.cancel_outlined,
-                                      color: isPresent ? AppColors.success : AppColors.error,
+                                      isPresent
+                                          ? Icons.check_circle_outline_rounded
+                                          : Icons.cancel_outlined,
+                                      color: isPresent
+                                          ? AppColors.success
+                                          : AppColors.error,
                                       size: 20,
                                     ),
                                   ),
                                   const SizedBox(width: 14),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          log['subject'] as String? ?? 'Class Session',
+                                          log['subject'] as String? ??
+                                              'Class Session',
                                           style: GoogleFonts.inter(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,

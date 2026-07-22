@@ -389,7 +389,9 @@ class PersonalInsightCard extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white70 : const Color(0xFF1B2C56),
+                        color: isDark
+                            ? Colors.white70
+                            : const Color(0xFF1B2C56),
                       ),
                     ),
                   ),
@@ -529,7 +531,10 @@ class _TrendChartState extends State<TrendChart> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     trends[idx]['week'] ?? '',
-                    style: const TextStyle(color: Color(0xFF7F8CA4), fontSize: 10),
+                    style: const TextStyle(
+                      color: Color(0xFF7F8CA4),
+                      fontSize: 10,
+                    ),
                   ),
                 );
               },
@@ -600,7 +605,10 @@ class _TrendChartState extends State<TrendChart> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     trends[idx]['month'] ?? '',
-                    style: const TextStyle(color: Color(0xFF7F8CA4), fontSize: 10),
+                    style: const TextStyle(
+                      color: Color(0xFF7F8CA4),
+                      fontSize: 10,
+                    ),
                   ),
                 );
               },
@@ -720,7 +728,9 @@ class LeaderboardCard extends StatelessWidget {
                             fontWeight: entry.isMe
                                 ? FontWeight.bold
                                 : FontWeight.w600,
-                            color: isDark ? Colors.white70 : const Color(0xFF1B2C56),
+                            color: isDark
+                                ? Colors.white70
+                                : const Color(0xFF1B2C56),
                           ),
                         ),
                         Text(
@@ -810,9 +820,13 @@ class HeatmapCard extends StatelessWidget {
               final dateStr = '2026-06-${dayNum.toString().padLeft(2, '0')}';
               final status = heatmapData[dateStr] as String?;
 
-              Color cellColor = isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF1F5FD);
+              Color cellColor = isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : const Color(0xFFF1F5FD);
               Border border = Border.all(
-                color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFE2E8F0),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : const Color(0xFFE2E8F0),
               );
 
               if (status == 'present') {
@@ -876,11 +890,18 @@ class HeatmapCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
-            border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFE2E8F0)),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : const Color(0xFFE2E8F0),
+            ),
           ),
         ),
         const SizedBox(width: 6),
-        Text(text, style: const TextStyle(fontSize: 10, color: Color(0xFF7F8CA4))),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 10, color: Color(0xFF7F8CA4)),
+        ),
       ],
     );
   }

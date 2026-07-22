@@ -39,7 +39,8 @@ class _NotificationPreferencesScreenState
     try {
       final profile = await ApiService.getUserProfile(token);
       if (profile.containsKey('notification_preferences')) {
-        final prefs = profile['notification_preferences'] as Map<String, dynamic>;
+        final prefs =
+            profile['notification_preferences'] as Map<String, dynamic>;
         setState(() {
           _emailEnabled = prefs['email'] ?? true;
           _pushEnabled = prefs['push'] ?? true;
@@ -101,9 +102,7 @@ class _NotificationPreferencesScreenState
     return PremiumScaffold(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: const PremiumAppBar(
-          title: 'Notification Preferences',
-        ),
+        appBar: const PremiumAppBar(title: 'Notification Preferences'),
         body: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(
@@ -128,7 +127,8 @@ class _NotificationPreferencesScreenState
                         children: [
                           _buildPreferenceSwitch(
                             title: 'Email Alerts',
-                            subtitle: 'Receive login OTPs, leave reviews & security warnings.',
+                            subtitle:
+                                'Receive login OTPs, leave reviews & security warnings.',
                             icon: Icons.email_outlined,
                             value: _emailEnabled,
                             onChanged: (val) => _updatePreference('email', val),
@@ -144,10 +144,12 @@ class _NotificationPreferencesScreenState
                           const Divider(color: Colors.white10),
                           _buildPreferenceSwitch(
                             title: 'In-App Alerts',
-                            subtitle: 'Updates inside the notification hub nexus.',
+                            subtitle:
+                                'Updates inside the notification hub nexus.',
                             icon: Icons.phonelink_ring_outlined,
                             value: _inAppEnabled,
-                            onChanged: (val) => _updatePreference('in_app', val),
+                            onChanged: (val) =>
+                                _updatePreference('in_app', val),
                           ),
                         ],
                       ),
@@ -189,10 +191,7 @@ class _NotificationPreferencesScreenState
                 ),
                 Text(
                   subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: Colors.white38,
-                  ),
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.white38),
                 ),
               ],
             ),

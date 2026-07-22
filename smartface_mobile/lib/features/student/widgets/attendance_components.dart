@@ -284,10 +284,7 @@ class HeatmapGrid extends StatelessWidget {
                         ),
                       )
                       .animate()
-                      .fadeIn(
-                        delay: (flatIndex * 18).ms,
-                        duration: 320.ms,
-                      )
+                      .fadeIn(delay: (flatIndex * 18).ms, duration: 320.ms)
                       .scaleXY(
                         begin: 0.3,
                         end: 1,

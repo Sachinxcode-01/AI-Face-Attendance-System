@@ -193,11 +193,10 @@ class _AdminLeaveAnalyticsScreenState extends State<AdminLeaveAnalyticsScreen> {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  getDrawingHorizontalLine: (value) =>
-                      FlLine(
-                        color: isDark ? Colors.white12 : Colors.black12,
-                        strokeWidth: 1,
-                      ),
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: isDark ? Colors.white12 : Colors.black12,
+                    strokeWidth: 1,
+                  ),
                 ),
                 titlesData: FlTitlesData(
                   topTitles: const AxisTitles(

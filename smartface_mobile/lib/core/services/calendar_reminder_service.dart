@@ -21,7 +21,10 @@ class CalendarReminderService {
         priority: Priority.high,
       );
       const iosDetails = DarwinNotificationDetails();
-      const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+      const details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
 
       // In unit test or simple runtime, schedule a simple notification or mock schedule
       await _localNotif.show(

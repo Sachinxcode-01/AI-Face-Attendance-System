@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
-import 'package:smartface_attendance/design_system/design_system.dart' hide PrimaryButton;
+import 'package:smartface_attendance/design_system/design_system.dart'
+    hide PrimaryButton;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -54,7 +55,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (pass.length >= 6) score++; // Length check
     if (pass.contains(RegExp(r'[A-Z]'))) score++; // Uppercase check
     if (pass.contains(RegExp(r'[0-9]'))) score++; // Digit check
-    if (pass.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'))) score++; // Special char
+    if (pass.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]')))
+      score++; // Special char
 
     setState(() {
       _passwordStrengthSegments = score.clamp(1, 4);
@@ -81,26 +83,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final password = _passwordController.text;
 
     if (name.isEmpty) {
-      AppToast.show(context, message: 'Please enter your full name', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please enter your full name',
+        type: ToastType.warning,
+      );
       return;
     }
     if (name.length < 2) {
-      AppToast.show(context, message: 'Name must be at least 2 characters long', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Name must be at least 2 characters long',
+        type: ToastType.warning,
+      );
       return;
     }
     if (email.isEmpty || !_isValidEmail(email)) {
-      AppToast.show(context, message: 'Please enter a valid email address', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please enter a valid email address',
+        type: ToastType.warning,
+      );
       return;
     }
     if (password.isEmpty) {
-      AppToast.show(context, message: 'Please enter a password', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please enter a password',
+        type: ToastType.warning,
+      );
       return;
     }
     if (password.length < 8) {
-      AppToast.show(context, message: 'Password must be at least 8 characters long', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Password must be at least 8 characters long',
+        type: ToastType.warning,
+      );
       return;
     }
-    
+
     // Check password strength requirement
     final hasUpper = RegExp(r'[A-Z]').hasMatch(password);
     final hasLower = RegExp(r'[a-z]').hasMatch(password);
@@ -109,14 +131,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!hasUpper || !hasLower || !hasDigit || !hasSpecial) {
       AppToast.show(
         context,
-        message: 'Password must contain uppercase, lowercase, numbers, and special characters',
+        message:
+            'Password must contain uppercase, lowercase, numbers, and special characters',
         type: ToastType.warning,
       );
       return;
     }
 
     if (!_agreeToTerms) {
-      AppToast.show(context, message: 'You must agree to the processing of Personal data', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'You must agree to the processing of Personal data',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -133,7 +160,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (!mounted) return;
 
-      if (registerResult.containsKey('id') || registerResult.containsKey('email')) {
+      if (registerResult.containsKey('id') ||
+          registerResult.containsKey('email')) {
         HapticFeedback.heavyImpact();
         AppToast.show(
           context,
@@ -145,12 +173,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // Go to OTP screen and pass the registered email for auto OTP trigger
         context.go('/auth/otp', extra: email);
       } else {
-        final msg = registerResult['detail'] ?? registerResult['message'] ?? 'Sign up failed';
+        final msg =
+            registerResult['detail'] ??
+            registerResult['message'] ??
+            'Sign up failed';
         AppToast.show(context, message: msg.toString(), type: ToastType.error);
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'An unexpected error occurred. Please try again.', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'An unexpected error occurred. Please try again.',
+        type: ToastType.error,
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -168,11 +203,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Text.rich(
           TextSpan(
             text: 'Already have an account? ',
-            style: AuthDesign.fontPoppins(fontSize: 11, fontWeight: FontWeight.w500, color: AuthDesign.textLabel),
+            style: AuthDesign.fontPoppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: AuthDesign.textLabel,
+            ),
             children: [
               TextSpan(
                 text: 'Sign in',
-                style: AuthDesign.fontPoppins(fontSize: 11, fontWeight: FontWeight.w700, color: AuthDesign.primaryIndigo),
+                style: AuthDesign.fontPoppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AuthDesign.primaryIndigo,
+                ),
               ),
             ],
           ),
@@ -220,7 +263,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       height: 4,
                       margin: const EdgeInsets.symmetric(horizontal: 2.0),
                       decoration: BoxDecoration(
-                        color: isFilled ? AuthDesign.primaryIndigo : AuthDesign.underlineUnfocused,
+                        color: isFilled
+                            ? AuthDesign.primaryIndigo
+                            : AuthDesign.underlineUnfocused,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -263,7 +308,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       isSelected: _selectedRole == 'Student',
                       width: cardWidth,
                       height: cardHeight,
-                      onTap: _isLoading ? null : () => setState(() => _selectedRole = 'Student'),
+                      onTap: _isLoading
+                          ? null
+                          : () => setState(() => _selectedRole = 'Student'),
                     ),
                     _RoleCard(
                       role: 'Teacher',
@@ -271,7 +318,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       isSelected: _selectedRole == 'Teacher',
                       width: cardWidth,
                       height: cardHeight,
-                      onTap: _isLoading ? null : () => setState(() => _selectedRole = 'Teacher'),
+                      onTap: _isLoading
+                          ? null
+                          : () => setState(() => _selectedRole = 'Teacher'),
                     ),
                     _RoleCard(
                       role: 'Parent',
@@ -279,7 +328,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       isSelected: _selectedRole == 'Parent',
                       width: cardWidth,
                       height: cardHeight,
-                      onTap: _isLoading ? null : () => setState(() => _selectedRole = 'Parent'),
+                      onTap: _isLoading
+                          ? null
+                          : () => setState(() => _selectedRole = 'Parent'),
                     ),
                     _RoleCard(
                       role: 'Admin',
@@ -287,7 +338,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       isSelected: _selectedRole == 'Admin',
                       width: cardWidth,
                       height: cardHeight,
-                      onTap: _isLoading ? null : () => setState(() => _selectedRole = 'Admin'),
+                      onTap: _isLoading
+                          ? null
+                          : () => setState(() => _selectedRole = 'Admin'),
                     ),
                   ],
                 );
@@ -319,11 +372,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Text.rich(
                     TextSpan(
                       text: 'I agree to the processing of ',
-                      style: AuthDesign.fontPoppins(fontSize: 11, fontWeight: FontWeight.w500, color: AuthDesign.textLabel),
+                      style: AuthDesign.fontPoppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AuthDesign.textLabel,
+                      ),
                       children: [
                         TextSpan(
                           text: 'Personal data',
-                          style: AuthDesign.fontPoppins(fontSize: 11, fontWeight: FontWeight.w700, color: AuthDesign.primaryIndigo),
+                          style: AuthDesign.fontPoppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AuthDesign.primaryIndigo,
+                          ),
                         ),
                       ],
                     ),
@@ -371,7 +432,8 @@ class _RoleCard extends StatefulWidget {
   State<_RoleCard> createState() => _RoleCardState();
 }
 
-class _RoleCardState extends State<_RoleCard> with SingleTickerProviderStateMixin {
+class _RoleCardState extends State<_RoleCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -382,9 +444,10 @@ class _RoleCardState extends State<_RoleCard> with SingleTickerProviderStateMixi
       vsync: this,
       duration: const Duration(milliseconds: 80),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.94).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.94,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -397,10 +460,14 @@ class _RoleCardState extends State<_RoleCard> with SingleTickerProviderStateMixi
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     const selectedColor = AppColors.primaryBright;
-    final unselectedColor = isDark ? AppColors.textMutedDark : const Color(0xFF94A3B8);
+    final unselectedColor = isDark
+        ? AppColors.textMutedDark
+        : const Color(0xFF94A3B8);
     final selectedBg = isDark ? AppColors.surfaceDark : const Color(0xFFEEF2FF);
     final unselectedBg = isDark ? AppColors.cardDark : Colors.white;
-    final borderColor = widget.isSelected ? selectedColor : (isDark ? AppColors.borderDark : const Color(0xFFE2E8F0));
+    final borderColor = widget.isSelected
+        ? selectedColor
+        : (isDark ? AppColors.borderDark : const Color(0xFFE2E8F0));
 
     return GestureDetector(
       onTapDown: widget.onTap == null
@@ -435,14 +502,14 @@ class _RoleCardState extends State<_RoleCard> with SingleTickerProviderStateMixi
                       color: selectedColor.withValues(alpha: 0.08),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ]
                 : [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
-                    )
+                    ),
                   ],
           ),
           child: Column(
@@ -470,4 +537,3 @@ class _RoleCardState extends State<_RoleCard> with SingleTickerProviderStateMixi
     );
   }
 }
-

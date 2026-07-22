@@ -463,8 +463,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? AppColors.surfaceElevated
-              : AppColors.surfaceDark,
+            ? AppColors.surfaceElevated
+            : AppColors.surfaceDark,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
@@ -525,8 +525,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
         builder: (context, setDialogState) {
           return AlertDialog(
             backgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? AppColors.surfaceElevated
-              : AppColors.bgDark,
+                ? AppColors.surfaceElevated
+                : AppColors.bgDark,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
               side: BorderSide(color: AppColors.gold.withValues(alpha: 0.2)),
@@ -855,85 +855,85 @@ class _StudentDashboardState extends State<StudentDashboard> {
             ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1, end: 0),
             Expanded(
               child: GlowRefreshIndicator(
-          onRefresh: _loadDashboardData,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Transform.translate(
-                  offset: const Offset(0, -20),
-                  child: _buildAttendanceSummaryCard(),
-                ),
-                if (activeSessionBanner != null) ...[
-                  activeSessionBanner,
-                  const SizedBox(height: 20),
-                ],
-                const SyncStatusBanner(),
-                const SizedBox(height: 10),
-                if (!isTablet) ...[
-                  // Mobile view layout: Single column high-density details
-                  healthGrid,
-                  const SizedBox(height: 20),
-                  aiInsights,
-                  const SizedBox(height: 20),
-                  weeklyMonthlyAnalytics,
-                  const SizedBox(height: 20),
-                  leaderboardCard,
-                  const SizedBox(height: 20),
-                  calendarHistory,
-                  const SizedBox(height: 20),
-                  activityTimeline,
-                  const SizedBox(height: 20),
-                  securityCard,
-                  const SizedBox(height: 20),
-                  quickActions,
-                ] else ...[
-                  // Tablet view layout: Premium responsive split screen
-                  Row(
+                onRefresh: _loadDashboardData,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        flex: 6,
-                        child: Column(
+                      Transform.translate(
+                        offset: const Offset(0, -20),
+                        child: _buildAttendanceSummaryCard(),
+                      ),
+                      if (activeSessionBanner != null) ...[
+                        activeSessionBanner,
+                        const SizedBox(height: 20),
+                      ],
+                      const SyncStatusBanner(),
+                      const SizedBox(height: 10),
+                      if (!isTablet) ...[
+                        // Mobile view layout: Single column high-density details
+                        healthGrid,
+                        const SizedBox(height: 20),
+                        aiInsights,
+                        const SizedBox(height: 20),
+                        weeklyMonthlyAnalytics,
+                        const SizedBox(height: 20),
+                        leaderboardCard,
+                        const SizedBox(height: 20),
+                        calendarHistory,
+                        const SizedBox(height: 20),
+                        activityTimeline,
+                        const SizedBox(height: 20),
+                        securityCard,
+                        const SizedBox(height: 20),
+                        quickActions,
+                      ] else ...[
+                        // Tablet view layout: Premium responsive split screen
+                        Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            header,
-                            const SizedBox(height: 20),
-                            healthGrid,
-                            const SizedBox(height: 20),
-                            weeklyMonthlyAnalytics,
-                            const SizedBox(height: 20),
-                            leaderboardCard,
-                            const SizedBox(height: 20),
-                            calendarHistory,
+                            Expanded(
+                              flex: 6,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  header,
+                                  const SizedBox(height: 20),
+                                  healthGrid,
+                                  const SizedBox(height: 20),
+                                  weeklyMonthlyAnalytics,
+                                  const SizedBox(height: 20),
+                                  leaderboardCard,
+                                  const SizedBox(height: 20),
+                                  calendarHistory,
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              flex: 4,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  aiInsights,
+                                  const SizedBox(height: 20),
+                                  quickActions,
+                                  const SizedBox(height: 20),
+                                  activityTimeline,
+                                  const SizedBox(height: 20),
+                                  securityCard,
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        flex: 4,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            aiInsights,
-                            const SizedBox(height: 20),
-                            quickActions,
-                            const SizedBox(height: 20),
-                            activityTimeline,
-                            const SizedBox(height: 20),
-                            securityCard,
-                          ],
-                        ),
-                      ),
+                      ],
+                      const SizedBox(height: 40),
                     ],
                   ),
-                ],
-                const SizedBox(height: 40),
-              ],
-            ),
-          ),
+                ),
               ),
             ),
           ],
@@ -959,12 +959,27 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
   String _todayString() {
     const days = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
-      'Saturday', 'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
     ];
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June', 'July',
-      'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     final now = DateTime.now();
     return '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]}';
@@ -1099,7 +1114,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
-                              color: isDark ? Colors.white : AppColors.textHeading,
+                              color: isDark
+                                  ? Colors.white
+                                  : AppColors.textHeading,
                               fontWeight: isCurrent
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -1109,7 +1126,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           Text(
                             'IP: ${s['ip']} • ${s['location']}',
                             style: GoogleFonts.inter(
-                              color: isDark ? Colors.white60 : AppColors.textMuted,
+                              color: isDark
+                                  ? Colors.white60
+                                  : AppColors.textMuted,
                               fontSize: 10,
                             ),
                           ),

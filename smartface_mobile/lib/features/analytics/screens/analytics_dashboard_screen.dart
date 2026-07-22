@@ -73,17 +73,16 @@ class AnalyticsDashboardScreen extends StatefulWidget {
 
 class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
     with SingleTickerProviderStateMixin {
-
   // ── State ──────────────────────────────────────────────────────────────────
   bool _loading = true;
   String? _error;
 
-  List<_TrendPoint>   _trends     = [];
-  List<_DeptBar>      _depts      = [];
-  List<_SubjectBar>   _subjects   = [];
-  List<_RiskStudent>  _risk       = [];
-  List<_HeatDay>      _heatmap    = [];
-  int                 _touchedIdx = -1;
+  List<_TrendPoint> _trends = [];
+  List<_DeptBar> _depts = [];
+  List<_SubjectBar> _subjects = [];
+  List<_RiskStudent> _risk = [];
+  List<_HeatDay> _heatmap = [];
+  int _touchedIdx = -1;
 
   late final TabController _tabs;
 
@@ -112,11 +111,14 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   // ── Data Fetching ──────────────────────────────────────────────────────────
   Future<void> _loadAll() async {
     if (!mounted) return;
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
       final session = context.read<SessionManager>();
-      final token   = session.token ?? '';
+      final token = session.token ?? '';
 
       final results = await Future.wait([
         ApiService.getAnalyticsTrends(token),
@@ -130,40 +132,58 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
       final rawTrends = (results[0]['trends'] as List?)?.cast<Map>() ?? [];
       _trends = rawTrends.map((t) {
         final label = (t['month'] as String? ?? '');
-        final rate  = (t['rate'] as num?)?.toDouble() ?? 0.0;
-        return _TrendPoint(label.length >= 7 ? label.substring(5) : label, rate);
+        final rate = (t['rate'] as num?)?.toDouble() ?? 0.0;
+        return _TrendPoint(
+          label.length >= 7 ? label.substring(5) : label,
+          rate,
+        );
       }).toList();
 
       // ── Departments ────────────────────────────────────────────────────────
       final rawDepts = (results[1]['departments'] as List?)?.cast<Map>() ?? [];
-      _depts = rawDepts.map((d) => _DeptBar(
-        d['department'] as String? ?? 'N/A',
-        (d['averageRate'] as num?)?.toDouble() ?? 0.0,
-      )).toList();
+      _depts = rawDepts
+          .map(
+            (d) => _DeptBar(
+              d['department'] as String? ?? 'N/A',
+              (d['averageRate'] as num?)?.toDouble() ?? 0.0,
+            ),
+          )
+          .toList();
 
       // ── Subjects ───────────────────────────────────────────────────────────
       final rawSubjects = (results[2]['subjects'] as List?)?.cast<Map>() ?? [];
-      _subjects = rawSubjects.map((s) => _SubjectBar(
-        s['subject'] as String? ?? 'N/A',
-        (s['averageRate'] as num?)?.toDouble() ?? 0.0,
-      )).toList();
+      _subjects = rawSubjects
+          .map(
+            (s) => _SubjectBar(
+              s['subject'] as String? ?? 'N/A',
+              (s['averageRate'] as num?)?.toDouble() ?? 0.0,
+            ),
+          )
+          .toList();
 
       // ── Risk Students ─────────────────────────────────────────────────────
       final rawRisk = (results[3]['riskStudents'] as List?)?.cast<Map>() ?? [];
-      _risk = rawRisk.map((r) => _RiskStudent(
-        r['email'] as String? ?? '',
-        r['name'] as String? ?? 'Unknown',
-        r['department'] as String? ?? 'N/A',
-        (r['attendanceRate'] as num?)?.toDouble() ?? 0.0,
-      )).toList();
+      _risk = rawRisk
+          .map(
+            (r) => _RiskStudent(
+              r['email'] as String? ?? '',
+              r['name'] as String? ?? 'Unknown',
+              r['department'] as String? ?? 'N/A',
+              (r['attendanceRate'] as num?)?.toDouble() ?? 0.0,
+            ),
+          )
+          .toList();
 
       // ── Heatmap ────────────────────────────────────────────────────────────
       final rawHeat = (results[4]['heatmap'] as List?)?.cast<Map>() ?? [];
-      _heatmap = rawHeat.map((h) => _HeatDay(
-        h['date'] as String? ?? '',
-        (h['count'] as num?)?.toInt() ?? 0,
-      )).toList();
-
+      _heatmap = rawHeat
+          .map(
+            (h) => _HeatDay(
+              h['date'] as String? ?? '',
+              (h['count'] as num?)?.toInt() ?? 0,
+            ),
+          )
+          .toList();
     } catch (e) {
       _error = 'Failed to load analytics data. Please try again.';
       debugPrint('[AnalyticsDashboard] load error: $e');
@@ -225,17 +245,17 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
         body: _loading
             ? _buildSkeleton()
             : _error != null
-                ? _buildError()
-                : TabBarView(
-                    controller: _tabs,
-                    children: [
-                      _buildTrendsTab(),
-                      _buildDepartmentsTab(),
-                      _buildSubjectsTab(),
-                      _buildRiskTab(),
-                      _buildHeatmapTab(),
-                    ],
-                  ),
+            ? _buildError()
+            : TabBarView(
+                controller: _tabs,
+                children: [
+                  _buildTrendsTab(),
+                  _buildDepartmentsTab(),
+                  _buildSubjectsTab(),
+                  _buildRiskTab(),
+                  _buildHeatmapTab(),
+                ],
+              ),
       ),
     );
   }
@@ -314,10 +334,8 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: false,
-                    getDrawingHorizontalLine: (_) => const FlLine(
-                      color: Colors.white10,
-                      strokeWidth: 1,
-                    ),
+                    getDrawingHorizontalLine: (_) =>
+                        const FlLine(color: Colors.white10, strokeWidth: 1),
                   ),
                   borderData: FlBorderData(show: false),
                   titlesData: FlTitlesData(
@@ -411,10 +429,9 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   Widget _buildDepartmentsTab() {
     if (_depts.isEmpty) return _buildEmpty('No department data available yet.');
 
-    final maxY = (_depts.map((d) => d.rate).reduce((a, b) => a > b ? a : b) *
-                100 +
-            10)
-        .clamp(10.0, 110.0);
+    final maxY =
+        (_depts.map((d) => d.rate).reduce((a, b) => a > b ? a : b) * 100 + 10)
+            .clamp(10.0, 110.0);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -482,8 +499,8 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                           final label = parts.length > 1
                               ? parts.map((p) => p[0]).join('')
                               : (_depts[idx].department.length > 5
-                                  ? _depts[idx].department.substring(0, 5)
-                                  : _depts[idx].department);
+                                    ? _depts[idx].department.substring(0, 5)
+                                    : _depts[idx].department);
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
@@ -507,10 +524,8 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                   borderData: FlBorderData(show: false),
                   gridData: FlGridData(
                     drawVerticalLine: false,
-                    getDrawingHorizontalLine: (_) => const FlLine(
-                      color: Colors.white10,
-                      strokeWidth: 1,
-                    ),
+                    getDrawingHorizontalLine: (_) =>
+                        const FlLine(color: Colors.white10, strokeWidth: 1),
                   ),
                   barGroups: _depts.asMap().entries.map((e) {
                     final touched = e.key == _touchedIdx;
@@ -523,9 +538,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(6),
                           ),
-                          color: touched
-                              ? AppColors.gold
-                              : _deptColor(e.key),
+                          color: touched ? AppColors.gold : _deptColor(e.key),
                           backDrawRodData: BackgroundBarChartRodData(
                             show: true,
                             toY: maxY,
@@ -552,10 +565,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                 ),
                 label: Text(
                   '${e.value.department} — ${(e.value.rate * 100).toStringAsFixed(1)}%',
-                  style: GoogleFonts.inter(
-                    color: Colors.white70,
-                    fontSize: 11,
-                  ),
+                  style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
                 ),
                 backgroundColor: Colors.white.withValues(alpha: 0.05),
                 padding: EdgeInsets.zero,
@@ -602,7 +612,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   }
 
   Widget _subjectRow(_SubjectBar s) {
-    final pct  = s.rate * 100;
+    final pct = s.rate * 100;
     final good = pct >= 75;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -686,7 +696,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: _risk.length,
             itemBuilder: (ctx, i) {
-              final s   = _risk[i];
+              final s = _risk[i];
               final pct = (s.rate * 100).toStringAsFixed(1);
               return _glassCard(
                 margin: const EdgeInsets.only(bottom: 10),
@@ -754,10 +764,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
 
     // Build a map from date → count for quick lookup
     final dateMap = {for (final h in _heatmap) h.date: h.count};
-    final maxCount = _heatmap.map((h) => h.count).reduce((a, b) => a > b ? a : b);
+    final maxCount = _heatmap
+        .map((h) => h.count)
+        .reduce((a, b) => a > b ? a : b);
 
     // Generate all 30 days
-    final now  = DateTime.now().toUtc();
+    final now = DateTime.now().toUtc();
     final days = List.generate(30, (i) {
       final d = now.subtract(Duration(days: 29 - i));
       return DateTime.utc(d.year, d.month, d.day);
@@ -780,7 +792,8 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
               spacing: 6,
               runSpacing: 6,
               children: days.map((day) {
-                final key   = '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+                final key =
+                    '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
                 final count = dateMap[key] ?? 0;
                 final alpha = maxCount == 0 ? 0.0 : count / maxCount;
                 return Tooltip(
@@ -889,7 +902,11 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
             Text(
               message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(color: Colors.white38, fontSize: 13, height: 1.6),
+              style: GoogleFonts.inter(
+                color: Colors.white38,
+                fontSize: 13,
+                height: 1.6,
+              ),
             ),
           ],
         ),

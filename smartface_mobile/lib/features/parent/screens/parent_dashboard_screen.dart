@@ -183,18 +183,18 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 if (_error != null) _buildErrorBanner(_error!),
 
                 // ── Greeting Header ──────────────────────────────────────────
-                _buildGreetingHeader(session)
-                    .animate()
-                    .fadeIn(duration: 400.ms)
-                    .slideY(begin: -0.1),
+                _buildGreetingHeader(
+                  session,
+                ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
 
                 const SizedBox(height: 20),
 
                 // ── Ward Selector (Only if multiple wards exist) ──────────────
                 if (_wards.length > 1) ...[
-                  _buildWardSelector()
-                      .animate()
-                      .fadeIn(delay: 50.ms, duration: 400.ms),
+                  _buildWardSelector().animate().fadeIn(
+                    delay: 50.ms,
+                    duration: 400.ms,
+                  ),
                   const SizedBox(height: 20),
                 ],
 
@@ -207,30 +207,33 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 const SizedBox(height: 20),
 
                 // ── Subject-Wise Attendance ──────────────────────────────────
-                _buildSubjectAttendanceSection()
-                    .animate()
-                    .fadeIn(delay: 150.ms, duration: 400.ms),
+                _buildSubjectAttendanceSection().animate().fadeIn(
+                  delay: 150.ms,
+                  duration: 400.ms,
+                ),
 
                 const SizedBox(height: 20),
 
                 // ── Quick Actions ────────────────────────────────────────────
-                _buildQuickActions(context)
-                    .animate()
-                    .fadeIn(delay: 200.ms, duration: 400.ms),
+                _buildQuickActions(
+                  context,
+                ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
 
                 const SizedBox(height: 20),
 
                 // ── Leave Status Section ─────────────────────────────────────
-                _buildLeaveRequestsSection()
-                    .animate()
-                    .fadeIn(delay: 250.ms, duration: 400.ms),
+                _buildLeaveRequestsSection().animate().fadeIn(
+                  delay: 250.ms,
+                  duration: 400.ms,
+                ),
 
                 const SizedBox(height: 20),
 
                 // ── Recent Activity Logs ─────────────────────────────────────
-                _buildRecentActivitySection()
-                    .animate()
-                    .fadeIn(delay: 300.ms, duration: 400.ms),
+                _buildRecentActivitySection().animate().fadeIn(
+                  delay: 300.ms,
+                  duration: 400.ms,
+                ),
 
                 const SizedBox(height: 40),
               ],
@@ -255,7 +258,11 @@ class _ParentDashboardState extends State<ParentDashboard> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 18),
+            const Icon(
+              Icons.error_outline_rounded,
+              color: AppColors.error,
+              size: 18,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -291,10 +298,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 color: AppColors.cyan.withValues(alpha: 0.4),
                 width: 1.5,
               ),
-              boxShadow: AppShadows.glow(
-                AppColors.cyan,
-                intensity: 0.15,
-              ),
+              boxShadow: AppShadows.glow(AppColors.cyan, intensity: 0.15),
             ),
             child: const Center(
               child: Icon(
@@ -367,10 +371,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
         if (_selectedWard != null)
           Text(
             'Monitoring attendance for: ${_selectedWard!['full_name']}',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: AppColors.textMuted,
-            ),
+            style: GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted),
           ),
       ],
     );
@@ -415,13 +416,15 @@ class _ParentDashboardState extends State<ParentDashboard> {
 
   // ── Overall Attendance Card ────────────────────────────────────────────────
   Widget _buildOverallAttendanceCard() {
-    final double overall = (_wardStats['overall_percentage'] as num?)?.toDouble() ?? 0.0;
+    final double overall =
+        (_wardStats['overall_percentage'] as num?)?.toDouble() ?? 0.0;
     final String standing = _wardStats['standing'] as String? ?? 'Unknown';
     final isGood = overall >= 0.75;
 
     return ProgressCard(
       title: _selectedWard?['full_name'] ?? 'Ward Status',
-      subtitle: 'Rate: ${(overall * 100).toStringAsFixed(0)}% • ${standing.toUpperCase()}',
+      subtitle:
+          'Rate: ${(overall * 100).toStringAsFixed(0)}% • ${standing.toUpperCase()}',
       percentage: overall,
       progressColor: isGood ? AppColors.cyan : AppColors.error,
       leadingIcon: Icons.family_restroom_rounded,
@@ -453,12 +456,17 @@ class _ParentDashboardState extends State<ParentDashboard> {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Text(
               'No class subjects statistics recorded.',
-              style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textMuted),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: isDark ? Colors.white60 : AppColors.textMuted,
+              ),
             ),
           )
         else
           ...filtered.map((s) {
-            final double rate = s['total'] > 0 ? (s['present'] / s['total']) : 0.0;
+            final double rate = s['total'] > 0
+                ? (s['present'] / s['total'])
+                : 0.0;
             final isGood = rate >= 0.75;
 
             return Padding(
@@ -479,7 +487,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
                             style: GoogleFonts.inter(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
-                              color: isDark ? Colors.white : AppColors.textHeading,
+                              color: isDark
+                                  ? Colors.white
+                                  : AppColors.textHeading,
                             ),
                           ),
                         ),
@@ -488,7 +498,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
                           style: GoogleFonts.robotoMono(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white54 : AppColors.textMuted,
+                            color: isDark
+                                ? Colors.white54
+                                : AppColors.textMuted,
                           ),
                         ),
                       ],
@@ -499,7 +511,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
                       child: LinearProgressIndicator(
                         value: rate,
                         color: isGood ? AppColors.cyan : AppColors.error,
-                        backgroundColor: isDark ? Colors.white.withValues(alpha: 0.08) : AppColors.surfaceLight,
+                        backgroundColor: isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : AppColors.surfaceLight,
                         minHeight: 6,
                       ),
                     ),
@@ -519,7 +533,11 @@ class _ParentDashboardState extends State<ParentDashboard> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 12),
+                              const Icon(
+                                Icons.warning_amber_rounded,
+                                color: AppColors.error,
+                                size: 12,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 'Attendance Warning',
@@ -569,14 +587,16 @@ class _ParentDashboardState extends State<ParentDashboard> {
               description: 'Chronological check-in histories',
               icon: Icons.assignment_turned_in_outlined,
               color: AppColors.cyan,
-              onTap: () => context.push('/parent/attendance-logs', extra: wardEmail),
+              onTap: () =>
+                  context.push('/parent/attendance-logs', extra: wardEmail),
             ),
             QuickActionCard(
               label: 'Leave status',
               description: 'Monitor requests & approvals',
               icon: Icons.event_busy_outlined,
               color: Colors.orangeAccent,
-              onTap: () => context.push('/parent/leave-status', extra: wardEmail),
+              onTap: () =>
+                  context.push('/parent/leave-status', extra: wardEmail),
             ),
             QuickActionCard(
               label: 'Alerts & warnings',
@@ -595,15 +615,27 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: Text('Export Report', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                    content: Text('Do you want to export the attendance check-in report for ${_selectedWard?['full_name']}?'),
+                    title: Text(
+                      'Export Report',
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                    ),
+                    content: Text(
+                      'Do you want to export the attendance check-in report for ${_selectedWard?['full_name']}?',
+                    ),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Cancel'),
+                      ),
                       ElevatedButton(
                         onPressed: () {
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Report generated & downloaded to device successfully.')),
+                            const SnackBar(
+                              content: Text(
+                                'Report generated & downloaded to device successfully.',
+                              ),
+                            ),
                           );
                         },
                         child: const Text('Export PDF'),
@@ -640,7 +672,10 @@ class _ParentDashboardState extends State<ParentDashboard> {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Text(
               'No leave requests recorded for this ward.',
-              style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textMuted),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: isDark ? Colors.white60 : AppColors.textMuted,
+              ),
             ),
           )
         else
@@ -660,16 +695,22 @@ class _ParentDashboardState extends State<ParentDashboard> {
                       decoration: BoxDecoration(
                         color: isApproved
                             ? AppColors.success.withValues(alpha: 0.15)
-                            : (isPending ? Colors.orangeAccent.withValues(alpha: 0.15) : AppColors.error.withValues(alpha: 0.15)),
+                            : (isPending
+                                  ? Colors.orangeAccent.withValues(alpha: 0.15)
+                                  : AppColors.error.withValues(alpha: 0.15)),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         isApproved
                             ? Icons.check_circle_rounded
-                            : (isPending ? Icons.pending_rounded : Icons.cancel_rounded),
+                            : (isPending
+                                  ? Icons.pending_rounded
+                                  : Icons.cancel_rounded),
                         color: isApproved
                             ? AppColors.success
-                            : (isPending ? Colors.orangeAccent : AppColors.error),
+                            : (isPending
+                                  ? Colors.orangeAccent
+                                  : AppColors.error),
                         size: 20,
                       ),
                     ),
@@ -685,7 +726,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : AppColors.textHeading,
+                              color: isDark
+                                  ? Colors.white
+                                  : AppColors.textHeading,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -695,18 +738,25 @@ class _ParentDashboardState extends State<ParentDashboard> {
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
                               fontSize: 11,
-                              color: isDark ? Colors.white60 : AppColors.textMuted,
+                              color: isDark
+                                  ? Colors.white60
+                                  : AppColors.textMuted,
                             ),
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: isApproved
                             ? AppColors.success.withValues(alpha: 0.1)
-                            : (isPending ? Colors.orangeAccent.withValues(alpha: 0.1) : AppColors.error.withValues(alpha: 0.1)),
+                            : (isPending
+                                  ? Colors.orangeAccent.withValues(alpha: 0.1)
+                                  : AppColors.error.withValues(alpha: 0.1)),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -716,7 +766,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
                           fontWeight: FontWeight.bold,
                           color: isApproved
                               ? AppColors.success
-                              : (isPending ? Colors.orangeAccent : AppColors.error),
+                              : (isPending
+                                    ? Colors.orangeAccent
+                                    : AppColors.error),
                         ),
                       ),
                     ),
@@ -750,7 +802,10 @@ class _ParentDashboardState extends State<ParentDashboard> {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Text(
               'No recent check-in activities.',
-              style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textMuted),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: isDark ? Colors.white60 : AppColors.textMuted,
+              ),
             ),
           )
         else
@@ -783,7 +838,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : AppColors.textHeading,
+                              color: isDark
+                                  ? Colors.white
+                                  : AppColors.textHeading,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -793,7 +850,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
                               fontSize: 11,
-                              color: isDark ? Colors.white60 : AppColors.textMuted,
+                              color: isDark
+                                  ? Colors.white60
+                                  : AppColors.textMuted,
                             ),
                           ),
                         ],

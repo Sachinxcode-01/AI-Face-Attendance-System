@@ -28,9 +28,10 @@ class AuthService {
 
   Future<Map<String, dynamic>> sendLoginOtp(String email) async {
     try {
+      final normalizedEmail = email.trim().toLowerCase();
       final response = await _api.post(
         '/auth/login-otp/send',
-        body: {'email': email},
+        body: {'email': normalizedEmail},
       );
       return jsonDecode(response.body);
     } catch (_) {
@@ -89,24 +90,17 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> githubLogin(
-    String code,
-    String role,
-  ) async {
+  Future<Map<String, dynamic>> githubLogin(String code, String role) async {
     try {
       final response = await _api.post(
         '/auth/github',
-        body: {
-          'code': code,
-          'role': role,
-        },
+        body: {'code': code, 'role': role},
       );
       return normalizeAuthResponse(jsonDecode(response.body));
     } catch (_) {
       return {'detail': 'Connection failed'};
     }
   }
-
 
   Future<Map<String, dynamic>> register(
     String name,

@@ -63,17 +63,17 @@ class SmartBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness =
-        dark ? Brightness.dark : Theme.of(context).brightness;
+    final brightness = dark ? Brightness.dark : Theme.of(context).brightness;
     final bool isDarkMode = brightness == Brightness.dark;
 
     const Color activeColor = AppColors.primary;
-    final Color inactiveColor =
-        isDarkMode ? const Color(0xFF5C6390) : const Color(0xFF8A90AE);
+    final Color inactiveColor = isDarkMode
+        ? const Color(0xFF5C6390)
+        : const Color(0xFF8A90AE);
     final Color containerColor = isGlass
         ? (isDarkMode
-            ? const Color(0xFF0A0F24).withValues(alpha: 0.78)
-            : const Color(0xFFFFFFFF).withValues(alpha: 0.78))
+              ? const Color(0xFF0A0F24).withValues(alpha: 0.78)
+              : const Color(0xFFFFFFFF).withValues(alpha: 0.78))
         : (isDarkMode ? const Color(0xFF1A2040) : const Color(0xFFFFFFFF));
     final Color borderColor = isDarkMode
         ? const Color(0xFF1E2848).withValues(alpha: 0.6)
@@ -128,15 +128,13 @@ class SmartBottomNav extends StatelessWidget {
               sigmaY: isGlass ? 20.0 : 0.0,
             ),
             child: Container(
-              padding:
-                  EdgeInsets.symmetric(horizontal: internalPaddingHorizontal),
+              padding: EdgeInsets.symmetric(
+                horizontal: internalPaddingHorizontal,
+              ),
               decoration: BoxDecoration(
                 color: containerColor,
                 borderRadius: BorderRadius.circular(borderRadius),
-                border: Border.all(
-                  color: borderColor,
-                  width: 1.0,
-                ),
+                border: Border.all(color: borderColor, width: 1.0),
               ),
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -159,8 +157,9 @@ class SmartBottomNav extends StatelessWidget {
                         bottom: hideText ? 4 : 3,
                         child: Container(
                           decoration: BoxDecoration(
-                            borderRadius:
-                                BorderRadius.circular(borderRadius - 6),
+                            borderRadius: BorderRadius.circular(
+                              borderRadius - 6,
+                            ),
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -297,8 +296,9 @@ class _NavItemState extends State<_NavItem>
         builder: (context, _) {
           final pulse = _pulseAnimation.value;
           final scale = 1.0 + (widget.selected ? pulse * 0.15 : 0.0);
-          final translateY =
-              widget.selected && !widget.hideText ? -2.0 * pulse : 0.0;
+          final translateY = widget.selected && !widget.hideText
+              ? -2.0 * pulse
+              : 0.0;
 
           return Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -319,8 +319,9 @@ class _NavItemState extends State<_NavItem>
                       boxShadow: widget.selected
                           ? [
                               BoxShadow(
-                                color: widget.activeColor
-                                    .withValues(alpha: 0.20),
+                                color: widget.activeColor.withValues(
+                                  alpha: 0.20,
+                                ),
                                 blurRadius: pulse * 12,
                                 spreadRadius: pulse * 2,
                               ),
@@ -338,8 +339,9 @@ class _NavItemState extends State<_NavItem>
                       shadows: widget.selected
                           ? [
                               Shadow(
-                                color:
-                                    widget.activeColor.withValues(alpha: 0.3),
+                                color: widget.activeColor.withValues(
+                                  alpha: 0.3,
+                                ),
                                 blurRadius: 4,
                               ),
                             ]
@@ -358,8 +360,9 @@ class _NavItemState extends State<_NavItem>
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 9.5,
-                    fontWeight:
-                        widget.selected ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: widget.selected
+                        ? FontWeight.w700
+                        : FontWeight.w500,
                     letterSpacing: widget.selected ? 0.2 : 0.1,
                     color: widget.selected
                         ? widget.activeColor
@@ -418,13 +421,16 @@ class _TabTransitionWrapperState extends State<TabTransitionWrapper>
       parent: _controller,
       curve: const Cubic(0.16, 1.0, 0.3, 1.0),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.035, 0.0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Cubic(0.16, 1.0, 0.3, 1.0),
-    ));
+    _slideAnimation =
+        Tween<Offset>(
+          begin: const Offset(0.035, 0.0),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Cubic(0.16, 1.0, 0.3, 1.0),
+          ),
+        );
     _controller.forward(from: 0.0);
   }
 
@@ -449,10 +455,7 @@ class _TabTransitionWrapperState extends State<TabTransitionWrapper>
     if (!widget.enabled) return widget.child;
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: widget.child,
-      ),
+      child: SlideTransition(position: _slideAnimation, child: widget.child),
     );
   }
 }

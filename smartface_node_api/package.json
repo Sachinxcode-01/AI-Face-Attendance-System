@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "node tests/run_all.js"
+    "test": "node tests/run_all.js",
+    "resend:check": "node scripts/check-resend-production.js"
   },
   "dependencies": {
     "@getbrevo/brevo": "^6.0.2",

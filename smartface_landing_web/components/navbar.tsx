@@ -9,11 +9,21 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [portalsOpen, setPortalsOpen] = useState(false);
 
+  // Prevent open redirect vulnerabilities by validating relative internal paths
+  const safeRedirect = (target: string): string => {
+    if (!target || typeof target !== 'string') return '/login';
+    const trimmed = target.trim();
+    if (trimmed.startsWith('/') && !trimmed.startsWith('//') && !trimmed.startsWith('/\\')) {
+      return trimmed;
+    }
+    return '/login';
+  };
+
   const portals = [
-    { name: 'Student Portal', href: '/login' },
-    { name: 'Parent Portal', href: '/login' },
-    { name: 'Teacher Portal', href: '/login' },
-    { name: 'Admin Portal', href: '/login' },
+    { name: 'Student Portal', href: safeRedirect('/login') },
+    { name: 'Parent Portal', href: safeRedirect('/login') },
+    { name: 'Teacher Portal', href: safeRedirect('/login') },
+    { name: 'Admin Portal', href: safeRedirect('/login') },
   ];
 
   return (

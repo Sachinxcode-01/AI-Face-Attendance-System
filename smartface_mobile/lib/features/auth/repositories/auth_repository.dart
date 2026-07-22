@@ -26,7 +26,8 @@ class AuthRepository {
   ) async {
     final result = await _authService.loginWithPassword(email, password);
     if (result.containsKey('token') || result.containsKey('access_token')) {
-      final String token = (result['token'] ?? result['access_token']) as String;
+      final String token =
+          (result['token'] ?? result['access_token']) as String;
       final String name = result['name'] as String? ?? 'User';
       final String role = result['role'] as String? ?? 'student';
       final String? avatarUrl = result['avatar_url'] as String?;
@@ -50,7 +51,8 @@ class AuthRepository {
   Future<Map<String, dynamic>> verifyLoginOtp(String email, String otp) async {
     final result = await _authService.verifyLoginOtp(email, otp);
     if (result.containsKey('token') || result.containsKey('access_token')) {
-      final String token = (result['token'] ?? result['access_token']) as String;
+      final String token =
+          (result['token'] ?? result['access_token']) as String;
       final String name = result['name'] as String? ?? 'User';
       final String role = result['role'] as String? ?? 'student';
       final String? avatarUrl = result['avatar_url'] as String?;
@@ -86,7 +88,8 @@ class AuthRepository {
       idToken: idToken,
     );
     if (result.containsKey('token') || result.containsKey('access_token')) {
-      final String token = (result['token'] ?? result['access_token']) as String;
+      final String token =
+          (result['token'] ?? result['access_token']) as String;
       final String userRole = result['role'] as String? ?? role;
       final bool bioRegistered = result['biometric_registered'] ?? false;
       final bool introCompleted = result['introCompleted'] ?? false;
@@ -105,13 +108,11 @@ class AuthRepository {
     return result;
   }
 
-  Future<Map<String, dynamic>> githubLogin(
-    String code,
-    String role,
-  ) async {
+  Future<Map<String, dynamic>> githubLogin(String code, String role) async {
     final result = await _authService.githubLogin(code, role);
     if (result.containsKey('token') || result.containsKey('access_token')) {
-      final String token = (result['token'] ?? result['access_token']) as String;
+      final String token =
+          (result['token'] ?? result['access_token']) as String;
       final String email = result['email'] as String? ?? '';
       final String name = result['full_name'] ?? result['name'] ?? 'User';
       final String userRole = result['role'] as String? ?? role;
@@ -132,7 +133,6 @@ class AuthRepository {
     }
     return result;
   }
-
 
   Future<Map<String, dynamic>> register(
     String name,

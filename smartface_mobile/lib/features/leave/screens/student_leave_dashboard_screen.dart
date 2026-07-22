@@ -264,9 +264,24 @@ class _StudentLeaveDashboardScreenState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildOverviewItem('Pending', '$pending', Colors.amberAccent, isDark),
-              _buildOverviewItem('Approved', '$approved', Colors.greenAccent, isDark),
-              _buildOverviewItem('Rejected', '$rejected', Colors.redAccent, isDark),
+              _buildOverviewItem(
+                'Pending',
+                '$pending',
+                Colors.amberAccent,
+                isDark,
+              ),
+              _buildOverviewItem(
+                'Approved',
+                '$approved',
+                Colors.greenAccent,
+                isDark,
+              ),
+              _buildOverviewItem(
+                'Rejected',
+                '$rejected',
+                Colors.redAccent,
+                isDark,
+              ),
             ],
           ),
         ],
@@ -274,7 +289,12 @@ class _StudentLeaveDashboardScreenState
     ).animate().fadeIn(delay: 350.ms, duration: 500.ms);
   }
 
-  Widget _buildOverviewItem(String label, String count, Color color, bool isDark) {
+  Widget _buildOverviewItem(
+    String label,
+    String count,
+    Color color,
+    bool isDark,
+  ) {
     return Column(
       children: [
         FittedBox(
@@ -460,7 +480,9 @@ class _StudentLeaveDashboardScreenState
                               Text(
                                 durationStr,
                                 style: TextStyle(
-                                  color: isDark ? Colors.white70 : Colors.black87,
+                                  color: isDark
+                                      ? Colors.white70
+                                      : Colors.black87,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                 ),

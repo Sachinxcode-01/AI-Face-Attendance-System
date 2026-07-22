@@ -54,91 +54,110 @@ void main() {
 
   // ── Mock HTTP that returns empty-but-valid analytics responses ────────────
   void setupEmptyMocks() {
-    MockApiService.setupCustom(MockClient((request) async {
-      final path = request.url.path;
-      if (path.endsWith('/analytics/trends')) {
-        return http.Response(jsonEncode({'trends': []}), 200);
-      }
-      if (path.endsWith('/analytics/department-comparison')) {
-        return http.Response(jsonEncode({'departments': []}), 200);
-      }
-      if (path.endsWith('/analytics/subject-wise')) {
-        return http.Response(jsonEncode({'subjects': []}), 200);
-      }
-      if (path.endsWith('/analytics/risk-students')) {
-        return http.Response(jsonEncode({'riskStudents': []}), 200);
-      }
-      if (path.endsWith('/analytics/heatmap')) {
-        return http.Response(jsonEncode({'heatmap': []}), 200);
-      }
-      return http.Response(jsonEncode({'detail': 'Not found'}), 404);
-    }));
+    MockApiService.setupCustom(
+      MockClient((request) async {
+        final path = request.url.path;
+        if (path.endsWith('/analytics/trends')) {
+          return http.Response(jsonEncode({'trends': []}), 200);
+        }
+        if (path.endsWith('/analytics/department-comparison')) {
+          return http.Response(jsonEncode({'departments': []}), 200);
+        }
+        if (path.endsWith('/analytics/subject-wise')) {
+          return http.Response(jsonEncode({'subjects': []}), 200);
+        }
+        if (path.endsWith('/analytics/risk-students')) {
+          return http.Response(jsonEncode({'riskStudents': []}), 200);
+        }
+        if (path.endsWith('/analytics/heatmap')) {
+          return http.Response(jsonEncode({'heatmap': []}), 200);
+        }
+        return http.Response(jsonEncode({'detail': 'Not found'}), 404);
+      }),
+    );
   }
 
   // ── Mock HTTP that returns rich analytics data ────────────────────────────
   void setupRichMocks() {
-    MockApiService.setupCustom(MockClient((request) async {
-      final path = request.url.path;
-      if (path.endsWith('/analytics/trends')) {
-        return http.Response(
-          jsonEncode({
-            'trends': [
-              {'month': '2025-01', 'rate': 0.82, 'total': 200, 'present': 164},
-              {'month': '2025-02', 'rate': 0.87, 'total': 180, 'present': 157},
-            ],
-          }),
-          200,
-        );
-      }
-      if (path.endsWith('/analytics/department-comparison')) {
-        return http.Response(
-          jsonEncode({
-            'departments': [
-              {'department': 'CSE', 'averageRate': 0.85, 'studentCount': 40},
-              {'department': 'ECE', 'averageRate': 0.78, 'studentCount': 30},
-            ],
-          }),
-          200,
-        );
-      }
-      if (path.endsWith('/analytics/subject-wise')) {
-        return http.Response(
-          jsonEncode({
-            'subjects': [
-              {'subject': 'Math', 'averageRate': 0.9, 'totalSessions': 30, 'totalPresent': 27},
-            ],
-          }),
-          200,
-        );
-      }
-      if (path.endsWith('/analytics/risk-students')) {
-        return http.Response(
-          jsonEncode({
-            'riskStudents': [
-              {
-                'email': 'risk@example.com',
-                'name': 'At Risk Student',
-                'department': 'CSE',
-                'attendanceRate': 0.65,
-              },
-            ],
-          }),
-          200,
-        );
-      }
-      if (path.endsWith('/analytics/heatmap')) {
-        return http.Response(
-          jsonEncode({
-            'heatmap': [
-              {'date': '2025-01-15', 'count': 34},
-              {'date': '2025-01-16', 'count': 28},
-            ],
-          }),
-          200,
-        );
-      }
-      return http.Response(jsonEncode({'detail': 'Not found'}), 404);
-    }));
+    MockApiService.setupCustom(
+      MockClient((request) async {
+        final path = request.url.path;
+        if (path.endsWith('/analytics/trends')) {
+          return http.Response(
+            jsonEncode({
+              'trends': [
+                {
+                  'month': '2025-01',
+                  'rate': 0.82,
+                  'total': 200,
+                  'present': 164,
+                },
+                {
+                  'month': '2025-02',
+                  'rate': 0.87,
+                  'total': 180,
+                  'present': 157,
+                },
+              ],
+            }),
+            200,
+          );
+        }
+        if (path.endsWith('/analytics/department-comparison')) {
+          return http.Response(
+            jsonEncode({
+              'departments': [
+                {'department': 'CSE', 'averageRate': 0.85, 'studentCount': 40},
+                {'department': 'ECE', 'averageRate': 0.78, 'studentCount': 30},
+              ],
+            }),
+            200,
+          );
+        }
+        if (path.endsWith('/analytics/subject-wise')) {
+          return http.Response(
+            jsonEncode({
+              'subjects': [
+                {
+                  'subject': 'Math',
+                  'averageRate': 0.9,
+                  'totalSessions': 30,
+                  'totalPresent': 27,
+                },
+              ],
+            }),
+            200,
+          );
+        }
+        if (path.endsWith('/analytics/risk-students')) {
+          return http.Response(
+            jsonEncode({
+              'riskStudents': [
+                {
+                  'email': 'risk@example.com',
+                  'name': 'At Risk Student',
+                  'department': 'CSE',
+                  'attendanceRate': 0.65,
+                },
+              ],
+            }),
+            200,
+          );
+        }
+        if (path.endsWith('/analytics/heatmap')) {
+          return http.Response(
+            jsonEncode({
+              'heatmap': [
+                {'date': '2025-01-15', 'count': 34},
+                {'date': '2025-01-16', 'count': 28},
+              ],
+            }),
+            200,
+          );
+        }
+        return http.Response(jsonEncode({'detail': 'Not found'}), 404);
+      }),
+    );
   }
 
   Widget buildApp(SessionManager session) {
@@ -173,22 +192,24 @@ void main() {
   tearDown(() => MockApiService.reset());
 
   // ── Test 1: TabBar renders ────────────────────────────────────────────────
-  testWidgets('AnalyticsDashboardScreen renders TabBar with all tab labels',
-      (WidgetTester tester) async {
+  testWidgets('AnalyticsDashboardScreen renders TabBar with all tab labels', (
+    WidgetTester tester,
+  ) async {
     setupEmptyMocks();
     await pumpScreen(tester, buildApp(sessionManager));
     await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('Trends'),      findsWidgets);
+    expect(find.text('Trends'), findsWidgets);
     expect(find.text('Departments'), findsWidgets);
-    expect(find.text('Subjects'),    findsWidgets);
-    expect(find.text('Risk'),        findsWidgets);
-    expect(find.text('Heatmap'),     findsWidgets);
+    expect(find.text('Subjects'), findsWidgets);
+    expect(find.text('Risk'), findsWidgets);
+    expect(find.text('Heatmap'), findsWidgets);
   });
 
   // ── Test 2: Empty state on Trends tab ─────────────────────────────────────
-  testWidgets('Trends tab shows empty state when no data',
-      (WidgetTester tester) async {
+  testWidgets('Trends tab shows empty state when no data', (
+    WidgetTester tester,
+  ) async {
     setupEmptyMocks();
     await pumpScreen(tester, buildApp(sessionManager));
 
@@ -199,29 +220,32 @@ void main() {
   });
 
   // ── Test 3: Risk tab empty state ──────────────────────────────────────────
-  testWidgets('Risk tab shows celebration empty state when no at-risk students',
-      (WidgetTester tester) async {
-    setupEmptyMocks();
-    await pumpScreen(tester, buildApp(sessionManager));
+  testWidgets(
+    'Risk tab shows celebration empty state when no at-risk students',
+    (WidgetTester tester) async {
+      setupEmptyMocks();
+      await pumpScreen(tester, buildApp(sessionManager));
 
-    await tester.pump(const Duration(seconds: 2));
+      await tester.pump(const Duration(seconds: 2));
 
-    // Switch to Risk tab
-    await tester.tap(find.text('Risk'));
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 2));
+      // Switch to Risk tab
+      await tester.tap(find.text('Risk'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
 
-    expect(find.textContaining('No at-risk students'), findsOneWidget);
-  });
+      expect(find.textContaining('No at-risk students'), findsOneWidget);
+    },
+  );
 
   // ── Test 4: Rich data — risk list appears ────────────────────────────────
-  testWidgets('Risk tab shows at-risk student when data present',
-      (WidgetTester tester) async {
+  testWidgets('Risk tab shows at-risk student when data present', (
+    WidgetTester tester,
+  ) async {
     setupRichMocks();
     await tester.runAsync(() async {
       await tester.pumpWidget(buildApp(sessionManager));
       await tester.pump();
-      
+
       // Wait for async load to complete (real time)
       await Future.delayed(const Duration(seconds: 2));
       await tester.pump();

@@ -80,7 +80,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
 
   List<dynamic> _getEventsForDay(DateTime day) {
     final events = [];
-    
+
     // Check leaves
     final dayLeaves = _leaves.where((l) {
       final start = DateTime.parse(l['start_date']);
@@ -142,8 +142,12 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                           vertical: 12,
                         ),
                         child: TableCalendar(
-                          firstDay: DateTime.now().subtract(const Duration(days: 365)),
-                          lastDay: DateTime.now().add(const Duration(days: 365)),
+                          firstDay: DateTime.now().subtract(
+                            const Duration(days: 365),
+                          ),
+                          lastDay: DateTime.now().add(
+                            const Duration(days: 365),
+                          ),
                           focusedDay: _focusedDay,
                           calendarFormat: _calendarFormat,
                           selectedDayPredicate: (day) {
@@ -165,18 +169,28 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                           },
                           eventLoader: _getEventsForDay,
                           calendarStyle: CalendarStyle(
-                            defaultTextStyle: const TextStyle(color: Colors.white),
-                            weekendTextStyle: const TextStyle(color: Colors.white60),
+                            defaultTextStyle: const TextStyle(
+                              color: Colors.white,
+                            ),
+                            weekendTextStyle: const TextStyle(
+                              color: Colors.white60,
+                            ),
                             todayDecoration: BoxDecoration(
                               color: AppColors.indigo.withValues(alpha: 0.3),
                               shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.indigo, width: 1.5),
+                              border: Border.all(
+                                color: AppColors.indigo,
+                                width: 1.5,
+                              ),
                             ),
                             selectedDecoration: const BoxDecoration(
                               color: AppColors.gold,
                               shape: BoxShape.circle,
                             ),
-                            selectedTextStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                            selectedTextStyle: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
                             markersMaxCount: 3,
                           ),
                           headerStyle: HeaderStyle(
@@ -190,11 +204,19 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                             formatButtonDecoration: BoxDecoration(
-                              border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+                              border: Border.all(
+                                color: AppColors.gold.withValues(alpha: 0.5),
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            leftChevronIcon: const Icon(Icons.chevron_left, color: Colors.white),
-                            rightChevronIcon: const Icon(Icons.chevron_right, color: Colors.white),
+                            leftChevronIcon: const Icon(
+                              Icons.chevron_left,
+                              color: Colors.white,
+                            ),
+                            rightChevronIcon: const Icon(
+                              Icons.chevron_right,
+                              color: Colors.white,
+                            ),
                           ),
                           calendarBuilders: CalendarBuilders(
                             prioritizedBuilder: (context, day, focusedDay) {
@@ -203,7 +225,10 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                                   margin: const EdgeInsets.all(4),
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.greenAccent, width: 1.5),
+                                    border: Border.all(
+                                      color: Colors.greenAccent,
+                                      width: 1.5,
+                                    ),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Text(
@@ -218,7 +243,10 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
                                     color: Colors.amber.withValues(alpha: 0.2),
-                                    border: Border.all(color: Colors.amber, width: 1.5),
+                                    border: Border.all(
+                                      color: Colors.amber,
+                                      width: 1.5,
+                                    ),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Text(
@@ -232,8 +260,13 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                                   margin: const EdgeInsets.all(4),
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: Colors.purple.withValues(alpha: 0.25),
-                                    border: Border.all(color: Colors.purpleAccent, width: 1.5),
+                                    color: Colors.purple.withValues(
+                                      alpha: 0.25,
+                                    ),
+                                    border: Border.all(
+                                      color: Colors.purpleAccent,
+                                      width: 1.5,
+                                    ),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Text(
@@ -348,8 +381,8 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                       e['type'] == 'leave'
                           ? Icons.time_to_leave
                           : e['type'] == 'holiday'
-                              ? Icons.beach_access
-                              : Icons.check,
+                          ? Icons.beach_access
+                          : Icons.check,
                       color: badgeColor,
                     ),
                   ),

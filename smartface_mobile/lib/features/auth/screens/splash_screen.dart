@@ -61,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _runStartupSequence() async {
     final session = context.read<SessionManager>();
-    
+
     Future<void> updateMessage(String msg, int delayMs) async {
       if (!mounted) return;
       setState(() {
@@ -99,15 +99,23 @@ class _SplashScreenState extends State<SplashScreen> {
       if (isLoggedIn) {
         if (isBackendOnline) {
           try {
-            final profileResult = await ApiService.getUserProfile(session.token!);
-            if (profileResult.containsKey('detail') && 
-                (profileResult['detail'].toString().toLowerCase().contains('invalid') || 
-                 profileResult['detail'].toString().toLowerCase().contains('expired'))) {
+            final profileResult = await ApiService.getUserProfile(
+              session.token!,
+            );
+            if (profileResult.containsKey('detail') &&
+                (profileResult['detail'].toString().toLowerCase().contains(
+                      'invalid',
+                    ) ||
+                    profileResult['detail'].toString().toLowerCase().contains(
+                      'expired',
+                    ))) {
               await session.logout();
               await updateMessage('SECURITY: SESSION EXPIRED', 300);
             } else {
               if (profileResult.containsKey('email')) {
-                final isBioRegistered = profileResult['biometric_registered'] ?? session.biometricRegistered;
+                final isBioRegistered =
+                    profileResult['biometric_registered'] ??
+                    session.biometricRegistered;
                 await session.saveSession(
                   token: session.token!,
                   email: profileResult['email'],
@@ -115,8 +123,13 @@ class _SplashScreenState extends State<SplashScreen> {
                   name: profileResult['full_name'] ?? session.name,
                   biometricRegistered: isBioRegistered,
                 );
-                if (profileResult['setup_completed'] == true || isBioRegistered) {
-                  await CacheService.set('sf_wizard_completed', true, persist: true);
+                if (profileResult['setup_completed'] == true ||
+                    isBioRegistered) {
+                  await CacheService.set(
+                    'sf_wizard_completed',
+                    true,
+                    persist: true,
+                  );
                 }
               }
             }
@@ -129,10 +142,15 @@ class _SplashScreenState extends State<SplashScreen> {
       // 5. Decision Engine
       await updateMessage('DECISION ENGINE: RESOLVING ROUTE...', 150);
 
-      final onboardingCompleted = await CacheService.get<bool>('sf_onboarding_completed') ?? false;
-      final introImagesCompleted = await CacheService.get<bool>('sf_intro_images_completed') ?? false;
-      final introCompleted = await CacheService.get<bool>('sf_intro_completed') ?? false;
-      final wizardCompleted = session.biometricRegistered || (await CacheService.get<bool>('sf_wizard_completed') ?? false);
+      final onboardingCompleted =
+          await CacheService.get<bool>('sf_onboarding_completed') ?? false;
+      final introImagesCompleted =
+          await CacheService.get<bool>('sf_intro_images_completed') ?? false;
+      final introCompleted =
+          await CacheService.get<bool>('sf_intro_completed') ?? false;
+      final wizardCompleted =
+          session.biometricRegistered ||
+          (await CacheService.get<bool>('sf_wizard_completed') ?? false);
 
       if (!mounted) return;
 
@@ -172,8 +190,10 @@ class _SplashScreenState extends State<SplashScreen> {
       final String targetDashboard = role == 'admin'
           ? '/admin/dashboard'
           : (role == 'teacher' || role == 'faculty' || role == 'lecturer'
-              ? '/teacher/dashboard'
-              : (role == 'parent' ? '/parent/dashboard' : '/student/dashboard'));
+                ? '/teacher/dashboard'
+                : (role == 'parent'
+                      ? '/parent/dashboard'
+                      : '/student/dashboard'));
 
       context.go(targetDashboard);
     } catch (e) {
@@ -254,10 +274,17 @@ class _SplashScreenState extends State<SplashScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Dynamic responsive font sizes and styling properties
-    final double titleFontSize = (MediaQuery.of(context).size.width * 0.08).clamp(28.0, 36.0);
-    final titleColor = isDark ? const Color(0xFFF4F7FF) : const Color(0xFF0B1028);
-    final subtitleColor = isDark ? const Color(0xFFDCE6FF) : const Color(0xFF4E659E);
-    final shadowColor = isDark ? const Color(0xFF0B1028) : const Color(0xFF4F7BFF);
+    final double titleFontSize = (MediaQuery.of(context).size.width * 0.08)
+        .clamp(28.0, 36.0);
+    final titleColor = isDark
+        ? const Color(0xFFF4F7FF)
+        : const Color(0xFF0B1028);
+    final subtitleColor = isDark
+        ? const Color(0xFFDCE6FF)
+        : const Color(0xFF4E659E);
+    final shadowColor = isDark
+        ? const Color(0xFF0B1028)
+        : const Color(0xFF4F7BFF);
 
     return SafeArea(
       key: const ValueKey('boot_ui'),
@@ -322,10 +349,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: const Color(0xFF0A1024),
-                          border: Border.all(
-                            color: primaryColor,
-                            width: 2.0,
-                          ),
+                          border: Border.all(color: primaryColor, width: 2.0),
                           boxShadow: [
                             BoxShadow(
                               color: primaryColor.withValues(alpha: 0.30),
@@ -357,78 +381,84 @@ class _SplashScreenState extends State<SplashScreen> {
           // --- BRAND TEXT ---
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Text(
-              'Smart Attendance AI',
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.outfit(
-                fontSize: titleFontSize,
-                fontWeight: FontWeight.w800, // weight: 700-800
-                letterSpacing: 0.5, // letter spacing: 0.3-0.8
-                color: titleColor,
-                shadows: [
-                  Shadow(
-                    color: shadowColor.withValues(alpha: isDark ? 0.6 : 0.3),
-                    blurRadius: isDark ? 14 : 8,
-                    offset: const Offset(0, 2),
-                  ),
-                  if (isDark)
-                    BoxShadow(
-                      color: const Color(0xFF4F7BFF).withValues(alpha: 0.3),
-                      blurRadius: 20,
+            child:
+                Text(
+                      'Smart Attendance AI',
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(
+                        fontSize: titleFontSize,
+                        fontWeight: FontWeight.w800, // weight: 700-800
+                        letterSpacing: 0.5, // letter spacing: 0.3-0.8
+                        color: titleColor,
+                        shadows: [
+                          Shadow(
+                            color: shadowColor.withValues(
+                              alpha: isDark ? 0.6 : 0.3,
+                            ),
+                            blurRadius: isDark ? 14 : 8,
+                            offset: const Offset(0, 2),
+                          ),
+                          if (isDark)
+                            BoxShadow(
+                              color: const Color(
+                                0xFF4F7BFF,
+                              ).withValues(alpha: 0.3),
+                              blurRadius: 20,
+                            ),
+                        ],
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(
+                      delay: 400.ms,
+                      duration: 800.ms,
+                      curve: Curves.easeOutCubic,
+                    )
+                    .slideY(
+                      begin: 0.15,
+                      end: 0,
+                      duration: 800.ms,
+                      curve: Curves.easeOutCubic,
+                    )
+                    .scale(
+                      begin: const Offset(0.96, 0.96),
+                      end: const Offset(1.0, 1.0),
+                      duration: 800.ms,
+                      curve: Curves.easeOutCubic,
                     ),
-                ],
-              ),
-            )
-            .animate()
-            .fadeIn(
-              delay: 400.ms,
-              duration: 800.ms,
-              curve: Curves.easeOutCubic,
-            )
-            .slideY(
-              begin: 0.15,
-              end: 0,
-              duration: 800.ms,
-              curve: Curves.easeOutCubic,
-            )
-            .scale(
-              begin: const Offset(0.96, 0.96),
-              end: const Offset(1.0, 1.0),
-              duration: 800.ms,
-              curve: Curves.easeOutCubic,
-            ),
           ),
 
           const SizedBox(height: 12),
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Text(
-              'Face Recognition Attendance System',
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.inter(
-                fontSize: 14, // font size: 13-15
-                fontWeight: FontWeight.w500, // weight: 500
-                color: subtitleColor,
-                letterSpacing: 0.5,
-              ),
-            )
-            .animate()
-            .fadeIn(
-              delay: 1000.ms,
-              duration: 600.ms,
-              curve: Curves.easeOutCubic,
-            )
-            .slideY(
-              begin: 0.1,
-              end: 0,
-              duration: 600.ms,
-              curve: Curves.easeOutCubic,
-            ),
+            child:
+                Text(
+                      'Face Recognition Attendance System',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 14, // font size: 13-15
+                        fontWeight: FontWeight.w500, // weight: 500
+                        color: subtitleColor,
+                        letterSpacing: 0.5,
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(
+                      delay: 1000.ms,
+                      duration: 600.ms,
+                      curve: Curves.easeOutCubic,
+                    )
+                    .slideY(
+                      begin: 0.1,
+                      end: 0,
+                      duration: 600.ms,
+                      curve: Curves.easeOutCubic,
+                    ),
           ),
 
           const Spacer(),

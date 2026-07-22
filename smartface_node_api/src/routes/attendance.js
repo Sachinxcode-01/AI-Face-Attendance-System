@@ -16,6 +16,13 @@ const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const notificationService = require('../services/notificationService');
 const GSheetsManager = require('../services/gsheetsManager');
 const gsheets = new GSheetsManager();
+const faceAiService = require('../services/faceAiService');
+
+const multer = require('multer');
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
 
 const { authenticate, requireRole } = require('../middleware/auth');
 const SHEET_URL = process.env.GSHEETS_URL || "";
@@ -162,13 +169,129 @@ router.post('/mark', authenticate, async (req, res) => {
 
     res.json({ status: "success", message: "Attendance marked successfully" });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ detail: "Attendance already marked for this session", message: "Attendance already marked for this session" });
+    }
     res.status(500).json({ detail: error.message });
   }
 });
 
 // ─── POST /attendance/mark/face ───────────────────────────────────
-router.post('/mark/face', async (req, res) => {
+router.post('/mark/face', upload.single('image'), async (req, res) => {
   try {
+    // 1. If an image file is uploaded (Flutter Mobile Flow)
+    if (req.file && req.file.buffer) {
+      // Authenticate JWT
+      const authHeader = req.headers['authorization'];
+      let userEmail = null;
+      let userRole = null;
+
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const tokenStr = authHeader.substring(7);
+        const AuthService = require('../services/authService');
+        const payload = AuthService.decodeToken(tokenStr);
+        if (payload && payload.sub) {
+          userEmail = payload.sub;
+          userRole = payload.role || 'student';
+        }
+      }
+
+      if (!userEmail) {
+        return res.status(401).json({ detail: "Authentication required for face attendance" });
+      }
+
+      if (userRole !== 'student' && userRole !== 'admin') {
+        return res.status(403).json({ detail: "Only students can mark face attendance" });
+      }
+
+      const student_email = userEmail;
+      const { session_id } = req.body;
+
+      // Validate session
+      let session = null;
+      if (session_id && mongoose.Types.ObjectId.isValid(session_id)) {
+        session = await Session.findOne({ _id: session_id, is_active: true });
+      } else {
+        session = await Session.findOne({ is_active: true });
+      }
+
+      if (!session) {
+        return res.status(400).json({ detail: "No active attendance session found" });
+      }
+
+      const activeSessionId = session._id.toString();
+
+      // Check for duplicate attendance FIRST
+      const existing = await Attendance.findOne({
+        student_email,
+        session_id: activeSessionId
+      });
+
+      if (existing) {
+        return res.status(409).json({
+          detail: "Attendance already marked for this session",
+          message: "Attendance already marked for this session"
+        });
+      }
+
+      // Forward to Python FastAPI AI microservice
+      const aiResult = await faceAiService.verifyFace(req.file.buffer, student_email);
+
+      if (aiResult.status === 503) {
+        return res.status(503).json({ detail: "AI face recognition service is currently unavailable" });
+      }
+
+      if (aiResult.status === 504) {
+        return res.status(504).json({ detail: "AI face recognition request timed out" });
+      }
+
+      if (!aiResult.success || !aiResult.matched) {
+        return res.status(400).json({
+          detail: aiResult.message || "Face identity verification failed",
+          matched: false,
+          confidence: aiResult.confidence || 0
+        });
+      }
+
+      // Save Attendance in MongoDB
+      const timestamp = new Date();
+      const newRecord = new Attendance({
+        student_email,
+        session_id: activeSessionId,
+        timestamp,
+        status: "Present",
+        verified_by: "face",
+        confidence: aiResult.confidence
+      });
+
+      await newRecord.save();
+
+      // Audit Log
+      await auditLog(student_email, 'student', 'ATTENDANCE_MARKED', { method: 'face', session_id: activeSessionId, confidence: aiResult.confidence }, req);
+
+      // Broadcast update via WebSockets
+      trackJob(notificationService.broadcast({
+        type: "attendance_update",
+        student_email,
+        session_id: activeSessionId,
+        status: "Present",
+        timestamp: timestamp.toISOString(),
+        verified_by: "face",
+        confidence: aiResult.confidence
+      }).catch(console.error));
+
+      // Recalculate health score
+      trackJob(calculateHealthScore(student_email).catch(console.error));
+
+      return res.json({
+        status: "success",
+        matched: true,
+        confidence: aiResult.confidence,
+        message: "Face attendance marked successfully"
+      });
+    }
+
+    // 2. Legacy Direct Scanner Token Flow (for automated camera scripts)
     const token = req.headers['token'] || req.headers['authorization']?.split(' ')[1] || req.headers['x-face-scanner-token'];
     const expectedToken = process.env.FACE_SCANNER_TOKEN;
     if (!expectedToken || expectedToken.trim() === '') {
@@ -191,7 +314,10 @@ router.post('/mark/face', async (req, res) => {
     });
 
     if (existing) {
-      return res.json({ status: "success", message: "Attendance already marked for this session" });
+      return res.status(409).json({
+        detail: "Attendance already marked for this session",
+        message: "Attendance already marked for this session"
+      });
     }
 
     const timestamp = new Date();
@@ -206,10 +332,8 @@ router.post('/mark/face', async (req, res) => {
 
     await newRecord.save();
 
-    // Audit Log
     await auditLog(student_email, 'student', 'ATTENDANCE_MARKED', { method: 'face', session_id: session._id.toString(), confidence }, req);
 
-    // Broadcast update to live-logs WebSockets
     trackJob(notificationService.broadcast({
       type: "attendance_update",
       student_email,
@@ -220,11 +344,13 @@ router.post('/mark/face', async (req, res) => {
       confidence
     }).catch(console.error));
 
-    // Recalculate health score cache in background
     trackJob(calculateHealthScore(student_email).catch(console.error));
 
     res.json({ status: "success", message: "Face attendance marked successfully" });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ detail: "Attendance already marked for this session", message: "Attendance already marked for this session" });
+    }
     res.status(500).json({ detail: error.message });
   }
 });

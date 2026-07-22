@@ -8,7 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
-import 'package:smartface_attendance/design_system/design_system.dart' hide PrimaryButton;
+import 'package:smartface_attendance/design_system/design_system.dart'
+    hide PrimaryButton;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -56,11 +57,19 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty) {
-      AppToast.show(context, message: 'Please enter your email', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please enter your email',
+        type: ToastType.warning,
+      );
       return;
     }
     if (password.isEmpty) {
-      AppToast.show(context, message: 'Please enter your password', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please enter your password',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -82,7 +91,10 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
         final bool introCompleted = result['introCompleted'] ?? false;
-        final bool wizardCompleted = result['wizardCompleted'] ?? result['biometric_registered'] ?? false;
+        final bool wizardCompleted =
+            result['wizardCompleted'] ??
+            result['biometric_registered'] ??
+            false;
         final bool bioRegistered = result['biometric_registered'] ?? false;
         final String role = result['role'] ?? 'student';
         final String name = result['full_name'] ?? result['name'] ?? 'User';
@@ -109,11 +121,15 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           if (roleLower == 'admin') {
             context.go('/admin/dashboard');
-          } else if (roleLower == 'teacher' || roleLower == 'faculty' || roleLower == 'lecturer') {
+          } else if (roleLower == 'teacher' ||
+              roleLower == 'faculty' ||
+              roleLower == 'lecturer') {
             context.go('/teacher/dashboard');
           } else if (roleLower == 'parent') {
             context.go('/parent/dashboard');
-          } else if (roleLower == 'hod' || roleLower == 'principal' || roleLower == 'management') {
+          } else if (roleLower == 'hod' ||
+              roleLower == 'principal' ||
+              roleLower == 'management') {
             context.go('/management/dashboard');
           } else {
             context.go('/student/dashboard');
@@ -125,7 +141,11 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'An unexpected error occurred. Please try again.', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'An unexpected error occurred. Please try again.',
+        type: ToastType.error,
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -136,7 +156,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? AppColors.textHeadingDark : AppColors.textHeading;
+    final textColor = isDark
+        ? AppColors.textHeadingDark
+        : AppColors.textHeading;
     final mutedColor = isDark ? AppColors.textMutedDark : AppColors.textMuted;
 
     return PremiumBackground(
@@ -175,12 +197,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 8),
 
                   Text(
-                    'Sign in to your SmartFace account',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: mutedColor,
-                    ),
-                  ).animate().fadeIn(delay: 80.ms, duration: 400.ms).slideY(begin: -0.08),
+                        'Sign in to your SmartFace account',
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          color: mutedColor,
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(delay: 80.ms, duration: 400.ms)
+                      .slideY(begin: -0.08),
 
                   const SizedBox(height: 40),
 
@@ -217,11 +242,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                          _obscurePassword
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
                           color: mutedColor,
                           size: 20,
                         ),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                     ),
                   ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
@@ -239,7 +268,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 24,
                             child: Checkbox(
                               value: _rememberMe,
-                              onChanged: (val) => setState(() => _rememberMe = val ?? false),
+                              onChanged: (val) =>
+                                  setState(() => _rememberMe = val ?? false),
                               activeColor: AppColors.primary,
                               checkColor: Colors.white,
                               shape: RoundedRectangleBorder(
@@ -282,7 +312,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
-                        disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
+                        disabledBackgroundColor: AppColors.primary.withValues(
+                          alpha: 0.5,
+                        ),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -352,9 +384,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         icon: Icons.g_mobiledata_rounded,
                         label: 'Google',
                         onTap: () {
-                          AppToast.show(context,
-                              message: 'Google Sign-In coming soon',
-                              type: ToastType.info);
+                          AppToast.show(
+                            context,
+                            message: 'Google Sign-In coming soon',
+                            type: ToastType.info,
+                          );
                         },
                       ),
                       const SizedBox(width: 16),
@@ -362,9 +396,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         icon: Icons.apple_rounded,
                         label: 'Apple',
                         onTap: () {
-                          AppToast.show(context,
-                              message: 'Apple Sign-In coming soon',
-                              type: ToastType.info);
+                          AppToast.show(
+                            context,
+                            message: 'Apple Sign-In coming soon',
+                            type: ToastType.info,
+                          );
                         },
                       ),
                     ],
@@ -447,7 +483,11 @@ class _LoginScreenState extends State<LoginScreen> {
             width: 1,
           ),
         ),
-        child: Icon(icon, color: isDark ? Colors.white70 : Colors.black54, size: 28),
+        child: Icon(
+          icon,
+          color: isDark ? Colors.white70 : Colors.black54,
+          size: 28,
+        ),
       ),
     );
   }

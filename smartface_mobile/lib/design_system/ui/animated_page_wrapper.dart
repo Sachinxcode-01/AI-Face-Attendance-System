@@ -18,8 +18,9 @@ class AnimatedPageWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Check if reduce motion is enabled (prevents accessibility issues)
-    final disableAnimations = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
     if (disableAnimations) return child;
 
     return child

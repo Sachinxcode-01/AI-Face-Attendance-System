@@ -176,11 +176,7 @@ class CircularBackButton extends StatelessWidget {
         child: const SizedBox(
           width: 42,
           height: 42,
-          child: Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.white,
-            size: 16,
-          ),
+          child: Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 16),
         ),
       ),
     );

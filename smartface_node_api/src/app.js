@@ -176,11 +176,19 @@ app.get(['/health', '/api/health'], async (req, res) => {
   } catch (err) {
     dbStatus = "unreachable";
   }
+  const emailProvider = process.env.EMAIL_PROVIDER || 'resend';
+  const emailConfigured = Boolean(process.env.RESEND_API_KEY || process.env.BREVO_API_KEY);
+  
   res.json({
     success: true,
     status: "ok",
     message: "Server running",
     database: dbStatus,
+    email_service: {
+      provider: emailProvider,
+      status: emailConfigured ? "operational" : "degraded",
+      domain: "smartface.pro"
+    },
     version: "2.0.0",
     timestamp: new Date().toISOString()
   });
@@ -297,3 +305,30 @@ const PORT = process.env.PORT || 8000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 SmartFace Node.js Server listening on port ${PORT}`);
 });
+
+// Graceful Shutdown Handler
+const gracefulShutdown = (signal) => {
+  console.log(`\n🛑 Received ${signal}. Initiating graceful shutdown...`);
+  wss.close(() => {
+    console.log("✅ WebSocket server closed.");
+  });
+  server.close(async () => {
+    console.log("✅ HTTP server closed.");
+    try {
+      const mongoose = require('mongoose');
+      await mongoose.connection.close();
+      console.log("✅ MongoDB connection disconnected.");
+    } catch (err) {
+      console.error("Error closing MongoDB connection:", err);
+    }
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.error("⚠️ Forced shutdown after 10s timeout.");
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

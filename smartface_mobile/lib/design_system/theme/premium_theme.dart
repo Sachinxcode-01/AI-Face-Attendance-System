@@ -23,9 +23,7 @@ class PremiumTheme {
         color: AppColors.textHeading,
         letterSpacing: -0.5,
       ),
-      titleLarge: playfair.titleLarge?.copyWith(
-        color: AppColors.textHeading,
-      ),
+      titleLarge: playfair.titleLarge?.copyWith(color: AppColors.textHeading),
       bodyLarge: inter.bodyLarge?.copyWith(
         color: AppColors.textBody,
         height: 1.6,
@@ -34,9 +32,7 @@ class PremiumTheme {
         color: AppColors.textBody,
         height: 1.55,
       ),
-      bodySmall: inter.bodySmall?.copyWith(
-        color: AppColors.textMuted,
-      ),
+      bodySmall: inter.bodySmall?.copyWith(color: AppColors.textMuted),
       labelLarge: inter.labelLarge?.copyWith(
         fontWeight: FontWeight.w600,
         letterSpacing: 0.5,
@@ -60,39 +56,40 @@ class PremiumTheme {
 
       // ── Elevated Buttons ────────────────────────────────────────────
       elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.black12,
-          disabledForegroundColor: AppColors.textMuted,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
-          textStyle: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-          ),
-        ).copyWith(
-          backgroundColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.pressed)) {
-              return AppColors.primaryDark;
-            }
-            return AppColors.primary;
-          }),
-          shadowColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.pressed)) {
-              return Colors.transparent;
-            }
-            return AppColors.primary.withValues(alpha: 0.2);
-          }),
-          elevation: WidgetStateProperty.resolveWith((states) {
-            return 4;
-          }),
-        ),
+        style:
+            ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: AppColors.black12,
+              disabledForegroundColor: AppColors.textMuted,
+              elevation: 0,
+              shadowColor: Colors.transparent,
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              textStyle: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ).copyWith(
+              backgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return AppColors.primaryDark;
+                }
+                return AppColors.primary;
+              }),
+              shadowColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return Colors.transparent;
+                }
+                return AppColors.primary.withValues(alpha: 0.2);
+              }),
+              elevation: WidgetStateProperty.resolveWith((states) {
+                return 4;
+              }),
+            ),
       ),
 
       // ── Outlined Buttons ────────────────────────────────────────────
@@ -133,10 +130,7 @@ class PremiumTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleSpacing: 0,
-        iconTheme: const IconThemeData(
-          color: AppColors.textHeading,
-          size: 24,
-        ),
+        iconTheme: const IconThemeData(color: AppColors.textHeading, size: 24),
         titleTextStyle: GoogleFonts.inter(
           color: AppColors.textHeading,
           fontSize: 18,
@@ -152,10 +146,7 @@ class PremiumTheme {
         shadowColor: AppColors.black12,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          side: const BorderSide(
-            color: AppColors.borderLight,
-            width: 1,
-          ),
+          side: const BorderSide(color: AppColors.borderLight, width: 1),
         ),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       ),
@@ -169,10 +160,7 @@ class PremiumTheme {
           horizontal: 16,
           vertical: 14,
         ),
-        labelStyle: GoogleFonts.inter(
-          color: AppColors.textMuted,
-          fontSize: 14,
-        ),
+        labelStyle: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 14),
         hintStyle: GoogleFonts.inter(
           color: AppColors.textPlaceholder,
           fontSize: 14,
@@ -193,24 +181,15 @@ class PremiumTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(
-            color: AppColors.primary,
-            width: 1.5,
-          ),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(
-            color: AppColors.error,
-            width: 1.2,
-          ),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.2),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(
-            color: AppColors.errorDark,
-            width: 1.5,
-          ),
+          borderSide: const BorderSide(color: AppColors.errorDark, width: 1.5),
         ),
       ),
 
@@ -228,9 +207,7 @@ class PremiumTheme {
         backgroundColor: Colors.white,
         elevation: 4,
         shadowColor: AppColors.black12,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
 
       // ── Divider ─────────────────────────────────────────────────────
@@ -245,9 +222,7 @@ class PremiumTheme {
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.surfaceElevatedLight,
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         contentTextStyle: GoogleFonts.inter(
           color: AppColors.textHeading,
           fontSize: 14,
@@ -259,10 +234,7 @@ class PremiumTheme {
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.iconChipLight,
         selectedColor: AppColors.primary.withValues(alpha: 0.15),
-        labelStyle: GoogleFonts.inter(
-          color: AppColors.textBody,
-          fontSize: 13,
-        ),
+        labelStyle: GoogleFonts.inter(color: AppColors.textBody, fontSize: 13),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.sm),
         ),

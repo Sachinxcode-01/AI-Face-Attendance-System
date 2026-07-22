@@ -35,7 +35,8 @@ import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
-import 'package:smartface_attendance/design_system/design_system.dart' hide StatCard;
+import 'package:smartface_attendance/design_system/design_system.dart'
+    hide StatCard;
 
 /// The administrative dashboard command center widget.
 class AdminDashboard extends StatefulWidget {
@@ -148,7 +149,11 @@ class _AdminDashboardState extends State<AdminDashboard>
           title: 'Admin Control Panel',
           titleWidget: Row(
             children: [
-              const Icon(Icons.shield_outlined, color: AppColors.primary, size: 22),
+              const Icon(
+                Icons.shield_outlined,
+                color: AppColors.primary,
+                size: 22,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Admin Control Panel',
@@ -210,69 +215,69 @@ class _AdminDashboardState extends State<AdminDashboard>
             ),
           ],
         ),
-      body: GlowRefreshIndicator(
-        onRefresh: _loadDashboard,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!isTablet) ...[
-                // Mobile layout
-                header,
-                const SizedBox(height: 20),
-                statsGrid,
-                const SizedBox(height: 20),
-                alertStatus,
-                const SizedBox(height: 20),
-                diagnostics,
-                const SizedBox(height: 20),
-                quickActions,
-                const SizedBox(height: 24),
-                logoutButton,
-              ] else ...[
-                // Tablet layout
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 6,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          header,
-                          const SizedBox(height: 20),
-                          statsGrid,
-                          const SizedBox(height: 20),
-                          diagnostics,
-                        ],
+        body: GlowRefreshIndicator(
+          onRefresh: _loadDashboard,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!isTablet) ...[
+                  // Mobile layout
+                  header,
+                  const SizedBox(height: 20),
+                  statsGrid,
+                  const SizedBox(height: 20),
+                  alertStatus,
+                  const SizedBox(height: 20),
+                  diagnostics,
+                  const SizedBox(height: 20),
+                  quickActions,
+                  const SizedBox(height: 24),
+                  logoutButton,
+                ] else ...[
+                  // Tablet layout
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 6,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            header,
+                            const SizedBox(height: 20),
+                            statsGrid,
+                            const SizedBox(height: 20),
+                            diagnostics,
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      flex: 4,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          alertStatus,
-                          const SizedBox(height: 20),
-                          quickActions,
-                          const SizedBox(height: 24),
-                          logoutButton,
-                        ],
+                      const SizedBox(width: 20),
+                      Expanded(
+                        flex: 4,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            alertStatus,
+                            const SizedBox(height: 20),
+                            quickActions,
+                            const SizedBox(height: 24),
+                            logoutButton,
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 40),
               ],
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   Widget _buildWelcomeHeader(bool isDark, SessionManager session) {
@@ -416,10 +421,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                   hasIntruderAlert
                       ? '$alertCount unknown faces captured on campus CCTV feed.'
                       : 'Zero unauthorized intruder breaches logged today.',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: mutedTextColor,
-                  ),
+                  style: GoogleFonts.inter(fontSize: 11, color: mutedTextColor),
                 ),
               ],
             ),
@@ -573,12 +575,17 @@ class _AdminDashboardState extends State<AdminDashboard>
                           children: [
                             Expanded(
                               child: TextButton(
-                                onPressed: () => Navigator.pop(dialogContext, false),
+                                onPressed: () =>
+                                    Navigator.pop(dialogContext, false),
                                 style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14),
-                                    side: const BorderSide(color: Colors.white24),
+                                    side: const BorderSide(
+                                      color: Colors.white24,
+                                    ),
                                   ),
                                 ),
                                 child: Text(
@@ -593,11 +600,16 @@ class _AdminDashboardState extends State<AdminDashboard>
                             const SizedBox(width: 12),
                             Expanded(
                               child: GlowButton(
-                                onPressed: () => Navigator.pop(dialogContext, true),
+                                onPressed: () =>
+                                    Navigator.pop(dialogContext, true),
                                 color: AppColors.error,
-                                glowColor: AppColors.error.withValues(alpha: 0.3),
+                                glowColor: AppColors.error.withValues(
+                                  alpha: 0.3,
+                                ),
                                 borderRadius: 14,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 child: Text(
                                   'Logout',
                                   style: GoogleFonts.inter(

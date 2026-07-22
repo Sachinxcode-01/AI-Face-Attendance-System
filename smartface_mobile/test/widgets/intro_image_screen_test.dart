@@ -44,20 +44,19 @@ void main() {
         ),
         GoRoute(
           path: '/auth/login',
-          builder: (context, state) => const Scaffold(
-            body: Text('Login Screen'),
-          ),
+          builder: (context, state) =>
+              const Scaffold(body: Text('Login Screen')),
         ),
       ],
     );
 
-    return MaterialApp.router(
-      routerConfig: router,
-    );
+    return MaterialApp.router(routerConfig: router);
   }
 
   group('IntroImageScreen Widget Tests', () {
-    testWidgets('renders all HUD elements correctly on initial load', (WidgetTester tester) async {
+    testWidgets('renders all HUD elements correctly on initial load', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(createTestRouterWidget());
       await tester.pumpAndSettle();
 
@@ -72,11 +71,15 @@ void main() {
         matching: find.byType(AnimatedOpacity),
       );
       expect(backButtonOpacityFinder, findsOneWidget);
-      final AnimatedOpacity animatedOpacity = tester.widget<AnimatedOpacity>(backButtonOpacityFinder);
+      final AnimatedOpacity animatedOpacity = tester.widget<AnimatedOpacity>(
+        backButtonOpacityFinder,
+      );
       expect(animatedOpacity.opacity, 0.0);
     });
 
-    testWidgets('navigation pages work correctly when clicking NEXT and BACK', (WidgetTester tester) async {
+    testWidgets('navigation pages work correctly when clicking NEXT and BACK', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(createTestRouterWidget());
       await tester.pumpAndSettle();
 
@@ -89,7 +92,9 @@ void main() {
         of: find.text('BACK'),
         matching: find.byType(AnimatedOpacity),
       );
-      final AnimatedOpacity animatedOpacity = tester.widget<AnimatedOpacity>(backButtonOpacityFinder);
+      final AnimatedOpacity animatedOpacity = tester.widget<AnimatedOpacity>(
+        backButtonOpacityFinder,
+      );
       expect(animatedOpacity.opacity, 1.0);
 
       // Tap NEXT again to go to page 3
@@ -107,7 +112,9 @@ void main() {
       expect(find.text("LET'S START"), findsNothing);
     });
 
-    testWidgets('clicking SKIP completes intro and redirects to login', (WidgetTester tester) async {
+    testWidgets('clicking SKIP completes intro and redirects to login', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(createTestRouterWidget());
       await tester.pumpAndSettle();
 
@@ -123,29 +130,32 @@ void main() {
       expect(find.text('Login Screen'), findsOneWidget);
     });
 
-    testWidgets('clicking LETS GET STARTED on the final page completes intro and redirects to login', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestRouterWidget());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'clicking LETS GET STARTED on the final page completes intro and redirects to login',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(createTestRouterWidget());
+        await tester.pumpAndSettle();
 
-      // Go to page 2
-      await tester.tap(find.text('NEXT'));
-      await tester.pumpAndSettle();
+        // Go to page 2
+        await tester.tap(find.text('NEXT'));
+        await tester.pumpAndSettle();
 
-      // Go to page 3
-      await tester.tap(find.text('NEXT'));
-      await tester.pumpAndSettle();
+        // Go to page 3
+        await tester.tap(find.text('NEXT'));
+        await tester.pumpAndSettle();
 
-      expect(mockSessionManager.introImagesCompleted, isFalse);
+        expect(mockSessionManager.introImagesCompleted, isFalse);
 
-      // Tap "LET'S START"
-      await tester.tap(find.text("LET'S START"));
-      await tester.pumpAndSettle();
+        // Tap "LET'S START"
+        await tester.tap(find.text("LET'S START"));
+        await tester.pumpAndSettle();
 
-      // Verify session state updated
-      expect(mockSessionManager.introImagesCompleted, isTrue);
+        // Verify session state updated
+        expect(mockSessionManager.introImagesCompleted, isTrue);
 
-      // Verify redirected to Login Screen
-      expect(find.text('Login Screen'), findsOneWidget);
-    });
+        // Verify redirected to Login Screen
+        expect(find.text('Login Screen'), findsOneWidget);
+      },
+    );
   });
 }

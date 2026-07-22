@@ -248,7 +248,7 @@ router.post('/login-otp/send', limitOtpSend, async (req, res) => {
       }
     }
 
-    const otpVal = Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join('');
+    const otpVal = Array.from({ length: 6 }, () => crypto.randomInt(0, 10)).join('');
     const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     await Otp.updateOne(
@@ -716,7 +716,7 @@ router.post('/forgot-password', async (req, res) => {
       }
     }
 
-    const otpVal = Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join('');
+    const otpVal = Array.from({ length: 6 }, () => crypto.randomInt(0, 10)).join('');
     const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     await Otp.updateOne(

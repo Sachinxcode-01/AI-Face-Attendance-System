@@ -8,7 +8,8 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
 
-import 'package:smartface_attendance/design_system/design_system.dart' hide PrimaryButton;
+import 'package:smartface_attendance/design_system/design_system.dart'
+    hide PrimaryButton;
 
 class OTPScreen extends StatefulWidget {
   final String? email;
@@ -66,8 +67,13 @@ class _OTPScreenState extends State<OTPScreen> {
   Future<void> _sendCode() async {
     if (_isLoading) return; // Guard against double-tap duplicate submissions
     final email = _emailController.text.trim();
-    if (email.isEmpty || !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      AppToast.show(context, message: 'Please enter a valid email address', type: ToastType.warning);
+    if (email.isEmpty ||
+        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      AppToast.show(
+        context,
+        message: 'Please enter a valid email address',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -98,7 +104,9 @@ class _OTPScreenState extends State<OTPScreen> {
             msg = 'Secure connection failed. Please try again.';
             break;
           default:
-            msg = result['detail']?.toString() ?? 'Failed to send OTP. Please try again.';
+            msg =
+                result['detail']?.toString() ??
+                'Failed to send OTP. Please try again.';
         }
         AppToast.show(context, message: msg, type: ToastType.error);
         return;
@@ -112,14 +120,27 @@ class _OTPScreenState extends State<OTPScreen> {
           _otpSent = true;
         });
         _startTimer();
-        AppToast.show(context, message: 'OTP sent to your email!', type: ToastType.success);
+        AppToast.show(
+          context,
+          message: 'OTP sent to your email!',
+          type: ToastType.success,
+        );
       } else {
-        final rawMsg = result['detail'] ?? result['message'] ?? 'Failed to send OTP';
-        AppToast.show(context, message: rawMsg.toString(), type: ToastType.error);
+        final rawMsg =
+            result['detail'] ?? result['message'] ?? 'Failed to send OTP';
+        AppToast.show(
+          context,
+          message: rawMsg.toString(),
+          type: ToastType.error,
+        );
       }
     } catch (e) {
       if (!mounted) return;
-      AppToast.show(context, message: 'Unexpected error. Please try again.', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'Unexpected error. Please try again.',
+        type: ToastType.error,
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -133,7 +154,11 @@ class _OTPScreenState extends State<OTPScreen> {
     final otp = _otpValue;
 
     if (otp.length != 6) {
-      AppToast.show(context, message: 'Please enter the 6-digit code', type: ToastType.warning);
+      AppToast.show(
+        context,
+        message: 'Please enter the 6-digit code',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -147,9 +172,12 @@ class _OTPScreenState extends State<OTPScreen> {
           _success = true;
         });
         HapticFeedback.heavyImpact();
-        
+
         final bool introCompleted = result['introCompleted'] ?? false;
-        final bool wizardCompleted = result['wizardCompleted'] ?? result['biometric_registered'] ?? false;
+        final bool wizardCompleted =
+            result['wizardCompleted'] ??
+            result['biometric_registered'] ??
+            false;
         final bool bioRegistered = result['biometric_registered'] ?? false;
         final String role = result['role'] ?? 'student';
         final String name = result['full_name'] ?? result['name'] ?? 'User';
@@ -168,7 +196,11 @@ class _OTPScreenState extends State<OTPScreen> {
 
         if (!mounted) return;
 
-        AppToast.show(context, message: 'Verification successful!', type: ToastType.success);
+        AppToast.show(
+          context,
+          message: 'Verification successful!',
+          type: ToastType.success,
+        );
 
         // Transition delay for success animation to play
         await Future.delayed(const Duration(milliseconds: 600));
@@ -183,11 +215,15 @@ class _OTPScreenState extends State<OTPScreen> {
         } else {
           if (roleLower == 'admin') {
             context.go('/admin/dashboard');
-          } else if (roleLower == 'teacher' || roleLower == 'faculty' || roleLower == 'lecturer') {
+          } else if (roleLower == 'teacher' ||
+              roleLower == 'faculty' ||
+              roleLower == 'lecturer') {
             context.go('/teacher/dashboard');
           } else if (roleLower == 'parent') {
             context.go('/parent/dashboard');
-          } else if (roleLower == 'hod' || roleLower == 'principal' || roleLower == 'management') {
+          } else if (roleLower == 'hod' ||
+              roleLower == 'principal' ||
+              roleLower == 'management') {
             context.go('/management/dashboard');
           } else {
             context.go('/student/dashboard');
@@ -197,7 +233,10 @@ class _OTPScreenState extends State<OTPScreen> {
         setState(() {
           _errorTrigger++;
         });
-        final msg = result['detail'] ?? result['message'] ?? 'Invalid code. Please try again.';
+        final msg =
+            result['detail'] ??
+            result['message'] ??
+            'Invalid code. Please try again.';
         AppToast.show(context, message: msg.toString(), type: ToastType.error);
       }
     } catch (e) {
@@ -205,7 +244,11 @@ class _OTPScreenState extends State<OTPScreen> {
       setState(() {
         _errorTrigger++;
       });
-      AppToast.show(context, message: 'An unexpected error occurred. Please try again.', type: ToastType.error);
+      AppToast.show(
+        context,
+        message: 'An unexpected error occurred. Please try again.',
+        type: ToastType.error,
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -254,7 +297,10 @@ class _OTPScreenState extends State<OTPScreen> {
 
           if (_otpSent) ...[
             const SizedBox(height: 8),
-            Divider(color: isDark ? AppColors.borderDark : AppColors.borderLight, thickness: 1),
+            Divider(
+              color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              thickness: 1,
+            ),
             const SizedBox(height: 16),
 
             // OTP Digit Boxes
@@ -287,11 +333,14 @@ class _OTPScreenState extends State<OTPScreen> {
                         style: AppTextStyles.caption(
                           context,
                           weight: FontWeight.w500,
-                          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                          color: isDark
+                              ? AppColors.textMutedDark
+                              : AppColors.textMuted,
                         ),
                         children: [
                           TextSpan(
-                            text: '0:${_countdownSeconds.toString().padLeft(2, '0')}',
+                            text:
+                                '0:${_countdownSeconds.toString().padLeft(2, '0')}',
                             style: AppTextStyles.caption(
                               context,
                               weight: FontWeight.w700,

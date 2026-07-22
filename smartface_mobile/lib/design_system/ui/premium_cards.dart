@@ -39,7 +39,8 @@ class GradientCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: resolvedGradient,
         borderRadius: BorderRadius.circular(radius),
-        boxShadow: boxShadow ??
+        boxShadow:
+            boxShadow ??
             [
               BoxShadow(
                 color: AppColors.primary.withValues(alpha: 0.28),
@@ -133,10 +134,7 @@ class StatCard extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.muted(brightness),
-            ),
+            style: TextStyle(fontSize: 12, color: AppColors.muted(brightness)),
           ),
         ],
       ),
@@ -163,7 +161,9 @@ class _TrendChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            positive ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+            positive
+                ? Icons.arrow_upward_rounded
+                : Icons.arrow_downward_rounded,
             color: color,
             size: 11,
           ),

@@ -9,10 +9,15 @@ class SecureTokenStorage {
   static const String _keyToken = 'sf_auth_token';
   static const String _keyRefreshToken = 'sf_refresh_token';
 
-  static Future<String?> getAccessToken() async => await _storage.read(key: _keyToken);
-  static Future<String?> getRefreshToken() async => await _storage.read(key: _keyRefreshToken);
+  static Future<String?> getAccessToken() async =>
+      await _storage.read(key: _keyToken);
+  static Future<String?> getRefreshToken() async =>
+      await _storage.read(key: _keyRefreshToken);
 
-  static Future<void> saveTokens({required String accessToken, required String refreshToken}) async {
+  static Future<void> saveTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
     await _storage.write(key: _keyToken, value: accessToken);
     await _storage.write(key: _keyRefreshToken, value: refreshToken);
   }
