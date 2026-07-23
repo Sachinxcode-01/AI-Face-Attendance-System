@@ -60,7 +60,7 @@ async function request<T = any>(path: string, options: RequestInit = {}): Promis
       throw new Error(errorMsg);
     }
 
-    return data;
+    return data as T;
   } catch (error: unknown) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error(`Request timed out after ${DEFAULT_TIMEOUT_MS}ms`);
