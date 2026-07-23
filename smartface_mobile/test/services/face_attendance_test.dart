@@ -45,6 +45,104 @@ void main() {
       expect(result['confidence'], 0.88);
     });
 
+    test(
+      'markAttendanceWithFace handles 422 mismatch gracefully without identity leak',
+      () async {
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'detail': 'Face verification failed',
+              'matched': false,
+            }),
+            422,
+          );
+        });
+
+        final service = AttendanceService(apiService);
+        final result = await service.markAttendanceWithFace(
+          token: 'fake_jwt_token',
+          sessionId: 'sess_123',
+          imageBytes: [1, 2, 3],
+          fileName: 'test_face.jpg',
+          client: mockClient,
+        );
+
+        expect(result['status'], 'mismatch');
+        expect(result['matched'], false);
+        expect(result['detail'], 'Face verification failed');
+        expect(result.containsKey('student_email'), false);
+      },
+    );
+
+    test('markAttendanceWithFace handles 413 payload too large', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          jsonEncode({'detail': 'Uploaded image is too large (max 5MB)'}),
+          413,
+        );
+      });
+
+      final service = AttendanceService(apiService);
+      final result = await service.markAttendanceWithFace(
+        token: 'fake_jwt_token',
+        sessionId: 'sess_123',
+        imageBytes: [1, 2, 3],
+        fileName: 'test_face.jpg',
+        client: mockClient,
+      );
+
+      expect(result['status'], 'payload_too_large');
+      expect(result['matched'], false);
+      expect(result['detail'], contains('too large'));
+    });
+
+    test('markAttendanceWithFace handles 415 unsupported type', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          jsonEncode({'detail': 'Unsupported image format'}),
+          415,
+        );
+      });
+
+      final service = AttendanceService(apiService);
+      final result = await service.markAttendanceWithFace(
+        token: 'fake_jwt_token',
+        sessionId: 'sess_123',
+        imageBytes: [1, 2, 3],
+        fileName: 'test_file.txt',
+        client: mockClient,
+      );
+
+      expect(result['status'], 'unsupported_type');
+      expect(result['matched'], false);
+      expect(result['detail'], contains('Unsupported'));
+    });
+
+    test('markAttendanceWithFace handles 429 rate limited', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'detail':
+                'Too many verification attempts. Please wait a few minutes.',
+          }),
+          429,
+        );
+      });
+
+      final service = AttendanceService(apiService);
+      final result = await service.markAttendanceWithFace(
+        token: 'fake_jwt_token',
+        sessionId: 'sess_123',
+        imageBytes: [1, 2, 3],
+        fileName: 'test_face.jpg',
+        client: mockClient,
+      );
+
+      expect(result['status'], 'rate_limited');
+      expect(result['matched'], false);
+      expect(result['detail'], contains('Too many'));
+    });
+
     test('markAttendanceWithFace returns conflict on duplicate 409', () async {
       final mockClient = MockClient((request) async {
         return http.Response(
@@ -73,7 +171,9 @@ void main() {
     test('markAttendanceWithFace handles 503 unavailable gracefully', () async {
       final mockClient = MockClient((request) async {
         return http.Response(
-          jsonEncode({'detail': 'AI face recognition service is currently unavailable'}),
+          jsonEncode({
+            'detail': 'AI face recognition service is currently unavailable',
+          }),
           503,
         );
       });

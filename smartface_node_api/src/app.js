@@ -172,6 +172,8 @@ app.get(['/health', '/api/health'], async (req, res) => {
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState !== 1) {
       dbStatus = "unreachable";
+    } else {
+      await mongoose.connection.db.admin().ping({ maxTimeMS: 2000 });
     }
   } catch (err) {
     dbStatus = "unreachable";
@@ -179,10 +181,11 @@ app.get(['/health', '/api/health'], async (req, res) => {
   const emailProvider = process.env.EMAIL_PROVIDER || 'resend';
   const emailConfigured = Boolean(process.env.RESEND_API_KEY || process.env.BREVO_API_KEY);
   
-  res.json({
-    success: true,
-    status: "ok",
-    message: "Server running",
+  const isHealthy = dbStatus === "connected";
+  res.status(isHealthy ? 200 : 503).json({
+    success: isHealthy,
+    status: isHealthy ? "ok" : "degraded",
+    message: isHealthy ? "Server running" : "Database connection issue",
     database: dbStatus,
     email_service: {
       provider: emailProvider,
@@ -238,9 +241,17 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/', aiRoutes);
 app.use('/api', aiRoutes);
 
+// 404 JSON fallback handler (replaces default Express HTML 404)
+app.use((req, res, next) => {
+  res.status(404).json({ detail: `Cannot ${req.method} ${req.path}` });
+});
+
 // Error fallback handler for all routes
 app.use((err, req, res, next) => {
   console.error("Unhandled Route Error:", err);
+  if (err.name === 'CastError' || err.name === 'ValidationError' || (err.message && err.message.includes('Cast to string failed'))) {
+    return res.status(400).json({ success: false, detail: "Invalid request data" });
+  }
   res.status(err.status || 500).json({ detail: err.message || "Internal server error" });
 });
 
@@ -262,18 +273,23 @@ wss.on('connection', (ws, req, email) => {
   });
 
   ws.on('message', (message) => {
-    // We just keep connection alive, client doesn't need to send messages
-    // but in case they do, we log it or handle ping-pong.
+    // Keep-alive or ping/pong handling
   });
 });
 
 // Handle HTTP upgrades to WebSocket connections
-server.on('upgrade', (request, socket, head) => {
-  const parsedUrl = url.parse(request.url, true);
-  const pathname = parsedUrl.pathname;
-
-  if (pathname === '/ws/notifications') {
+server.on('upgrade', async (request, socket, head) => {
+  try {
+    const parsedUrl = url.parse(request.url, true);
+    const pathname = parsedUrl.pathname;
     const token = parsedUrl.query.token;
+
+    if (pathname !== '/ws/notifications' && pathname !== '/ws/live-logs') {
+      socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+
     if (!token) {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\nToken missing');
       socket.destroy();
@@ -287,15 +303,37 @@ server.on('upgrade', (request, socket, head) => {
       return;
     }
 
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit('connection', ws, request, payload.sub);
-    });
-  } else if (pathname === '/ws/live-logs') {
-    // Allow live-logs connections without token, or register as special logger connection
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit('connection', ws, request, '__live_logs__');
-    });
-  } else {
+    // Live session check
+    const crypto = require('crypto');
+    const UserSession = require('./models/UserSession');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const session = await UserSession.findOne({ tokenHash });
+
+    if (!session || new Date() > session.expiry) {
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\nSession revoked or expired');
+      socket.destroy();
+      return;
+    }
+
+    const userRole = (payload.role || 'student').toLowerCase();
+
+    if (pathname === '/ws/live-logs') {
+      const allowedRoles = ['admin', 'super_admin', 'hod', 'principal'];
+      if (!allowedRoles.includes(userRole)) {
+        socket.write('HTTP/1.1 403 Forbidden\r\n\r\nAdmin authorization required');
+        socket.destroy();
+        return;
+      }
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request, '__live_logs__');
+      });
+    } else {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request, payload.sub);
+      });
+    }
+  } catch (err) {
+    socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
     socket.destroy();
   }
 });

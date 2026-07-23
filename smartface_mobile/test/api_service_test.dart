@@ -71,8 +71,8 @@ void main() {
             'role': 'student',
             'introCompleted': true,
             'wizardCompleted': true,
-          }
-        }
+          },
+        },
       };
 
       final normalized = normalizeAuthResponse(input);

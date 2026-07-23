@@ -6,6 +6,7 @@ import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
+import 'package:smartface_attendance/core/ui_system/app_ui_package_registry.dart';
 
 class AttendanceCalendarScreen extends StatefulWidget {
   const AttendanceCalendarScreen({super.key});
@@ -341,14 +342,15 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
         ),
         const SizedBox(height: 10),
         if (events.isEmpty)
-          GlassCard(
-            child: Container(
-              width: double.infinity,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Text(
-                'No events scheduled for this day.',
-                style: GoogleFonts.inter(color: Colors.white38),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24.0),
+            child: Center(
+              child: AppLottieState(
+                assetPath: 'assets/animations/lottie/empty.json',
+                width: 110,
+                height: 110,
+                fallbackIcon: Icons.calendar_today_outlined,
+                message: 'No events scheduled for this day.',
               ),
             ),
           )

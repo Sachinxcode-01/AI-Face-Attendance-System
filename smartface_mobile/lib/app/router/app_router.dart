@@ -13,9 +13,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:animated_icon/animated_icon.dart';
+import 'package:smartface_attendance/shared/widgets/smart_salomon_bottom_bar.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/design_system/ui/ui.dart'
-    show SmartBottomNav, BottomNavItemData, TabTransitionWrapper;
+    show TabTransitionWrapper;
 import 'package:smartface_attendance/app/router/route_guards.dart';
 import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/core/di/service_locator.dart';
@@ -201,9 +203,12 @@ final GoRouter appRouter = GoRouter(
           context,
           listen: false,
         ).userRole;
-        if (role == UserRole.student) return AppRoutes.studentProfilePath;
-        if (role == UserRole.teacher || role == UserRole.parent)
+        if (role == UserRole.student) {
+          return AppRoutes.studentProfilePath;
+        }
+        if (role == UserRole.teacher || role == UserRole.parent) {
           return AppRoutes.teacherProfilePath;
+        }
         return AppRoutes.adminProfilePath;
       },
     ),
@@ -743,42 +748,44 @@ class StudentShell extends StatelessWidget {
         index: navigationShell.currentIndex,
         child: navigationShell,
       ),
-      bottomNavigationBar: SmartBottomNav(
+      bottomNavigationBar: SmartSalomonBottomBar(
         currentIndex: navigationShell.currentIndex,
         onTap: navigationShell.goBranch,
         role: 'student',
-        showLabels: true,
-        isGlass: true,
-        animationEnabled: true,
         items: const [
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.home_outlined,
             activeIcon: Icons.home_rounded,
-            label: 'Home',
+            animateIcon: AnimateIcons.home,
+            title: 'Home',
             route: AppRoutes.studentHomePath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.calendar_view_week_rounded,
             activeIcon: Icons.calendar_view_week_rounded,
-            label: 'Schedule',
+            animateIcon: AnimateIcons.calendar,
+            title: 'Schedule',
             route: AppRoutes.studentTimetablePath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.qr_code_scanner_rounded,
             activeIcon: Icons.qr_code_scanner_rounded,
-            label: 'Scan',
+            animateIcon: AnimateIcons.qrCode,
+            title: 'Scan',
             route: AppRoutes.studentScanPath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.analytics_outlined,
             activeIcon: Icons.analytics_rounded,
-            label: 'Reports',
+            animateIcon: AnimateIcons.document,
+            title: 'Reports',
             route: AppRoutes.studentAttendanceHubPath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.person_outline_rounded,
             activeIcon: Icons.person_rounded,
-            label: 'Profile',
+            animateIcon: AnimateIcons.settings,
+            title: 'Profile',
             route: AppRoutes.studentProfilePath,
           ),
         ],
@@ -802,42 +809,44 @@ class TeacherShell extends StatelessWidget {
         index: navigationShell.currentIndex,
         child: navigationShell,
       ),
-      bottomNavigationBar: SmartBottomNav(
+      bottomNavigationBar: SmartSalomonBottomBar(
         currentIndex: navigationShell.currentIndex,
         onTap: navigationShell.goBranch,
         role: 'teacher',
-        showLabels: true,
-        isGlass: true,
-        animationEnabled: true,
         items: const [
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.home_outlined,
             activeIcon: Icons.home_rounded,
-            label: 'Home',
+            animateIcon: AnimateIcons.home,
+            title: 'Home',
             route: AppRoutes.teacherHomePath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.school_outlined,
             activeIcon: Icons.school_rounded,
-            label: 'Classes',
+            animateIcon: AnimateIcons.list,
+            title: 'Classes',
             route: AppRoutes.teacherFeedPath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.qr_code_rounded,
             activeIcon: Icons.qr_code_rounded,
-            label: 'Scan',
+            animateIcon: AnimateIcons.checkmarkOk,
+            title: 'Attendance',
             route: AppRoutes.teacherQrPath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.analytics_outlined,
             activeIcon: Icons.analytics_rounded,
-            label: 'Reports',
+            animateIcon: AnimateIcons.document,
+            title: 'Reports',
             route: AppRoutes.teacherStatsPath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.person_outline_rounded,
             activeIcon: Icons.person_rounded,
-            label: 'Profile',
+            animateIcon: AnimateIcons.settings,
+            title: 'Profile',
             route: AppRoutes.teacherProfilePath,
           ),
         ],
@@ -861,42 +870,44 @@ class ParentShell extends StatelessWidget {
         index: navigationShell.currentIndex,
         child: navigationShell,
       ),
-      bottomNavigationBar: SmartBottomNav(
+      bottomNavigationBar: SmartSalomonBottomBar(
         currentIndex: navigationShell.currentIndex,
         onTap: navigationShell.goBranch,
         role: 'parent',
-        showLabels: true,
-        isGlass: true,
-        animationEnabled: true,
         items: const [
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.home_outlined,
             activeIcon: Icons.home_rounded,
-            label: 'Home',
+            animateIcon: AnimateIcons.home,
+            title: 'Home',
             route: AppRoutes.parentHomePath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.event_busy_outlined,
             activeIcon: Icons.event_busy_rounded,
-            label: 'Ward',
+            animateIcon: AnimateIcons.smile,
+            title: 'Ward',
             route: AppRoutes.parentLeaveStatusPath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.analytics_outlined,
             activeIcon: Icons.analytics_rounded,
-            label: 'Reports',
+            animateIcon: AnimateIcons.document,
+            title: 'Reports',
             route: AppRoutes.parentAttendanceLogsPath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.notifications_none_rounded,
             activeIcon: Icons.notifications_rounded,
-            label: 'Alerts',
+            animateIcon: AnimateIcons.bell,
+            title: 'Alerts',
             route: AppRoutes.parentAlertsPath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.person_outline_rounded,
             activeIcon: Icons.person_rounded,
-            label: 'Profile',
+            animateIcon: AnimateIcons.settings,
+            title: 'Profile',
             route: '/parent/profile',
           ),
         ],
@@ -920,42 +931,44 @@ class AdminShell extends StatelessWidget {
         index: navigationShell.currentIndex,
         child: navigationShell,
       ),
-      bottomNavigationBar: SmartBottomNav(
+      bottomNavigationBar: SmartSalomonBottomBar(
         currentIndex: navigationShell.currentIndex,
         onTap: navigationShell.goBranch,
         role: 'admin',
-        showLabels: true,
-        isGlass: true,
-        animationEnabled: true,
         items: const [
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.home_outlined,
             activeIcon: Icons.home_rounded,
-            label: 'Home',
+            animateIcon: AnimateIcons.home,
+            title: 'Home',
             route: AppRoutes.adminHomePath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.people_alt_outlined,
             activeIcon: Icons.people_alt_rounded,
-            label: 'Users',
+            animateIcon: AnimateIcons.list,
+            title: 'Users',
             route: AppRoutes.adminApprovalsPath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.security_outlined,
             activeIcon: Icons.security_rounded,
-            label: 'Monitor',
+            animateIcon: AnimateIcons.activity,
+            title: 'Monitor',
             route: AppRoutes.adminSecurityPath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.analytics_outlined,
             activeIcon: Icons.analytics_rounded,
-            label: 'Reports',
+            animateIcon: AnimateIcons.document,
+            title: 'Reports',
             route: AppRoutes.adminAnalyticsPath,
           ),
-          BottomNavItemData(
+          SmartSalomonNavItemData(
             icon: Icons.settings_applications_outlined,
             activeIcon: Icons.settings_applications_rounded,
-            label: 'Settings',
+            animateIcon: AnimateIcons.settings,
+            title: 'Settings',
             route: AppRoutes.adminProfilePath,
           ),
         ],

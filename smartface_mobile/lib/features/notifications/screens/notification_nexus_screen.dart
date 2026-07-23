@@ -40,6 +40,7 @@ import 'dart:async';
 // Core & State Imports
 // ======================================================
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
+import 'package:smartface_attendance/core/animation/app_lottie_state.dart';
 import 'package:smartface_attendance/app/config/app_state.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 
@@ -284,25 +285,14 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.notifications_off_outlined,
-            color: Colors.white24,
-            size: 64,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Silence is Golden',
-            style: GoogleFonts.inter(fontSize: 18, color: Colors.white54),
-          ),
-          const Text(
-            'No new alerts at the moment.',
-            style: TextStyle(color: Colors.white24, fontSize: 12),
-          ),
-        ],
+    return const Center(
+      child: AppLottieState(
+        assetPath: 'assets/animations/lottie/empty.json',
+        width: 140,
+        height: 140,
+        fallbackIcon: Icons.notifications_off_outlined,
+        fallbackColor: Colors.white24,
+        message: 'Silence is Golden\nNo new alerts at the moment.',
       ),
     );
   }

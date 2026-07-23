@@ -20,8 +20,8 @@ async function runTest() {
   // Clean setup
   await User.deleteOne({ email: TEST_EMAIL });
 
-  // 1. Google Login (New User)
-  console.log("\n📡 Logging in with Google (new user) via /auth/google...");
+  // 1. Google Login (Unconfigured / Missing idToken Check)
+  console.log("\n📡 Logging in with Google (testing hardened security validation)...");
   const loginRes1 = await fetch(`${API_URL}/auth/google`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -36,41 +36,10 @@ async function runTest() {
   const data1 = await loginRes1.json();
   console.log("Response:", data1);
 
-  // Verify DB state
-  const dbUser1 = await User.findOne({ email: TEST_EMAIL });
-  if (!dbUser1) {
-    throw new Error("User was not created in the database!");
+  if (loginRes1.status !== 503 && loginRes1.status !== 400) {
+    throw new Error(`Expected status 503 or 400 for unverified Google login attempt, got ${loginRes1.status}`);
   }
-  console.log(`✅ User created successfully. avatar_url in DB: "${dbUser1.avatar_url}"`);
-  if (dbUser1.avatar_url !== MOCK_PHOTO_1) {
-    throw new Error(`Expected avatar_url to be "${MOCK_PHOTO_1}", but got "${dbUser1.avatar_url}"`);
-  }
-
-  // 2. Google Login (Existing User - with same photo, shouldn't change custom logic but let's test if it updates or preserves)
-  console.log("\n📡 Logging in with Google (existing user, empty avatar check)...");
-  // Set avatar_url to null to test sync on existing user
-  await User.updateOne({ email: TEST_EMAIL }, { $set: { avatar_url: null } });
-  
-  const loginRes2 = await fetch(`${API_URL}/auth/google`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      email: TEST_EMAIL,
-      name: "Test Google User",
-      role: "student",
-      avatar_url: MOCK_PHOTO_2
-    })
-  });
-
-  const data2 = await loginRes2.json();
-  console.log("Response:", data2);
-
-  // Verify DB state
-  const dbUser2 = await User.findOne({ email: TEST_EMAIL });
-  console.log(`✅ Existing user updated. avatar_url in DB: "${dbUser2.avatar_url}"`);
-  if (dbUser2.avatar_url !== MOCK_PHOTO_2) {
-    throw new Error(`Expected avatar_url to be synced to "${MOCK_PHOTO_2}", but got "${dbUser2.avatar_url}"`);
-  }
+  console.log("✅ Google OAuth unverified body fallback correctly rejected with status", loginRes1.status);
 
   // Cleanup
   console.log("\n🧹 Cleaning up database...");

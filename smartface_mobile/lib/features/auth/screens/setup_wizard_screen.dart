@@ -42,10 +42,15 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   int _currentPage = 0;
 
   int get _totalPages {
-    if (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer')
+    if (_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') {
       return 5;
-    if (_role == 'admin') return 3;
-    if (_role == 'parent') return 3;
+    }
+    if (_role == 'admin') {
+      return 3;
+    }
+    if (_role == 'parent') {
+      return 3;
+    }
     return 5; // student
   }
 

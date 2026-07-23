@@ -1,18 +1,22 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:animated_icon/animated_icon.dart';
+import '../../shared/widgets/modern_animated_icon.dart';
 import 'app_colors.dart';
 
 /// The model representing a single bottom navigation item.
 class BottomNavItemData {
   final IconData icon;
   final IconData? activeIcon;
+  final AnimateIcons? animateIcon;
   final String label;
   final String route;
 
   const BottomNavItemData({
     required this.icon,
     this.activeIcon,
+    this.animateIcon,
     required this.label,
     required this.route,
   });
@@ -24,6 +28,7 @@ class SmartNavItem extends BottomNavItemData {
   const SmartNavItem({
     required super.icon,
     super.activeIcon,
+    super.animateIcon,
     required super.label,
     super.route = '',
   });
@@ -328,25 +333,38 @@ class _NavItemState extends State<_NavItem>
                             ]
                           : null,
                     ),
-                    child: Icon(
-                      widget.selected
-                          ? (widget.item.activeIcon ?? widget.item.icon)
-                          : widget.item.icon,
-                      size: widget.hideText ? 24 : 22,
-                      color: widget.selected
-                          ? widget.activeColor
-                          : widget.inactiveColor,
-                      shadows: widget.selected
-                          ? [
-                              Shadow(
-                                color: widget.activeColor.withValues(
-                                  alpha: 0.3,
-                                ),
-                                blurRadius: 4,
-                              ),
-                            ]
-                          : null,
-                    ),
+                    child: widget.item.animateIcon != null
+                        ? ModernAnimatedIcon(
+                            animateIcon: widget.item.animateIcon!,
+                            fallbackIcon: widget.selected
+                                ? (widget.item.activeIcon ?? widget.item.icon)
+                                : widget.item.icon,
+                            size: widget.hideText ? 24 : 22,
+                            activeColor: widget.activeColor,
+                            inactiveColor: widget.inactiveColor,
+                            isActive: widget.selected,
+                            iconType: IconType.animatedOnTap,
+                            semanticLabel: widget.item.label,
+                          )
+                        : Icon(
+                            widget.selected
+                                ? (widget.item.activeIcon ?? widget.item.icon)
+                                : widget.item.icon,
+                            size: widget.hideText ? 24 : 22,
+                            color: widget.selected
+                                ? widget.activeColor
+                                : widget.inactiveColor,
+                            shadows: widget.selected
+                                ? [
+                                    Shadow(
+                                      color: widget.activeColor.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                      blurRadius: 4,
+                                    ),
+                                  ]
+                                : null,
+                          ),
                   ),
                 ),
               ),

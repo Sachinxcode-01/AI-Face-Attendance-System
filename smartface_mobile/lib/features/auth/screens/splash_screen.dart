@@ -33,6 +33,7 @@ import 'package:provider/provider.dart';
 // ======================================================
 // Core & State Imports
 // ======================================================
+import 'package:smartface_attendance/core/animation/app_animated_heading.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
 import 'package:smartface_attendance/core/di/service_locator.dart';
@@ -381,53 +382,27 @@ class _SplashScreenState extends State<SplashScreen> {
           // --- BRAND TEXT ---
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child:
-                Text(
-                      'Smart Attendance AI',
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.outfit(
-                        fontSize: titleFontSize,
-                        fontWeight: FontWeight.w800, // weight: 700-800
-                        letterSpacing: 0.5, // letter spacing: 0.3-0.8
-                        color: titleColor,
-                        shadows: [
-                          Shadow(
-                            color: shadowColor.withValues(
-                              alpha: isDark ? 0.6 : 0.3,
-                            ),
-                            blurRadius: isDark ? 14 : 8,
-                            offset: const Offset(0, 2),
-                          ),
-                          if (isDark)
-                            BoxShadow(
-                              color: const Color(
-                                0xFF4F7BFF,
-                              ).withValues(alpha: 0.3),
-                              blurRadius: 20,
-                            ),
-                        ],
-                      ),
-                    )
-                    .animate()
-                    .fadeIn(
-                      delay: 400.ms,
-                      duration: 800.ms,
-                      curve: Curves.easeOutCubic,
-                    )
-                    .slideY(
-                      begin: 0.15,
-                      end: 0,
-                      duration: 800.ms,
-                      curve: Curves.easeOutCubic,
-                    )
-                    .scale(
-                      begin: const Offset(0.96, 0.96),
-                      end: const Offset(1.0, 1.0),
-                      duration: 800.ms,
-                      curve: Curves.easeOutCubic,
+            child: AppAnimatedHeading(
+              text: 'Smart Attendance AI',
+              style: GoogleFonts.outfit(
+                fontSize: titleFontSize,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+                color: titleColor,
+                shadows: [
+                  Shadow(
+                    color: shadowColor.withValues(alpha: isDark ? 0.6 : 0.3),
+                    blurRadius: isDark ? 14 : 8,
+                    offset: const Offset(0, 2),
+                  ),
+                  if (isDark)
+                    BoxShadow(
+                      color: const Color(0xFF4F7BFF).withValues(alpha: 0.3),
+                      blurRadius: 20,
                     ),
+                ],
+              ),
+            ),
           ),
 
           const SizedBox(height: 12),

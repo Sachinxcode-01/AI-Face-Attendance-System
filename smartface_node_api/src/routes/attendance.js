@@ -176,35 +176,49 @@ router.post('/mark', authenticate, async (req, res) => {
   }
 });
 
+// In-memory rate-limiter and cooldown tracker for face verification attempts
+const faceAttemptMap = new Map();
+
+const checkFaceRateLimit = (userEmail) => {
+  const now = Date.now();
+  const userStats = faceAttemptMap.get(userEmail) || { attempts: [], failures: [] };
+
+  userStats.attempts = userStats.attempts.filter(t => now - t < 15 * 60 * 1000);
+  userStats.failures = userStats.failures.filter(t => now - t < 2 * 60 * 1000);
+
+  if (userStats.failures.length >= 3) {
+    return { allowed: false, message: "Too many failed verification attempts. Cooldown active for 2 minutes." };
+  }
+
+  if (userStats.attempts.length >= 5) {
+    return { allowed: false, message: "Face verification rate limit exceeded. Please try again later." };
+  }
+
+  userStats.attempts.push(now);
+  faceAttemptMap.set(userEmail, userStats);
+  return { allowed: true };
+};
+
+const recordFaceFailure = (userEmail) => {
+  const now = Date.now();
+  const userStats = faceAttemptMap.get(userEmail) || { attempts: [now], failures: [] };
+  userStats.failures.push(now);
+  faceAttemptMap.set(userEmail, userStats);
+};
+
 // ─── POST /attendance/mark/face ───────────────────────────────────
-router.post('/mark/face', upload.single('image'), async (req, res) => {
+router.post('/mark/face', authenticate, requireRole(['student', 'admin']), upload.single('image'), async (req, res) => {
   try {
     // 1. If an image file is uploaded (Flutter Mobile Flow)
     if (req.file && req.file.buffer) {
-      // Authenticate JWT
-      const authHeader = req.headers['authorization'];
-      let userEmail = null;
-      let userRole = null;
+      const student_email = req.userEmail;
 
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        const tokenStr = authHeader.substring(7);
-        const AuthService = require('../services/authService');
-        const payload = AuthService.decodeToken(tokenStr);
-        if (payload && payload.sub) {
-          userEmail = payload.sub;
-          userRole = payload.role || 'student';
-        }
+      // Rate limit check per user
+      const rateCheck = checkFaceRateLimit(student_email);
+      if (!rateCheck.allowed) {
+        return res.status(429).json({ detail: rateCheck.message });
       }
 
-      if (!userEmail) {
-        return res.status(401).json({ detail: "Authentication required for face attendance" });
-      }
-
-      if (userRole !== 'student' && userRole !== 'admin') {
-        return res.status(403).json({ detail: "Only students can mark face attendance" });
-      }
-
-      const student_email = userEmail;
       const { session_id } = req.body;
 
       // Validate session
@@ -237,6 +251,22 @@ router.post('/mark/face', upload.single('image'), async (req, res) => {
       // Forward to Python FastAPI AI microservice
       const aiResult = await faceAiService.verifyFace(req.file.buffer, student_email);
 
+      if (aiResult.status === 400) {
+        return res.status(400).json({ detail: "Invalid or malformed image payload", matched: false });
+      }
+
+      if (aiResult.status === 413) {
+        return res.status(413).json({ detail: "Uploaded image exceeds maximum size of 5MB", matched: false });
+      }
+
+      if (aiResult.status === 415) {
+        return res.status(415).json({ detail: "Unsupported image file format", matched: false });
+      }
+
+      if (aiResult.status === 429) {
+        return res.status(429).json({ detail: "Face verification rate limit exceeded. Please try again shortly.", matched: false });
+      }
+
       if (aiResult.status === 503) {
         return res.status(503).json({ detail: "AI face recognition service is currently unavailable" });
       }
@@ -245,9 +275,10 @@ router.post('/mark/face', upload.single('image'), async (req, res) => {
         return res.status(504).json({ detail: "AI face recognition request timed out" });
       }
 
-      if (!aiResult.success || !aiResult.matched) {
-        return res.status(400).json({
-          detail: aiResult.message || "Face identity verification failed",
+      if (aiResult.status === 422 || !aiResult.success || !aiResult.matched) {
+        recordFaceFailure(student_email);
+        return res.status(422).json({
+          detail: "Face verification failed",
           matched: false,
           confidence: aiResult.confidence || 0
         });

@@ -1,5 +1,6 @@
 /**
  * Service handling secure communication with the Python FastAPI face verification microservice.
+ * Enforces strict HTTP status code handling and privacy guarantees.
  */
 
 class FaceAiService {
@@ -22,6 +23,7 @@ class FaceAiService {
         success: false,
         matched: false,
         confidence: 0,
+        status: 400,
         message: 'Empty image buffer provided'
       };
     }
@@ -49,7 +51,53 @@ class FaceAiService {
       clearTimeout(timer);
 
       if (response.status === 401) {
-        throw new Error('AI Service authentication failed: invalid internal token');
+        return {
+          success: false,
+          matched: false,
+          confidence: 0,
+          status: 500,
+          message: 'AI Service configuration error'
+        };
+      }
+
+      if (response.status === 413) {
+        return {
+          success: false,
+          matched: false,
+          confidence: 0,
+          status: 413,
+          message: 'Uploaded image exceeds maximum size of 5MB'
+        };
+      }
+
+      if (response.status === 415) {
+        return {
+          success: false,
+          matched: false,
+          confidence: 0,
+          status: 415,
+          message: 'Unsupported image file format'
+        };
+      }
+
+      if (response.status === 422) {
+        return {
+          success: false,
+          matched: false,
+          confidence: 0,
+          status: 422,
+          message: 'Face verification failed'
+        };
+      }
+
+      if (response.status === 429) {
+        return {
+          success: false,
+          matched: false,
+          confidence: 0,
+          status: 429,
+          message: 'Face verification rate limit exceeded'
+        };
       }
 
       if (response.status === 504) {
@@ -58,7 +106,7 @@ class FaceAiService {
           matched: false,
           confidence: 0,
           status: 504,
-          message: 'AI face recognition timed out'
+          message: 'AI face recognition request timed out'
         };
       }
 
@@ -70,7 +118,7 @@ class FaceAiService {
           matched: false,
           confidence: 0,
           status: response.status,
-          message: data.detail || 'Face verification service error'
+          message: data.detail || 'Face verification failed'
         };
       }
 
@@ -78,7 +126,7 @@ class FaceAiService {
         success: data.success ?? true,
         matched: data.matched ?? false,
         confidence: data.confidence ?? 0.0,
-        student_email: data.student_email,
+        status: 200,
         message: data.message || 'Face verification complete'
       };
 
@@ -95,13 +143,12 @@ class FaceAiService {
         };
       }
 
-      // Handle connection errors
       return {
         success: false,
         matched: false,
         confidence: 0,
         status: 503,
-        message: `AI service unavailable: ${error.message}`
+        message: 'AI face recognition service is currently unavailable'
       };
     }
   }

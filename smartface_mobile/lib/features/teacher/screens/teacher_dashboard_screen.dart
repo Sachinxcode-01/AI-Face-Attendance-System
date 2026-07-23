@@ -109,11 +109,12 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   // ── Data loading (teacher-only endpoints) ─────────────────────────────────
   Future<void> _loadData({bool silent = false}) async {
     if (!mounted) return;
-    if (!silent)
+    if (!silent) {
       setState(() {
         _isLoading = true;
         _error = null;
       });
+    }
 
     try {
       final session = context.read<SessionManager>();

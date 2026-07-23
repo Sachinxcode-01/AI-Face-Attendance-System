@@ -108,13 +108,40 @@ class AttendanceService {
       );
 
       final httpClient = client ?? http.Client();
-      final streamedResponse = await httpClient.send(request).timeout(
-        const Duration(seconds: 20),
-      );
+      final streamedResponse = await httpClient
+          .send(request)
+          .timeout(const Duration(seconds: 20));
 
       final response = await http.Response.fromStream(streamedResponse);
       if (client == null) {
         httpClient.close();
+      }
+
+      if (response.statusCode == 400) {
+        return {
+          'status': 'invalid_image',
+          'matched': false,
+          'detail': 'Invalid image payload',
+          'message': 'Invalid image payload',
+        };
+      }
+
+      if (response.statusCode == 401) {
+        return {
+          'status': 'unauthorized',
+          'matched': false,
+          'detail': 'Authentication required for face attendance',
+          'message': 'Authentication required',
+        };
+      }
+
+      if (response.statusCode == 403) {
+        return {
+          'status': 'forbidden',
+          'matched': false,
+          'detail': 'Only students can mark face attendance',
+          'message': 'Access denied',
+        };
       }
 
       if (response.statusCode == 409) {
@@ -123,6 +150,43 @@ class AttendanceService {
           'matched': false,
           'detail': 'Attendance already marked for this session',
           'message': 'Attendance already marked for this session',
+        };
+      }
+
+      if (response.statusCode == 413) {
+        return {
+          'status': 'payload_too_large',
+          'matched': false,
+          'detail': 'Uploaded image is too large (max 5MB)',
+          'message': 'Uploaded image is too large (max 5MB)',
+        };
+      }
+
+      if (response.statusCode == 415) {
+        return {
+          'status': 'unsupported_type',
+          'matched': false,
+          'detail': 'Unsupported image format',
+          'message': 'Unsupported image format',
+        };
+      }
+
+      if (response.statusCode == 422) {
+        return {
+          'status': 'mismatch',
+          'matched': false,
+          'detail': 'Face verification failed',
+          'message': 'Face verification failed',
+        };
+      }
+
+      if (response.statusCode == 429) {
+        return {
+          'status': 'rate_limited',
+          'matched': false,
+          'detail':
+              'Too many verification attempts. Please wait a few minutes.',
+          'message': 'Too many verification attempts',
         };
       }
 

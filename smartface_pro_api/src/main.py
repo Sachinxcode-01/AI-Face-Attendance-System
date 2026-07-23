@@ -290,6 +290,22 @@ async def create_notification(user_id: str, title: str, message: str, type: str,
 
 # ── FastAPI lifespan (startup + shutdown) ────────────────────────────────────
 async def seed_users():
+    app_env = os.getenv("APP_ENV", os.getenv("NODE_ENV", "development")).lower()
+    enable_demo_seed = os.getenv("ENABLE_DEMO_SEED", "false").lower() == "true"
+    demo_emails = [
+        "student@smartface.pro", "bob_student@smartface.pro",
+        "parent@smartface.pro", "teacher@smartface.pro",
+        "admin@smartface.pro", "superadmin@smartface.pro"
+    ]
+
+    if app_env == "production" or not enable_demo_seed:
+        # Disable/deactivate legacy demo seed accounts if present in production
+        await users_collection.update_many(
+            {"email": {"$in": demo_emails}},
+            {"$set": {"is_active": False, "requires_password_reset": True}}
+        )
+        return
+
     try:
         # Seed Alice Cooper
         alice = await users_collection.find_one({"email": "student@smartface.pro"})
@@ -525,8 +541,7 @@ async def register(user: UserCreate, background_tasks: BackgroundTasks):
         upsert=True
     )
     
-    logger.info(f"Generated Registration OTP for {user.email}: {otp}")
-    print(f"Generated Registration OTP for {user.email}: {otp}")
+    logger.info(f'{{"event": "otp_generated", "recipient": "{user.email[:2]}***@{user.email.split("@")[-1]}", "purpose": "registration"}}')
     
     # Audit log
     await log_audit_action(user.email, "Register (Pending)", f"Pending account created for {user.full_name} with role {user.role}")
@@ -550,7 +565,7 @@ async def send_login_otp(request: OTPRequest, background_tasks: BackgroundTasks)
 
     user = await users_collection.find_one({"email": email})
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        return {"success": True, "message": "If the account exists, a verification code has been sent."}
     
     otp = "".join([str(random.randint(0, 9)) for _ in range(6)])
     # Save OTP with expiry (5 minutes)
@@ -561,12 +576,11 @@ async def send_login_otp(request: OTPRequest, background_tasks: BackgroundTasks)
         upsert=True
     )
     
-    logger.info(f"Generated OTP for {email}: {otp}")
-    print(f"Generated OTP for {email}: {otp}")
+    logger.info(f'{{"event": "otp_generated", "recipient": "{email[:2]}***@{email.split("@")[-1]}", "purpose": "login"}}')
     
     background_tasks.add_task(EmailService.send_otp, email, otp)
     await log_audit_action(email, "Send OTP", "OTP code sent to email")
-    return {"message": "OTP sent successfully"}
+    return {"success": True, "message": "If the account exists, a verification code has been sent."}
 
 @app.post("/auth/verify-otp", response_model=Token)
 @app.post("/auth/login-otp/verify", response_model=Token)
@@ -928,22 +942,22 @@ async def get_system_db_stats(current_user: str = Depends(AuthService.get_curren
 @app.post("/auth/forgot-password")
 async def forgot_password(email_data: dict, background_tasks: BackgroundTasks):
     email = email_data.get("email")
-    user = await users_collection.find_one({"email": email})
-    if user:
-        # Generate a real random 6-digit OTP
-        otp = "".join([str(random.randint(0, 9)) for _ in range(6)])
-        expiry = datetime.utcnow() + timedelta(minutes=10)
-        await otps_collection.update_one(
-            {"email": email},
-            {"$set": {"otp": otp, "expiry": expiry, "type": "password_reset"}},
-            upsert=True
-        )
+    if email:
+        user = await users_collection.find_one({"email": email})
+        if user:
+            # Generate a real random 6-digit OTP
+            otp = "".join([str(random.randint(0, 9)) for _ in range(6)])
+            expiry = datetime.utcnow() + timedelta(minutes=10)
+            await otps_collection.update_one(
+                {"email": email},
+                {"$set": {"otp": otp, "expiry": expiry, "type": "password_reset"}},
+                upsert=True
+            )
+            
+            logger.info(f'{{"event": "otp_generated", "recipient": "{email[:2]}***@{email.split("@")[-1]}", "purpose": "password_reset"}}')
+            background_tasks.add_task(EmailService.send_otp, email, otp)
         
-        logger.info(f"Generated Password Reset OTP for {email}: {otp}")
-        print(f"Generated Password Reset OTP for {email}: {otp}")
-        background_tasks.add_task(EmailService.send_otp, email, otp)
-        
-    return {"message": "OTP sent to email"}
+    return {"success": True, "message": "If the account exists, a verification code has been sent."}
 
 @app.post("/security/intruder-alert")
 async def intruder_alert(data: IntruderAlert, background_tasks: BackgroundTasks):
@@ -993,17 +1007,35 @@ async def reset_password(data: dict):
     otp = data.get("otp")
     new_password = data.get("new_password")
     
+    if not email or not otp or not new_password:
+        raise HTTPException(status_code=400, detail="email, otp, and new_password are required")
+
+    # Password Policy Check
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long.")
+    has_upper = any(c.isupper() for c in new_password)
+    has_lower = any(c.islower() for c in new_password)
+    has_digit = any(c.isdigit() for c in new_password)
+    has_special = any(not c.isalnum() for c in new_password)
+    if not (has_upper and has_lower and has_digit and has_special):
+        raise HTTPException(status_code=400, detail="Password must contain uppercase, lowercase, numbers, and special characters.")
+
+    email_prefix = email.split('@')[0].lower() if '@' in email else ""
+    weak_patterns = ['password', '12345', 'qwerty', 'smartface', email_prefix]
+    if any(p in new_password.lower() for p in weak_patterns if p):
+        raise HTTPException(status_code=400, detail="Weak or common password pattern detected. Please use a stronger password.")
+
     user = await users_collection.find_one({"email": email})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-        
+
     otp_record = await otps_collection.find_one({"email": email, "type": "password_reset"})
     if not otp_record or otp_record["otp"] != otp:
         raise HTTPException(status_code=401, detail="Invalid OTP")
-        
+
     if datetime.utcnow() > otp_record["expiry"]:
         raise HTTPException(status_code=401, detail="OTP expired")
-        
+
     # Valid OTP, delete it and update password
     await otps_collection.delete_one({"email": email, "type": "password_reset"})
     hashed_password = AuthService.get_password_hash(new_password)
@@ -1011,20 +1043,80 @@ async def reset_password(data: dict):
         {"email": email}, 
         {"$set": {"password": hashed_password}}
     )
+
+    # Invalidate active sessions after reset
+    await login_sessions_collection.update_many(
+        {"user_email": email},
+        {"$set": {"is_active": False, "last_active": datetime.utcnow()}}
+    )
+
     return {"message": "Password updated successfully"}
 
+FORBIDDEN_FIELDS = {
+    "role", "is_admin", "is_active", "is_locked", "email_verified",
+    "is_email_verified", "biometric_registered", "permissions",
+    "session_data", "audit_fields", "password", "password_hash",
+    "created_at", "security_flags", "_id"
+}
+
+ALLOWED_FIELDS_BY_ROLE = {
+    "student": {
+        "name", "full_name", "roll_no", "student_id", "usn", "branch",
+        "department", "semester", "section", "phone", "phone_number",
+        "profile_preferences", "wizard_step", "wizardStep", "avatar_url"
+    },
+    "teacher": {
+        "name", "full_name", "department", "employee_id", "subjects",
+        "phone", "phone_number", "wizard_step", "wizardStep", "avatar_url"
+    },
+    "parent": {
+        "name", "full_name", "phone", "phone_number", "child_email",
+        "child_emails", "linked_children", "wizard_step", "wizardStep", "avatar_url"
+    },
+    "admin": {
+        "name", "full_name", "phone", "phone_number", "department", "avatar_url"
+    },
+    "super_admin": {
+        "name", "full_name", "phone", "phone_number", "department", "avatar_url"
+    }
+}
+
+def validate_role_fields(role: str, payload_keys: set):
+    for key in payload_keys:
+        if key in FORBIDDEN_FIELDS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Field '{key}' is prohibited from modification"
+            )
+    
+    role_clean = (role or "student").lower()
+    allowed = ALLOWED_FIELDS_BY_ROLE.get(role_clean, ALLOWED_FIELDS_BY_ROLE["student"])
+    server_keys = {"setup_completed", "profile_completed", "wizard_step"}
+    
+    unrecognized = payload_keys - allowed - server_keys
+    if unrecognized:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unrecognized or prohibited fields for role '{role_clean}': {', '.join(unrecognized)}"
+        )
+
 @app.patch("/setup/complete")
+@app.post("/setup/complete")
 async def setup_complete(data: dict, current_user: str = Depends(AuthService.get_current_user)):
     user = await users_collection.find_one({"email": current_user})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
-    data["setup_completed"] = True
-    data["profile_completed"] = True
-    data["wizard_step"] = 0
+    user_role = user.get("role", "student")
+    validate_role_fields(user_role, set(data.keys()))
+
+    update_payload = {k: v for k, v in data.items() if k not in FORBIDDEN_FIELDS}
+    update_payload["setup_completed"] = True
+    update_payload["profile_completed"] = True
+    update_payload["wizard_step"] = 0
     await users_collection.update_one(
         {"email": current_user},
-        {"$set": data}
+        {"$set": update_payload}
     )
     await log_audit_action(current_user, "Complete Setup", "Profile setup completed successfully")
     return {"message": "Setup completed successfully"}
@@ -1392,6 +1484,8 @@ async def complete_profile(data: CompleteProfileRequest, current_user: str = Dep
         raise HTTPException(status_code=404, detail="User not found")
         
     update_data = {k: v for k, v in data.dict().items() if v is not None}
+    validate_role_fields(user.get("role", "student"), set(update_data.keys()))
+    
     await users_collection.update_one(
         {"email": current_user},
         {"$set": update_data}
@@ -1826,28 +1920,24 @@ async def get_leave_balance(email: str):
     }
 
 @app.get("/leave/analytics")
-async def get_leave_analytics():
+async def get_leave_analytics(current_user: str = Depends(AuthService.get_current_user)):
+    user = await users_collection.find_one({"email": current_user})
+    if not user or user.get("role") not in ["admin", "super_admin", "hod", "principal"]:
+        raise HTTPException(status_code=403, detail="Only administrators and HODs can view leave analytics")
+
     total = await db.leaves.count_documents({})
     approved = await db.leaves.count_documents({"status": "Approved"})
-    approval_rate = approved / total if total > 0 else 0.85
+    approval_rate = (approved / total) if total > 0 else 0.0
     
+    dept_pipeline = [{"$group": {"_id": "$department", "count": {"$sum": 1}}}]
+    dept_results = await db.leaves.aggregate(dept_pipeline).to_list(100)
+    dept_stats = {item["_id"] or "General": round((item["count"] / total) * 100, 1) if total > 0 else 0.0 for item in dept_results}
+
     return {
         "total_requests": total,
-        "approval_rate": approval_rate,
-        "department_statistics": {
-            "CSE": 45.0,
-            "ECE": 25.0,
-            "ME": 15.0,
-            "Civil": 15.0
-        },
-        "monthly_trends": {
-            "Jan": 5,
-            "Feb": 8,
-            "Mar": 12,
-            "Apr": 15,
-            "May": 22,
-            "Jun": 18
-        }
+        "approval_rate": round(approval_rate, 4),
+        "department_statistics": dept_stats,
+        "monthly_trends": {}
     }
 
 # Notification Endpoints
@@ -2057,7 +2147,11 @@ async def get_parent_child_attendance_logs(email: str, current_user: str = Depen
 
 
 @app.get("/admin/stats")
-async def get_admin_stats():
+async def get_admin_stats(current_user: str = Depends(AuthService.get_current_user)):
+    user = await users_collection.find_one({"email": current_user})
+    if not user or user.get("role") not in ["admin", "super_admin", "hod", "principal"]:
+        raise HTTPException(status_code=403, detail="Only administrators can access admin stats")
+        
     try:
         total_students = await db.users.count_documents({"role": "student"})
         total_teachers = await db.users.count_documents({"role": "teacher"})
@@ -2070,14 +2164,14 @@ async def get_admin_stats():
         if total_students > 0:
             attendance_percentage = f"{min(int((attendance_today_count / total_students) * 100), 100)}%"
         else:
-            attendance_percentage = "89%"
+            attendance_percentage = "0%"
             
         intruder_alerts = await db.security_logs.count_documents({})
         pending_leaves = await db.leaves.count_documents({"status": "Pending"})
         
         return {
-            "total_students": str(max(total_students, 1247)),
-            "total_teachers": str(max(total_teachers, 86)),
+            "total_students": str(total_students),
+            "total_teachers": str(total_teachers),
             "active_sessions": str(active_sessions),
             "attendance_today": attendance_percentage,
             "intruder_alerts": str(intruder_alerts),
@@ -2086,10 +2180,10 @@ async def get_admin_stats():
     except Exception as e:
         print(f"Error in get_admin_stats: {e}")
         return {
-            "total_students": "1247",
-            "total_teachers": "86",
+            "total_students": "0",
+            "total_teachers": "0",
             "active_sessions": "0",
-            "attendance_today": "89%",
+            "attendance_today": "0%",
             "intruder_alerts": "0",
             "pending_leaves": "0"
         }
@@ -2119,8 +2213,12 @@ async def get_ai_analysis(student_id: str):
     return {"analysis": analysis}
 
 @app.get("/admin/activity-log")
-async def get_activity_log():
+async def get_activity_log(current_user: str = Depends(AuthService.get_current_user)):
     """Returns a unified, chronological activity feed for the admin dashboard."""
+    user = await users_collection.find_one({"email": current_user})
+    if not user or user.get("role") not in ["admin", "super_admin", "hod", "principal"]:
+        raise HTTPException(status_code=403, detail="Only administrators can view activity logs")
+
     try:
         events = []
 

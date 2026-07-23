@@ -13,7 +13,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:smartface_attendance/shared/widgets/smart_charts.dart';
+import 'package:smartface_attendance/shared/widgets/premium_carousel.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart'
     hide AttendanceRing;
 import 'package:smartface_attendance/shared/widgets/attendance_ring.dart';
@@ -348,9 +349,11 @@ class PersonalInsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (insights.isEmpty) return const SizedBox.shrink();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return ModernDashboardCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       borderColor: Colors.white.withValues(alpha: 0.05),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,41 +367,59 @@ class PersonalInsightCard extends StatelessWidget {
               letterSpacing: 1.5,
             ),
           ),
-          const SizedBox(height: 16),
-          ...List.generate(insights.length, (index) {
-            final insight = insights[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: insight.color.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: insight.color.withValues(alpha: 0.2),
+          const SizedBox(height: 12),
+          PremiumCarousel<PersonalInsight>(
+            items: insights,
+            height: 72.0,
+            viewportFraction: 0.95,
+            autoPlay: true,
+            showIndicators: true,
+            semanticLabel: 'Personal Insights Carousel',
+            itemBuilder: (context, insight, index) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF19213D)
+                      : const Color(0xFFF4F6FC),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: insight.color.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(insight.icon, color: insight.color, size: 16),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        insight.text,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: isDark
+                              ? Colors.white70
+                              : const Color(0xFF1B2C56),
+                        ),
                       ),
                     ),
-                    child: Icon(insight.icon, color: insight.color, size: 16),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      insight.text,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: isDark
-                            ? Colors.white70
-                            : const Color(0xFF1B2C56),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+                  ],
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -504,60 +525,14 @@ class _TrendChartState extends State<TrendChart> {
       return const Center(child: Text('No trend data available'));
     }
 
-    return BarChart(
-      BarChartData(
-        maxY: 7,
-        borderData: FlBorderData(show: false),
-        gridData: const FlGridData(show: false),
-        titlesData: FlTitlesData(
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          leftTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (val, meta) {
-                final idx = val.toInt();
-                if (idx < 0 || idx >= trends.length) {
-                  return const SizedBox.shrink();
-                }
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    trends[idx]['week'] ?? '',
-                    style: const TextStyle(
-                      color: Color(0xFF7F8CA4),
-                      fontSize: 10,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        barGroups: List.generate(trends.length, (index) {
-          final double val = (trends[index]['present'] as num? ?? 0.0)
-              .toDouble();
-          return BarChartGroupData(
-            x: index,
-            barRods: [
-              BarChartRodData(
-                toY: val,
-                color: const Color(0xFF3559E0),
-                width: 12,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ],
-          );
-        }),
-      ),
-    );
+    final subjectsData = trends.map((t) {
+      final String label = t['week']?.toString() ?? t['day']?.toString() ?? '';
+      final double val = ((t['present'] ?? t['percentage'] ?? 0) as num)
+          .toDouble();
+      return ChartDataPoint(label, val);
+    }).toList();
+
+    return SubjectBarChart(subjectsData: subjectsData);
   }
 
   Widget _buildLineChart() {
@@ -566,75 +541,14 @@ class _TrendChartState extends State<TrendChart> {
       return const Center(child: Text('No trend data available'));
     }
 
-    return LineChart(
-      LineChartData(
-        minY: 50,
-        maxY: 100,
-        borderData: FlBorderData(show: false),
-        gridData: const FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          horizontalInterval: 10,
-        ),
-        titlesData: FlTitlesData(
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 28,
-              getTitlesWidget: (val, meta) => Text(
-                '${val.toInt()}',
-                style: const TextStyle(color: Color(0xFF7F8CA4), fontSize: 10),
-              ),
-            ),
-          ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (val, meta) {
-                final idx = val.toInt();
-                if (idx < 0 || idx >= trends.length) {
-                  return const SizedBox.shrink();
-                }
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    trends[idx]['month'] ?? '',
-                    style: const TextStyle(
-                      color: Color(0xFF7F8CA4),
-                      fontSize: 10,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        lineBarsData: [
-          LineChartBarData(
-            isCurved: true,
-            color: const Color(0xFF3559E0),
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: const FlDotData(show: true),
-            belowBarData: BarAreaData(
-              show: true,
-              color: const Color(0xFF3559E0).withValues(alpha: 0.1),
-            ),
-            spots: List.generate(trends.length, (index) {
-              final double val = (trends[index]['percentage'] as num? ?? 0.0)
-                  .toDouble();
-              return FlSpot(index.toDouble(), val);
-            }),
-          ),
-        ],
-      ),
-    );
+    final dataPoints = trends.map((t) {
+      final String month = t['month']?.toString() ?? '';
+      final double val = ((t['rate'] ?? t['percentage'] ?? 80) as num)
+          .toDouble();
+      return ChartDataPoint(month, val);
+    }).toList();
+
+    return AttendanceTrendChart(dataPoints: dataPoints);
   }
 }
 

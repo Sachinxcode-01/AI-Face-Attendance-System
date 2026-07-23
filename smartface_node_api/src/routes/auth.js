@@ -235,7 +235,10 @@ router.post('/login-otp/send', limitOtpSend, async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ detail: "User not found" });
+      return res.json({
+        success: true,
+        message: "If the account exists, a verification code has been sent."
+      });
     }
 
     // OTP Resend Cooldown (60 seconds)
@@ -257,7 +260,7 @@ router.post('/login-otp/send', limitOtpSend, async (req, res) => {
       { upsert: true }
     );
 
-    console.log(`Generated login OTP for email index hash`); // do not expose email or OTP in production logs
+    console.log(JSON.stringify({ event: "otp_generated", recipient: email ? `${email[0]}***@${email.split('@')[1] || ''}` : 'masked', purpose: "login" }));
 
     // Send OTP email
     const emailSent = await EmailService.sendOtp(email, otpVal, 'login');
@@ -274,7 +277,7 @@ router.post('/login-otp/send', limitOtpSend, async (req, res) => {
 
     res.json({
       success: true,
-      message: "OTP sent successfully"
+      message: "If the account exists, a verification code has been sent."
     });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -402,67 +405,75 @@ router.post(['/login-password', '/login'], limitLoginPassword, async (req, res) 
 // ─── POST /auth/google ───────────────────────────────────────────
 router.post('/google', async (req, res) => {
   try {
-    let { email, name, role, avatar_url, idToken } = req.body;
-
+    const { idToken, role: requestedRole } = req.body;
     const googleClientId = process.env.GOOGLE_CLIENT_ID;
-    // Verify Google ID Token if present and client ID is configured
-    if (idToken && googleClientId && googleClientId !== 'YOUR_GOOGLE_CLIENT_ID' && googleClientId !== 'your_google_client_id' && googleClientId !== 'your_production_google_client_id_here') {
-      try {
-        const { google } = require('googleapis');
-        const client = new google.auth.OAuth2(googleClientId);
-        const ticket = await client.verifyIdToken({
-          idToken: idToken,
-          audience: googleClientId,
-        });
-        const payload = ticket.getPayload();
-        email = payload.email;
-        name = payload.name;
-        avatar_url = payload.picture;
-      } catch (err) {
-        console.error("Google ID Token verification failed:", err);
-        return res.status(401).json({ detail: "Google ID Token verification failed: " + err.message });
+
+    if (!googleClientId || googleClientId.includes('YOUR_') || googleClientId.includes('your_')) {
+      return res.status(503).json({
+        success: false,
+        detail: "Google OAuth is unconfigured on the server."
+      });
+    }
+
+    if (!idToken) {
+      return res.status(400).json({ detail: "Google idToken is required" });
+    }
+
+    let verifiedEmail = null;
+    let verifiedName = null;
+    let verifiedPicture = null;
+
+    try {
+      const { google } = require('googleapis');
+      const client = new google.auth.OAuth2(googleClientId);
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: googleClientId,
+      });
+      const payload = ticket.getPayload();
+
+      if (!payload || !payload.email || !payload.email_verified) {
+        return res.status(401).json({ detail: "Google authentication failed: unverified email" });
       }
+
+      // Verify issuer
+      const validIssuers = ['accounts.google.com', 'https://accounts.google.com'];
+      if (!validIssuers.includes(payload.iss)) {
+        return res.status(401).json({ detail: "Invalid Google token issuer" });
+      }
+
+      verifiedEmail = payload.email.toLowerCase();
+      verifiedName = payload.name;
+      verifiedPicture = payload.picture;
+    } catch (err) {
+      console.error("Google ID Token verification error:", err);
+      return res.status(401).json({ detail: "Google token verification failed: " + err.message });
     }
 
-    if (!email) {
-      return res.status(400).json({ detail: "Email is required" });
-    }
-
-    let user = await User.findOne({ email });
-    let biometricRegistered = false;
-    let userRole = role ? role.toLowerCase() : 'student';
+    let user = await User.findOne({ email: verifiedEmail });
+    let userRole = requestedRole ? requestedRole.toLowerCase() : 'student';
 
     if (!user) {
       user = new User({
-        email,
-        full_name: name || 'Google User',
-        role: userRole,
+        email: verifiedEmail,
+        full_name: verifiedName || 'Google User',
+        role: (userRole === 'admin' || userRole === 'super_admin') ? 'student' : userRole,
         biometric_registered: false,
-        avatar_url: avatar_url || null
+        avatar_url: verifiedPicture || null
       });
       await user.save();
-      // Send Welcome Email in background
-      trackJob(EmailService.sendRegistrationSuccess(email, name || 'Google User').catch(console.error));
+      trackJob(EmailService.sendRegistrationSuccess(verifiedEmail, verifiedName || 'Google User').catch(console.error));
     } else {
       userRole = user.role;
-      biometricRegistered = user.biometric_registered;
-      // Sync Google profile photo if not already set
-      if (!user.avatar_url && avatar_url) {
-        await User.updateOne({ email }, { $set: { avatar_url } });
+      if (verifiedPicture && !user.avatar_url) {
+        user.avatar_url = verifiedPicture;
+        await user.save();
       }
     }
 
-    const token = AuthService.createAccessToken({ sub: email, role: userRole });
-    const refreshToken = await registerSession(email, token, req);
-
-    // New device check
-    const userAgent = req.headers['user-agent'] || 'Unknown Device';
-    const knownDevice = await UserSession.exists({ userId: email, device: userAgent });
-    if (!knownDevice) {
-      trackJob(EmailService.sendNewDeviceLoginAlert(email, userAgent, req.ip || '127.0.0.1', new Date().toISOString()).catch(console.error));
-    }
-
-    await logSecurityEvent(email, userRole, 'LOGIN_EVENT', { method: 'google', device: userAgent }, req);
+    const token = AuthService.createAccessToken({ sub: verifiedEmail, role: userRole });
+    const refreshToken = await registerSession(verifiedEmail, token, req);
+    await logSecurityEvent(verifiedEmail, userRole, 'LOGIN_EVENT', { method: 'google' }, req);
 
     res.json(formatAuthResponse(user, token, refreshToken, "Google login successful"));
   } catch (error) {
@@ -703,7 +714,10 @@ router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ detail: "User not found" });
+      return res.json({
+        success: true,
+        message: "If the account exists, a verification code has been sent."
+      });
     }
 
     // OTP Resend Cooldown (60 seconds)
@@ -725,7 +739,7 @@ router.post('/forgot-password', async (req, res) => {
       { upsert: true }
     );
 
-    console.log(`Generated password reset OTP for email index hash`); // do not expose email in logs
+    console.log(JSON.stringify({ event: "otp_generated", recipient: email ? `${email[0]}***@${email.split('@')[1] || ''}` : 'masked', purpose: "password_reset" }));
 
     // Send OTP email
     const emailSent = await EmailService.sendOtp(email, otpVal, 'password_reset');
@@ -742,7 +756,7 @@ router.post('/forgot-password', async (req, res) => {
 
     res.json({
       success: true,
-      message: "OTP sent to email"
+      message: "If the account exists, a verification code has been sent."
     });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -807,6 +821,9 @@ router.post('/reset-password', async (req, res) => {
 
     const hashedPassword = await AuthService.hashPassword(new_password);
     await User.updateOne({ email }, { $set: { password: hashedPassword } });
+
+    // Invalidate active sessions
+    await UserSession.deleteMany({ userId: email });
 
     // Send password reset success email
     trackJob(EmailService.sendResetPasswordSuccess(email).catch(console.error));

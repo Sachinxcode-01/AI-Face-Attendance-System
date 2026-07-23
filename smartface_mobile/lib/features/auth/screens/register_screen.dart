@@ -52,11 +52,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     int score = 0;
-    if (pass.length >= 6) score++; // Length check
-    if (pass.contains(RegExp(r'[A-Z]'))) score++; // Uppercase check
-    if (pass.contains(RegExp(r'[0-9]'))) score++; // Digit check
-    if (pass.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]')))
+    if (pass.length >= 6) {
+      score++; // Length check
+    }
+    if (pass.contains(RegExp(r'[A-Z]'))) {
+      score++; // Uppercase check
+    }
+    if (pass.contains(RegExp(r'[0-9]'))) {
+      score++; // Digit check
+    }
+    if (pass.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'))) {
       score++; // Special char
+    }
 
     setState(() {
       _passwordStrengthSegments = score.clamp(1, 4);

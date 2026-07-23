@@ -271,19 +271,24 @@ ThemeData getDarkTheme() {
             ),
           ).copyWith(
             backgroundColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.pressed))
+              if (states.contains(WidgetState.pressed)) {
                 return const Color(0xFF3730A3);
-              if (states.contains(WidgetState.disabled))
+              }
+              if (states.contains(WidgetState.disabled)) {
                 return Colors.white.withValues(alpha: 0.08);
+              }
               return d.primary;
             }),
             elevation: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.pressed)) return 2;
+              if (states.contains(WidgetState.pressed)) {
+                return 2;
+              }
               return 6;
             }),
             shadowColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.pressed))
+              if (states.contains(WidgetState.pressed)) {
                 return Colors.transparent;
+              }
               return d.primaryGlow.withValues(alpha: 0.25);
             }),
           ),

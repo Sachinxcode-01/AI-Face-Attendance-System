@@ -403,4 +403,44 @@ router.get('/risk/critical', authenticate, requireRole(['hod', 'principal', 'man
   }
 });
 
+// ─── GET /management/users ────────────────────────────────────────
+router.get('/users', authenticate, requireRole(['admin', 'super_admin', 'hod', 'management', 'principal']), async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const query = {};
+    if (req.query.role) {
+      query.role = req.query.role.toLowerCase();
+    }
+    if (req.query.department) {
+      query.department = req.query.department;
+    }
+
+    const total = await User.countDocuments(query);
+    const users = await User.find(query)
+      .select('-password')
+      .skip(skip)
+      .limit(limit)
+      .sort({ created_at: -1 })
+      .lean();
+
+    const formattedUsers = users.map(u => ({
+      ...u,
+      id: u._id.toString()
+    }));
+
+    res.json({
+      success: true,
+      total,
+      page,
+      limit,
+      users: formattedUsers
+    });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
 module.exports = router;

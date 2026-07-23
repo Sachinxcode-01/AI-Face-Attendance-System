@@ -485,9 +485,14 @@ class ApiService {
           .get(Uri.parse('$baseUrl/security/logs'))
           .timeout(const Duration(seconds: 15));
       final result = _processResponse(response);
-      if (result is List) return result;
-      if (result is Map && result.containsKey('data') && result['data'] is List)
+      if (result is List) {
+        return result;
+      }
+      if (result is Map &&
+          result.containsKey('data') &&
+          result['data'] is List) {
         return result['data'];
+      }
       return [];
     } catch (e) {
       return [];
@@ -587,9 +592,12 @@ class ApiService {
           .timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        if (decoded is List) return decoded;
-        if (decoded is Map && decoded['data'] is List)
+        if (decoded is List) {
+          return decoded;
+        }
+        if (decoded is Map && decoded['data'] is List) {
           return decoded['data'] as List;
+        }
       }
     } catch (e) {
       debugPrint('getStudents error: $e');

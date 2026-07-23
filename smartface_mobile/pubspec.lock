@@ -9,6 +9,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.59"
+  animated_icon:
+    dependency: "direct main"
+    description:
+      name: animated_icon
+      sha256: d4d5d91c3dae2a926dfc85ac96daf38cadd0086c47b206e10e6e4a8d6ab798a5
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  animated_text_kit:
+    dependency: "direct main"
+    description:
+      name: animated_text_kit
+      sha256: "1d41486860885321972dd332179357a535d50d4780fc2ba5e1805bde085c81f2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.3.0"
   animations:
     dependency: "direct main"
     description:
@@ -129,6 +145,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.5+3"
+  carousel_slider:
+    dependency: "direct main"
+    description:
+      name: carousel_slider
+      sha256: febf4b0163e0242adc13d7a863b04965351f59e7dfea56675c7c2caa7bcd7476
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.2"
   characters:
     dependency: transitive
     description:
@@ -550,6 +574,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.3"
+  flutter_staggered_animations:
+    dependency: "direct main"
+    description:
+      name: flutter_staggered_animations
+      sha256: "81d3c816c9bb0dca9e8a5d5454610e21ffb068aedb2bde49d2f8d04f75538351"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -656,6 +688,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.12.4+4"
+  graphic:
+    dependency: "direct main"
+    description:
+      name: graphic
+      sha256: f0028af737f7fdd5fd50c043af85242d72638ae040a820470208bc885a229d04
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.7.0"
+  graphs:
+    dependency: transitive
+    description:
+      name: graphs
+      sha256: "741bbf84165310a68ff28fe9e727332eef1407342fca52759cb21ad8177bb8d0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.2"
   hive:
     dependency: "direct main"
     description:
@@ -864,6 +912,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
+  lottie:
+    dependency: "direct main"
+    description:
+      name: lottie
+      sha256: "8b6359a7422167014aa73ce763fa133fb832065dcc0ac4d1dec1f603a5cef7d0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.3.3"
   matcher:
     dependency: transitive
     description:
@@ -1120,6 +1176,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.0"
+  rive:
+    dependency: "direct main"
+    description:
+      name: rive
+      sha256: "2551a44fa766a7ed3f52aa2b94feda6d18d00edc25dee5f66e72e9b365bb6d6c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.13.20"
+  rive_common:
+    dependency: transitive
+    description:
+      name: rive_common
+      sha256: "2ba42f80d37a4efd0696fb715787c4785f8a13361e8aea9227c50f1e78cf763a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.15"
   rxdart:
     dependency: transitive
     description:
@@ -1128,6 +1200,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.28.0"
+  salomon_bottom_bar:
+    dependency: "direct main"
+    description:
+      name: salomon_bottom_bar
+      sha256: e20abf2e449749432223a8b4e6647c212eef6c2b638e0ed8cc92eff9529c2b48
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.3.2"
   shared_preferences:
     dependency: "direct main"
     description:
@@ -1285,6 +1365,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  syncfusion_flutter_charts:
+    dependency: "direct main"
+    description:
+      name: syncfusion_flutter_charts
+      sha256: f2c3e7009d8d3a1ea77d04bcd8e77259712b0b5dd01a07bbc3ba78c2a9e42681
+      url: "https://pub.dev"
+    source: hosted
+    version: "34.1.32"
+  syncfusion_flutter_core:
+    dependency: transitive
+    description:
+      name: syncfusion_flutter_core
+      sha256: "4e5825c8b0cbbc9ec66140dcbc0948d136bb8c0a9ac8b00bd762f1ed520ca4e8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "34.1.32"
   synchronized:
     dependency: transitive
     description:

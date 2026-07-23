@@ -6,6 +6,11 @@ from typing import Optional, Dict, Any
 import numpy as np
 import cv2
 
+# Safe platform mock for winsound when running on Linux containers (e.g. Railway)
+if sys.platform != "win32" and "winsound" not in sys.modules:
+    from unittest.mock import MagicMock
+    sys.modules["winsound"] = MagicMock()
+
 # Ensure project root and core directory are in sys.path
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 CORE_DIR = PROJECT_ROOT / "core"
@@ -41,12 +46,21 @@ class LegacyAttendanceAdapter:
         return cls._instance
 
     def is_ready(self) -> bool:
-        """Returns True if the underlying model and encodings are loaded."""
+        """Returns True if the underlying model, encodings, and student mappings are loaded."""
         try:
+            encodings_path = Path(getattr(self.system, "encodings_path", ""))
+            student_file = Path(getattr(self.system, "student_details_file", ""))
             return (
                 hasattr(self.system, "app")
                 and self.system.app is not None
+                and hasattr(self.system, "known_face_encodings")
+                and self.system.known_face_encodings is not None
                 and len(self.system.known_face_encodings) > 0
+                and hasattr(self.system, "student_db")
+                and self.system.student_db is not None
+                and len(self.system.student_db) > 0
+                and encodings_path.is_file()
+                and student_file.is_file()
             )
         except Exception:
             return False
@@ -58,14 +72,17 @@ class LegacyAttendanceAdapter:
     ) -> Dict[str, Any]:
         """
         Extracts face from image bytes and verifies identity against known encodings.
+        Enforces strict privacy: never disclosures alternate student identity, names, or vectors.
         """
+        req_id = f"req_{os.urandom(4).hex()}"
+
         if not image_bytes:
             return {
                 "success": False,
                 "matched": False,
                 "confidence": 0.0,
-                "student_email": None,
-                "message": "Empty image provided"
+                "status_code": 400,
+                "detail": "Empty image content provided"
             }
 
         # 1. Decode image bytes using OpenCV
@@ -77,8 +94,19 @@ class LegacyAttendanceAdapter:
                 "success": False,
                 "matched": False,
                 "confidence": 0.0,
-                "student_email": None,
-                "message": "Invalid or malformed image data"
+                "status_code": 400,
+                "detail": "Invalid or malformed image data"
+            }
+
+        # Validate maximum resolution (max 4096x4096 / 16 Megapixels)
+        h, w = img.shape[:2]
+        if w > 4096 or h > 4096 or (w * h) > 16777216:
+            return {
+                "success": False,
+                "matched": False,
+                "confidence": 0.0,
+                "status_code": 400,
+                "detail": "Image dimensions exceed maximum resolution limits"
             }
 
         # 2. Extract face embeddings via InsightFace app
@@ -89,25 +117,30 @@ class LegacyAttendanceAdapter:
                 "success": False,
                 "matched": False,
                 "confidence": 0.0,
-                "student_email": None,
-                "message": f"Face detection inference error: {str(err)}"
+                "status_code": 400,
+                "detail": f"Face detection inference error: {str(err)}"
             }
 
         if not faces or len(faces) == 0:
+            print(f"[AUDIT {req_id}] Result: MISMATCH | Category: NO_FACE | Student: Masked | Confidence: 0.0")
             return {
-                "success": True,
+                "success": False,
                 "matched": False,
                 "confidence": 0.0,
-                "student_email": None,
-                "message": "No face detected in image"
+                "status_code": 422,
+                "detail": "Face verification failed"
             }
 
-        # Select largest face if multiple faces are present
-        faces = sorted(
-            faces,
-            key=lambda x: (x.bbox[2] - x.bbox[0]) * (x.bbox[3] - x.bbox[1]),
-            reverse=True
-        )
+        if len(faces) > 1:
+            print(f"[AUDIT {req_id}] Result: MISMATCH | Category: MULTIPLE_FACES | Student: Masked | Confidence: 0.0")
+            return {
+                "success": False,
+                "matched": False,
+                "confidence": 0.0,
+                "status_code": 422,
+                "detail": "Face verification failed"
+            }
+
         target_face = faces[0]
 
         # 3. Vectorized Cosine Similarity
@@ -121,11 +154,11 @@ class LegacyAttendanceAdapter:
         known_encodings = self.system.known_face_encodings
         if len(known_encodings) == 0:
             return {
-                "success": True,
+                "success": False,
                 "matched": False,
                 "confidence": 0.0,
-                "student_email": None,
-                "message": "No known face encodings loaded in database"
+                "status_code": 422,
+                "detail": "Face verification failed"
             }
 
         sims = np.dot(known_encodings, norm_emb)
@@ -133,6 +166,8 @@ class LegacyAttendanceAdapter:
         best_sim = float(sims[best_idx])
 
         threshold = self.system.confidence_threshold # Default 0.6
+        conf_rounded = round(best_sim, 4)
+        conf_bucket = "HIGH" if conf_rounded >= 0.85 else ("MED" if conf_rounded >= 0.6 else "LOW")
 
         if best_sim >= threshold:
             best_roll = self.system.known_roll_nos[best_idx]
@@ -155,35 +190,41 @@ class LegacyAttendanceAdapter:
                 expected_clean = expected_student_email.strip().lower()
 
                 if detected_email_clean and detected_email_clean == expected_clean:
+                    masked_student = f"{expected_clean[:2]}***{expected_clean[expected_clean.find('@'):]}" if "@" in expected_clean else "masked"
+                    print(f"[AUDIT {req_id}] Result: MATCH | Bucket: {conf_bucket} ({conf_rounded}) | Student: {masked_student}")
                     return {
                         "success": True,
                         "matched": True,
-                        "confidence": round(best_sim, 4),
-                        "student_email": detected_email,
-                        "message": "Face verified successfully"
+                        "confidence": conf_rounded,
+                        "status_code": 200,
+                        "detail": "Face verification complete"
                     }
                 else:
+                    masked_student = f"{expected_clean[:2]}***{expected_clean[expected_clean.find('@'):]}" if "@" in expected_clean else "masked"
+                    print(f"[AUDIT {req_id}] Result: MISMATCH | Category: IDENTITY_MISMATCH | Bucket: {conf_bucket} ({conf_rounded}) | Student: {masked_student}")
                     return {
-                        "success": True,
+                        "success": False,
                         "matched": False,
-                        "confidence": round(best_sim, 4),
-                        "student_email": detected_email,
-                        "message": f"Face identity mismatch: recognized as {detected_email} instead of {expected_student_email}"
+                        "confidence": conf_rounded,
+                        "status_code": 422,
+                        "detail": "Face verification failed"
                     }
             else:
+                print(f"[AUDIT {req_id}] Result: MATCH | Bucket: {conf_bucket} ({conf_rounded})")
                 return {
                     "success": True,
                     "matched": True,
-                    "confidence": round(best_sim, 4),
-                    "student_email": detected_email,
-                    "message": "Face recognized successfully"
+                    "confidence": conf_rounded,
+                    "status_code": 200,
+                    "detail": "Face verification complete"
                 }
 
         else:
+            print(f"[AUDIT {req_id}] Result: MISMATCH | Category: BELOW_THRESHOLD | Bucket: LOW ({conf_rounded})")
             return {
-                "success": True,
+                "success": False,
                 "matched": False,
-                "confidence": round(best_sim, 4),
-                "student_email": None,
-                "message": "Face not recognized (below similarity threshold)"
+                "confidence": conf_rounded,
+                "status_code": 422,
+                "detail": "Face verification failed"
             }

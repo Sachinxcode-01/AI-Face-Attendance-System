@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:animated_icon/animated_icon.dart';
+import 'modern_animated_icon.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 
@@ -102,6 +104,7 @@ class StatCard extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
+  final AnimateIcons? animateIcon;
   final Color? accentColor;
   final String? subtitle;
   final String? trend;
@@ -113,6 +116,7 @@ class StatCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
+    this.animateIcon,
     this.accentColor,
     this.subtitle,
     this.trend,
@@ -142,7 +146,18 @@ class StatCard extends StatelessWidget {
                   color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: animateIcon != null
+                    ? ModernAnimatedIcon(
+                        animateIcon: animateIcon!,
+                        fallbackIcon: icon,
+                        size: 20,
+                        activeColor: color,
+                        inactiveColor: color,
+                        isActive: true,
+                        iconType: IconType.animatedOnTap,
+                        semanticLabel: label,
+                      )
+                    : Icon(icon, color: color, size: 20),
               ),
               if (trend != null)
                 Container(
@@ -352,6 +367,7 @@ class QuickActionCard extends StatelessWidget {
   final String label;
   final String description;
   final IconData icon;
+  final AnimateIcons? animateIcon;
   final Color color;
   final VoidCallback onTap;
 
@@ -360,6 +376,7 @@ class QuickActionCard extends StatelessWidget {
     required this.label,
     required this.description,
     required this.icon,
+    this.animateIcon,
     required this.color,
     required this.onTap,
   });
@@ -382,7 +399,18 @@ class QuickActionCard extends StatelessWidget {
               color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: animateIcon != null
+                ? ModernAnimatedIcon(
+                    animateIcon: animateIcon!,
+                    fallbackIcon: icon,
+                    size: 20,
+                    activeColor: color,
+                    inactiveColor: color,
+                    isActive: true,
+                    iconType: IconType.animatedOnTap,
+                    semanticLabel: label,
+                  )
+                : Icon(icon, color: color, size: 20),
           ),
           const SizedBox(height: 12),
           Text(
