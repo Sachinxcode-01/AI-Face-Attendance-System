@@ -109,15 +109,10 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/logo.png
-    - assets/images/smartface_logo.png
-    - assets/icon/smartface_blue.png
-    - assets/icons/google.png
-    - assets/icons/github.png
-    - assets/background/splash_background.jpeg
-    - assets/background/Intro_1.jpeg
-    - assets/background/Intro_2.jpeg
-    - assets/background/Intro_3.jpeg
+    - assets/images/
+    - assets/icon/
+    - assets/icons/
+    - assets/background/
     - .env
     - .env.development
     - .env.staging

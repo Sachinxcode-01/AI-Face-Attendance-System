@@ -13,10 +13,14 @@ from email.message import EmailMessage
 import pyttsx3
 import queue                                                         
 import time
+from typing import Any
 
 from insightface.app import FaceAnalysis
 from dotenv import load_dotenv  
-import ai_analyst
+try:
+    import ai_analyst
+except ImportError:
+    from core import ai_analyst
 
 
 import requests
@@ -74,6 +78,76 @@ SENDER_PASSWORD = os.getenv("EMAIL_PASSWORD")
 TEACHER_EMAIL = "saxhin0708@gmail.com" #updates of  Attendance Of Todays 
 SECURITY_EMAIL = "saxhin0708@gmail.com"   # Email to alert about intruders
 
+
+def _build_smart_html_email(title, badge_text, badge_bg, heading, body_html, footer_note=""):
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+</head>
+<body style="margin: 0; padding: 0; width: 100%; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f1f5f9; padding: 30px 10px 40px 10px;">
+    <tr>
+      <td align="center">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); overflow: hidden;">
+          <!-- Header Banner with Brand Logo -->
+          <tr>
+            <td align="center" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 32px 24px; text-align: center;">
+              <div style="margin-bottom: 8px;">
+                <img src="cid:smartface_logo" alt="Smart Attendance AI Logo" style="max-height: 52px; max-width: 220px; height: auto; width: auto; border: 0; display: inline-block; vertical-align: middle;" />
+              </div>
+              <div style="font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; margin-top: 6px;">Smart Attendance AI</div>
+              <div style="font-size: 11px; color: #93c5fd; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-top: 4px;">Next-Gen Biometric Security & Attendance</div>
+            </td>
+          </tr>
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 32px 32px 24px 32px; background-color: #ffffff;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <span style="display: inline-block; background-color: {badge_bg}; color: #ffffff; padding: 6px 18px; border-radius: 20px; font-size: 12px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  {badge_text}
+                </span>
+              </div>
+              <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 20px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">{heading}</h2>
+              {body_html}
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; line-height: 1.6;">
+              {f'<div style="margin-bottom: 8px; color: #475569; font-weight: 500;">{footer_note}</div>' if footer_note else ''}
+              <div style="margin-top: 6px; font-weight: 600; color: #94a3b8;">© 2026 Smart Attendance System • AI Security & Analytics Platform</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+
+def _attach_inline_logo(msg):
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    logo_candidates = [
+        os.path.join(base_dir, "smartface_node_api", "public", "email", "Email_logo.png"),
+        os.path.join(base_dir, "smartface_banner.png"),
+    ]
+    for logo_path in logo_candidates:
+        if os.path.exists(logo_path):
+            try:
+                with open(logo_path, 'rb') as f:
+                    logo_data = f.read()
+                    for part in msg.walk():
+                        if part.get_content_type() == 'text/html':
+                            part.add_related(logo_data, maintype='image', subtype='png', cid='<smartface_logo>')
+                            return True
+            except Exception as e:
+                print(f"[LOGO ATTACH WARN] Could not attach inline logo: {e}")
+    return False
+
 class SmartAttendanceSystem:
     def __init__(self):
         # API Sync configuration
@@ -106,7 +180,7 @@ class SmartAttendanceSystem:
         
         # Data Structures
         self.student_db = {} 
-        self.known_face_encodings = []
+        self.known_face_encodings: Any = []
         self.known_face_names = []
         self.known_roll_nos = []
         self.present_students = set() 
@@ -255,10 +329,11 @@ class SmartAttendanceSystem:
             
             # Configure a clear, beautiful female voice (Zira) if available
             voices = engine.getProperty("voices")
-            for voice in voices:
-                if "zira" in voice.name.lower():
-                    engine.setProperty("voice", voice.id)
-                    break
+            if isinstance(voices, (list, tuple)):
+                for voice in voices:
+                    if hasattr(voice, "name") and "zira" in str(voice.name).lower():
+                        engine.setProperty("voice", voice.id)
+                        break
         except Exception as e:
             print(f"[VOICE ERROR] Failed to initialize voice worker: {e}")
             return
@@ -298,45 +373,63 @@ class SmartAttendanceSystem:
         # 3. Send Email WITH PHOTO ATTACHMENT
         def _send_email_with_photo():
             if not SENDER_PASSWORD: return
-            
             formatted_time = datetime.now().strftime('%Y-%m-%d %I:%M:%S %p')
             
             msg = EmailMessage()
             msg['Subject'] = f"🛡️ [SECURITY NOTICE] Unregistered Individual Detected"
             msg['From'] = SENDER_EMAIL
             msg['To'] = SECURITY_EMAIL
-            
-            # --- PRO CLASSY EMAIL BODY ---
-            body = (
-                "SECURITY NOTIFICATION\n"
-                "========================================\n\n"
-                "Dear Administrator,\n\n"
-                "The SmartFace AI Attendance System has detected an unregistered individual in the primary scanning area.\n\n"
-                f"🕒 Date & Time: {formatted_time}\n"
-                "📍 Location: Main Camera Feed\n\n"
-                "For your security and administrative review, a high-resolution snapshot of the unrecognized person has been attached to this email. "
-                "Please review the image to determine if security action is required, or if this is a new student who needs to be registered in the dataset.\n\n"
-                "System Status: Active & Monitoring.\n\n"
-                "Best regards,\n"
-                "SmartFace AI Security Engine"
-            )
-            msg.set_content(body)
 
-            # --- ATTACHMENT LOGIC ---
+            plain_text = f"SECURITY ALERT\n\nUnregistered person detected at {formatted_time}.\nSnapshot attached."
+            msg.set_content(plain_text)
+
+            body_html = f"""
+            <div style="background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="font-size: 14px; color: #9f1239; padding-bottom: 8px;"><strong>Alert Level:</strong></td>
+                  <td style="font-size: 14px; text-align: right; padding-bottom: 8px;"><span style="background-color: #e11d48; color: #ffffff; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px;">HIGH SECURITY</span></td>
+                </tr>
+                <tr>
+                  <td style="font-size: 14px; color: #9f1239; padding-bottom: 8px;"><strong>Date & Time:</strong></td>
+                  <td style="font-size: 14px; color: #0f172a; font-weight: 700; text-align: right; padding-bottom: 8px;">{formatted_time}</td>
+                </tr>
+                <tr>
+                  <td style="font-size: 14px; color: #9f1239;"><strong>Source:</strong></td>
+                  <td style="font-size: 14px; color: #0f172a; font-weight: 600; text-align: right;">Main Camera Feed</td>
+                </tr>
+              </table>
+            </div>
+            <p style="font-size: 14px; color: #475569; line-height: 1.6; margin: 0 0 16px 0;">
+              Dear Administrator,<br><br>
+              An unregistered individual was detected by the SmartFace AI Security Engine in the scanning area. A high-resolution snapshot is attached to this notice for immediate review.
+            </p>
+            """
+
+            html_full = _build_smart_html_email(
+                title="Security Notice - Smart Attendance AI",
+                badge_text="🛡️ SECURITY ALERT",
+                badge_bg="#e11d48",
+                heading="Unregistered Individual Detected",
+                body_html=body_html,
+                footer_note="High-resolution intruder snapshot attached to this alert."
+            )
+
+            msg.add_alternative(html_full, subtype='html')
+            _attach_inline_logo(msg)
+
             try:
                 with open(filename, 'rb') as f:
                     file_data = f.read()
                     file_name = os.path.basename(filename)
                 
-                # Add the image to the email
                 msg.add_attachment(file_data, maintype='image', subtype='jpeg', filename=file_name)
                 
-                # Send
                 server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
                 server.login(SENDER_EMAIL, SENDER_PASSWORD)
                 server.send_message(msg)
                 server.quit()
-                print(f"[EMAIL SENT] 🛡️ Security Notice sent to Admin successfully.")
+                print(f"[EMAIL SENT] 🛡️ Smart HTML Security Notice sent to Admin successfully.")
                 
             except Exception as e:
                 print(f"[EMAIL ERROR] Could not send photo: {e}")
@@ -345,31 +438,144 @@ class SmartAttendanceSystem:
         
     def send_absent_email(self, roll, details):
         if not SENDER_PASSWORD: return
+        recipient_email = str(details.get('email', '')).strip()
+        if not recipient_email or recipient_email.endswith('@college.edu'):
+            return  # Skip default placeholder emails
+
+        today_str = datetime.now().strftime("%B %d, %Y")
+        student_name = details.get('name', 'Student')
+
         msg = EmailMessage()
-        msg.set_content(f"Dear Parent,\n\nStudent: {details['name']} ({roll})\nStatus: ABSENT\nDate: {datetime.now().strftime('%Y-%m-%d')}\n\nPlease contact the college.\n\nRegards,\nSmart Attendance System")
-        msg['Subject'] = f"Absent Alert: {details['name']}"
+        msg['Subject'] = f"🔴 Absent Alert: {student_name} ({roll})"
         msg['From'] = SENDER_EMAIL
-        msg['To'] = details['email']
+        msg['To'] = recipient_email
+
+        plain_text = (
+            f"Dear Parent / Guardian,\n\n"
+            f"This is an automated notification from Smart Attendance System.\n\n"
+            f"Student Name: {student_name}\n"
+            f"Roll Number: {roll}\n"
+            f"Status: ABSENT\n"
+            f"Date: {today_str}\n\n"
+            f"Please contact administration if this absence was unexpected.\n\n"
+            f"Regards,\nSmart Attendance AI Team"
+        )
+        msg.set_content(plain_text)
+
+        body_html = f"""
+        <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td style="font-size: 14px; color: #991b1b; padding-bottom: 10px;"><strong>Student Name:</strong></td>
+              <td style="font-size: 15px; color: #111827; font-weight: 700; text-align: right; padding-bottom: 10px;">{student_name}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 14px; color: #991b1b; padding-bottom: 10px;"><strong>Roll / Student ID:</strong></td>
+              <td style="font-size: 15px; color: #111827; font-weight: 700; text-align: right; padding-bottom: 10px;">{roll}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 14px; color: #991b1b; padding-bottom: 10px;"><strong>Attendance Status:</strong></td>
+              <td style="font-size: 14px; text-align: right; padding-bottom: 10px;"><span style="background-color: #dc2626; color: #ffffff; padding: 4px 12px; border-radius: 12px; font-weight: 700; font-size: 12px;">ABSENT</span></td>
+            </tr>
+            <tr>
+              <td style="font-size: 14px; color: #991b1b;"><strong>Date:</strong></td>
+              <td style="font-size: 15px; color: #111827; font-weight: 600; text-align: right;">{today_str}</td>
+            </tr>
+          </table>
+        </div>
+        <p style="font-size: 14px; color: #475569; line-height: 1.6; margin: 0 0 16px 0;">
+          Dear Parent / Guardian,<br><br>
+          Our biometric face recognition system recorded <strong>{student_name}</strong> as <strong>ABSENT</strong> for today's session on <strong>{today_str}</strong>.
+        </p>
+        <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 0;">
+          If this absence was unplanned, please notify the college administration.
+        </p>
+        """
+
+        html_full = _build_smart_html_email(
+            title="Absent Notification - Smart Attendance AI",
+            badge_text="🔴 ABSENT NOTICE",
+            badge_bg="#dc2626",
+            heading="Attendance Status Alert",
+            body_html=body_html,
+            footer_note="Automated notification generated by Smart Attendance AI Biometric System."
+        )
+
+        msg.add_alternative(html_full, subtype='html')
+        _attach_inline_logo(msg)
+
         try:
             server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
             server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.send_message(msg)
             server.quit()
-        except: pass
+            print(f"[EMAIL SENT] 📧 Smart HTML Absent alert sent for {student_name} ({roll}) to {recipient_email}")
+        except Exception as e:
+            print(f"[EMAIL ERROR] Failed sending absent alert to {recipient_email}: {e}")
 
     def send_admin_report(self, present_list, absent_list, filepath):
         if not TEACHER_EMAIL or not SENDER_PASSWORD: return
-        today_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        today_str = datetime.now().strftime("%B %d, %Y %I:%M %p")
         
         msg = EmailMessage()
-        msg['Subject'] = f"✅ Attendance Log: {today_str}"
+        msg['Subject'] = f"✅ Attendance Log Report: {today_str}"
         msg['From'] = SENDER_EMAIL
         msg['To'] = TEACHER_EMAIL
-        
-        body = f"Session Ended: {today_str}\n\nTotal Present: {len(present_list)}\nTotal Absent: {len(absent_list)}\n\nPlease find the detailed attendance sheet attached for this session."
-        msg.set_content(body)
-        
-        # --- NEW: ATTACH THE CSV FILE ---
+
+        total_present = len(present_list)
+        total_absent = len(absent_list)
+        total_students = total_present + total_absent
+
+        plain_text = (
+            f"Dear Administrator,\n\n"
+            f"Biometric Attendance Session Ended: {today_str}\n\n"
+            f"Total Present: {total_present}\n"
+            f"Total Absent: {total_absent}\n"
+            f"Total Students: {total_students}\n\n"
+            f"The detailed attendance CSV log is attached to this email.\n\n"
+            f"Smart Attendance AI Engine"
+        )
+        msg.set_content(plain_text)
+
+        body_html = f"""
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td style="font-size: 14px; color: #64748b; padding-bottom: 10px;"><strong>Session Timestamp:</strong></td>
+              <td style="font-size: 14px; color: #0f172a; font-weight: 700; text-align: right; padding-bottom: 10px;">{today_str}</td>
+            </tr>
+            <tr>
+              <td style="font-size: 14px; color: #15803d; padding-bottom: 10px;"><strong>Total Present:</strong></td>
+              <td style="font-size: 16px; color: #15803d; font-weight: 800; text-align: right; padding-bottom: 10px;">{total_present} Students</td>
+            </tr>
+            <tr>
+              <td style="font-size: 14px; color: #b91c1c; padding-bottom: 10px;"><strong>Total Absent:</strong></td>
+              <td style="font-size: 16px; color: #b91c1c; font-weight: 800; text-align: right; padding-bottom: 10px;">{total_absent} Students</td>
+            </tr>
+            <tr>
+              <td style="font-size: 14px; color: #1d4ed8;"><strong>Total Tracked:</strong></td>
+              <td style="font-size: 16px; color: #1d4ed8; font-weight: 800; text-align: right;">{total_students} Students</td>
+            </tr>
+          </table>
+        </div>
+        <p style="font-size: 14px; color: #334155; line-height: 1.6; margin: 0 0 16px 0;">
+          Dear Administrator,<br><br>
+          The biometric face recognition attendance session has concluded. Attached is the full session record CSV containing individual verification timestamps and accuracy metrics.
+        </p>
+        """
+
+        html_full = _build_smart_html_email(
+            title="Attendance Log Report - Smart Attendance AI",
+            badge_text="📊 SESSION REPORT",
+            badge_bg="#1e3a8a",
+            heading="Daily Attendance Summary",
+            body_html=body_html,
+            footer_note="CSV Log file attached to this message."
+        )
+
+        msg.add_alternative(html_full, subtype='html')
+        _attach_inline_logo(msg)
+
         try:
             with open(filepath, 'rb') as f:
                 file_data = f.read()
@@ -381,7 +587,7 @@ class SmartAttendanceSystem:
             server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.send_message(msg)
             server.quit()
-            print(f"[REPORT SENT] 📧 Email with CSV Attachment sent to Admin.")
+            print(f"[REPORT SENT] 📧 Smart HTML Email with CSV Attachment sent to Admin ({TEACHER_EMAIL}).")
         except Exception as e:
             print(f"[EMAIL ERROR] Failed to send report: {e}")
 
@@ -445,7 +651,13 @@ class SmartAttendanceSystem:
         new_summary.to_csv(self.summary_file, mode='a', header=not os.path.exists(self.summary_file), index=False)
         print(f"[INFO] 📊 Session logged to '{self.attendance_file}'")
 
-        # 4. SEND EMAIL WITH ATTACHMENT
+        # 4. SEND INDIVIDUAL ABSENT NOTIFICATIONS TO STUDENTS/PARENTS
+        for roll in absent_rolls:
+            details = self.student_db.get(roll)
+            if details:
+                threading.Thread(target=self.send_absent_email, args=(roll, details)).start()
+
+        # 5. SEND EMAIL WITH ATTACHMENT TO ADMIN/TEACHER
         self.send_admin_report(present_rolls, absent_rolls, self.attendance_file)
     def mark_present(self, roll, ai_name, score):
         student_info = self.student_db.get(roll, {})
@@ -686,16 +898,23 @@ class SmartAttendanceSystem:
             # Draw the global high-tech diagnostic HUD overlay
             self.draw_hud(frame, fps)
 
-            cv2.imshow('Smart Attendance System By Face Recognition Done by AI', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                self.process_absentees()
-                self.speak("Attendance session ended.")
-                self.speech_queue.join()
-                break
+            try:
+                cv2.imshow('Smart Attendance System By Face Recognition Done by AI', frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    self.process_absentees()
+                    self.speak("Attendance session ended.")
+                    self.speech_queue.join()
+                    break
+            except cv2.error:
+                # opencv-python-headless installed or display GUI unavailable
+                pass
         
         self.camera.release()
         self.speech_worker_started = False
-        cv2.destroyAllWindows()
+        try:
+            cv2.destroyAllWindows()
+        except cv2.error:
+            pass
 
 if __name__ == "__main__":
     system = SmartAttendanceSystem()
