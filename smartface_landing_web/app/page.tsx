@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
+import { ApkDownloadHero } from '@/components/download/ApkDownloadHero';
 import { DashboardCard } from '@/components/portal/ui-helpers';
 import { 
   ArrowRight, 
@@ -1496,6 +1497,11 @@ export default function Home() {
           </div>
 
         </div>
+      </section>
+
+      {/* APK Download Main Section */}
+      <section className="w-full max-w-7xl px-6 md:px-8 mx-auto my-16">
+        <ApkDownloadHero />
       </section>
 
       {/* Sitemap footer */}

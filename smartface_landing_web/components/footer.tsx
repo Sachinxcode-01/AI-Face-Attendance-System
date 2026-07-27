@@ -60,6 +60,10 @@ export default function Footer() {
             <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">
               Product
             </span>
+            <Link href="/download" className="text-xs text-cyan-400 font-bold hover:text-cyan-300 transition flex items-center gap-1">
+              <span>Android APK</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            </Link>
             <Link href="/#features" className="text-xs text-slate-400 hover:text-white transition">Features</Link>
             <Link href="/docs" className="text-xs text-slate-400 hover:text-white transition">Documentation</Link>
             <Link href="/contact" className="text-xs text-slate-400 hover:text-white transition">Contact Us</Link>

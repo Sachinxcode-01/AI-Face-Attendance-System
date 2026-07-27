@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Menu, X, ArrowRight, Fingerprint, ChevronDown } from 'lucide-react';
+import { Menu, X, Fingerprint, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
@@ -95,9 +95,9 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
 
-            <Link href="/#mobile" className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors relative group py-2">
-              Mobile App
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
+            <Link href="/download" className="text-xs font-medium font-sans tracking-wide text-cyan-400 hover:text-cyan-300 transition-colors relative group py-2 flex items-center gap-1 font-bold">
+              <span>Download App</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </Link>
 
             <Link href="/docs" className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors relative group py-2">
@@ -112,20 +112,19 @@ export default function Navbar() {
           </div>
 
           {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              href="/download"
+              className="relative inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 text-white shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-105 transition-all"
+            >
+              <span>Download APK</span>
+            </Link>
+
             <Link
               href="/login"
-              className="text-xs font-semibold text-slate-300 hover:text-white px-4 py-2 hover:bg-white/5 rounded-lg transition"
+              className="text-xs font-semibold text-slate-300 hover:text-white px-3.5 py-2 hover:bg-white/5 rounded-lg transition"
             >
               Sign In
-            </Link>
-            
-            <Link
-              href="/login"
-              className="relative inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-semibold rounded-xl bg-primary text-white border border-primary/20 overflow-hidden shadow-[0_0_20px_rgba(37,99,235,0.25)] hover:shadow-[0_0_30px_rgba(37,99,235,0.45)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
-            >
-              <span>Get Started</span>
-              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 

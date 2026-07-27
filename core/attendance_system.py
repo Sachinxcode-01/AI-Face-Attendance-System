@@ -106,7 +106,7 @@ class SmartAttendanceSystem:
         
         # Data Structures
         self.student_db = {} 
-        self.known_face_encodings = []
+        self.known_face_encodings = np.array([])
         self.known_face_names = []
         self.known_roll_nos = []
         self.present_students = set() 
@@ -254,7 +254,7 @@ class SmartAttendanceSystem:
             engine.setProperty("rate", 150)
             
             # Configure a clear, beautiful female voice (Zira) if available
-            voices = engine.getProperty("voices")
+            voices: list = engine.getProperty("voices")  # type: ignore
             for voice in voices:
                 if "zira" in voice.name.lower():
                     engine.setProperty("voice", voice.id)
