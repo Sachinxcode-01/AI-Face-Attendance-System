@@ -30,7 +30,7 @@ class EmailService {
     }
 
     const provider = process.env.EMAIL_PROVIDER || 'resend';
-    const emailFrom = process.env.EMAIL_FROM || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
+    const emailFrom = process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || process.env.EMAIL_FROM_ADDRESS || 'noreply@smartface.pro';
     const emailSenderName = process.env.EMAIL_SENDER_NAME || 'Smart Attendance AI';
 
     if (process.env.NODE_ENV === 'test' || provider === 'test') {

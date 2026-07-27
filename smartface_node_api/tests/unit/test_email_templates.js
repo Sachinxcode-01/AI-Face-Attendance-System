@@ -97,6 +97,7 @@ async function runTests() {
 
     // 8. onboarding@resend.dev restriction handled
     console.log("➡️ Testing onboarding@resend.dev restriction handling...");
+    delete process.env.RESEND_FROM_EMAIL;
     process.env.EMAIL_FROM = 'onboarding@resend.dev';
     
     global.fetch = async (url, options) => {
