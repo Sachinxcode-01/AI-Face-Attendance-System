@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import sys
 
@@ -198,19 +198,19 @@ async def log_audit_action(user_email: str, action: str, details: str = ""):
             "user_email": user_email,
             "action": action,
             "details": details,
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         })
     except Exception as e:
         logger.error(f"Failed to log audit action: {e}")
 
-async def record_login_attempt(email: str, status: str, request: Request, role: str = None):
+async def record_login_attempt(email: str, status: str, request: Request, role: Optional[str] = None):
     ip_address = request.client.host if request.client else "Unknown IP"
     user_agent_str = request.headers.get("user-agent", "")
     ua_info = parse_user_agent(user_agent_str)
     try:
         await login_logs_collection.insert_one({
             "email": email,
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(timezone.utc),
             "status": status,
             "ip_address": ip_address,
             "user_agent": user_agent_str,
@@ -229,7 +229,7 @@ async def create_user_session(email: str, token: str, request: Request) -> str:
     session_id = str(uuid.uuid4())
     device_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{email}_{user_agent_str}_{ip_address}"))
     
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     expires_at = now + timedelta(hours=24)
     
     try:
@@ -267,7 +267,7 @@ async def create_user_session(email: str, token: str, request: Request) -> str:
     return session_id
 
 
-async def create_notification(user_id: str, title: str, message: str, type: str, priority: str = "Info", extra_data: dict = None):
+async def create_notification(user_id: str, title: str, message: str, type: str, priority: str = "Info", extra_data: Optional[dict] = None):
     try:
         notif = {
             "user_id": user_id,
@@ -276,7 +276,7 @@ async def create_notification(user_id: str, title: str, message: str, type: str,
             "type": type,
             "priority": priority,
             "is_read": False,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "extra_data": extra_data or {}
         }
         result = await db.notifications.insert_one(notif)
@@ -317,7 +317,7 @@ async def seed_users():
                 "role": "student",
                 "student_id": "CSE-2026-08",
                 "biometric_registered": True,
-                "created_at": datetime.utcnow()
+                "created_at": datetime.now(timezone.utc)
             })
             logger.info("Seeded student Alice Cooper")
 
@@ -331,7 +331,7 @@ async def seed_users():
                 "role": "student",
                 "student_id": "MEC-2027-14",
                 "biometric_registered": True,
-                "created_at": datetime.utcnow()
+                "created_at": datetime.now(timezone.utc)
             })
             logger.info("Seeded student Bob Cooper")
 
@@ -344,7 +344,7 @@ async def seed_users():
                 "password": AuthService.get_password_hash("password123"),
                 "role": "parent",
                 "child_emails": ["student@smartface.pro", "bob_student@smartface.pro"],
-                "created_at": datetime.utcnow()
+                "created_at": datetime.now(timezone.utc)
             })
             logger.info("Seeded parent Mr. Cooper")
 
@@ -356,7 +356,7 @@ async def seed_users():
                 "full_name": "Dr. Sarah Jenkins",
                 "password": AuthService.get_password_hash("password123"),
                 "role": "teacher",
-                "created_at": datetime.utcnow()
+                "created_at": datetime.now(timezone.utc)
             })
             logger.info("Seeded teacher Dr. Sarah Jenkins")
 
@@ -368,7 +368,7 @@ async def seed_users():
                 "full_name": "Principal Admin",
                 "password": AuthService.get_password_hash("password123"),
                 "role": "admin",
-                "created_at": datetime.utcnow()
+                "created_at": datetime.now(timezone.utc)
             })
             logger.info("Seeded admin Principal Admin")
 
@@ -380,7 +380,7 @@ async def seed_users():
                 "full_name": "Super Administrator",
                 "password": AuthService.get_password_hash("password123"),
                 "role": "super_admin",
-                "created_at": datetime.utcnow()
+                "created_at": datetime.now(timezone.utc)
             })
             logger.info("Seeded super_admin Super Administrator")
     except Exception as e:
@@ -479,7 +479,7 @@ async def health_check():
         "status": "ok",
         "database": db_status,
         "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 @app.get("/notifications/unread-count/{email}")
@@ -523,9 +523,9 @@ async def register(user: UserCreate, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=400, detail="Email already registered")
     
     hashed_password = AuthService.get_password_hash(user.password)
-    user_dict = user.dict()
+    user_dict = user.model_dump()
     user_dict["password"] = hashed_password
-    user_dict["created_at"] = datetime.utcnow()
+    user_dict["created_at"] = datetime.now(timezone.utc)
     user_dict["is_active"] = False
     user_dict["biometric_registered"] = False
     
@@ -534,7 +534,7 @@ async def register(user: UserCreate, background_tasks: BackgroundTasks):
     
     # Generate verification OTP
     otp = "".join([str(random.randint(0, 9)) for _ in range(6)])
-    expiry = datetime.utcnow() + timedelta(minutes=5)
+    expiry = datetime.now(timezone.utc) + timedelta(minutes=5)
     await otps_collection.update_one(
         {"email": user.email},
         {"$set": {"otp": otp, "expiry": expiry, "role": user.role}},
@@ -569,7 +569,7 @@ async def send_login_otp(request: OTPRequest, background_tasks: BackgroundTasks)
     
     otp = "".join([str(random.randint(0, 9)) for _ in range(6)])
     # Save OTP with expiry (5 minutes)
-    expiry = datetime.utcnow() + timedelta(minutes=5)
+    expiry = datetime.now(timezone.utc) + timedelta(minutes=5)
     await otps_collection.update_one(
         {"email": email},
         {"$set": {"otp": otp, "expiry": expiry, "role": user["role"]}},
@@ -600,7 +600,7 @@ async def verify_login_otp(request: OTPVerification, req: Request, background_ta
         await record_login_attempt(email, "Failed (Invalid OTP)", req)
         raise HTTPException(status_code=401, detail="Invalid OTP")
     
-    if datetime.utcnow() > record["expiry"]:
+    if datetime.now(timezone.utc) > record["expiry"]:
         await record_login_attempt(email, "Failed (Expired OTP)", req)
         raise HTTPException(status_code=401, detail="OTP expired")
     
@@ -677,7 +677,7 @@ async def google_login(request: GoogleLoginRequest, req: Request):
             "full_name": request.name,
             "role": request.role.lower(),
             "avatar_url": request.avatar_url,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
             "biometric_registered": False,
             "setup_completed": False,
             "profile_completed": False,
@@ -788,15 +788,15 @@ async def logout(auth: HTTPAuthorizationCredentials = Depends(HTTPBearer())):
         
     exp = payload.get("exp")
     if exp:
-        expires_at = datetime.utcfromtimestamp(exp)
+        expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
     else:
-        expires_at = datetime.utcnow() + timedelta(hours=24)
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
         
     try:
         await db.revoked_tokens.insert_one({
             "token": token,
             "expires_at": expires_at,
-            "revoked_at": datetime.utcnow()
+            "revoked_at": datetime.now(timezone.utc)
         })
     except Exception:
         pass
@@ -805,7 +805,7 @@ async def logout(auth: HTTPAuthorizationCredentials = Depends(HTTPBearer())):
     try:
         await login_sessions_collection.update_many(
             {"token": token},
-            {"$set": {"is_active": False, "last_active": datetime.utcnow()}}
+            {"$set": {"is_active": False, "last_active": datetime.now(timezone.utc)}}
         )
     except Exception:
         pass
@@ -854,19 +854,19 @@ async def revoke_session(session_id: str, current_user: str = Depends(AuthServic
     if token:
         payload = AuthService.decode_token(token)
         exp = payload.get("exp") if payload else None
-        expires_at = datetime.utcfromtimestamp(exp) if exp else datetime.utcnow() + timedelta(hours=24)
+        expires_at = datetime.fromtimestamp(exp, tz=timezone.utc) if exp else datetime.now(timezone.utc) + timedelta(hours=24)
         try:
             await db.revoked_tokens.insert_one({
                 "token": token,
                 "expires_at": expires_at,
-                "revoked_at": datetime.utcnow()
+                "revoked_at": datetime.now(timezone.utc)
             })
         except Exception:
             pass
             
     await login_sessions_collection.update_one(
         {"session_id": session_id},
-        {"$set": {"is_active": False, "last_active": datetime.utcnow()}}
+        {"$set": {"is_active": False, "last_active": datetime.now(timezone.utc)}}
     )
     
     await log_audit_action(current_user, "Revoke Session", f"Revoked session {session_id} for user {session['user_email']}")
@@ -885,11 +885,11 @@ async def logout_all(current_user: str = Depends(AuthService.get_current_user)):
         if token:
             payload = AuthService.decode_token(token)
             exp = payload.get("exp") if payload else None
-            expires_at = datetime.utcfromtimestamp(exp) if exp else datetime.utcnow() + timedelta(hours=24)
+            expires_at = datetime.fromtimestamp(exp, tz=timezone.utc) if exp else datetime.now(timezone.utc) + timedelta(hours=24)
             revoked_list.append({
                 "token": token,
                 "expires_at": expires_at,
-                "revoked_at": datetime.utcnow()
+                "revoked_at": datetime.now(timezone.utc)
             })
             
     if revoked_list:
@@ -901,7 +901,7 @@ async def logout_all(current_user: str = Depends(AuthService.get_current_user)):
     # Mark all sessions as inactive
     await login_sessions_collection.update_many(
         {"user_email": current_user},
-        {"$set": {"is_active": False, "last_active": datetime.utcnow()}}
+        {"$set": {"is_active": False, "last_active": datetime.now(timezone.utc)}}
     )
     
     await log_audit_action(current_user, "Logout All", "All active sessions revoked")
@@ -936,7 +936,7 @@ async def get_system_db_stats(current_user: str = Depends(AuthService.get_curren
     return {
         "collections": stats,
         "database_name": db.name,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 @app.post("/auth/forgot-password")
@@ -947,7 +947,7 @@ async def forgot_password(email_data: dict, background_tasks: BackgroundTasks):
         if user:
             # Generate a real random 6-digit OTP
             otp = "".join([str(random.randint(0, 9)) for _ in range(6)])
-            expiry = datetime.utcnow() + timedelta(minutes=10)
+            expiry = datetime.now(timezone.utc) + timedelta(minutes=10)
             await otps_collection.update_one(
                 {"email": email},
                 {"$set": {"otp": otp, "expiry": expiry, "type": "password_reset"}},
@@ -963,7 +963,7 @@ async def forgot_password(email_data: dict, background_tasks: BackgroundTasks):
 async def intruder_alert(data: IntruderAlert, background_tasks: BackgroundTasks):
     location = data.location or data.camera_id or "Unknown Location"
     alert_type = data.type or "intruder"
-    timestamp = datetime.utcnow()
+    timestamp = datetime.now(timezone.utc)
     
     # Save to security logs collection in db
     await db.security_logs.insert_one({
@@ -1033,7 +1033,7 @@ async def reset_password(data: dict):
     if not otp_record or otp_record["otp"] != otp:
         raise HTTPException(status_code=401, detail="Invalid OTP")
 
-    if datetime.utcnow() > otp_record["expiry"]:
+    if datetime.now(timezone.utc) > otp_record["expiry"]:
         raise HTTPException(status_code=401, detail="OTP expired")
 
     # Valid OTP, delete it and update password
@@ -1047,7 +1047,7 @@ async def reset_password(data: dict):
     # Invalidate active sessions after reset
     await login_sessions_collection.update_many(
         {"user_email": email},
-        {"$set": {"is_active": False, "last_active": datetime.utcnow()}}
+        {"$set": {"is_active": False, "last_active": datetime.now(timezone.utc)}}
     )
 
     return {"message": "Password updated successfully"}
@@ -1144,7 +1144,7 @@ async def get_profile(current_user: str = Depends(AuthService.get_current_user))
 @app.patch("/api/profile")
 @app.post("/auth/update-profile")
 async def update_profile(data: ProfileUpdate, current_user: str = Depends(AuthService.get_current_user)):
-    update_data = {k: v for k, v in data.dict().items() if v is not None}
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     await users_collection.update_one(
         {"email": current_user},
         {"$set": update_data}
@@ -1209,7 +1209,7 @@ async def update_notification_settings(data: NotificationSettingsUpdate, current
         "push_notifications": True,
         "in_app_notifications": True
     })
-    update_dict = {k: v for k, v in data.dict().items() if v is not None}
+    update_dict = {k: v for k, v in data.model_dump().items() if v is not None}
     if "in_app_notifications" in update_dict:
         current_settings["in_app_notifications"] = update_dict["in_app_notifications"]
     for k, v in update_dict.items():
@@ -1411,6 +1411,7 @@ async def register_biometric(request: BiometricRequest, current_user: str = Depe
 
 import base64
 import cv2
+import cv2.data
 import numpy as np
 
 def perform_ai_quality_check(base64_image: str):
@@ -1441,7 +1442,7 @@ def perform_ai_quality_check(base64_image: str):
             return {"passed": False, "reason": "Environment too bright. Avoid strong direct backlights."}
             
         # 2. Blur Check (Laplacian variance)
-        blur_score = cv2.Laplacian(gray, cv2.CV_64F).var()
+        blur_score = cv2.Laplacian(gray, getattr(cv2, "CV_64F", 6)).var()
         if blur_score < 75:
             return {"passed": False, "reason": "Image is blurry. Clean your camera lens and keep steady."}
             
@@ -1483,7 +1484,7 @@ async def complete_profile(data: CompleteProfileRequest, current_user: str = Dep
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
-    update_data = {k: v for k, v in data.dict().items() if v is not None}
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     validate_role_fields(user.get("role", "student"), set(update_data.keys()))
     
     await users_collection.update_one(
@@ -1595,7 +1596,8 @@ async def upload_student_face(
     if ext not in {".jpg", ".jpeg", ".png"}:
         raise HTTPException(status_code=400, detail="Only JPEG or PNG images are allowed")
         
-    save_path = os.path.join(dataset_dir, file.filename)
+    filename = file.filename or f"image_{uuid.uuid4().hex[:8]}.jpg"
+    save_path = os.path.join(dataset_dir, filename)
     contents = await file.read()
     with open(save_path, "wb") as f:
         f.write(contents)
@@ -1620,7 +1622,7 @@ async def start_session(session_data: SessionStart):
         "teacher_id": session_data.teacher_email, # Using email as ID for simplicity or lookup
         "subject": session_data.subject,
         "duration": "1 Hour", # Default or should be in model
-        "start_time": datetime.utcnow(),
+        "start_time": datetime.now(timezone.utc),
         "is_active": True,
         "qr_code": qr_code
     }
@@ -1671,7 +1673,7 @@ async def stop_session(session_data: SessionStop):
         
         await db.sessions.update_one(
             {"_id": ObjectId(session_data.session_id)},
-            {"$set": {"is_active": False, "end_time": datetime.utcnow()}}
+            {"$set": {"is_active": False, "end_time": datetime.now(timezone.utc)}}
         )
         return {"message": "Session terminated successfully"}
     except Exception as e:
@@ -1723,7 +1725,7 @@ async def mark_attendance(request: AttendanceMark):
         if session["qr_code"] != request.qr_code:
             raise HTTPException(status_code=400, detail="Invalid QR Code")
 
-    timestamp = datetime.utcnow()
+    timestamp = datetime.now(timezone.utc)
     record_dict = {
         "student_email": request.student_email,
         "session_id": request.session_id,
@@ -1778,7 +1780,7 @@ async def mark_face_attendance(request: FaceAttendanceMark, token: str = Header(
     if existing:
         return {"status": "success", "message": "Attendance already marked for this session"}
 
-    timestamp = datetime.utcnow()
+    timestamp = datetime.now(timezone.utc)
     record_dict = {
         "student_email": request.student_email,
         "session_id": str(session["_id"]),
@@ -1820,7 +1822,7 @@ async def mark_face_attendance(request: FaceAttendanceMark, token: str = Header(
 # Leave Management Endpoints
 @app.post("/leave/apply")
 async def apply_leave(leave: LeaveApplication):
-    leave_dict = leave.dict()
+    leave_dict = leave.model_dump()
     result = await db.leaves.insert_one(leave_dict)
     
     # Save notification for admin
@@ -1857,26 +1859,32 @@ async def leave_action(data: dict, background_tasks: BackgroundTasks):
     status = data.get("status") # Approved, Rejected
     remarks = data.get("remarks")
     
+    if not leave_id or not status:
+        raise HTTPException(status_code=400, detail="leave_id and status are required")
+        
+    status_str = str(status)
+    remarks_str = str(remarks) if remarks is not None else ""
+    
     result = await db.leaves.update_one(
         {"_id": ObjectId(leave_id)},
-        {"$set": {"status": status, "remarks": remarks}}
+        {"$set": {"status": status_str, "remarks": remarks_str}}
     )
     
     leave = await db.leaves.find_one({"_id": ObjectId(leave_id)})
     if leave:
         # Send email
-        background_tasks.add_task(EmailService.send_leave_status_update, leave["user_id"], status, remarks)
+        background_tasks.add_task(EmailService.send_leave_status_update, leave["user_id"], status_str, remarks_str)
         # Save notification for the student
         await create_notification(
             leave["user_id"],
             "Leave Application Status",
-            f"Your leave request from {leave.get('start_date')} to {leave.get('end_date')} has been {status.lower()}.",
+            f"Your leave request from {leave.get('start_date')} to {leave.get('end_date')} has been {status_str.lower()}.",
             "leave_status",
             "High",
-            {"leave_id": leave_id, "status": status}
+            {"leave_id": leave_id, "status": status_str}
         )
         
-    return {"message": f"Leave {status.lower()} successfully"}
+    return {"message": f"Leave {status_str.lower()} successfully"}
 
 @app.get("/leave/balance/{email}")
 async def get_leave_balance(email: str):
@@ -1950,7 +1958,7 @@ async def get_notifications(email: str):
     return notifications
 
 @app.websocket("/ws/notifications")
-async def websocket_endpoint(websocket: WebSocket, token: str = None):
+async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
     if not token:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Token missing")
         return
@@ -2158,7 +2166,7 @@ async def get_admin_stats(current_user: str = Depends(AuthService.get_current_us
         active_sessions = await db.sessions.count_documents({"is_active": True})
         
         # Calculate attendance today
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         attendance_today_count = await db.attendance.count_documents({"timestamp": {"$gte": today_start}})
         
         if total_students > 0:
@@ -2230,7 +2238,7 @@ async def get_activity_log(current_user: str = Depends(AuthService.get_current_u
                 "icon": "check_circle",
                 "title": "Attendance Marked",
                 "detail": f"{rec.get('student_email', 'Unknown')} marked present",
-                "timestamp": rec.get("timestamp", datetime.utcnow()).isoformat() if hasattr(rec.get("timestamp", ""), "isoformat") else str(rec.get("timestamp", "")),
+                "timestamp": rec.get("timestamp", datetime.now(timezone.utc)).isoformat() if hasattr(rec.get("timestamp", ""), "isoformat") else str(rec.get("timestamp", "")),
                 "color": "success",
             })
 
@@ -2242,7 +2250,7 @@ async def get_activity_log(current_user: str = Depends(AuthService.get_current_u
                 "icon": "play_circle",
                 "title": "Session Started",
                 "detail": f"{s.get('subject', 'Unknown Subject')} by {s.get('teacher_id', 'Teacher')}",
-                "timestamp": s.get("start_time", datetime.utcnow()).isoformat() if hasattr(s.get("start_time", ""), "isoformat") else str(s.get("start_time", "")),
+                "timestamp": s.get("start_time", datetime.now(timezone.utc)).isoformat() if hasattr(s.get("start_time", ""), "isoformat") else str(s.get("start_time", "")),
                 "color": "info",
             })
 
@@ -2254,7 +2262,7 @@ async def get_activity_log(current_user: str = Depends(AuthService.get_current_u
                 "icon": "warning",
                 "title": "Security Alert",
                 "detail": f"Intruder detected at {log.get('location', 'Unknown Location')}",
-                "timestamp": log.get("timestamp", datetime.utcnow()).isoformat() if hasattr(log.get("timestamp", ""), "isoformat") else str(log.get("timestamp", "")),
+                "timestamp": log.get("timestamp", datetime.now(timezone.utc)).isoformat() if hasattr(log.get("timestamp", ""), "isoformat") else str(log.get("timestamp", "")),
                 "color": "error",
             })
 

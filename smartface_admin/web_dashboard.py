@@ -48,12 +48,14 @@ try:
     import pyttsx3
     _TTS_AVAILABLE = True
 except ImportError:
+    pyttsx3 = None
     _TTS_AVAILABLE = False
 
 try:
     import pywhatkit
     _WHATSAPP_AVAILABLE = True
 except ImportError:
+    pywhatkit = None
     _WHATSAPP_AVAILABLE = False
 
 # ── AI Analyst (graceful fallback if Gemini key missing) ───────────────────
@@ -61,6 +63,7 @@ try:
     from core import ai_analyst
     _AI_AVAILABLE = True
 except Exception:
+    ai_analyst = None
     _AI_AVAILABLE = False
 
 # ── Secrets: st.secrets (cloud) or .env (local) ────────────────────────────
@@ -76,7 +79,7 @@ SENDER_PASSWORD = _get_secret("EMAIL_PASSWORD", "")
 
 # ── Voice helper ───────────────────────────────────────────────────────────
 def nexa_speak(text: str):
-    if not _TTS_AVAILABLE:
+    if not _TTS_AVAILABLE or pyttsx3 is None:
         st.info("🔊 Voice unavailable in cloud mode.")
         return
     engine = pyttsx3.init()
@@ -319,7 +322,10 @@ else:
     if st.sidebar.button("📷 2. Start Smart Camera", use_container_width=True):
         st.sidebar.info("Camera initializing... (Press 'q' in the camera window to close it)")
         try:
-            subprocess.Popen([sys.executable, attendance_system_path])
+            kwargs = {}
+            if sys.platform == "win32":
+                kwargs["creationflags"] = subprocess.CREATE_NEW_CONSOLE
+            subprocess.Popen([sys.executable, attendance_system_path], **kwargs)
         except Exception as e:
             st.sidebar.error(f"❌ Error: {e}")
 
@@ -503,8 +509,9 @@ with tab1:
                 st.subheader("🔥 Attendance Density Heatmap")
                 try:
                     hm = df.copy()
-                    hm["Day"]  = hm["Datetime"].dt.day_name()
-                    hm["Hour"] = hm["Datetime"].dt.hour
+                    dt_series = pd.to_datetime(hm["Datetime"], errors="coerce")
+                    hm["Day"]  = dt_series.dt.day_name()
+                    hm["Hour"] = dt_series.dt.hour
                     day_order  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
                     pivot      = hm.groupby(["Day","Hour"]).size().reset_index(name="Records")
                     fig_hm = px.density_heatmap(
@@ -534,7 +541,7 @@ with tab1:
 
             profile_col, stats_col = st.columns([1, 2.5])
             with profile_col:
-                folder_name = f"{str(selected_student).strip()}_{str(roll_no).strip()}"
+                folder_name = f"{selected_student.strip()}_{str(roll_no).strip()}"
                 photo_path  = os.path.join("dataset", folder_name)
                 shown = False
                 if os.path.exists(photo_path):
@@ -731,7 +738,9 @@ with tab5:
                     "Please ensure regular attendance — Rural Engineering College."
                 )
                 wa_msg = st.text_area("WhatsApp Message:", value=default_msg, height=100)
-                if st.button("🚀 Send WhatsApp Alert", use_container_width=True):
+                if not _WHATSAPP_AVAILABLE or pywhatkit is None:
+                    st.error("❌ `pywhatkit` is not installed or unavailable in this environment.")
+                elif st.button("🚀 Send WhatsApp Alert", use_container_width=True):
                     phone = str(s_df[s_df["Name"] == target]["Parent_Phone"].iloc[0])
                     if pd.isna(phone) or not phone.strip():
                         st.error("❌ No phone number in database.")
@@ -752,11 +761,12 @@ with tab6:
     st.header("🧠 AI Attendance Command Center")
     st.markdown("Powered by Google Gemini. Get deep insights and talk to your attendance data.")
 
-    if not _AI_AVAILABLE:
+    if not _AI_AVAILABLE or ai_analyst is None:
         st.error("❌ AI module unavailable. Check that `GOOGLE_API_KEY` is set in Secrets.")
     elif df.empty:
         st.warning("No data available for AI analysis. Capture attendance logs first.")
     else:
+        student_names = sorted(df["Name"].unique().tolist())
         ai_col1, ai_col2 = st.columns(2)
 
         with ai_col1:

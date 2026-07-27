@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
-import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:animated_icon/animated_icon.dart';
-import 'modern_animated_icon.dart';
+import 'package:smartface_attendance/design_system/ui/smart_bottom_nav.dart';
 
 /// Item data model for SmartSalomonBottomBar.
 class SmartSalomonNavItemData {
@@ -23,9 +21,9 @@ class SmartSalomonNavItemData {
   });
 }
 
-/// SmartSalomonBottomBar — Premium Salomon Bottom Bar implementation for Smart Attendance AI.
-/// Supports role-based navigation, smooth active color transitions, animated icons,
-/// and accessibility compliant 48x48 touch target area inside SafeArea.
+/// SmartSalomonBottomBar — Premium Bottom Navigation implementation for Smart Attendance AI.
+/// Built with SmartBottomNav for fixed-width grid spacing, spring indicator pill,
+/// frosted glassmorphism, animated icons, and accessibility compliant touch targets.
 class SmartSalomonBottomBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -50,88 +48,21 @@ class SmartSalomonBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final Color effectiveActiveColor = activeColor ?? AppColors.primary;
-    final Color effectiveInactiveColor =
-        inactiveColor ??
-        (isDark ? const Color(0xFF6C7593) : const Color(0xFF8A90AE));
-    final Color backgroundColor = isDark
-        ? const Color(0xFF0F152B)
-        : Colors.white;
-    final Color borderColor = isDark
-        ? const Color(0xFF1E2848).withValues(alpha: 0.6)
-        : const Color(0xFFE5E7F0).withValues(alpha: 0.7);
-
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double horizontalMargin = screenWidth < 380 ? 8 : 16;
-
-    return SafeArea(
-      top: false,
-      minimum: const EdgeInsets.only(bottom: 6),
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: borderColor, width: 1.0),
-          boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? Colors.black.withValues(alpha: 0.4)
-                  : const Color(0xFF8794C8).withValues(alpha: 0.18),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: SalomonBottomBar(
-          currentIndex: currentIndex,
-          onTap: onTap,
-          duration: animationDuration,
-          unselectedItemColor: effectiveInactiveColor,
-          items: items.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            final isSelected = index == currentIndex;
-
-            Widget iconWidget;
-            if (item.animateIcon != null) {
-              iconWidget = ModernAnimatedIcon(
-                animateIcon: item.animateIcon!,
-                fallbackIcon: isSelected
-                    ? (item.activeIcon ?? item.icon)
-                    : item.icon,
-                size: 20,
-                activeColor: item.selectedColor ?? effectiveActiveColor,
-                inactiveColor: effectiveInactiveColor,
-                isActive: isSelected,
-                semanticLabel: item.title,
-              );
-            } else {
-              iconWidget = Icon(
-                isSelected ? (item.activeIcon ?? item.icon) : item.icon,
-                size: 20,
-              );
-            }
-
-            return SalomonBottomBarItem(
-              icon: iconWidget,
-              title: Text(
-                item.title,
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              selectedColor: item.selectedColor ?? effectiveActiveColor,
-            );
-          }).toList(),
-        ),
-      ),
+    return SmartBottomNav(
+      currentIndex: currentIndex,
+      onTap: onTap,
+      role: role,
+      showLabels: showLabels,
+      items: items.map((item) {
+        return BottomNavItemData(
+          icon: item.icon,
+          activeIcon: item.activeIcon,
+          animateIcon: item.animateIcon,
+          label: item.title,
+          route: item.route,
+        );
+      }).toList(),
     );
   }
 }
+

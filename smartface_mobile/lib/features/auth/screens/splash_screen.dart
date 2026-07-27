@@ -411,7 +411,7 @@ class _SplashScreenState extends State<SplashScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child:
                 Text(
-                      'Face Recognition Attendance System',
+                      'Secure. Intelligent. Effortless Attendance.',
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

@@ -87,10 +87,10 @@ class _AdminDashboardState extends State<AdminDashboard>
           _stats = stats;
         } else {
           _stats = {
-            'total_students': '1,247',
-            'total_teachers': '86',
+            'total_students': '0',
+            'total_teachers': '0',
             'active_sessions': '0',
-            'attendance_today': '89%',
+            'attendance_today': '0%',
             'intruder_alerts': '0',
             'pending_leaves': '0',
           };

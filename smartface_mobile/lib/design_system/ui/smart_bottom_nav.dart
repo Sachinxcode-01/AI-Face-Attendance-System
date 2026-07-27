@@ -85,7 +85,7 @@ class SmartBottomNav extends StatelessWidget {
         : const Color(0xFFE5E7F0).withValues(alpha: 0.7);
 
     final double screenWidth = MediaQuery.of(context).size.width;
-    final bool hideText = !showLabels || screenWidth < 360;
+    final bool hideText = !showLabels || screenWidth < 320;
     final double horizontalMargin = screenWidth < 380 ? 8 : 16;
     final double internalPaddingHorizontal = screenWidth < 380 ? 6 : 12;
     final double barHeight = hideText ? 62.0 : 72.0;
