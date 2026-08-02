@@ -52,7 +52,7 @@ google-services.json
 GoogleService-Info.plist
 
 # ───────────────────────────────────────────────
-# Generated / Large Files
+# Generated / Large Binary Files
 # ───────────────────────────────────────────────
 dataset/
 Intruders/
@@ -63,6 +63,11 @@ backups/
 *.pkl
 *.tar.gz
 *.zip
+# APK / IPA / AAB — too large for GitHub (>100 MB)
+*.apk
+*.ipa
+*.aab
+smartface_landing_web/public/downloads/
 
 # ───────────────────────────────────────────────
 # System Files
@@ -76,7 +81,9 @@ desktop.ini
 # ───────────────────────────────────────────────
 .vscode/
 .idea/
-*.iml# Local sensitive files - do NOT commit
+*.iml
+
+# Local sensitive files - do NOT commit
 data/face_encodings_arcface.pkl
 smartface_mobile/android/app/google-services.json
 smartface_mobile/ios/Runner/GoogleService-Info.plist
@@ -87,6 +94,3 @@ skills-lock.json
 
 # Next.js build output
 smartface_landing_web/.next/
-
-nul
-smartface_mobile/nul
