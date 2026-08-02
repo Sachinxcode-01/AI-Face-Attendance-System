@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { APP_RELEASE } from '@/config/app-release';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     if (!APP_RELEASE.isAvailable) {
       return NextResponse.json(
@@ -13,13 +13,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const host = request.headers.get('host') || 'localhost:3000';
-    const protocol = request.headers.get('x-forwarded-proto') || 'https';
-    const baseUrl = `${protocol}://${host}`;
-    const redirectUrl = new URL(APP_RELEASE.apkDownloadUrl, baseUrl);
-
-    const response = NextResponse.redirect(redirectUrl, { status: 307 });
-    response.headers.set('Content-Type', 'application/vnd.android.package-archive');
+    // Redirect directly to the APK download URL (GitHub Releases CDN)
+    const response = NextResponse.redirect(APP_RELEASE.apkDownloadUrl, { status: 307 });
     response.headers.set('Content-Disposition', `attachment; filename="${APP_RELEASE.apkFileName}"`);
     response.headers.set('Cache-Control', 'public, max-age=3600');
     response.headers.set('X-Content-Type-Options', 'nosniff');

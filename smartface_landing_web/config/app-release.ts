@@ -26,7 +26,7 @@ export const APP_RELEASE: AppReleaseConfig = {
   versionCode: 2,
   releaseDate: 'July 27, 2026',
   apkFileName: 'Smart-Attendance-AI-v1.1.0.apk',
-  apkDownloadUrl: '/downloads/Smart-Attendance-AI-v1.1.0.apk',
+  apkDownloadUrl: 'https://github.com/Sachinxcode-01/AI-Face-Attendance-System/releases/download/v1.1.0/Smart-Attendance-AI-v1.1.0.apk',
   apiDownloadUrl: '/api/download/android',
   fileSize: '113.68 MB',
   fileSizeBytes: 119198462,
