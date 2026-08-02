@@ -36,6 +36,6 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.pyright]
-extraPaths = ["core", "smartface_pro_api", "smartface_admin"]
+extraPaths = ["core", "smartface_pro_api", "smartface_admin", "smartface_pro_web"]
 pythonVersion = "3.10"
 

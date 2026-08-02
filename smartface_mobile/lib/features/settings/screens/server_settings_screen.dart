@@ -24,6 +24,7 @@ import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
+import 'package:smartface_attendance/features/chatbot/controllers/chatbot_controller.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
@@ -1235,6 +1236,96 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   color: Colors.white30,
                 ),
           onTap: () => themeCtrl.setMode(ThemeMode.system),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        _buildSectionHeader('NEXA AI ASSISTANT CONFIGURATION'),
+        const SizedBox(height: AppSpacing.sm),
+        Consumer<ChatbotController>(
+          builder: (context, chatbotCtrl, child) {
+            return Column(
+              children: [
+                PremiumSettingRow(
+                  icon: Icons.auto_awesome,
+                  title: 'Nexa Floating AI Assistant',
+                  subtitle:
+                      'Show floating, draggable Nexa AI assistant icon across application screens',
+                  iconColor: AppColors.cyan,
+                  iconBgColor: AppColors.cyan.withValues(alpha: 0.15),
+                  trailing: Switch(
+                    value: chatbotCtrl.isEnabled,
+                    activeThumbColor: AppColors.gold,
+                    onChanged: (val) {
+                      chatbotCtrl.toggleEnabled(val);
+                      AppToast.show(
+                        context,
+                        message: val
+                            ? 'Nexa Assistant Enabled'
+                            : 'Nexa Assistant Disabled',
+                        type: ToastType.info,
+                      );
+                    },
+                  ),
+                ),
+                if (chatbotCtrl.isEnabled) ...[
+                  PremiumSettingRow(
+                    icon: Icons.touch_app_outlined,
+                    title: 'Reset Floating Assistant Position',
+                    subtitle:
+                        'Reset floating button back to default bottom-right position',
+                    iconColor: AppColors.gold,
+                    iconBgColor: AppColors.gold.withValues(alpha: 0.15),
+                    trailing: const Icon(
+                      Icons.restore,
+                      color: AppColors.gold,
+                      size: 20,
+                    ),
+                    onTap: () {
+                      chatbotCtrl.resetPosition();
+                      AppToast.show(
+                        context,
+                        message: 'Assistant position reset',
+                        type: ToastType.success,
+                      );
+                    },
+                  ),
+                  PremiumSettingRow(
+                    icon: Icons.cleaning_services_outlined,
+                    title: 'Clear Chat History',
+                    subtitle:
+                        'Erase all saved chat messages from local device storage',
+                    iconColor: AppColors.error,
+                    iconBgColor: AppColors.error.withValues(alpha: 0.15),
+                    trailing: const Icon(
+                      Icons.delete_outline,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
+                    onTap: () async {
+                      final confirm = await PremiumDialogs.showConfirmDialog(
+                        context,
+                        title: 'Clear Chat History',
+                        message:
+                            'Are you sure you want to delete all saved Nexa conversation messages?',
+                        confirmLabel: 'CLEAR',
+                        cancelLabel: 'CANCEL',
+                        isDestructive: true,
+                      );
+                      if (confirm == true) {
+                        await chatbotCtrl.clearMessages();
+                        if (context.mounted) {
+                          AppToast.show(
+                            context,
+                            message: 'Chat history cleared',
+                            type: ToastType.info,
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ],
+              ],
+            );
+          },
         ),
       ],
     );

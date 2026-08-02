@@ -441,11 +441,136 @@ const sanitizePrompt = (text) => {
   return sanitized.trim();
 };
 
-// ─── POST /ai/chat ───────────────────────────────────────────────
-router.post('/chat', authenticate, async (req, res) => {
+// ─── FAQ & Knowledge Base for Smart Attendance AI ────────────────────────
+const KNOWLEDGE_BASE = [
+  {
+    keywords: ["what is smart attendance", "about app", "how app works", "overview"],
+    answer: "Smart Attendance AI is an enterprise academic attendance platform featuring AI face recognition, dynamic rolling QR codes, real-time analytics, leave management, and role-based portals for Students, Teachers, Parents, and Admins.",
+    actions: []
+  },
+  {
+    keywords: ["qr", "scan", "qr code", "mark qr"],
+    answer: "To mark QR attendance: Go to the 'Scan' tab or QR Attendance screen, point your camera at the teacher's live rolling QR code, and hold steady. Your verification will log in real-time!",
+    actions: [
+      { type: "navigate", label: "Open QR Attendance", route: "/student/qr-attendance", roles: ["student"] }
+    ]
+  },
+  {
+    keywords: ["face", "facial", "recognition", "face attendance", "camera"],
+    answer: "To use Face Verification: Open Face Attendance, align your face inside the circular scanner guide in a bright room, and wait for green biometric verification. Never use photos of screens.",
+    actions: [
+      { type: "navigate", label: "Open Face Attendance", route: "/student/face-attendance", roles: ["student"] }
+    ]
+  },
+  {
+    keywords: ["timetable", "schedule", "classes today", "class schedule"],
+    answer: "You can check your daily schedule, time slots, subject names, and assigned classroom numbers on the Timetable screen.",
+    actions: [
+      { type: "navigate", label: "Open Timetable", route: "/student/timetable", roles: ["student"] }
+    ]
+  },
+  {
+    keywords: ["leave", "apply leave", "sick leave", "absent request"],
+    answer: "To apply for leave: Go to Leave Hub, tap 'Apply Leave', pick your start and end dates, select leave category (Sick, Personal, Emergency, Academic), type your reason, and submit for faculty review.",
+    actions: [
+      { type: "navigate", label: "Apply for Leave", route: "/student/leave-apply", roles: ["student"] },
+      { type: "navigate", label: "Review Leave Requests", route: "/teacher/leave-approvals", roles: ["teacher", "admin"] }
+    ]
+  },
+  {
+    keywords: ["report", "analytics", "percentage", "subject attendance", "download report"],
+    answer: "You can view subject-wise attendance breakdown, overall percentages, monthly trends, and export CSV/PDF reports in the Reports section.",
+    actions: [
+      { type: "navigate", label: "View Reports", route: "/student/reports", roles: ["student"] },
+      { type: "navigate", label: "View Analytics", route: "/teacher/reports", roles: ["teacher", "admin"] }
+    ]
+  },
+  {
+    keywords: ["start session", "generate qr", "teacher qr", "faculty portal"],
+    answer: "Teachers can launch an attendance session by opening the Faculty Portal, choosing the target course/section, and tapping 'Generate Rolling QR' or starting 'Live Monitor'.",
+    actions: [
+      { type: "navigate", label: "Generate QR", route: "/teacher/qr-generator", roles: ["teacher"] },
+      { type: "navigate", label: "Live Monitor", route: "/teacher/live-monitor", roles: ["teacher"] }
+    ]
+  },
+  {
+    keywords: ["ward", "child", "parent portal", "switch ward"],
+    answer: "Parents can view linked ward attendance, subject performance, and leave history in the Parent Portal. Use the ward dropdown at top to switch between multiple children.",
+    actions: [
+      { type: "navigate", label: "Parent Portal", route: "/parent/dashboard", roles: ["parent"] }
+    ]
+  },
+  {
+    keywords: ["system health", "audit", "security", "logs", "admin portal"],
+    answer: "Administrators can monitor live session telemetry, inspect security alerts and intruder logs, audit user accounts, and view institution analytics in the Command Center.",
+    actions: [
+      { type: "navigate", label: "System Health", route: "/admin/system-health", roles: ["admin", "hod"] },
+      { type: "navigate", label: "Security Logs", route: "/admin/security-logs", roles: ["admin", "hod"] }
+    ]
+  },
+  {
+    keywords: ["photo", "profile photo", "avatar", "settings"],
+    answer: "You can update your profile photo in Profile Settings. Choose a JPEG/PNG under 5 MB. Photos save permanently to server storage and update automatically across all screens.",
+    actions: [
+      { type: "navigate", label: "Open Profile", route: "/student/profile", roles: ["student", "teacher", "parent", "admin"] }
+    ]
+  }
+];
+
+// Navigation route allowlist per role
+const ROUTE_ALLOWLIST = {
+  student: [
+    "/student/dashboard", "/student/timetable", "/student/qr-attendance",
+    "/student/face-attendance", "/student/history", "/student/reports",
+    "/student/leave-apply", "/student/leave-hub", "/notifications/nexus",
+    "/student/profile", "/settings"
+  ],
+  teacher: [
+    "/teacher/dashboard", "/teacher/classes", "/teacher/qr-generator",
+    "/teacher/live-monitor", "/teacher/reports", "/teacher/leave-approvals",
+    "/teacher/profile", "/settings"
+  ],
+  parent: [
+    "/parent/dashboard", "/parent/reports", "/parent/alerts",
+    "/parent/leave-status", "/parent/profile", "/settings"
+  ],
+  admin: [
+    "/admin/dashboard", "/admin/users", "/admin/sessions",
+    "/admin/reports", "/admin/system-health", "/admin/security-logs",
+    "/admin/profile", "/settings"
+  ],
+  hod: [
+    "/admin/dashboard", "/admin/users", "/admin/sessions",
+    "/admin/reports", "/admin/system-health", "/admin/security-logs",
+    "/admin/profile", "/settings"
+  ]
+};
+
+// Filter suggested actions by role
+const filterActionsForRole = (actions, role) => {
+  if (!actions || !Array.isArray(actions)) return [];
+  const normalizedRole = (role || 'student').toLowerCase();
+  const allowedRoutes = ROUTE_ALLOWLIST[normalizedRole] || ROUTE_ALLOWLIST.student;
+
+  return actions.filter(act => {
+    if (act.roles && !act.roles.includes(normalizedRole)) return false;
+    return allowedRoutes.some(r => act.route && act.route.startsWith(r));
+  }).map(act => ({
+    type: act.type || "navigate",
+    label: act.label,
+    route: act.route
+  }));
+};
+
+// ─── POST /ai/chat & /api/assistant/chat ───────────────────────────────────────
+const handleChatRequest = async (req, res) => {
   try {
-    const { message, history } = req.body;
-    if (!message) {
+    const message = req.body.message || req.body.query || "";
+    const history = req.body.history || [];
+    const conversationId = req.body.conversationId || `conv_${Date.now()}`;
+    const currentRoute = req.body.currentRoute || "";
+
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
       return res.status(400).json({ detail: "Message is required." });
     }
 
@@ -456,73 +581,150 @@ router.post('/chat', authenticate, async (req, res) => {
       return res.status(400).json({ detail: secError.message });
     }
 
-    let systemContext = "You are SmartFace AI, an expert academic assistant.";
-    if (req.userRole === 'student') {
-      const stats = await getStudentAttendanceStats(req.userEmail);
-      systemContext += ` You are chatting with student ${req.userEmail}. Current Stats: Overall Attendance: ${(stats.overall_percentage * 100).toFixed(0)}%, standing: "${stats.standing}", rank: "${stats.rank}", streak: ${stats.streak} days. Subject breakdown: ${stats.subjects.map(s => `${s.subject}: ${(s.percentage*100).toFixed(0)}%`).join(', ')}. Keep replies extremely concise, encouraging, and academic-focused.`;
-    } else if (req.userRole === 'teacher') {
-      systemContext += ` You are chatting with teacher ${req.userEmail}. You can help them analyze classroom participation, session schedules, and student attendance risk levels.`;
-    } else {
-      systemContext += ` You are chatting with administrator ${req.userEmail}. You have access to security logs, intruder telemetry, leave applications, and campus-wide statistics.`;
-    }
+    const userRole = (req.userRole || 'student').toLowerCase();
+    const userEmail = req.userEmail || req.user?.email || "user@smartface.ai";
+    const userName = req.userName || req.user?.name || userEmail.split('@')[0];
 
-    if (groqClient) {
-      const messages = [
-        { role: "system", content: systemContext },
-        ...(history || []).map(h => ({
-          role: h.role === 'user' ? 'user' : 'assistant',
-          content: h.content
-        })),
-        { role: "user", content: cleanMessage }
-      ];
+    // Check for real data intent queries
+    const msgLower = cleanMessage.toLowerCase();
+    let realDataAddendum = "";
 
-      const response = await groqClient.chat.completions.create({
-        messages,
-        model: MODEL_NAME,
-        temperature: 0.5,
-        max_tokens: 300
-      });
-
-      const reply = response.choices[0].message.content.trim();
-      return res.json({ reply });
-    }
-
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-    if (GEMINI_API_KEY) {
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-      
-      const contents = [
-        { role: 'user', parts: [{ text: `System context: ${systemContext}` }] },
-        ...(history || []).map(h => ({
-          role: h.role === 'user' ? 'user' : 'model',
-          parts: [{ text: h.content }]
-        })),
-        { role: 'user', parts: [{ text: cleanMessage }] }
-      ];
-
-      const geminiRes = await fetch(geminiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents })
-      });
-      const geminiData = await geminiRes.json();
-      if (geminiData.candidates && geminiData.candidates[0].content) {
-        const reply = geminiData.candidates[0].content.parts[0].text.trim();
-        return res.json({ reply });
+    if (msgLower.includes("my attendance") || msgLower.includes("attendance percentage") || msgLower.includes("what is my percentage")) {
+      if (userRole === 'student') {
+        const stats = await getStudentAttendanceStats(userEmail);
+        realDataAddendum = ` [Verified Database Stats for ${userName}: Overall Attendance is ${(stats.overall_percentage * 100).toFixed(0)}%, Standing: "${stats.standing}", Rank: "${stats.rank}", Streak: ${stats.streak} days]`;
+      }
+    } else if (msgLower.includes("active session") || msgLower.includes("sessions today")) {
+      const activeCount = await Session.countDocuments({ is_active: true });
+      realDataAddendum = ` [Verified Database Stats: Currently ${activeCount} active attendance sessions on campus]`;
+    } else if (msgLower.includes("pending leave") || msgLower.includes("my leave status")) {
+      const leaves = await Leave.find({ user_id: userEmail }).sort({ created_at: -1 }).limit(3);
+      if (leaves.length > 0) {
+        realDataAddendum = ` [Your Recent Leaves: ${leaves.map(l => `${l.category} (${l.status})`).join(', ')}]`;
       }
     }
 
-    let fallbackReply = `Hi! I am SmartFace AI. Currently, my live API connection is offline, but I can see you said: "${cleanMessage}". `;
-    if (req.userRole === 'student') {
-      fallbackReply += "Your attendance is strong, keep attending your compiler design classes!";
-    } else {
-      fallbackReply += "How can I assist you with database administration or lecture schedules today?";
+    // Match query against knowledge base
+    let matchedKnowledge = null;
+    for (const item of KNOWLEDGE_BASE) {
+      if (item.keywords.some(kw => msgLower.includes(kw))) {
+        matchedKnowledge = item;
+        break;
+      }
     }
 
-    res.json({ reply: fallbackReply });
+    // Detect completely unrelated questions
+    const unrelatedTriggers = ["weather", "president", "recipe", "movie", "football", "joke", "crypto", "stock"];
+    const isUnrelated = unrelatedTriggers.some(t => msgLower.includes(t)) && !matchedKnowledge;
+
+    if (isUnrelated) {
+      return res.json({
+        success: true,
+        conversationId,
+        reply: "I am designed to help with Smart Attendance AI, attendance workflows, schedules, reports, leave, QR attendance, face verification, and application support.",
+        message: {
+          id: `msg_${Date.now()}`,
+          role: "assistant",
+          content: "I am designed to help with Smart Attendance AI, attendance workflows, schedules, reports, leave, QR attendance, face verification, and application support.",
+          createdAt: new Date().toISOString()
+        },
+        suggestedActions: []
+      });
+    }
+
+    // Construct system context prompt for Groq/Gemini LLM
+    let systemContext = `You are Nexa Attendance Assistant, an expert AI helper for the Smart Attendance AI application.
+You are chatting with an authenticated user: ${userName} (Role: ${userRole.toUpperCase()}, Email: ${userEmail}).
+Current Screen Route: ${currentRoute || 'Dashboard'}.
+Core Instruction: Answer using verified application knowledge and the authenticated user's permitted role context.
+Never reveal secrets, API keys, passwords, JWT tokens, or another user's data.
+Never claim an action succeeded unless confirmed by an authorized API response.
+For unrelated questions, politely state that you assist with Smart Attendance AI application features.
+Keep responses concise, clear, professional, and helpful (max 3-4 sentences).`;
+
+    if (realDataAddendum) {
+      systemContext += realDataAddendum;
+    }
+
+    // Try Groq LLM Provider
+    if (groqClient) {
+      try {
+        const messages = [
+          { role: "system", content: systemContext },
+          ...(history || []).slice(-6).map(h => ({
+            role: h.role === 'user' ? 'user' : 'assistant',
+            content: h.content
+          })),
+          { role: "user", content: cleanMessage + (realDataAddendum || "") }
+        ];
+
+        const response = await groqClient.chat.completions.create({
+          messages,
+          model: MODEL_NAME,
+          temperature: 0.5,
+          max_tokens: 350
+        });
+
+        const reply = response.choices[0].message.content.trim();
+        const actions = matchedKnowledge ? filterActionsForRole(matchedKnowledge.actions, userRole) : [];
+
+        return res.json({
+          success: true,
+          conversationId,
+          reply,
+          message: {
+            id: `msg_${Date.now()}`,
+            role: "assistant",
+            content: reply,
+            createdAt: new Date().toISOString()
+          },
+          suggestedActions: actions
+        });
+      } catch (err) {
+        console.error("[Nexa AI] Groq API Error:", err.message);
+      }
+    }
+
+    // Fallback response using Knowledge Base or Deterministic Answer
+    let fallbackReply = "";
+    let actions = [];
+
+    if (matchedKnowledge) {
+      fallbackReply = matchedKnowledge.answer;
+      if (realDataAddendum) {
+        fallbackReply += ` ${realDataAddendum.replace(/\[|\]/g, '')}.`;
+      }
+      actions = filterActionsForRole(matchedKnowledge.actions, userRole);
+    } else if (realDataAddendum) {
+      fallbackReply = `Here is your current account data: ${realDataAddendum.replace(/\[|\]/g, '')}. Let me know if you need help navigating to your timetable or reports!`;
+    } else {
+      fallbackReply = `Hello ${userName}! I can help you with your ${userRole} dashboard, QR scanning, face attendance, timetable, leave applications, and reports. What would you like to do?`;
+      if (userRole === 'student') {
+        actions = [
+          { type: "navigate", label: "Open QR Attendance", route: "/student/qr-attendance" },
+          { type: "navigate", label: "View Timetable", route: "/student/timetable" }
+        ];
+      }
+    }
+
+    res.json({
+      success: true,
+      conversationId,
+      reply: fallbackReply,
+      message: {
+        id: `msg_${Date.now()}`,
+        role: "assistant",
+        content: fallbackReply,
+        createdAt: new Date().toISOString()
+      },
+      suggestedActions: actions
+    });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    console.error("Nexa Chat Error:", error);
+    res.status(500).json({ detail: error.message || "Chat service error" });
   }
-});
+};
+
+router.post(['/chat', '/assistant/chat', '/api/assistant/chat', '/ai/chat'], authenticate, handleChatRequest);
 
 module.exports = router;

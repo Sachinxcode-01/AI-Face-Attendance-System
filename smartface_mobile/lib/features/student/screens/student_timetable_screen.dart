@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
@@ -133,14 +133,17 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
   }
 
   Widget _buildTimetableList(List<dynamic> slots) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      itemCount: slots.length,
-      itemBuilder: (context, index) {
-        final slot = slots[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12.0),
-          child: GlassCard(
+    return AnimationLimiter(
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
+        itemCount: slots.length,
+        itemBuilder: (context, index) {
+          final slot = slots[index];
+          return StaggeredListItem(
+            position: index,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: GlassCard(
             child: Row(
               children: [
                 Container(
@@ -211,8 +214,10 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
               ],
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  ),
+);
+}
 }

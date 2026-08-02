@@ -29,6 +29,7 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
+import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/features/leave/models/leave_model.dart';
 
@@ -173,11 +174,13 @@ class _ParentDashboardState extends State<ParentDashboard> {
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.05,
-              vertical: 12,
+            padding: EdgeInsets.fromLTRB(
+              screenWidth * 0.05,
+              12,
+              screenWidth * 0.05,
+              110,
             ),
-            child: Column(
+            child: StaggeredColumn(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (_error != null) _buildErrorBanner(_error!),

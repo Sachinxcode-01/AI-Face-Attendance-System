@@ -181,6 +181,9 @@ class PredictionCard extends StatelessWidget {
       riskColor = Colors.redAccent;
     }
 
+    final dividerColor =
+        isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFE2E8F0);
+
     return ModernDashboardCard(
       padding: const EdgeInsets.all(20),
       borderColor: Colors.white.withValues(alpha: 0.05),
@@ -210,82 +213,108 @@ class PredictionCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _buildPredictionMetric(
-                  'Semester Projection',
-                  '${predictions.semesterProjection.toStringAsFixed(0)}%',
-                  isDark,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: _buildPredictionMetric(
+                    'Semester\nProjection',
+                    '${predictions.semesterProjection.toStringAsFixed(0)}%',
+                    isDark,
+                  ),
                 ),
               ),
-              Container(width: 1, height: 40, color: const Color(0xFFE2E8F0)),
+              Container(width: 1, height: 44, color: dividerColor),
               Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      'Attendance Trend',
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        color: const Color(0xFF7F8CA4),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(trendIcon, color: trendColor, size: 18),
-                        const SizedBox(width: 4),
-                        Text(
-                          predictions.trendDirection.toUpperCase(),
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: trendColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Container(width: 1, height: 40, color: const Color(0xFFE2E8F0)),
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      'AI Risk Level',
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        color: const Color(0xFF7F8CA4),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: riskColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: riskColor.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Text(
-                        predictions.riskLevel.toUpperCase(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Attendance\nTrend',
+                        textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
                           fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: riskColor,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? Colors.white60
+                              : const Color(0xFF7F8CA4),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(trendIcon, color: trendColor, size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              predictions.trendDirection.toUpperCase(),
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: trendColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Container(width: 1, height: 44, color: dividerColor),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'AI Risk\nLevel',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? Colors.white60
+                              : const Color(0xFF7F8CA4),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: riskColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: riskColor.withValues(alpha: 0.35),
+                          ),
+                        ),
+                        child: Text(
+                          predictions.riskLevel.toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: riskColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 18),
-          const Divider(color: Color(0xFFE2E8F0), height: 1),
+          Divider(color: dividerColor, height: 1),
           const SizedBox(height: 14),
           Row(
             children: [
@@ -298,12 +327,11 @@ class PredictionCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   predictions.missableClasses > 0
-                      ? 'You can safely miss up to ${predictions.missableClasses} classes this month while maintaining 75%+'
+                      ? 'You can safely miss up to ${predictions.missableClasses} classes without dropping below the target threshold.'
                       : 'Attention: You cannot miss any classes to avoid dropping below the 75% limit.',
                   style: GoogleFonts.inter(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: isDark ? Colors.white70 : const Color(0xFF1B2C56),
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -316,17 +344,22 @@ class PredictionCard extends StatelessWidget {
 
   Widget _buildPredictionMetric(String label, String value, bool isDark) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           label,
+          textAlign: TextAlign.center,
           style: GoogleFonts.inter(
             fontSize: 10,
-            color: const Color(0xFF7F8CA4),
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white60 : const Color(0xFF7F8CA4),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           value,
+          textAlign: TextAlign.center,
           style: GoogleFonts.outfit(
             fontSize: 20,
             fontWeight: FontWeight.bold,

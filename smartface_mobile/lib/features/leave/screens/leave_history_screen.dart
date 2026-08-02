@@ -13,9 +13,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/leave/controllers/leave_controller.dart';
 import 'package:smartface_attendance/features/leave/models/leave_model.dart';
@@ -120,16 +120,18 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                     )
                   : filteredLeaves.isEmpty
                   ? _buildEmptyState(isDark)
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(20),
-                      itemCount: filteredLeaves.length,
-                      itemBuilder: (context, index) {
-                        final leave = filteredLeaves[index];
-                        return _buildLeaveCard(leave, isDark)
-                            .animate()
-                            .fadeIn(delay: (index * 60).ms)
-                            .slideY(begin: 0.05);
-                      },
+                  : AnimationLimiter(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(20),
+                        itemCount: filteredLeaves.length,
+                        itemBuilder: (context, index) {
+                          final leave = filteredLeaves[index];
+                          return StaggeredListItem(
+                            position: index,
+                            child: _buildLeaveCard(leave, isDark),
+                          );
+                        },
+                      ),
                     ),
             ),
           ],

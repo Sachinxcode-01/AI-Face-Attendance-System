@@ -74,6 +74,7 @@ import 'package:smartface_attendance/features/analytics/screens/ai_analyst_scree
 import 'package:smartface_attendance/features/analytics/screens/analytics_dashboard_screen.dart';
 import 'package:smartface_attendance/features/settings/screens/server_settings_screen.dart';
 import 'package:smartface_attendance/features/settings/screens/component_showcase_screen.dart';
+import 'package:smartface_attendance/features/chatbot/widgets/floating_chatbot_overlay.dart';
 
 // Session Manager for listening to login state changes
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
@@ -744,9 +745,11 @@ class StudentShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      body: TabTransitionWrapper(
-        index: navigationShell.currentIndex,
-        child: navigationShell,
+      body: FloatingChatbotOverlay(
+        child: TabTransitionWrapper(
+          index: navigationShell.currentIndex,
+          child: navigationShell,
+        ),
       ),
       bottomNavigationBar: SmartSalomonBottomBar(
         currentIndex: navigationShell.currentIndex,
@@ -805,9 +808,11 @@ class TeacherShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      body: TabTransitionWrapper(
-        index: navigationShell.currentIndex,
-        child: navigationShell,
+      body: FloatingChatbotOverlay(
+        child: TabTransitionWrapper(
+          index: navigationShell.currentIndex,
+          child: navigationShell,
+        ),
       ),
       bottomNavigationBar: SmartSalomonBottomBar(
         currentIndex: navigationShell.currentIndex,
@@ -866,9 +871,11 @@ class ParentShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      body: TabTransitionWrapper(
-        index: navigationShell.currentIndex,
-        child: navigationShell,
+      body: FloatingChatbotOverlay(
+        child: TabTransitionWrapper(
+          index: navigationShell.currentIndex,
+          child: navigationShell,
+        ),
       ),
       bottomNavigationBar: SmartSalomonBottomBar(
         currentIndex: navigationShell.currentIndex,
@@ -927,9 +934,11 @@ class AdminShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      body: TabTransitionWrapper(
-        index: navigationShell.currentIndex,
-        child: navigationShell,
+      body: FloatingChatbotOverlay(
+        child: TabTransitionWrapper(
+          index: navigationShell.currentIndex,
+          child: navigationShell,
+        ),
       ),
       bottomNavigationBar: SmartSalomonBottomBar(
         currentIndex: navigationShell.currentIndex,

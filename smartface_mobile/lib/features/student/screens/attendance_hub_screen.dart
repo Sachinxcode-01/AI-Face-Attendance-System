@@ -354,7 +354,7 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
           onRefresh: _fetchHubData,
           color: AppColors.gold,
           child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
             children:
                 [
                       // 1. Health Score Card

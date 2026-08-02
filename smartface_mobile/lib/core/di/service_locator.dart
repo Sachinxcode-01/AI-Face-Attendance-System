@@ -41,6 +41,7 @@ import 'package:smartface_attendance/features/analytics/controllers/ai_controlle
 import 'package:smartface_attendance/features/notifications/controllers/notification_controller.dart';
 import 'package:smartface_attendance/features/leave/controllers/leave_controller.dart';
 import 'package:smartface_attendance/features/analytics/controllers/analytics_controller.dart';
+import 'package:smartface_attendance/features/chatbot/controllers/chatbot_controller.dart';
 
 // Sync Feature
 import 'package:smartface_attendance/features/sync/models/sync_state.dart';
@@ -138,11 +139,13 @@ Future<void> initServiceLocator() async {
   final sessionManager = SessionManager();
   final themeController = ThemeController();
   final appState = AppState();
+  final chatbotController = ChatbotController();
 
   // Load persistence for the managers synchronously/parallelly before registering.
   await Future.wait([
     sessionManager.init(),
     themeController.init(),
+    chatbotController.init(),
     offlineQueueService.init(),
     connectivityService.init(),
   ]);
@@ -150,6 +153,7 @@ Future<void> initServiceLocator() async {
   sl.registerSingleton<SessionManager>(sessionManager);
   sl.registerSingleton<ThemeController>(themeController);
   sl.registerSingleton<AppState>(appState);
+  sl.registerSingleton<ChatbotController>(chatbotController);
 
   // Set up ApiService callbacks to SessionManager
   ApiService.onSessionExpired = () {

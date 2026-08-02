@@ -420,12 +420,19 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
       final result = await ApiService.uploadAvatar(file, token);
       if (!mounted) return;
 
-      if (result.containsKey('avatar_url')) {
+      final String? photoUrl =
+          (result['profilePhotoUrl'] ?? result['avatar_url']) as String?;
+
+      if (photoUrl != null && photoUrl.isNotEmpty) {
         setState(() {
-          _profileData['avatar_url'] = result['avatar_url'];
+          _profileData['avatar_url'] = photoUrl;
+          _profileData['profilePhotoUrl'] = photoUrl;
           _isUploadingPhoto = false;
         });
-        _showSuccess('Profile photo updated! ✓');
+        await context.read<SessionManager>().updateAvatarUrl(photoUrl);
+        if (mounted) {
+          _showSuccess('Profile photo updated! ✓');
+        }
       } else {
         setState(() {
           _localAvatarFile = null;
@@ -520,10 +527,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 backgroundColor: const Color(0xFF070B1A),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 110),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -865,7 +869,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                         ),
                       ],
 
-                      const SizedBox(height: 50),
+                      const SizedBox(height: 80),
                     ],
                   ),
                 ),

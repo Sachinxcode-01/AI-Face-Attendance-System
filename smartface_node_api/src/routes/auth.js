@@ -19,6 +19,7 @@ const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 
 function formatAuthResponse(user, accessToken, refreshToken, message = "Success") {
   const wizardCompleted = user.setup_completed || user.biometric_registered || false;
+  const photoUrl = user.profilePhotoUrl || user.avatar_url || null;
   return {
     success: true,
     message: message,
@@ -26,6 +27,8 @@ function formatAuthResponse(user, accessToken, refreshToken, message = "Success"
     refresh_token: refreshToken,
     token_type: "bearer",
     role: user.role,
+    profilePhotoUrl: photoUrl,
+    avatar_url: photoUrl,
     biometric_registered: user.biometric_registered || false,
     setup_completed: wizardCompleted,
     data: {
@@ -36,6 +39,8 @@ function formatAuthResponse(user, accessToken, refreshToken, message = "Success"
         name: user.full_name || "",
         email: user.email,
         role: user.role,
+        profilePhotoUrl: photoUrl,
+        avatar_url: photoUrl,
         introCompleted: true,
         wizardCompleted: wizardCompleted
       }
@@ -847,10 +852,16 @@ router.get(['/profile', '/me'], authenticate, async (req, res) => {
     delete user._id;
     delete user.password;
 
+    const photoUrl = user.profilePhotoUrl || user.avatar_url || null;
+    user.profilePhotoUrl = photoUrl;
+    user.avatar_url = photoUrl;
+
     const wizardCompleted = user.setup_completed || user.biometric_registered || false;
     res.json({
       success: true,
       message: "Profile retrieved successfully",
+      profilePhotoUrl: photoUrl,
+      avatar_url: photoUrl,
       ...user,
       data: {
         user: {
@@ -858,6 +869,8 @@ router.get(['/profile', '/me'], authenticate, async (req, res) => {
           name: user.full_name,
           email: user.email,
           role: user.role,
+          profilePhotoUrl: photoUrl,
+          avatar_url: photoUrl,
           introCompleted: true,
           wizardCompleted: wizardCompleted
         }
@@ -876,7 +889,7 @@ router.post('/update-profile', authenticate, async (req, res) => {
       'full_name', 'phone', 'department', 'dob', 'college', 'semester', 'student_id',
       'employee_id', 'designation', 'specialization', 'qualification', 'experience', 'gender', 'address',
       'usn', 'course', 'section', 'roll_number', 'parent_details', 'language_preference',
-      'setup_completed', 'linked_children'
+      'setup_completed', 'linked_children', 'profilePhotoUrl', 'avatar_url'
     ];
     
     allowedKeys.forEach(key => {
@@ -884,6 +897,12 @@ router.post('/update-profile', authenticate, async (req, res) => {
         updateFields[key] = req.body[key];
       }
     });
+
+    if (updateFields.profilePhotoUrl && !updateFields.avatar_url) {
+      updateFields.avatar_url = updateFields.profilePhotoUrl;
+    } else if (updateFields.avatar_url && !updateFields.profilePhotoUrl) {
+      updateFields.profilePhotoUrl = updateFields.avatar_url;
+    }
 
     await User.updateOne({ email: req.userEmail }, { $set: updateFields });
 
@@ -926,7 +945,9 @@ router.get('/students', authenticate, async (req, res) => {
     const result = students.map(s => ({
       email: s.email,
       full_name: s.full_name,
-      student_id: s.student_id || '000'
+      student_id: s.student_id || '000',
+      profilePhotoUrl: s.profilePhotoUrl || s.avatar_url || null,
+      avatar_url: s.profilePhotoUrl || s.avatar_url || null
     }));
     res.json(result);
   } catch (error) {
@@ -947,21 +968,98 @@ router.post('/upload-student-face', authenticate, (req, res) => {
   });
 });
 
-// ─── POST /auth/upload-avatar ─────────────────────────────────────
-router.post('/upload-avatar', authenticate, async (req, res) => {
-  avatarUpload.single('file')(req, res, async (err) => {
+// Helper handler for profile photo uploads
+const handleProfilePhotoUpload = async (req, res) => {
+  const uploadSingle = avatarUpload.single('file');
+  uploadSingle(req, res, async (err) => {
     if (err) {
-      return res.status(400).json({ detail: err.message });
+      return res.status(400).json({ success: false, detail: err.message });
     }
     if (!req.file) {
-      return res.status(400).json({ detail: "No file uploaded" });
+      return res.status(400).json({ success: false, detail: "No image file uploaded" });
     }
 
     try {
+      // Validate magic bytes to ensure file is genuinely a JPEG, PNG, or WEBP image
+      const fileBuffer = fs.readFileSync(req.file.path);
+      const isJpeg = fileBuffer.length > 3 && fileBuffer[0] === 0xFF && fileBuffer[1] === 0xD8 && fileBuffer[2] === 0xFF;
+      const isPng = fileBuffer.length > 8 && fileBuffer[0] === 0x89 && fileBuffer[1] === 0x50 && fileBuffer[2] === 0x4E && fileBuffer[3] === 0x47;
+      const isWebp = fileBuffer.length > 12 && fileBuffer.toString('ascii', 0, 4) === 'RIFF' && fileBuffer.toString('ascii', 8, 12) === 'WEBP';
+
+      if (!isJpeg && !isPng && !isWebp) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ success: false, detail: "Invalid image file format or corrupted file." });
+      }
+
       const user = await User.findOne({ email: req.userEmail });
-      if (user && user.avatar_url) {
-        // Delete old avatar
-        const oldFilename = user.avatar_url.split('/').pop();
+      if (user && (user.profilePhotoUrl || user.avatar_url)) {
+        const oldUrl = user.profilePhotoUrl || user.avatar_url;
+        const oldFilename = oldUrl.split('/').pop();
+        if (oldFilename && oldFilename !== req.file.filename) {
+          const oldPath = path.join(avatarsDir, oldFilename);
+          if (fs.existsSync(oldPath)) {
+            try {
+              fs.unlinkSync(oldPath);
+            } catch (e) {
+              console.error("Failed to delete old avatar file:", e);
+            }
+          }
+        }
+      }
+
+      const avatarUrl = `/static/avatars/${req.file.filename}`;
+      const publicId = req.file.filename;
+
+      await User.updateOne(
+        { email: req.userEmail },
+        {
+          $set: {
+            avatar_url: avatarUrl,
+            profilePhotoUrl: avatarUrl,
+            profilePhotoPublicId: publicId
+          }
+        }
+      );
+
+      const updatedUser = await User.findOne({ email: req.userEmail }).lean();
+
+      res.json({
+        success: true,
+        message: "Profile photo updated successfully.",
+        profilePhotoUrl: avatarUrl,
+        avatar_url: avatarUrl,
+        profilePhotoPublicId: publicId,
+        user: {
+          id: updatedUser._id.toString(),
+          name: updatedUser.full_name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          profilePhotoUrl: avatarUrl,
+          avatar_url: avatarUrl
+        }
+      });
+    } catch (error) {
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      res.status(500).json({ success: false, detail: error.message });
+    }
+  });
+};
+
+// ─── POST /auth/upload-avatar & PATCH /api/users/me/profile-photo ──────────
+router.post('/upload-avatar', authenticate, handleProfilePhotoUpload);
+router.patch('/users/me/profile-photo', authenticate, handleProfilePhotoUpload);
+router.post('/users/me/profile-photo', authenticate, handleProfilePhotoUpload);
+
+// ─── DELETE /api/users/me/profile-photo & DELETE /auth/delete-avatar ────────
+const handleProfilePhotoDelete = async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.userEmail });
+    if (user && (user.profilePhotoUrl || user.avatar_url)) {
+      const oldUrl = user.profilePhotoUrl || user.avatar_url;
+      const oldFilename = oldUrl.split('/').pop();
+      if (oldFilename) {
         const oldPath = path.join(avatarsDir, oldFilename);
         if (fs.existsSync(oldPath)) {
           try {
@@ -971,19 +1069,42 @@ router.post('/upload-avatar', authenticate, async (req, res) => {
           }
         }
       }
-
-      const avatarUrl = `/static/avatars/${req.file.filename}`;
-      await User.updateOne({ email: req.userEmail }, { $set: { avatar_url: avatarUrl } });
-
-      res.json({
-        message: "Profile picture updated successfully",
-        avatar_url: avatarUrl
-      });
-    } catch (error) {
-      res.status(500).json({ detail: error.message });
     }
-  });
-});
+
+    await User.updateOne(
+      { email: req.userEmail },
+      {
+        $unset: {
+          avatar_url: 1,
+          profilePhotoUrl: 1,
+          profilePhotoPublicId: 1
+        }
+      }
+    );
+
+    const updatedUser = await User.findOne({ email: req.userEmail }).lean();
+
+    res.json({
+      success: true,
+      message: "Profile photo deleted successfully.",
+      profilePhotoUrl: null,
+      avatar_url: null,
+      user: {
+        id: updatedUser._id.toString(),
+        name: updatedUser.full_name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        profilePhotoUrl: null,
+        avatar_url: null
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, detail: error.message });
+  }
+};
+
+router.delete('/users/me/profile-photo', authenticate, handleProfilePhotoDelete);
+router.delete('/delete-avatar', authenticate, handleProfilePhotoDelete);
 
 // ─── POST /auth/train-faces ───────────────────────────────────────
 router.post('/train-faces', authenticate, async (req, res) => {

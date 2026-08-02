@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:smartface_attendance/core/network/api_service.dart';
 
 import 'app_colors.dart';
-import 'premium_background.dart';
 
 /// ============================================================================
 /// DashboardHeader — the rounded royal-blue header from the reference dashboard.
@@ -15,6 +15,7 @@ class DashboardHeader extends StatelessWidget {
   final String name;
   final String subtitle;
   final String? avatarText;
+  final String? avatarUrl;
   final VoidCallback? onNotifications;
   final bool hasUnread;
   final VoidCallback? onAvatar;
@@ -25,6 +26,7 @@ class DashboardHeader extends StatelessWidget {
     required this.name,
     required this.subtitle,
     this.avatarText,
+    this.avatarUrl,
     this.onNotifications,
     this.hasUnread = false,
     this.onAvatar,
@@ -43,71 +45,52 @@ class DashboardHeader extends StatelessWidget {
           bottomRight: Radius.circular(30),
         ),
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Decorative spheres.
-          const Positioned(
-            right: -20,
-            top: -30,
-            child: Opacity(
-              opacity: 0.35,
-              child: GlossySphere(size: 120, dark: true),
-            ),
-          ),
-          const Positioned(
-            right: 40,
-            bottom: -14,
-            child: Opacity(opacity: 0.5, child: GlossySphere(size: 46)),
-          ),
-          Column(
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          greeting,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            height: 1.2,
-                          ),
-                        ),
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          subtitle,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.82),
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      greeting,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                      ),
                     ),
-                  ),
-                  _NotificationButton(
-                    hasUnread: hasUnread,
-                    onTap: onNotifications,
-                  ),
-                  const SizedBox(width: 10),
-                  _Avatar(text: avatarText, onTap: onAvatar),
-                ],
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.82),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              _NotificationButton(
+                hasUnread: hasUnread,
+                onTap: onNotifications,
+              ),
+              const SizedBox(width: 10),
+              _Avatar(avatarUrl: avatarUrl, text: avatarText, onTap: onAvatar),
             ],
           ),
         ],
@@ -162,12 +145,19 @@ class _NotificationButton extends StatelessWidget {
 }
 
 class _Avatar extends StatelessWidget {
+  final String? avatarUrl;
   final String? text;
   final VoidCallback? onTap;
-  const _Avatar({this.text, this.onTap});
+  const _Avatar({this.avatarUrl, this.text, this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final String? fullUrl = (avatarUrl != null && avatarUrl!.isNotEmpty)
+        ? (avatarUrl!.startsWith('http')
+            ? avatarUrl!
+            : '${ApiService.baseUrl}$avatarUrl')
+        : null;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -179,13 +169,32 @@ class _Avatar extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
         ),
-        child: Text(
-          (text == null || text!.isEmpty) ? 'U' : text!,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-          ),
+        child: ClipOval(
+          child: fullUrl != null
+              ? Image.network(
+                  fullUrl,
+                  width: 44,
+                  height: 44,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Center(
+                    child: Text(
+                      (text == null || text!.isEmpty) ? 'U' : text!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                )
+              : Text(
+                  (text == null || text!.isEmpty) ? 'U' : text!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
         ),
       ),
     );

@@ -70,7 +70,8 @@ class GroqAnalyst:
                 temperature=0.6,
                 max_tokens=512,
             )
-            return response.choices[0].message.content.strip()
+            content = response.choices[0].message.content
+            return content.strip() if content else ""
         except Exception as e:
             print(f"[GroqAnalyst] API Error: {e}")
             return f"Analysis temporarily unavailable for {student_name}. Please try again later."

@@ -30,10 +30,11 @@
 */
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:async';
 
 // ======================================================
@@ -223,16 +224,19 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
             ? const NotificationShimmer()
             : notificationsList.isEmpty
             ? _buildEmptyState()
-            : ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                itemCount: notificationsList.length,
-                itemBuilder: (context, index) {
-                  final notification = notificationsList[index];
-                  final notifId = notification['id'] ?? '';
-                  return Dismissible(
+            : AnimationLimiter(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  itemCount: notificationsList.length,
+                  itemBuilder: (context, index) {
+                    final notification = notificationsList[index];
+                    final notifId = notification['id'] ?? '';
+                    return StaggeredListItem(
+                      position: index,
+                      child: Dismissible(
                         key: Key(notifId),
                         onDismissed: (direction) =>
                             _dismissNotification(notifId),
@@ -274,11 +278,10 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
                           ),
                         ),
                         child: _buildNotificationCard(notification),
-                      )
-                      .animate()
-                      .fadeIn(delay: (index * 100).ms)
-                      .slideX(begin: 0.1);
-                },
+                      ),
+                    );
+                  },
+                ),
               ),
       ),
     );

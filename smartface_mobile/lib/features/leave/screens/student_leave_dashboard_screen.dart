@@ -21,6 +21,7 @@ import 'package:smartface_attendance/features/leave/models/leave_balance.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
+import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 
 class StudentLeaveDashboardScreen extends StatefulWidget {
@@ -201,39 +202,57 @@ class _StudentLeaveDashboardScreenState
           ),
         ),
         const SizedBox(height: 12),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          childAspectRatio: 1.35,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          children: [
-            MetricCard(
-              label: 'Sick Leave',
-              value: '$sick Days',
-              icon: Icons.healing_rounded,
-              accentColor: Colors.tealAccent,
-            ),
-            MetricCard(
-              label: 'Personal Leave',
-              value: '$personal Days',
-              icon: Icons.person_rounded,
-              accentColor: Colors.orangeAccent,
-            ),
-            MetricCard(
-              label: 'Emergency Leave',
-              value: '$emergency Days',
-              icon: Icons.warning_amber_rounded,
-              accentColor: Colors.redAccent,
-            ),
-            MetricCard(
-              label: 'Academic Leave',
-              value: '$academic Days',
-              icon: Icons.school_rounded,
-              accentColor: Colors.blueAccent,
-            ),
-          ],
+        AnimationLimiter(
+          child: GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            childAspectRatio: 1.35,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            children: [
+              StaggeredGridItem(
+                position: 0,
+                columnCount: 2,
+                child: MetricCard(
+                  label: 'Sick Leave',
+                  value: '$sick Days',
+                  icon: Icons.healing_rounded,
+                  accentColor: Colors.tealAccent,
+                ),
+              ),
+              StaggeredGridItem(
+                position: 1,
+                columnCount: 2,
+                child: MetricCard(
+                  label: 'Personal Leave',
+                  value: '$personal Days',
+                  icon: Icons.person_rounded,
+                  accentColor: Colors.orangeAccent,
+                ),
+              ),
+              StaggeredGridItem(
+                position: 2,
+                columnCount: 2,
+                child: MetricCard(
+                  label: 'Emergency Leave',
+                  value: '$emergency Days',
+                  icon: Icons.warning_amber_rounded,
+                  accentColor: Colors.redAccent,
+                ),
+              ),
+              StaggeredGridItem(
+                position: 3,
+                columnCount: 2,
+                child: MetricCard(
+                  label: 'Academic Leave',
+                  value: '$academic Days',
+                  icon: Icons.school_rounded,
+                  accentColor: Colors.blueAccent,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     ).animate().fadeIn(delay: 200.ms, duration: 500.ms);

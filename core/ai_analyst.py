@@ -36,7 +36,8 @@ def get_groq_response(prompt, system_prompt="You are a helpful academic assistan
             temperature=0.7,
             max_tokens=1024,
         )
-        return chat_completion.choices[0].message.content.strip()
+        content = chat_completion.choices[0].message.content
+        return content.strip() if content else None
     except Exception as e:
         print(f"Groq API Error: {str(e)}")
         return None

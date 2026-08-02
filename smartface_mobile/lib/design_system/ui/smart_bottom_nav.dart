@@ -158,31 +158,29 @@ class SmartBottomNav extends StatelessWidget {
                         curve: Curves.easeOutCubic,
                         left: currentIndex * itemWidth + 4,
                         width: itemWidth - 8,
-                        top: hideText ? 4 : 3,
-                        bottom: hideText ? 4 : 3,
+                        top: hideText ? 6 : 5,
+                        bottom: hideText ? 6 : 5,
                         child: Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(
-                              borderRadius - 6,
-                            ),
+                            borderRadius: BorderRadius.circular(18),
                             gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
                               colors: [
-                                activeColor.withValues(alpha: 0.15),
-                                activeColor.withValues(alpha: 0.05),
+                                activeColor.withValues(alpha: 0.22),
+                                activeColor.withValues(alpha: 0.08),
                               ],
                             ),
                             border: Border.all(
-                              color: activeColor.withValues(alpha: 0.18),
-                              width: 1.0,
+                              color: activeColor.withValues(alpha: 0.35),
+                              width: 1.2,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: activeColor.withValues(alpha: 0.10),
+                                color: activeColor.withValues(alpha: 0.16),
                                 blurRadius: 12,
-                                offset: const Offset(0, 0),
-                                spreadRadius: 0,
+                                offset: const Offset(0, 2),
+                                spreadRadius: 1,
                               ),
                             ],
                           ),
@@ -319,20 +317,7 @@ class _NavItemState extends State<_NavItem>
                     padding: EdgeInsets.all(
                       widget.selected && !widget.hideText ? 2 : 0,
                     ),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: widget.selected
-                          ? [
-                              BoxShadow(
-                                color: widget.activeColor.withValues(
-                                  alpha: 0.20,
-                                ),
-                                blurRadius: pulse * 12,
-                                spreadRadius: pulse * 2,
-                              ),
-                            ]
-                          : null,
-                    ),
+                    decoration: const BoxDecoration(),
                     child: widget.item.animateIcon != null
                         ? ModernAnimatedIcon(
                             animateIcon: widget.item.animateIcon!,
@@ -354,16 +339,6 @@ class _NavItemState extends State<_NavItem>
                             color: widget.selected
                                 ? widget.activeColor
                                 : widget.inactiveColor,
-                            shadows: widget.selected
-                                ? [
-                                    Shadow(
-                                      color: widget.activeColor.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                      blurRadius: 4,
-                                    ),
-                                  ]
-                                : null,
                           ),
                   ),
                 ),

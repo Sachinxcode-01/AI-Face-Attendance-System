@@ -32,6 +32,7 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/status_badge.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
+import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
@@ -219,8 +220,8 @@ class _AdminDashboardState extends State<AdminDashboard>
           onRefresh: _loadDashboard,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 110),
+            child: StaggeredColumn(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (!isTablet) ...[

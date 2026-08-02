@@ -12,6 +12,8 @@ const UserSchema = new mongoose.Schema({
   setup_completed: { type: Boolean, default: false },
   linked_children: [{ email: String, full_name: String, student_id: String }],
   avatar_url: { type: String },
+  profilePhotoUrl: { type: String },
+  profilePhotoPublicId: { type: String },
   phone: { type: String },
   dob: { type: String },
   college: { type: String },

@@ -558,6 +558,76 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> uploadAvatar(
+    File imageFile,
+    String token,
+  ) async {
+    try {
+      final uri = Uri.parse('$baseUrl/auth/upload-avatar');
+      final request = http.MultipartRequest('POST', uri)
+        ..headers['Authorization'] = 'Bearer $token'
+        ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+      final streamedResponse = await client.send(request);
+      final response = await http.Response.fromStream(streamedResponse);
+      final Map<String, dynamic> result =
+          jsonDecode(response.body) as Map<String, dynamic>;
+      final String? photoUrl =
+          (result['profilePhotoUrl'] ?? result['avatar_url']) as String?;
+      if (photoUrl != null) {
+        result['profilePhotoUrl'] = photoUrl;
+        result['avatar_url'] = photoUrl;
+      }
+      return result;
+    } catch (e) {
+      return {'detail': 'Upload failed: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> deleteProfilePhoto(String token) async {
+    try {
+      final response = await client
+          .delete(
+            Uri.parse('$baseUrl/auth/users/me/profile-photo'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
+      return _processResponse(response);
+    } catch (e) {
+      return _classifyNetworkError(e);
+    }
+  }
+
+  static Future<Map<String, dynamic>> sendChatMessage({
+    required String message,
+    List<Map<String, String>>? history,
+    String? currentRoute,
+    required String token,
+  }) async {
+    try {
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/api/assistant/chat'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'message': message,
+              'history': history ?? [],
+              'currentRoute': currentRoute ?? '',
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+      return _processResponse(response);
+    } catch (e) {
+      return _classifyNetworkError(e);
+    }
+  }
+
   static Future<Map<String, dynamic>> registerBiometric(
     String email,
     String token,
@@ -940,23 +1010,7 @@ class ApiService {
     };
   }
 
-  static Future<Map<String, dynamic>> uploadAvatar(
-    File imageFile,
-    String token,
-  ) async {
-    try {
-      final uri = Uri.parse('$baseUrl/auth/upload-avatar');
-      final request = http.MultipartRequest('POST', uri)
-        ..headers['Authorization'] = 'Bearer $token'
-        ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
 
-      final streamedResponse = await client.send(request);
-      final response = await http.Response.fromStream(streamedResponse);
-      return jsonDecode(response.body);
-    } catch (e) {
-      return {'detail': 'Upload failed: $e'};
-    }
-  }
 
   static Future<List<dynamic>> getNotifications(
     String email, [
@@ -1810,6 +1864,23 @@ class InterceptingClient extends http.BaseClient {
 Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
   final normalized = Map<String, dynamic>.from(json);
 
+  Map<String, dynamic>? userData;
+  if (json['data'] is Map<String, dynamic> &&
+      (json['data'] as Map<String, dynamic>)['user'] is Map<String, dynamic>) {
+    userData = (json['data'] as Map<String, dynamic>)['user']
+        as Map<String, dynamic>;
+  }
+
+  final String? photoUrl = (json['profilePhotoUrl'] ??
+      json['avatar_url'] ??
+      userData?['profilePhotoUrl'] ??
+      userData?['avatar_url']) as String?;
+
+  if (photoUrl != null && photoUrl.isNotEmpty) {
+    normalized['profilePhotoUrl'] = photoUrl;
+    normalized['avatar_url'] = photoUrl;
+  }
+
   if (json.containsKey('data') && json['data'] is Map<String, dynamic>) {
     final data = json['data'] as Map<String, dynamic>;
 
@@ -1831,6 +1902,11 @@ Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
       }
       if (user.containsKey('role')) normalized['role'] = user['role'];
 
+      if (photoUrl != null && photoUrl.isNotEmpty) {
+        user['profilePhotoUrl'] = photoUrl;
+        user['avatar_url'] = photoUrl;
+      }
+
       final intro = user['introCompleted'] ?? false;
       final wizard =
           user['wizardCompleted'] ??
@@ -1850,6 +1926,10 @@ Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
       userMap['name'] = json['full_name'] ?? json['name'];
     }
     if (json.containsKey('role')) userMap['role'] = json['role'];
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      userMap['profilePhotoUrl'] = photoUrl;
+      userMap['avatar_url'] = photoUrl;
+    }
 
     final wizard =
         json['biometric_registered'] ?? json['setup_completed'] ?? false;

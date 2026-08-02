@@ -164,10 +164,37 @@ class SessionManager extends ChangeNotifier {
           await CacheService.get<bool>('sf_wizard_completed') ?? false;
 
       notifyListeners();
+      if (_isLoggedIn && _token != null && _token!.isNotEmpty) {
+        unawaited(refreshUserProfile());
+      }
       return _isLoggedIn;
     } catch (e) {
       debugPrint('[SessionManager] init error: $e');
       return false;
+    }
+  }
+
+  /// Fetches the latest authenticated profile details from the backend
+  /// and synchronizes global session state and local secure storage.
+  Future<void> refreshUserProfile() async {
+    if (_token == null || _token!.isEmpty) return;
+    try {
+      final profile = await ApiService.getUserProfile(_token!);
+      final String? photoUrl =
+          (profile['profilePhotoUrl'] ?? profile['avatar_url']) as String?;
+      final String? fullName =
+          (profile['full_name'] ?? profile['name']) as String?;
+      if (fullName != null && fullName.isNotEmpty) {
+        _name = fullName;
+        await _storage.write(key: _keyName, value: fullName);
+      }
+      if (photoUrl != null && photoUrl.isNotEmpty) {
+        _avatarUrl = photoUrl;
+        await _storage.write(key: _keyAvatarUrl, value: photoUrl);
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[SessionManager] refreshUserProfile error: $e');
     }
   }
 
@@ -225,7 +252,11 @@ class SessionManager extends ChangeNotifier {
     _email = email;
     _role = role.toLowerCase();
     _name = name;
-    _avatarUrl = avatarUrl;
+    if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      _avatarUrl = avatarUrl;
+    } else if (_avatarUrl == null || _avatarUrl!.isEmpty) {
+      _avatarUrl = await _storage.read(key: _keyAvatarUrl);
+    }
     _biometricRegistered = biometricRegistered;
     _isLoggedIn = true;
 
@@ -246,8 +277,8 @@ class SessionManager extends ChangeNotifier {
       _storage.write(key: _keyEmail, value: email),
       _storage.write(key: _keyRole, value: role.toLowerCase()),
       if (name != null) _storage.write(key: _keyName, value: name),
-      if (avatarUrl != null)
-        _storage.write(key: _keyAvatarUrl, value: avatarUrl),
+      if (_avatarUrl != null && _avatarUrl!.isNotEmpty)
+        _storage.write(key: _keyAvatarUrl, value: _avatarUrl!),
       _storage.write(key: _keyBiometric, value: biometricRegistered.toString()),
       CacheService.set(
         'sf_onboarding_completed',
@@ -264,6 +295,9 @@ class SessionManager extends ChangeNotifier {
     ]);
 
     notifyListeners();
+
+    // Trigger current-user profile sync in background to ensure profilePhotoUrl is updated from backend
+    unawaited(refreshUserProfile());
   }
 
   /// Updates only the in-memory JWT token (used during interceptor-triggered refreshes).

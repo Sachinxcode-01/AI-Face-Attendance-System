@@ -36,6 +36,7 @@ import 'package:smartface_attendance/app/router/route_names.dart';
 // ======================================================
 // Services & Component Imports
 // ======================================================
+import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/core/services/notification_service.dart';
@@ -850,6 +851,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               name: session.name ?? 'Student',
               subtitle: _todayString(),
               avatarText: initials.isEmpty ? 'S' : initials,
+              avatarUrl: session.avatarUrl,
               hasUnread: true,
               onNotifications: () => context.push('/notifications/nexus'),
               onAvatar: () => context.push(AppRoutes.studentProfilePath),
@@ -859,20 +861,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 onRefresh: _loadDashboardData,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                  child: Column(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+                  child: StaggeredColumn(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Transform.translate(
-                        offset: const Offset(0, -20),
-                        child: _buildAttendanceSummaryCard(),
-                      ),
+                      _buildAttendanceSummaryCard(),
+                      const SizedBox(height: 16),
                       if (activeSessionBanner != null) ...[
                         activeSessionBanner,
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                       ],
                       const SyncStatusBanner(),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 16),
                       if (!isTablet) ...[
                         // Mobile view layout: Single column high-density details
                         healthGrid,

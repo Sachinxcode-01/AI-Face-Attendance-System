@@ -111,13 +111,13 @@ class _PremiumBackgroundState extends State<PremiumBackground>
                 _sphere(
                   top: (widget.immersive ? 110 : 70) - (t * 20),
                   right: 28,
-                  size: widget.immersive ? 120 : 96,
-                  dark: false,
+                  size: widget.immersive ? 100 : 80,
+                  dark: true,
                 ),
                 _sphere(
                   bottom: (widget.immersive ? 140 : 100) + (t * 18),
                   left: 20,
-                  size: widget.immersive ? 96 : 76,
+                  size: widget.immersive ? 80 : 64,
                   dark: true,
                 ),
                 _sphere(

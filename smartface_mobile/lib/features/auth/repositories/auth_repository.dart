@@ -30,7 +30,12 @@ class AuthRepository {
           (result['token'] ?? result['access_token']) as String;
       final String name = result['name'] as String? ?? 'User';
       final String role = result['role'] as String? ?? 'student';
-      final String? avatarUrl = result['avatar_url'] as String?;
+      final String? avatarUrl =
+          (result['profilePhotoUrl'] ??
+                  result['avatar_url'] ??
+                  result['data']?['user']?['profilePhotoUrl'] ??
+                  result['data']?['user']?['avatar_url'])
+              as String?;
       final bool bioRegistered = result['biometric_registered'] ?? false;
       final bool introCompleted = result['introCompleted'] ?? false;
       final bool wizardCompleted = result['wizardCompleted'] ?? bioRegistered;
@@ -55,7 +60,12 @@ class AuthRepository {
           (result['token'] ?? result['access_token']) as String;
       final String name = result['name'] as String? ?? 'User';
       final String role = result['role'] as String? ?? 'student';
-      final String? avatarUrl = result['avatar_url'] as String?;
+      final String? avatarUrl =
+          (result['profilePhotoUrl'] ??
+                  result['avatar_url'] ??
+                  result['data']?['user']?['profilePhotoUrl'] ??
+                  result['data']?['user']?['avatar_url'])
+              as String?;
       final bool bioRegistered = result['biometric_registered'] ?? false;
       final bool introCompleted = result['introCompleted'] ?? false;
       final bool wizardCompleted = result['wizardCompleted'] ?? bioRegistered;
@@ -91,6 +101,13 @@ class AuthRepository {
       final String token =
           (result['token'] ?? result['access_token']) as String;
       final String userRole = result['role'] as String? ?? role;
+      final String? fetchedAvatar =
+          (result['profilePhotoUrl'] ??
+                  result['avatar_url'] ??
+                  result['data']?['user']?['profilePhotoUrl'] ??
+                  result['data']?['user']?['avatar_url'] ??
+                  avatarUrl)
+              as String?;
       final bool bioRegistered = result['biometric_registered'] ?? false;
       final bool introCompleted = result['introCompleted'] ?? false;
       final bool wizardCompleted = result['wizardCompleted'] ?? bioRegistered;
@@ -99,7 +116,7 @@ class AuthRepository {
         email: email,
         name: name,
         role: userRole,
-        avatarUrl: avatarUrl,
+        avatarUrl: fetchedAvatar,
         biometricRegistered: bioRegistered,
         introCompleted: introCompleted,
         wizardCompleted: wizardCompleted,
@@ -116,7 +133,12 @@ class AuthRepository {
       final String email = result['email'] as String? ?? '';
       final String name = result['full_name'] ?? result['name'] ?? 'User';
       final String userRole = result['role'] as String? ?? role;
-      final String? avatarUrl = result['avatar_url'] as String?;
+      final String? avatarUrl =
+          (result['profilePhotoUrl'] ??
+                  result['avatar_url'] ??
+                  result['data']?['user']?['profilePhotoUrl'] ??
+                  result['data']?['user']?['avatar_url'])
+              as String?;
       final bool bioRegistered = result['biometric_registered'] ?? false;
       final bool introCompleted = result['introCompleted'] ?? false;
       final bool wizardCompleted = result['wizardCompleted'] ?? bioRegistered;

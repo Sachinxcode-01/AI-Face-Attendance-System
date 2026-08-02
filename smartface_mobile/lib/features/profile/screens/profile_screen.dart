@@ -310,18 +310,27 @@ class _ProfileScreenState extends State<ProfileScreen>
       final result = await ApiService.uploadAvatar(file, token);
 
       if (!mounted) return;
-      if (result.containsKey('avatar_url')) {
+      final String? photoUrl =
+          (result['profilePhotoUrl'] ?? result['avatar_url']) as String?;
+
+      if (photoUrl != null && photoUrl.isNotEmpty) {
         setState(() {
-          _profileData['avatar_url'] = result['avatar_url'];
+          _profileData['avatar_url'] = photoUrl;
+          _profileData['profilePhotoUrl'] = photoUrl;
           _isUploading = false;
         });
-        _showSuccessSnack('Profile photo updated successfully! ✓');
+        await session.updateAvatarUrl(photoUrl);
+        if (mounted) {
+          _showSuccessSnack('Profile photo updated successfully! ✓');
+        }
       } else {
         setState(() {
           _localAvatarFile = null;
           _isUploading = false;
         });
-        _showErrorSnack(result['detail'] ?? 'Upload failed. Please try again.');
+        _showErrorSnack(
+          result['detail'] ?? 'Upload failed. Please try again.',
+        );
       }
     } catch (e) {
       if (!mounted) return;

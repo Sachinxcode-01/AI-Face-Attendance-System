@@ -19,10 +19,11 @@ def speak(text: str):
         
         # Configure a clear, beautiful female voice (Zira) if available
         voices = engine.getProperty("voices")
-        for voice in voices:
-            if "zira" in voice.name.lower():
-                engine.setProperty("voice", voice.id)
-                break
+        if isinstance(voices, (list, tuple)):
+            for voice in voices:
+                if "zira" in getattr(voice, "name", "").lower():
+                    engine.setProperty("voice", getattr(voice, "id", ""))
+                    break
                 
         engine.say(text)
         engine.runAndWait()

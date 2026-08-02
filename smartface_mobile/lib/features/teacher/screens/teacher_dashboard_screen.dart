@@ -33,6 +33,7 @@ import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
+import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
 import 'package:smartface_attendance/design_system/design_system.dart'
     hide StatCard;
 
@@ -206,11 +207,13 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           onRefresh: () => _loadData(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.05,
-              vertical: 12,
+            padding: EdgeInsets.fromLTRB(
+              screenWidth * 0.05,
+              12,
+              screenWidth * 0.05,
+              110,
             ),
-            child: Column(
+            child: StaggeredColumn(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Error banner
@@ -282,6 +285,13 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   // ── AppBar ─────────────────────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar(SessionManager session, bool isDark) {
     final textColor = isDark ? Colors.white : AppColors.textHeading;
+    final String? avatarUrl = session.avatarUrl;
+    final String? fullUrl = (avatarUrl != null && avatarUrl.isNotEmpty)
+        ? (avatarUrl.startsWith('http')
+            ? avatarUrl
+            : '${ApiService.baseUrl}$avatarUrl')
+        : null;
+
     return PremiumAppBar(
       leadingWidth: 0,
       leading: const SizedBox.shrink(),
@@ -304,15 +314,34 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               ),
               boxShadow: AppShadows.glow(AppColors.primary, intensity: 0.15),
             ),
-            child: Center(
-              child: Text(
-                (session.name ?? 'T').substring(0, 1).toUpperCase(),
-                style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+            child: ClipOval(
+              child: fullUrl != null
+                  ? Image.network(
+                      fullUrl,
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Center(
+                        child: Text(
+                          (session.name ?? 'T').substring(0, 1).toUpperCase(),
+                          style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Center(
+                      child: Text(
+                        (session.name ?? 'T').substring(0, 1).toUpperCase(),
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: 10),
