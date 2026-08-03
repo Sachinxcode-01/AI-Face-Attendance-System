@@ -33,7 +33,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 

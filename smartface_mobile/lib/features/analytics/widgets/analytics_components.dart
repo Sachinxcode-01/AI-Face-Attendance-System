@@ -181,8 +181,9 @@ class PredictionCard extends StatelessWidget {
       riskColor = Colors.redAccent;
     }
 
-    final dividerColor =
-        isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFE2E8F0);
+    final dividerColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : const Color(0xFFE2E8F0);
 
     return ModernDashboardCard(
       padding: const EdgeInsets.all(20),

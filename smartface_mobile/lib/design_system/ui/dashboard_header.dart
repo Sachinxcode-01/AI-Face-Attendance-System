@@ -85,10 +85,7 @@ class DashboardHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              _NotificationButton(
-                hasUnread: hasUnread,
-                onTap: onNotifications,
-              ),
+              _NotificationButton(hasUnread: hasUnread, onTap: onNotifications),
               const SizedBox(width: 10),
               _Avatar(avatarUrl: avatarUrl, text: avatarText, onTap: onAvatar),
             ],
@@ -154,8 +151,8 @@ class _Avatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final String? fullUrl = (avatarUrl != null && avatarUrl!.isNotEmpty)
         ? (avatarUrl!.startsWith('http')
-            ? avatarUrl!
-            : '${ApiService.baseUrl}$avatarUrl')
+              ? avatarUrl!
+              : '${ApiService.baseUrl}$avatarUrl')
         : null;
 
     return GestureDetector(

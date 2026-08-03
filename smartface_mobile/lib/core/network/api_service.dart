@@ -605,6 +605,9 @@ class ApiService {
     required String message,
     List<Map<String, String>>? history,
     String? currentRoute,
+    String? screenContext,
+    String? conversationId,
+    String? language,
     required String token,
   }) async {
     try {
@@ -619,9 +622,43 @@ class ApiService {
               'message': message,
               'history': history ?? [],
               'currentRoute': currentRoute ?? '',
+              'screenContext': screenContext ?? currentRoute ?? '',
+              'conversationId': conversationId,
+              'language': language ?? 'en',
             }),
           )
           .timeout(const Duration(seconds: 15));
+      return _processResponse(response);
+    } catch (e) {
+      return _classifyNetworkError(e);
+    }
+  }
+
+  static Future<Map<String, dynamic>> sendChatFeedback({
+    required String responseId,
+    required String rating, // 'helpful' or 'not_helpful'
+    String? category,
+    String? feedback,
+    String? currentRoute,
+    required String token,
+  }) async {
+    try {
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/api/assistant/feedback'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'responseId': responseId,
+              'rating': rating,
+              'category': category ?? 'general',
+              'feedback': feedback ?? '',
+              'currentRoute': currentRoute ?? '',
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
       return _processResponse(response);
     } catch (e) {
       return _classifyNetworkError(e);
@@ -1009,8 +1046,6 @@ class ApiService {
       },
     };
   }
-
-
 
   static Future<List<dynamic>> getNotifications(
     String email, [
@@ -1867,14 +1902,16 @@ Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
   Map<String, dynamic>? userData;
   if (json['data'] is Map<String, dynamic> &&
       (json['data'] as Map<String, dynamic>)['user'] is Map<String, dynamic>) {
-    userData = (json['data'] as Map<String, dynamic>)['user']
-        as Map<String, dynamic>;
+    userData =
+        (json['data'] as Map<String, dynamic>)['user'] as Map<String, dynamic>;
   }
 
-  final String? photoUrl = (json['profilePhotoUrl'] ??
-      json['avatar_url'] ??
-      userData?['profilePhotoUrl'] ??
-      userData?['avatar_url']) as String?;
+  final String? photoUrl =
+      (json['profilePhotoUrl'] ??
+              json['avatar_url'] ??
+              userData?['profilePhotoUrl'] ??
+              userData?['avatar_url'])
+          as String?;
 
   if (photoUrl != null && photoUrl.isNotEmpty) {
     normalized['profilePhotoUrl'] = photoUrl;

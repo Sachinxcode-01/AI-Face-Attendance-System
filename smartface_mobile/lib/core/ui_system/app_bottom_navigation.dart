@@ -57,4 +57,3 @@ class AppBottomNavigation extends StatelessWidget {
     );
   }
 }
-

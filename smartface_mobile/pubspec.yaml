@@ -83,6 +83,8 @@ dependencies:
   animated_text_kit: ^4.3.0
   flutter_staggered_animations: ^1.1.1
   graphic: ^2.7.0
+  speech_to_text: ^7.0.0
+  flutter_tts: ^4.2.0
 
 dev_dependencies:
   flutter_test:
@@ -113,6 +115,7 @@ flutter:
     - assets/icon/
     - assets/icons/
     - assets/background/
+    - assets/knowledge/
     - .env
     - .env.development
     - .env.staging

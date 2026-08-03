@@ -15,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/leave/controllers/leave_controller.dart';
 import 'package:smartface_attendance/features/leave/models/leave_model.dart';

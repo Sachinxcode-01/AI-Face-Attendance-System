@@ -53,7 +53,9 @@ class ChatbotController extends ChangeNotifier {
       if (rawMsgs != null && rawMsgs.isNotEmpty) {
         final List list = jsonDecode(rawMsgs) as List;
         _messages = list
-            .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => ChatMessage.fromJson(Map<String, dynamic>.from(e as Map)),
+            )
             .toList();
       }
       notifyListeners();
@@ -82,9 +84,10 @@ class ChatbotController extends ChangeNotifier {
     double rawX,
     double rawY,
     double screenWidth,
-    double screenHeight,
-  ) async {
-    const double buttonSize = 56.0;
+    double screenHeight, {
+    bool snap = false,
+  }) async {
+    const double buttonSize = 54.0;
     const double minMargin = 16.0;
     const double minY = 60.0;
     final double maxY = screenHeight - 160.0;
@@ -92,18 +95,24 @@ class ChatbotController extends ChangeNotifier {
     // Clamp Y
     final double clampedY = rawY.clamp(minY, maxY);
 
-    // Snap to nearest left or right edge
-    final double midX = screenWidth / 2;
-    final double snappedX =
-        (rawX + buttonSize / 2 < midX) ? minMargin : screenWidth - buttonSize - minMargin;
+    double targetX;
+    if (snap) {
+      // Snap to nearest left or right edge
+      final double midX = screenWidth / 2;
+      targetX = (rawX + buttonSize / 2 < midX)
+          ? minMargin
+          : screenWidth - buttonSize - minMargin;
+    } else {
+      targetX = rawX.clamp(minMargin, screenWidth - buttonSize - minMargin);
+    }
 
-    _posX = snappedX;
+    _posX = targetX;
     _posY = clampedY;
     notifyListeners();
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setDouble(_keyPosX, snappedX);
+      await prefs.setDouble(_keyPosX, targetX);
       await prefs.setDouble(_keyPosY, clampedY);
     } catch (e) {
       debugPrint('[ChatbotController] Position save error: $e');
@@ -189,9 +198,13 @@ class ChatbotController extends ChangeNotifier {
       );
 
       final String replyContent =
-          (res['reply'] ?? res['message']?['content'] ?? 'Nexa Assistant is ready to help.') as String;
+          (res['reply'] ??
+                  res['message']?['content'] ??
+                  'Nexa Assistant is ready to help.')
+              as String;
 
-      final List<Map<String, dynamic>> actions = (res['suggestedActions'] as List?)
+      final List<Map<String, dynamic>> actions =
+          (res['suggestedActions'] as List?)
               ?.map((e) => Map<String, dynamic>.from(e as Map))
               .toList() ??
           [];

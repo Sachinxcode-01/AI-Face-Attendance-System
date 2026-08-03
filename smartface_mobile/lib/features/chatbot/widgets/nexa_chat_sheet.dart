@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
+import 'package:smartface_attendance/core/constants/asset_paths.dart';
 import 'package:smartface_attendance/design_system/ui/app_colors.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/chatbot/controllers/chatbot_controller.dart';
@@ -159,7 +160,10 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
               Expanded(
                 child: ListView(
                   controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   children: [
                     // Privacy notice (first-time)
                     if (!chatbot.hasSeenNotice)
@@ -170,7 +174,9 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
                     const SizedBox(height: 16),
 
                     // Messages list
-                    ...chatbot.messages.map((msg) => _buildMessageBubble(msg, isDark)),
+                    ...chatbot.messages.map(
+                      (msg) => _buildMessageBubble(msg, isDark),
+                    ),
 
                     // Loading indicator
                     if (chatbot.isLoading) ...[
@@ -214,16 +220,21 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
                       spacing: 8,
                       runSpacing: 8,
                       children: suggestions
-                          .map((q) => ActionChip(
-                                label: Text(q, style: const TextStyle(fontSize: 12)),
-                                backgroundColor: isDark
-                                    ? Colors.white.withValues(alpha: 0.08)
-                                    : AppColors.primary.withValues(alpha: 0.08),
-                                side: BorderSide(
-                                  color: AppColors.gold.withValues(alpha: 0.3),
-                                ),
-                                onPressed: () => _handleSend(q),
-                              ))
+                          .map(
+                            (q) => ActionChip(
+                              label: Text(
+                                q,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              backgroundColor: isDark
+                                  ? Colors.white.withValues(alpha: 0.08)
+                                  : AppColors.primary.withValues(alpha: 0.08),
+                              side: BorderSide(
+                                color: AppColors.gold.withValues(alpha: 0.3),
+                              ),
+                              onPressed: () => _handleSend(q),
+                            ),
+                          )
                           .toList(),
                     ),
                     const SizedBox(height: 12),
@@ -251,15 +262,24 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            width: 36,
+            height: 36,
+            padding: const EdgeInsets.all(4),
             decoration: const BoxDecoration(
               gradient: AppColors.headerGradient,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.auto_awesome,
-              color: Colors.white,
-              size: 20,
+            child: ClipOval(
+              child: Image.asset(
+                AppAssets.chatbotIcon,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+                errorBuilder: (_, _, _) => const Icon(
+                  Icons.auto_awesome,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -388,21 +408,31 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0),
       child: Row(
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
             Container(
-              padding: const EdgeInsets.all(6),
+              width: 26,
+              height: 26,
+              padding: const EdgeInsets.all(3),
               decoration: const BoxDecoration(
                 gradient: AppColors.headerGradient,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.auto_awesome,
-                color: Colors.white,
-                size: 14,
+              child: ClipOval(
+                child: Image.asset(
+                  AppAssets.chatbotIcon,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                  errorBuilder: (_, _, _) => const Icon(
+                    Icons.auto_awesome,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -414,8 +444,8 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
                 color: isUser
                     ? AppColors.primary
                     : (isDark
-                        ? Colors.white.withValues(alpha: 0.1)
-                        : Colors.grey.shade100),
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.grey.shade100),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -458,7 +488,10 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
                             }
                           },
                           icon: const Icon(Icons.launch, size: 14),
-                          label: Text(label, style: const TextStyle(fontSize: 11)),
+                          label: Text(
+                            label,
+                            style: const TextStyle(fontSize: 11),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.gold,
                             foregroundColor: Colors.black,
@@ -514,9 +547,7 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F172A) : Colors.white,
         border: Border(
-          top: BorderSide(
-            color: isDark ? Colors.white10 : Colors.black12,
-          ),
+          top: BorderSide(color: isDark ? Colors.white10 : Colors.black12),
         ),
       ),
       child: Row(
@@ -556,11 +587,7 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
               customBorder: const CircleBorder(),
               child: const Padding(
                 padding: EdgeInsets.all(10.0),
-                child: Icon(
-                  Icons.send_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                child: Icon(Icons.send_rounded, color: Colors.white, size: 20),
               ),
             ),
           ),

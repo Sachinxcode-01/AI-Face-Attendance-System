@@ -29,7 +29,6 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
-import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/features/leave/models/leave_model.dart';
 

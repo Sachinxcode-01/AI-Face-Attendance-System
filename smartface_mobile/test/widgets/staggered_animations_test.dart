@@ -4,17 +4,14 @@ import 'package:smartface_attendance/design_system/components/app_staggered_anim
 
 void main() {
   group('AppStaggeredAnimations Unit & Widget Tests', () {
-    testWidgets('StaggeredColumn renders children cleanly',
-        (WidgetTester tester) async {
+    testWidgets('StaggeredColumn renders children cleanly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: StaggeredColumn(
-              children: [
-                Text('Item 1'),
-                Text('Item 2'),
-                Text('Item 3'),
-              ],
+              children: [Text('Item 1'), Text('Item 2'), Text('Item 3')],
             ),
           ),
         ),
@@ -28,8 +25,9 @@ void main() {
       expect(find.text('Item 1'), findsOneWidget);
     });
 
-    testWidgets('StaggeredListItem renders child cleanly',
-        (WidgetTester tester) async {
+    testWidgets('StaggeredListItem renders child cleanly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -52,8 +50,9 @@ void main() {
       expect(find.text('Staggered List Element'), findsOneWidget);
     });
 
-    testWidgets('StaggeredGridItem renders child cleanly in GridView',
-        (WidgetTester tester) async {
+    testWidgets('StaggeredGridItem renders child cleanly in GridView', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -84,17 +83,13 @@ void main() {
       expect(find.text('Grid Card 1'), findsOneWidget);
     });
 
-    testWidgets('StaggeredRow renders children cleanly',
-        (WidgetTester tester) async {
+    testWidgets('StaggeredRow renders children cleanly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: StaggeredRow(
-              children: [
-                Text('Chip 1'),
-                Text('Chip 2'),
-              ],
-            ),
+            body: StaggeredRow(children: [Text('Chip 1'), Text('Chip 2')]),
           ),
         ),
       );

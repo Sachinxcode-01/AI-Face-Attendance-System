@@ -19,7 +19,8 @@ const unitTests = [
   'tests/unit/test_reset_password.js',
   'tests/unit/test_email_templates.js',
   'tests/unit/test_security_controls.js',
-  'tests/unit/test_face_attendance_gateway.js'
+  'tests/unit/test_face_attendance_gateway.js',
+  'tests/unit/test_nexa_phase2.js'
 ];
 
 const integrationTests = [

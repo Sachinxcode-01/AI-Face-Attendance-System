@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
@@ -144,80 +143,80 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
             child: Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: GlassCard(
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.gold.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: AppColors.gold.withValues(alpha: 0.25),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(
-                        Icons.access_time,
-                        color: AppColors.gold,
-                        size: 20,
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        slot['time'].toString().split(' ')[0],
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.gold,
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: AppColors.gold.withValues(alpha: 0.25),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        slot['subject'] ?? 'Lecture Slot',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
+                      child: Column(
                         children: [
                           const Icon(
-                            Icons.room_outlined,
-                            color: Colors.white38,
-                            size: 14,
+                            Icons.access_time,
+                            color: AppColors.gold,
+                            size: 20,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            slot['room'] ?? 'TBA',
+                            slot['time'].toString().split(' ')[0],
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              color: Colors.white38,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.gold,
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            slot['subject'] ?? 'Lecture Slot',
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.room_outlined,
+                                color: Colors.white38,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                slot['room'] ?? 'TBA',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: Colors.white38,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      );
-    },
-  ),
-);
-}
+          );
+        },
+      ),
+    );
+  }
 }

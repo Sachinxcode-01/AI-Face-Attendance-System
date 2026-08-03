@@ -1,0 +1,227 @@
+﻿{
+  "version": "1.1.0",
+  "updatedAt": "2026-08-02",
+  "description": "Nexa Attendance Assistant offline knowledge base",
+  "entries": [
+    {
+      "id": "login_how",
+      "category": "login",
+      "keywords": ["login", "sign in", "how to login"],
+      "answer": {
+        "en": "To login: Open Smart Attendance AI, enter your registered email and password, then tap Sign In. Biometric login is available if registered.",
+        "kn": "ಲಾಗಿನ್ ಮಾಡಲು: ನಿಮ್ಮ ನೋಂದಾಯಿತ ಇಮೇಲ್ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ, Sign In ಒತ್ತಿರಿ.",
+        "hi": "लॉगिन करने के लिए: अपना पंजीकृत ईमेल और पासवर्ड दर्ज करें, फिर Sign In पर टैप करें।"
+      },
+      "actions": []
+    },
+    {
+      "id": "login_otp",
+      "category": "login",
+      "keywords": ["otp", "one time password", "verification code"],
+      "answer": {
+        "en": "OTP is a 6-digit code sent to your email. Check your inbox and spam folder. OTPs expire in 10 minutes. Never share your OTP with anyone.",
+        "kn": "OTP ನಿಮ್ಮ ಇಮೇಲ್‌ಗೆ ಕಳುಹಿಸಲಾದ 6-ಅಂಕಿ ಕೋಡ್. ಇನ್‌ಬಾಕ್ಸ್ ಮತ್ತು ಸ್ಪ್ಯಾಮ್ ಫೋಲ್ಡರ್ ಪರಿಶೀಲಿಸಿ. OTP 10 ನಿಮಿಷಗಳಲ್ಲಿ ಅವಧಿ ಮೀರುತ್ತದೆ.",
+        "hi": "OTP आपके ईमेल पर भेजा गया 6-अंकीय कोड है। अपना इनबॉक्स और स्पैम फ़ोल्डर जांचें। OTP 10 मिनट में समाप्त हो जाता है।"
+      },
+      "actions": []
+    },
+    {
+      "id": "attendance_percentage",
+      "category": "student_dashboard",
+      "keywords": ["attendance percentage", "my attendance", "percentage", "how much attendance"],
+      "answer": {
+        "en": "Your attendance percentage = (Classes Attended / Total Classes) x 100. You need at least 75% for exam eligibility. Subjects below 75% are highlighted in red on your dashboard.",
+        "kn": "ನಿಮ್ಮ ಹಾಜರಾತಿ ಶೇಕಡಾ = (ಹಾಜರಾದ ತರಗತಿಗಳು / ಒಟ್ಟು ತರಗತಿಗಳು) x 100. ಪರೀಕ್ಷೆಯ ಅರ್ಹತೆಗೆ ಕನಿಷ್ಠ 75% ಅಗತ್ಯ.",
+        "hi": "आपकी उपस्थिति प्रतिशत = (उपस्थित कक्षाएं / कुल कक्षाएं) x 100। परीक्षा पात्रता के लिए न्यूनतम 75% आवश्यक।"
+      },
+      "actions": [{"type": "navigate", "label": "Open Dashboard", "route": "/student/home", "roles": ["student"]}]
+    },
+    {
+      "id": "qr_how_to_scan",
+      "category": "qr_attendance",
+      "keywords": ["qr", "scan", "how to scan", "qr attendance", "mark attendance"],
+      "answer": {
+        "en": "To mark QR attendance: 1) Go to QR Attendance. 2) Point camera at teacher's QR code. 3) Hold steady until green confirmation appears. The QR rotates every 15 seconds — scan quickly!",
+        "kn": "QR ಹಾಜರಾತಿ ಗುರುತಿಸಲು: 1) QR Attendance ಗೆ ಹೋಗಿ. 2) ಶಿಕ್ಷಕರ QR ಕೋಡ್‌ಗೆ ಕ್ಯಾಮೆರಾ ತೋರಿಸಿ. 3) ಹಸಿರು ದೃಢೀಕರಣ ಬರುವವರೆಗೆ ಹಿಡಿಯಿರಿ. QR ಪ್ರತಿ 15 ಸೆಕೆಂಡಿಗೆ ತಿರುಗುತ್ತದೆ!",
+        "hi": "QR उपस्थिति दर्ज करने के लिए: 1) QR Attendance पर जाएं। 2) शिक्षक के QR कोड पर कैमरा लगाएं। 3) हरी पुष्टि दिखने तक रुकें। QR 15 सेकंड में बदलता है!"
+      },
+      "actions": [{"type": "navigate", "label": "Open QR Attendance", "route": "/student/qr-attendance", "roles": ["student"]}]
+    },
+    {
+      "id": "qr_expired",
+      "category": "qr_attendance",
+      "keywords": ["expired qr", "qr expired", "invalid qr", "scan failed"],
+      "answer": {
+        "en": "If QR Code is Expired: The code rotated before your scan completed. Ask your teacher to show the new code and scan immediately.",
+        "kn": "QR ಮೀಯಾದಿ ಆಗಿದ್ದರೆ: ಕೋಡ್ ತಿರುಗಿದ ನಂತರ ಸ್ಕ್ಯಾನ್ ಮಾಡಿದ್ದೀರಿ. ಶಿಕ್ಷಕರನ್ನು ಹೊಸ ಕೋಡ್ ತೋರಿಸಲು ಕೇಳಿ.",
+        "hi": "यदि QR समाप्त हो गया: कोड रोटेट हो गया। शिक्षक से नया कोड दिखाने को कहें और तुरंत स्कैन करें।"
+      },
+      "actions": []
+    },
+    {
+      "id": "qr_duplicate",
+      "category": "qr_attendance",
+      "keywords": ["duplicate", "already marked", "already scanned"],
+      "answer": {
+        "en": "Attendance Already Marked means your QR scan was already recorded for this session. You cannot mark twice. Check Attendance History to confirm.",
+        "kn": "ಈ ಸೆಷನ್‌ಗಾಗಿ ನಿಮ್ಮ ಹಾಜರಾತಿ ಈಗಾಗಲೇ ದಾಖಲಾಗಿದೆ. ಎರಡು ಬಾರಿ ಗುರುತಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ.",
+        "hi": "Attendance Already Marked का अर्थ है इस सत्र के लिए आपकी उपस्थिति पहले से दर्ज है।"
+      },
+      "actions": []
+    },
+    {
+      "id": "face_how_to",
+      "category": "face_attendance",
+      "keywords": ["face attendance", "face scan", "biometric", "face recognition"],
+      "answer": {
+        "en": "Face Attendance: 1) Open Face Attendance. 2) Position face inside circular guide in good lighting. 3) Look directly at camera. 4) Wait for green verification ring. Tip: Remove glasses/masks if recognition fails.",
+        "kn": "ಮುಖ ಹಾಜರಾತಿ: 1) Face Attendance ತೆರೆಯಿರಿ. 2) ಉತ್ತಮ ಬೆಳಕಿನಲ್ಲಿ ವೃತ್ತದ ಒಳಗೆ ಮುಖ ಇರಿಸಿ. 3) ಕ್ಯಾಮೆರಾ ಕಡೆ ನೇರವಾಗಿ ನೋಡಿ.",
+        "hi": "Face Attendance: 1) Face Attendance खोलें। 2) अच्छी रोशनी में गोलाकार गाइड के अंदर चेहरा रखें। 3) कैमरे की तरफ सीधे देखें।"
+      },
+      "actions": [{"type": "navigate", "label": "Open Face Attendance", "route": "/student/face-attendance", "roles": ["student"]}]
+    },
+    {
+      "id": "face_error",
+      "category": "face_attendance",
+      "keywords": ["no face detected", "face not detected", "recognition failed", "face error"],
+      "answer": {
+        "en": "Face not detected: Ensure your face is fully inside the guide, room is well-lit (avoid backlight), and you are not wearing a mask. If it fails 3 times, ask your teacher to record manually.",
+        "kn": "ಮುಖ ಪತ್ತೆಯಾಗಲಿಲ್ಲ: ಮುಖ ಸಂಪೂರ್ಣವಾಗಿ ಮಾರ್ಗದರ್ಶಿ ಒಳಗೆ ಇದೆ ಎಂದು ಖಚಿತಪಡಿಸಿ, ಕೋಣೆ ಉತ್ತಮ ಬೆಳಕಿನಿಂದ ಕೂಡಿರಬೇಕು.",
+        "hi": "चेहरा नहीं मिला: सुनिश्चित करें कि चेहरा पूरी तरह गाइड के अंदर है, कमरे में अच्छी रोशनी हो।"
+      },
+      "actions": []
+    },
+    {
+      "id": "timetable_view",
+      "category": "timetable",
+      "keywords": ["timetable", "schedule", "classes today", "my classes"],
+      "answer": {
+        "en": "Your Timetable shows all classes for the day: subject, teacher, time, and classroom. Open from the bottom navigation or home dashboard. Tap any class for details.",
+        "kn": "ನಿಮ್ಮ ಸಮಯಪಟ್ಟಿ ದಿನದ ಎಲ್ಲಾ ತರಗತಿಗಳನ್ನು ತೋರಿಸುತ್ತದೆ: ವಿಷಯ, ಶಿಕ್ಷಕ, ಸಮಯ ಮತ್ತು ತರಗತಿ ಕೊಠಡಿ.",
+        "hi": "आपका टाइमटेबल दिन की सभी कक्षाएं दिखाता है: विषय, शिक्षक, समय और कक्षा।"
+      },
+      "actions": [{"type": "navigate", "label": "Open Timetable", "route": "/student/timetable", "roles": ["student"]}]
+    },
+    {
+      "id": "leave_apply",
+      "category": "leave",
+      "keywords": ["apply leave", "leave request", "sick leave", "absent"],
+      "answer": {
+        "en": "Apply for leave: 1) Go to Leave Hub. 2) Tap Apply Leave. 3) Select dates. 4) Choose category (Sick/Personal/Emergency). 5) Write reason. 6) Submit. Teacher or HOD will approve or reject.",
+        "kn": "ರಜೆಗೆ ಅರ್ಜಿ: 1) Leave Hub ಗೆ ಹೋಗಿ. 2) Apply Leave ಒತ್ತಿರಿ. 3) ದಿನಾಂಕ ಆಯ್ಕೆ. 4) ವರ್ಗ ಆಯ್ಕೆ. 5) ಕಾರಣ ಬರೆಯಿರಿ. 6) ಸಲ್ಲಿಸಿ.",
+        "hi": "छुट्टी के लिए: 1) Leave Hub पर जाएं। 2) Apply Leave टैप करें। 3) तारीखें चुनें। 4) श्रेणी चुनें। 5) कारण लिखें। 6) सबमिट।"
+      },
+      "actions": [{"type": "navigate", "label": "Apply for Leave", "route": "/student/leave-apply", "roles": ["student"]}]
+    },
+    {
+      "id": "leave_status",
+      "category": "leave",
+      "keywords": ["leave status", "leave approved", "leave rejected", "leave pending"],
+      "answer": {
+        "en": "Check leave status in Leave Hub: Pending (yellow), Approved (green), Rejected (red). Approved leaves do not affect attendance. Rejected leaves count as absent.",
+        "kn": "Leave Hub ನಲ್ಲಿ ರಜೆ ಸ್ಥಿತಿ: Pending (ಹಳದಿ), Approved (ಹಸಿರು), Rejected (ಕೆಂಪು).",
+        "hi": "Leave Hub में स्थिति: Pending (पीला), Approved (हरा), Rejected (लाल)।"
+      },
+      "actions": [{"type": "navigate", "label": "View Leave Status", "route": "/student/leave-status", "roles": ["student"]}]
+    },
+    {
+      "id": "reports_view",
+      "category": "reports",
+      "keywords": ["reports", "attendance report", "subject report"],
+      "answer": {
+        "en": "Attendance Reports show subject-wise breakdown, monthly summaries, absent dates, and eligibility status. Filter by month or subject. Export as PDF from the Reports screen.",
+        "kn": "Attendance Reports ವಿಷಯ-ವಾರು ಹಾಜರಾತಿ ವಿವರ, ಮಾಸಿಕ ಸಾರಾಂಶ ಮತ್ತು ಅನುಪಸ್ಥಿತ ದಿನಾಂಕಗಳನ್ನು ತೋರಿಸುತ್ತದೆ.",
+        "hi": "Attendance Reports में विषयवार विवरण, मासिक सारांश और अनुपस्थित तारीखें हैं।"
+      },
+      "actions": [{"type": "navigate", "label": "Open Reports", "route": "/student/reports", "roles": ["student"]}]
+    },
+    {
+      "id": "profile_photo",
+      "category": "profile",
+      "keywords": ["profile photo", "profile picture", "upload photo", "change photo"],
+      "answer": {
+        "en": "Update profile photo: Go to Profile, tap your photo, select Upload Photo, choose from gallery or camera. The photo saves permanently across all sessions.",
+        "kn": "ಪ್ರೊಫೈಲ್ ಫೋಟೋ ಅಪ್‌ಡೇಟ್: Profile ಗೆ ಹೋಗಿ, ಫೋಟೋ ಒತ್ತಿರಿ, Upload Photo ಆಯ್ಕೆ.",
+        "hi": "प्रोफाइल फोटो अपडेट: Profile पर जाएं, फोटो टैप करें, Upload Photo चुनें।"
+      },
+      "actions": [{"type": "navigate", "label": "Open Profile", "route": "/student/profile", "roles": ["student"]}]
+    },
+    {
+      "id": "teacher_session_create",
+      "category": "teacher_session",
+      "keywords": ["create session", "start session", "start attendance"],
+      "answer": {
+        "en": "Start attendance session: 1) Go to your class. 2) Tap Start Session. 3) Select subject and classroom. 4) Rolling QR rotates every 15 seconds. 5) Display for students to scan. 6) Monitor in Live Monitor tab.",
+        "kn": "ಹಾಜರಾತಿ ಸೆಷನ್ ಪ್ರಾರಂಭ: 1) ತರಗತಿಗೆ ಹೋಗಿ. 2) Start Session ಒತ್ತಿರಿ. 3) ವಿಷಯ ಮತ್ತು ತರಗತಿ ಆಯ್ಕೆ. 4) QR ಪ್ರತಿ 15 ಸೆಕೆಂಡಿಗೆ ತಿರುಗುತ್ತದೆ.",
+        "hi": "सत्र शुरू: 1) कक्षा में जाएं। 2) Start Session टैप करें। 3) विषय और कक्षा चुनें। 4) QR 15 सेकंड में बदलता है।"
+      },
+      "actions": [{"type": "navigate", "label": "Open QR Generator", "route": "/teacher/qr-generator", "roles": ["teacher"]}]
+    },
+    {
+      "id": "parent_ward_attendance",
+      "category": "parent",
+      "keywords": ["ward attendance", "child attendance", "my child"],
+      "answer": {
+        "en": "View your ward's attendance in Parent Dashboard: overall percentage, subject-wise breakdown, absent dates, and low-attendance alerts.",
+        "kn": "Parent Dashboard ನಲ್ಲಿ ವಾರ್ಡ್ ಹಾಜರಾತಿ: ಒಟ್ಟಾರೆ ಶೇಕಡಾ, ವಿಷಯ-ವಾರು ವಿವರ.",
+        "hi": "Parent Dashboard में वार्ड की उपस्थिति: कुल प्रतिशत, विषयवार विवरण।"
+      },
+      "actions": [{"type": "navigate", "label": "Open Ward Dashboard", "route": "/parent/dashboard", "roles": ["parent"]}]
+    },
+    {
+      "id": "admin_active_sessions",
+      "category": "admin",
+      "keywords": ["active sessions", "sessions running", "how many sessions"],
+      "answer": {
+        "en": "Admin Dashboard shows active session count across all departments. Tap Active Sessions for details: teacher, subject, class, start time. You can force-close any session.",
+        "kn": "Admin Dashboard ಎಲ್ಲಾ ವಿಭಾಗಗಳಲ್ಲಿ ಸಕ್ರಿಯ ಸೆಷನ್ ಸಂಖ್ಯೆ ತೋರಿಸುತ್ತದೆ.",
+        "hi": "Admin Dashboard सभी विभागों में सक्रिय सत्र संख्या दिखाता है।"
+      },
+      "actions": [{"type": "navigate", "label": "Open Admin Dashboard", "route": "/admin/dashboard", "roles": ["admin", "hod"]}]
+    },
+    {
+      "id": "admin_system_health",
+      "category": "admin",
+      "keywords": ["system health", "ai service", "server status"],
+      "answer": {
+        "en": "System Health shows: Node.js API, Python AI service, MongoDB, WebSocket. Green = healthy, Yellow = degraded, Red = down.",
+        "kn": "System Health ತೋರಿಸುತ್ತದೆ: Node.js API, Python AI ಸೇವೆ, MongoDB. ಹಸಿರು = ಆರೋಗ್ಯಕರ, ಹಳದಿ = ದುರ್ಬಲ, ಕೆಂಪು = ಸ್ಥಗಿತ.",
+        "hi": "System Health दिखाता है: Node.js API, Python AI सेवा, MongoDB. हरा = स्वस्थ, पीला = खराब, लाल = बंद।"
+      },
+      "actions": [{"type": "navigate", "label": "Open System Health", "route": "/admin/system-health", "roles": ["admin", "hod"]}]
+    },
+    {
+      "id": "network_error",
+      "category": "errors",
+      "keywords": ["connection error", "network error", "no internet", "offline", "server unreachable"],
+      "answer": {
+        "en": "Network error: 1) Check WiFi or mobile data. 2) Verify server URL in Settings. 3) Try again in a few seconds. If it persists, contact your administrator.",
+        "kn": "ನೆಟ್‌ವರ್ಕ್ ದೋಷ: 1) WiFi ಅಥವಾ ಡೇಟಾ ಪರಿಶೀಲಿಸಿ. 2) Settings ನಲ್ಲಿ ಸರ್ವರ್ URL ಪರಿಶೀಲಿಸಿ.",
+        "hi": "नेटवर्क त्रुटि: 1) WiFi या डेटा जांचें। 2) Settings में सर्वर URL सत्यापित करें।"
+      },
+      "actions": []
+    },
+    {
+      "id": "nexa_assistant_help",
+      "category": "app_help",
+      "keywords": ["nexa", "chatbot", "ai assistant", "what is nexa"],
+      "answer": {
+        "en": "Nexa is your AI assistant for Smart Attendance. It answers questions about attendance, timetable, QR, face scanning, leave, reports, and settings. Nexa works offline for common questions and uses live data when connected.",
+        "kn": "Nexa Smart Attendance ಗಾಗಿ ನಿಮ್ಮ AI ಸಹಾಯಕ. ಹಾಜರಾತಿ, ಸಮಯಪಟ್ಟಿ, QR, ರಜೆ ಮತ್ತು ಸೆಟ್ಟಿಂಗ್‌ಗಳ ಬಗ್ಗೆ ಪ್ರಶ್ನೆಗಳಿಗೆ ಉತ್ತರಿಸುತ್ತದೆ.",
+        "hi": "Nexa Smart Attendance के लिए आपका AI सहायक है। उपस्थिति, टाइमटेबल, QR, छुट्टी और सेटिंग के बारे में जवाब देता है।"
+      },
+      "actions": []
+    },
+    {
+      "id": "password_reset",
+      "category": "account",
+      "keywords": ["forgot password", "reset password", "change password"],
+      "answer": {
+        "en": "Reset password: On login screen, tap Forgot Password, enter your email, check inbox for reset link. Link expires in 30 minutes.",
+        "kn": "ಪಾಸ್‌ವರ್ಡ್ ರೀಸೆಟ್: ಲಾಗಿನ್ ಸ್ಕ್ರೀನ್‌ನಲ್ಲಿ Forgot Password ಒತ್ತಿ, ಇಮೇಲ್ ನಮೂದಿಸಿ.",
+        "hi": "पासवर्ड रीसेट: लॉगिन स्क्रीन पर Forgot Password टैप करें, ईमेल दर्ज करें।"
+      },
+      "actions": []
+    }
+  ]
+}

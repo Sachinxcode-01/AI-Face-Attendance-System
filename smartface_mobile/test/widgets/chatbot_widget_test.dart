@@ -23,7 +23,11 @@ void main() {
         content: 'Hello, how can I help you?',
         timestamp: DateTime.parse('2026-08-02T12:00:00Z'),
         suggestedActions: const [
-          {'type': 'navigate', 'label': 'Open Timetable', 'route': '/student/timetable'}
+          {
+            'type': 'navigate',
+            'label': 'Open Timetable',
+            'route': '/student/timetable',
+          },
         ],
       );
 
@@ -37,22 +41,49 @@ void main() {
       expect(restored.suggestedActions.length, equals(1));
     });
 
-    test('ChatbotController initial state and toggle', () async {
+    test(
+      'ChatbotController initial state, toggle, and position snapping',
+      () async {
+        final controller = ChatbotController();
+        await controller.init();
+
+        expect(controller.isEnabled, isTrue);
+        expect(controller.isOpen, isFalse);
+        expect(controller.unreadCount, equals(0));
+
+        await controller.toggleEnabled(false);
+        expect(controller.isEnabled, isFalse);
+
+        await controller.toggleEnabled(true);
+        expect(controller.isEnabled, isTrue);
+
+        // Position update & snap test
+        await controller.updatePosition(50.0, 300.0, 400.0, 800.0, snap: true);
+        expect(controller.posX, equals(16.0)); // Snapped to left edge minMargin
+        expect(controller.posY, equals(300.0));
+
+        // Reset position
+        await controller.resetPosition();
+        expect(controller.posX, isNull);
+        expect(controller.posY, isNull);
+      },
+    );
+
+    test('ChatbotController privacy notice & clear messages', () async {
       final controller = ChatbotController();
       await controller.init();
 
-      expect(controller.isEnabled, isTrue);
-      expect(controller.isOpen, isFalse);
-      expect(controller.unreadCount, equals(0));
+      expect(controller.hasSeenNotice, isFalse);
+      await controller.acceptPrivacyNotice();
+      expect(controller.hasSeenNotice, isTrue);
 
-      await controller.toggleEnabled(false);
-      expect(controller.isEnabled, isFalse);
-
-      await controller.toggleEnabled(true);
-      expect(controller.isEnabled, isTrue);
+      await controller.clearMessages();
+      expect(controller.messages, isEmpty);
     });
 
-    testWidgets('NexaChatSheet renders header, role context, and suggestions', (WidgetTester tester) async {
+    testWidgets('NexaChatSheet renders header, role context, and suggestions', (
+      WidgetTester tester,
+    ) async {
       final sessionManager = SessionManager();
       final themeController = ThemeController();
       final chatbotController = ChatbotController();
@@ -62,14 +93,14 @@ void main() {
         MultiProvider(
           providers: [
             ChangeNotifierProvider<SessionManager>.value(value: sessionManager),
-            ChangeNotifierProvider<ThemeController>.value(value: themeController),
-            ChangeNotifierProvider<ChatbotController>.value(value: chatbotController),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: NexaChatSheet(),
+            ChangeNotifierProvider<ThemeController>.value(
+              value: themeController,
             ),
-          ),
+            ChangeNotifierProvider<ChatbotController>.value(
+              value: chatbotController,
+            ),
+          ],
+          child: const MaterialApp(home: Scaffold(body: NexaChatSheet())),
         ),
       );
 

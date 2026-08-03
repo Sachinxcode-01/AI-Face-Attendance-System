@@ -65,4 +65,3 @@ class SmartSalomonBottomBar extends StatelessWidget {
     );
   }
 }
-

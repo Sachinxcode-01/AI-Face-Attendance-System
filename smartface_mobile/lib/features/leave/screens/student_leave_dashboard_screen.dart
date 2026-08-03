@@ -21,7 +21,6 @@ import 'package:smartface_attendance/features/leave/models/leave_balance.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
-import 'package:smartface_attendance/design_system/components/app_staggered_animations.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 
 class StudentLeaveDashboardScreen extends StatefulWidget {

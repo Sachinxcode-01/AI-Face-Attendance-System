@@ -328,9 +328,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _localAvatarFile = null;
           _isUploading = false;
         });
-        _showErrorSnack(
-          result['detail'] ?? 'Upload failed. Please try again.',
-        );
+        _showErrorSnack(result['detail'] ?? 'Upload failed. Please try again.');
       }
     } catch (e) {
       if (!mounted) return;

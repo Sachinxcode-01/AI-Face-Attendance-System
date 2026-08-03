@@ -28,6 +28,7 @@ import 'package:smartface_attendance/features/chatbot/controllers/chatbot_contro
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
+import 'package:smartface_attendance/core/constants/asset_paths.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 
 class ServerSettingsScreen extends StatefulWidget {
@@ -302,6 +303,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   final List<Map<String, dynamic>> _tabsInfo = [
     {'label': 'Account', 'icon': Icons.person_outline_rounded},
     {'label': 'Security', 'icon': Icons.security_rounded},
+    {'label': 'AI Assistant', 'icon': Icons.auto_awesome_rounded},
     {'label': 'Notifications', 'icon': Icons.notifications_none_rounded},
     {'label': 'Appearance', 'icon': Icons.dark_mode_outlined},
     {'label': 'Help & Support', 'icon': Icons.contact_support_outlined},
@@ -516,12 +518,14 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       case 1:
         return _buildSecuritySettings(session, isDark);
       case 2:
-        return _buildNotificationsSettings(isDark);
+        return _buildAIAssistantSettings(isDark);
       case 3:
-        return _buildAppearanceSettings(themeCtrl, isDark);
+        return _buildNotificationsSettings(isDark);
       case 4:
-        return _buildHelpSettings(isDark);
+        return _buildAppearanceSettings(themeCtrl, isDark);
       case 5:
+        return _buildHelpSettings(isDark);
+      case 6:
         return _buildAboutSettings(isDark);
       default:
         return const SizedBox.shrink();
@@ -723,7 +727,109 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     );
   }
 
-  // 2. Security Settings: timeouts & applock & biometrics & devices
+  // 2. AI Assistant Settings: Nexa Assistant toggle & reset position
+  Widget _buildAIAssistantSettings(bool isDark) {
+    final chatbot = context.watch<ChatbotController>();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('AI ASSISTANT PREFERENCES'),
+        const SizedBox(height: AppSpacing.sm),
+        GlassContainer(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            children: [
+              SwitchListTile(
+                value: chatbot.isEnabled,
+                activeThumbColor: AppColors.gold,
+                secondary: Container(
+                  width: 32,
+                  height: 32,
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    gradient: AppColors.headerGradient,
+                    shape: BoxShape.circle,
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      AppAssets.chatbotIcon,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.auto_awesome,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ),
+                title: Text(
+                  'Nexa Attendance Assistant',
+                  style: AppText.subheading(
+                    color: isDark ? Colors.white : Colors.black87,
+                    weight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    'Show a floating AI assistant for help with attendance, schedules, reports, QR scanning, face verification, leave, and application features.',
+                    style: AppText.body(
+                      color: isDark ? Colors.white60 : Colors.black54,
+                    ),
+                  ),
+                ),
+                onChanged: (val) async {
+                  await chatbot.toggleEnabled(val);
+                  if (mounted) {
+                    AppToast.show(
+                      context,
+                      message: val
+                          ? 'Nexa Attendance Assistant Enabled'
+                          : 'Nexa Attendance Assistant Disabled',
+                      type: val ? ToastType.success : ToastType.info,
+                    );
+                  }
+                },
+              ),
+              const Divider(height: 24, color: Colors.white10),
+              ListTile(
+                leading: const Icon(
+                  Icons.center_focus_strong_rounded,
+                  color: AppColors.cyan,
+                ),
+                title: Text(
+                  'Reset Assistant Position',
+                  style: AppText.subheading(
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                subtitle: Text(
+                  'Restores the floating Nexa button to the default bottom-right screen position.',
+                  style: AppText.body(
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
+                ),
+                trailing: const Icon(Icons.refresh_rounded, size: 20),
+                onTap: () async {
+                  await chatbot.resetPosition();
+                  if (mounted) {
+                    AppToast.show(
+                      context,
+                      message: 'Nexa assistant position reset to default!',
+                      type: ToastType.success,
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 3. Security Settings: timeouts & applock & biometrics & devices
   Widget _buildSecuritySettings(SessionManager session, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
