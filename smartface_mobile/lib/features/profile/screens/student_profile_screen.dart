@@ -32,6 +32,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -268,32 +269,60 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
 
   // ── Photo Upload ──────────────────────────────────────────────────────────
   void _showPhotoSheet() {
+    final session = context.read<SessionManager>();
+    final String? currentPhoto = (_profileData['profilePhotoUrl'] ??
+            _profileData['avatar_url'] ??
+            session.avatarUrl)
+        ?.toString();
+    final bool hasExistingPhoto =
+        (currentPhoto != null &&
+            currentPhoto.trim().isNotEmpty &&
+            currentPhoto != 'null') ||
+        _localAvatarFile != null;
+
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(24),
+      builder: (ctx) => Container(
+        padding: EdgeInsets.fromLTRB(
+          24,
+          16,
+          24,
+          MediaQuery.of(ctx).padding.bottom + 24,
+        ),
         decoration: BoxDecoration(
           color: const Color(0xFF0D1130),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+          border: Border.all(
+            color: AppColors.gold.withValues(alpha: 0.35),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.8),
+              blurRadius: 30,
+              spreadRadius: 8,
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40,
-              height: 4,
+              width: 44,
+              height: 5,
               decoration: BoxDecoration(
                 color: Colors.white24,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(3),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             Text(
               'Update Profile Photo',
               style: GoogleFonts.inter(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -301,63 +330,136 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
             const SizedBox(height: 6),
             Text(
               'JPEG, PNG or WEBP · Max 5 MB',
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.white38),
+              style: GoogleFonts.inter(fontSize: 12, color: Colors.white54),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 22),
             Row(
               children: [
                 Expanded(
                   child: _photoSourceBtn(
-                    Icons.photo_library_outlined,
+                    Icons.photo_library_rounded,
                     'Gallery',
+                    'Choose image',
                     () {
-                      Navigator.pop(context);
+                      Navigator.of(ctx).pop();
                       _pickImage(ImageSource.gallery);
                     },
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 14),
                 Expanded(
                   child: _photoSourceBtn(
-                    Icons.camera_alt_outlined,
+                    Icons.camera_alt_rounded,
                     'Camera',
+                    'Take photo',
                     () {
-                      Navigator.pop(context);
+                      Navigator.of(ctx).pop();
                       _pickImage(ImageSource.camera);
                     },
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            if (hasExistingPhoto) ...[
+              const SizedBox(height: 16),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _deleteProfilePhoto();
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  splashColor: Colors.redAccent.withValues(alpha: 0.2),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.redAccent.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.delete_outline_rounded,
+                          color: Colors.redAccent,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Remove Current Photo',
+                          style: GoogleFonts.inter(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _photoSourceBtn(IconData icon, String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        decoration: BoxDecoration(
-          color: AppColors.gold.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.gold.withValues(alpha: 0.25)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: AppColors.gold, size: 30),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+  Widget _photoSourceBtn(
+    IconData icon,
+    String label,
+    String subtitle,
+    VoidCallback onTap,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        splashColor: AppColors.gold.withValues(alpha: 0.15),
+        highlightColor: AppColors.gold.withValues(alpha: 0.08),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
+          decoration: BoxDecoration(
+            color: AppColors.gold.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: AppColors.gold, size: 26),
               ),
-            ),
-          ],
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(
+                  color: Colors.white54,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -373,28 +475,33 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
       );
       if (picked == null) return;
 
-      // Cropping step
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: picked.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Crop Profile Photo',
-            toolbarColor: const Color(0xFF0F172A),
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-            activeControlsWidgetColor: AppColors.gold,
-          ),
-          IOSUiSettings(
-            title: 'Crop Profile Photo',
-            aspectRatioLockEnabled: true,
-          ),
-        ],
-      );
-      if (croppedFile == null) return;
+      File file;
+      try {
+        final croppedFile = await ImageCropper().cropImage(
+          sourcePath: picked.path,
+          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop Profile Photo',
+              toolbarColor: const Color(0xFF0D1130),
+              toolbarWidgetColor: Colors.white,
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+              activeControlsWidgetColor: AppColors.gold,
+              backgroundColor: const Color(0xFF070B1A),
+            ),
+            IOSUiSettings(
+              title: 'Crop Profile Photo',
+              aspectRatioLockEnabled: true,
+            ),
+          ],
+        );
+        file = croppedFile != null ? File(croppedFile.path) : File(picked.path);
+      } catch (cropErr) {
+        debugPrint('Image cropper fallback to picked file: $cropErr');
+        file = File(picked.path);
+      }
 
-      final file = File(croppedFile.path);
       final bytes = await file.readAsBytes();
       if (bytes.length > 5 * 1024 * 1024) {
         _showError('Image too large. Max 5 MB allowed.');
@@ -412,8 +519,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
 
       if (token.isEmpty) {
         await Future.delayed(const Duration(milliseconds: 600));
-        setState(() => _isUploadingPhoto = false);
-        _showSuccess('Preview updated (demo mode).');
+        if (mounted) {
+          setState(() => _isUploadingPhoto = false);
+          _showSuccess('Preview updated (demo mode).');
+        }
         return;
       }
 
@@ -429,9 +538,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           _profileData['profilePhotoUrl'] = photoUrl;
           _isUploadingPhoto = false;
         });
-        await context.read<SessionManager>().updateAvatarUrl(photoUrl);
+        await session.updateAvatarUrl(photoUrl);
         if (mounted) {
-          _showSuccess('Profile photo updated! ✓');
+          _showSuccess('Profile photo updated successfully! ✓');
         }
       } else {
         setState(() {
@@ -447,6 +556,41 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
         _isUploadingPhoto = false;
       });
       _showError('Error: $e');
+    }
+  }
+
+  Future<void> _deleteProfilePhoto() async {
+    final confirmed = await PremiumDialogs.showConfirmDialog(
+      context,
+      title: 'Remove Profile Photo',
+      message: 'Are you sure you want to remove your current profile photo?',
+      confirmLabel: 'REMOVE',
+      cancelLabel: 'CANCEL',
+      isDestructive: true,
+      icon: Icons.delete_outline_rounded,
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isUploadingPhoto = true);
+    try {
+      final session = context.read<SessionManager>();
+      final token = session.token ?? '';
+      if (token.isNotEmpty) {
+        await ApiService.deleteProfilePhoto(token);
+      }
+      if (!mounted) return;
+      setState(() {
+        _localAvatarFile = null;
+        _profileData['avatar_url'] = null;
+        _profileData['profilePhotoUrl'] = null;
+        _isUploadingPhoto = false;
+      });
+      await session.updateAvatarUrl(null);
+      _showSuccess('Profile photo removed.');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isUploadingPhoto = false);
+      _showError('Failed to remove photo: $e');
     }
   }
 
@@ -910,18 +1054,27 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
 
   // ── Avatar ────────────────────────────────────────────────────────────────
   Widget _buildAvatarSection() {
-    final String? networkUrl = _profileData['avatar_url'] as String?;
-    final bool hasNet = networkUrl != null && networkUrl.isNotEmpty;
+    final session = context.watch<SessionManager>();
+    final String? networkUrl = (_profileData['profilePhotoUrl'] ??
+            _profileData['avatar_url'] ??
+            session.avatarUrl)
+        ?.toString();
+    final bool hasNet = networkUrl != null &&
+        networkUrl.trim().isNotEmpty &&
+        networkUrl != 'null';
     final bool hasLocal = _localAvatarFile != null;
 
     ImageProvider? avatarImage;
     if (hasLocal) {
       avatarImage = FileImage(_localAvatarFile!);
     } else if (hasNet) {
-      final full = networkUrl.startsWith('http')
-          ? networkUrl
-          : '${ApiService.baseUrl}$networkUrl';
-      avatarImage = NetworkImage(full);
+      final cleanUrl = networkUrl.replaceAll('\\', '/');
+      final full = cleanUrl.startsWith('http')
+          ? cleanUrl
+          : cleanUrl.startsWith('/')
+              ? '${ApiService.baseUrl}$cleanUrl'
+              : '${ApiService.baseUrl}/$cleanUrl';
+      avatarImage = CachedNetworkImageProvider(full);
     }
 
     return GestureDetector(
@@ -964,6 +1117,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
               radius: 68,
               backgroundColor: const Color(0xFF0D1130),
               backgroundImage: avatarImage,
+              onBackgroundImageError: avatarImage != null
+                  ? (exception, stackTrace) {
+                      debugPrint('Avatar image load error: $exception');
+                    }
+                  : null,
               child: avatarImage == null
                   ? Text(
                       _initials.isNotEmpty ? _initials : 'ST',

@@ -35,6 +35,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
@@ -149,32 +150,60 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   /// Shows bottom sheet to pick source: Gallery or Camera
   void _showImageSourceSheet() {
+    final session = context.read<SessionManager>();
+    final String? currentPhoto = (_profileData['profilePhotoUrl'] ??
+            _profileData['avatar_url'] ??
+            session.avatarUrl)
+        ?.toString();
+    final bool hasExistingPhoto =
+        (currentPhoto != null &&
+            currentPhoto.trim().isNotEmpty &&
+            currentPhoto != 'null') ||
+        _localAvatarFile != null;
+
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(24),
+      builder: (ctx) => Container(
+        padding: EdgeInsets.fromLTRB(
+          24,
+          16,
+          24,
+          MediaQuery.of(ctx).padding.bottom + 24,
+        ),
         decoration: BoxDecoration(
-          color: AppColors.bgModal,
+          color: const Color(0xFF0D1130),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+          border: Border.all(
+            color: AppColors.gold.withValues(alpha: 0.35),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.8),
+              blurRadius: 30,
+              spreadRadius: 8,
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40,
-              height: 4,
+              width: 44,
+              height: 5,
               decoration: BoxDecoration(
                 color: Colors.white24,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(3),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             Text(
               'Update Profile Photo',
               style: GoogleFonts.inter(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -182,35 +211,80 @@ class _ProfileScreenState extends State<ProfileScreen>
             const SizedBox(height: 6),
             Text(
               'JPEG, PNG or WEBP · Max 5 MB',
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.white38),
+              style: GoogleFonts.inter(fontSize: 12, color: Colors.white54),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 22),
             Row(
               children: [
                 Expanded(
                   child: _sourceButton(
-                    icon: Icons.photo_library_outlined,
+                    icon: Icons.photo_library_rounded,
                     label: 'Gallery',
+                    subtitle: 'Choose image',
                     onTap: () {
-                      Navigator.pop(context);
+                      Navigator.of(ctx).pop();
                       _pickImage(ImageSource.gallery);
                     },
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 14),
                 Expanded(
                   child: _sourceButton(
-                    icon: Icons.camera_alt_outlined,
+                    icon: Icons.camera_alt_rounded,
                     label: 'Camera',
+                    subtitle: 'Take photo',
                     onTap: () {
-                      Navigator.pop(context);
+                      Navigator.of(ctx).pop();
                       _pickImage(ImageSource.camera);
                     },
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            if (hasExistingPhoto) ...[
+              const SizedBox(height: 16),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _deleteProfilePhoto();
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  splashColor: Colors.redAccent.withValues(alpha: 0.2),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.redAccent.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.delete_outline_rounded,
+                          color: Colors.redAccent,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Remove Current Photo',
+                          style: GoogleFonts.inter(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -220,30 +294,53 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _sourceButton({
     required IconData icon,
     required String label,
+    required String subtitle,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        decoration: BoxDecoration(
-          color: AppColors.gold.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.gold.withValues(alpha: 0.25)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: AppColors.gold, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        splashColor: AppColors.gold.withValues(alpha: 0.15),
+        highlightColor: AppColors.gold.withValues(alpha: 0.08),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
+          decoration: BoxDecoration(
+            color: AppColors.gold.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: AppColors.gold, size: 26),
               ),
-            ),
-          ],
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(
+                  color: Colors.white54,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -263,38 +360,40 @@ class _ProfileScreenState extends State<ProfileScreen>
       );
       if (picked == null) return;
 
-      // Cropping step
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: picked.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Crop Profile Photo',
-            toolbarColor: const Color(0xFF0F172A),
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-            activeControlsWidgetColor: AppColors.gold,
-          ),
-          IOSUiSettings(
-            title: 'Crop Profile Photo',
-            aspectRatioLockEnabled: true,
-          ),
-        ],
-      );
-      if (croppedFile == null) return;
+      File file;
+      try {
+        final croppedFile = await ImageCropper().cropImage(
+          sourcePath: picked.path,
+          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop Profile Photo',
+              toolbarColor: const Color(0xFF0D1130),
+              toolbarWidgetColor: Colors.white,
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+              activeControlsWidgetColor: AppColors.gold,
+              backgroundColor: const Color(0xFF070B1A),
+            ),
+            IOSUiSettings(
+              title: 'Crop Profile Photo',
+              aspectRatioLockEnabled: true,
+            ),
+          ],
+        );
+        file = croppedFile != null ? File(croppedFile.path) : File(picked.path);
+      } catch (cropErr) {
+        debugPrint('Image cropper fallback to picked file: $cropErr');
+        file = File(picked.path);
+      }
 
-      final file = File(croppedFile.path);
       final bytes = await file.readAsBytes();
-
-      // Client-side size check (5 MB)
       if (bytes.length > 5 * 1024 * 1024) {
         if (!mounted) return;
         _showErrorSnack('Image too large. Please choose a file under 5 MB.');
         return;
       }
 
-      // Show local preview immediately
       setState(() {
         _localAvatarFile = file;
         _isUploading = true;
@@ -302,8 +401,12 @@ class _ProfileScreenState extends State<ProfileScreen>
 
       if (token.isEmpty) {
         await Future.delayed(const Duration(milliseconds: 800));
-        setState(() => _isUploading = false);
-        _showSuccessSnack('Preview updated (demo mode — not saved to server).');
+        if (mounted) {
+          setState(() => _isUploading = false);
+          _showSuccessSnack(
+            'Preview updated (demo mode — not saved to server).',
+          );
+        }
         return;
       }
 
@@ -337,6 +440,41 @@ class _ProfileScreenState extends State<ProfileScreen>
         _isUploading = false;
       });
       _showErrorSnack('Error picking image: $e');
+    }
+  }
+
+  Future<void> _deleteProfilePhoto() async {
+    final confirmed = await PremiumDialogs.showConfirmDialog(
+      context,
+      title: 'Remove Profile Photo',
+      message: 'Are you sure you want to remove your current profile photo?',
+      confirmLabel: 'REMOVE',
+      cancelLabel: 'CANCEL',
+      isDestructive: true,
+      icon: Icons.delete_outline_rounded,
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isUploading = true);
+    try {
+      final session = context.read<SessionManager>();
+      final token = session.token ?? '';
+      if (token.isNotEmpty) {
+        await ApiService.deleteProfilePhoto(token);
+      }
+      if (!mounted) return;
+      setState(() {
+        _localAvatarFile = null;
+        _profileData['avatar_url'] = null;
+        _profileData['profilePhotoUrl'] = null;
+        _isUploading = false;
+      });
+      await session.updateAvatarUrl(null);
+      _showSuccessSnack('Profile photo removed.');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isUploading = false);
+      _showErrorSnack('Failed to remove photo: $e');
     }
   }
 
@@ -783,19 +921,27 @@ class _ProfileScreenState extends State<ProfileScreen>
   //  AVATAR WIDGET — Clickable, drag-enabled, with upload HUD
   // ──────────────────────────────────────────────────────────────────
   Widget _buildAvatarSection(String initials) {
-    final String? networkAvatarUrl = _profileData['avatar_url'] as String?;
-    final hasNetworkAvatar =
-        networkAvatarUrl != null && networkAvatarUrl.isNotEmpty;
+    final session = context.watch<SessionManager>();
+    final String? networkAvatarUrl = (_profileData['profilePhotoUrl'] ??
+            _profileData['avatar_url'] ??
+            session.avatarUrl)
+        ?.toString();
+    final hasNetworkAvatar = networkAvatarUrl != null &&
+        networkAvatarUrl.trim().isNotEmpty &&
+        networkAvatarUrl != 'null';
     final hasLocalPreview = _localAvatarFile != null;
 
     ImageProvider? avatarImage;
     if (hasLocalPreview) {
       avatarImage = FileImage(_localAvatarFile!);
     } else if (hasNetworkAvatar) {
-      final fullUrl = networkAvatarUrl.startsWith('http')
-          ? networkAvatarUrl
-          : '${ApiService.baseUrl}$networkAvatarUrl?v=${DateTime.now().millisecondsSinceEpoch}';
-      avatarImage = NetworkImage(fullUrl);
+      final cleanUrl = networkAvatarUrl.replaceAll('\\', '/');
+      final fullUrl = cleanUrl.startsWith('http')
+          ? cleanUrl
+          : cleanUrl.startsWith('/')
+              ? '${ApiService.baseUrl}$cleanUrl'
+              : '${ApiService.baseUrl}/$cleanUrl';
+      avatarImage = CachedNetworkImageProvider(fullUrl);
     }
 
     return DragTarget<String>(
@@ -866,6 +1012,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                     radius: 68,
                     backgroundColor: AppColors.bgModal,
                     backgroundImage: avatarImage,
+                    onBackgroundImageError: avatarImage != null
+                        ? (exception, stackTrace) {
+                            debugPrint('Avatar image load error: $exception');
+                          }
+                        : null,
                     child: avatarImage == null
                         ? Text(
                             initials.isNotEmpty ? initials : 'AI',

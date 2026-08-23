@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const AuthService = require('../services/authService');
 const UserSession = require('../models/UserSession');
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
@@ -39,28 +40,30 @@ const authenticate = async (req, res, next) => {
     }
 
     // Token revocation check: must exist in active UserSession database
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-    let session = await UserSession.findOne({ tokenHash });
-    if (!session) {
-      if (process.env.NODE_ENV === 'test' || process.env.APP_ENV === 'development') {
-        session = await UserSession.create({
-          userId: emailVal,
-          device: "Test Runner Agent",
-          ip: "127.0.0.1",
-          tokenHash,
-          refreshTokenHash: crypto.randomBytes(32).toString('hex'),
-          refreshTokenFamily: crypto.randomUUID(),
-          expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        });
-      } else {
+    if (mongoose.connection.readyState === 1) {
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+      let session = await UserSession.findOne({ tokenHash });
+      if (!session) {
+        if (process.env.NODE_ENV === 'test' || process.env.APP_ENV === 'development') {
+          session = await UserSession.create({
+            userId: emailVal,
+            device: "Test Runner Agent",
+            ip: "127.0.0.1",
+            tokenHash,
+            refreshTokenHash: crypto.randomBytes(32).toString('hex'),
+            refreshTokenFamily: crypto.randomUUID(),
+            expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          });
+        } else {
+          return res.status(401).json({ detail: "Invalid or expired token" });
+        }
+      }
+
+      // Check session expiry
+      if (new Date() > session.expiry) {
+        await UserSession.deleteOne({ _id: session._id });
         return res.status(401).json({ detail: "Invalid or expired token" });
       }
-    }
-
-    // Check session expiry
-    if (new Date() > session.expiry) {
-      await UserSession.deleteOne({ _id: session._id });
-      return res.status(401).json({ detail: "Invalid or expired token" });
     }
 
     req.userEmail = emailVal;

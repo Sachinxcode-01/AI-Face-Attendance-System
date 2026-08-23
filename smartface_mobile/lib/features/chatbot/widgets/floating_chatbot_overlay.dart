@@ -115,10 +115,16 @@ class _FloatingChatbotOverlayState extends State<FloatingChatbotOverlay>
         Positioned(
           left: isCameraScreen
               ? 16.0
-              : currentX.clamp(16.0, screenWidth - 70.0),
+              : currentX.clamp(
+                  16.0,
+                  (screenWidth - 70.0) < 16.0 ? 16.0 : (screenWidth - 70.0),
+                ),
           top: isCameraScreen
               ? (mediaQuery.padding.top + 16.0)
-              : currentY.clamp(60.0, screenHeight - 160.0),
+              : currentY.clamp(
+                  60.0,
+                  (screenHeight - 160.0) < 60.0 ? 60.0 : (screenHeight - 160.0),
+                ),
           child: Semantics(
             button: true,
             label: 'Nexa Attendance Assistant floating help button',

@@ -97,7 +97,18 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
 
     final session = context.read<SessionManager>();
     final chatbot = context.read<ChatbotController>();
-    final String currentRoute = GoRouterState.of(context).matchedLocation;
+    String currentRoute = '/';
+    try {
+      currentRoute = GoRouterState.of(context).matchedLocation;
+    } catch (_) {
+      try {
+        currentRoute = GoRouter.of(
+          context,
+        ).routerDelegate.currentConfiguration.uri.toString();
+      } catch (_) {
+        currentRoute = '/';
+      }
+    }
 
     chatbot.sendMessage(
       text: query,

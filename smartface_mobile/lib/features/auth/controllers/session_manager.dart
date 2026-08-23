@@ -309,10 +309,14 @@ class SessionManager extends ChangeNotifier {
   /// Updates the user's avatar image URL locally and in secure storage.
   ///
   /// Parameters:
-  /// - [url]: New avatar URL
-  Future<void> updateAvatarUrl(String url) async {
+  /// - [url]: New avatar URL or null to remove
+  Future<void> updateAvatarUrl(String? url) async {
     _avatarUrl = url;
-    await _storage.write(key: _keyAvatarUrl, value: url);
+    if (url != null && url.isNotEmpty) {
+      await _storage.write(key: _keyAvatarUrl, value: url);
+    } else {
+      await _storage.delete(key: _keyAvatarUrl);
+    }
     notifyListeners();
   }
 
