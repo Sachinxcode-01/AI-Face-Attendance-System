@@ -50,7 +50,7 @@ $null = Start-Process -FilePath $pyPath `
 
 Write-Host "Waiting for Python AI readiness (/ready)..." -ForegroundColor Yellow
 $PythonReady = $false
-for ($i = 0; $i -lt 25; $i++) {
+for ($i = 0; $i -lt 30; $i++) {
     Start-Sleep -Seconds 1
     try {
         $res = Invoke-RestMethod -Uri "http://127.0.0.1:8001/ready" -ErrorAction SilentlyContinue
@@ -64,18 +64,23 @@ for ($i = 0; $i -lt 25; $i++) {
 if ($PythonReady) {
     Write-Host "[PASS] Python AI microservice is READY on http://127.0.0.1:8001" -ForegroundColor Green
 } else {
-    Write-Host "[INFO] Python AI service started (warming up InsightFace model)." -ForegroundColor Yellow
+    Write-Host "[INFO] Python AI service started." -ForegroundColor Yellow
 }
 
 # 4. Launch Node.js API
 Write-Host "`n[4/6] Starting Node.js API Gateway (Port 8000)..." -ForegroundColor Yellow
-$null = Start-Process -FilePath "npm" `
-    -ArgumentList "start" `
+$nodeExe = (Get-Command "node" -ErrorAction SilentlyContinue).Source
+if (-not $nodeExe) {
+    $nodeExe = "node"
+}
+
+$null = Start-Process -FilePath $nodeExe `
+    -ArgumentList "src/app.js" `
     -WorkingDirectory $NODE_DIR -PassThru -NoNewWindow
 
 Write-Host "Waiting for Node.js API health (/health)..." -ForegroundColor Yellow
 $NodeHealthy = $false
-for ($i = 0; $i -lt 15; $i++) {
+for ($i = 0; $i -lt 20; $i++) {
     Start-Sleep -Seconds 1
     try {
         $res = Invoke-RestMethod -Uri "http://127.0.0.1:8000/health" -ErrorAction SilentlyContinue
