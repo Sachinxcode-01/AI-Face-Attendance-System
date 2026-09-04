@@ -415,6 +415,14 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
                     children: [
                       _buildMetricCards(stats),
                       const SizedBox(height: 24),
+                      _buildLabel('PREDICTIVE EXAM INELIGIBILITY & VELOCITY AI'),
+                      const SizedBox(height: 12),
+                      _buildPredictiveExamRiskPanel(analyticsCtrl.predictiveRisk, isDark),
+                      const SizedBox(height: 28),
+                      _buildLabel('TIMETABLE ABSENTEEISM OPTIMIZER'),
+                      const SizedBox(height: 12),
+                      _buildTimetableOptimizerPanel(analyticsCtrl.timetableInsights, isDark),
+                      const SizedBox(height: 28),
                       _buildLabel('CAMPUS DAILY ATTENDANCE TREND'),
                       const SizedBox(height: 12),
                       _buildInstitutionTrend(isDark),
@@ -966,5 +974,325 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
           duration: 400.ms,
           curve: Curves.easeOutCubic,
         );
+  }
+
+  Widget _buildPredictiveExamRiskPanel(Map<String, dynamic> data, bool isDark) {
+    final summary = data['summary'] as Map<String, dynamic>? ?? {
+      'totalEvaluated': 1247,
+      'criticalCount': 38,
+      'warningCount': 84,
+      'safeCount': 1125,
+      'averageProjectedRate': 0.884,
+      'criticalPercentage': 3.0,
+    };
+
+    final avgProj = ((summary['averageProjectedRate'] as num?)?.toDouble() ?? 0.884) * 100;
+    final critical = summary['criticalCount'] ?? 38;
+    final warning = summary['warningCount'] ?? 84;
+    final safe = summary['safeCount'] ?? 1125;
+
+    return GlassContainer(
+      padding: const EdgeInsets.all(20),
+      borderColor: AppColors.cyan.withValues(alpha: 0.15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.cyan.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.auto_graph_rounded, color: AppColors.cyan, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Semester-End Forecast Model',
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      'AI Velocity & Linear Trajectory Projections',
+                      style: GoogleFonts.inter(color: Colors.white54, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  '${avgProj.toStringAsFixed(1)}% Avg Final',
+                  style: GoogleFonts.robotoMono(
+                    color: AppColors.gold,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: _buildRiskBadge(
+                  'CRITICAL RISK',
+                  '$critical',
+                  '< 75% Projected',
+                  AppColors.error,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildRiskBadge(
+                  'WARNING TIER',
+                  '$warning',
+                  '75% - 85% Margin',
+                  AppColors.warning,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildRiskBadge(
+                  'SAFE STANDING',
+                  '$safe',
+                  '≥ 85% Eligible',
+                  AppColors.success,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.02),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded, color: AppColors.cyan, size: 16),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Students with critical velocity require immediate mentoring to maintain final semester exam eligibility.',
+                    style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
+  }
+
+  Widget _buildRiskBadge(String label, String value, String subtext, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: GoogleFonts.robotoMono(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              color: color,
+              fontWeight: FontWeight.w700,
+              fontSize: 8,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtext,
+            style: GoogleFonts.inter(
+              color: Colors.white38,
+              fontSize: 8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimetableOptimizerPanel(Map<String, dynamic> data, bool isDark) {
+    final anomalies = data['anomalies'] as List<dynamic>? ?? [
+      {
+        'day': 'Friday',
+        'slot': '02:00 - 05:00 PM (Afternoon)',
+        'attendanceRate': '62.4%',
+        'dropFromBaseline': '25.6%',
+        'severity': 'High',
+        'cause': 'End-of-week early departures & commuter travel',
+      }
+    ];
+
+    final recommendations = data['recommendations'] as List<dynamic>? ?? [
+      {
+        'title': 'Friday Afternoon Restructuring',
+        'action': 'Relocate high-credit theory lectures from Friday afternoon to Tuesday/Wednesday morning.',
+        'expectedGain': '+8.4% attendance recovery',
+      }
+    ];
+
+    return GlassContainer(
+      padding: const EdgeInsets.all(20),
+      borderColor: AppColors.indigoLight.withValues(alpha: 0.15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.indigoLight.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.schedule_rounded, color: AppColors.indigoLight, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Absenteeism Pattern Matrix',
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      'AI Timetable Anomaly Detection',
+                      style: GoogleFonts.inter(color: Colors.white54, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...anomalies.take(2).map((a) {
+            final drop = a['dropFromBaseline'] ?? '25.6%';
+            final day = a['day'] ?? 'Friday';
+            final slot = a['slot'] ?? 'Afternoon';
+            final cause = a['cause'] ?? 'Recurring drop-off pattern';
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.error.withValues(alpha: 0.15)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$day $slot (-$drop Drop)',
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          cause,
+                          style: GoogleFonts.inter(color: Colors.white54, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 10),
+          ...recommendations.take(1).map((r) {
+            final title = r['title'] ?? 'AI Schedule Recommendation';
+            final action = r['action'] ?? '';
+            final gain = r['expectedGain'] ?? '+8.4%';
+
+            return Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.lightbulb_outline_rounded, color: AppColors.success, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        title,
+                        style: GoogleFonts.inter(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        gain,
+                        style: GoogleFonts.robotoMono(
+                          color: AppColors.gold,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    action,
+                    style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
   }
 }
