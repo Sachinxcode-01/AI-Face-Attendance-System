@@ -462,9 +462,19 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
           </div>
 
           <button
-            onClick={() => {
+            onClick={async () => {
               setMarkModalOpen(true);
               setMarkFeedback(null);
+              if (!manualSessionId) {
+                try {
+                  const activeSess = await api.getActiveSession();
+                  if (activeSess && (activeSess.session_id || activeSess.id)) {
+                    setManualSessionId(activeSess.session_id || activeSess.id);
+                  }
+                } catch {
+                  // ignore
+                }
+              }
             }}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-lg shadow-amber-500/20 transition cursor-pointer shrink-0 self-start sm:self-auto"
           >
@@ -1072,14 +1082,41 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
               <form onSubmit={handleMarkAttendance} className="space-y-4 text-xs font-sans">
                 {/* Session ID input */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">
-                    Active Session ID
-                  </label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">
+                      Active Session ID
+                    </label>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const activeSess = await api.getActiveSession();
+                          if (activeSess && (activeSess.session_id || activeSess.id)) {
+                            setManualSessionId(activeSess.session_id || activeSess.id);
+                            setMarkFeedback({
+                              success: true,
+                              message: `Connected to live session for ${activeSess.subject || 'Class'}`
+                            });
+                          } else {
+                            setMarkFeedback({
+                              success: false,
+                              message: 'No live class session active at the moment.'
+                            });
+                          }
+                        } catch {
+                          setMarkFeedback({ success: false, message: 'Could not connect to live session.' });
+                        }
+                      }}
+                      className="text-[10px] font-mono text-amber-400 hover:text-amber-300 underline cursor-pointer"
+                    >
+                      Detect Live Class
+                    </button>
+                  </div>
                   <input
                     type="text"
                     value={manualSessionId}
                     onChange={(e) => setManualSessionId(e.target.value)}
-                    placeholder="e.g. 64b1f2e8..."
+                    placeholder="Auto-detected or enter Session ID"
                     className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:ring-1 focus:ring-amber-400/50 transition outline-none font-mono"
                   />
                 </div>

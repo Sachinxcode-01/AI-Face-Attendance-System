@@ -57,4 +57,55 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin']), async (re
   }
 });
 
+// GET /sessions/active - Get currently active attendance session
+router.get('/active', async (req, res) => {
+  try {
+    const activeSession = await Session.findOne({ is_active: true }).sort({ start_time: -1 }).lean();
+    if (!activeSession) {
+      return res.json({ is_active: false, message: "No active attendance session found" });
+    }
+    res.json({
+      is_active: true,
+      session_id: activeSession._id.toString(),
+      teacher_id: activeSession.teacher_id,
+      subject: activeSession.subject,
+      start_time: activeSession.start_time,
+      qr_code: activeSession.qr_code,
+      duration: activeSession.duration
+    });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// POST /sessions/stop - End an active attendance session
+router.post('/stop', authenticate, requireRole(['teacher', 'admin']), async (req, res) => {
+  try {
+    const { session_id } = req.body;
+    let query = { is_active: true };
+    if (session_id && mongoose.Types.ObjectId.isValid(session_id)) {
+      query = { _id: session_id, is_active: true };
+    }
+
+    const session = await Session.findOne(query);
+    if (!session) {
+      return res.status(404).json({ detail: "Active session not found" });
+    }
+
+    if (req.userRole.toLowerCase() !== 'admin' && req.userEmail.toLowerCase() !== session.teacher_id.toLowerCase()) {
+      return res.status(403).json({ detail: "Forbidden: You can only stop sessions you created" });
+    }
+
+    session.is_active = false;
+    await session.save();
+
+    res.json({
+      session_id: session._id.toString(),
+      message: "Session ended successfully"
+    });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
 module.exports = router;
