@@ -37,6 +37,7 @@ export default function ParentDashboard({ forceTab }: PortalProps) {
   const [childLeaves, setChildLeaves] = useState<any[]>([]);
   const [attendanceFilter, setAttendanceFilter] = useState<'all' | 'Present' | 'Absent' | 'Late'>('all');
   const [consentGranted, setConsentGranted] = useState<Record<string, boolean>>({});
+  const [leaveFilter, setLeaveFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -383,85 +384,201 @@ export default function ParentDashboard({ forceTab }: PortalProps) {
       )}
 
       {/* 3. WARD LEAVES VIEW */}
-      {activeTab === 'leaves' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="font-black text-lg text-white font-sans uppercase">Ward Leave Applications</h3>
-              <p className="text-xs text-slate-400 font-sans mt-0.5">
-                Review and provide guardian consent for leaves submitted by {currentChild.full_name}
-              </p>
-            </div>
-          </div>
+      {activeTab === 'leaves' && (() => {
+        const rawLeaves = childLeaves.length > 0 ? childLeaves : [
+          {
+            id: 'leave-101',
+            leave_type: 'Medical Leave',
+            start_date: '2026-06-20',
+            end_date: '2026-06-22',
+            reason: 'Dental surgery and post-operative recovery recommended by clinic.',
+            status: 'Approved',
+            remarks: 'Verified by Dean office with doctor certificate.'
+          },
+          {
+            id: 'leave-102',
+            leave_type: 'Academic Duty',
+            start_date: '2026-06-26',
+            end_date: '2026-06-27',
+            reason: 'Selected to represent college at National Robotics Symposium.',
+            status: 'Pending',
+            remarks: 'Awaiting faculty advisor endorsement.'
+          },
+          {
+            id: 'leave-103',
+            leave_type: 'Personal Leave',
+            start_date: '2026-05-14',
+            end_date: '2026-05-15',
+            reason: 'Family ceremonial obligations out of station.',
+            status: 'Approved',
+            remarks: 'Granted standard casual quota.'
+          }
+        ];
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {(childLeaves.length > 0 ? childLeaves : [
-              {
-                id: 'leave-101',
-                leave_type: 'Medical Leave',
-                start_date: '2026-06-20',
-                end_date: '2026-06-22',
-                reason: 'Dental surgery and post-operative rest recommended by physician.',
-                status: 'Approved',
-                remarks: 'Approved by Dr. Evans with medical prescription attached.'
-              },
-              {
-                id: 'leave-102',
-                leave_type: 'Academic Duty',
-                start_date: '2026-06-26',
-                end_date: '2026-06-27',
-                reason: 'Representing institute at National Hackathon in Bangalore.',
-                status: 'Pending',
-                remarks: 'Awaiting Dean counter-signature.'
-              }
-            ]).map((leave: any) => (
-              <DashboardCard key={leave.id} className="space-y-4 relative">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="font-mono text-[9px] uppercase tracking-widest text-slate-500 font-bold block">
-                      {leave.leave_type || 'Personal Leave'}
-                    </span>
-                    <h4 className="font-bold text-white text-sm mt-0.5 font-sans">
-                      {typeof leave.start_date === 'string' ? leave.start_date.split('T')[0] : leave.start_date} to{' '}
-                      {typeof leave.end_date === 'string' ? leave.end_date.split('T')[0] : leave.end_date}
-                    </h4>
-                  </div>
-                  <StatusBadge status={leave.status as any} />
-                </div>
+        const totalLeaves = rawLeaves.length;
+        const approvedLeaves = rawLeaves.filter(l => l.status.toLowerCase() === 'approved').length;
+        const pendingLeaves = rawLeaves.filter(l => l.status.toLowerCase() === 'pending').length;
+        const consentsSigned = Object.values(consentGranted).filter(Boolean).length;
 
-                <p className="text-xs text-slate-300 font-sans leading-relaxed bg-slate-950/40 p-3 rounded-xl border border-white/5">
-                  &quot;{leave.reason}&quot;
+        const filteredLeaves = rawLeaves.filter(l => {
+          if (leaveFilter === 'all') return true;
+          return l.status.toLowerCase() === leaveFilter;
+        });
+
+        return (
+          <div className="space-y-6">
+            {/* Header Title */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="font-black text-lg text-white font-sans uppercase">Ward Leave Applications</h3>
+                <p className="text-xs text-slate-400 font-sans mt-0.5">
+                  Monitor absence requests, faculty review status, and sign parental consent endorsements for {currentChild.full_name}.
                 </p>
+              </div>
 
-                {leave.remarks && (
-                  <div className="text-[11px] text-slate-400 font-sans">
-                    <strong className="text-slate-300">Admin Note:</strong> {leave.remarks}
-                  </div>
-                )}
+              {/* Status Filter Tabs */}
+              <div className="flex items-center gap-1.5 p-1 bg-slate-950/60 rounded-xl border border-white/5 text-xs font-semibold self-start sm:self-auto">
+                {[
+                  { id: 'all', label: 'All', count: totalLeaves },
+                  { id: 'pending', label: 'Pending', count: pendingLeaves },
+                  { id: 'approved', label: 'Approved', count: approvedLeaves },
+                  { id: 'rejected', label: 'Rejected', count: rawLeaves.filter(l => l.status.toLowerCase() === 'rejected').length }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setLeaveFilter(tab.id as any)}
+                    className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer text-xs ${
+                      leaveFilter === tab.id
+                        ? 'bg-white/10 text-white font-bold shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <span>{tab.label}</span>
+                    <span className="text-[10px] font-mono text-slate-500">({tab.count})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                <div className="pt-3 border-t border-white/5 flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-slate-500">
-                    Parent Consent: {consentGranted[leave.id] ? (
-                      <span className="text-emerald-400 font-bold">Granted ✓</span>
-                    ) : (
-                      <span className="text-amber-400">Review Requested</span>
-                    )}
-                  </span>
-                  {!consentGranted[leave.id] && (
-                    <button
-                      onClick={() => setConsentGranted((prev) => ({ ...prev, [leave.id]: true }))}
-                      className="px-3 py-1.5 bg-white/10 hover:bg-white/15 text-xs font-bold text-white rounded-lg border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Sign Consent</span>
-                    </button>
-                  )}
-                </div>
-              </DashboardCard>
-            ))}
+            {/* Leave Metrics Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/5 space-y-1">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 block">Total Requests</span>
+                <span className="text-2xl font-black text-white font-sans">{totalLeaves}</span>
+                <span className="text-[10px] text-slate-400 font-mono block">Current Semester</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-1">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400 block">Pending Review</span>
+                <span className="text-2xl font-black text-amber-400 font-sans">{pendingLeaves}</span>
+                <span className="text-[10px] text-slate-400 font-mono block">Awaiting HOD / Faculty</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-1">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 block">Approved</span>
+                <span className="text-2xl font-black text-emerald-400 font-sans">{approvedLeaves}</span>
+                <span className="text-[10px] text-slate-400 font-mono block">Authorized Absences</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 space-y-1">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-blue-400 block">Guardian Endorsed</span>
+                <span className="text-2xl font-black text-blue-400 font-sans">{consentsSigned}</span>
+                <span className="text-[10px] text-slate-400 font-mono block">Signed Parent Consents</span>
+              </div>
+            </div>
+
+            {/* Leave Cards Grid */}
+            {filteredLeaves.length === 0 ? (
+              <div className="p-10 rounded-2xl bg-slate-900/30 border border-white/5 text-center space-y-2">
+                <Calendar className="w-8 h-8 text-slate-500 mx-auto" />
+                <h4 className="text-sm font-bold text-white font-sans">No Leave Applications Found</h4>
+                <p className="text-xs text-slate-400 font-sans max-w-sm mx-auto">
+                  There are no leave records matching the &ldquo;{leaveFilter}&rdquo; status filter for {currentChild.full_name}.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {filteredLeaves.map((leave: any) => {
+                  const isApproved = leave.status.toLowerCase() === 'approved';
+                  const isPending = leave.status.toLowerCase() === 'pending';
+                  const isConsentGiven = Boolean(consentGranted[leave.id]);
+
+                  return (
+                    <DashboardCard key={leave.id} className="space-y-4 relative">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider ${
+                              (leave.leave_type || '').toLowerCase().includes('medical') || (leave.leave_type || '').toLowerCase().includes('sick')
+                                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                : (leave.leave_type || '').toLowerCase().includes('academic')
+                                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            }`}>
+                              {leave.leave_type || 'Personal Leave'}
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-500">
+                              ID: {leave.id}
+                            </span>
+                          </div>
+                          <h4 className="font-bold text-white text-sm font-sans flex items-center gap-2">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                            <span>
+                              {typeof leave.start_date === 'string' ? leave.start_date.split('T')[0] : leave.start_date} to{' '}
+                              {typeof leave.end_date === 'string' ? leave.end_date.split('T')[0] : leave.end_date}
+                            </span>
+                          </h4>
+                        </div>
+                        <StatusBadge status={leave.status as any} />
+                      </div>
+
+                      {/* Reason Body */}
+                      <p className="text-xs text-slate-300 font-sans leading-relaxed bg-slate-950/40 p-3.5 rounded-xl border border-white/5">
+                        &quot;{leave.reason}&quot;
+                      </p>
+
+                      {/* Remarks */}
+                      {leave.remarks && (
+                        <div className="text-[11px] text-slate-400 font-sans bg-white/2 p-2.5 rounded-lg border border-white/5">
+                          <strong className="text-slate-300">Authority Note:</strong> {leave.remarks}
+                        </div>
+                      )}
+
+                      {/* Parent Consent Action Footer */}
+                      <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs">
+                        <span className="text-[11px] font-sans">
+                          {isConsentGiven ? (
+                            <span className="text-emerald-400 font-bold flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              Guardian Consent Signed
+                            </span>
+                          ) : (
+                            <span className="text-amber-400 font-medium">Guardian Consent Pending</span>
+                          )}
+                        </span>
+
+                        {!isConsentGiven ? (
+                          <button
+                            onClick={() => setConsentGranted((prev) => ({ ...prev, [leave.id]: true }))}
+                            className="px-3 py-1.5 bg-linear-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 text-xs font-bold rounded-lg shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Sign Consent</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setConsentGranted((prev) => ({ ...prev, [leave.id]: false }))}
+                            className="text-[10px] text-slate-500 hover:text-slate-400 font-mono underline cursor-pointer"
+                          >
+                            Revoke
+                          </button>
+                        )}
+                      </div>
+                    </DashboardCard>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
     </div>
   );
