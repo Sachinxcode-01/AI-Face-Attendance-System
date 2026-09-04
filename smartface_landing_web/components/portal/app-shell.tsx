@@ -24,7 +24,8 @@ import {
   Command,
   Sparkles,
   RefreshCw,
-  Home
+  Home,
+  Clock
 } from 'lucide-react';
 import { UserAvatar, DeveloperRoleSwitcher } from './ui-helpers';
 import { api } from '@/lib/api';
@@ -39,6 +40,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['student', 'parent', 'teacher', 'admin', 'super_admin'] },
+  { name: 'Timetable', icon: Clock, path: '/dashboard?tab=timetable', roles: ['student'] },
   { name: 'Attendance', icon: CalendarCheck, path: '/dashboard?tab=attendance', roles: ['student', 'parent', 'teacher', 'admin'] },
   { name: 'Analytics', icon: BarChart3, path: '/dashboard?tab=analytics', roles: ['student', 'teacher', 'admin'] },
   { name: 'Reports', icon: FileSpreadsheet, path: '/dashboard/reports', roles: ['student', 'parent', 'teacher', 'admin'] },

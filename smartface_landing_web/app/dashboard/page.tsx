@@ -63,6 +63,15 @@ function DashboardHub() {
     );
   }
 
+  if (tab === 'timetable') {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-xl font-black text-white font-sans uppercase">Academic Timetable</h2>
+        <StudentDashboard forceTab="timetable" />
+      </div>
+    );
+  }
+
   if (tab === 'users' && role === 'admin') {
     return <AdminDashboard forceTab="users" />;
   }

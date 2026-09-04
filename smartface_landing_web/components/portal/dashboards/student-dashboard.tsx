@@ -27,7 +27,11 @@ import {
   Check,
   RotateCcw,
   TrendingUp,
-  Calculator
+  Calculator,
+  MapPin,
+  Search,
+  Download,
+  GraduationCap
 } from 'lucide-react';
 import AttendanceRing from '@/components/portal/attendance-ring';
 import { DashboardCard, StatusBadge, SkeletonLoader, EmptyState } from '@/components/portal/ui-helpers';
@@ -81,7 +85,18 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
 
   // Timetable states
   const [timetableSlots, setTimetableSlots] = useState<any[]>(FALLBACK_TIMETABLE);
-  const [selectedDay, setSelectedDay] = useState<string>('Monday');
+  const [selectedDay, setSelectedDay] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const today = dayNames[new Date().getDay()];
+      if (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(today)) {
+        return today;
+      }
+    }
+    return 'Monday';
+  });
+  const [timetableSearch, setTimetableSearch] = useState('');
+  const [timePeriodFilter, setTimePeriodFilter] = useState<'all' | 'am' | 'pm'>('all');
 
   // Attendance Goal & Bunk Calculator
   const [targetGoal, setTargetGoal] = useState<number>(75);
@@ -567,78 +582,255 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
       )}
 
       {/* 2. TIMETABLE & SCHEDULE VIEW */}
-      {activeTab === 'timetable' && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/40 border border-white/5 p-4 rounded-2xl">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-amber-400/10 text-amber-400 border border-amber-400/20">
-                <Clock className="w-5 h-5" />
+      {activeTab === 'timetable' && (() => {
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+        // Filter slots by selected day, search, and timePeriod
+        const daySlots = timetableSlots.filter(
+          (slot) => (slot.day || 'Monday').toLowerCase() === selectedDay.toLowerCase()
+        );
+
+        const filteredSlots = daySlots.filter((slot) => {
+          if (timetableSearch.trim()) {
+            const q = timetableSearch.toLowerCase();
+            const matchSub = (slot.subject || '').toLowerCase().includes(q);
+            const matchRoom = (slot.room || '').toLowerCase().includes(q);
+            const matchInst = (slot.instructor || '').toLowerCase().includes(q);
+            if (!matchSub && !matchRoom && !matchInst) return false;
+          }
+
+          if (timePeriodFilter === 'am') {
+            return (slot.time || '').toLowerCase().includes('am');
+          } else if (timePeriodFilter === 'pm') {
+            return (slot.time || '').toLowerCase().includes('pm');
+          }
+          return true;
+        });
+
+        // Metrics for the day
+        const totalDayClasses = daySlots.length;
+        const labClasses = daySlots.filter((s) => (s.subject || '').toLowerCase().includes('lab') || (s.subject || '').toLowerCase().includes('practical')).length;
+        const theoryClasses = totalDayClasses - labClasses;
+
+        return (
+          <div className="space-y-6 font-sans">
+            {/* Top Overview Pods */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="p-4 rounded-2xl bg-slate-900/40 border border-white/5 space-y-1">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 block">Active Day</span>
+                <span className="text-xl font-black text-amber-400 font-sans flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" />
+                  {selectedDay}
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono block">Semester 6 CSE</span>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Weekly Academic Schedule</h3>
-                <span className="text-[10px] text-slate-400 font-mono">B.Tech Computer Science & Engineering · Semester 6</span>
+              <div className="p-4 rounded-2xl bg-slate-900/40 border border-white/5 space-y-1">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 block">Lectures Today</span>
+                <span className="text-xl font-black text-white font-sans">{totalDayClasses} Sessions</span>
+                <span className="text-[10px] text-slate-400 font-mono block">Scheduled Classes</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 space-y-1">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-blue-400 block">Practical Labs</span>
+                <span className="text-xl font-black text-blue-400 font-sans">{labClasses} Labs</span>
+                <span className="text-[10px] text-slate-400 font-mono block">Hands-on Sessions</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-1">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 block">Theory Slots</span>
+                <span className="text-xl font-black text-emerald-400 font-sans">{theoryClasses} Lectures</span>
+                <span className="text-[10px] text-slate-400 font-mono block">Classroom Theory</span>
               </div>
             </div>
 
-            {/* Day selector */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
-                <button
-                  key={day}
-                  onClick={() => setSelectedDay(day)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold font-mono transition cursor-pointer ${
-                    selectedDay === day
-                      ? 'bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-400/20'
-                      : 'text-slate-400 hover:text-white bg-slate-950/60 border border-white/5'
-                  }`}
-                >
-                  {day}
-                </button>
-              ))}
-            </div>
-          </div>
+            {/* Navigation & Controls Bar */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900/40 border border-white/5 p-4 rounded-2xl">
+              {/* Day Selector with Counts */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 scroll-x">
+                {days.map((day) => {
+                  const count = timetableSlots.filter((s) => (s.day || 'Monday').toLowerCase() === day.toLowerCase()).length;
+                  const isSelected = selectedDay.toLowerCase() === day.toLowerCase();
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {timetableSlots
-              .filter((slot) => (slot.day || 'Monday').toLowerCase() === selectedDay.toLowerCase())
-              .map((slot, idx) => (
-                <DashboardCard key={slot.id || idx} className="space-y-3 relative overflow-hidden group">
-                  <div className="flex justify-between items-start">
-                    <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] font-mono text-amber-400 font-bold">
-                      {slot.time}
-                    </span>
-                    <span className="text-[10px] font-mono text-slate-400 bg-slate-950/60 px-2 py-0.5 rounded border border-white/5">
-                      {slot.room || 'Room 401'}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h4 className="font-bold text-white text-sm group-hover:text-amber-400 transition">
-                      {slot.subject}
-                    </h4>
-                    {slot.instructor && (
-                      <span className="text-[11px] text-slate-400 block mt-1">
-                        Instructor: <strong className="text-slate-300 font-medium">{slot.instructor}</strong>
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => setSelectedDay(day)}
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold font-mono transition whitespace-nowrap cursor-pointer ${
+                        isSelected
+                          ? 'bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-400/20'
+                          : 'text-slate-400 hover:text-white bg-slate-950/60 border border-white/5 hover:border-white/10'
+                      }`}
+                    >
+                      <span>{day}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        isSelected ? 'bg-slate-950/20 text-slate-950' : 'bg-white/10 text-slate-400'
+                      }`}>
+                        {count}
                       </span>
-                    )}
-                  </div>
+                    </button>
+                  );
+                })}
+              </div>
 
-                  <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-500 font-mono">
-                    <span>Status: Scheduled</span>
-                    <span className="text-emerald-400 flex items-center gap-1 font-bold">
-                      <CheckCircle2 className="w-3 h-3" /> Biometric Ready
-                    </span>
-                  </div>
-                </DashboardCard>
-              ))}
-            {timetableSlots.filter((slot) => (slot.day || 'Monday').toLowerCase() === selectedDay.toLowerCase()).length === 0 && (
-              <div className="col-span-full py-12 text-center text-slate-500 text-xs">
-                No classes scheduled for {selectedDay}. Enjoy your academic study break!
+              {/* Quick Today Jump */}
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                    const today = dayNames[new Date().getDay()];
+                    setSelectedDay(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(today) ? today : 'Monday');
+                  }}
+                  className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white rounded-xl text-xs font-semibold font-mono flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Today</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              {/* Search Box */}
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Filter by course, room code, or instructor..."
+                  value={timetableSearch}
+                  onChange={(e) => setTimetableSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-900/60 border border-white/5 text-xs text-slate-100 placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-amber-400/50 transition font-sans"
+                />
+                {timetableSearch && (
+                  <button
+                    onClick={() => setTimetableSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Time Period Filter Chips */}
+              <div className="flex items-center gap-1.5 bg-slate-950/60 p-1 rounded-xl border border-white/5 shrink-0 self-start sm:self-auto">
+                {[
+                  { id: 'all', label: 'All Times' },
+                  { id: 'am', label: 'Morning (AM)' },
+                  { id: 'pm', label: 'Afternoon (PM)' }
+                ].map((chip) => (
+                  <button
+                    key={chip.id}
+                    onClick={() => setTimePeriodFilter(chip.id as any)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition cursor-pointer ${
+                      timePeriodFilter === chip.id
+                        ? 'bg-white/15 text-white font-bold'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Slot Cards Grid */}
+            {filteredSlots.length === 0 ? (
+              <div className="p-12 rounded-2xl bg-slate-900/30 border border-white/5 text-center space-y-3">
+                <Clock className="w-8 h-8 text-slate-500 mx-auto" />
+                <h4 className="text-sm font-bold text-white">No Lectures Found</h4>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  {timetableSearch || timePeriodFilter !== 'all'
+                    ? 'No scheduled classes match your current search or time filter.'
+                    : `No classes are scheduled on ${selectedDay}. Enjoy your academic study break!`}
+                </p>
+                {(timetableSearch || timePeriodFilter !== 'all') && (
+                  <button
+                    onClick={() => {
+                      setTimetableSearch('');
+                      setTimePeriodFilter('all');
+                    }}
+                    className="px-3 py-1.5 bg-white/10 hover:bg-white/15 text-xs text-white rounded-lg font-mono transition cursor-pointer"
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredSlots.map((slot, idx) => {
+                  const isLab = (slot.subject || '').toLowerCase().includes('lab') || (slot.subject || '').toLowerCase().includes('practical');
+
+                  return (
+                    <DashboardCard key={slot.id || idx} className="space-y-4 relative overflow-hidden group hover:border-amber-400/30 transition-all flex flex-col justify-between">
+                      <div className="space-y-3">
+                        {/* Time & Type Badges */}
+                        <div className="flex justify-between items-center gap-2">
+                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/80 border border-white/10 text-[10px] font-mono text-amber-400 font-bold">
+                            <Clock className="w-3 h-3 text-amber-400" />
+                            {slot.time}
+                          </span>
+
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider ${
+                            isLab
+                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          }`}>
+                            {isLab ? 'Practical Lab' : 'Theory'}
+                          </span>
+                        </div>
+
+                        {/* Subject Title */}
+                        <div>
+                          <h4 className="font-bold text-white text-sm group-hover:text-amber-400 transition leading-snug">
+                            {slot.subject}
+                          </h4>
+                        </div>
+
+                        {/* Location and Instructor Meta */}
+                        <div className="space-y-1.5 text-xs text-slate-400">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                            <span className="font-mono text-[11px] text-slate-300">{slot.room || 'Room TBA'}</span>
+                          </div>
+                          {slot.instructor && (
+                            <div className="flex items-center gap-2">
+                              <GraduationCap className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                              <span className="text-[11px] text-slate-300 font-sans">
+                                {slot.instructor}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Footer: Live Biometric Readiness & Fast Check-In Action */}
+                      <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+                        <span className="text-emerald-400 flex items-center gap-1.5 font-mono text-[10px] font-bold">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Biometric Ready</span>
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMarkModalOpen(true);
+                            setMarkFeedback(null);
+                            if (slot.id) {
+                              setManualSessionId(`SES-${slot.id}`);
+                            }
+                          }}
+                          className="px-2.5 py-1 bg-white/5 hover:bg-amber-400 hover:text-slate-950 text-slate-300 text-[10px] font-mono font-bold rounded-lg border border-white/10 hover:border-amber-400 transition flex items-center gap-1 cursor-pointer"
+                        >
+                          <Camera className="w-3 h-3" />
+                          <span>Check In</span>
+                        </button>
+                      </div>
+                    </DashboardCard>
+                  );
+                })}
               </div>
             )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 2. ATTENDANCE HISTORIC PANEL */}
       {activeTab === 'attendance' && (
