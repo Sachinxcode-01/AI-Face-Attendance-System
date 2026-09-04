@@ -123,7 +123,7 @@ export default function GlobalChatbot() {
               setIsOpen(true);
               setHasNewAlert(false);
             }}
-            className="group relative flex items-center gap-3 px-4 py-3.5 rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-slate-950 font-bold shadow-2xl shadow-amber-500/25 border border-amber-300/40 hover:shadow-amber-500/40 transition-all duration-300 cursor-pointer"
+            className="group relative flex items-center gap-3 px-4 py-3.5 rounded-full bg-linear-to-r from-amber-500 via-amber-400 to-yellow-500 text-slate-950 font-bold shadow-2xl shadow-amber-500/25 border border-amber-300/40 hover:shadow-amber-500/40 transition-all duration-300 cursor-pointer"
             aria-label="Open Nexa AI Assistant"
           >
             <div className="relative">
@@ -146,12 +146,12 @@ export default function GlobalChatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="w-[92vw] sm:w-[420px] h-[580px] max-h-[85vh] rounded-3xl bg-slate-950/95 border border-white/10 shadow-2xl backdrop-blur-2xl flex flex-col overflow-hidden ring-1 ring-white/5"
+            className="w-[92vw] sm:w-105 h-145 max-h-[85vh] rounded-3xl bg-slate-950/95 border border-white/10 shadow-2xl backdrop-blur-2xl flex flex-col overflow-hidden ring-1 ring-white/5"
           >
             {/* Header */}
-            <div className="px-5 py-4 border-b border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-white/5 bg-linear-to-r from-white/3 to-transparent flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20 font-black">
+                <div className="w-9 h-9 rounded-xl bg-linear-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20 font-black">
                   <Bot className="w-5 h-5" />
                 </div>
                 <div>
@@ -210,7 +210,7 @@ export default function GlobalChatbot() {
                   <div
                     className={`max-w-[80%] rounded-2xl p-3.5 leading-relaxed ${
                       msg.sender === 'user'
-                        ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-slate-950 font-medium rounded-tr-sm shadow-md shadow-amber-500/10'
+                        ? 'bg-linear-to-br from-amber-500 to-amber-600 text-slate-950 font-medium rounded-tr-sm shadow-md shadow-amber-500/10'
                         : 'bg-slate-900/80 border border-white/10 text-slate-200 rounded-tl-sm backdrop-blur-md'
                     }`}
                   >
@@ -254,7 +254,7 @@ export default function GlobalChatbot() {
                     key={idx}
                     disabled={isLoading}
                     onClick={() => handleSend(prompt)}
-                    className="shrink-0 px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 text-[10px] text-slate-300 hover:text-white transition whitespace-nowrap"
+                    className="shrink-0 px-2.5 py-1 rounded-full bg-white/4 hover:bg-white/8 border border-white/5 text-[10px] text-slate-300 hover:text-white transition whitespace-nowrap"
                   >
                     {prompt}
                   </button>
@@ -276,7 +276,7 @@ export default function GlobalChatbot() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask Nexa AI regarding attendance, classes..."
                 disabled={isLoading}
-                className="flex-1 bg-slate-900/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400/50 transition"
+                className="flex-1 bg-slate-900/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder:opacity-60 focus:ring-1 focus:ring-amber-400/50 outline-none transition"
               />
               <button
                 type="submit"

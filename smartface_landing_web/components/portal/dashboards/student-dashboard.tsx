@@ -476,7 +476,7 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
                 }
               }
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-lg shadow-amber-500/20 transition cursor-pointer shrink-0 self-start sm:self-auto"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-linear-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-lg shadow-amber-500/20 transition cursor-pointer shrink-0 self-start sm:self-auto"
           >
             <Camera className="w-4 h-4" />
             <span>Mark Attendance</span>
@@ -715,7 +715,7 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
           </div>
 
           {/* AI Bunk & Attendance Goal Simulator */}
-          <DashboardCard className="space-y-4 border border-amber-400/20 bg-gradient-to-br from-amber-500/[0.03] to-slate-900/60">
+          <DashboardCard className="space-y-4 border border-amber-400/20 bg-linear-to-br from-amber-500/3 to-slate-900/60">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-amber-400/10 text-amber-400 border border-amber-400/20">
@@ -920,7 +920,7 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
                         placeholder="Detail your request justification..."
                         value={newLeave.reason}
                         onChange={(e) => setNewLeave(prev => ({ ...prev, reason: e.target.value }))}
-                        className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white placeholder:text-slate-500 focus:ring-1 focus:ring-primary transition outline-none font-sans"
+                        className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-slate-100 placeholder:opacity-60 focus:ring-1 focus:ring-primary transition outline-none font-sans"
                       />
                     </div>
 
@@ -992,7 +992,7 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
               placeholder="Ask AI Analyst..."
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              className="flex-1 px-4 py-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white placeholder:text-slate-500 focus:ring-1 focus:ring-primary transition outline-none font-sans"
+              className="flex-1 px-4 py-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-slate-100 placeholder:opacity-60 focus:ring-1 focus:ring-primary transition outline-none font-sans"
             />
             <button
               type="submit"
@@ -1193,7 +1193,7 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
                   <button
                     type="submit"
                     disabled={isMarking}
-                    className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
+                    className="flex-1 py-3 bg-linear-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {isMarking ? (
                       <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />

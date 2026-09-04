@@ -366,7 +366,7 @@ export default function ParentDashboard({ forceTab }: PortalProps) {
                   ])
                     .filter((rec) => attendanceFilter === 'all' || rec.status.toLowerCase() === attendanceFilter.toLowerCase())
                     .map((rec: any, idx: number) => (
-                      <tr key={idx} className="hover:bg-white/[0.02] transition text-slate-300">
+                      <tr key={idx} className="hover:bg-white/2 transition text-slate-300">
                         <td className="py-3 font-mono text-[10px] text-slate-400">{rec.date}</td>
                         <td className="py-3 font-bold text-white font-sans">{rec.subject}</td>
                         <td className="py-3 text-[11px] text-slate-400 font-sans">{rec.verifiedBy || 'QR Scan'}</td>

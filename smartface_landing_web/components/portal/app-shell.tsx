@@ -429,7 +429,7 @@ function AppShellInner({ children }: AppShellProps) {
                 <span>Back</span>
               </button>
 
-              <div className="h-4 w-[1px] bg-glass-border hidden sm:block" />
+              <div className="h-4 w-px bg-glass-border hidden sm:block" />
 
               {/* Breadcrumbs */}
               <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
@@ -494,7 +494,7 @@ function AppShellInner({ children }: AppShellProps) {
                 )}
               </button>
 
-              <div className="h-8 w-[1px] bg-glass-border hidden md:block" />
+              <div className="h-8 w-px bg-glass-border hidden md:block" />
 
               {/* Profile Avatar Dropdown */}
               <div className="relative">
@@ -674,7 +674,7 @@ function AppShellInner({ children }: AppShellProps) {
                   placeholder="Type a command, shortcut, or search dashboard..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent text-xs text-primary-text placeholder-slate-500 outline-none w-full font-sans"
+                  className="bg-transparent text-xs text-slate-100 placeholder:opacity-60 outline-none w-full font-sans"
                   autoFocus
                 />
                 <button
@@ -686,7 +686,7 @@ function AppShellInner({ children }: AppShellProps) {
               </div>
 
               {/* Navigation / Shortcuts */}
-              <div className="py-2.5 max-h-[300px] overflow-y-auto space-y-1">
+              <div className="py-2.5 max-h-75 overflow-y-auto space-y-1">
                 {commandResults.length > 0 ? (
                   commandResults.map((item, idx) => (
                     <button

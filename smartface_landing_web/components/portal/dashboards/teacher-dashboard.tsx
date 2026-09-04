@@ -707,7 +707,7 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
                 <button
                   onClick={handleEnrollFace}
                   disabled={isEnrolling}
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-linear-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isEnrolling ? (
                     <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
@@ -749,7 +749,7 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
                     type="text"
                     value={studentEnrollName}
                     onChange={(e) => setStudentEnrollName(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:border-amber-400/50 outline-none transition"
+                    className="w-full p-2.5 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:ring-1 focus:ring-amber-400/50 outline-none transition"
                   />
                 </div>
 
@@ -761,7 +761,7 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
                     type="email"
                     value={studentEnrollEmail}
                     onChange={(e) => setStudentEnrollEmail(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:border-amber-400/50 outline-none transition font-mono"
+                    className="w-full p-2.5 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:ring-1 focus:ring-amber-400/50 outline-none transition font-mono"
                   />
                 </div>
 
