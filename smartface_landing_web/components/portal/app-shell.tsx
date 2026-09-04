@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { UserAvatar, DeveloperRoleSwitcher } from './ui-helpers';
 import { api } from '@/lib/api';
+import GlobalChatbot from './global-chatbot';
 
 interface NavItem {
   name: string;
@@ -746,6 +747,10 @@ function AppShellInner({ children }: AppShellProps) {
         )}
       </AnimatePresence>
 
+      {/* Persistent Global AI Assistant */}
+      <GlobalChatbot />
+
     </div>
   );
 }
+

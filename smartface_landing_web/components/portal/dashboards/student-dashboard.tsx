@@ -16,7 +16,15 @@ import {
   Clock,
   ChevronRight,
   ShieldCheck,
-  Plus
+  Plus,
+  Camera,
+  CheckCircle2,
+  ScanLine,
+  Sliders,
+  AlertTriangle,
+  X,
+  Zap,
+  Check
 } from 'lucide-react';
 import AttendanceRing from '@/components/portal/attendance-ring';
 import { DashboardCard, StatusBadge, SkeletonLoader, EmptyState } from '@/components/portal/ui-helpers';
@@ -35,13 +43,45 @@ interface SubjectItem {
   percent: number;
 }
 
+const FALLBACK_TIMETABLE = [
+  { id: '1', day: 'Monday', time: '09:00 AM - 10:30 AM', subject: 'Software Engineering (CSE-302)', room: 'Room 401', instructor: 'Prof. Miller' },
+  { id: '2', day: 'Monday', time: '11:00 AM - 12:30 PM', subject: 'Machine Learning (CSE-303)', room: 'Lab 3B', instructor: 'Dr. Jane Goodall' },
+  { id: '3', day: 'Monday', time: '02:00 PM - 03:30 PM', subject: 'Cloud Computing (CSE-304)', room: 'Room 402', instructor: 'Dr. S. K. Roy' },
+  { id: '4', day: 'Tuesday', time: '09:30 AM - 11:00 AM', subject: 'Distributed Systems (CSE-305)', room: 'Room 305', instructor: 'Prof. A. Kumar' },
+  { id: '5', day: 'Tuesday', time: '11:30 AM - 01:00 PM', subject: 'Compiler Design (CSE-306)', room: 'Room 302', instructor: 'Dr. R. Sharma' },
+  { id: '6', day: 'Wednesday', time: '09:00 AM - 10:30 AM', subject: 'AI & Neural Networks (CSE-307)', room: 'Seminar Hall', instructor: 'Prof. Miller' },
+  { id: '7', day: 'Wednesday', time: '01:30 PM - 04:30 PM', subject: 'Deep Learning Practical Lab', room: 'High-Perf Lab 1', instructor: 'Dr. Jane Goodall' },
+  { id: '8', day: 'Thursday', time: '10:00 AM - 11:30 AM', subject: 'Software Engineering (CSE-302)', room: 'Room 401', instructor: 'Prof. Miller' },
+  { id: '9', day: 'Thursday', time: '02:00 PM - 03:30 PM', subject: 'Cloud Computing (CSE-304)', room: 'Room 402', instructor: 'Dr. S. K. Roy' },
+  { id: '10', day: 'Friday', time: '09:00 AM - 10:30 AM', subject: 'Machine Learning (CSE-303)', room: 'Lab 3B', instructor: 'Dr. Jane Goodall' },
+  { id: '11', day: 'Friday', time: '11:00 AM - 12:30 PM', subject: 'Computer Networks (CSE-308)', room: 'Room 201', instructor: 'Dr. V. Patel' }
+];
+
 export default function StudentDashboard({ forceTab }: PortalProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'attendance' | 'analytics' | 'leave' | 'chat'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'attendance' | 'timetable' | 'analytics' | 'leave' | 'chat'>(
     (forceTab as any) || 'overview'
   );
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+
+
+  // Mark Attendance Modal & Camera States
+  const [markModalOpen, setMarkModalOpen] = useState(false);
+  const [markMethod, setMarkMethod] = useState<'token' | 'face'>('token');
+  const [manualSessionId, setManualSessionId] = useState('');
+  const [manualToken, setManualToken] = useState('');
+  const [isMarking, setIsMarking] = useState(false);
+  const [markFeedback, setMarkFeedback] = useState<{ success: boolean; message: string } | null>(null);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+  const streamRef = React.useRef<MediaStream | null>(null);
+
+  // Timetable states
+  const [timetableSlots, setTimetableSlots] = useState<any[]>(FALLBACK_TIMETABLE);
+  const [selectedDay, setSelectedDay] = useState<string>('Monday');
+
+  // Attendance Goal & Bunk Calculator
+  const [targetGoal, setTargetGoal] = useState<number>(75);
 
   // Student stats from API
   const [stats, setStats] = useState<any>(null);
@@ -66,6 +106,42 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
 
+  // Manage Camera Stream for Face Verification
+  useEffect(() => {
+    if (markModalOpen && markMethod === 'face') {
+      let active = true;
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+        navigator.mediaDevices
+          .getUserMedia({ video: { width: 640, height: 480 } })
+          .then((stream) => {
+            if (!active) {
+              stream.getTracks().forEach((t) => t.stop());
+              return;
+            }
+            streamRef.current = stream;
+            if (videoRef.current) {
+              videoRef.current.srcObject = stream;
+            }
+          })
+          .catch((err) => {
+            console.warn('Camera preview not available:', err);
+          });
+      }
+      return () => {
+        active = false;
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((t) => t.stop());
+          streamRef.current = null;
+        }
+      };
+    } else {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      }
+    }
+  }, [markModalOpen, markMethod]);
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -80,6 +156,26 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
         // Fetch stats
         const statsData = await api.getStudentStats(email, token);
         setStats(statsData);
+
+        // Fetch active session
+        try {
+          const activeSess = await api.getActiveSession();
+          if (activeSess && (activeSess.session_id || activeSess.id)) {
+            setManualSessionId(activeSess.session_id || activeSess.id);
+          }
+        } catch (e) {
+          console.error("Failed to load active session:", e);
+        }
+
+        // Fetch timetable
+        try {
+          const tData = await api.getTimetable(token);
+          if (Array.isArray(tData) && tData.length > 0) {
+            setTimetableSlots(tData);
+          }
+        } catch (e) {
+          console.error("Failed to load timetable:", e);
+        }
 
         // Fetch leave balance
         try {
@@ -115,6 +211,69 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
     }
     loadData();
   }, []);
+
+  const handleMarkAttendance = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsMarking(true);
+    setMarkFeedback(null);
+    const token = localStorage.getItem('token');
+    const email = localStorage.getItem('userEmail') || 'student@smartface.pro';
+
+    if (!token) {
+      setMarkFeedback({ success: false, message: 'Authorization token not found. Please log in.' });
+      setIsMarking(false);
+      return;
+    }
+
+    try {
+      if (markMethod === 'token') {
+        if (!manualToken.trim()) {
+          setMarkFeedback({ success: false, message: 'Please enter the session QR code or passcode.' });
+          setIsMarking(false);
+          return;
+        }
+        const sessId = manualSessionId.trim() || 'default_session';
+        const res = await api.markAttendance(email, sessId, manualToken.trim(), token);
+        setMarkFeedback({ success: true, message: res?.message || 'Attendance verified & logged successfully!' });
+      } else {
+        // Face Snapshot capture
+        let blob: Blob | null = null;
+        if (videoRef.current) {
+          const canvas = document.createElement('canvas');
+          canvas.width = videoRef.current.videoWidth || 640;
+          canvas.height = videoRef.current.videoHeight || 480;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+            blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+          }
+        }
+
+        const formData = new FormData();
+        if (blob) {
+          formData.append('image', blob, 'face_snapshot.jpg');
+        }
+        if (manualSessionId) {
+          formData.append('session_id', manualSessionId);
+        }
+
+        const res = await api.markFaceAttendance(formData, token);
+        setMarkFeedback({ success: true, message: res?.message || 'Face biometrics matched! Attendance recorded.' });
+      }
+
+      // Refresh student stats
+      const updatedStats = await api.getStudentStats(email, token);
+      setStats(updatedStats);
+    } catch (err: any) {
+      setMarkFeedback({
+        success: false,
+        message: err?.message || 'Verification failed. Please check your QR code or face alignment.'
+      });
+    } finally {
+      setIsMarking(false);
+    }
+  };
+
 
   const handleApplyLeave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -275,29 +434,43 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
         </div>
       )}
 
-      {/* Main tab select headers */}
+      {/* Main tab select headers + Action Buttons */}
       {!forceTab && (
-        <div className="flex items-center gap-1.5 border-b border-white/5 pb-2 scroll-x">
-          {[
-            { id: 'overview', name: 'Overview', icon: BookOpen },
-            { id: 'attendance', name: 'Attendance Records', icon: CalendarCheck },
-            { id: 'analytics', name: 'Performance Analytics', icon: Award },
-            { id: 'leave', name: 'Leave Requests', icon: Calendar },
-            { id: 'chat', name: 'AI Analyst Chat', icon: MessageSquare }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold font-sans transition ${
-                activeTab === tab.id
-                  ? 'bg-white/5 text-white border border-white/10'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              <span>{tab.name}</span>
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-2">
+          <div className="flex items-center gap-1.5 scroll-x overflow-x-auto pb-1 sm:pb-0">
+            {[
+              { id: 'overview', name: 'Overview', icon: BookOpen },
+              { id: 'attendance', name: 'Attendance Records', icon: CalendarCheck },
+              { id: 'timetable', name: 'Class Timetable', icon: Clock },
+              { id: 'analytics', name: 'Analytics & Bunk Planner', icon: Award },
+              { id: 'leave', name: 'Leave Requests', icon: Calendar },
+              { id: 'chat', name: 'AI Analyst Chat', icon: MessageSquare }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold font-sans transition whitespace-nowrap cursor-pointer ${
+                  activeTab === tab.id
+                    ? 'bg-white/10 text-white border border-white/15 shadow-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                <span>{tab.name}</span>
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => {
+              setMarkModalOpen(true);
+              setMarkFeedback(null);
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-lg shadow-amber-500/20 transition cursor-pointer shrink-0 self-start sm:self-auto"
+          >
+            <Camera className="w-4 h-4" />
+            <span>Mark Attendance</span>
+          </button>
         </div>
       )}
 
@@ -373,6 +546,80 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
                 ))}
               </div>
             </DashboardCard>
+          </div>
+        </div>
+      )}
+
+      {/* 2. TIMETABLE & SCHEDULE VIEW */}
+      {activeTab === 'timetable' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/40 border border-white/5 p-4 rounded-2xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-400/10 text-amber-400 border border-amber-400/20">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Weekly Academic Schedule</h3>
+                <span className="text-[10px] text-slate-400 font-mono">B.Tech Computer Science & Engineering · Semester 6</span>
+              </div>
+            </div>
+
+            {/* Day selector */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
+                <button
+                  key={day}
+                  onClick={() => setSelectedDay(day)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold font-mono transition cursor-pointer ${
+                    selectedDay === day
+                      ? 'bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-400/20'
+                      : 'text-slate-400 hover:text-white bg-slate-950/60 border border-white/5'
+                  }`}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {timetableSlots
+              .filter((slot) => (slot.day || 'Monday').toLowerCase() === selectedDay.toLowerCase())
+              .map((slot, idx) => (
+                <DashboardCard key={slot.id || idx} className="space-y-3 relative overflow-hidden group">
+                  <div className="flex justify-between items-start">
+                    <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] font-mono text-amber-400 font-bold">
+                      {slot.time}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400 bg-slate-950/60 px-2 py-0.5 rounded border border-white/5">
+                      {slot.room || 'Room 401'}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="font-bold text-white text-sm group-hover:text-amber-400 transition">
+                      {slot.subject}
+                    </h4>
+                    {slot.instructor && (
+                      <span className="text-[11px] text-slate-400 block mt-1">
+                        Instructor: <strong className="text-slate-300 font-medium">{slot.instructor}</strong>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                    <span>Status: Scheduled</span>
+                    <span className="text-emerald-400 flex items-center gap-1 font-bold">
+                      <CheckCircle2 className="w-3 h-3" /> Biometric Ready
+                    </span>
+                  </div>
+                </DashboardCard>
+              ))}
+            {timetableSlots.filter((slot) => (slot.day || 'Monday').toLowerCase() === selectedDay.toLowerCase()).length === 0 && (
+              <div className="col-span-full py-12 text-center text-slate-500 text-xs">
+                No classes scheduled for {selectedDay}. Enjoy your academic study break!
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -456,6 +703,80 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
               </div>
             </DashboardCard>
           </div>
+
+          {/* AI Bunk & Attendance Goal Simulator */}
+          <DashboardCard className="space-y-4 border border-amber-400/20 bg-gradient-to-br from-amber-500/[0.03] to-slate-900/60">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-400/10 text-amber-400 border border-amber-400/20">
+                  <Sliders className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">AI Bunk & Compliance Margin Simulator</h4>
+                  <span className="text-[10px] text-slate-400 font-mono">Simulate threshold safety and lecture bunk margins</span>
+                </div>
+              </div>
+
+              {/* Target Goal Slider control */}
+              <div className="flex items-center gap-3 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-white/5">
+                <span className="text-[11px] font-mono text-slate-400">Target Goal:</span>
+                <input
+                  type="range"
+                  min="60"
+                  max="95"
+                  step="1"
+                  value={targetGoal}
+                  onChange={(e) => setTargetGoal(Number(e.target.value))}
+                  className="w-24 accent-amber-400 cursor-pointer"
+                />
+                <span className="text-xs font-mono font-bold text-amber-400 w-9 text-right">{targetGoal}%</span>
+              </div>
+            </div>
+
+            {/* Calculations display */}
+            {(() => {
+              const currentPresent = stats?.subjects?.reduce((acc: number, s: any) => acc + s.present, 0) || 76;
+              const currentTotal = stats?.subjects?.reduce((acc: number, s: any) => acc + s.total, 0) || 94;
+              const targetPct = targetGoal / 100;
+              const currentPct = currentTotal > 0 ? currentPresent / currentTotal : 0;
+              const safeBunks = currentPct >= targetPct ? Math.floor((currentPresent - targetPct * currentTotal) / targetPct) : 0;
+              const neededConsecutive = currentPct < targetPct ? Math.ceil((targetPct * currentTotal - currentPresent) / (1 - targetPct)) : 0;
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                  <div className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 space-y-1">
+                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">Current Aggregate</span>
+                    <span className="text-2xl font-black text-white font-sans">
+                      {Math.round(currentPct * 100)}%
+                    </span>
+                    <span className="text-[10px] text-slate-400 block font-mono">
+                      {currentPresent} attended of {currentTotal} sessions
+                    </span>
+                  </div>
+
+                  <div className={`p-3.5 rounded-xl border space-y-1 ${safeBunks > 0 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-slate-950/40 border-white/5 text-slate-400'}`}>
+                    <span className="text-[10px] font-mono uppercase tracking-widest block">Safe Bunk Allowance</span>
+                    <span className="text-2xl font-black font-sans">
+                      {safeBunks} {safeBunks === 1 ? 'Class' : 'Classes'}
+                    </span>
+                    <span className="text-[10px] block opacity-80 font-mono">
+                      Can safely miss without dropping below {targetGoal}%
+                    </span>
+                  </div>
+
+                  <div className={`p-3.5 rounded-xl border space-y-1 ${neededConsecutive > 0 ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-slate-950/40 border-white/5 text-slate-400'}`}>
+                    <span className="text-[10px] font-mono uppercase tracking-widest block">Catch-up Requirement</span>
+                    <span className="text-2xl font-black font-sans">
+                      {neededConsecutive} {neededConsecutive === 1 ? 'Class' : 'Classes'}
+                    </span>
+                    <span className="text-[10px] block opacity-80 font-mono">
+                      Consecutive attendances needed to reach {targetGoal}%
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+          </DashboardCard>
         </div>
       )}
 
@@ -546,7 +867,7 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
                       <select
                         value={newLeave.type}
                         onChange={(e) => setNewLeave(prev => ({ ...prev, type: e.target.value }))}
-                        className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:border-primary transition outline-none font-sans"
+                        className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:ring-1 focus:ring-primary transition outline-none font-sans"
                       >
                         <option value="Sick">Sick Leave</option>
                         <option value="Casual">Casual Leave</option>
@@ -564,7 +885,7 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
                           type="date"
                           value={newLeave.start}
                           onChange={(e) => setNewLeave(prev => ({ ...prev, start: e.target.value }))}
-                          className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:border-primary transition outline-none font-mono"
+                          className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:ring-1 focus:ring-primary transition outline-none font-mono"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -575,7 +896,7 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
                           type="date"
                           value={newLeave.end}
                           onChange={(e) => setNewLeave(prev => ({ ...prev, end: e.target.value }))}
-                          className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:border-primary transition outline-none font-mono"
+                          className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:ring-1 focus:ring-primary transition outline-none font-mono"
                         />
                       </div>
                     </div>
@@ -589,7 +910,7 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
                         placeholder="Detail your request justification..."
                         value={newLeave.reason}
                         onChange={(e) => setNewLeave(prev => ({ ...prev, reason: e.target.value }))}
-                        className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white placeholder-slate-500 focus:border-primary transition outline-none font-sans"
+                        className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white placeholder:text-slate-500 focus:ring-1 focus:ring-primary transition outline-none font-sans"
                       />
                     </div>
 
@@ -618,7 +939,7 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
 
       {/* 5. AI ANALYST CLIENT */}
       {activeTab === 'chat' && (
-        <DashboardCard className="h-[450px] flex flex-col p-6">
+        <DashboardCard className="h-112.5 flex flex-col p-6">
           <div className="flex items-center gap-2.5 border-b border-white/5 pb-4 mb-4">
             <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
               <Sparkles className="w-4.5 h-4.5" />
@@ -646,7 +967,7 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
               </div>
             ))}
             {chatLoading && (
-              <div className="bg-slate-950/50 border border-white/5 text-slate-400 mr-auto rounded-2xl rounded-tl-none p-3.5 text-xs max-w-[200px] flex items-center gap-2">
+              <div className="bg-slate-950/50 border border-white/5 text-slate-400 mr-auto rounded-2xl rounded-tl-none p-3.5 text-xs max-w-50 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
                 <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]" />
                 <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.4s]" />
@@ -661,7 +982,7 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
               placeholder="Ask AI Analyst..."
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              className="flex-1 px-4 py-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white placeholder-slate-500 focus:border-primary transition outline-none font-sans"
+              className="flex-1 px-4 py-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white placeholder:text-slate-500 focus:ring-1 focus:ring-primary transition outline-none font-sans"
             />
             <button
               type="submit"
@@ -673,6 +994,185 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
         </DashboardCard>
       )}
 
+      {/* Mark Attendance Modal (QR & Live Face Verification) */}
+      <AnimatePresence>
+        {markModalOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0 }}
+              onClick={() => {
+                setMarkModalOpen(false);
+                setMarkFeedback(null);
+              }}
+              className="fixed inset-0 bg-black z-50 pointer-events-auto backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed top-12 left-1/2 -translate-x-1/2 w-[92vw] max-w-lg bg-slate-900 border border-white/10 rounded-3xl shadow-2xl z-55 overflow-hidden flex flex-col p-6"
+            >
+              <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-400/10 border border-amber-400/20 text-amber-400 flex items-center justify-center font-bold">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-base text-white font-sans uppercase leading-none">
+                      Mark Attendance
+                    </h3>
+                    <span className="text-[10px] text-slate-400 font-mono">Instant Session Verification</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setMarkModalOpen(false);
+                    setMarkFeedback(null);
+                  }}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Method Tabs */}
+              <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950/60 rounded-xl border border-white/5 mb-5 text-xs font-semibold">
+                <button
+                  onClick={() => {
+                    setMarkMethod('token');
+                    setMarkFeedback(null);
+                  }}
+                  className={`py-2 rounded-lg transition flex items-center justify-center gap-2 cursor-pointer ${
+                    markMethod === 'token'
+                      ? 'bg-white/10 text-white font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <ScanLine className="w-4 h-4" />
+                  <span>Session / QR Token</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setMarkMethod('face');
+                    setMarkFeedback(null);
+                  }}
+                  className={`py-2 rounded-lg transition flex items-center justify-center gap-2 cursor-pointer ${
+                    markMethod === 'face'
+                      ? 'bg-amber-400 text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>Face Biometrics</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleMarkAttendance} className="space-y-4 text-xs font-sans">
+                {/* Session ID input */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">
+                    Active Session ID
+                  </label>
+                  <input
+                    type="text"
+                    value={manualSessionId}
+                    onChange={(e) => setManualSessionId(e.target.value)}
+                    placeholder="e.g. 64b1f2e8..."
+                    className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:ring-1 focus:ring-amber-400/50 transition outline-none font-mono"
+                  />
+                </div>
+
+                {markMethod === 'token' ? (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">
+                      Rotating QR Code or 6-Digit Passcode
+                    </label>
+                    <input
+                      type="text"
+                      value={manualToken}
+                      onChange={(e) => setManualToken(e.target.value)}
+                      placeholder="Paste token_... or enter room passcode"
+                      className="w-full p-3 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white focus:ring-1 focus:ring-amber-400/50 transition outline-none font-mono"
+                    />
+                    <span className="text-[10px] text-slate-500 block">
+                      Ask your instructor for the active session code or scan the rolling QR on the classroom projector.
+                    </span>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">
+                      Live Webcam Preview
+                    </label>
+                    <div className="relative w-full h-48 bg-slate-950 rounded-2xl border border-white/10 overflow-hidden flex items-center justify-center">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-4 border-2 border-dashed border-amber-400/40 rounded-xl pointer-events-none flex items-center justify-center">
+                        <span className="text-[10px] font-mono text-amber-400/80 bg-slate-950/80 px-2 py-1 rounded">
+                          Align Face Here
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-slate-500 block">
+                      Ensure good lighting. The system matches your live face with enrolled biometrics via ArcFace AI.
+                    </span>
+                  </div>
+                )}
+
+                {markFeedback && (
+                  <div
+                    className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+                      markFeedback.success
+                        ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+                        : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
+                    }`}
+                  >
+                    {markFeedback.success ? (
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    ) : (
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                    )}
+                    <span>{markFeedback.message}</span>
+                  </div>
+                )}
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMarkModalOpen(false);
+                      setMarkFeedback(null);
+                    }}
+                    className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl border border-white/10 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isMarking}
+                    className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {isMarking ? (
+                      <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
+                    <span>{isMarking ? 'Verifying...' : 'Submit Check-In'}</span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
+

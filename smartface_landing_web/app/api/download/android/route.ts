@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { APP_RELEASE } from '@/config/app-release';
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     if (!APP_RELEASE.isAvailable) {
       return NextResponse.json(

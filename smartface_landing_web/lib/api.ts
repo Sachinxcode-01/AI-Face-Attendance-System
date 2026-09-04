@@ -305,4 +305,30 @@ export const api = {
     request(`/reports/department/${encodeURIComponent(dept)}?format=${format}`, {
       headers: { Authorization: `Bearer ${token}` },
     }),
+
+  // Mark Attendance (QR & Face)
+  markAttendance: (studentEmail: string, sessionId: string, qrCode: string, token: string) =>
+    request("/attendance/mark", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ student_email: studentEmail, session_id: sessionId, qr_code: qrCode }),
+    }),
+
+  markFaceAttendance: (formData: FormData, token: string) =>
+    request("/attendance/mark/face", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    }),
+
+  // Academic Timetable
+  getTimetable: (token: string) =>
+    request("/academic/timetable", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  // System Health
+  getHealth: () =>
+    request("/health"),
 };
+

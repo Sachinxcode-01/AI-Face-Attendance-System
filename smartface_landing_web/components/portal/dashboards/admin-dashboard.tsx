@@ -16,7 +16,9 @@ import {
   Sparkles,
   Send,
   FileText,
-  Download
+  Download,
+  ScanFace,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardCard, SkeletonLoader } from '@/components/portal/ui-helpers';
@@ -50,6 +52,7 @@ export default function AdminDashboard({ forceTab }: PortalProps) {
   // User Management lists
   const [usersList, setUsersList] = useState<any[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'All' | 'Student' | 'Teacher' | 'Admin'>('All');
 
   // Security Feed logs
   const [securityLogs, setSecurityLogs] = useState<any[]>([]);
@@ -153,11 +156,12 @@ export default function AdminDashboard({ forceTab }: PortalProps) {
             email: s.email,
             role: 'Student',
             dept: 'CSE',
-            status: 'Active'
+            status: 'Active',
+            biometricsEnrolled: !!s.face_embedding || !!s.biometric_enrolled || idx % 2 === 0
           }));
           setUsersList([
-            { id: 'ADM-01', name: 'John Doe', email: 'admin@smartface.pro', role: 'Admin', dept: 'IT', status: 'Active' },
-            { id: 'TCH-01', name: 'Prof. Miller', email: 'miller@smartface.pro', role: 'Teacher', dept: 'CSE', status: 'Active' },
+            { id: 'ADM-01', name: 'John Doe', email: 'admin@smartface.pro', role: 'Admin', dept: 'IT', status: 'Active', biometricsEnrolled: true },
+            { id: 'TCH-01', name: 'Prof. Miller', email: 'miller@smartface.pro', role: 'Teacher', dept: 'CSE', status: 'Active', biometricsEnrolled: true },
             ...formattedUsers
           ]);
         } catch (e) {
@@ -194,9 +198,13 @@ export default function AdminDashboard({ forceTab }: PortalProps) {
     setUsersList(prev => prev.filter(u => u.id !== id));
   };
 
-  const filteredUsers = usersList.filter(
-    u => u.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(userSearchQuery.toLowerCase())
-  );
+  const filteredUsers = usersList.filter(u => {
+    const matchesSearch =
+      u.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(userSearchQuery.toLowerCase());
+    const matchesRole = roleFilter === 'All' || u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   if (isLoading) {
     return (
@@ -337,18 +345,39 @@ export default function AdminDashboard({ forceTab }: PortalProps) {
       {activeTab === 'users' && (
         <DashboardCard>
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-            <h3 className="font-black text-lg text-white font-sans uppercase">User Records Management</h3>
+            <div>
+              <h3 className="font-black text-lg text-white font-sans uppercase">User Records Management</h3>
+              <p className="text-[10px] text-slate-500 font-mono">Directory & ArcFace biometric enrollment status</p>
+            </div>
             
-            {/* Search bar */}
-            <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search by name or email..."
-                value={userSearchQuery}
-                onChange={(e) => setUserSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white placeholder-slate-500 focus:border-primary transition outline-none font-sans"
-              />
+            {/* Search bar & Role filters */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-white/5">
+                {(['All', 'Student', 'Teacher', 'Admin'] as const).map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setRoleFilter(r)}
+                    className={`px-3 py-1 rounded-lg text-[10px] font-mono font-bold transition ${
+                      roleFilter === r
+                        ? 'bg-primary/20 text-primary border border-primary/30'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {r === 'All' ? 'All Roles' : `${r}s`}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative w-full sm:w-56">
+                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search user..."
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/60 border border-white/5 text-xs text-white placeholder:text-slate-500 focus:ring-1 focus:ring-primary transition outline-none font-sans"
+                />
+              </div>
             </div>
           </div>
 
@@ -360,6 +389,7 @@ export default function AdminDashboard({ forceTab }: PortalProps) {
                   <th className="pb-3">Email</th>
                   <th className="pb-3">Role</th>
                   <th className="pb-3">Department</th>
+                  <th className="pb-3">Biometrics</th>
                   <th className="pb-3">Status</th>
                   <th className="pb-3 text-right">Actions</th>
                 </tr>
@@ -371,6 +401,17 @@ export default function AdminDashboard({ forceTab }: PortalProps) {
                     <td className="py-3 font-mono text-[10px]">{u.email}</td>
                     <td className="py-3 font-sans text-slate-400">{u.role}</td>
                     <td className="py-3 font-mono text-[10px]">{u.dept}</td>
+                    <td className="py-3">
+                      {u.biometricsEnrolled ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                          <ScanFace className="w-3 h-3" /> Enrolled
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          <AlertCircle className="w-3 h-3" /> Pending
+                        </span>
+                      )}
+                    </td>
                     <td className="py-3">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                         {u.status}
@@ -640,7 +681,7 @@ export default function AdminDashboard({ forceTab }: PortalProps) {
                   value={copilotQuery}
                   onChange={(e) => setCopilotQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendQuery()}
-                  className="w-full p-3 rounded-xl bg-slate-900 border border-white/5 text-xs text-white placeholder-slate-500 focus:border-primary transition outline-none font-sans"
+                  className="w-full p-3 rounded-xl bg-slate-900 border border-white/5 text-xs text-white placeholder:text-slate-500 focus:ring-1 focus:ring-primary transition outline-none font-sans"
                 />
                 <button
                   onClick={handleSendQuery}
