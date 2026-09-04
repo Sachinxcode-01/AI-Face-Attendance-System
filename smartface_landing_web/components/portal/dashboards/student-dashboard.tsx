@@ -24,7 +24,10 @@ import {
   AlertTriangle,
   X,
   Zap,
-  Check
+  Check,
+  RotateCcw,
+  TrendingUp,
+  Calculator
 } from 'lucide-react';
 import AttendanceRing from '@/components/portal/attendance-ring';
 import { DashboardCard, StatusBadge, SkeletonLoader, EmptyState } from '@/components/portal/ui-helpers';
@@ -82,6 +85,9 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
 
   // Attendance Goal & Bunk Calculator
   const [targetGoal, setTargetGoal] = useState<number>(75);
+  const [bunkSubject, setBunkSubject] = useState<string>('all');
+  const [simMissed, setSimMissed] = useState<number>(0);
+  const [simAttended, setSimAttended] = useState<number>(0);
 
   // Student stats from API
   const [stats, setStats] = useState<any>(null);
@@ -715,73 +721,238 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
           </div>
 
           {/* AI Bunk & Attendance Goal Simulator */}
-          <DashboardCard className="space-y-4 border border-amber-400/20 bg-linear-to-br from-amber-500/3 to-slate-900/60">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
+          <DashboardCard className="space-y-5 border border-amber-400/20 bg-linear-to-br from-amber-500/3 to-slate-900/60">
+            {/* Header controls bar */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/5">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-amber-400/10 text-amber-400 border border-amber-400/20">
-                  <Sliders className="w-4 h-4" />
+                  <Calculator className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white">AI Bunk & Compliance Margin Simulator</h4>
-                  <span className="text-[10px] text-slate-400 font-mono">Simulate threshold safety and lecture bunk margins</span>
+                  <h4 className="text-sm font-bold text-white">AI Bunk & Compliance Goal Simulator</h4>
+                  <span className="text-[10px] text-slate-400 font-mono">Mathematical margin calculator & What-If scenario sandbox</span>
                 </div>
               </div>
 
-              {/* Target Goal Slider control */}
-              <div className="flex items-center gap-3 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-white/5">
-                <span className="text-[11px] font-mono text-slate-400">Target Goal:</span>
-                <input
-                  type="range"
-                  min="60"
-                  max="95"
-                  step="1"
-                  value={targetGoal}
-                  onChange={(e) => setTargetGoal(Number(e.target.value))}
-                  className="w-24 accent-amber-400 cursor-pointer"
-                />
-                <span className="text-xs font-mono font-bold text-amber-400 w-9 text-right">{targetGoal}%</span>
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Subject Scope Selector */}
+                <div className="flex items-center gap-2 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-white/5">
+                  <span className="text-[11px] font-mono text-slate-400">Scope:</span>
+                  <select
+                    value={bunkSubject}
+                    onChange={(e) => {
+                      setBunkSubject(e.target.value);
+                      setSimMissed(0);
+                      setSimAttended(0);
+                    }}
+                    className="bg-transparent text-xs text-white outline-none cursor-pointer font-sans"
+                  >
+                    <option value="all" className="bg-slate-900 text-white">All Subjects (Overall)</option>
+                    {subjects.map((s) => (
+                      <option key={s.code} value={s.code} className="bg-slate-900 text-white">
+                        {s.name} ({s.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Target Goal Slider control */}
+                <div className="flex items-center gap-3 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-white/5">
+                  <span className="text-[11px] font-mono text-slate-400">Target:</span>
+                  <input
+                    type="range"
+                    min="60"
+                    max="95"
+                    step="1"
+                    value={targetGoal}
+                    onChange={(e) => setTargetGoal(Number(e.target.value))}
+                    className="w-20 accent-amber-400 cursor-pointer"
+                  />
+                  <span className="text-xs font-mono font-bold text-amber-400 w-9 text-right">{targetGoal}%</span>
+                </div>
               </div>
             </div>
 
-            {/* Calculations display */}
+            {/* Calculations Engine */}
             {(() => {
-              const currentPresent = stats?.subjects?.reduce((acc: number, s: any) => acc + s.present, 0) || 76;
-              const currentTotal = stats?.subjects?.reduce((acc: number, s: any) => acc + s.total, 0) || 94;
+              let currPresent = 0;
+              let currTotal = 0;
+              let activeScopeName = "Overall Aggregate";
+
+              if (bunkSubject === 'all') {
+                currPresent = stats?.subjects?.reduce((acc: number, s: any) => acc + s.present, 0) || 76;
+                currTotal = stats?.subjects?.reduce((acc: number, s: any) => acc + s.total, 0) || 94;
+                activeScopeName = "All Courses Aggregate";
+              } else {
+                const found = subjects.find(s => s.code === bunkSubject || s.name === bunkSubject);
+                if (found) {
+                  currPresent = found.present;
+                  currTotal = found.total;
+                  activeScopeName = `${found.name} (${found.code})`;
+                } else {
+                  currPresent = 18;
+                  currTotal = 24;
+                  activeScopeName = bunkSubject;
+                }
+              }
+
               const targetPct = targetGoal / 100;
-              const currentPct = currentTotal > 0 ? currentPresent / currentTotal : 0;
-              const safeBunks = currentPct >= targetPct ? Math.floor((currentPresent - targetPct * currentTotal) / targetPct) : 0;
-              const neededConsecutive = currentPct < targetPct ? Math.ceil((targetPct * currentTotal - currentPresent) / (1 - targetPct)) : 0;
+              const currentPct = currTotal > 0 ? currPresent / currTotal : 0;
+              const safeBunks = currentPct >= targetPct ? Math.floor((currPresent - targetPct * currTotal) / targetPct) : 0;
+              const neededConsecutive = currentPct < targetPct ? Math.ceil((targetPct * currTotal - currPresent) / (1 - targetPct)) : 0;
+
+              // Simulation projection
+              const projectedPresent = currPresent + simAttended;
+              const projectedTotal = currTotal + simAttended + simMissed;
+              const projectedPct = projectedTotal > 0 ? (projectedPresent / projectedTotal) * 100 : 0;
+              const deltaPct = projectedPct - (currentPct * 100);
 
               return (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                  <div className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 space-y-1">
-                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">Current Aggregate</span>
-                    <span className="text-2xl font-black text-white font-sans">
-                      {Math.round(currentPct * 100)}%
-                    </span>
-                    <span className="text-[10px] text-slate-400 block font-mono">
-                      {currentPresent} attended of {currentTotal} sessions
-                    </span>
+                <div className="space-y-4 text-xs font-sans">
+                  {/* Metric Baseline Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">Current Rate</span>
+                        <span className="text-[10px] font-mono text-slate-400 truncate max-w-30">{activeScopeName}</span>
+                      </div>
+                      <span className="text-2xl font-black text-white font-sans">
+                        {Math.round(currentPct * 100)}%
+                      </span>
+                      <span className="text-[10px] text-slate-400 block font-mono">
+                        {currPresent} present of {currTotal} total sessions
+                      </span>
+                    </div>
+
+                    <div className={`p-3.5 rounded-xl border space-y-1 ${safeBunks > 0 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-slate-950/40 border-white/5 text-slate-400'}`}>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-mono uppercase tracking-widest block">Safe Bunk Allowance</span>
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300">MARGIN</span>
+                      </div>
+                      <span className="text-2xl font-black font-sans">
+                        {safeBunks} {safeBunks === 1 ? 'Class' : 'Classes'}
+                      </span>
+                      <span className="text-[10px] block opacity-80 font-mono">
+                        Can miss safely while staying at or above {targetGoal}%
+                      </span>
+                    </div>
+
+                    <div className={`p-3.5 rounded-xl border space-y-1 ${neededConsecutive > 0 ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-slate-950/40 border-white/5 text-slate-400'}`}>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-mono uppercase tracking-widest block">Catch-up Requirement</span>
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-rose-500/20 text-rose-300">DEFICIT</span>
+                      </div>
+                      <span className="text-2xl font-black font-sans">
+                        {neededConsecutive} {neededConsecutive === 1 ? 'Class' : 'Classes'}
+                      </span>
+                      <span className="text-[10px] block opacity-80 font-mono">
+                        Consecutive attendances needed to reach {targetGoal}%
+                      </span>
+                    </div>
                   </div>
 
-                  <div className={`p-3.5 rounded-xl border space-y-1 ${safeBunks > 0 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-slate-950/40 border-white/5 text-slate-400'}`}>
-                    <span className="text-[10px] font-mono uppercase tracking-widest block">Safe Bunk Allowance</span>
-                    <span className="text-2xl font-black font-sans">
-                      {safeBunks} {safeBunks === 1 ? 'Class' : 'Classes'}
-                    </span>
-                    <span className="text-[10px] block opacity-80 font-mono">
-                      Can safely miss without dropping below {targetGoal}%
-                    </span>
+                  {/* Interactive What-If Simulation Sandbox */}
+                  <div className="p-4 rounded-2xl bg-slate-950/50 border border-white/10 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="font-bold text-white text-xs font-sans">Interactive Scenario Simulation</span>
+                      </div>
+                      {(simMissed > 0 || simAttended > 0) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSimMissed(0);
+                            setSimAttended(0);
+                          }}
+                          className="flex items-center gap-1 text-[10px] font-mono text-slate-400 hover:text-white transition cursor-pointer"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>Reset</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                      {/* Miss Classes Control */}
+                      <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-2">
+                        <span className="text-[10px] font-mono text-slate-400 block uppercase">Simulate Missing Classes</span>
+                        <div className="flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() => setSimMissed(prev => Math.max(0, prev - 1))}
+                            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-white font-bold flex items-center justify-center transition cursor-pointer"
+                          >
+                            -
+                          </button>
+                          <span className="font-mono text-base font-black text-rose-400">
+                            {simMissed} {simMissed === 1 ? 'class' : 'classes'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSimMissed(prev => prev + 1)}
+                            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-white font-bold flex items-center justify-center transition cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Attend Classes Control */}
+                      <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-2">
+                        <span className="text-[10px] font-mono text-slate-400 block uppercase">Simulate Attending Classes</span>
+                        <div className="flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() => setSimAttended(prev => Math.max(0, prev - 1))}
+                            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-white font-bold flex items-center justify-center transition cursor-pointer"
+                          >
+                            -
+                          </button>
+                          <span className="font-mono text-base font-black text-emerald-400">
+                            {simAttended} {simAttended === 1 ? 'class' : 'classes'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSimAttended(prev => prev + 1)}
+                            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-white font-bold flex items-center justify-center transition cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Projected Outcome Card */}
+                      <div className={`p-3 rounded-xl border space-y-1 ${projectedPct >= targetGoal ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-rose-500/10 border-rose-500/20'}`}>
+                        <span className="text-[10px] font-mono text-slate-400 block uppercase">Projected Attendance</span>
+                        <div className="flex items-baseline gap-2">
+                          <span className={`text-2xl font-black font-sans ${projectedPct >= targetGoal ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {projectedPct.toFixed(1)}%
+                          </span>
+                          {(simMissed > 0 || simAttended > 0) && (
+                            <span className={`text-[11px] font-mono font-bold ${deltaPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {deltaPct >= 0 ? `+${deltaPct.toFixed(1)}%` : `${deltaPct.toFixed(1)}%`}
+                            </span>
+                          )}
+                        </div>
+                        <span className={`text-[10px] font-mono block ${projectedPct >= targetGoal ? 'text-emerald-300' : 'text-rose-300'}`}>
+                          {projectedPct >= targetGoal ? 'Status: Above Target' : 'Status: Below Target'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className={`p-3.5 rounded-xl border space-y-1 ${neededConsecutive > 0 ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-slate-950/40 border-white/5 text-slate-400'}`}>
-                    <span className="text-[10px] font-mono uppercase tracking-widest block">Catch-up Requirement</span>
-                    <span className="text-2xl font-black font-sans">
-                      {neededConsecutive} {neededConsecutive === 1 ? 'Class' : 'Classes'}
-                    </span>
-                    <span className="text-[10px] block opacity-80 font-mono">
-                      Consecutive attendances needed to reach {targetGoal}%
-                    </span>
+                  {/* Nexa AI Advisory Advice Box */}
+                  <div className="p-3.5 rounded-xl bg-amber-400/5 border border-amber-400/20 flex items-start gap-3">
+                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="space-y-0.5 leading-relaxed text-xs">
+                      <span className="font-bold text-white font-sans block">Nexa AI Academic Advisory</span>
+                      <p className="text-slate-300">
+                        {projectedPct >= targetGoal
+                          ? `You are in a healthy academic standing for ${activeScopeName}. With ${safeBunks} safe bunk allowances remaining, you can safely miss emergency lectures without breaching your ${targetGoal}% compliance goal.`
+                          : `Warning: You are currently below your ${targetGoal}% compliance objective for ${activeScopeName}. You must attend ${neededConsecutive} consecutive sessions to reach compliance and avoid formal attendance sanction warnings.`}
+                      </p>
+                    </div>
                   </div>
                 </div>
               );
