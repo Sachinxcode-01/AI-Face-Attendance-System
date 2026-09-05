@@ -67,7 +67,18 @@ backups/
 *.apk
 *.ipa
 *.aab
-smartface_landing_web/public/downloads/
+# Mobile / Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/pubspec.lock
+smartface_mobile/.dart_tool/
+smartface_mobile/build/
+smartface_mobile/.flutter-plugins
+smartface_mobile/.flutter-plugins-dependencies
+smartface_mobile/pubspec.lock
+*.g.dart
 
 # ───────────────────────────────────────────────
 # System Files
@@ -85,6 +96,8 @@ desktop.ini
 
 # Local sensitive files - do NOT commit
 data/face_encodings_arcface.pkl
+mobile/android/app/google-services.json
+mobile/ios/Runner/GoogleService-Info.plist
 smartface_mobile/android/app/google-services.json
 smartface_mobile/ios/Runner/GoogleService-Info.plist
 
@@ -93,4 +106,15 @@ smartface_mobile/ios/Runner/GoogleService-Info.plist
 skills-lock.json
 
 # Next.js build output
+frontend/web/.next/
+frontend/web/public/downloads/
 smartface_landing_web/.next/
+smartface_landing_web/public/downloads/
+
+# Backward compatibility junctions
+smartface_node_api
+smartface_pro_api
+smartface_landing_web
+smartface_admin
+smartface_pro_web
+smartface_mobile

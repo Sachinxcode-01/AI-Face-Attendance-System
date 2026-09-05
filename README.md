@@ -60,61 +60,65 @@ Transitioned from a single local computer Python script, the system is now a **f
 
 ---
 
-## 📂 Comprehensive Project Directory Map
+## 📂 Comprehensive Professional Project Directory Map
 
 ```text
 SmartFace-attendance/
 │
-├── core/                           # 🧠 CORE ML & RECOGNITION SYSTEM
-│   ├── attendance_system.py        # Main real-time camera analyzer, ArcFace matching, and security loops
-│   ├── train_faces.py              # ML Embeddings Trainer: Compiles facial arrays into pickles
+├── Makefile                        # 🌟 "ONE THING FOR ALL" - Master developer command runner
+├── package.json                    # 🌟 Root npm scripts for cross-platform execution
+├── ROUTES.md                       # 🚀 Instant 1-page API route & path reference cheat sheet
+│
+├── backend/                        # ⚡ SERVER-SIDE MICROSERVICES
+│   ├── api/                        # Primary Node.js / Express REST & WebSocket API Gateway (Port 8000)
+│   │   ├── src/                    # Controllers, middleware, routes, services
+│   │   ├── tests/                  # Automated unit and integration test suite
+│   │   └── package.json            # Node.js gateway package manifest
+│   └── ai/                         # Python FastAPI ArcFace AI microservice (Port 8001)
+│       ├── app/                    # FastAPI routes, ONNX inference adapters, auth
+│       ├── tests/                  # Pytest verification suites
+│       └── requirements.txt        # FastAPI microservice python manifest
+│
+├── frontend/                       # 🌐 WEB CLIENT APPLICATIONS
+│   ├── web/                        # Modern Next.js 15 Landing & Student/Teacher Portal (Port 3000)
+│   │   ├── app/ & components/      # Responsive React 19 UI with Tailwind & Framer Motion
+│   │   └── package.json            # Next.js web application manifest
+│   ├── admin/                      # Streamlit Real-Time Biometric & Reporting Dashboard (Port 8501)
+│   │   ├── web_dashboard.py        # Live attendance monitor, class scheduler, and intruder stream
+│   │   └── student_report.py       # PDF generator and email dispatch utility
+│   └── reflex/                     # Python Reflex full-stack web client
+│
+├── mobile/                         # 📱 CROSS-PLATFORM STUDENT FLUTTER APP
+│   ├── lib/                        # Flutter source code (Clean Architecture: core, data, presentation)
+│   ├── assets/                     # Custom graphics, audio cues, and fonts
+│   └── pubspec.yaml                # Flutter project package configurations
+│
+├── core/                           # 🧠 BIOMETRICS & AI ENGINE
+│   ├── attendance_system.py        # Real-time ArcFace camera pipeline & security loops
+│   ├── train_faces.py              # ML Embeddings Trainer: Compiles facial arrays into .pkl
 │   ├── ai_analyst.py               # AI Analyst using Google Generative AI APIs
-│   ├── ai_analyst_groq.py          # AI Analyst leveraging Groq API for rapid inference
-│   └── Attendance_Logs/            # Flat-file raw log fallback directory
+│   └── ai_analyst_groq.py          # AI Analyst leveraging Groq API for rapid inference
 │
-├── smartface_pro_api/              # ⚡ ENTERPRISE FASTAPI BACKEND GATEWAY
-│   ├── main.py                     # Main API entrypoint: REST routes, WebSockets, rate limiters, security
-│   ├── auth_service.py             # JWT token utilities, password hashing, and user validation
-│   ├── database.py                 # Async MongoDB collection client configurations
-│   ├── db_indexes.py               # MongoDB index manager for speed optimization
-│   ├── email_service.py            # SMTP mail dispatcher (OTPs, leave reviews, security warnings)
-│   ├── gsheets_manager.py          # Real-time background sync with Google Sheets
-│   ├── middleware.py               # Security headers, RequestID injection, and JSON logging stack
-│   ├── models.py                   # Pydantic core data schemas and validation templates
-│   ├── seed_db.py                  # Database seeder utility for local mock records
-│   └── requirements.txt            # FastAPI python dependency package manifest
-│
-├── smartface_admin/                # 📊 DUAL REPORTING & STREAMLIT DASHBOARD PANELS
-│   ├── web_dashboard.py            # Elegant Streamlit dashboard for class scheduling & live monitoring
-│   ├── student_report.py           # Premium PDF generator & SMTP dispatch CLI panel
-│   ├── student_portal.py           # Standard classroom overview analytics portal
-│   ├── dean_report.py              # Bulk analytical reporting dashboards
-│   └── desktop_app.py              # Legacy Tkinter-based desktop admin panel
-│
-├── smartface_pro_web/              # 🌐 PYTHON REFLEX WEB FRONTEND (REACT / NEXT.JS)
-│   ├── smartface_pro_web/          # reflex code packages
-│   ├── assets/                     # Frontend media, logos, and style sheets
-│   └── rxconfig.py                 # Reflex platform config settings
-│
-├── smartface_mobile/               # 📱 CROSS-PLATFORM STUDENT FLUTTER APPLICATION
-│   ├── lib/                        # Flutter app source files (Screens, Services, Models)
-│   ├── assets/                     # Custom app logos, sounds, and graphics
-│   ├── pubspec.yaml                # Flutter project package configurations
-│   └── ios/ & android/             # Native platform configuration directories
-│
-├── data/                           # 🗄️ LOCAL TRANSACTIONAL DATABASE
+├── data/                           # 🗄️ PERSISTENT STORAGE
 │   ├── dataset/                    # Training images organized as 'Name_RollNo' folders
-│   ├── Intruders/                  # Security snaps of unknown individuals
-│   ├── Reports/                    # Exquisite PDF reports exported locally
-│   ├── Attendance_Logs/            # Local daily csv records
+│   ├── Intruders/                  # Security snapshot captures of unregistered visitors
+│   ├── Reports/                    # PDF report exports
+│   ├── Attendance_Logs/            # Local daily CSV records
 │   ├── students.csv                # Student base flat-file index
-│   ├── face_encodings_arcface.pkl  # Compiled 512-dimensional facial AI vector embeddings
-│   └── *.csv                       # Configuration files (teachers, database credentials)
+│   └── face_encodings_arcface.pkl  # Compiled 512-dimensional facial AI vector embeddings
 │
-├── .env                            # 🔐 Environment configurations (Sensitive API keys, passwords)
-├── .gitignore                      # Prevents secrets, cache files, and big binaries from entering git
+├── scripts/                        # 🛠️ DEVOPS & RUNTIME AUTOMATION
+│   ├── run.ps1                     # Unified multi-platform developer CLI runner
+│   ├── start_exam_demo.ps1         # Multi-service launcher
+│   ├── stop_exam_demo.ps1          # Graceful service shutdown
+│   ├── exam_preflight.ps1          # Pre-exam health diagnostics & hash verification
+│   └── db_backup.py                # Automated MongoDB snapshot utility
+│
+├── docs/                           # 📚 AUDIT, CERTIFICATION & ARCHITECTURE EVIDENCE
+│
+├── .env.example                    # Environment variable template with documentation
 ├── requirements.txt                # Unified core project python packages
-└── README.md                       # High-fidelity project documentation
+└── README.md                       # Project documentation
 ```
 
 ---
@@ -133,51 +137,71 @@ SmartFace-attendance/
 
 ## ⚙️ Installation & Quickstart
 
-To run the full suite on your local development environment:
-
-### Step 1: Clone the Repository & Configure Environment
-```bash
-git clone https://github.com/Sachinxcode-01/SmartAttendance-by-Using-FaceRecogniition-AI-.git
-cd SmartAttendance-by-Using-FaceRecogniition-AI-
-```
-
-Create a `.env` file in the root directory (and inside `smartface_pro_api/`) using the following keys:
-```env
-# Database & Security
-MONGO_URI=mongodb://localhost:27017/smartface
-JWT_SECRET=your_super_secret_jwt_key
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-FACE_SCANNER_TOKEN=secure_face_scanner_default_key_123
-
-# Integrations
-GROQ_API_KEY=your_groq_api_key
-GEMINI_API_KEY=your_gemini_api_key
-GSHEETS_URL=https://docs.google.com/spreadsheets/d/...
-
-# SMTP Email Configurations
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-ADMIN_EMAIL=saxhin0708@gmail.com
-EMAIL_PASSWORD=your_google_app_password
-```
-
 ---
 
-### Step 2: Spin Up the FastAPI Web Server
-1. Navigate to the API folder and install dependencies:
-   ```bash
-   cd smartface_pro_api
-   pip install -r requirements.txt
-   ```
-2. *(Optional)* Seed your MongoDB database with mock students and teachers:
-   ```bash
-   python seed_db.py
-   ```
-3. Start the hot-reloading development server:
-   ```bash
-   uvicorn main:app --reload --port 8000
-   ```
-   *The Swagger UI documentation is interactive at: `http://localhost:8000/api/docs`*
+## ⚙️ Quickstart — "One Thing for All" Developer Commands
+
+Launch the full suite, microservices, or client applications with single-line commands:
+
+### 🌟 1. One-Command Full Stack (`make dev` or `npm run dev`)
+Spins up the Node.js API Gateway (port 8000), Python FastAPI AI Microservice (port 8001), and Next.js Web Portal (port 3000):
+```bash
+# Using Makefile
+make dev
+
+# Or using npm
+npm run dev
+
+# Or using native PowerShell runner
+.\scripts\run.ps1 dev
+```
+
+### ⚡ 2. Backend Microservices Only (`make backend` or `npm run backend`)
+Spins up both Node.js API Gateway (8000) and Python ArcFace AI (8001) in background:
+```bash
+npm run backend
+# Or: make backend
+```
+- Node.js API Gateway: `http://localhost:8000`
+- Python AI Microservice: `http://localhost:8001`
+- Health Probe: `http://localhost:8000/api/health`
+
+### 🌐 3. Web Frontend (`make frontend` or `npm run frontend`)
+Runs the modern Next.js 15 web client on port 3000:
+```bash
+npm run frontend
+# Or: make frontend
+```
+
+### 📊 4. Streamlit Admin Dashboard (`make admin` or `npm run admin`)
+Runs the real-time class monitoring & intruder inspection panel on port 8501:
+```bash
+npm run admin
+# Or: make admin
+```
+
+### 📱 5. Mobile Flutter App (`make mobile` or `npm run mobile`)
+Automatically configures ADB reverse port forwarding (8000 & 8001) and launches Flutter:
+```bash
+npm run mobile
+# Or: make mobile
+```
+
+### 🛑 6. Graceful Shutdown (`make stop` or `npm run stop`)
+Stops all background Node and Python processes running on ports 8000 and 8001:
+```bash
+npm run stop
+# Or: make stop
+```
+
+### 📋 7. System Diagnostics & Preflight (`npm run preflight`)
+Runs verification across MongoDB, environment files, ports, and models:
+```bash
+npm run preflight
+# Or: make preflight
+```
+
+*For the complete list of all endpoints, parameters, and quick cURL examples, see [ROUTES.md](file:///c:/Users/kalin/OneDrive/Documents/Projects/SmartFace-attendance/ROUTES.md).*
 
 ---
 

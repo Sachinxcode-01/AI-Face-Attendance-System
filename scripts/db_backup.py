@@ -29,7 +29,9 @@ try:
     from dotenv import load_dotenv
     # Walk up from scripts/ to find .env files
     base = Path(__file__).resolve().parent.parent
-    for env_path in [base / "smartface_node_api" / ".env",
+    for env_path in [base / "backend" / "api" / ".env",
+                     base / "backend" / "ai" / ".env",
+                     base / "smartface_node_api" / ".env",
                      base / "smartface_pro_api" / ".env",
                      base / ".env"]:
         if env_path.exists():

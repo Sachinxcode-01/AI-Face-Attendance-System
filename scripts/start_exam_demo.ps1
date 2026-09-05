@@ -11,8 +11,8 @@ Write-Host "  SMART ATTENDANCE AI - LOCAL EXAM DEMO LAUNCHER        " -Foregroun
 Write-Host "========================================================" -ForegroundColor Cyan
 
 $ROOT_DIR = "$PSScriptRoot\.."
-$NODE_DIR = "$ROOT_DIR\smartface_node_api"
-$PYTHON_DIR = "$ROOT_DIR\smartface_pro_api"
+$NODE_DIR = if (Test-Path "$ROOT_DIR\backend\api") { "$ROOT_DIR\backend\api" } else { "$ROOT_DIR\smartface_node_api" }
+$PYTHON_DIR = if (Test-Path "$ROOT_DIR\backend\ai") { "$ROOT_DIR\backend\ai" } else { "$ROOT_DIR\smartface_pro_api" }
 
 # 1. Environment files verification
 Write-Host "`n[1/6] Checking environment configuration files..." -ForegroundColor Yellow

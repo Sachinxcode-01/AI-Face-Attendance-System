@@ -3,7 +3,7 @@
 target-version = "py310"
 
 # Source directories to check
-src = ["core", "smartface_pro_api", "smartface_admin", "scripts"]
+src = ["core", "backend/ai", "frontend/admin", "scripts", "smartface_pro_api", "smartface_admin"]
 
 # Enable standard linter rules:
 # - E: pycodestyle errors
@@ -36,6 +36,6 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.pyright]
-extraPaths = ["core", "smartface_pro_api", "smartface_admin", "smartface_pro_web"]
+extraPaths = ["core", "backend/ai", "frontend/admin", "frontend/reflex", "smartface_pro_api", "smartface_admin"]
 pythonVersion = "3.10"
 

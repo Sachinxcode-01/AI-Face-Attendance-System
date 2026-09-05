@@ -12,17 +12,21 @@ import sys
 # This ensures that no matter where the dashboard is started from, the system 
 # is robust, imports core modules like ai_analyst, and points to data correctly.
 _CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-_WORKSPACE_ROOT = os.path.dirname(_CURRENT_DIR)
+_candidate = os.path.dirname(_CURRENT_DIR)
+if os.path.exists(os.path.join(_candidate, "core")) or os.path.exists(os.path.join(_candidate, ".env")):
+    _WORKSPACE_ROOT = _candidate
+else:
+    _WORKSPACE_ROOT = os.path.dirname(_candidate)
 
 _CORE_DIR = os.path.join(_WORKSPACE_ROOT, "core")
 _DATA_DIR = os.path.join(_WORKSPACE_ROOT, "data")
-_ADMIN_DIR = os.path.join(_WORKSPACE_ROOT, "smartface_admin")
+_ADMIN_DIR = os.path.join(_WORKSPACE_ROOT, "frontend", "admin")
+_LEGACY_ADMIN_DIR = os.path.join(_WORKSPACE_ROOT, "smartface_admin")
 
 # Route sys.path so imports work cleanly
-if _CORE_DIR not in sys.path:
-    sys.path.insert(0, _CORE_DIR)
-if _ADMIN_DIR not in sys.path:
-    sys.path.insert(0, _ADMIN_DIR)
+for _p in [_CORE_DIR, _ADMIN_DIR, _LEGACY_ADMIN_DIR]:
+    if os.path.exists(_p) and _p not in sys.path:
+        sys.path.insert(0, _p)
 
 # Detect if running on Streamlit Cloud
 _IS_CLOUD = not os.path.exists(os.path.join(_WORKSPACE_ROOT, ".env"))
