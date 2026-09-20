@@ -78,36 +78,15 @@ const sanitizeNoSQL = (obj) => {
   }
 };
 
-const sanitizeXSS = (val) => {
-  if (typeof val === 'string') {
-    return val
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#x27;')
-      .replace(/\//g, '&#x2F;');
-  }
-  if (val && typeof val === 'object') {
-    for (const key in val) {
-      val[key] = sanitizeXSS(val[key]);
-    }
-  }
-  return val;
-};
-
 const inputSanitizer = (req, res, next) => {
   if (req.body) {
     sanitizeNoSQL(req.body);
-    req.body = sanitizeXSS(req.body);
   }
   if (req.query) {
     sanitizeNoSQL(req.query);
-    req.query = sanitizeXSS(req.query);
   }
   if (req.params) {
     sanitizeNoSQL(req.params);
-    req.params = sanitizeXSS(req.params);
   }
   next();
 };

@@ -65,14 +65,55 @@ class LegacyAttendanceAdapter:
         except Exception:
             return False
 
+    def extract_embedding(self, image_bytes: bytes) -> Dict[str, Any]:
+        """
+        Extracts and normalizes a 512-D face embedding vector from raw image bytes.
+        """
+        if not image_bytes:
+            return {"success": False, "status_code": 400, "detail": "Empty image content provided"}
+
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is None or img.size == 0:
+            return {"success": False, "status_code": 400, "detail": "Invalid or malformed image data"}
+
+        h, w = img.shape[:2]
+        if w > 4096 or h > 4096 or (w * h) > 16777216:
+            return {"success": False, "status_code": 400, "detail": "Image dimensions exceed maximum resolution limits"}
+
+        try:
+            faces = self.system.app.get(img)
+        except Exception as err:
+            return {"success": False, "status_code": 400, "detail": f"Face detection error: {str(err)}"}
+
+        if not faces or len(faces) == 0:
+            return {"success": False, "status_code": 422, "detail": "No face detected in image"}
+        if len(faces) > 1:
+            return {"success": False, "status_code": 422, "detail": "Multiple faces detected in image"}
+
+        embedding = faces[0].embedding
+        norm = np.linalg.norm(embedding)
+        norm_emb = embedding if norm == 0 else embedding / norm
+
+        return {
+            "success": True,
+            "status_code": 200,
+            "embedding": norm_emb.tolist(),
+            "confidence": 1.0,
+            "detail": "Embedding extracted successfully"
+        }
+
     def verify_face(
         self,
         image_bytes: bytes,
-        expected_student_email: Optional[str] = None
+        expected_student_email: Optional[str] = None,
+        enrolled_vector: Optional[list] = None
     ) -> Dict[str, Any]:
         """
-        Extracts face from image bytes and verifies identity against known encodings.
-        Enforces strict privacy: never disclosures alternate student identity, names, or vectors.
+        Extracts face from image bytes and verifies identity.
+        Supports 1:1 dynamic vector verification when enrolled_vector is provided,
+        otherwise falls back to 1:N verification against known encodings.
+        Enforces strict privacy: never discloses alternate student identity, names, or vectors.
         """
         req_id = f"req_{os.urandom(4).hex()}"
 
@@ -151,6 +192,40 @@ class LegacyAttendanceAdapter:
         else:
             norm_emb = embedding / norm
 
+        threshold = self.system.confidence_threshold # Default 0.6
+
+        # ── Dynamic 1:1 Biometric Verification (from Database Profile) ────
+        if enrolled_vector and len(enrolled_vector) > 0:
+            enrolled_arr = np.array(enrolled_vector, dtype=np.float32)
+            enrolled_norm = np.linalg.norm(enrolled_arr)
+            if enrolled_norm > 0:
+                enrolled_arr = enrolled_arr / enrolled_norm
+            direct_sim = float(np.dot(enrolled_arr, norm_emb))
+            conf_rounded = round(direct_sim, 4)
+            conf_bucket = "HIGH" if conf_rounded >= 0.85 else ("MED" if conf_rounded >= 0.6 else "LOW")
+
+            if direct_sim >= threshold:
+                masked = f"{expected_student_email[:2]}***{expected_student_email[expected_student_email.find('@'):]}" if (expected_student_email and "@" in expected_student_email) else "enrolled_user"
+                print(f"[AUDIT {req_id}] Result: MATCH (1:1 Dynamic Vector) | Bucket: {conf_bucket} ({conf_rounded}) | Student: {masked}")
+                return {
+                    "success": True,
+                    "matched": True,
+                    "confidence": conf_rounded,
+                    "status_code": 200,
+                    "detail": "Face verification complete"
+                }
+            else:
+                masked = f"{expected_student_email[:2]}***{expected_student_email[expected_student_email.find('@'):]}" if (expected_student_email and "@" in expected_student_email) else "enrolled_user"
+                print(f"[AUDIT {req_id}] Result: MISMATCH (1:1 Dynamic Vector) | Bucket: {conf_bucket} ({conf_rounded}) | Student: {masked}")
+                return {
+                    "success": False,
+                    "matched": False,
+                    "confidence": conf_rounded,
+                    "status_code": 422,
+                    "detail": "Face verification failed"
+                }
+
+        # ── Legacy 1:N Fallback Verification (from Disk Pickle) ───────────
         known_encodings = self.system.known_face_encodings
         if len(known_encodings) == 0:
             return {

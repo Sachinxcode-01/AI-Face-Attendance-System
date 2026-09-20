@@ -14,6 +14,16 @@ const EmailService = require('../services/emailService');
 const { authenticate } = require('../middleware/auth');
 const { trackJob } = require('../utils/jobTracker');
 const { limitRegister, limitOtpSend, limitOtpVerify, limitLoginPassword } = require('../middleware/rateLimiter');
+const validate = require('../middleware/validate');
+const {
+  registerSchema,
+  loginPasswordSchema,
+  otpSendSchema,
+  otpVerifySchema,
+  resetPasswordSchema
+} = require('../schemas/validationSchemas');
+const BiometricProfile = require('../models/BiometricProfile');
+const faceAiService = require('../services/faceAiService');
 
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 
@@ -165,8 +175,13 @@ const datasetUpload = multer({
   }
 });
 
+const memoryUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
+
 // ─── POST /auth/register ──────────────────────────────────────────
-router.post('/register', limitRegister, async (req, res) => {
+router.post('/register', limitRegister, validate(registerSchema), async (req, res) => {
   try {
     const { email, full_name, role, password } = req.body;
     
@@ -235,7 +250,7 @@ router.post('/register', limitRegister, async (req, res) => {
 });
 
 // ─── POST /auth/login-otp/send ─────────────────────────────────────
-router.post('/login-otp/send', limitOtpSend, async (req, res) => {
+router.post('/login-otp/send', limitOtpSend, validate(otpSendSchema), async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
@@ -290,7 +305,7 @@ router.post('/login-otp/send', limitOtpSend, async (req, res) => {
 });
 
 // ─── POST /auth/login-otp/verify ──────────────────────────────────
-router.post('/login-otp/verify', limitOtpVerify, async (req, res) => {
+router.post('/login-otp/verify', limitOtpVerify, validate(otpVerifySchema), async (req, res) => {
   try {
     const { email, otp } = req.body;
     
@@ -339,7 +354,7 @@ router.post('/login-otp/verify', limitOtpVerify, async (req, res) => {
 });
 
 // ─── POST /auth/login-password ────────────────────────────────────
-router.post(['/login-password', '/login'], limitLoginPassword, async (req, res) => {
+router.post(['/login-password', '/login'], limitLoginPassword, validate(loginPasswordSchema), async (req, res) => {
   try {
     const { email, password } = req.body;
     
@@ -769,7 +784,7 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // ─── POST /auth/reset-password ────────────────────────────────────
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', validate(resetPasswordSchema), async (req, res) => {
   try {
     const { email, otp, new_password } = req.body;
 
@@ -929,10 +944,49 @@ router.patch('/notification-preferences', authenticate, async (req, res) => {
 });
 
 // ─── POST /auth/register-biometric ─────────────────────────────────
-router.post('/register-biometric', authenticate, async (req, res) => {
+router.post('/register-biometric', authenticate, memoryUpload.single('image'), async (req, res) => {
   try {
+    const user = await User.findOne({ email: req.userEmail });
+    if (!user) {
+      return res.status(404).json({ detail: "User not found" });
+    }
+
+    let enrolledSuccessfully = false;
+    let imageBuffer = null;
+
+    if (req.file && req.file.buffer) {
+      imageBuffer = req.file.buffer;
+    } else if (req.body && req.body.image_base64) {
+      imageBuffer = Buffer.from(req.body.image_base64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    }
+
+    if (imageBuffer) {
+      const enrollRes = await faceAiService.enrollFace(imageBuffer, req.userEmail);
+      if (enrollRes.success && enrollRes.embedding) {
+        await BiometricProfile.findOneAndUpdate(
+          { user_email: req.userEmail.toLowerCase().trim() },
+          {
+            user_email: req.userEmail.toLowerCase().trim(),
+            user_id: user._id,
+            embedding: enrollRes.embedding,
+            consent_given: true,
+            consent_timestamp: new Date(),
+            updated_at: new Date()
+          },
+          { upsert: true, new: true }
+        );
+        enrolledSuccessfully = true;
+      } else {
+        return res.status(enrollRes.status || 400).json({ detail: enrollRes.message || "Face enrollment failed" });
+      }
+    }
+
     await User.updateOne({ email: req.userEmail }, { $set: { biometric_registered: true } });
-    res.json({ message: "Biometric registration successful" });
+    res.json({
+      success: true,
+      message: "Biometric registration successful",
+      enrolled: enrolledSuccessfully
+    });
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }

@@ -6,9 +6,11 @@ const EmailService = require('../services/emailService');
 const notificationService = require('../services/notificationService');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { trackJob } = require('../utils/jobTracker');
+const validate = require('../middleware/validate');
+const { leaveApplySchema } = require('../schemas/validationSchemas');
 
 // ─── POST /leave/apply ──────────────────────────────────────────
-router.post('/apply', authenticate, async (req, res) => {
+router.post('/apply', authenticate, validate(leaveApplySchema), async (req, res) => {
   try {
     const { user_id, reason, start_date, end_date } = req.body;
 

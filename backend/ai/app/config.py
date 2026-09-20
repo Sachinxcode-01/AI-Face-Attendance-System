@@ -2,7 +2,14 @@ import os
 from pathlib import Path
 
 # Base Paths
-BASE_DIR = Path(__file__).resolve().parents[2] # Project Root directory
+def _find_project_root() -> Path:
+    p = Path(__file__).resolve()
+    for parent in p.parents:
+        if (parent / "core" / "attendance_system.py").exists():
+            return parent
+    return Path(__file__).resolve().parents[3]
+
+BASE_DIR = _find_project_root()
 DATA_DIR = BASE_DIR / "data"
 
 # Environment Configurations

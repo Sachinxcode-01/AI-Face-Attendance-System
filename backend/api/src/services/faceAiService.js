@@ -3,6 +3,8 @@
  * Enforces strict HTTP status code handling and privacy guarantees.
  */
 
+const BiometricProfile = require('../models/BiometricProfile');
+
 class FaceAiService {
   constructor() {
     this.aiUrl = (process.env.AI_SERVICE_URL || 'http://127.0.0.1:8001').replace(/\/$/, '');
@@ -12,6 +14,7 @@ class FaceAiService {
 
   /**
    * Forwards image buffer to Python FastAPI /v1/face/verify endpoint.
+   * Checks for dynamically enrolled 512-D vector in MongoDB first for 1:1 matching.
    *
    * @param {Buffer} imageBuffer - Raw image buffer
    * @param {string} studentEmail - Expected student email address from verified JWT
@@ -33,6 +36,16 @@ class FaceAiService {
     formData.append('image', blob, 'scan.jpg');
     if (studentEmail) {
       formData.append('student_email', studentEmail);
+
+      // Check for dynamically enrolled biometric vector in MongoDB
+      try {
+        const profile = await BiometricProfile.findOne({ user_email: studentEmail.toLowerCase().trim() });
+        if (profile && Array.isArray(profile.embedding) && profile.embedding.length > 0) {
+          formData.append('enrolled_vector', JSON.stringify(profile.embedding));
+        }
+      } catch (dbErr) {
+        // If DB query fails, proceed without enrolled_vector to let AI service check legacy known encodings
+      }
     }
 
     const controller = new AbortController();
@@ -147,6 +160,78 @@ class FaceAiService {
         success: false,
         matched: false,
         confidence: 0,
+        status: 503,
+        message: 'AI face recognition service is currently unavailable'
+      };
+    }
+  }
+
+  /**
+   * Forwards image buffer to Python FastAPI /v1/face/enroll endpoint.
+   * Extracts and returns the 512-D normalized face vector for persistence in MongoDB.
+   *
+   * @param {Buffer} imageBuffer - Raw image buffer
+   * @param {string} studentEmail - Student email address
+   * @returns {Promise<Object>} Enrollment result with embedding
+   */
+  async enrollFace(imageBuffer, studentEmail) {
+    if (!imageBuffer || imageBuffer.length === 0) {
+      return {
+        success: false,
+        status: 400,
+        message: 'Empty image buffer provided'
+      };
+    }
+
+    const formData = new FormData();
+    const blob = new Blob([imageBuffer], { type: 'image/jpeg' });
+    formData.append('image', blob, 'enroll.jpg');
+    if (studentEmail) {
+      formData.append('student_email', studentEmail);
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    try {
+      const response = await fetch(`${this.aiUrl}/v1/face/enroll`, {
+        method: 'POST',
+        headers: {
+          'X-Internal-Token': this.token
+        },
+        body: formData,
+        signal: controller.signal
+      });
+
+      clearTimeout(timer);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          status: response.status,
+          message: data.detail || 'Face enrollment failed'
+        };
+      }
+
+      return {
+        success: true,
+        status: 200,
+        embedding: data.embedding,
+        message: data.message || 'Face embedding generated successfully'
+      };
+    } catch (err) {
+      clearTimeout(timer);
+      if (err.name === 'AbortError') {
+        return {
+          success: false,
+          status: 504,
+          message: 'AI service enrollment request timeout'
+        };
+      }
+      return {
+        success: false,
         status: 503,
         message: 'AI face recognition service is currently unavailable'
       };
