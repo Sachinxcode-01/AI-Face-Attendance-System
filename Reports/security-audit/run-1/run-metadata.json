@@ -1,0 +1,30 @@
+{
+  "run_id": "run-1",
+  "repo": "SmartFace-attendance",
+  "target": "c:/Users/kalin/OneDrive/Documents/Projects/SmartFace-attendance",
+  "source_ref": "6eaaa79bc135f8ca8a0fa0a4aa410e16a019b657",
+  "profile": "standard",
+  "scope_paths": [],
+  "budget": null,
+  "execution_policy": "sandboxed-source-and-local-only",
+  "selected_companion_files": [
+    "WEB-PROTOCOL-AND-AUTH.md",
+    "CLIENT-SIDE.md",
+    "AI-AND-LLM.md",
+    "DESKTOP-MOBILE-AND-LOCAL-IPC.md",
+    "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md",
+    "DATA-ISOLATION-AND-LIFECYCLE.md",
+    "CLOUD-AND-DEPLOYMENT.md"
+  ],
+  "prior_run_paths": [],
+  "shared_file_owners": {
+    "run-metadata.json": "parent",
+    "architecture.md": "parent",
+    "coverage-ledger.json": "parent",
+    "findings.json": "parent",
+    "REPORT.md": "parent",
+    "FINDINGS-DETAIL.md": "parent",
+    "NEEDS-VALIDATION.md": "parent"
+  },
+  "run_status": "in_progress"
+}
