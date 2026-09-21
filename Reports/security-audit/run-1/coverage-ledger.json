@@ -23,25 +23,10 @@
     "prior_status": "new",
     "attempts": [],
     "wave": 1,
-    "status": "covered",
-    "agent_id": "hunter-alpha",
-    "reviewed_paths": [
-      "backend/ai/app/adapters/legacy_attendance_adapter.py",
-      "core/attendance_system.py"
-    ],
-    "local_checks": [
-      {
-        "agent_id": "hunter-alpha",
-        "reviewed_paths": [
-          "backend/ai/app/adapters/legacy_attendance_adapter.py",
-          "core/attendance_system.py"
-        ],
-        "invariant": "Verified access controls and defensive boundary invariants for Neural model inference execution",
-        "method": "source",
-        "result": "Source trace confirmed: input validation, role checks, and error handling satisfy intended security boundaries without violation.",
-        "artifact": null
-      }
-    ],
+    "status": "planned",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
     "result_fingerprints": [],
     "unresolved": []
   },
@@ -306,25 +291,10 @@
     "prior_status": "new",
     "attempts": [],
     "wave": 1,
-    "status": "covered",
-    "agent_id": "hunter-alpha",
-    "reviewed_paths": [
-      "backend/api/src/routes/attendance.js",
-      "backend/api/src/services/faceAiService.js"
-    ],
-    "local_checks": [
-      {
-        "agent_id": "hunter-alpha",
-        "reviewed_paths": [
-          "backend/api/src/routes/attendance.js",
-          "backend/api/src/services/faceAiService.js"
-        ],
-        "invariant": "Verified access controls and defensive boundary invariants for Biometric face scan check-in",
-        "method": "source",
-        "result": "Source trace confirmed: input validation, role checks, and error handling satisfy intended security boundaries without violation.",
-        "artifact": null
-      }
-    ],
+    "status": "planned",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
     "result_fingerprints": [],
     "unresolved": []
   },
@@ -398,23 +368,10 @@
     "prior_status": "new",
     "attempts": [],
     "wave": 1,
-    "status": "covered",
-    "agent_id": "hunter-alpha",
-    "reviewed_paths": [
-      "backend/api/src/routes/auth.js"
-    ],
-    "local_checks": [
-      {
-        "agent_id": "hunter-alpha",
-        "reviewed_paths": [
-          "backend/api/src/routes/auth.js"
-        ],
-        "invariant": "Verified access controls and defensive boundary invariants for One-time password verification",
-        "method": "source",
-        "result": "Source trace confirmed: input validation, role checks, and error handling satisfy intended security boundaries without violation.",
-        "artifact": null
-      }
-    ],
+    "status": "planned",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
     "result_fingerprints": [],
     "unresolved": []
   },
@@ -442,25 +399,10 @@
     "prior_status": "new",
     "attempts": [],
     "wave": 1,
-    "status": "covered",
-    "agent_id": "hunter-alpha",
-    "reviewed_paths": [
-      "backend/api/src/routes/auth.js",
-      "backend/api/src/services/authService.js"
-    ],
-    "local_checks": [
-      {
-        "agent_id": "hunter-alpha",
-        "reviewed_paths": [
-          "backend/api/src/routes/auth.js",
-          "backend/api/src/services/authService.js"
-        ],
-        "invariant": "Verified access controls and defensive boundary invariants for Password authentication endpoint",
-        "method": "source",
-        "result": "Source trace confirmed: input validation, role checks, and error handling satisfy intended security boundaries without violation.",
-        "artifact": null
-      }
-    ],
+    "status": "planned",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
     "result_fingerprints": [],
     "unresolved": []
   },
@@ -487,23 +429,10 @@
     "prior_status": "new",
     "attempts": [],
     "wave": 1,
-    "status": "covered",
-    "agent_id": "hunter-alpha",
-    "reviewed_paths": [
-      "backend/api/src/routes/auth.js"
-    ],
-    "local_checks": [
-      {
-        "agent_id": "hunter-alpha",
-        "reviewed_paths": [
-          "backend/api/src/routes/auth.js"
-        ],
-        "invariant": "Verified access controls and defensive boundary invariants for Avatar image upload",
-        "method": "source",
-        "result": "Source trace confirmed: input validation, role checks, and error handling satisfy intended security boundaries without violation.",
-        "artifact": null
-      }
-    ],
+    "status": "planned",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
     "result_fingerprints": [],
     "unresolved": []
   },
@@ -573,23 +502,10 @@
     "prior_status": "new",
     "attempts": [],
     "wave": 1,
-    "status": "covered",
-    "agent_id": "hunter-alpha",
-    "reviewed_paths": [
-      "backend/api/src/routes/leave.js"
-    ],
-    "local_checks": [
-      {
-        "agent_id": "hunter-alpha",
-        "reviewed_paths": [
-          "backend/api/src/routes/leave.js"
-        ],
-        "invariant": "Verified access controls and defensive boundary invariants for Leave request status mutation",
-        "method": "source",
-        "result": "Source trace confirmed: input validation, role checks, and error handling satisfy intended security boundaries without violation.",
-        "artifact": null
-      }
-    ],
+    "status": "planned",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
     "result_fingerprints": [],
     "unresolved": []
   },
@@ -749,23 +665,10 @@
     "prior_status": "new",
     "attempts": [],
     "wave": 1,
-    "status": "covered",
-    "agent_id": "hunter-alpha",
-    "reviewed_paths": [
-      "mobile/lib/main.dart"
-    ],
-    "local_checks": [
-      {
-        "agent_id": "hunter-alpha",
-        "reviewed_paths": [
-          "mobile/lib/main.dart"
-        ],
-        "invariant": "Verified access controls and defensive boundary invariants for Flutter mobile application client",
-        "method": "source",
-        "result": "Source trace confirmed: input validation, role checks, and error handling satisfy intended security boundaries without violation.",
-        "artifact": null
-      }
-    ],
+    "status": "planned",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
     "result_fingerprints": [],
     "unresolved": []
   },
@@ -794,27 +697,10 @@
     "prior_status": "new",
     "attempts": [],
     "wave": 1,
-    "status": "covered",
-    "agent_id": "hunter-alpha",
-    "reviewed_paths": [
-      "railway.json",
-      "backend/api/railway.json",
-      "backend/ai/railway.json"
-    ],
-    "local_checks": [
-      {
-        "agent_id": "hunter-alpha",
-        "reviewed_paths": [
-          "railway.json",
-          "backend/api/railway.json",
-          "backend/ai/railway.json"
-        ],
-        "invariant": "Verified access controls and defensive boundary invariants for Railway multi-service deployment descriptors",
-        "method": "source",
-        "result": "Source trace confirmed: input validation, role checks, and error handling satisfy intended security boundaries without violation.",
-        "artifact": null
-      }
-    ],
+    "status": "planned",
+    "agent_id": null,
+    "reviewed_paths": [],
+    "local_checks": [],
     "result_fingerprints": [],
     "unresolved": []
   }

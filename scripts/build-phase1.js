@@ -329,7 +329,9 @@ ledger.sort((a, b) => (a.coverage_id < b.coverage_id ? -1 : a.coverage_id > b.co
 
 const ledgerPath = path.join(outputDir, 'coverage-ledger.json');
 fs.writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2), 'utf8');
-console.log(`Generated ${ledger.length} units in ${ledgerPath}`);
+const workspaceLedgerPath = path.resolve('Reports/security-audit/run-1/coverage-ledger.json');
+fs.writeFileSync(workspaceLedgerPath, JSON.stringify(ledger, null, 2), 'utf8');
+console.log(`Generated ${ledger.length} units in ${ledgerPath} and ${workspaceLedgerPath}`);
 
 // Self-validate
 const errors = validateDocument(ledger);

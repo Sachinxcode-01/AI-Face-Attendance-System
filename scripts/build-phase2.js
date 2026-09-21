@@ -60,9 +60,13 @@ const candidateMap = {
   }
 };
 
+// Explicit coverage evidence map: only units with verified source evidence may be marked covered
+const explicitCoverageMap = {};
+
 const updatedLedger = ledger.map(unit => {
   const surfaceRef = unit.canonical_refs.surface;
   const candidateInfo = candidateMap[surfaceRef];
+  const coverageInfo = explicitCoverageMap[surfaceRef];
 
   if (candidateInfo) {
     return {
@@ -82,23 +86,37 @@ const updatedLedger = ledger.map(unit => {
       result_fingerprints: candidateInfo.fingerprints,
       unresolved: []
     };
-  } else {
+  } else if (coverageInfo && coverageInfo.invariant && coverageInfo.result) {
     return {
       ...unit,
       status: "covered",
-      agent_id: "hunter-alpha",
+      agent_id: coverageInfo.agent_id || "hunter-alpha",
       wave: 1,
-      reviewed_paths: unit.starting_paths,
+      reviewed_paths: coverageInfo.reviewed_paths || unit.starting_paths,
       local_checks: [{
-        agent_id: "hunter-alpha",
-        reviewed_paths: unit.starting_paths,
-        invariant: `Verified access controls and defensive boundary invariants for ${unit.surface}`,
-        method: "source",
-        result: `Source trace confirmed: input validation, role checks, and error handling satisfy intended security boundaries without violation.`,
-        artifact: null
+        agent_id: coverageInfo.agent_id || "hunter-alpha",
+        reviewed_paths: coverageInfo.reviewed_paths || unit.starting_paths,
+        invariant: coverageInfo.invariant,
+        method: coverageInfo.method || "source",
+        result: coverageInfo.result,
+        artifact: coverageInfo.artifact || null
       }],
       result_fingerprints: [],
       unresolved: []
+    };
+  } else {
+    // Unmapped unit: preserve prior status and avoid generating synthetic review evidence
+    const priorStatus = unit.status || "planned";
+    const isPlanned = priorStatus === "planned";
+    return {
+      ...unit,
+      status: priorStatus,
+      agent_id: isPlanned ? null : (unit.agent_id ?? null),
+      wave: unit.wave || 1,
+      reviewed_paths: isPlanned ? [] : (Array.isArray(unit.reviewed_paths) ? unit.reviewed_paths : []),
+      local_checks: isPlanned ? [] : (Array.isArray(unit.local_checks) ? unit.local_checks : []),
+      result_fingerprints: isPlanned ? [] : (Array.isArray(unit.result_fingerprints) ? unit.result_fingerprints : []),
+      unresolved: isPlanned ? [] : (Array.isArray(unit.unresolved) ? unit.unresolved : [])
     };
   }
 });
