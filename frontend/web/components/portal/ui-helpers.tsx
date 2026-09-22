@@ -229,33 +229,58 @@ export function DeveloperRoleSwitcher({ currentRole, onRoleChange }: DevSwitcher
 interface UserAvatarProps {
   name: string;
   role?: string;
-  size?: 'sm' | 'md' | 'lg';
+  avatarUrl?: string | null;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
 
-export function UserAvatar({ name, role, size = 'md', className = '' }: UserAvatarProps) {
+export function UserAvatar({ name, role, avatarUrl, size = 'md', className = '' }: UserAvatarProps) {
+  const [imgError, setImgError] = React.useState(false);
+
   const sizes = {
     sm: 'w-8 h-8 text-xs',
     md: 'w-10 h-10 text-sm',
     lg: 'w-14 h-14 text-lg',
+    xl: 'w-24 h-24 text-2xl',
   };
 
   const initials = name
     .split(' ')
+    .filter(Boolean)
     .map((n) => n[0])
     .slice(0, 2)
     .join('')
     .toUpperCase();
 
+  const formattedUrl = React.useMemo(() => {
+    if (!avatarUrl) return null;
+    if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://') || avatarUrl.startsWith('data:')) {
+      return avatarUrl;
+    }
+    const base = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+    const cleanPath = avatarUrl.startsWith('/') ? avatarUrl : `/${avatarUrl}`;
+    return `${base}${cleanPath}`;
+  }, [avatarUrl]);
+
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <div className={`${sizes[size]} rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold font-sans text-white border border-white/10 shadow-inner relative overflow-hidden`}>
-        {initials || <User className="w-4 h-4" />}
+      <div className={`${sizes[size]} rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold font-sans text-white border border-white/10 shadow-inner relative overflow-hidden shrink-0`}>
+        {formattedUrl && !imgError ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={formattedUrl}
+            alt={name}
+            className="w-full h-full object-cover rounded-full"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          initials || <User className="w-4 h-4" />
+        )}
       </div>
       {role && (
-        <div className="flex flex-col">
-          <span className="text-xs font-bold text-white font-sans">{name}</span>
-          <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase">{role}</span>
+        <div className="flex flex-col min-w-0">
+          <span className="text-xs font-bold text-white font-sans truncate">{name}</span>
+          <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase truncate">{role}</span>
         </div>
       )}
     </div>

@@ -105,8 +105,10 @@ function AppShellInner({ children }: AppShellProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [customAvatar, setCustomAvatar] = useState<string | null>(null);
+  const [customName, setCustomName] = useState<string | null>(null);
 
-  const userName = ROLE_NAMES[role];
+  const userName = customName || ROLE_NAMES[role];
 
   // Resolve whether a nav item is the active route, accounting for ?tab= query params
   const isNavActive = (itemPath: string) => {
@@ -230,6 +232,41 @@ function AppShellInner({ children }: AppShellProps) {
       setRole(resolvedRole as 'student' | 'parent' | 'teacher' | 'admin' | 'super_admin');
     }
     
+    // Sync cached avatar and profile name
+    const cachedAvatar = localStorage.getItem('userAvatar');
+    const cachedName = localStorage.getItem('userName');
+    if (cachedAvatar) setCustomAvatar(cachedAvatar);
+    if (cachedName) setCustomName(cachedName);
+
+    // Fetch fresh profile state if token is available
+    if (token) {
+      api.getMe(token).then((res) => {
+        if (res) {
+          const userObj = res.data?.user || res.user || res;
+          const avatar = userObj.avatar_url || userObj.profilePhotoUrl || res.avatar_url || res.profilePhotoUrl;
+          if (avatar) {
+            setCustomAvatar(avatar);
+            localStorage.setItem('userAvatar', avatar);
+          }
+          const name = userObj.name || userObj.full_name || res.full_name;
+          if (name) {
+            setCustomName(name);
+            localStorage.setItem('userName', name);
+          }
+        }
+      }).catch(() => {});
+    }
+
+    const syncProfileFromStorage = () => {
+      const savedAvatar = localStorage.getItem('userAvatar');
+      const savedName = localStorage.getItem('userName');
+      setCustomAvatar(savedAvatar || null);
+      if (savedName) setCustomName(savedName);
+    };
+
+    window.addEventListener('avatar-updated', syncProfileFromStorage);
+    window.addEventListener('profile-updated', syncProfileFromStorage);
+
     // Initialise display theme
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.className = '';
@@ -238,6 +275,11 @@ function AppShellInner({ children }: AppShellProps) {
     } else if (savedTheme === 'cyberpunk') {
       document.documentElement.classList.add('theme-cyberpunk');
     }
+
+    return () => {
+      window.removeEventListener('avatar-updated', syncProfileFromStorage);
+      window.removeEventListener('profile-updated', syncProfileFromStorage);
+    };
   }, [router]);
 
   const unreadCount = notifications.filter(n => n.unread).length;
@@ -386,7 +428,7 @@ function AppShellInner({ children }: AppShellProps) {
           <div className="p-4 border-t border-glass-border space-y-2 bg-glass">
             {sidebarOpen ? (
               <div className="flex items-center justify-between">
-                <UserAvatar name={userName} role={role} size="sm" />
+                <UserAvatar name={userName} role={role} avatarUrl={customAvatar} size="sm" />
                 <button
                   onClick={handleLogout}
                   className="p-2 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-white/5 transition cursor-pointer"
@@ -504,7 +546,7 @@ function AppShellInner({ children }: AppShellProps) {
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="flex items-center gap-1.5 outline-none cursor-pointer"
                 >
-                  <UserAvatar name={userName} role={role} size="sm" />
+                  <UserAvatar name={userName} role={role} avatarUrl={customAvatar} size="sm" />
                   <ChevronDown className="w-3 h-3 text-slate-400" />
                 </button>
 

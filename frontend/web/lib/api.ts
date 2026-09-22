@@ -24,6 +24,15 @@ export function safeRedirect(target: string): string {
   return "/login";
 }
 
+export function formatAvatarUrl(url?: string | null): string | null {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
+    return url;
+  }
+  const cleanPath = url.startsWith("/") ? url : `/${url}`;
+  return `${BASE_URL}${cleanPath}`;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function request<T = any>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${BASE_URL}${path}`;
@@ -283,11 +292,49 @@ export const api = {
       headers: { Authorization: `Bearer ${token}` },
     }),
 
-  uploadAvatar: (formData: FormData, token: string) =>
-    request("/auth/upload-avatar", {
+  updateProfile: (data: Record<string, unknown>, token: string) =>
+    request("/auth/update-profile", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    }),
+
+  updateProfilePhoto: (formData: FormData, token: string) =>
+    request("/auth/update-profile-photo", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
+    }),
+
+  uploadAvatar: (formData: FormData, token: string) =>
+    request("/auth/update-profile-photo", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    }),
+
+  deleteProfilePhoto: (token: string) =>
+    request("/auth/delete-avatar", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  updateNotificationPreferences: (prefs: { email?: boolean; push?: boolean; in_app?: boolean }, token: string) =>
+    request("/auth/notification-preferences", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(prefs),
+    }),
+
+  getActiveSessions: (token: string) =>
+    request("/auth/sessions/active", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  logoutAllSessions: (token: string) =>
+    request("/auth/sessions/logout-all", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
     }),
 
   // Reports (server-side CSV/Excel/JSON export)

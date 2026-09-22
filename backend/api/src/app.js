@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
 const url = require('url');
 const { WebSocketServer } = require('ws');
 const dotenv = require('dotenv');
@@ -135,9 +136,15 @@ app.use(express.json());
 app.use(inputSanitizer);
 app.use(securityAndLogger);
 
-// Serve static avatars
-const avatarsDir = path.join(__dirname, '../../data/avatars');
-app.use('/static/avatars', express.static(avatarsDir));
+// Serve static avatars securely with cross-origin access for web clients
+const avatarsDir = path.resolve(__dirname, '../../data/avatars');
+if (!fs.existsSync(avatarsDir)) {
+  fs.mkdirSync(avatarsDir, { recursive: true });
+}
+app.use('/static/avatars', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(avatarsDir));
 app.use('/static', express.static(path.join(__dirname, '../public')));
 
 // ─── HTTP Endpoints ─────────────────────────────────────────────────

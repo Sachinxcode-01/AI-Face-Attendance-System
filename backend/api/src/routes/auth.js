@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
 const crypto = require('crypto');
+const sharp = require('sharp');
 
 const User = require('../models/User');
 const Otp = require('../models/Otp');
@@ -108,32 +109,21 @@ async function registerSession(userId, accessToken, req) {
 const avatarsDir = path.join(__dirname, '../../../data/avatars');
 fs.mkdirSync(avatarsDir, { recursive: true });
 
-const avatarStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, avatarsDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const safeEmail = req.userEmail.replace(/@/g, '_at_').replace(/\./g, '_');
-    const timestamp = Math.floor(Date.now() / 1000);
-    cb(null, `avatar_${safeEmail}_${timestamp}${ext}`);
-  }
-});
-
-const avatarUpload = multer({
-  storage: avatarStorage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+const memoryAvatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB max limit
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
-    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.heic', '.heif'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
     const ext = path.extname(file.originalname).toLowerCase();
-    if (file.mimetype.startsWith('image/') || allowedTypes.includes(file.mimetype) || allowedExtensions.includes(ext)) {
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+    if (allowedTypes.includes(file.mimetype.toLowerCase()) || allowedExtensions.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error("Only JPEG, PNG, and WEBP images are accepted."));
+      cb(new Error("Only JPEG, PNG, and WebP images are accepted."));
     }
   }
 });
+const avatarUpload = memoryAvatarUpload;
 
 // Configure Multer for student face dataset upload
 const datasetDir = path.join(__dirname, '../../../data/dataset');
@@ -1022,67 +1012,91 @@ router.post('/upload-student-face', authenticate, (req, res) => {
   });
 });
 
-// Helper handler for profile photo uploads
+// Helper handler for profile photo uploads using Multer memoryStorage and Sharp optimization
 const handleProfilePhotoUpload = async (req, res) => {
-  const uploadSingle = avatarUpload.single('file');
-  uploadSingle(req, res, async (err) => {
+  const uploadMiddleware = memoryAvatarUpload.fields([
+    { name: 'file', maxCount: 1 },
+    { name: 'photo', maxCount: 1 },
+    { name: 'avatar', maxCount: 1 }
+  ]);
+
+  uploadMiddleware(req, res, async (err) => {
     if (err) {
-      return res.status(400).json({ success: false, detail: err.message });
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ success: false, detail: "File too large. Maximum size is 2MB." });
+      }
+      return res.status(400).json({ success: false, detail: err.message || "File upload error" });
     }
-    if (!req.file) {
-      return res.status(400).json({ success: false, detail: "No image file uploaded" });
+
+    const file = (req.files && (req.files.file?.[0] || req.files.photo?.[0] || req.files.avatar?.[0])) || req.file;
+    if (!file || !file.buffer) {
+      return res.status(400).json({ success: false, detail: "No image file uploaded." });
     }
 
     try {
-      // Validate magic bytes to ensure file is genuinely a JPEG, PNG, or WEBP image
-      const fileBuffer = fs.readFileSync(req.file.path);
-      const isJpeg = fileBuffer.length > 3 && fileBuffer[0] === 0xFF && fileBuffer[1] === 0xD8 && fileBuffer[2] === 0xFF;
-      const isPng = fileBuffer.length > 8 && fileBuffer[0] === 0x89 && fileBuffer[1] === 0x50 && fileBuffer[2] === 0x4E && fileBuffer[3] === 0x47;
-      const isWebp = fileBuffer.length > 12 && fileBuffer.toString('ascii', 0, 4) === 'RIFF' && fileBuffer.toString('ascii', 8, 12) === 'WEBP';
+      const buffer = file.buffer;
+      // Validate magic bytes to verify true image format
+      const isJpeg = buffer.length > 3 && buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+      const isPng = buffer.length > 8 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+      const isWebp = buffer.length > 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
 
       if (!isJpeg && !isPng && !isWebp) {
-        fs.unlinkSync(req.file.path);
-        return res.status(400).json({ success: false, detail: "Invalid image file format or corrupted file." });
+        return res.status(400).json({ success: false, detail: "Invalid image content. File signature does not match JPEG, PNG, or WebP." });
       }
 
+      // Generate UUID-based filename and safe destination path
+      const fileUuid = crypto.randomUUID();
+      const outputFilename = `avatar_${fileUuid}.webp`;
+      const outputPath = path.join(avatarsDir, outputFilename);
+
+      // Re-encode via Sharp: resize to 400x400 cover crop, strip EXIF metadata, convert to WebP
+      await sharp(buffer)
+        .resize(400, 400, {
+          fit: 'cover',
+          position: 'center'
+        })
+        .rotate() // auto-orient based on EXIF before stripping
+        .withMetadata(false) // strip all EXIF metadata for privacy & security
+        .webp({ quality: 85 })
+        .toFile(outputPath);
+
+      // Delete prior avatar file if it was a local file in avatarsDir
       const user = await User.findOne({ email: req.userEmail });
       if (user && (user.profilePhotoUrl || user.avatar_url)) {
         const oldUrl = user.profilePhotoUrl || user.avatar_url;
-        const oldFilename = oldUrl.split('/').pop();
-        if (oldFilename && oldFilename !== req.file.filename) {
+        const oldFilename = path.basename(oldUrl);
+        if (oldFilename && oldFilename !== outputFilename) {
           const oldPath = path.join(avatarsDir, oldFilename);
           if (fs.existsSync(oldPath)) {
             try {
               fs.unlinkSync(oldPath);
-            } catch (e) {
-              console.error("Failed to delete old avatar file:", e);
+            } catch (unlinkErr) {
+              console.warn("Could not delete old avatar:", unlinkErr.message);
             }
           }
         }
       }
 
-      const avatarUrl = `/static/avatars/${req.file.filename}`;
-      const publicId = req.file.filename;
-
+      const avatarUrl = `/static/avatars/${outputFilename}`;
       await User.updateOne(
         { email: req.userEmail },
         {
           $set: {
             avatar_url: avatarUrl,
             profilePhotoUrl: avatarUrl,
-            profilePhotoPublicId: publicId
+            profilePhotoPublicId: outputFilename
           }
         }
       );
 
       const updatedUser = await User.findOne({ email: req.userEmail }).lean();
 
-      res.json({
+      return res.json({
         success: true,
         message: "Profile photo updated successfully.",
         profilePhotoUrl: avatarUrl,
         avatar_url: avatarUrl,
-        profilePhotoPublicId: publicId,
+        profilePhotoPublicId: outputFilename,
         user: {
           id: updatedUser._id.toString(),
           name: updatedUser.full_name,
@@ -1092,16 +1106,15 @@ const handleProfilePhotoUpload = async (req, res) => {
           avatar_url: avatarUrl
         }
       });
-    } catch (error) {
-      if (req.file && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-      }
-      res.status(500).json({ success: false, detail: error.message });
+    } catch (processErr) {
+      console.error("Avatar image processing error:", processErr);
+      return res.status(500).json({ success: false, detail: "Failed to process and optimize image: " + processErr.message });
     }
   });
 };
 
-// ─── POST /auth/upload-avatar & PATCH /api/users/me/profile-photo ──────────
+// ─── POST /auth/update-profile-photo & aliases ──────────────────────────
+router.post('/update-profile-photo', authenticate, handleProfilePhotoUpload);
 router.post('/upload-avatar', authenticate, handleProfilePhotoUpload);
 router.patch('/users/me/profile-photo', authenticate, handleProfilePhotoUpload);
 router.post('/users/me/profile-photo', authenticate, handleProfilePhotoUpload);
