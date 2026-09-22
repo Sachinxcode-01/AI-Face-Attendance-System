@@ -776,6 +776,7 @@ module.exports = {
   collectSchemaErrors,
   hasVisibleProse,
   isSafeRelativeSourcePath,
+  loadSchema,
   validateDocument,
 };
 
