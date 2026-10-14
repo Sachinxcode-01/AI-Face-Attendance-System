@@ -395,7 +395,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                           const Divider(color: Colors.white12, height: 16),
                           _buildTelemetryItem(
                             'GEOFENCE RADAR',
-                            'VERIFIED (< 25m)',
+                            'STANDBY (AWAITING CHECK)',
                           ),
                         ],
                       ),
@@ -466,6 +466,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                         HapticFeedback.lightImpact();
                         try {
                           await _controller.toggleTorch();
+                          if (!mounted) return;
                           setState(() {
                             _torchEnabled = !_torchEnabled;
                           });

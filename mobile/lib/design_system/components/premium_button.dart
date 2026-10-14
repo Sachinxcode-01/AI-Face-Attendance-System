@@ -130,7 +130,7 @@ class PremiumButton extends StatelessWidget {
             ),
     );
 
-    Widget buttonBody = Ink(
+    Widget buttonBody = Container(
       decoration: decoration,
       height: height,
       child: Container(

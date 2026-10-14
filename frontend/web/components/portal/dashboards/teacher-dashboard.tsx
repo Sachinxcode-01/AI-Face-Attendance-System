@@ -87,6 +87,7 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
   const [pendingLeaves, setPendingLeaves] = useState<any[]>([]);
   const [selectedDocUrl, setSelectedDocUrl] = useState<string | null>(null);
   const [selectedDocStudent, setSelectedDocStudent] = useState<string>('');
+  const [isSampleDoc, setIsSampleDoc] = useState(false);
   const [docZoom, setDocZoom] = useState(1);
   const [docRotation, setDocRotation] = useState(0);
   const [leaveRemarks, setLeaveRemarks] = useState<Record<string, string>>({});
@@ -121,12 +122,13 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
         try {
           const leavesData = await api.getPendingLeaves(token);
           const formatted = leavesData.map((l: any) => ({
-            id: l.id,
+            id: l.id || l._id,
             student: l.user_id,
             dept: 'CSE',
             type: l.leave_type || 'Personal',
             duration: `${typeof l.start_date === 'string' ? l.start_date.split('T')[0] : l.start_date} to ${typeof l.end_date === 'string' ? l.end_date.split('T')[0] : l.end_date}`,
-            reason: l.reason
+            reason: l.reason,
+            documentUrl: l.document_url || l.attachment_url || null
           }));
           setPendingLeaves(formatted);
         } catch (e) {
@@ -174,21 +176,30 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
       }
     };
 
-    ws.onclose = () => {
-      console.log("WebSocket connection closed");
-    };
-
     return () => {
       ws.close();
     };
-  }, [sessionActive, activeSessionId, chimeEnabled]);
+  }, [sessionActive, activeSessionId]);
 
-  // Audio chime for student verification
+  const audioCtxRef = React.useRef<AudioContext | null>(null);
+  const chimeEnabledRef = React.useRef(chimeEnabled);
+  useEffect(() => {
+    chimeEnabledRef.current = chimeEnabled;
+  }, [chimeEnabled]);
+
+  // Audio chime for student verification (reusing AudioContext)
   const playArrivalChime = () => {
-    if (!chimeEnabled) return;
+    if (!chimeEnabledRef.current) return;
     try {
-      if (typeof window !== 'undefined' && 'AudioContext' in window) {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (typeof window !== 'undefined' && ('AudioContext' in window || 'webkitAudioContext' in (window as any))) {
+        if (!audioCtxRef.current) {
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          audioCtxRef.current = new AudioContextClass();
+        }
+        const audioCtx = audioCtxRef.current;
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
@@ -217,15 +228,29 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [projectorModeOpen]);
 
-  // Instant manual check-in
-  const handleManualCheckIn = (studentName: string, roll: string) => {
+  // Instant manual check-in with database persistence fallback labeling
+  const handleManualCheckIn = async (studentName: string, roll: string) => {
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    let modeLabel = 'Local-Only Preview (Not Recorded to DB)';
+    let studentEmail = `${roll.toLowerCase().replace(/[^a-z0-9]/g, '')}@smartface.pro`;
+
+    if (activeSessionId && token) {
+      try {
+        await api.markAttendance(studentEmail, activeSessionId, qrToken || 'MANUAL_FACULTY_OVERRIDE', token);
+        modeLabel = 'Manual Override (Recorded to DB)';
+      } catch (err) {
+        console.warn('Backend markAttendance error, defaulting to local-only preview:', err);
+        modeLabel = 'Local-Only Preview (DB Sync Failed)';
+      }
+    }
+
     const record = {
       rollNo: roll,
       name: studentName,
       time: nowTime,
       status: 'Present',
-      mode: 'Manual Override (Faculty)'
+      mode: modeLabel
     };
     setLiveAttendance(prev => [record, ...prev]);
     setRecentArrivalName(studentName);
@@ -819,15 +844,16 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
                     <button
                       type="button"
                       onClick={() => {
-                        setSelectedDocUrl('/samples/medical_certificate_sample.pdf');
+                        setSelectedDocUrl(l.documentUrl || '/samples/medical_certificate_sample.pdf');
                         setSelectedDocStudent(l.student);
+                        setIsSampleDoc(!l.documentUrl);
                         setDocZoom(1);
                         setDocRotation(0);
                       }}
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 transition text-[10px] font-semibold"
                     >
                       <FileText className="w-3 h-3" />
-                      <span>Medical_Proof.pdf</span>
+                      <span>{l.documentUrl ? 'Leave_Attachment.pdf' : 'Sample_Proof.pdf (Demo)'}</span>
                       <Eye className="w-3 h-3 ml-0.5" />
                     </button>
                   </div>
@@ -910,11 +936,18 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
                   <div className="flex items-center gap-2">
                     <FileText className="w-5 h-5 text-sky-400" />
                     <div>
-                      <h4 className="text-sm font-bold text-white font-sans">
-                        Document Preview — {selectedDocStudent}
+                      <h4 className="text-sm font-bold text-white font-sans flex items-center gap-2">
+                        <span>Document Preview — {selectedDocStudent}</span>
+                        {isSampleDoc && (
+                          <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            SAMPLE DEMO PREVIEW
+                          </span>
+                        )}
                       </h4>
                       <p className="text-[10px] font-mono text-slate-400">
-                        Official Medical Practitioner Endorsement & Certificate
+                        {isSampleDoc
+                          ? 'No student attachment submitted · Displaying sample certificate template'
+                          : 'Official attachment submitted with leave application'}
                       </p>
                     </div>
                   </div>
@@ -966,48 +999,69 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
 
                 {/* Modal Document Canvas */}
                 <div className="p-6 overflow-auto flex items-center justify-center bg-slate-950/50 min-h-95">
-                  <div
-                    style={{
-                      transform: `scale(${docZoom}) rotate(${docRotation}deg)`,
-                      transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
-                    }}
-                    className="w-105 bg-white text-slate-900 rounded-lg shadow-xl p-6 space-y-4 font-serif border border-slate-300 origin-center select-none"
-                  >
-                    {/* Simulated Medical Certificate Format */}
-                    <div className="text-center border-b pb-3 border-slate-300">
-                      <div className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                        Metro City Multi-Speciality Clinic & Hospital
-                      </div>
-                      <div className="text-[10px] text-slate-500 italic">
-                        Department of General Medicine & Health Sciences
-                      </div>
-                      <div className="text-base font-bold text-slate-900 mt-2 tracking-wide font-sans">
-                        MEDICAL FITNESS / LEAVE CERTIFICATE
-                      </div>
+                  {!isSampleDoc && selectedDocUrl ? (
+                    <div
+                      style={{
+                        transform: `scale(${docZoom}) rotate(${docRotation}deg)`,
+                        transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                      }}
+                      className="w-full max-w-lg bg-slate-900 rounded-lg overflow-hidden border border-white/10 p-2 origin-center"
+                    >
+                      <iframe
+                        src={selectedDocUrl}
+                        title="Attached Leave Document"
+                        className="w-full h-96 rounded border border-white/10 bg-white"
+                      />
                     </div>
+                  ) : (
+                    <div
+                      style={{
+                        transform: `scale(${docZoom}) rotate(${docRotation}deg)`,
+                        transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                      }}
+                      className="w-105 bg-white text-slate-900 rounded-lg shadow-xl p-6 space-y-4 font-serif border border-slate-300 origin-center select-none"
+                    >
+                      {/* Notice banner for sample preview */}
+                      <div className="bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-sans p-2 rounded text-center">
+                        <strong>Notice:</strong> This is an illustrative sample format (no uploaded attachment provided by student).
+                      </div>
 
-                    <div className="text-xs space-y-2 leading-relaxed text-slate-800">
-                      <p>
-                        This is to certify that student <strong>{selectedDocStudent}</strong> was examined at our outpatient facility and was diagnosed with <strong>Acute Viral Febrile Illness & Bronchial Irritation</strong>.
-                      </p>
-                      <p>
-                        The patient has been advised complete rest and prescribed medical recuperation for a period of <strong>3 days</strong> with vital signs monitoring.
-                      </p>
-                    </div>
-
-                    <div className="pt-6 flex justify-between items-end border-t border-slate-200 text-[10px] font-sans">
-                      <div>
-                        <div className="font-bold text-emerald-800 uppercase tracking-wider">
-                          [ Verified Official Seal ]
+                      {/* Simulated Medical Certificate Format */}
+                      <div className="text-center border-b pb-3 border-slate-300">
+                        <div className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                          Metro City Multi-Speciality Clinic & Hospital
                         </div>
-                        <div className="text-slate-500">Reg No: MED-884920/2024</div>
+                        <div className="text-[10px] text-slate-500 italic">
+                          Department of General Medicine & Health Sciences
+                        </div>
+                        <div className="text-base font-bold text-slate-900 mt-2 tracking-wide font-sans">
+                          SAMPLE MEDICAL CERTIFICATE TEMPLATE
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold italic text-slate-700 font-serif">Dr. R. K. Verma, MD</div>
-                        <div className="text-slate-500">Senior Consulting Physician</div>
+
+                      <div className="text-xs space-y-2 leading-relaxed text-slate-800">
+                        <p>
+                          Demonstration sample document layout. Medical evaluation certificate template with physician attestation and diagnostic records.
+                        </p>
+                        <p>
+                          Prescribed medical recuperation period with vital signs monitoring.
+                        </p>
+                      </div>
+
+                      <div className="pt-6 flex justify-between items-end border-t border-slate-200 text-[10px] font-sans">
+                        <div>
+                          <div className="font-bold text-slate-600 uppercase tracking-wider">
+                            [ Illustrative Seal ]
+                          </div>
+                          <div className="text-slate-500">Reg No: SAMPLE-TEMPLATE</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold italic text-slate-700 font-serif">Medical Officer Signature</div>
+                          <div className="text-slate-500">Consulting Physician</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Modal Footer */}
@@ -1247,7 +1301,7 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 font-mono">
-                  SmartFace Anti-Proxy Overhead Projector Mode · Token Rotates Every 15s
+                  SmartFace Anti-Proxy Overhead Projector Mode · Token Rotates Every 5s
                 </p>
               </div>
             </div>

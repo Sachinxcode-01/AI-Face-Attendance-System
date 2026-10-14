@@ -433,7 +433,14 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
         const targetDayIdx = dayIndexes[dayCode] ?? 1;
         const currentDayIdx = now.getDay();
         let diffDays = targetDayIdx - currentDayIdx;
-        if (diffDays <= 0) diffDays += 7;
+        if (diffDays === 0) {
+          const isStarted = now.getHours() > start24.h || (now.getHours() === start24.h && now.getMinutes() >= start24.m);
+          if (isStarted) {
+            diffDays = 7;
+          }
+        } else if (diffDays < 0) {
+          diffDays += 7;
+        }
 
         const eventDate = new Date(now);
         eventDate.setDate(now.getDate() + diffDays);
@@ -444,21 +451,43 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
         const dtStart = `${y}${mon}${d}T${pad(start24.h)}${pad(start24.m)}00`;
         const dtEnd = `${y}${mon}${d}T${pad(end24.h)}${pad(end24.m)}00`;
 
+        // RFC-5545 string escaping for text values
+        const escapeIcs = (str: string) =>
+          (str || '')
+            .replace(/\\/g, '\\\\')
+            .replace(/;/g, '\\;')
+            .replace(/,/g, '\\,')
+            .replace(/\r?\n/g, '\\n');
+
+        const safeSubject = escapeIcs(slot.subject || 'Lecture');
+        const safeRoom = escapeIcs(slot.room || 'Campus Room');
+        const safeInstructor = escapeIcs(slot.instructor || 'Faculty Member');
+        const safeAlarmRoom = escapeIcs(slot.room || 'Classroom');
+
+        // Derive UNTIL date from academic term end (semester end) in compatible UTC format
+        const termEndRaw = slot.term_end || slot.termEnd || stats?.term_end || stats?.semester_end;
+        const termEndMonth = now.getMonth() < 6 ? 5 : 11;
+        const termEndDay = now.getMonth() < 6 ? 30 : 31;
+        const termEndDate = termEndRaw ? new Date(termEndRaw) : new Date(Date.UTC(now.getFullYear(), termEndMonth, termEndDay, 18, 29, 59));
+        const untilUtc = `${termEndDate.getUTCFullYear()}${pad(termEndDate.getUTCMonth() + 1)}${pad(termEndDate.getUTCDate())}T182959Z`;
+
+        const stableSlotId = slot.id || `${dayCode}-${start24.h}${start24.m}-${index}`;
+
         icsContent.push(
           'BEGIN:VEVENT',
-          `UID:smartface-slot-${slot.id || index}-${timeStamp}@smartface.pro`,
+          `UID:smartface-slot-${stableSlotId}@smartface.pro`,
           `DTSTAMP:${timeStamp}`,
-          `DTSTART:${dtStart}`,
-          `DTEND:${dtEnd}`,
-          `RRULE:FREQ=WEEKLY;BYDAY=${dayCode};UNTIL=20261231T235959Z`,
-          `SUMMARY:${slot.subject || 'Lecture'}`,
-          `LOCATION:${slot.room || 'Campus Room'}`,
-          `DESCRIPTION:Instructor: ${slot.instructor || 'Faculty Member'}\\nSmartFace Dynamic Biometric Attendance Verified`,
+          `DTSTART;TZID=Asia/Kolkata:${dtStart}`,
+          `DTEND;TZID=Asia/Kolkata:${dtEnd}`,
+          `RRULE:FREQ=WEEKLY;BYDAY=${dayCode};UNTIL=${untilUtc}`,
+          `SUMMARY:${safeSubject}`,
+          `LOCATION:${safeRoom}`,
+          `DESCRIPTION:Instructor: ${safeInstructor}\\nSmartFace Dynamic Biometric Attendance Verified`,
           'STATUS:CONFIRMED',
           'BEGIN:VALARM',
           'TRIGGER:-PT15M',
           'ACTION:DISPLAY',
-          `DESCRIPTION:Reminder: ${slot.subject || 'Lecture'} starts in 15 minutes at ${slot.room || 'Classroom'}`,
+          `DESCRIPTION:${escapeIcs(`Reminder: ${slot.subject || 'Lecture'} starts in 15 minutes at ${slot.room || 'Classroom'}`)}`,
           'END:VALARM',
           'END:VEVENT'
         );

@@ -84,12 +84,12 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
           actions: [
             IconButton(
               icon: const Icon(Icons.calendar_month_rounded, color: AppColors.gold),
-              tooltip: 'Sync Schedule & Reminders',
+              tooltip: 'Academic Schedule Info',
               onPressed: () {
                 AppHaptics.medium();
                 context.showSuccessToast(
-                  'Full academic schedule and lecture reminders synced with your device calendar!',
-                  title: 'Schedule Synchronized',
+                  'Displaying active semester lecture slots and timetable schedule.',
+                  title: 'Academic Timetable',
                 );
               },
             ),
