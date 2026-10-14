@@ -987,14 +987,231 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Widget _buildAttendanceSummaryCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final int pct = (_overallPercentage * 100).round();
+
     return AnimatedCardWrapper(
       delay: 100.ms,
-      child: ProgressCard(
-        title: '${(_overallPercentage * 100).round()}% attendance',
-        subtitle: 'Overall this semester • $_standing',
-        percentage: _overallPercentage,
-        progressColor: AppColors.primary,
-        leadingIcon: Icons.fact_check_outlined,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(26),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [
+                    AppColors.primary.withValues(alpha: 0.28),
+                    const Color(0xFF111827).withValues(alpha: 0.85),
+                    const Color(0xFF0F172A).withValues(alpha: 0.95),
+                  ]
+                : [
+                    Colors.white,
+                    AppColors.primary.withValues(alpha: 0.05),
+                  ],
+          ),
+          border: Border.all(
+            color: isDark
+                ? Colors.cyanAccent.withValues(alpha: 0.22)
+                : AppColors.primary.withValues(alpha: 0.15),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? AppColors.primary.withValues(alpha: 0.2)
+                  : const Color(0xFF9EAFD8).withValues(alpha: 0.2),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.greenAccent,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.greenAccent,
+                                  blurRadius: 6,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'SEMESTER ATTENDANCE INDEX',
+                            style: GoogleFonts.robotoMono(
+                              fontSize: 9.5,
+                              letterSpacing: 1.5,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.cyanAccent : AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _standing,
+                        style: GoogleFonts.outfit(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppColors.textHeading,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _rank,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: isDark ? Colors.white70 : AppColors.textMuted,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 14),
+                // Circular Ring with Percentage
+                SizedBox(
+                  width: 76,
+                  height: 76,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 76,
+                        height: 76,
+                        child: CircularProgressIndicator(
+                          value: _overallPercentage,
+                          strokeWidth: 7,
+                          backgroundColor: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : Colors.black.withValues(alpha: 0.06),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            pct >= 75
+                                ? (isDark ? Colors.cyanAccent : AppColors.primary)
+                                : Colors.amberAccent,
+                          ),
+                        ),
+                      ),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$pct%',
+                            style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? Colors.white : AppColors.textHeading,
+                            ),
+                          ),
+                          Text(
+                            'HEALTH',
+                            style: GoogleFonts.robotoMono(
+                              fontSize: 7.5,
+                              letterSpacing: 1,
+                              color: isDark ? Colors.white54 : AppColors.textMuted,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(color: Colors.white10, height: 1),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                // Streak Pill
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.amber.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.local_fire_department_rounded, color: Colors.amber, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$_streak Days Streak',
+                        style: GoogleFonts.robotoMono(
+                          color: Colors.amber,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                // Quick Launch Scan Button
+                InkWell(
+                  onTap: () => context.go('/student/scan'),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary,
+                          AppColors.primary.withValues(alpha: 0.8),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.35),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 14),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Scan QR',
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
