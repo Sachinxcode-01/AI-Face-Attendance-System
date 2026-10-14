@@ -330,12 +330,12 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                                     ),
                                   ),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   width: 54,
                                   height: 54,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 4,
-                                    valueColor: const AlwaysStoppedAnimation<Color>(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
                                       Colors.cyanAccent,
                                     ),
                                   ),
@@ -1042,8 +1042,8 @@ class ScannerHUDPainter extends CustomPainter {
     required this.cutoutSize,
     required this.resultState,
     required this.pulseValue,
-    Listenable? repaint,
-  }) : super(repaint: repaint);
+    super.repaint,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
