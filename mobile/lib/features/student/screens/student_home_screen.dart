@@ -989,6 +989,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   Widget _buildAttendanceSummaryCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final int pct = (_overallPercentage * 100).round();
+    final streakForegroundColor = isDark ? Colors.amber : const Color(0xFFB45309);
 
     return AnimatedCardWrapper(
       delay: 100.ms,
@@ -1054,13 +1055,15 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            'SEMESTER ATTENDANCE INDEX',
-                            style: GoogleFonts.robotoMono(
-                              fontSize: 9.5,
-                              letterSpacing: 1.5,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.cyanAccent : AppColors.primary,
+                          Expanded(
+                            child: Text(
+                              'SEMESTER ATTENDANCE INDEX',
+                              style: GoogleFonts.robotoMono(
+                                fontSize: 9.5,
+                                letterSpacing: 1.5,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.cyanAccent : AppColors.primary,
+                              ),
                             ),
                           ),
                         ],
@@ -1140,27 +1143,35 @@ class _StudentDashboardState extends State<StudentDashboard> {
             const SizedBox(height: 16),
             const Divider(color: Colors.white10, height: 1),
             const SizedBox(height: 14),
-            Row(
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 10,
               children: [
                 // Streak Pill
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.12),
+                    color: isDark
+                        ? Colors.amber.withValues(alpha: 0.12)
+                        : const Color(0xFFFDE68A).withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.amber.withValues(alpha: 0.3),
+                      color: isDark
+                          ? Colors.amber.withValues(alpha: 0.3)
+                          : const Color(0xFFD97706).withValues(alpha: 0.4),
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.local_fire_department_rounded, color: Colors.amber, size: 14),
+                      Icon(Icons.local_fire_department_rounded, color: streakForegroundColor, size: 14),
                       const SizedBox(width: 4),
                       Text(
                         '$_streak Days Streak',
                         style: GoogleFonts.robotoMono(
-                          color: Colors.amber,
+                          color: streakForegroundColor,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1168,7 +1179,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     ],
                   ),
                 ),
-                const Spacer(),
                 // Quick Launch Scan Button
                 InkWell(
                   onTap: () => context.go('/student/scan'),

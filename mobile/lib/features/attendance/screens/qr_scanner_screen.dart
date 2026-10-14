@@ -91,16 +91,19 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     }
   }
 
+  String _resolveStudentEmail({bool listen = false}) {
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    final session = Provider.of<SessionManager>(context, listen: listen);
+    return args?['email'] ?? session.email ?? 'student@smartface.elite';
+  }
+
   Future<void> _handleAttendance(String qrData) async {
     try {
       final decoded = jsonDecode(qrData);
       final sessionId = decoded['session_id'];
       final token = decoded['token'];
 
-      final session = context.read<SessionManager>();
-      final args = ModalRoute.of(context)?.settings.arguments as Map?;
-      final studentEmail =
-          args?['email'] ?? session.email ?? 'student@smartface.elite';
+      final studentEmail = _resolveStudentEmail();
 
       final record = await sl<SyncRepository>().recordAttendance(
         studentEmail: studentEmail,
@@ -133,7 +136,9 @@ class _QRScannerScreenState extends State<QRScannerScreen>
       HapticFeedback.heavyImpact();
       setState(() {
         _resultState = ScanResultState.error;
-        _statusMessage = 'AUTHENTICATION FAILED // INVALID QR CODE';
+        _statusMessage = e is FormatException
+            ? 'AUTHENTICATION FAILED // INVALID QR CODE'
+            : 'ATTENDANCE FAILED // REPOSITORY ERROR';
       });
       AppToast.show(
         context,
@@ -157,8 +162,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   @override
   Widget build(BuildContext context) {
     const double cutoutSize = 270.0;
-    final session = context.watch<SessionManager>();
-    final studentEmail = session.email ?? 'student@smartface.ai';
+    final studentEmail = _resolveStudentEmail(listen: true);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -171,13 +175,19 @@ class _QRScannerScreenState extends State<QRScannerScreen>
           ),
 
           // 🛡️ High-Tech Cyber Mask HUD Overlay
-          CustomPaint(
-            size: Size.infinite,
-            painter: ScannerHUDPainter(
-              cutoutSize: cutoutSize,
-              resultState: _resultState,
-              pulseValue: _pulseController.value,
-            ),
+          AnimatedBuilder(
+            animation: _pulseController,
+            builder: (context, child) {
+              return CustomPaint(
+                size: Size.infinite,
+                painter: ScannerHUDPainter(
+                  cutoutSize: cutoutSize,
+                  resultState: _resultState,
+                  pulseValue: _pulseController.value,
+                  repaint: _pulseController,
+                ),
+              );
+            },
           ),
 
           // 🌌 Dynamic Ambient Radial Glow
@@ -705,9 +715,9 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                             children: [
                               Expanded(
                                 child: _buildTelemetryBlock(
-                                  icon: Icons.shield_outlined,
-                                  title: 'SECURITY PROTOCOL',
-                                  value: 'AES-256 ENCRYPTED',
+                                  icon: Icons.qr_code_2_rounded,
+                                  title: 'SCAN PAYLOAD',
+                                  value: 'SESSION QR TOKEN',
                                   valueColor: Colors.cyanAccent,
                                 ),
                               ),
@@ -718,10 +728,20 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                               ),
                               Expanded(
                                 child: _buildTelemetryBlock(
-                                  icon: Icons.radar_rounded,
-                                  title: 'GEO-LIVENESS RADAR',
-                                  value: 'IN-BOUNDS (ACTIVE)',
-                                  valueColor: Colors.greenAccent,
+                                  icon: Icons.track_changes_rounded,
+                                  title: 'SCANNER STATUS',
+                                  value: _resultState == ScanResultState.success
+                                      ? 'VERIFIED'
+                                      : _resultState == ScanResultState.loading
+                                          ? 'PROCESSING'
+                                          : _resultState == ScanResultState.error
+                                              ? 'FAILED'
+                                              : 'AWAITING CODE',
+                                  valueColor: _resultState == ScanResultState.success
+                                      ? Colors.greenAccent
+                                      : _resultState == ScanResultState.error
+                                          ? Colors.redAccent
+                                          : Colors.cyanAccent,
                                 ),
                               ),
                             ],
@@ -747,9 +767,9 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                               ),
                               Expanded(
                                 child: _buildTelemetryBlock(
-                                  icon: Icons.cloud_sync_outlined,
-                                  title: 'DATABASE DISPATCH',
-                                  value: 'INSTANT OFFLINE SYNC',
+                                  icon: Icons.sync_alt_rounded,
+                                  title: 'ATTENDANCE DISPATCH',
+                                  value: 'LOCAL SYNC QUEUE',
                                   valueColor: AppColors.gold,
                                 ),
                               ),
@@ -1022,7 +1042,8 @@ class ScannerHUDPainter extends CustomPainter {
     required this.cutoutSize,
     required this.resultState,
     required this.pulseValue,
-  });
+    Listenable? repaint,
+  }) : super(repaint: repaint);
 
   @override
   void paint(Canvas canvas, Size size) {
