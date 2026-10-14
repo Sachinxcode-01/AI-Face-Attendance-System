@@ -43,7 +43,6 @@ import 'package:provider/provider.dart';
 // ======================================================
 // Core & State Management
 // ======================================================
-import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 
 // ======================================================

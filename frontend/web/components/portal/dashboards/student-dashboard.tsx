@@ -37,6 +37,7 @@ import AttendanceRing from '@/components/portal/attendance-ring';
 import { DashboardCard, StatusBadge, SkeletonLoader, EmptyState } from '@/components/portal/ui-helpers';
 import { CustomAreaChart, AttendanceHeatmap } from '@/components/portal/custom-charts';
 import { api } from '@/lib/api';
+import confetti from 'canvas-confetti';
 
 interface PortalProps {
   forceTab?: string;
@@ -366,6 +367,117 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
     }
   };
 
+  // Celebrate streak with confetti particles
+  const triggerStreakCelebration = () => {
+    try {
+      confetti({
+        particleCount: 90,
+        spread: 75,
+        origin: { y: 0.6 },
+        colors: ['#F59E0B', '#F97316', '#EF4444', '#10B981', '#6366F1']
+      });
+    } catch (e) {
+      console.log('Confetti triggered', e);
+    }
+  };
+
+  // Export Timetable as RFC-5545 iCalendar (.ics)
+  const handleExportIcs = () => {
+    try {
+      const dayMap: { [key: string]: string } = {
+        monday: 'MO',
+        tuesday: 'TU',
+        wednesday: 'WE',
+        thursday: 'TH',
+        friday: 'FR',
+        saturday: 'SA',
+        sunday: 'SU',
+      };
+
+      const now = new Date();
+      const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+      const timeStamp = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
+
+      let icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//SmartFace AI//Academic Timetable//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'X-WR-CALNAME:SmartFace Academic Schedule',
+        'X-WR-TIMEZONE:Asia/Kolkata',
+      ];
+
+      timetableSlots.forEach((slot, index) => {
+        const dayCode = dayMap[(slot.day || 'Monday').toLowerCase()] || 'MO';
+        const timeParts = (slot.time || '09:00 AM - 10:30 AM').split('-');
+        let startTimeStr = timeParts[0]?.trim() || '09:00 AM';
+        let endTimeStr = timeParts[1]?.trim() || '10:30 AM';
+
+        const parseTo24h = (t: string) => {
+          const isPm = t.toUpperCase().includes('PM');
+          const isAm = t.toUpperCase().includes('AM');
+          const cleaned = t.replace(/(AM|PM)/gi, '').trim();
+          const [hStr, mStr] = cleaned.split(':');
+          let h = parseInt(hStr || '9', 10);
+          const m = parseInt(mStr || '0', 10);
+          if (isPm && h < 12) h += 12;
+          if (isAm && h === 12) h = 0;
+          return { h, m };
+        };
+
+        const start24 = parseTo24h(startTimeStr);
+        const end24 = parseTo24h(endTimeStr);
+
+        const dayIndexes: { [key: string]: number } = { MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6, SU: 0 };
+        const targetDayIdx = dayIndexes[dayCode] ?? 1;
+        const currentDayIdx = now.getDay();
+        let diffDays = targetDayIdx - currentDayIdx;
+        if (diffDays <= 0) diffDays += 7;
+
+        const eventDate = new Date(now);
+        eventDate.setDate(now.getDate() + diffDays);
+        const y = eventDate.getFullYear();
+        const mon = pad(eventDate.getMonth() + 1);
+        const d = pad(eventDate.getDate());
+
+        const dtStart = `${y}${mon}${d}T${pad(start24.h)}${pad(start24.m)}00`;
+        const dtEnd = `${y}${mon}${d}T${pad(end24.h)}${pad(end24.m)}00`;
+
+        icsContent.push(
+          'BEGIN:VEVENT',
+          `UID:smartface-slot-${slot.id || index}-${timeStamp}@smartface.pro`,
+          `DTSTAMP:${timeStamp}`,
+          `DTSTART:${dtStart}`,
+          `DTEND:${dtEnd}`,
+          `RRULE:FREQ=WEEKLY;BYDAY=${dayCode};UNTIL=20261231T235959Z`,
+          `SUMMARY:${slot.subject || 'Lecture'}`,
+          `LOCATION:${slot.room || 'Campus Room'}`,
+          `DESCRIPTION:Instructor: ${slot.instructor || 'Faculty Member'}\\nSmartFace Dynamic Biometric Attendance Verified`,
+          'STATUS:CONFIRMED',
+          'BEGIN:VALARM',
+          'TRIGGER:-PT15M',
+          'ACTION:DISPLAY',
+          `DESCRIPTION:Reminder: ${slot.subject || 'Lecture'} starts in 15 minutes at ${slot.room || 'Classroom'}`,
+          'END:VALARM',
+          'END:VEVENT'
+        );
+      });
+
+      icsContent.push('END:VCALENDAR');
+
+      const blob = new Blob([icsContent.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', 'SmartFace_Academic_Timetable.ics');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Failed to export .ics calendar:', err);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6 max-w-4xl mx-auto py-12">
@@ -418,21 +530,38 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
           </DashboardCard>
 
           {/* Streak details */}
-          <DashboardCard className="flex flex-col justify-between">
+          <DashboardCard className="flex flex-col justify-between" glow={(stats?.streak ?? 14) >= 14}>
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <span className="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-widest block">
                   Active Streak
                 </span>
-                <span className="text-3xl font-black text-white font-sans">{stats?.streak ?? 14} Days</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-black text-white font-sans">{stats?.streak ?? 14} Days</span>
+                  <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
+                    {(stats?.streak ?? 14) >= 30 ? '🥇 Gold' : (stats?.streak ?? 14) >= 14 ? '🥈 Silver' : '🥉 Bronze'}
+                  </span>
+                </div>
               </div>
-              <div className="p-2 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400">
+              <button
+                type="button"
+                onClick={triggerStreakCelebration}
+                title="Celebrate your attendance streak!"
+                className="p-2 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 text-orange-400 transition hover:scale-105 active:scale-95 cursor-pointer"
+              >
                 <Flame className="w-5 h-5 fill-orange-400" />
-              </div>
+              </button>
             </div>
-            <p className="text-[10px] text-slate-500 font-mono tracking-wider uppercase mt-4">
-              CONSECUTIVE ATTENDANCE RECORD
-            </p>
+            <div className="mt-4 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+              <span className="tracking-wider uppercase">CONSECUTIVE RECORD</span>
+              <button
+                type="button"
+                onClick={triggerStreakCelebration}
+                className="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 transition cursor-pointer"
+              >
+                <Sparkles className="w-3 h-3" /> Celebrate
+              </button>
+            </div>
           </DashboardCard>
 
           {/* Institutional Rank */}
@@ -670,8 +799,17 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
                 })}
               </div>
 
-              {/* Quick Today Jump */}
+              {/* Quick Today Jump & iCal Export */}
               <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleExportIcs}
+                  className="px-3 py-2 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-300 hover:text-amber-200 rounded-xl text-xs font-semibold font-mono flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                  title="Export full semester timetable to Apple Calendar, Google Calendar, or Outlook (.ics)"
+                >
+                  <Download className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Sync to Calendar (.ics)</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -1130,6 +1268,33 @@ export default function StudentDashboard({ forceTab }: PortalProps) {
                         <span className={`text-[10px] font-mono block ${projectedPct >= targetGoal ? 'text-emerald-300' : 'text-rose-300'}`}>
                           {projectedPct >= targetGoal ? 'Status: Above Target' : 'Status: Below Target'}
                         </span>
+                      </div>
+                    </div>
+
+                    {/* Preset Scenario Testing Chips */}
+                    <div className="pt-3 border-t border-white/5 space-y-2">
+                      <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
+                        Quick Scenario Presets:
+                      </span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {[
+                          { label: '🏖️ College Fest (-6 Classes)', missed: 6, attended: 0 },
+                          { label: '🤒 Sick Leave (-3 Classes)', missed: 3, attended: 0 },
+                          { label: '🎯 10-Class Power Sprint (+10)', missed: 0, attended: 10 },
+                          { label: '⚡ Next Week Attendance (+15)', missed: 0, attended: 15 },
+                        ].map((preset, pIdx) => (
+                          <button
+                            key={pIdx}
+                            type="button"
+                            onClick={() => {
+                              setSimMissed(preset.missed);
+                              setSimAttended(preset.attended);
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/10 text-[11px] font-mono transition cursor-pointer"
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>

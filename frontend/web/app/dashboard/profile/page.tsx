@@ -356,7 +356,7 @@ export default function UniversalProfileStudio() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <div className="flex flex-col items-center gap-3">
           <RefreshCw className="w-8 h-8 text-primary animate-spin" />
           <span className="text-xs font-mono text-slate-400">Loading Universal Profile Studio...</span>
@@ -410,7 +410,7 @@ export default function UniversalProfileStudio() {
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             {/* Avatar Preview & Controls */}
             <div className="relative group">
-              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-gradient-to-br from-primary/30 to-accent/30 p-1 border-2 border-white/20 shadow-2xl relative overflow-hidden flex items-center justify-center">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-linear-to-br from-primary/30 to-accent/30 p-1 border-2 border-white/20 shadow-2xl relative overflow-hidden flex items-center justify-center">
                 {currentAvatar ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
@@ -652,7 +652,7 @@ export default function UniversalProfileStudio() {
                       type="text"
                       value={editForm.full_name || ''}
                       onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                      className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans focus:outline-none focus:border-primary"
+                      className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans outline-none focus:ring-1 focus:ring-primary"
                     />
                   </div>
 
@@ -662,7 +662,7 @@ export default function UniversalProfileStudio() {
                       type="text"
                       value={editForm.phone || ''}
                       onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                      className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-primary"
+                      className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-mono outline-none focus:ring-1 focus:ring-primary"
                     />
                   </div>
 
@@ -672,7 +672,7 @@ export default function UniversalProfileStudio() {
                       type="text"
                       value={editForm.department || ''}
                       onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
-                      className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans focus:outline-none focus:border-primary"
+                      className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans outline-none focus:ring-1 focus:ring-primary"
                     />
                   </div>
 
@@ -681,7 +681,7 @@ export default function UniversalProfileStudio() {
                     <select
                       value={editForm.language_preference || 'English'}
                       onChange={(e) => setEditForm({ ...editForm, language_preference: e.target.value })}
-                      className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans focus:outline-none focus:border-primary"
+                      className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans outline-none focus:ring-1 focus:ring-primary"
                     >
                       <option value="English">English</option>
                       <option value="Hindi">Hindi</option>
@@ -698,7 +698,7 @@ export default function UniversalProfileStudio() {
                           type="text"
                           value={editForm.semester || ''}
                           onChange={(e) => setEditForm({ ...editForm, semester: e.target.value })}
-                          className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans focus:outline-none focus:border-primary"
+                          className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans outline-none focus:ring-1 focus:ring-primary"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -707,7 +707,7 @@ export default function UniversalProfileStudio() {
                           type="text"
                           value={editForm.student_id || ''}
                           onChange={(e) => setEditForm({ ...editForm, student_id: e.target.value })}
-                          className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-primary"
+                          className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-mono outline-none focus:ring-1 focus:ring-primary"
                         />
                       </div>
                     </>
@@ -721,7 +721,7 @@ export default function UniversalProfileStudio() {
                           type="text"
                           value={editForm.designation || ''}
                           onChange={(e) => setEditForm({ ...editForm, designation: e.target.value })}
-                          className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans focus:outline-none focus:border-primary"
+                          className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans outline-none focus:ring-1 focus:ring-primary"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -730,7 +730,7 @@ export default function UniversalProfileStudio() {
                           type="text"
                           value={editForm.specialization || ''}
                           onChange={(e) => setEditForm({ ...editForm, specialization: e.target.value })}
-                          className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans focus:outline-none focus:border-primary"
+                          className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans outline-none focus:ring-1 focus:ring-primary"
                         />
                       </div>
                     </>
@@ -742,7 +742,7 @@ export default function UniversalProfileStudio() {
                       rows={2}
                       value={editForm.address || ''}
                       onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                      className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans focus:outline-none focus:border-primary"
+                      className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-3 py-2 text-white font-sans outline-none focus:ring-1 focus:ring-primary"
                     />
                   </div>
                 </div>
@@ -944,7 +944,7 @@ export default function UniversalProfileStudio() {
                         </div>
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-white font-sans max-w-[130px] truncate" title={sess.device}>
+                            <span className="text-xs font-bold text-white font-sans max-w-32.5 truncate" title={sess.device}>
                               {sess.device.split(' ')[0] || 'Browser Client'}
                             </span>
                             {sess.is_current && (

@@ -147,7 +147,7 @@ export function DashboardCard({
         {/* Light Sweep Glow overlay */}
         <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-3xl">
           <div 
-            className="absolute top-0 bottom-0 w-[45%] bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-20deg]"
+            className="absolute top-0 bottom-0 w-[45%] bg-linear-to-r from-transparent via-white/10 to-transparent skew-x-[-20deg]"
             style={{
               left: '-100%',
               animation: 'premiumLightSweep 3.5s infinite linear',
@@ -264,7 +264,7 @@ export function UserAvatar({ name, role, avatarUrl, size = 'md', className = '' 
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <div className={`${sizes[size]} rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold font-sans text-white border border-white/10 shadow-inner relative overflow-hidden shrink-0`}>
+      <div className={`${sizes[size]} rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center font-bold font-sans text-white border border-white/10 shadow-inner relative overflow-hidden shrink-0`}>
         {formattedUrl && !imgError ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
@@ -304,7 +304,7 @@ export function SkeletonLoader({ className = '', count = 1 }) {
 // Empty State View
 export function EmptyState({ title, description, icon: Icon }: { title: string; description: string; icon?: React.ComponentType<{ className?: string }> }) {
   return (
-    <div className="flex flex-col items-center justify-center text-center p-8 bg-slate-900/10 border border-white/5 rounded-2xl backdrop-blur-sm min-h-[200px]">
+    <div className="flex flex-col items-center justify-center text-center p-8 bg-slate-900/10 border border-white/5 rounded-2xl backdrop-blur-sm min-h-50">
       {Icon && <Icon className="w-10 h-10 text-slate-500 mb-3" />}
       <h4 className="text-sm font-bold text-white mb-1 font-sans">{title}</h4>
       <p className="text-xs text-slate-400 max-w-xs font-sans leading-relaxed">{description}</p>

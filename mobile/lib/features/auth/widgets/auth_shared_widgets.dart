@@ -10,7 +10,6 @@ import 'package:smartface_attendance/app/config/env_config.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
-import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // DESIGN SYSTEM CONSTANTS & TOKENS

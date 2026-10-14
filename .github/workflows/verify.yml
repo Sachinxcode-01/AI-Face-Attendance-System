@@ -25,11 +25,18 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: smartface_mobile
+        working-directory: mobile
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Create compatibility links
+        run: |
+          ln -sfn mobile smartface_mobile || true
+          ln -sfn backend/api smartface_node_api || true
+          ln -sfn backend/ai smartface_pro_api || true
+          ln -sfn frontend/web smartface_landing_web || true
 
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
@@ -37,11 +44,11 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Install Flutter dependencies
-        run: flutter pub get
-
       - name: Create placeholder env files for asset validation
         run: touch .env .env.development .env.staging .env.production
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
 
       # Advisory (non-blocking) until the formatting/analyzer backlog is cleared.
       - name: Verify dart format
@@ -63,18 +70,25 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: smartface_node_api
+        working-directory: backend/api
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Create compatibility links
+        run: |
+          ln -sfn mobile smartface_mobile || true
+          ln -sfn backend/api smartface_node_api || true
+          ln -sfn backend/ai smartface_pro_api || true
+          ln -sfn frontend/web smartface_landing_web || true
 
       - name: Set up Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: smartface_node_api/package-lock.json
+          cache-dependency-path: backend/api/package-lock.json
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
@@ -122,22 +136,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Create compatibility links
+        run: |
+          ln -sfn mobile smartface_mobile || true
+          ln -sfn backend/api smartface_node_api || true
+          ln -sfn backend/ai smartface_pro_api || true
+          ln -sfn frontend/web smartface_landing_web || true
+
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
 
+      - name: Install system build prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential python3-dev
+
       - name: Install FastAPI dependencies
         run: |
-          pip install --upgrade pip
-          pip install -r smartface_pro_api/requirements.txt
+          python -m pip install --upgrade pip setuptools wheel
+          pip install numpy cython
+          pip install -r backend/ai/requirements.txt
           pip install pyflakes
 
-      - name: Syntax check — smartface_pro_api (src layout)
+      - name: Syntax check — backend/ai (src layout)
         run: |
-          echo "Running Python syntax check on the refactored src/ tree..."
-          python -m compileall -q smartface_pro_api/src smartface_pro_api/seed_db.py
+          echo "Running Python syntax check on backend/ai src tree..."
+          python -m compileall -q backend/ai/src backend/ai/seed_db.py
           echo "All Python files passed syntax check."
 
       - name: Syntax check — backup script

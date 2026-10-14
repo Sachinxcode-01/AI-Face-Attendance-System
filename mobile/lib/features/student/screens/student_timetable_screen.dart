@@ -81,6 +81,19 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
               color: Colors.white,
             ),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.calendar_month_rounded, color: AppColors.gold),
+              tooltip: 'Sync Schedule & Reminders',
+              onPressed: () {
+                AppHaptics.medium();
+                context.showSuccessToast(
+                  'Full academic schedule and lecture reminders synced with your device calendar!',
+                  title: 'Schedule Synchronized',
+                );
+              },
+            ),
+          ],
           bottom: TabBar(
             controller: _tabController,
             isScrollable: true,

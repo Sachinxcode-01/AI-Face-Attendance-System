@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
+    "build": "echo 'Node.js API build ready'",
     "test": "node tests/run_all.js",
     "resend:check": "node scripts/check-resend-production.js"
   },

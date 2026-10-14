@@ -104,25 +104,88 @@ Page<dynamic> buildPageWithTransition<T>({
   required GoRouterState state,
   required Widget child,
 }) {
+  final reduceMotion =
+      MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
+  if (reduceMotion) {
+    return NoTransitionPage<T>(
+      key: state.pageKey,
+      child: child,
+    );
+  }
+
   return CustomTransitionPage<T>(
     key: state.pageKey,
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      return FadeTransition(
-        opacity: animation,
-        child: SlideTransition(
-          position:
-              Tween<Offset>(
-                begin: const Offset(0.04, 0.0),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-              ),
-          child: child,
+      final inCurve = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      final secCurve = CurvedAnimation(
+        parent: secondaryAnimation,
+        curve: Curves.easeOutCubic,
+      );
+
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0.05, 0.0),
+          end: Offset.zero,
+        ).animate(inCurve),
+        child: FadeTransition(
+          opacity: inCurve,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 1.0, end: 0.96).animate(secCurve),
+            child: child,
+          ),
         ),
       );
     },
     transitionDuration: const Duration(milliseconds: 320),
+    reverseTransitionDuration: const Duration(milliseconds: 260),
+  );
+}
+
+/// Spring-slide-up modal transition for bottom-sheets, detail popups, and dialogs.
+Page<dynamic> buildModalPageWithTransition<T>({
+  required BuildContext context,
+  required GoRouterState state,
+  required Widget child,
+}) {
+  final reduceMotion =
+      MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
+  if (reduceMotion) {
+    return NoTransitionPage<T>(
+      key: state.pageKey,
+      child: child,
+    );
+  }
+
+  return CustomTransitionPage<T>(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curve = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0.0, 0.08),
+          end: Offset.zero,
+        ).animate(curve),
+        child: FadeTransition(
+          opacity: curve,
+          child: child,
+        ),
+      );
+    },
+    transitionDuration: const Duration(milliseconds: 280),
+    reverseTransitionDuration: const Duration(milliseconds: 220),
   );
 }
 

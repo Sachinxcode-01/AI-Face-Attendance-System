@@ -14,7 +14,6 @@ permissions:
 env:
   NODE_VERSION: '20'
   PYTHON_VERSION: '3.11'
-  FLUTTER_VERSION: '3.22.0'
   DOCKER_REGISTRY: ghcr.io
   IMAGE_OWNER: ${{ github.repository_owner }}
 
@@ -28,6 +27,13 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Create compatibility links
+        run: |
+          ln -sfn mobile smartface_mobile || true
+          ln -sfn backend/api smartface_node_api || true
+          ln -sfn backend/ai smartface_pro_api || true
+          ln -sfn frontend/web smartface_landing_web || true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -51,22 +57,13 @@ jobs:
       - name: Build and Push Node.js API Image
         uses: docker/build-push-action@v5
         with:
-          context: ./smartface_node_api
-          file: ./smartface_node_api/Dockerfile
+          context: ./backend/api
+          file: ./backend/api/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      # Example Deploy step to AWS ECS / EKS or Kubernetes
-      # - name: Deploy to AWS ECS
-      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-      #   with:
-      #     task-definition: task-definition.json
-      #     service: smartface-node-api-service
-      #     cluster: smartface-prod-cluster
-      #     wait-for-service-stability: true
 
   # ─────────────────────────────────────────────────────────────────────────
   # Stage 2: Build & Deploy Python FastAPI AI Service Backend
@@ -77,6 +74,13 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Create compatibility links
+        run: |
+          ln -sfn mobile smartface_mobile || true
+          ln -sfn backend/api smartface_node_api || true
+          ln -sfn backend/ai smartface_pro_api || true
+          ln -sfn frontend/web smartface_landing_web || true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -100,8 +104,8 @@ jobs:
       - name: Build and Push Python AI Service Image
         uses: docker/build-push-action@v5
         with:
-          context: ./smartface_pro_api
-          file: ./smartface_pro_api/Dockerfile
+          context: ./backend/ai
+          file: ./backend/ai/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -116,10 +120,17 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: smartface_mobile
+        working-directory: mobile
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Create compatibility links
+        run: |
+          ln -sfn mobile smartface_mobile || true
+          ln -sfn backend/api smartface_node_api || true
+          ln -sfn backend/ai smartface_pro_api || true
+          ln -sfn frontend/web smartface_landing_web || true
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -131,8 +142,10 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
+
+      - name: Create placeholder env files
+        run: touch .env .env.development .env.staging .env.production
 
       - name: Install Dependencies
         run: flutter pub get
@@ -140,16 +153,18 @@ jobs:
       # Decode Release KeyStore and Keystore Properties from Secrets
       - name: Prepare Android Signing Key
         run: |
-          echo "${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.jks
-          echo "storeFile=release.jks" > android/key.properties
-          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/key.properties
-          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
-          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
+          if [ -n "$ANDROID_RELEASE_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_RELEASE_KEYSTORE_BASE64" | base64 --decode > android/app/release.jks
+            echo "storeFile=release.jks" > android/key.properties
+            echo "storePassword=$ANDROID_KEYSTORE_PASSWORD" >> android/key.properties
+            echo "keyAlias=$ANDROID_KEY_ALIAS" >> android/key.properties
+            echo "keyPassword=$ANDROID_KEY_PASSWORD" >> android/key.properties
+          fi
         env:
-          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets[format('{0}', 'ANDROID_RELEASE_KEYSTORE_BASE64')] }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets[format('{0}', 'ANDROID_KEYSTORE_PASSWORD')] }}
+          ANDROID_KEY_ALIAS: ${{ secrets[format('{0}', 'ANDROID_KEY_ALIAS')] }}
+          ANDROID_KEY_PASSWORD: ${{ secrets[format('{0}', 'ANDROID_KEY_PASSWORD')] }}
 
       # Build App Bundle (AAB) with Obfuscation & Split Debug Symbols for Play Store
       - name: Build Production Android App Bundle (AAB)
@@ -176,25 +191,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: smartface-android-aab
-          path: smartface_mobile/build/app/outputs/bundle/release/app-release.aab
+          path: mobile/build/app/outputs/bundle/release/app-release.aab
 
       - name: Archive Android APK
         uses: actions/upload-artifact@v4
         with:
           name: smartface-android-apk
-          path: smartface_mobile/build/app/outputs/apk/release/app-release.apk
+          path: mobile/build/app/outputs/apk/release/app-release.apk
 
       - name: Upload Debug Symbols
         uses: actions/upload-artifact@v4
         with:
           name: smartface-android-symbols
-          path: smartface_mobile/build/app/outputs/symbols
-
-      # Optional step to distribute to Google Play Store / Firebase App Distribution
-      # - name: Publish to Firebase App Distribution
-      #   uses: wzieba/Firebase-App-Distribution@v2
-      #   with:
-      #     appId: ${{ secrets.FIREBASE_APP_ID }}
-      #     token: ${{ secrets.FIREBASE_CLI_TOKEN }}
-      #     groups: testers
-      #     file: smartface_mobile/build/app/outputs/apk/release/app-release.apk
+          path: mobile/build/app/outputs/symbols

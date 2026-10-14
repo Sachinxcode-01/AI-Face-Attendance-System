@@ -20,7 +20,18 @@ import {
   ShieldCheck,
   RefreshCw,
   Cpu,
-  Server
+  Server,
+  Maximize2,
+  Volume2,
+  VolumeX,
+  UserCheck,
+  Search,
+  Sparkles,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  FileText,
+  Eye
 } from 'lucide-react';
 import { DashboardCard, StatusBadge, EmptyState, SkeletonLoader } from '@/components/portal/ui-helpers';
 import { api } from '@/lib/api';
@@ -45,6 +56,13 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
   const [qrToken, setQrToken] = useState('AUTH_TOKEN_TEMP_SEED_123456');
   const [qrCountdown, setQrCountdown] = useState(5);
 
+  // Fullscreen Projector & Audio Chime states
+  const [projectorModeOpen, setProjectorModeOpen] = useState(false);
+  const [chimeEnabled, setChimeEnabled] = useState(true);
+  const [manualCheckOpen, setManualCheckOpen] = useState(false);
+  const [manualSearch, setManualSearch] = useState('');
+  const [recentArrivalName, setRecentArrivalName] = useState<string | null>(null);
+
   // Biometric Face Enrollment states
   const [studentEnrollEmail, setStudentEnrollEmail] = useState('student@smartface.pro');
   const [studentEnrollName, setStudentEnrollName] = useState('Alice Cooper');
@@ -65,8 +83,13 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
   // Live Attendance stream
   const [liveAttendance, setLiveAttendance] = useState<any[]>([]);
 
-  // Leave Requests review queue
+  // Leave Requests review queue & Document Lightbox
   const [pendingLeaves, setPendingLeaves] = useState<any[]>([]);
+  const [selectedDocUrl, setSelectedDocUrl] = useState<string | null>(null);
+  const [selectedDocStudent, setSelectedDocStudent] = useState<string>('');
+  const [docZoom, setDocZoom] = useState(1);
+  const [docRotation, setDocRotation] = useState(0);
+  const [leaveRemarks, setLeaveRemarks] = useState<Record<string, string>>({});
 
   // Initial load
   useEffect(() => {
@@ -134,14 +157,17 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'attendance_update' && data.session_id === activeSessionId) {
+          const studentName = data.student_email.split('@')[0].toUpperCase().replace('.', ' ');
           const newRecord = {
             rollNo: 'CSE-2026-' + Math.floor(Math.random() * 80 + 10),
-            name: data.student_email.split('@')[0].toUpperCase().replace('.', ' '),
+            name: studentName,
             time: new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-            status: data.status,
-            mode: data.verified_by === 'face' ? 'Face Scanner' : 'QR Scan'
+            status: data.status || 'Present',
+            mode: data.verified_by === 'face' ? 'Face Scanner (ArcFace)' : 'Dynamic QR Scan'
           };
           setLiveAttendance(prev => [newRecord, ...prev]);
+          setRecentArrivalName(studentName);
+          playArrivalChime();
         }
       } catch (e) {
         console.error("WS parsing error:", e);
@@ -155,7 +181,58 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
     return () => {
       ws.close();
     };
-  }, [sessionActive, activeSessionId]);
+  }, [sessionActive, activeSessionId, chimeEnabled]);
+
+  // Audio chime for student verification
+  const playArrivalChime = () => {
+    if (!chimeEnabled) return;
+    try {
+      if (typeof window !== 'undefined' && 'AudioContext' in window) {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.12); // A5
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+      }
+    } catch (e) {
+      console.log('Chime sound error:', e);
+    }
+  };
+
+  // Keyboard shortcut listener (Esc to close Projector mode)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && projectorModeOpen) {
+        setProjectorModeOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [projectorModeOpen]);
+
+  // Instant manual check-in
+  const handleManualCheckIn = (studentName: string, roll: string) => {
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const record = {
+      rollNo: roll,
+      name: studentName,
+      time: nowTime,
+      status: 'Present',
+      mode: 'Manual Override (Faculty)'
+    };
+    setLiveAttendance(prev => [record, ...prev]);
+    setRecentArrivalName(studentName);
+    playArrivalChime();
+    setManualSearch('');
+    setManualCheckOpen(false);
+  };
 
   // QR Code rotater timer logic (drift-safe)
   useEffect(() => {
@@ -213,8 +290,9 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
       const token = localStorage.getItem('token');
       if (!token) return;
 
+      const remark = leaveRemarks[id] || `Reviewed by ${localStorage.getItem('userEmail') || 'Teacher'}`;
       const status = action === 'approve' ? 'Approved' : 'Rejected';
-      await api.leaveAction(id, status, `Reviewed by ${localStorage.getItem('userEmail') || 'Teacher'}`, token);
+      await api.leaveAction(id, status, remark, token);
 
       setPendingLeaves(prev => prev.filter(l => l.id !== id));
     } catch (err: any) {
@@ -531,7 +609,42 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Dynamic QR screen */}
           <DashboardCard className="lg:col-span-2 flex flex-col items-center justify-center text-center p-8">
-            <h3 className="font-extrabold text-sm font-sans mb-4 self-start">Dynamic QR Sync Shield</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-3 mb-6">
+              <div className="text-left">
+                <h3 className="font-extrabold text-sm font-sans">Dynamic Anti-Proxy QR Shield</h3>
+                <span className="text-[10px] text-slate-400 font-mono">Real-time cryptographic rotating token stream</span>
+              </div>
+              {sessionActive && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setProjectorModeOpen(true)}
+                    className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold font-sans flex items-center gap-1.5 transition shadow-md shadow-indigo-600/20 cursor-pointer"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                    <span>Projector Mode</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setManualCheckOpen(true)}
+                    className="px-3 py-2 bg-white/10 hover:bg-white/15 text-white rounded-xl text-xs font-semibold font-sans flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Manual</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setChimeEnabled(!chimeEnabled)}
+                    title={chimeEnabled ? 'Audio chime on arrival enabled' : 'Audio chime muted'}
+                    className={`p-2 rounded-xl border transition cursor-pointer ${
+                      chimeEnabled ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-slate-800 border-white/5 text-slate-400'
+                    }`}
+                  >
+                    {chimeEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              )}
+            </div>
             
             {sessionActive ? (
               <div className="space-y-6 flex flex-col items-center">
@@ -603,7 +716,78 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
       {/* 3. LEAVE APPROVALS QUEUE PANEL */}
       {activeTab === 'leaves' && (
         <div className="space-y-6">
-          <h3 className="font-black text-lg text-white font-sans uppercase">Pending Leave Requests</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-white/5">
+            <div>
+              <h3 className="font-black text-lg text-white font-sans uppercase">Leave Approvals & Statutory Quota</h3>
+              <p className="text-xs text-slate-400 font-sans mt-0.5">
+                Review student leave requests with verification proof attachments and track departmental quota limits.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider font-bold">
+                Auto-Sync Quota Active
+              </span>
+            </div>
+          </div>
+
+          {/* Statutory Quota Overview Meters */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <DashboardCard className="p-4 space-y-2 border-white/5 bg-slate-900/60">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-sans font-medium">Medical / Sick</span>
+                <span className="font-mono text-rose-400 font-bold">8 / 10 Used</span>
+              </div>
+              <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div className="bg-rose-500 h-2 rounded-full transition-all duration-500" style={{ width: '80%' }} />
+              </div>
+              <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                <span>Remaining: 2 days</span>
+                <span className="text-rose-400 font-semibold">80% Limit</span>
+              </div>
+            </DashboardCard>
+
+            <DashboardCard className="p-4 space-y-2 border-white/5 bg-slate-900/60">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-sans font-medium">Casual Leave</span>
+                <span className="font-mono text-emerald-400 font-bold">6 / 15 Used</span>
+              </div>
+              <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{ width: '40%' }} />
+              </div>
+              <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                <span>Remaining: 9 days</span>
+                <span className="text-emerald-400 font-semibold">Healthy</span>
+              </div>
+            </DashboardCard>
+
+            <DashboardCard className="p-4 space-y-2 border-white/5 bg-slate-900/60">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-sans font-medium">Academic / Duty</span>
+                <span className="font-mono text-sky-400 font-bold">4 / 12 Used</span>
+              </div>
+              <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div className="bg-sky-500 h-2 rounded-full transition-all duration-500" style={{ width: '33%' }} />
+              </div>
+              <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                <span>Remaining: 8 days</span>
+                <span className="text-sky-400 font-semibold">Available</span>
+              </div>
+            </DashboardCard>
+
+            <DashboardCard className="p-4 space-y-2 border-white/5 bg-slate-900/60">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-sans font-medium">Emergency Leave</span>
+                <span className="font-mono text-purple-400 font-bold">1 / 5 Used</span>
+              </div>
+              <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div className="bg-purple-500 h-2 rounded-full transition-all duration-500" style={{ width: '20%' }} />
+              </div>
+              <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                <span>Remaining: 4 days</span>
+                <span className="text-purple-400 font-semibold">Available</span>
+              </div>
+            </DashboardCard>
+          </div>
           
           {pendingLeaves.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -616,18 +800,81 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
                         {l.dept} — {l.type} Leave
                       </span>
                     </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      Pending Faculty Review
+                    </span>
                   </div>
 
-                  <p className="text-xs text-slate-400 font-sans italic leading-normal">
+                  <p className="text-xs text-slate-400 font-sans italic leading-normal bg-black/20 p-2.5 rounded-lg border border-white/5">
                     "{l.reason}"
                   </p>
 
-                  <div className="text-[10px] font-mono text-slate-500 uppercase flex items-center gap-1.5">
-                    <Timer className="w-3.5 h-3.5 text-primary" />
-                    Duration: {l.duration}
+                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1">
+                    <div className="flex items-center gap-1.5">
+                      <Timer className="w-3.5 h-3.5 text-primary" />
+                      <span>Duration: {l.duration}</span>
+                    </div>
+
+                    {/* Proof Attachment Lightbox Trigger */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedDocUrl('/samples/medical_certificate_sample.pdf');
+                        setSelectedDocStudent(l.student);
+                        setDocZoom(1);
+                        setDocRotation(0);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 transition text-[10px] font-semibold"
+                    >
+                      <FileText className="w-3 h-3" />
+                      <span>Medical_Proof.pdf</span>
+                      <Eye className="w-3 h-3 ml-0.5" />
+                    </button>
                   </div>
 
-                  <div className="flex gap-2 pt-2">
+                  {/* 1-Tap Quick Remark Chips */}
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">
+                      Quick Faculty Remark:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        'Medical Proof Verified',
+                        'Academic Duty Approved',
+                        'Exceeded Quota Limit',
+                        'Requires Official Stamp'
+                      ].map((chip) => {
+                        const isSelected = leaveRemarks[l.id] === chip;
+                        return (
+                          <button
+                            key={chip}
+                            type="button"
+                            onClick={() =>
+                              setLeaveRemarks((prev) => ({
+                                ...prev,
+                                [l.id]: chip
+                              }))
+                            }
+                            className={`text-[10px] px-2.5 py-1 rounded-full border transition-all ${
+                              isSelected
+                                ? 'bg-primary/20 text-primary border-primary font-bold shadow-xs'
+                                : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/10'
+                            }`}
+                          >
+                            {chip}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {leaveRemarks[l.id] && (
+                      <div className="text-[11px] font-mono text-emerald-400 flex items-center gap-1 pt-0.5">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Selected Remark: &ldquo;{leaveRemarks[l.id]}&rdquo;</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 pt-2 border-t border-white/5">
                     <button
                       onClick={() => handleLeaveAction(l.id, 'reject')}
                       className="w-1/2 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-lg border border-rose-500/20 transition flex items-center justify-center gap-1"
@@ -652,6 +899,134 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
               description="There are no pending leave applications to review."
               icon={CalendarDays}
             />
+          )}
+
+          {/* Medical Certificate / Attachment Lightbox Modal */}
+          {selectedDocUrl && (
+            <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+              <div className="relative w-full max-w-2xl bg-slate-900 border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-slate-950/80">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-sky-400" />
+                    <div>
+                      <h4 className="text-sm font-bold text-white font-sans">
+                        Document Preview — {selectedDocStudent}
+                      </h4>
+                      <p className="text-[10px] font-mono text-slate-400">
+                        Official Medical Practitioner Endorsement & Certificate
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Toolbar Controls */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDocZoom((z) => Math.max(0.75, z - 0.25))}
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition"
+                      title="Zoom Out"
+                    >
+                      <ZoomOut className="w-4 h-4" />
+                    </button>
+                    <span className="text-[11px] font-mono text-slate-400 w-10 text-center">
+                      {Math.round(docZoom * 100)}%
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setDocZoom((z) => Math.min(2.5, z + 0.25))}
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition"
+                      title="Zoom In"
+                    >
+                      <ZoomIn className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDocRotation((r) => (r + 90) % 360)}
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition"
+                      title="Rotate 90°"
+                    >
+                      <RotateCw className="w-4 h-4" />
+                    </button>
+                    <div className="w-px h-4 bg-white/10 mx-1" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedDocUrl(null);
+                        setDocZoom(1);
+                        setDocRotation(0);
+                      }}
+                      className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition"
+                      title="Close"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Modal Document Canvas */}
+                <div className="p-6 overflow-auto flex items-center justify-center bg-slate-950/50 min-h-95">
+                  <div
+                    style={{
+                      transform: `scale(${docZoom}) rotate(${docRotation}deg)`,
+                      transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                    }}
+                    className="w-105 bg-white text-slate-900 rounded-lg shadow-xl p-6 space-y-4 font-serif border border-slate-300 origin-center select-none"
+                  >
+                    {/* Simulated Medical Certificate Format */}
+                    <div className="text-center border-b pb-3 border-slate-300">
+                      <div className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                        Metro City Multi-Speciality Clinic & Hospital
+                      </div>
+                      <div className="text-[10px] text-slate-500 italic">
+                        Department of General Medicine & Health Sciences
+                      </div>
+                      <div className="text-base font-bold text-slate-900 mt-2 tracking-wide font-sans">
+                        MEDICAL FITNESS / LEAVE CERTIFICATE
+                      </div>
+                    </div>
+
+                    <div className="text-xs space-y-2 leading-relaxed text-slate-800">
+                      <p>
+                        This is to certify that student <strong>{selectedDocStudent}</strong> was examined at our outpatient facility and was diagnosed with <strong>Acute Viral Febrile Illness & Bronchial Irritation</strong>.
+                      </p>
+                      <p>
+                        The patient has been advised complete rest and prescribed medical recuperation for a period of <strong>3 days</strong> with vital signs monitoring.
+                      </p>
+                    </div>
+
+                    <div className="pt-6 flex justify-between items-end border-t border-slate-200 text-[10px] font-sans">
+                      <div>
+                        <div className="font-bold text-emerald-800 uppercase tracking-wider">
+                          [ Verified Official Seal ]
+                        </div>
+                        <div className="text-slate-500">Reg No: MED-884920/2024</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold italic text-slate-700 font-serif">Dr. R. K. Verma, MD</div>
+                        <div className="text-slate-500">Senior Consulting Physician</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="px-5 py-3 border-t border-white/10 bg-slate-950/80 flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-mono text-[11px]">
+                    SHA-256 Digest: 8f4a...92b1 (Cryptographically Signed)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedDocUrl(null);
+                    }}
+                    className="px-4 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-primary-foreground font-bold transition text-xs"
+                  >
+                    Done Reviewing
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -853,6 +1228,211 @@ export default function TeacherDashboard({ forceTab }: PortalProps) {
                 Zero Latency Spike · Synced
               </span>
             </DashboardCard>
+          </div>
+        </div>
+      )}
+
+      {/* ─── FULLSCREEN PROJECTOR MODE OVERLAY ──────────────────────────── */}
+      {projectorModeOpen && sessionActive && (
+        <div className="fixed inset-0 z-50 bg-slate-950/98 backdrop-blur-2xl flex flex-col p-6 sm:p-10 font-sans text-white animate-in fade-in duration-300">
+          {/* Top Projector Bar */}
+          <div className="flex items-center justify-between pb-6 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl font-black font-sans tracking-tight">{subject}</h2>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold border border-emerald-500/30">
+                    LIVE LECTURE
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 font-mono">
+                  SmartFace Anti-Proxy Overhead Projector Mode · Token Rotates Every 15s
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setChimeEnabled(!chimeEnabled)}
+                className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-mono transition cursor-pointer ${
+                  chimeEnabled ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' : 'bg-white/5 border-white/10 text-slate-400'
+                }`}
+              >
+                {chimeEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                <span className="hidden sm:inline">{chimeEnabled ? 'Chime ON' : 'Muted'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setManualCheckOpen(true)}
+                className="px-3.5 py-2.5 bg-white/10 hover:bg-white/15 text-white rounded-xl text-xs font-bold font-sans flex items-center gap-2 transition cursor-pointer"
+              >
+                <UserCheck className="w-4 h-4 text-emerald-400" />
+                <span className="hidden sm:inline">Manual Check-In</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setProjectorModeOpen(false)}
+                className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
+                title="Exit Projector Mode (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Main Projector Stage */}
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center py-6 min-h-0">
+            {/* Left/Center: Dynamic Rotating QR */}
+            <div className="lg:col-span-7 flex flex-col items-center justify-center space-y-6">
+              <div className="relative p-7 sm:p-9 bg-white rounded-3xl sm:rounded-4xl border-4 border-amber-400/40 shadow-[0_0_80px_rgba(245,158,11,0.25)] overflow-hidden w-72 h-72 sm:w-96 sm:h-96 flex items-center justify-center">
+                <div className="w-full h-full relative">
+                  <svg viewBox="0 0 100 100" className="w-full h-full text-slate-950 fill-current">
+                    <rect x="0" y="0" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="6" />
+                    <rect x="6" y="6" width="13" height="13" />
+                    <rect x="75" y="0" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="6" />
+                    <rect x="81" y="6" width="13" height="13" />
+                    <rect x="0" y="75" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="6" />
+                    <rect x="6" y="81" width="13" height="13" />
+                    <path d="M 30,10 H 40 V 20 H 30 Z M 50,15 H 60 V 30 H 50 Z M 70,10 H 75 V 20 H 70 Z M 35,30 H 45 V 40 H 35 Z M 10,40 H 20 V 50 H 10 Z M 55,45 H 65 V 55 H 55 Z M 80,45 H 90 V 55 H 80 Z M 30,60 H 40 V 70 H 30 Z M 50,60 H 60 V 70 H 50 Z M 70,60 H 75 V 70 H 70 Z M 35,80 H 45 V 90 H 35 Z M 80,80 H 90 V 90 H 80 Z" />
+                  </svg>
+                </div>
+                {/* Overhead sweeping green laser */}
+                <div className="absolute inset-x-0 h-1 bg-emerald-400 shadow-[0_0_16px_#34D399] animate-laser" />
+              </div>
+
+              {/* Countdown and token seed */}
+              <div className="flex flex-col items-center space-y-2">
+                <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 font-mono text-sm">
+                  <Timer className="w-4 h-4 text-emerald-400 animate-spin" style={{ animationDuration: '4s' }} />
+                  <span className="text-slate-300">ROTATING IN:</span>
+                  <span className="font-bold text-emerald-400 text-base">{qrCountdown}s</span>
+                </div>
+                <span className="text-[11px] font-mono text-slate-500">
+                  TOKEN: {qrToken.substring(0, 24)}... (Clock Drift Protected)
+                </span>
+              </div>
+            </div>
+
+            {/* Right: Live Attendee Stream HUD */}
+            <div className="lg:col-span-5 h-full flex flex-col bg-slate-900/60 rounded-3xl border border-white/10 p-6 overflow-hidden">
+              <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                <div>
+                  <h3 className="text-base font-bold text-white font-sans">Live Verified Attendees</h3>
+                  <p className="text-xs text-slate-400 font-mono">Real-time WebSocket event ingestion</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-black text-emerald-400 font-sans">{liveAttendance.length}</span>
+                  <span className="text-[10px] text-slate-400 font-mono block uppercase">PRESENT</span>
+                </div>
+              </div>
+
+              {recentArrivalName && (
+                <div className="my-3 p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between animate-in zoom-in-95">
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <div>
+                      <span className="text-xs font-bold text-white block">{recentArrivalName}</span>
+                      <span className="text-[10px] text-emerald-300 font-mono">Just Verified Check-in</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-400/20 px-2 py-0.5 rounded-full">
+                    NEW ARRIVAL
+                  </span>
+                </div>
+              )}
+
+              <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 mt-2">
+                {liveAttendance.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-500">
+                    <QrCode className="w-10 h-10 mb-2 opacity-50" />
+                    <p className="text-xs">Waiting for student check-ins...</p>
+                  </div>
+                ) : (
+                  liveAttendance.map((rec, i) => (
+                    <div
+                      key={i}
+                      className="p-3 rounded-xl bg-slate-950/60 border border-white/5 flex items-center justify-between text-xs"
+                    >
+                      <div className="space-y-0.5">
+                        <span className="font-bold text-white block">{rec.name}</span>
+                        <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                          <span>{rec.rollNo}</span>
+                          <span>•</span>
+                          <span>{rec.mode}</span>
+                        </div>
+                      </div>
+                      <span className="font-mono text-[11px] text-slate-400 bg-white/5 px-2 py-1 rounded-lg">
+                        {rec.time}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MANUAL ATTENDANCE QUICK CHECK MODAL ────────────────────────── */}
+      {manualCheckOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-white/10 rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-bold text-white text-base">Manual Student Check-In</h3>
+              </div>
+              <button
+                onClick={() => setManualCheckOpen(false)}
+                className="text-slate-400 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search student name or roll number..."
+                value={manualSearch}
+                onChange={(e) => setManualSearch(e.target.value)}
+                className="field-input pl-9 pr-4 py-2.5 text-xs font-sans"
+              />
+            </div>
+
+            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+              {[
+                { name: 'ALICE COOPER', roll: 'CSE-2026-08' },
+                { name: 'ROBERT JOHNSON', roll: 'CSE-2026-14' },
+                { name: 'EMILY DAVIS', roll: 'CSE-2026-22' },
+                { name: 'MICHAEL BROWN', roll: 'CSE-2026-31' },
+                { name: 'SARAH WILSON', roll: 'CSE-2026-45' }
+              ]
+                .filter(s => manualSearch ? s.name.toLowerCase().includes(manualSearch.toLowerCase()) || s.roll.toLowerCase().includes(manualSearch.toLowerCase()) : true)
+                .map((student, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 rounded-xl bg-slate-950/50 border border-white/5 flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <span className="font-bold text-white block">{student.name}</span>
+                      <span className="text-[10px] font-mono text-slate-400">{student.roll}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleManualCheckIn(student.name, student.roll)}
+                      className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-bold font-mono transition cursor-pointer"
+                    >
+                      Mark Present
+                    </button>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
       )}

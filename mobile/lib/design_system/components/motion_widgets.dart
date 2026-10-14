@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -244,4 +245,183 @@ Future<T?> showModernSheet<T>({
       );
     },
   );
+}
+
+/// Animated breathing glow indicator for live status badges, recording, and active sensors.
+class PulseGlow extends StatefulWidget {
+  final Widget child;
+  final Color glowColor;
+  final double maxBlur;
+  final double maxSpread;
+  final Duration duration;
+  final bool active;
+  final BoxShape shape;
+
+  const PulseGlow({
+    super.key,
+    required this.child,
+    this.glowColor = AppColors.primary,
+    this.maxBlur = 16.0,
+    this.maxSpread = 4.0,
+    this.duration = const Duration(milliseconds: 1800),
+    this.active = true,
+    this.shape = BoxShape.circle,
+  });
+
+  @override
+  State<PulseGlow> createState() => _PulseGlowState();
+}
+
+class _PulseGlowState extends State<PulseGlow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    );
+    if (widget.active) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant PulseGlow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active != oldWidget.active) {
+      if (widget.active) {
+        _controller.repeat(reverse: true);
+      } else {
+        _controller.stop();
+        _controller.reset();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.active) return widget.child;
+
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final t = _animation.value;
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            shape: widget.shape,
+            boxShadow: [
+              BoxShadow(
+                color: widget.glowColor.withValues(alpha: 0.2 + 0.45 * t),
+                blurRadius: widget.maxBlur * t,
+                spreadRadius: widget.maxSpread * t,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+/// Animated scale entrance with a subtle physics bounce (spring overshoot).
+class BouncyScale extends StatefulWidget {
+  final Widget child;
+  final Duration duration;
+  final Duration delay;
+  final Curve curve;
+
+  const BouncyScale({
+    super.key,
+    required this.child,
+    this.duration = const Duration(milliseconds: 600),
+    this.delay = Duration.zero,
+    this.curve = Curves.elasticOut,
+  });
+
+  @override
+  State<BouncyScale> createState() => _BouncyScaleState();
+}
+
+class _BouncyScaleState extends State<BouncyScale>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+  Timer? _delayTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    _animation = CurvedAnimation(parent: _controller, curve: widget.curve);
+
+    if (widget.delay == Duration.zero) {
+      _controller.forward();
+    } else {
+      _delayTimer = Timer(widget.delay, () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _delayTimer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _animation,
+      child: widget.child,
+    );
+  }
+}
+
+/// Pre-configured physics-curved transition switcher for toggling between states.
+class SmoothAnimatedSwitcher extends StatelessWidget {
+  final Widget child;
+  final Duration duration;
+  final Duration reverseDuration;
+
+  const SmoothAnimatedSwitcher({
+    super.key,
+    required this.child,
+    this.duration = const Duration(milliseconds: 280),
+    this.reverseDuration = const Duration(milliseconds: 200),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: duration,
+      reverseDuration: reverseDuration,
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.95, end: 1.0).animate(animation),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
 }

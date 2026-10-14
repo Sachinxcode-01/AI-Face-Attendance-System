@@ -9,12 +9,32 @@ import 'package:smartface_attendance/shared/widgets/shimmer_skeleton.dart';
 import 'package:smartface_attendance/shared/widgets/status_badge.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 
-/// Temporary showcase screen to verify all newly built shared widgets.
-///
-/// Overlays the component deck on top of [AnimatedMeshBackground] to demonstrate
-/// frosted backdrop filtering in motion. Provides a toggle button to check light theme compatibility.
-class ComponentShowcaseScreen extends StatelessWidget {
+/// Component showcase screen to preview and test shared widgets,
+/// micro-interactions, haptic feedback, and toast variants.
+class ComponentShowcaseScreen extends StatefulWidget {
   const ComponentShowcaseScreen({super.key});
+
+  @override
+  State<ComponentShowcaseScreen> createState() => _ComponentShowcaseScreenState();
+}
+
+class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
+  bool _isLoading = false;
+  int _bouncyCounter = 0;
+
+  void _triggerSimulatedAction() async {
+    setState(() => _isLoading = true);
+    await Future.delayed(const Duration(milliseconds: 1400));
+    if (mounted) {
+      setState(() => _isLoading = false);
+      context.showSuccessToast(
+        'Neural weights synchronized with InsightFace core.',
+        title: 'Sync Complete',
+        actionLabel: 'VIEW',
+        onAction: () {},
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +42,7 @@ class ComponentShowcaseScreen extends StatelessWidget {
     final isDark = themeCtrl.isDark;
 
     return Scaffold(
-      backgroundColor: Colors
-          .transparent, // Required to let AnimatedMeshBackground shine through
+      backgroundColor: Colors.transparent,
       appBar: PremiumAppBar(
         title: 'SmartFace Component Showcase',
         actions: [
@@ -38,6 +57,7 @@ class ComponentShowcaseScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.lg,
@@ -45,20 +65,215 @@ class ComponentShowcaseScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // SECTION 1: Status Badges & Theme Mode Info
-              _buildSectionHeader('Status Badges & Info'),
+              // SECTION 1: Semantic Feedback Toasts (NEW)
+              _buildSectionHeader('Interactive Semantic Feedback Toasts'),
+              Text(
+                'Frosted glassmorphism, spring physics, tactile haptics & swipe-to-dismiss gesture.',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.showSuccessToast(
+                        'Attendance verified with 99.4% ArcFace confidence.',
+                        title: 'Attendance Marked',
+                      );
+                    },
+                    icon: const Icon(Icons.check_circle_outline, size: 16),
+                    label: const Text('Success Toast'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.18),
+                      foregroundColor: const Color(0xFF34D399),
+                      elevation: 0,
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.showErrorToast(
+                        'Unregistered face detected hovering in frame.',
+                        title: 'Security Alert',
+                        actionLabel: 'INSPECT',
+                        onAction: () {},
+                      );
+                    },
+                    icon: const Icon(Icons.error_outline, size: 16),
+                    label: const Text('Error Toast'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.18),
+                      foregroundColor: const Color(0xFFF87171),
+                      elevation: 0,
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.showWarningToast(
+                        'Class attendance session expires in 30 seconds.',
+                        title: 'Token Expiring',
+                      );
+                    },
+                    icon: const Icon(Icons.warning_amber_outlined, size: 16),
+                    label: const Text('Warning Toast'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF59E0B).withValues(alpha: 0.18),
+                      foregroundColor: const Color(0xFFFBBF24),
+                      elevation: 0,
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.showInfoToast(
+                        'WebSocket connected to ws://localhost:8000/ws/live-logs',
+                        title: 'Telemetry Connected',
+                      );
+                    },
+                    icon: const Icon(Icons.info_outline, size: 16),
+                    label: const Text('Info Toast'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3B82F6).withValues(alpha: 0.18),
+                      foregroundColor: const Color(0xFF60A5FA),
+                      elevation: 0,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // SECTION 2: Micro-Interactions & Motion Primitives (NEW)
+              _buildSectionHeader('Micro-Interactions: PulseGlow & BouncyScale'),
+              GlassContainer(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      children: [
+                        const PulseGlow(
+                          glowColor: AppColors.success,
+                          maxBlur: 18,
+                          maxSpread: 5,
+                          child: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Color(0xFF10B981),
+                            child: Icon(Icons.videocam_rounded, color: Colors.white, size: 22),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Active Sensor',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const PulseGlow(
+                          glowColor: AppColors.gold,
+                          maxBlur: 16,
+                          maxSpread: 4,
+                          child: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: AppColors.gold,
+                            child: Icon(Icons.qr_code_2_rounded, color: Colors.black, size: 22),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Rolling QR',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        AppHaptics.medium();
+                        setState(() => _bouncyCounter++);
+                      },
+                      child: Column(
+                        children: [
+                          BouncyScale(
+                            key: ValueKey(_bouncyCounter),
+                            child: const CircleAvatar(
+                              radius: 24,
+                              backgroundColor: AppColors.primary,
+                              child: Icon(Icons.touch_app_rounded, color: Colors.white, size: 22),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tap Bounce',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // SECTION 3: Tactile Glow & Glass Buttons (ENHANCED)
+              _buildSectionHeader('Tactile Buttons (Spring Physics & Loading Crossfade)'),
+              Row(
+                children: [
+                  Expanded(
+                    child: PremiumButton(
+                      isLoading: _isLoading,
+                      onPressed: _triggerSimulatedAction,
+                      leadingIcon: const Icon(Icons.bolt, size: 20),
+                      child: const Text('INITIALIZE FACE SCANNER'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: PremiumButton.glass(
+                      onPressed: () {
+                        context.showInfoToast('Secondary glass button pressed');
+                      },
+                      leadingIcon: const Icon(Icons.tune_rounded, size: 18, color: Colors.white),
+                      child: const Text('CONFIGURE SENSORS'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: PremiumButton(
+                      onPressed: null, // Disabled State
+                      child: Text('DISABLED BUTTON'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // SECTION 4: Status Badges & Info
+              _buildSectionHeader('Status Badges & Chips'),
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  const StatusBadge(
-                    label: 'Live Feed',
-                    color: Color(0xFF10B981),
-                  ),
-                  const StatusBadge(
-                    label: 'Late Check-in',
-                    color: Color(0xFFF59E0B),
-                  ),
+                  const StatusBadge(label: 'Live Feed', color: Color(0xFF10B981)),
+                  const StatusBadge(label: 'Late Check-in', color: Color(0xFFF59E0B)),
                   const StatusBadge(label: 'Absent', color: Color(0xFFEF4444)),
                   StatusBadge(
                     label: 'System Active',
@@ -69,7 +284,7 @@ class ComponentShowcaseScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // SECTION 2: Glass Container & Card Presentation
+              // SECTION 5: Glass Container & AI Engine Presentation
               _buildSectionHeader('Glass Containers (sigmaX/Y = 22)'),
               GlassContainer(
                 child: Column(
@@ -132,7 +347,7 @@ class ComponentShowcaseScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // SECTION 3: Animated Attendance Rings
+              // SECTION 6: Animated Attendance Rings
               _buildSectionHeader('Tween-Animated Attendance Rings'),
               GlassContainer(
                 child: Column(
@@ -176,43 +391,7 @@ class ComponentShowcaseScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // SECTION 4: Interactive Glow Buttons
-              _buildSectionHeader('Glow Buttons (Tactile Scaling CTA)'),
-              Row(
-                children: [
-                  Expanded(
-                    child: PremiumButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('CTA Button Triggered')),
-                        );
-                      },
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.bolt, size: 20),
-                          SizedBox(width: 8),
-                          Text('INITIALIZE FACE SCANNER'),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Row(
-                children: [
-                  Expanded(
-                    child: PremiumButton(
-                      onPressed: null, // Disabled State
-                      child: Text('DISABLED ACTION BUTTON'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // SECTION 5: Dark-Optimized Shimmer Skeleton Loading
+              // SECTION 7: Shimmer Skeleton
               _buildSectionHeader('Dark-Optimized Shimmer Loader'),
               const GlassContainer(
                 child: Row(
@@ -246,7 +425,7 @@ class ComponentShowcaseScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -255,15 +434,16 @@ class ComponentShowcaseScreen extends StatelessWidget {
   }
 
   Widget _buildSectionHeader(String title) {
+    final isDark = context.read<ThemeController>().isDark;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Text(
         title.toUpperCase(),
         style: GoogleFonts.inter(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
-          color: const Color(0xFF3B82F6),
+          color: isDark ? AppColors.gold : AppColors.primary,
         ),
       ),
     );

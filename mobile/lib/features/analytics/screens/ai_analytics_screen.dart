@@ -30,7 +30,6 @@ import 'package:path_provider/path_provider.dart';
 // ======================================================
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/analytics/controllers/analytics_controller.dart';
-import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';

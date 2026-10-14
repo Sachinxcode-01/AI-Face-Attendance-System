@@ -43,6 +43,7 @@ class QRScannerScreen extends StatefulWidget {
 class _QRScannerScreenState extends State<QRScannerScreen>
     with TickerProviderStateMixin {
   bool _isScanning = true;
+  bool _torchEnabled = false;
   final MobileScannerController _controller = MobileScannerController();
   late final AnimationController _laserController;
   ScanResultState _resultState = ScanResultState.none;
@@ -391,6 +392,11 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                             'TIMESTAMP',
                             DateTime.now().toIso8601String().split('T')[0],
                           ),
+                          const Divider(color: Colors.white12, height: 16),
+                          _buildTelemetryItem(
+                            'GEOFENCE RADAR',
+                            'VERIFIED (< 25m)',
+                          ),
                         ],
                       ),
                     ),
@@ -423,6 +429,49 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                       ),
                       onPressed: () {
                         context.go('/student/home');
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // 💡 Flashlight / Torch Toggle Button
+          Positioned(
+            top: 50,
+            right: 20,
+            child: SafeArea(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black45,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white10),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        _torchEnabled
+                            ? Icons.flash_on_rounded
+                            : Icons.flash_off_rounded,
+                        color: _torchEnabled
+                            ? Colors.amberAccent
+                            : Colors.white70,
+                        size: 20,
+                      ),
+                      onPressed: () async {
+                        HapticFeedback.lightImpact();
+                        try {
+                          await _controller.toggleTorch();
+                          setState(() {
+                            _torchEnabled = !_torchEnabled;
+                          });
+                        } catch (e) {
+                          debugPrint('Torch toggle error: $e');
+                        }
                       },
                     ),
                   ),

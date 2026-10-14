@@ -16,7 +16,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:smartface_attendance/features/leave/controllers/leave_controller.dart';
 import 'package:smartface_attendance/features/leave/models/leave_model.dart';
-import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
@@ -163,7 +162,80 @@ class _TeacherLeaveDashboardScreenState
                         fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 18),
+                    Text(
+                      'QUICK REMARKS',
+                      style: GoogleFonts.inter(
+                        fontSize: 9,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white54 : Colors.black45,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          'Medical Proof Verified',
+                          'Academic Duty Approved',
+                          'Exceeded Quota Limit',
+                          'Requires Official Stamp',
+                          'Approved with Exception',
+                        ].map((chip) {
+                          final isSelected = _remarksController.text == chip;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: InkWell(
+                              onTap: () {
+                                setModalState(() {
+                                  _remarksController.text = chip;
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(20),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.gold.withValues(alpha: 0.2)
+                                      : (isDark
+                                          ? Colors.white.withValues(alpha: 0.05)
+                                          : Colors.black.withValues(alpha: 0.04)),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? AppColors.gold
+                                        : (isDark
+                                            ? Colors.white12
+                                            : Colors.black12),
+                                    width: isSelected ? 1.5 : 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  chip,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: isSelected
+                                        ? AppColors.gold
+                                        : (isDark
+                                            ? Colors.white70
+                                            : Colors.black87),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     TextField(
                       controller: _remarksController,
                       maxLines: 3,

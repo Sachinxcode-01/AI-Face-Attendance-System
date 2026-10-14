@@ -17,7 +17,6 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:smartface_attendance/app/constants/app_constants.dart';
-import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';

@@ -15,7 +15,10 @@ import {
   FileText,
   Calendar,
   CheckCircle2,
-  Filter
+  Filter,
+  Phone,
+  MessageSquare,
+  ExternalLink
 } from 'lucide-react';
 import AttendanceRing from '@/components/portal/attendance-ring';
 import { DashboardCard, StatusBadge, SkeletonLoader } from '@/components/portal/ui-helpers';

@@ -20,6 +20,7 @@ import 'package:smartface_attendance/shared/widgets/premium_widgets.dart'
 import 'package:smartface_attendance/shared/widgets/attendance_ring.dart';
 import 'package:smartface_attendance/features/analytics/models/attendance_analytics_model.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
+import 'package:smartface_attendance/design_system/design_system.dart';
 
 // ============================================================================
 // 1. AttendanceScoreCard
@@ -107,35 +108,54 @@ class AttendanceScoreCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.redAccent.withValues(alpha: 0.2),
+                    GestureDetector(
+                      onTap: () {
+                        AppHaptics.medium();
+                        final tier = streak >= 30
+                            ? 'Gold'
+                            : streak >= 14
+                                ? 'Silver'
+                                : 'Bronze';
+                        context.showSuccessToast(
+                          'You are on a $streak-day active attendance streak! ($tier Tier)',
+                          title: 'Streak Milestone Achieved!',
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.fireplace_rounded,
-                            color: Colors.redAccent,
-                            size: 14,
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.redAccent.withValues(alpha: 0.25),
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '$streak Days Streak',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.fireplace_rounded,
                               color: Colors.redAccent,
+                              size: 14,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Text(
+                              '$streak Days Streak',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.redAccent,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              streak >= 30 ? '🥇' : streak >= 14 ? '🥈' : '🥉',
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
