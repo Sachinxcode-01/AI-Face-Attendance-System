@@ -200,44 +200,60 @@ export default function Home() {
             
             {/* Tagline Announcement */}
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-mono text-primary uppercase tracking-widest"
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-xs font-medium text-blue-300 shadow-sm"
             >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>SmartFace AI Platform</span>
+              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-mono text-[11px] text-slate-300">v2.4 Enterprise Release</span>
+              <span className="text-slate-600">•</span>
+              <span className="text-[11px] text-blue-400 font-medium">ArcFace 512D Biometrics</span>
             </motion.div>
 
             {/* Hero Typography Title */}
             <motion.h1
-              initial={{ opacity: 0, y: 25 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1, ease: 'easeOut' }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-tight font-sans uppercase"
+              transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
+              className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white leading-[1.08] font-sans"
             >
-              SmartFace <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-emerald-400">AI</span>
+              Autonomous Campus Attendance.{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-300">
+                Engineered for Absolute Precision.
+              </span>
             </motion.h1>
 
             {/* Hero Subtitle */}
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-              className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-slate-300 font-sans"
-            >
-              AI-Powered Smart Attendance Management Platform for Educational Institutions
-            </motion.p>
-
-            {/* Hero Description */}
-            <motion.p
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
-              className="text-xs sm:text-sm text-slate-400 max-w-xl font-sans leading-relaxed"
+              transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
+              className="text-base sm:text-lg text-slate-300 font-normal leading-relaxed max-w-xl"
             >
-              Manage attendance, monitor classrooms in real time, generate intelligent reports, streamline leave management, and provide dedicated portals for Students, Parents, Teachers, and Administrators.
+              Zero buddy-punching. Sub-second face matching, rotating anti-proxy QR codes, and tamper-proof real-time audit trails designed for modern universities and institutions.
             </motion.p>
+
+            {/* Quick Metrics Strip */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
+              className="grid grid-cols-3 gap-3 pt-1 pb-1 w-full max-w-md"
+            >
+              <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm">
+                <div className="text-base sm:text-lg font-bold text-white font-mono">&lt; 300ms</div>
+                <div className="text-[10px] text-slate-400">Match Latency</div>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm">
+                <div className="text-base sm:text-lg font-bold text-emerald-400 font-mono">99.87%</div>
+                <div className="text-[10px] text-slate-400">Model Accuracy</div>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm">
+                <div className="text-base sm:text-lg font-bold text-blue-400 font-mono">0%</div>
+                <div className="text-[10px] text-slate-400">Proxy Tolerance</div>
+              </div>
+            </motion.div>
 
             {/* CTA Buttons */}
             <motion.div
@@ -248,31 +264,31 @@ export default function Home() {
             >
               <Link
                 href="/login"
-                className="w-full sm:w-auto relative inline-flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold rounded-2xl bg-primary text-white border border-primary/20 overflow-hidden shadow-[0_0_25px_rgba(37,99,235,0.2)] hover:shadow-[0_0_35px_rgba(37,99,235,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                className="w-full sm:w-auto relative inline-flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold rounded-2xl bg-blue-600 hover:bg-blue-500 text-white border border-blue-400/30 overflow-hidden shadow-[0_0_25px_rgba(37,99,235,0.3)] hover:shadow-[0_0_35px_rgba(37,99,235,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
               >
-                <span>Get Started</span>
+                <span>Launch Portal</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               
               <Link
-                href="/login"
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold text-white bg-slate-900 border border-white/5 hover:bg-slate-800/80 rounded-2xl transition-all duration-300"
+                href="/download"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold text-white bg-slate-900/90 border border-white/10 hover:bg-slate-800 rounded-2xl transition-all duration-300"
               >
-                <Play className="w-3.5 h-3.5 fill-slate-300" />
-                <span>Login Portal</span>
+                <Download className="w-3.5 h-3.5 text-blue-400" />
+                <span>Download App</span>
               </Link>
 
               <button
                 onClick={scrollToFeatures}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-semibold text-slate-350 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 rounded-2xl backdrop-blur-sm transition-all duration-300"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-semibold text-slate-300 hover:text-white bg-white/5 border border-white/10 hover:bg-white/10 rounded-2xl backdrop-blur-sm transition-all duration-300 cursor-pointer"
               >
-                <span>View Features</span>
+                <span>Explore Architecture</span>
               </button>
             </motion.div>
           </div>
 
           {/* Right Video Visual Column */}
-          <div className="lg:col-span-5 flex justify-center items-center h-[380px] md:h-[480px] relative">
+          <div className="lg:col-span-5 flex justify-center items-center min-h-[440px] relative">
             <HeroVideo />
           </div>
 

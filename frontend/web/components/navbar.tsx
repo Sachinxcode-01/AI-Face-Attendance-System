@@ -29,34 +29,40 @@ export default function Navbar() {
   return (
     <>
       <header className="fixed top-0 inset-x-0 z-50 flex justify-center p-4 md:p-6 pointer-events-none">
-        <nav className="w-full max-w-7xl h-16 md:h-20 flex items-center justify-between px-6 md:px-8 rounded-2xl glass-panel pointer-events-auto backdrop-blur-md transition-all duration-300">
+        <nav className="w-full max-w-7xl h-16 md:h-18 flex items-center justify-between px-6 md:px-8 rounded-2xl bg-slate-950/75 border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.5)] pointer-events-auto backdrop-blur-xl transition-all duration-300">
           
-          {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="relative w-9 h-9 flex items-center justify-center rounded-lg bg-primary/10 border border-primary/20 group-hover:border-primary/50 group-hover:bg-primary/20 transition-all duration-300">
-              <Fingerprint className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-              <div className="absolute inset-0 rounded-lg bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+          {/* Brand Logo & Engine Badge */}
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="relative w-8 h-8 flex items-center justify-center rounded-xl bg-blue-600/15 border border-blue-500/30 group-hover:border-blue-400/60 group-hover:bg-blue-600/25 transition-all duration-300">
+                <Fingerprint className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
+                <div className="absolute inset-0 rounded-xl bg-blue-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold tracking-tight font-sans text-white group-hover:text-blue-300 transition-colors">
+                  SmartFace
+                </span>
+                <span className="text-[9px] tracking-wider font-mono text-slate-400">
+                  BIOMETRIC CORE
+                </span>
+              </div>
+            </Link>
+
+            {/* Live Operational Status Badge */}
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>AI Engine Online</span>
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-bold tracking-wider font-sans text-white group-hover:text-primary transition-colors">
-                SMARTFACE
-              </span>
-              <span className="text-[9px] tracking-[0.25em] font-mono text-slate-400">
-                AI ATTENDANCE
-              </span>
-            </div>
-          </Link>
+          </div>
 
           {/* Nav Links (Desktop) */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
-            <Link href="/" className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors relative group py-2">
+          <div className="hidden md:flex items-center gap-1 lg:gap-2 bg-white/[0.03] p-1 rounded-xl border border-white/[0.05]">
+            <Link href="/" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all">
               Home
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
             </Link>
             
-            <Link href="/#features" className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors relative group py-2">
+            <Link href="/#features" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all">
               Features
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
             </Link>
 
             {/* Portals Dropdown */}
@@ -66,7 +72,7 @@ export default function Navbar() {
               onMouseLeave={() => setPortalsOpen(false)}
             >
               <button
-                className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors flex items-center gap-1 py-2 cursor-pointer outline-none"
+                className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1 cursor-pointer outline-none"
               >
                 <span>Portals</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${portalsOpen ? 'rotate-180' : ''}`} />
@@ -75,19 +81,21 @@ export default function Navbar() {
               <AnimatePresence>
                 {portalsOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full left-0 mt-1 w-48 rounded-xl bg-slate-900 border border-white/10 p-2 shadow-2xl backdrop-blur-md z-50 flex flex-col gap-1"
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 mt-2 w-48 rounded-xl bg-slate-900/95 border border-white/10 p-1.5 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-0.5"
                   >
                     {portals.map((portal) => (
                       <Link
                         key={portal.name}
                         href={portal.href}
                         onClick={() => setPortalsOpen(false)}
-                        className="px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-white/5 transition"
+                        className="px-3 py-2 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-blue-600/20 transition-all flex items-center justify-between"
                       >
-                        {portal.name}
+                        <span>{portal.name}</span>
+                        <span className="text-[10px] text-slate-500 font-mono">→</span>
                       </Link>
                     ))}
                   </motion.div>
@@ -95,36 +103,34 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
 
-            <Link href="/download" className="text-xs font-medium font-sans tracking-wide text-cyan-400 hover:text-cyan-300 transition-colors relative group py-2 flex items-center gap-1 font-bold">
-              <span>Download App</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <Link href="/download" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1.5">
+              <span>App</span>
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-400 font-mono">APK</span>
             </Link>
 
-            <Link href="/docs" className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors relative group py-2">
-              Documentation
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
+            <Link href="/docs" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all">
+              Docs
             </Link>
 
-            <Link href="/contact" className="text-xs font-medium font-sans tracking-wide text-slate-300 hover:text-white transition-colors relative group py-2">
+            <Link href="/contact" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all">
               Contact
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
             </Link>
           </div>
 
           {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2.5">
             <Link
-              href="/download"
-              className="relative inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 text-white shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-105 transition-all"
+              href="/login"
+              className="text-xs font-medium text-slate-300 hover:text-white px-3.5 py-2 hover:bg-white/5 rounded-xl transition-all"
             >
-              <span>Download APK</span>
+              Sign In
             </Link>
 
             <Link
               href="/login"
-              className="text-xs font-semibold text-slate-300 hover:text-white px-3.5 py-2 hover:bg-white/5 rounded-lg transition"
+              className="relative inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-xl bg-white text-slate-950 hover:bg-slate-100 hover:shadow-[0_0_20px_rgba(255,255,255,0.25)] active:scale-[0.98] transition-all"
             >
-              Sign In
+              <span>Console Access</span>
             </Link>
           </div>
 

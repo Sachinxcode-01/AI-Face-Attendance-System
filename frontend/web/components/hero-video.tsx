@@ -1,139 +1,334 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  Scan, 
+  CheckCircle2, 
+  Activity, 
+  QrCode, 
+  RefreshCw, 
+  Radio
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function HeroVideo() {
-  const [videoSrc, setVideoSrc] = useState('/videos/hero-scan.mp4');
-  const [scanStatus, setScanStatus] = useState('COMPILING MESH...');
-  const [matchPercent, setMatchPercent] = useState(99.12);
-  const videoRef = useRef<HTMLVideoElement>(null);
+interface StudentProfile {
+  name: string;
+  roll: string;
+  department: string;
+  avatarSeed: string;
+  confidence: number;
+  time: string;
+  status: 'verified' | 'flagged' | 'scanning';
+  liveness: number;
+}
 
-  // Fallback to Mixkit stock video if local video fails to load (404)
-  const handleVideoError = () => {
-    if (videoSrc === '/videos/hero-scan.mp4') {
-      console.log('Local hero-scan.mp4 not found, falling back to Mixkit cloud template');
-      setVideoSrc('https://assets.mixkit.co/videos/preview/mixkit-futuristic-face-scanner-in-use-40347-large.mp4');
-    }
-  };
+const SAMPLE_PROFILES: StudentProfile[] = [
+  {
+    name: 'Elena Rostova',
+    roll: '2024-CS-042',
+    department: 'Computer Science • Year 3',
+    avatarSeed: 'elena',
+    confidence: 99.87,
+    time: '10:04:12 AM',
+    status: 'verified',
+    liveness: 0.996
+  },
+  {
+    name: 'Marcus Chen',
+    roll: '2024-AI-118',
+    department: 'Robotics & AI • Year 2',
+    avatarSeed: 'marcus',
+    confidence: 99.64,
+    time: '10:04:26 AM',
+    status: 'verified',
+    liveness: 0.998
+  },
+  {
+    name: 'Aisha Patel',
+    roll: '2024-DS-089',
+    department: 'Data Science • Year 4',
+    avatarSeed: 'aisha',
+    confidence: 99.91,
+    time: '10:04:41 AM',
+    status: 'verified',
+    liveness: 0.995
+  }
+];
 
-  // Simulating live HUD status telemetry
+export default function ModernHeroScanner() {
+  const [activeTab, setActiveTab] = useState<'face' | 'qr' | 'liveness'>('face');
+  const [profileIndex, setProfileIndex] = useState(0);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanStep, setScanStep] = useState<'idle' | 'detecting' | 'embedding' | 'verified'>('verified');
+  const [liveConfidence, setLiveConfidence] = useState(99.87);
+  const [liveLogCount, setLiveLogCount] = useState(1482);
+
+  const currentProfile = SAMPLE_PROFILES[profileIndex];
+
+  const handleTriggerScan = useCallback(() => {
+    if (isScanning) return;
+    setIsScanning(true);
+    setScanStep('detecting');
+
+    setTimeout(() => {
+      setScanStep('embedding');
+    }, 600);
+
+    setTimeout(() => {
+      const nextIdx = (profileIndex + 1) % SAMPLE_PROFILES.length;
+      setProfileIndex(nextIdx);
+      setLiveConfidence(SAMPLE_PROFILES[nextIdx].confidence + (Math.random() * 0.1 - 0.05));
+      setLiveLogCount(prev => prev + 1);
+      setScanStep('verified');
+      setIsScanning(false);
+    }, 1300);
+  }, [isScanning, profileIndex]);
+
+  // Automatic gentle rotation of simulated scans
   useEffect(() => {
-    const statusPool = [
-      'ISOLATING FEATURE VECTORS...',
-      'IRIS LOCK OK',
-      'ANTI-PROXY SCANNING...',
-      'COMPILING 3D MESH...',
-      'MATCH CONFIRMED'
-    ];
-    let idx = 0;
-    const interval = setInterval(() => {
-      setScanStatus(statusPool[idx]);
-      idx = (idx + 1) % statusPool.length;
-      if (idx === 4) {
-        setMatchPercent(99.2 + Math.random() * 0.7);
-      }
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
+    const timer = setInterval(() => {
+      handleTriggerScan();
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [handleTriggerScan]);
 
   return (
-    <div className="w-full h-full min-h-[350px] md:min-h-[450px] flex items-center justify-center relative">
-      {/* Decorative neon ambient mesh behind video */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] bg-primary/20 rounded-full blur-[70px] pointer-events-none -z-10 animate-pulse-slow" />
-      
-      {/* Premium Glassmorphic Video Card Container */}
-      <div className="w-full max-w-md aspect-square md:w-[420px] md:h-[420px] rounded-3xl border border-white/10 bg-slate-950/40 backdrop-blur-md p-2 relative overflow-hidden shadow-[0_0_50px_rgba(37,99,235,0.15)] flex items-center justify-center">
-        
-        {/* Self-contained styling for high-tech HUD scanner animations */}
-        <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes laserSweep {
-            0% { top: 4%; }
-            50% { top: 96%; }
-            100% { top: 4%; }
-          }
-          @keyframes slowRotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          .laser-line {
-            animation: laserSweep 3.5s ease-in-out infinite;
-          }
-          .hud-rotate {
-            animation: slowRotate 15s linear infinite;
-          }
-        `}} />
+    <div className="w-full h-full flex items-center justify-center relative select-none">
+      {/* Ambient background light field */}
+      <div className="absolute -inset-4 bg-gradient-to-tr from-blue-600/15 via-indigo-500/10 to-emerald-500/15 rounded-[40px] blur-3xl pointer-events-none -z-10" />
 
-        {/* Video Player */}
-        <div className="w-full h-full rounded-2xl overflow-hidden relative bg-slate-950">
-          <video
-            ref={videoRef}
-            src={videoSrc}
-            autoPlay
-            muted
-            loop
-            playsInline
-            onError={handleVideoError}
-            className="w-full h-full object-cover opacity-80"
-          />
+      {/* Main Glass Console Card */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-md bg-slate-950/80 border border-white/10 rounded-3xl p-5 backdrop-blur-2xl shadow-2xl relative overflow-hidden"
+      >
+        {/* Subtle top edge specular highlight */}
+        <div className="absolute top-0 inset-x-8 h-[1px] bg-gradient-to-r from-transparent via-blue-400/40 to-transparent" />
 
-          {/* Sweeping Green Laser Scanline */}
-          <div className="absolute left-[4%] right-[4%] h-[2px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_15px_#10B981] pointer-events-none laser-line z-20" />
-
-          {/* Biometric Target crosshair overlay */}
-          <div className="absolute inset-0 pointer-events-none border border-white/5 rounded-2xl z-10 flex items-center justify-center">
-            {/* Target HUD Brackets */}
-            <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-primary/60" />
-            <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-primary/60" />
-            <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-primary/60" />
-            <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-primary/60" />
-
-            {/* Rotating tracker rings */}
-            <div className="w-48 h-48 rounded-full border border-dashed border-purple-500/20 hud-rotate flex items-center justify-center">
-              <div className="w-32 h-32 rounded-full border border-dashed border-primary/20" />
+        {/* ── CARD HEADER: Device Status & Mode Selector ── */}
+        <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex items-center justify-center">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping absolute opacity-75" />
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
             </div>
-            {/* Center target crosshair */}
-            <div className="absolute w-4 h-4 flex items-center justify-center text-slate-500/30">
-              +
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-semibold tracking-wide text-white font-sans">
+                  Kiosk Node #01
+                </span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 font-mono font-medium">
+                  ArcFace 512D
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 font-mono">
+                Latency: 14ms • Room CS-402
+              </p>
             </div>
           </div>
 
-          {/* Floating HUD Annotations */}
-          {/* Top-Right Badge: Iris Scan status */}
-          <div className="absolute top-6 right-6 px-2.5 py-1 rounded bg-slate-950/80 border border-purple-500/30 font-mono text-[8px] text-purple-400 uppercase tracking-wider backdrop-blur-sm shadow-[0_0_10px_rgba(139,92,246,0.2)] z-30">
-            [IRIS SCAN: ACTIVE]
+          {/* Interactive Mode Pills */}
+          <div className="flex items-center gap-1 bg-white/[0.04] p-1 rounded-xl border border-white/[0.06]">
+            <button
+              onClick={() => setActiveTab('face')}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
+                activeTab === 'face'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Face ID
+            </button>
+            <button
+              onClick={() => setActiveTab('qr')}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
+                activeTab === 'qr'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              QR Sync
+            </button>
           </div>
-
-          {/* Bottom-Left Badge: Mesh confirmation */}
-          <div className="absolute bottom-6 left-6 px-2.5 py-1 rounded bg-slate-950/80 border border-emerald-500/30 font-mono text-[8px] text-emerald-400 uppercase tracking-wider backdrop-blur-sm shadow-[0_0_10px_rgba(16,185,129,0.2)] flex items-center gap-1 z-30">
-            <ShieldCheck className="w-3 h-3 text-emerald-400" />
-            <span>[MESH: VERIFIED]</span>
-          </div>
-
-          {/* Top-Left telemetry card */}
-          <div className="absolute top-6 left-6 p-3 rounded-2xl bg-slate-950/80 border border-white/5 font-mono text-[8px] space-y-1 text-slate-400 backdrop-blur-sm min-w-[120px] text-left z-30">
-            <div className="text-white font-bold border-b border-white/5 pb-1 flex justify-between">
-              <span>SYS STATUS</span>
-              <span className="text-emerald-400 animate-pulse flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-emerald-400" />
-                LIVE
-              </span>
-            </div>
-            <div>SCAN: <span className="text-purple-400 font-bold">{scanStatus}</span></div>
-            {matchPercent > 0 && (
-              <div className="text-emerald-400 font-bold">MATCH: {matchPercent.toFixed(2)}%</div>
-            )}
-          </div>
-
-          {/* Centralized scanner scanning feedback banner */}
-          <div className="absolute bottom-6 right-6 p-2 rounded-xl bg-slate-950/80 border border-white/5 font-mono text-[7px] text-slate-400 backdrop-blur-sm z-30 flex items-center gap-1">
-            <RefreshCw className="w-3 h-3 text-primary animate-spin" style={{ animationDuration: '3s' }} />
-            <span>ROTATING GEO-TOKEN SYNC</span>
-          </div>
-
         </div>
 
-      </div>
+        {/* ── VIEWPORT: Biometric Scanner Surface ── */}
+        <div className="relative mt-4 aspect-[4/3] rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-white/[0.08] overflow-hidden flex flex-col items-center justify-center">
+          
+          {/* Subtle Grid Matrix Background */}
+          <div 
+            className="absolute inset-0 opacity-15 pointer-events-none"
+            style={{
+              backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)',
+              backgroundSize: '20px 20px'
+            }}
+          />
+
+          {/* Dynamic Biometric Face Mesh / Reticle */}
+          {activeTab === 'face' && (
+            <div className="relative w-44 h-44 flex items-center justify-center">
+              
+              {/* Outer Alignment Brackets */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-400/80 rounded-tl-lg" />
+                <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-400/80 rounded-tr-lg" />
+                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-400/80 rounded-bl-lg" />
+                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-400/80 rounded-br-lg" />
+              </div>
+
+              {/* Realistic Geometric Face Silhouette */}
+              <svg 
+                className="w-36 h-36 text-blue-500/20"
+                viewBox="0 0 100 100" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="1.2"
+              >
+                {/* Face Oval */}
+                <ellipse cx="50" cy="50" rx="34" ry="42" className="stroke-blue-400/40" />
+                
+                {/* Eyebrows & Eyes Landmark Anchors */}
+                <circle cx="38" cy="42" r="2.5" className="fill-blue-400 stroke-none" />
+                <circle cx="62" cy="42" r="2.5" className="fill-blue-400 stroke-none" />
+                
+                {/* Eyebrow vectors */}
+                <path d="M 32 37 Q 38 34 44 37" className="stroke-blue-400/60" strokeLinecap="round" />
+                <path d="M 56 37 Q 62 34 68 37" className="stroke-blue-400/60" strokeLinecap="round" />
+
+                {/* Nose bridge vector */}
+                <path d="M 50 42 L 50 54 L 54 57" className="stroke-blue-400/60" strokeLinecap="round" strokeLinejoin="round" />
+
+                {/* Lips vector */}
+                <path d="M 42 67 Q 50 71 58 67" className="stroke-blue-400/60" strokeLinecap="round" />
+                <path d="M 44 67 Q 50 63 56 67" className="stroke-blue-400/40" strokeLinecap="round" />
+
+                {/* Cheek and Chin contour vertices */}
+                <circle cx="28" cy="54" r="1.5" className="fill-blue-400/60" />
+                <circle cx="72" cy="54" r="1.5" className="fill-blue-400/60" />
+                <circle cx="50" cy="78" r="1.5" className="fill-blue-400/60" />
+              </svg>
+
+              {/* Scanning Ray - Ultra Subtle, High-End Pulse */}
+              <motion.div
+                animate={{
+                  y: [-60, 60, -60],
+                  opacity: [0.3, 0.9, 0.3]
+                }}
+                transition={{
+                  duration: 2.8,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute inset-x-2 h-[1px] bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_8px_rgba(59,130,246,0.8)] pointer-events-none"
+              />
+
+              {/* Verified Badge Overlay */}
+              <AnimatePresence>
+                {scanStep === 'verified' && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute inset-0 flex items-center justify-center bg-slate-950/40 backdrop-blur-[2px] rounded-2xl"
+                  >
+                    <div className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-slate-900/90 border border-emerald-500/30 shadow-xl">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <span className="text-[11px] font-bold text-white tracking-wide font-sans">
+                        Identity Verified
+                      </span>
+                      <span className="text-[9px] font-mono text-emerald-400 font-semibold">
+                        {liveConfidence.toFixed(2)}% Match Score
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* Dynamic QR Mode View */}
+          {activeTab === 'qr' && (
+            <div className="flex flex-col items-center justify-center gap-3">
+              <div className="p-3 bg-white rounded-2xl shadow-lg">
+                <QrCode className="w-28 h-28 text-slate-900" />
+              </div>
+              <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono">
+                <RefreshCw className="w-3 h-3 text-blue-400 animate-spin" />
+                <span>Anti-Proxy Token: Active</span>
+              </div>
+            </div>
+          )}
+
+          {/* Floating status tag on the bottom-right of viewport */}
+          <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md bg-slate-950/80 border border-white/[0.08] text-[9px] font-mono text-slate-400 flex items-center gap-1">
+            <Radio className="w-2.5 h-2.5 text-emerald-400" />
+            <span>Anti-Spoof 3D: PASS</span>
+          </div>
+
+          <div className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-slate-950/80 border border-white/[0.08] text-[9px] font-mono text-slate-400 flex items-center gap-1">
+            <Activity className="w-2.5 h-2.5 text-blue-400" />
+            <span>Embedding: 512-Float</span>
+          </div>
+        </div>
+
+        {/* ── STUDENT DETAILS / VERIFICATION TICKET ── */}
+        <div className="mt-4 p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 p-[1px] relative">
+              <div className="w-full h-full rounded-[11px] bg-slate-900 flex items-center justify-center font-bold text-xs text-white uppercase">
+                {currentProfile.name.split(' ').map(n => n[0]).join('')}
+              </div>
+              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-950 flex items-center justify-center">
+                <CheckCircle2 className="w-2.5 h-2.5 text-white" />
+              </span>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs font-bold text-white font-sans">
+                  {currentProfile.name}
+                </h4>
+                <span className="text-[9px] font-mono text-slate-400">
+                  {currentProfile.roll}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 font-sans">
+                {currentProfile.department}
+              </p>
+            </div>
+          </div>
+
+          <div className="text-right">
+            <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold block mb-0.5">
+              CHECK-IN CONFIRMED
+            </span>
+            <span className="text-[9px] font-mono text-slate-500">
+              {currentProfile.time}
+            </span>
+          </div>
+        </div>
+
+        {/* ── INTERACTIVE CONTROLS ── */}
+        <div className="mt-3.5 flex items-center justify-between gap-2 pt-1">
+          <div className="text-[10px] text-slate-400 font-mono">
+            Audit Ledger: <span className="text-white font-semibold">#{liveLogCount}</span>
+          </div>
+
+          <button
+            onClick={handleTriggerScan}
+            disabled={isScanning}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold transition-all shadow-md shadow-blue-600/20 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+          >
+            <Scan className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
+            <span>{isScanning ? 'Processing Vector...' : 'Simulate Live Scan'}</span>
+          </button>
+        </div>
+
+      </motion.div>
     </div>
   );
 }
