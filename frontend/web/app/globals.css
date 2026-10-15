@@ -38,23 +38,36 @@
   --border-color: rgba(15, 23, 42, 0.05);
 }
 
-.theme-cyberpunk {
-  --background: #0a050d;
-  --foreground: #f59e0b;
-  --primary: #f59e0b;
-  --accent: #e5a93b;
-  --success: #10b981;
+.theme-lime-frost {
+  --background: #020617;
+  --foreground: #f8fafc;
+  --primary: #aff33e;
+  --accent: #14532d;
+  --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
 
-  --card-bg-solid: #1a0c22;
-  --card-bg: rgba(26, 12, 34, 0.6);
-  --card-border: rgba(245, 158, 11, 0.2);
-  --card-hover-bg: rgba(26, 12, 34, 0.8);
-  --card-hover-border: rgba(245, 158, 11, 0.45);
-  --text-primary: #f59e0b;
-  --text-muted: #a1a1aa;
-  --border-color: rgba(245, 158, 11, 0.15);
+  --card-bg-solid: #0f172a;
+  --card-bg: rgba(15, 23, 42, 0.65);
+  --card-border: rgba(175, 243, 62, 0.15);
+  --card-hover-bg: rgba(15, 23, 42, 0.85);
+  --card-hover-border: rgba(175, 243, 62, 0.4);
+  --text-primary: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: rgba(175, 243, 62, 0.1);
+}
+
+@keyframes shine-scan {
+  0% { mask-position: 0% -100%; -webkit-mask-position: 0% -100%; }
+  100% { mask-position: 0% 200%; -webkit-mask-position: 0% 200%; }
+}
+
+.animate-shine-scan {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 25%, transparent 40%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 25%, transparent 40%);
+  mask-size: 100% 300%;
+  -webkit-mask-size: 100% 300%;
+  animation: shine-scan 3.5s linear infinite;
 }
 
 @theme {

@@ -29,7 +29,7 @@ export default function Navbar() {
   return (
     <>
       <header className="fixed top-0 inset-x-0 z-50 flex justify-center p-4 md:p-6 pointer-events-none">
-        <nav className="w-full max-w-7xl h-16 md:h-18 flex items-center justify-between px-6 md:px-8 rounded-2xl bg-slate-950/75 border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.5)] pointer-events-auto backdrop-blur-xl transition-all duration-300">
+        <nav className="w-full max-w-7xl h-16 md:h-18 flex items-center justify-between px-6 md:px-8 rounded-2xl bg-slate-950/75 border border-white/8 shadow-[0_8px_32px_rgba(0,0,0,0.5)] pointer-events-auto backdrop-blur-xl transition-all duration-300">
           
           {/* Brand Logo & Engine Badge */}
           <div className="flex items-center gap-4">
@@ -56,12 +56,12 @@ export default function Navbar() {
           </div>
 
           {/* Nav Links (Desktop) */}
-          <div className="hidden md:flex items-center gap-1 lg:gap-2 bg-white/[0.03] p-1 rounded-xl border border-white/[0.05]">
-            <Link href="/" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all">
+          <div className="hidden md:flex items-center gap-1 lg:gap-2 bg-white/3 p-1 rounded-xl border border-white/5">
+            <Link href="/" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/6 transition-all">
               Home
             </Link>
             
-            <Link href="/#features" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all">
+            <Link href="/#features" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/6 transition-all">
               Features
             </Link>
 
@@ -72,7 +72,7 @@ export default function Navbar() {
               onMouseLeave={() => setPortalsOpen(false)}
             >
               <button
-                className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1 cursor-pointer outline-none"
+                className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/6 transition-all flex items-center gap-1 cursor-pointer outline-none"
               >
                 <span>Portals</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${portalsOpen ? 'rotate-180' : ''}`} />
@@ -103,16 +103,16 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
 
-            <Link href="/download" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all flex items-center gap-1.5">
+            <Link href="/download" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/6 transition-all flex items-center gap-1.5">
               <span>App</span>
               <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-400 font-mono">APK</span>
             </Link>
 
-            <Link href="/docs" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all">
+            <Link href="/docs" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/6 transition-all">
               Docs
             </Link>
 
-            <Link href="/contact" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all">
+            <Link href="/contact" className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/6 transition-all">
               Contact
             </Link>
           </div>

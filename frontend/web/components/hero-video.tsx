@@ -94,68 +94,76 @@ export default function ModernHeroScanner() {
 
   return (
     <div className="w-full h-full flex items-center justify-center relative select-none">
-      {/* Ambient background light field */}
-      <div className="absolute -inset-4 bg-gradient-to-tr from-blue-600/15 via-indigo-500/10 to-emerald-500/15 rounded-[40px] blur-3xl pointer-events-none -z-10" />
+      {/* Ambient background light field - Lime Frost & Slate */}
+      <div className="absolute -inset-4 bg-linear-to-tr from-[#aff33e]/15 via-emerald-500/10 to-cyan-500/15 rounded-[40px] blur-3xl pointer-events-none -z-10" />
 
-      {/* Main Glass Console Card */}
+      {/* 21st ShineBorder Security Card Container */}
       <motion.div 
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-md bg-slate-950/80 border border-white/10 rounded-3xl p-5 backdrop-blur-2xl shadow-2xl relative overflow-hidden"
+        className="w-full max-w-md relative rounded-3xl p-px overflow-hidden shadow-2xl"
       >
-        {/* Subtle top edge specular highlight */}
-        <div className="absolute top-0 inset-x-8 h-[1px] bg-gradient-to-r from-transparent via-blue-400/40 to-transparent" />
-
-        {/* ── CARD HEADER: Device Status & Mode Selector ── */}
-        <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
-          <div className="flex items-center gap-2.5">
-            <div className="relative flex items-center justify-center">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping absolute opacity-75" />
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-semibold tracking-wide text-white font-sans">
-                  Kiosk Node #01
-                </span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 font-mono font-medium">
-                  ArcFace 512D
-                </span>
-              </div>
-              <p className="text-[10px] text-slate-400 font-mono">
-                Latency: 14ms • Room CS-402
-              </p>
-            </div>
-          </div>
-
-          {/* Interactive Mode Pills */}
-          <div className="flex items-center gap-1 bg-white/[0.04] p-1 rounded-xl border border-white/[0.06]">
-            <button
-              onClick={() => setActiveTab('face')}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
-                activeTab === 'face'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Face ID
-            </button>
-            <button
-              onClick={() => setActiveTab('qr')}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
-                activeTab === 'qr'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              QR Sync
-            </button>
-          </div>
+        {/* Animated Scanner Shine Border Layer from 21st Component */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <div className="absolute inset-0 rounded-3xl border border-white/10 pointer-events-none -z-10" />
+          <div className="absolute inset-0 bg-linear-to-b from-[#aff33e] via-emerald-400 to-cyan-400 animate-shine-scan opacity-60 blur-xs" />
         </div>
 
+        {/* Inner Content Layer */}
+        <div className="relative z-10 w-full rounded-[23px] bg-slate-950/90 border border-white/8 p-5 backdrop-blur-2xl">
+          {/* Subtle top edge specular highlight */}
+          <div className="absolute top-0 inset-x-8 h-px bg-linear-to-r from-transparent via-[#aff33e]/40 to-transparent" />
+
+          {/* ── CARD HEADER: Device Status & Mode Selector ── */}
+          <div className="flex items-center justify-between pb-4 border-b border-white/8">
+            <div className="flex items-center gap-2.5">
+              <div className="relative flex items-center justify-center">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#aff33e] animate-ping absolute opacity-75" />
+                <span className="w-2 h-2 rounded-full bg-[#aff33e]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-semibold tracking-wide text-white font-sans">
+                    Kiosk Node #01
+                  </span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#aff33e]/15 text-[#aff33e] border border-[#aff33e]/30 font-mono font-medium">
+                    ArcFace 512D
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 font-mono">
+                  Latency: 14ms • Room CS-402
+                </p>
+              </div>
+            </div>
+
+            {/* Interactive Mode Pills */}
+            <div className="flex items-center gap-1 bg-white/4 p-1 rounded-xl border border-white/6">
+              <button
+                onClick={() => setActiveTab('face')}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all cursor-pointer ${
+                  activeTab === 'face'
+                    ? 'bg-[#aff33e] text-slate-950 font-bold shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Face ID
+              </button>
+              <button
+                onClick={() => setActiveTab('qr')}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all cursor-pointer ${
+                  activeTab === 'qr'
+                    ? 'bg-[#aff33e] text-slate-950 font-bold shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                QR Sync
+              </button>
+            </div>
+          </div>
+
         {/* ── VIEWPORT: Biometric Scanner Surface ── */}
-        <div className="relative mt-4 aspect-[4/3] rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-white/[0.08] overflow-hidden flex flex-col items-center justify-center">
+        <div className="relative mt-4 aspect-4/3 rounded-2xl bg-linear-to-b from-slate-900/90 to-slate-950/90 border border-white/8 overflow-hidden flex flex-col items-center justify-center">
           
           {/* Subtle Grid Matrix Background */}
           <div 
@@ -221,7 +229,7 @@ export default function ModernHeroScanner() {
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
-                className="absolute inset-x-2 h-[1px] bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_8px_rgba(59,130,246,0.8)] pointer-events-none"
+                className="absolute inset-x-2 h-px bg-linear-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_8px_rgba(59,130,246,0.8)] pointer-events-none"
               />
 
               {/* Verified Badge Overlay */}
@@ -264,21 +272,21 @@ export default function ModernHeroScanner() {
           )}
 
           {/* Floating status tag on the bottom-right of viewport */}
-          <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md bg-slate-950/80 border border-white/[0.08] text-[9px] font-mono text-slate-400 flex items-center gap-1">
+          <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md bg-slate-950/80 border border-white/8 text-[9px] font-mono text-slate-400 flex items-center gap-1">
             <Radio className="w-2.5 h-2.5 text-emerald-400" />
             <span>Anti-Spoof 3D: PASS</span>
           </div>
 
-          <div className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-slate-950/80 border border-white/[0.08] text-[9px] font-mono text-slate-400 flex items-center gap-1">
+          <div className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-slate-950/80 border border-white/8 text-[9px] font-mono text-slate-400 flex items-center gap-1">
             <Activity className="w-2.5 h-2.5 text-blue-400" />
             <span>Embedding: 512-Float</span>
           </div>
         </div>
 
         {/* ── STUDENT DETAILS / VERIFICATION TICKET ── */}
-        <div className="mt-4 p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between">
+        <div className="mt-4 p-3.5 rounded-2xl bg-white/3 border border-white/6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 p-[1px] relative">
+            <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-blue-600 to-indigo-600 p-px relative">
               <div className="w-full h-full rounded-[11px] bg-slate-900 flex items-center justify-center font-bold text-xs text-white uppercase">
                 {currentProfile.name.split(' ').map(n => n[0]).join('')}
               </div>
@@ -312,20 +320,21 @@ export default function ModernHeroScanner() {
           </div>
         </div>
 
-        {/* ── INTERACTIVE CONTROLS ── */}
-        <div className="mt-3.5 flex items-center justify-between gap-2 pt-1">
-          <div className="text-[10px] text-slate-400 font-mono">
-            Audit Ledger: <span className="text-white font-semibold">#{liveLogCount}</span>
-          </div>
+          {/* ── INTERACTIVE CONTROLS ── */}
+          <div className="mt-3.5 flex items-center justify-between gap-2 pt-1">
+            <div className="text-[10px] text-slate-400 font-mono">
+              Audit Ledger: <span className="text-[#aff33e] font-semibold">#{liveLogCount}</span>
+            </div>
 
-          <button
-            onClick={handleTriggerScan}
-            disabled={isScanning}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold transition-all shadow-md shadow-blue-600/20 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
-          >
-            <Scan className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-            <span>{isScanning ? 'Processing Vector...' : 'Simulate Live Scan'}</span>
-          </button>
+            <button
+              onClick={handleTriggerScan}
+              disabled={isScanning}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#aff33e] hover:bg-[#9de32f] text-slate-950 text-[11px] font-bold transition-all shadow-md shadow-[#aff33e]/20 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+            >
+              <Scan className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
+              <span>{isScanning ? 'Processing Vector...' : 'Simulate Live Scan'}</span>
+            </button>
+          </div>
         </div>
 
       </motion.div>
