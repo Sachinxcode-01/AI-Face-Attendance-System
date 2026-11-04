@@ -22,7 +22,7 @@ class _IntroScreenState extends State<IntroScreen> {
       subtitle:
           'Our advanced neural network registers your facial profile parameters locally and matches it securely with the institution database in milliseconds.',
       icon: Icons.face_unlock_outlined,
-      iconColor: AppColors.warning,
+      iconColor: AppColors.primaryBright,
     ),
     IntroPageData(
       title: 'Dynamic QR Attendance',
@@ -158,7 +158,7 @@ class _IntroScreenState extends State<IntroScreen> {
                             width: isSelected ? 24 : 6,
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? AppColors.warning
+                                  ? AppColors.primaryBright
                                   : Colors.white38,
                               borderRadius: BorderRadius.circular(3),
                             ),
