@@ -843,42 +843,10 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         if (_scanComplete)
           _buildNextButton(label: 'Continue →')
         else
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: _isScanLoading ? null : _startFaceScan,
-              icon: _isScanLoading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Icon(
-                      Icons.face_unlock_outlined,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-              label: Text(
-                _isScanLoading ? 'Scanning...' : 'Start face scan',
-                style: AuthDesign.fontPoppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: p,
-                disabledBackgroundColor: p.withValues(alpha: 0.6),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                elevation: 0,
-              ),
-            ),
+          PrimaryButton(
+            text: 'Start face scan',
+            isLoading: _isScanLoading,
+            onPressed: _startFaceScan,
           ),
       ],
     );

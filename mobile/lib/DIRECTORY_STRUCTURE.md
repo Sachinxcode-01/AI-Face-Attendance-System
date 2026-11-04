@@ -1,62 +1,56 @@
-# Nexa AI — Directory Structure & Clean Architecture Walkthrough
+# SmartFace Mobile — Directory Structure & Feature-First Architecture
 
-This document outlines the high-level architecture and folder structure of the **Nexa AI** mobile client.
+This document outlines the architecture and directory structure of the **SmartFace Mobile Client** (Flutter).
 
 ## High-Level Architecture Pattern
 
-The application is structured using a simplified **Clean Architecture** pattern to achieve strict separation of concerns, high maintainability, and testability. The application logic is segmented into three primary root layers:
+The application follows a **Clean Feature-First Architecture** ensuring clear separation of concerns, scalability, and testability:
 
-```
+```text
 lib/
-├── core/              # System-wide infrastructure & configurations
-│   ├── di/            # Dependency injection registry (service locator)
-│   ├── state/         # Core reactive engines (session, themes, global loading)
-│   └── constants.dart # Design system constants (colors, text styles, sizing)
+├── app/                  # Application bootstrap, routing, themes & DI setup
+│   ├── di/               # GetIt service locator & dependency injection registrations
+│   ├── routing/          # Declarative GoRouter configuration, route guards & path constants
+│   ├── theme/            # Theme mode state, dark/light definitions, color & typography tokens
+│   └── app.dart          # Root SmartAttendanceApp MaterialApp binding
 │
-├── data/              # Data layer: remote APIs, databases, & cached models
-│   ├── models/        # Standard data schema definitions
-│   └── services/      # REST API client, cache controllers, local notifications
+├── core/                 # Shared infrastructure, network, security & offline sync
+│   ├── config/           # Environment config, app constants & runtime state
+│   ├── network/          # ApiService HTTP client, WebSocket client, interceptors
+│   ├── security/         # SessionManager, JWT lifecycle, secure token storage
+│   ├── sync/             # Offline sync engine, local cache & SQLite persistence
+│   └── utils/            # Platform utilities, formatters, validation helpers
 │
-└── presentation/      # Presentation UI elements
-    ├── layouts/       # Scaffolding layouts and container wrappers
-    ├── screens/       # Views bound to user routes (login, dashboards, stats)
-    └── widgets/       # Global reusable components (glassmorphic panels, shimmer loaders)
+├── data/                 # Data layer: repository contracts, models & remote services
+│   ├── models/           # Typed immutable Dart data transfer objects & serialization
+│   ├── repositories/     # Concrete repository implementations (attendance, auth, profile)
+│   └── services/         # Device hardware services (biometrics, camera, notifications)
+│
+├── design_system/        # Core UI primitives & design tokens
+│   ├── tokens/           # Spacing, radius, elevation & color palettes
+│   └── ui/               # Base UI tokens (glassmorphism, gradient surfaces)
+│
+├── features/             # Feature modules (Domain-driven vertical slices)
+│   ├── auth/             # Login, OTP verification, biometric registration & onboarding
+│   ├── attendance/       # Live face recognition, QR scanner & check-in flow
+│   ├── student/          # Student home, timetable, bunk calculator, stats & attendance rings
+│   ├── teacher/          # Teacher console, class session initiator, dynamic QR projector
+│   ├── admin/            # Admin telemetry, live intruder logs & system status
+│   ├── profile/          # Profile studio, digital student ID card, avatar upload
+│   ├── leave/            # Leave application submission, tracking & approval inbox
+│   ├── ai_chat/          # AI student advisor & assistant conversation interface
+│   └── notifications/    # In-app notification center & push alert handlers
+│
+├── shared/               # Reusable cross-feature UI components
+│   ├── components/       # Glassmorphic cards, shimmer loaders, charts, buttons
+│   └── widgets/          # Floating toast system, animated icons, badge tags
+│
+└── main.dart             # Application entry point with async pre-initialization
 ```
 
----
+## Directory Organization Rules
 
-## Detailed Directory Breakdown
-
-### 1. `lib/core/`
-This folder houses system-wide configurations, design styles, and global controllers.
-
-| Subfolder/File | Purpose | Key Responsibilities |
-|---|---|---|
-| `constants.dart` | Theme colors, padding spacings, text styles | Establishes the design tokens (e.g. `AppColors.gold`, `AppRadius.md`). |
-| `di/` | Dependency Injection | Registers classes like `ApiService` and `SessionManager` in a `GetIt` service locator container. |
-| `state/` | App-wide State Managers | Manages global themes, loading states, and JWT token sessions. |
-
-### 2. `lib/data/`
-This layer interfaces with local storage and the remote backend, converting network payloads to Dart entities.
-
-| Subfolder/File | Purpose | Key Responsibilities |
-|---|---|---|
-| `models/` | Immutable Data Structures | Parses JSON schemas into typed Dart models (`LeaveModel`, `StudentStatsModel`). |
-| `services/` | Integration services | Runs standard GET/POST REST calls, schedules local notifications, handles biometric settings caching. |
-
-### 3. `lib/presentation/`
-The UI presentation layer that handles widgets, canvas drawing, screens, animations, and user inputs.
-
-| Subfolder/File | Purpose | Key Responsibilities |
-|---|---|---|
-| `layouts/` | General screen scaffolds | Modular wrappers for specific screen forms. |
-| `screens/` | Views/Pages | Route endpoints (e.g. `LoginScreen`, `StudentDashboard`). Subdivided by actor (`admin`, `teacher`, `student`, `auth`, `main`). |
-| `widgets/` | Reusable Atoms & Molecules | Reusable layouts such as `GlassmorphicCard`, `ShimmerLoader`, and the custom floating `ToastSystem`. |
-
----
-
-## Project Organization Guidelines
-
-1. **No Root Files**: All source code files must live within one of the three modular directories (`core/`, `data/`, or `presentation/`). The only exception is `main.dart` which is the application entry point.
-2. **Absolute Imports**: Always prefer absolute package imports (`import 'package:smartface_attendance/...'`) over nested relative imports (`../../..`). This avoids broken links during restructuring and refactoring.
-3. **Immutability**: Ensure all classes in `data/models/` remain immutable using final fields and include `fromJson` constructor mappings.
+1. **Feature Encapsulation**: Keep screen-specific state, controllers, and sub-widgets inside their respective `features/<feature_name>/` folder.
+2. **Shared Reusability**: Reusable atoms, layout cards, and shared UI primitives belong in `shared/` or `design_system/`.
+3. **Clean Data Flow**: Views call controllers/Cubits/providers, which interact with repositories in `data/`, which communicate via `ApiService` in `core/network/`.
+4. **Strong Typing & Serialization**: All models in `data/models/` must provide `fromJson` and `toJson` methods for safe serialization.
