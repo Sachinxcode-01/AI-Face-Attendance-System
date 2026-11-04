@@ -55,10 +55,14 @@ Transitioned from a single local computer Python script, the system is now a **f
 * **Attendance Insights & Chat:** Displays an elegant visual breakdown of personal attendance percentages, paired with an integrated AI Chatbot that replies to questions regarding personal performance logs.
 * **Leave & Alerts:** Submit leave requests directly from the app and receive instant push updates when approved or rejected by the dean.
 
-### 📊 4. Dual Web & Reporting Dashboard Platforms (`smartface_admin/` & `smartface_pro_web/`)
-* **Streamlit Admin Panel (`web_dashboard.py`):** Start active class sessions, preview camera feeds, manage student databases, inspect database tables, configure rate-limiters, and read security intruder logs in real time.
-* **Reflex Web Dashboard (`smartface_pro_web/`):** Full-stack responsive web client compiled directly into React and Next.js entirely from Python.
-* **Dean Analytics & PDF Reports (`student_report.py` & `dean_report.py`):** Stands up an FPDF-powered analytical reporting engine. Automatically formats and prints exquisite **Deep Navy & Gold Classy PDF Reports** and delivers them to student inboxes securely via SMTP.
+### 📊 4. Multi-Platform Web Portals & Dashboards (`frontend/web/`, `frontend/admin/` & `frontend/reflex/`)
+* **Next.js 15 Modern Web Suite (`frontend/web/` - Port 3000):** Dedicated high-performance web portals:
+  * `/student`: Live webcam check-in, anti-proxy QR scanner, attendance analytics, bunk calculator, dynamic ID card, and Gemini Copilot.
+  * `/teacher`: Classroom session controller, full-screen rotating QR projector, biometric podium kiosk, and student roster.
+  * `/admin`: System telemetry, intruder surveillance feed, student/faculty directory CRUD, ArcFace calibration, and audit trail.
+* **Streamlit Admin Panel (`frontend/admin/web_dashboard.py` - Port 8501):** Start active class sessions, preview camera feeds, manage student databases, inspect database tables, and view security intruder logs in real time.
+* **Reflex Web Dashboard (`frontend/reflex/`):** Full-stack responsive web client compiled directly into React and Next.js entirely from Python.
+* **Dean Analytics & PDF Reports (`frontend/admin/`):** Stands up an FPDF-powered analytical reporting engine (`student_report.py` & `dean_report.py`). Automatically formats and prints exquisite **Deep Navy & Gold Classy PDF Reports** and delivers them to student inboxes securely via SMTP.
 
 ---
 

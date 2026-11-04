@@ -104,7 +104,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 shape: BoxShape.circle,
                                 color: const Color(0xFF0A1024),
                                 border: Border.all(
-                                  color: AppColors.accent,
+                                  color: AppColors.primaryBright,
                                   width: 1.5,
                                 ),
                               ),
@@ -116,7 +116,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       const Icon(
                                         Icons.fingerprint_rounded,
                                         size: 20,
-                                        color: AppColors.accentLight,
+                                        color: AppColors.primaryBright,
                                       ),
                                 ),
                               ),
@@ -159,7 +159,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   style:
                                       AppTextStyles.label(
                                         context,
-                                        color: AppColors.accentLight,
+                                        color: AppColors.primaryBright,
                                       ).copyWith(
                                         fontWeight: FontWeight.bold,
                                         letterSpacing: 1.2,
@@ -277,11 +277,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   child: ElevatedButton(
                                     onPressed: _nextPage,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.accent,
-                                      foregroundColor: const Color(0xFF070A14),
+                                      backgroundColor: AppColors.primary,
+                                      foregroundColor: Colors.white,
                                       elevation: 6,
-                                      shadowColor: AppColors.accent.withValues(
-                                        alpha: 0.4,
+                                      shadowColor: AppColors.primary.withValues(
+                                        alpha: 0.35,
                                       ),
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 10,
@@ -301,10 +301,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                             _currentPage == _totalPages - 1
                                                 ? 'GET STARTED'
                                                 : 'NEXT',
-                                            style: GoogleFonts.inter(
+                                            style: GoogleFonts.poppins(
                                               fontSize: 12,
-                                              fontWeight: FontWeight.w800,
+                                              fontWeight: FontWeight.w700,
                                               letterSpacing: 1.0,
+                                              color: Colors.white,
                                             ),
                                           ),
                                           const SizedBox(width: 4),
@@ -314,6 +315,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                                 : Icons
                                                       .arrow_forward_ios_rounded,
                                             size: 14,
+                                            color: Colors.white,
                                           ),
                                         ],
                                       ),
