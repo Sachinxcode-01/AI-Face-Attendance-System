@@ -219,7 +219,7 @@ npm run preflight
    ```
 2. Start the interactive admin dashboard:
    ```bash
-   streamlit run smartface_admin/web_dashboard.py
+   streamlit run frontend/admin/web_dashboard.py
    ```
    *Access the web dashboard in your browser at `http://localhost:8501`*
 
@@ -229,7 +229,7 @@ npm run preflight
 1. Ensure you have the Flutter SDK configured on your system.
 2. Install package dependencies:
    ```bash
-   cd smartface_mobile
+   cd mobile
    flutter pub get
    ```
 3. Boot up the app on your local emulator or physical device:
@@ -280,7 +280,7 @@ python core/attendance_system.py
 ### 3. Generate Navy & Gold PDF reports via CLI Admin Portal
 ```python
 # Trigger student monthly summaries and email them reports:
-python smartface_admin/student_report.py
+python frontend/admin/student_report.py
 ```
 *Prompts the supervisor to search by student Roll Number. Compiles monthly parameters, outputs an elegant PDF into `data/Reports/`, and fires the email directly to the student.*
 

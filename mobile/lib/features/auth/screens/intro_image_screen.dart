@@ -151,9 +151,18 @@ class _IntroImageScreenState extends State<IntroImageScreen> {
                               width: isSelected ? 24 : 6,
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? Colors.white
+                                    ? AppColors.primaryBright
                                     : Colors.white38,
                                 borderRadius: BorderRadius.circular(3),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: AppColors.primaryBright
+                                              .withValues(alpha: 0.5),
+                                          blurRadius: 6,
+                                        ),
+                                      ]
+                                    : null,
                               ),
                             );
                           }),
