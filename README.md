@@ -37,7 +37,9 @@ Transitioned from a single local computer Python script, the system is now a **f
 * **Voice Feedback Engine:** Greets students upon successful recognition in real time using automated TTS audio cues (`pyttsx3`).
 * **AI Student Analyst:** Equipped with built-in LLM modules (`ai_analyst.py` & `ai_analyst_groq.py`) connected to the Groq/Gemini APIs to generate natural-language summaries of student performance trends.
 
-### ⚡ 2. Enterprise FastAPI API Gateway (`smartface_pro_api/`)
+### ⚡ 2. Backend Microservices (`backend/api/` & `backend/ai/`)
+* **Node.js Express API Gateway (`backend/api/` - Port 8000):** Enterprise REST API & WebSocket gateway providing JWT identity flows, OTP verification, attendance analytics, timetable, and leave management.
+* **FastAPI ArcFace AI Microservice (`backend/ai/` - Port 8001):** High-speed facial inference endpoint running ONNX ArcFace models for verified face-match validation.
 * **Secure Authentication:** Complete JSON Web Token (JWT) identity flows paired with Google OAuth2 integrations.
 * **Transaction-Safe Logins:** Multi-step transactional email OTP logins to prevent password leaks.
 * **WebSocket Broadcaster:** Built-in bi-directional connection manager delivering real-time logs, session initiations, and intruder alerts directly to administrative dashboards.
@@ -46,7 +48,7 @@ Transitioned from a single local computer Python script, the system is now a **f
 * **Live GSheets Replication:** Automatic background synchronization (`gsheets_manager.py`) mapping every attendance record straight to external Google Sheets.
 * **Production-Ready Security:** Token-bucket rate limiters on critical registration and login endpoints, custom RequestID tracing middleware, JSON structured logger, and secure CORS/HTTP headers.
 
-### 📱 3. Cross-Platform Student App (`smartface_mobile/`)
+### 📱 3. Cross-Platform Student App (`mobile/`)
 * **Modern Flutter UI:** Exquisite, dark-mode native experience for Android and iOS devices.
 * **Biometric Enrollment:** Connects with device camera and fingerprint scanners to verify student identity before logging attendance.
 * **Dynamic QR Scanner:** Real-time scanner with decoding logic matching rotating server tokens to confirm classroom presence.

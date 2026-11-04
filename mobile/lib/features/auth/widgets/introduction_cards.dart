@@ -881,13 +881,13 @@ class AnimatedPageIndicator extends StatelessWidget {
             width: isSelected ? 28.0 : 8.0,
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppColors.accentLight
+                  ? AppColors.primaryBright
                   : Colors.white.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(4.0),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: AppColors.accentLight.withValues(alpha: 0.5),
+                        color: AppColors.primaryBright.withValues(alpha: 0.5),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),
