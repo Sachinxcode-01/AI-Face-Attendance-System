@@ -96,14 +96,14 @@ The Python AI processing daemon should be deployed on an edge computer (e.g., NV
 
 ---
 
-## 4. Mobile App Compilation (`smartface_mobile`)
+## 4. Mobile App Compilation (`mobile`)
 
 The mobile client compiles to native binaries for distribution via App Store and Google Play.
 
 ### Compilation Steps
 1. Navigate to the mobile directory:
    ```bash
-   cd smartface_mobile
+   cd mobile
    ```
 2. Update the Environment configuration in `.env.production`:
    - `API_URL`: Gateway Endpoint (`https://api.smartface.pro`)

@@ -3,7 +3,7 @@
 
 Legend: ✅ Done · 🟡 Partial · ❌ Missing · ⚠ Broken
 
-Backend = Node/Express (`smartface_node_api`, port 8000, FastAPI-compatible routes, no `/api` prefix). Python/FastAPI (`smartface_pro_api`/`core`) is AI face-recognition only. Errors use `{detail}` for client compatibility.
+Backend = Node/Express (`backend/api`, port 8000, FastAPI-compatible routes, no `/api` prefix). Python/FastAPI (`backend/ai`/`core`, port 8001) is AI face-recognition only. Errors use `{detail}` for client compatibility.
 
 | Feature | Web | Mobile | Backend | DB | Connected | Status |
 |---|---|---|---|---|---|---|
