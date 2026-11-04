@@ -93,3 +93,28 @@ Tabular reports export endpoint. Accepts formats: `json`, `csv`, or `excel`.
 - **Live Logs Channel**:
   `ws://localhost:8000/ws/live-logs`
   Used by admin dash hubs to monitor attendance markers as they happen.
+
+
+---
+
+## 6. Python FastAPI ArcFace AI Microservice (Port 8001)
+
+The AI microservice performs neural face feature extraction and cosine distance verification using the InsightFace ArcFace (`buffalo_l`) ONNX model.
+
+| Method | Route | Access | Payload | Description |
+|:---|:---|:---|:---|:---|
+| **POST** | `/v1/face/verify` | `X-Internal-Token` Header | Multipart `image` file, optional `expected_id` | Compares detected facial embedding against enrolled 512-D vectors in memory. Returns `{ match, student_id, confidence, latency_ms }`. |
+| **POST** | `/v1/admin/faces/train` | `X-Internal-Token` Header | None | Triggers dynamic retraining of `data/face_encodings_arcface.pkl` from `data/dataset/`. |
+| **GET** | `/health` | Public | None | Minimal health check: `{"status": "ok"}`. |
+| **GET** | `/ready` | Public | None | Readiness probe confirming ArcFace ONNX model and vector dictionary are loaded in memory. |
+| **GET** | `/internal/health` | `X-Internal-Token` Header | None | Operational diagnostics returning model status, execution provider (CPU/CUDA), and worker state. |
+
+---
+
+## 7. Web Application AI Copilot Gateway (Port 3000)
+
+The Next.js 15 web client exposes a serverless route interfacing with the Gemini 3.8 Flash API for in-portal natural-language academic advising, quiz generation, and executive compliance reports.
+
+| Method | Route | Access | Payload | Description |
+|:---|:---|:---|:---|:---|
+| **POST** | `/api/gemini` | Session Cookie / In-App | `{ prompt: string, role: "student" \| "teacher" \| "admin", context?: object }` | Streams or returns structured AI responses tailored to the active user role and attendance record. |
