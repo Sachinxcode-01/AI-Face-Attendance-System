@@ -29,7 +29,8 @@ import {
   Terminal, 
   Lock, 
   Clock, 
-  FileDown
+  FileDown,
+  Laptop
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -294,6 +295,114 @@ export default function Home() {
 
         </div>
       </main>
+
+      {/* ──────────────────────────────────────────────────────── DEDICATED WEBSITES SUITE ── */}
+      <section className="w-full max-w-7xl px-6 md:px-8 py-8 mx-auto relative z-20">
+        <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-mono text-blue-400">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Dedicated Web Portals & Ecosystem</span>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+            Tailored Experiences for Every Stakeholder
+          </h2>
+          <p className="text-xs md:text-sm text-slate-400">
+            Independent, feature-rich web applications with dedicated workflows, camera biometrics, and Gemini 3.8 Flash AI.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Student Portal Card */}
+          <Link
+            href="/student"
+            className="group relative p-6 rounded-3xl bg-slate-900/80 border border-blue-500/20 hover:border-blue-500/60 shadow-xl hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all duration-300 flex flex-col justify-between overflow-hidden"
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+                  <User className="w-6 h-6" />
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">
+                  /student
+                </span>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white group-hover:text-blue-300 transition-colors">
+                  Student Website & Portal
+                </h3>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Webcam face check-in, dynamic QR scanner, attendance percentage rings, bunk calculator, timetable, digital student ID, and Gemini 3.8 Flash academic advisor.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-blue-400">
+              <span>Launch Student Portal</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Lecturer Portal Card */}
+          <Link
+            href="/teacher"
+            className="group relative p-6 rounded-3xl bg-slate-900/80 border border-indigo-500/20 hover:border-indigo-500/60 shadow-xl hover:shadow-[0_0_30px_rgba(99,102,241,0.2)] transition-all duration-300 flex flex-col justify-between overflow-hidden"
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                  <Laptop className="w-6 h-6" />
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+                  /teacher
+                </span>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
+                  Lecturer & Teacher Portal
+                </h3>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Classroom session launcher, full-screen 15s rotating QR projector, podium biometric kiosk, live roster manual override, leave approvals, and Gemini copilot.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-indigo-400">
+              <span>Launch Lecturer Portal</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Admin Sentinel Panel Card */}
+          <Link
+            href="/admin"
+            className="group relative p-6 rounded-3xl bg-slate-900/80 border border-emerald-500/20 hover:border-emerald-500/60 shadow-xl hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] transition-all duration-300 flex flex-col justify-between overflow-hidden"
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                  /admin
+                </span>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white group-hover:text-emerald-300 transition-colors">
+                  Admin Sentinel Panel
+                </h3>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Live biometric CCTV surveillance, intruder threat gallery, student & faculty directory CRUD, ArcFace face enrollment station, audit logs, and PDF email dispatcher.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-emerald-400">
+              <span>Launch Admin Panel</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+        </div>
+      </section>
 
       {/* ──────────────────────────────────────────────────────── TRUST SECTION ── */}
       <section className="w-full max-w-7xl px-6 md:px-8 py-10 mx-auto relative z-10">

@@ -27,11 +27,7 @@ if ($trainHash -eq "4BF26AE2A36EFB186FDB606E3FD0263D3878FE990995033219C6C267346A
 
 # 2. Check Android Release APK
 Write-Host "`n[2/5] Checking Release APK Artifact..." -ForegroundColor Yellow
-$apkPath = if (Test-Path "$ROOT_DIR\mobile\build\app\outputs\flutter-apk\app-release.apk") {
-    "$ROOT_DIR\mobile\build\app\outputs\flutter-apk\app-release.apk"
-} else {
-    "$ROOT_DIR\smartface_mobile\build\app\outputs\flutter-apk\app-release.apk"
-}
+$apkPath = "$ROOT_DIR\mobile\build\app\outputs\flutter-apk\app-release.apk"
 if (Test-Path $apkPath) {
     $apkItem = Get-Item $apkPath
     $sizeMb = [math]::Round($apkItem.Length / 1MB, 2)
@@ -70,16 +66,16 @@ try {
 
 # 5. Check Next.js Frontend and Flutter Mobile directories
 Write-Host "`n[5/5] Checking Source Directories..." -ForegroundColor Yellow
-if ((Test-Path "$ROOT_DIR\frontend\web") -or (Test-Path "$ROOT_DIR\smartface_landing_web")) {
+if (Test-Path "$ROOT_DIR\frontend\web") {
     Write-Host "  [PASS] Web Frontend directory exists (frontend/web)" -ForegroundColor Green
 }
-if ((Test-Path "$ROOT_DIR\mobile") -or (Test-Path "$ROOT_DIR\smartface_mobile")) {
+if (Test-Path "$ROOT_DIR\mobile") {
     Write-Host "  [PASS] Flutter Mobile App directory exists (mobile/)" -ForegroundColor Green
 }
-if ((Test-Path "$ROOT_DIR\backend\api") -or (Test-Path "$ROOT_DIR\smartface_node_api")) {
+if (Test-Path "$ROOT_DIR\backend\api") {
     Write-Host "  [PASS] Backend API directory exists (backend/api/)" -ForegroundColor Green
 }
-if ((Test-Path "$ROOT_DIR\backend\ai") -or (Test-Path "$ROOT_DIR\smartface_pro_api")) {
+if (Test-Path "$ROOT_DIR\backend\ai") {
     Write-Host "  [PASS] Backend AI directory exists (backend/ai/)" -ForegroundColor Green
 }
 

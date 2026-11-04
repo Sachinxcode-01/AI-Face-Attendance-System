@@ -45,7 +45,7 @@ if (-not (Test-Path $pyPath)) {
 }
 
 $null = Start-Process -FilePath $pyPath `
-    -ArgumentList "-m", "uvicorn", "smartface_pro_api.app.main:app", "--host", "127.0.0.1", "--port", "8001" `
+    -ArgumentList "-m", "uvicorn", "backend.ai.app.main:app", "--host", "127.0.0.1", "--port", "8001" `
     -WorkingDirectory $ROOT_DIR -PassThru -NoNewWindow
 
 Write-Host "Waiting for Python AI readiness (/ready)..." -ForegroundColor Yellow

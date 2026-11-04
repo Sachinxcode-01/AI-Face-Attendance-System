@@ -35,7 +35,9 @@ import 'package:provider/provider.dart';
 // ======================================================
 import 'package:smartface_attendance/core/animation/app_animated_heading.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
-import 'package:smartface_attendance/shared/widgets/glow_button.dart';
+import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
+import 'package:smartface_attendance/design_system/design_system.dart'
+    hide PrimaryButton;
 import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/features/sync/services/connectivity_service.dart';
 import 'package:smartface_attendance/app/config/cache_service.dart';
@@ -213,11 +215,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF3559E0);
-    const primaryGlow = Color(0x333559E0);
+    const primaryColor = AuthDesign.primaryIndigo;
+    final primaryGlow = AuthDesign.primaryIndigo.withValues(alpha: 0.28);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: isDark ? AppColors.bgDark : AuthDesign.pageBg,
       body: Stack(
         children: [
           // 🌌 Full-screen background image
@@ -227,7 +230,7 @@ class _SplashScreenState extends State<SplashScreen> {
             width: double.infinity,
             height: double.infinity,
           ),
-          // Adaptive contrast overlay to support both light and dark mode text colors
+          // Adaptive contrast overlay adhering to design.md (#E8EAF6 in light mode, #0D1225 in dark mode)
           Container(
             width: double.infinity,
             height: double.infinity,
@@ -235,14 +238,14 @@ class _SplashScreenState extends State<SplashScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: Theme.of(context).brightness == Brightness.dark
+                colors: isDark
                     ? [
-                        const Color(0xFF141B3A).withValues(alpha: 0.65),
-                        const Color(0xFF090D1C).withValues(alpha: 0.85),
+                        AppColors.bgDark.withValues(alpha: 0.70),
+                        AppColors.bgDeep.withValues(alpha: 0.92),
                       ]
                     : [
-                        const Color(0xFFE5ECFC).withValues(alpha: 0.5),
-                        const Color(0xFFFFFFFF).withValues(alpha: 0.8),
+                        AuthDesign.pageBg.withValues(alpha: 0.75),
+                        Colors.white.withValues(alpha: 0.92),
                       ],
               ),
             ),
@@ -274,18 +277,18 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget _buildBootUI(Color primaryColor, Color primaryGlow) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Dynamic responsive font sizes and styling properties
+    // Dynamic responsive font sizes and styling properties matching design.md
     final double titleFontSize = (MediaQuery.of(context).size.width * 0.08)
         .clamp(28.0, 36.0);
     final titleColor = isDark
-        ? const Color(0xFFF4F7FF)
-        : const Color(0xFF0B1028);
+        ? AppColors.textHeadingDark
+        : AuthDesign.textHeading;
     final subtitleColor = isDark
-        ? const Color(0xFFDCE6FF)
-        : const Color(0xFF4E659E);
+        ? AppColors.textMutedDark
+        : AuthDesign.textLabel;
     final shadowColor = isDark
-        ? const Color(0xFF0B1028)
-        : const Color(0xFF4F7BFF);
+        ? Colors.black54
+        : AuthDesign.primaryIndigo;
 
     return SafeArea(
       key: const ValueKey('boot_ui'),
@@ -306,7 +309,7 @@ class _SplashScreenState extends State<SplashScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: primaryColor.withValues(alpha: 0.15),
+                              color: AppColors.primaryBright.withValues(alpha: 0.20),
                               width: 1.5,
                             ),
                             boxShadow: [
@@ -333,7 +336,7 @@ class _SplashScreenState extends State<SplashScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: primaryColor.withValues(alpha: 0.35),
+                              color: AppColors.primaryBright.withValues(alpha: 0.35),
                               width: 1.5,
                             ),
                           ),
@@ -350,10 +353,10 @@ class _SplashScreenState extends State<SplashScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: const Color(0xFF0A1024),
-                          border: Border.all(color: primaryColor, width: 2.0),
+                          border: Border.all(color: AuthDesign.primaryIndigo, width: 2.0),
                           boxShadow: [
                             BoxShadow(
-                              color: primaryColor.withValues(alpha: 0.30),
+                              color: AuthDesign.primaryIndigo.withValues(alpha: 0.35),
                               blurRadius: 22,
                               spreadRadius: 1,
                             ),
@@ -384,22 +387,17 @@ class _SplashScreenState extends State<SplashScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: AppAnimatedHeading(
               text: 'Smart Attendance AI',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.poppins(
                 fontSize: titleFontSize,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
                 color: titleColor,
                 shadows: [
                   Shadow(
-                    color: shadowColor.withValues(alpha: isDark ? 0.6 : 0.3),
+                    color: shadowColor.withValues(alpha: isDark ? 0.6 : 0.2),
                     blurRadius: isDark ? 14 : 8,
                     offset: const Offset(0, 2),
                   ),
-                  if (isDark)
-                    BoxShadow(
-                      color: const Color(0xFF4F7BFF).withValues(alpha: 0.3),
-                      blurRadius: 20,
-                    ),
                 ],
               ),
             ),
@@ -416,10 +414,10 @@ class _SplashScreenState extends State<SplashScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
-                        fontSize: 14, // font size: 13-15
-                        fontWeight: FontWeight.w500, // weight: 500
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                         color: subtitleColor,
-                        letterSpacing: 0.5,
+                        letterSpacing: 0.2,
                       ),
                     )
                     .animate()
@@ -497,11 +495,11 @@ class _SplashScreenState extends State<SplashScreen> {
               Text(
                     'Welcome to Smart Next-Gen\nAI Face Recognition Attendance',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.poppins(
                       fontSize: 24,
                       height: 1.3,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF1B2C56),
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? AppColors.textHeadingDark : AuthDesign.textHeading,
                     ),
                   )
                   .animate()
@@ -516,7 +514,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   height: 1.55,
-                  color: const Color(0xFF7F8CA4),
+                  color: isDark ? AppColors.textMutedDark : AuthDesign.textLabel,
                   fontWeight: FontWeight.w400,
                 ),
               ).animate().fadeIn(delay: 350.ms, duration: 500.ms),
@@ -529,10 +527,10 @@ class _SplashScreenState extends State<SplashScreen> {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF6F8FF),
+                      color: isDark ? AppColors.surfaceDark : const Color(0xFFEEF2FF),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: const Color(0xFFE2E6FF),
+                        color: isDark ? AppColors.borderDark : const Color(0xFFE2E8F0),
                         width: 1.2,
                       ),
                     ),
@@ -561,32 +559,17 @@ class _SplashScreenState extends State<SplashScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   height: 1.5,
-                  color: const Color(0xFF8F9BB3),
+                  color: isDark ? AppColors.textMutedDark : AuthDesign.textLabel,
                   fontWeight: FontWeight.w500,
                 ),
               ).animate().fadeIn(delay: 650.ms, duration: 500.ms),
 
               const SizedBox(height: 40),
 
-              SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: GlowButton(
-                      onPressed: () => context.go('/auth/login'),
-                      color: primaryColor,
-                      glowColor: primaryGlow,
-                      borderRadius: 14,
-                      child: Text(
-                        'GET STARTED',
-                        style: GoogleFonts.inter(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.5,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  )
+              PrimaryButton(
+                text: 'GET STARTED',
+                onPressed: () => context.go('/auth/login'),
+              )
                   .animate()
                   .fadeIn(delay: 800.ms, duration: 500.ms)
                   .slideY(begin: 0.2, end: 0),
@@ -601,8 +584,8 @@ class _SplashScreenState extends State<SplashScreen> {
     return Text(
       label,
       style: GoogleFonts.inter(
-        color: const Color(0xFF3559E0),
-        fontWeight: FontWeight.bold,
+        color: AuthDesign.primaryIndigo,
+        fontWeight: FontWeight.w600,
         fontSize: 12,
         letterSpacing: 0.5,
       ),
@@ -610,12 +593,13 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Widget _buildBadgeDivider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 10),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Text(
         '•',
         style: TextStyle(
-          color: Color(0xFF8F9BB3),
+          color: isDark ? AppColors.textMutedDark : AuthDesign.textLabel,
           fontWeight: FontWeight.bold,
           fontSize: 12,
         ),
@@ -625,7 +609,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   // Futuristic diagnostics & dots loader
   Widget _buildNeuralLoadingIndicator() {
-    const primaryColor = Color(0xFF3559E0);
+    const primaryColor = AuthDesign.primaryIndigo;
 
     return Column(
       children: [

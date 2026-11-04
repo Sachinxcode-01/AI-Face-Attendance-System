@@ -52,31 +52,34 @@ class AuthDesign {
   }
 
   // Get Auth ThemeData
-  static ThemeData get themeData {
+  static ThemeData get themeData => getThemeData();
+
+  static ThemeData getThemeData({bool isDark = false}) {
     return ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: pageBg,
+      brightness: isDark ? Brightness.dark : Brightness.light,
+      scaffoldBackgroundColor: isDark ? AppColors.bgDark : pageBg,
       primaryColor: primaryIndigo,
       textTheme: TextTheme(
         headlineLarge: fontPoppins(
           fontSize: 24,
           fontWeight: FontWeight.w700,
-          color: Colors.white,
+          color: isDark ? AppColors.textHeadingDark : Colors.white,
         ),
         titleLarge: fontPoppins(
           fontSize: 21,
           fontWeight: FontWeight.w700,
-          color: textHeading,
+          color: isDark ? AppColors.textHeadingDark : textHeading,
         ),
         bodyLarge: fontPoppins(
           fontSize: 12,
           fontWeight: FontWeight.w400,
-          color: textHeading,
+          color: isDark ? AppColors.textHeadingDark : textHeading,
         ),
         bodyMedium: fontPoppins(
           fontSize: 10.5,
           fontWeight: FontWeight.w500,
-          color: textLabel,
+          color: isDark ? AppColors.textMutedDark : textLabel,
         ),
         labelLarge: fontPoppins(
           fontSize: 13,
@@ -227,6 +230,7 @@ class UnderlineTextField extends StatefulWidget {
   final bool obscureText;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
+  final Widget? prefixIcon;
   final Widget? suffixIcon;
   final ValueChanged<String>? onChanged;
   final bool readOnly;
@@ -239,6 +243,7 @@ class UnderlineTextField extends StatefulWidget {
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
     this.validator,
+    this.prefixIcon,
     this.suffixIcon,
     this.onChanged,
     this.readOnly = false,
@@ -327,11 +332,24 @@ class _UnderlineTextFieldState extends State<UnderlineTextField> {
               ),
             ),
             errorStyle: const TextStyle(fontSize: 10, height: 0.8),
+            prefixIcon: widget.prefixIcon,
+            prefixIconConstraints: widget.prefixIcon != null
+                ? const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 24,
+                  )
+                : null,
+            prefixIconColor: focused
+                ? AppColors.primary
+                : (isDark ? AppColors.textMutedDark : AppColors.textPlaceholder),
             suffixIcon: widget.suffixIcon,
             suffixIconConstraints: const BoxConstraints(
-              minWidth: 24,
+              minWidth: 44,
               minHeight: 24,
             ),
+            suffixIconColor: focused
+                ? AppColors.primary
+                : (isDark ? AppColors.textMutedDark : AppColors.textPlaceholder),
           ),
         ),
       ],
@@ -666,12 +684,13 @@ class _SocialIconRowState extends State<SocialIconRow> {
 
   Future<String?> _showGithubCodeDialog(BuildContext context) async {
     final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return showDialog<String>(
       context: context,
       barrierDismissible: true,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: isDark ? AppColors.cardDark : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -680,7 +699,7 @@ class _SocialIconRowState extends State<SocialIconRow> {
             style: AuthDesign.fontPoppins(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AuthDesign.textHeading,
+              color: isDark ? AppColors.textHeadingDark : AuthDesign.textHeading,
             ),
           ),
           content: Column(
@@ -692,33 +711,40 @@ class _SocialIconRowState extends State<SocialIconRow> {
                 style: AuthDesign.fontPoppins(
                   fontSize: 11,
                   fontWeight: FontWeight.w400,
-                  color: AuthDesign.textLabel,
+                  color: isDark ? AppColors.textMutedDark : AuthDesign.textLabel,
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: controller,
                 autofocus: true,
+                style: TextStyle(
+                  color: isDark ? AppColors.textHeadingDark : AuthDesign.textHeading,
+                ),
                 decoration: InputDecoration(
                   hintText: 'GitHub OAuth Code',
                   hintStyle: AuthDesign.fontPoppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
-                    color: AuthDesign.textPlaceholder,
+                    color: isDark ? AppColors.textMutedDark : AuthDesign.textPlaceholder,
                   ),
                   filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
+                  fillColor: isDark ? AppColors.surfaceDark : const Color(0xFFF8FAFC),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 14,
                     vertical: 12,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: BorderSide(
+                      color: isDark ? AppColors.borderDark : const Color(0xFFE2E8F0),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: BorderSide(
+                      color: isDark ? AppColors.borderDark : const Color(0xFFE2E8F0),
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -739,7 +765,7 @@ class _SocialIconRowState extends State<SocialIconRow> {
                 style: AuthDesign.fontPoppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AuthDesign.textLabel,
+                  color: isDark ? AppColors.textMutedDark : AuthDesign.textLabel,
                 ),
               ),
             ),
@@ -769,14 +795,22 @@ class _SocialIconRowState extends State<SocialIconRow> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor = isDark
+        ? AppColors.borderDark
+        : AuthDesign.underlineUnfocused;
+    final labelColor = isDark
+        ? AppColors.textMutedDark
+        : AuthDesign.textLabel;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Divider(
-                color: AuthDesign.underlineUnfocused,
+                color: dividerColor,
                 thickness: 1,
               ),
             ),
@@ -787,13 +821,13 @@ class _SocialIconRowState extends State<SocialIconRow> {
                 style: AuthDesign.fontPoppins(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: AuthDesign.textLabel,
+                  color: labelColor,
                 ),
               ),
             ),
-            const Expanded(
+            Expanded(
               child: Divider(
-                color: AuthDesign.underlineUnfocused,
+                color: dividerColor,
                 thickness: 1,
               ),
             ),
@@ -875,13 +909,14 @@ class AuthScreenLayout extends StatelessWidget {
 
     // Card top position
     final double cardTop = heroTotalH - cardOverlap;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Theme(
-      data: AuthDesign.themeData,
+      data: AuthDesign.getThemeData(isDark: isDark),
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         body: Container(
-          color: AuthDesign.pageBg,
+          color: isDark ? AppColors.bgDark : AuthDesign.pageBg,
           width: double.infinity,
           height: double.infinity,
           child: PremiumBackground(

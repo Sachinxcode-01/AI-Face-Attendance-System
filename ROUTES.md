@@ -10,9 +10,46 @@ An executive, developer-friendly cheat-sheet detailing every service port, path,
 |:---|:---|:---:|:---|:---|
 | **API Gateway** | Node.js / Express | `8000` | `http://localhost:8000` | Primary REST API & WebSocket server |
 | **AI Microservice** | Python / FastAPI | `8001` | `http://localhost:8001` | ArcFace ONNX neural face verification |
-| **Web Portal** | Next.js 15 / React | `3000` | `http://localhost:3000` | Modern responsive landing & student portal |
-| **Admin Dashboard** | Streamlit | `8501` | `http://localhost:8501` | Live telemetry, class feeds & reports |
+| **Web Portal Suite** | Next.js 15 / React | `3000` | `http://localhost:3000` | Landing, Student, Teacher & Admin Portals |
+| ↳ **Student Website** | Next.js 15 / React | `3000` | `http://localhost:3000/student` | Dedicated Student Attendance & AI Portal |
+| ↳ **Lecturer Website** | Next.js 15 / React | `3000` | `http://localhost:3000/teacher` | Dedicated Faculty & QR Projector Portal |
+| ↳ **Admin Panel** | Next.js 15 / React | `3000` | `http://localhost:3000/admin` | Dedicated Security Sentinel & Management Panel |
+| **Admin Streamlit** | Streamlit | `8501` | `http://localhost:8501` | Live telemetry, class feeds & reports |
 | **Mobile App** | Flutter | Mobile / ADB | Reverse proxy `8000`/`8001` | Cross-platform Android & iOS student client |
+
+---
+
+## 🌐 Dedicated Web Applications (Port 3000)
+
+### 🎓 1. Student Portal (`/student`)
+* **Live Webcam Face Check-in:** In-browser facial capture with ArcFace embedding verification.
+* **Dynamic Anti-Proxy QR Scanner:** Camera scanner / manual token validator for rotating classroom codes.
+* **Attendance Analytics:** Subject-wise percentage rings, overall standing, and streak counter.
+* **Smart Bunk Calculator:** Real-time safe absence simulator & required attendance planner.
+* **Daily Academic Timetable:** Interactive schedule with classroom directions and active status.
+* **Leave Application & Tracking:** Submit medical / institutional leave and track Dean approval status.
+* **Digital Holographic Student ID:** Verified digital ID card with barcode, dynamic QR, and printable export.
+* **Gemini 3.8 Flash Student Copilot:** AI academic advisor for attendance forecasting and leave letter drafting.
+
+### 👨‍🏫 2. Lecturer / Teacher Portal (`/teacher`)
+* **Classroom Session Controller:** Configure subject, section, room, and start/stop live sessions.
+* **Full-Screen Rotating QR Projector:** 15-second epoch anti-proxy rotating QR code for classroom smartboards.
+* **Podium Biometric Kiosk Terminal:** Walk-up webcam face scanner with automated TTS greetings.
+* **Live Student Roster & Manual Override:** Real-time status toggles (Present, Late, Absent, Excused).
+* **Leave Requests Approval Inbox:** 1-click Approve / Reject with instructor remarks.
+* **At-Risk Attendance Radar (<75%):** Automated detection and 1-click warning email dispatcher.
+* **Export & Cloud Sync:** 1-click CSV, Excel, Dean PDF export, and live Google Sheets sync.
+* **Gemini 3.8 Flash Faculty Copilot:** Class attendance analytics, proxy detection, and quiz question generator.
+
+### 🛡️ 3. Admin Sentinel & Security Panel (`/admin`)
+* **Executive Telemetry:** Multi-department attendance rates, total enrolled students, and system health.
+* **Unregistered Face Intruder Sentinel:** CCTV surveillance stream and snapshot threat gallery.
+* **Master User Directory (CRUD):** Add, edit, search, and delete students and faculty with biometric status.
+* **ArcFace Calibration Station:** 5-angle face enrollment station to train embeddings into `.pkl` file.
+* **Immutable Security Audit Trail:** Chronological tamper-proof logs of all verifications and overrides.
+* **Automated PDF Reports Dispatcher:** Batch generate official Deep Navy & Gold reports via secure SMTP.
+* **Hardware & Anti-Proxy Settings:** Configure API URLs, scanner tokens, and drift windows (15s/30s/60s).
+* **Gemini 3.8 Flash Institutional Sentinel:** Accreditation briefs (NAAC/NBA), compliance audits, and security reports.
 
 ---
 

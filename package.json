@@ -18,8 +18,5 @@
     "test": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 test",
     "stop": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 stop",
     "clean": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 clean"
-  },
-  "dependencies": {
-    "gsap": "^3.15.0"
   }
 }

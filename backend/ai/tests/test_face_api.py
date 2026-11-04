@@ -3,8 +3,16 @@ import unittest
 from pathlib import Path
 from fastapi.testclient import TestClient
 
-from smartface_pro_api.app.main import app
-from smartface_pro_api.app.config import AI_INTERNAL_TOKEN, BASE_DIR
+try:
+    from backend.ai.app.main import app
+    from backend.ai.app.config import AI_INTERNAL_TOKEN, BASE_DIR
+except (ImportError, ModuleNotFoundError):
+    try:
+        from app.main import app
+        from app.config import AI_INTERNAL_TOKEN, BASE_DIR
+    except (ImportError, ModuleNotFoundError):
+        from smartface_pro_api.app.main import app
+        from smartface_pro_api.app.config import AI_INTERNAL_TOKEN, BASE_DIR
 
 client = TestClient(app)
 

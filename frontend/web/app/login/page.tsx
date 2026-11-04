@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, 
@@ -166,7 +167,15 @@ export default function LoginPage() {
         if (rememberMe) {
           localStorage.setItem('rememberedUser', email);
         }
-        router.push('/dashboard');
+        if (data.role === 'student') {
+          router.push('/student');
+        } else if (data.role === 'teacher') {
+          router.push('/teacher');
+        } else if (data.role === 'admin' || data.role === 'super_admin') {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
       } else if (otpPurpose === 'register') {
         setSuccessMsg('Email address verified successfully!');
         setView('profile-setup');
@@ -420,7 +429,15 @@ export default function LoginPage() {
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('userRole', data.role);
       localStorage.setItem('userEmail', loginEmail);
-      router.push('/dashboard');
+      if (data.role === 'student') {
+        router.push('/student');
+      } else if (data.role === 'teacher') {
+        router.push('/teacher');
+      } else if (data.role === 'admin' || data.role === 'super_admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: unknown) {
       setIsLoading(false);
       const message = err instanceof Error ? err.message : 'Google Auth failed.';
@@ -901,6 +918,38 @@ export default function LoginPage() {
                       <MicrosoftLogo />
                       <span>Continue with Microsoft</span>
                     </button>
+                  </div>
+
+                  {/* Direct Dedicated Portals Demo Access */}
+                  <div className="pt-4 border-t border-white/5 space-y-2.5">
+                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block text-center font-bold">
+                      Direct Dedicated Websites
+                    </span>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Link
+                        href="/student"
+                        className="p-2.5 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/30 text-center transition flex flex-col items-center gap-1 group cursor-pointer"
+                      >
+                        <span className="text-xs font-bold text-blue-400 group-hover:text-blue-300">Student</span>
+                        <span className="text-[9px] font-mono text-slate-400">/student</span>
+                      </Link>
+
+                      <Link
+                        href="/teacher"
+                        className="p-2.5 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-500/30 text-center transition flex flex-col items-center gap-1 group cursor-pointer"
+                      >
+                        <span className="text-xs font-bold text-indigo-400 group-hover:text-indigo-300">Lecturer</span>
+                        <span className="text-[9px] font-mono text-slate-400">/teacher</span>
+                      </Link>
+
+                      <Link
+                        href="/admin"
+                        className="p-2.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 text-center transition flex flex-col items-center gap-1 group cursor-pointer"
+                      >
+                        <span className="text-xs font-bold text-emerald-400 group-hover:text-emerald-300">Admin</span>
+                        <span className="text-[9px] font-mono text-slate-400">/admin</span>
+                      </Link>
+                    </div>
                   </div>
 
                   <div className="text-center pt-2">

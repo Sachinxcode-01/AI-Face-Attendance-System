@@ -4,10 +4,22 @@ from typing import Dict, Any
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
-from smartface_pro_api.app.routes.face import router as face_router
-from smartface_pro_api.app.routes.train import router as train_router
-from smartface_pro_api.app.adapters.legacy_attendance_adapter import LegacyAttendanceAdapter
-from smartface_pro_api.app.security.internal_auth import verify_internal_token
+try:
+    from backend.ai.app.routes.face import router as face_router
+    from backend.ai.app.routes.train import router as train_router
+    from backend.ai.app.adapters.legacy_attendance_adapter import LegacyAttendanceAdapter
+    from backend.ai.app.security.internal_auth import verify_internal_token
+except (ImportError, ModuleNotFoundError):
+    try:
+        from app.routes.face import router as face_router
+        from app.routes.train import router as train_router
+        from app.adapters.legacy_attendance_adapter import LegacyAttendanceAdapter
+        from app.security.internal_auth import verify_internal_token
+    except (ImportError, ModuleNotFoundError):
+        from smartface_pro_api.app.routes.face import router as face_router
+        from smartface_pro_api.app.routes.train import router as train_router
+        from smartface_pro_api.app.adapters.legacy_attendance_adapter import LegacyAttendanceAdapter
+        from smartface_pro_api.app.security.internal_auth import verify_internal_token
 
 app_env = os.getenv("APP_ENV", os.getenv("NODE_ENV", "development")).lower()
 is_production = app_env == "production"

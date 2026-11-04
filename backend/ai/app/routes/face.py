@@ -4,15 +4,37 @@ import json
 from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 
-from smartface_pro_api.app.config import (
-    ALLOWED_MIME_TYPES,
-    FACE_INFERENCE_CONCURRENCY,
-    FACE_INFERENCE_TIMEOUT_SECONDS,
-    MAX_IMAGE_SIZE_MB,
-)
-from smartface_pro_api.app.security.internal_auth import verify_internal_token
-from smartface_pro_api.app.schemas.face import FaceVerifyResponse
-from smartface_pro_api.app.adapters.legacy_attendance_adapter import LegacyAttendanceAdapter
+try:
+    from backend.ai.app.config import (
+        ALLOWED_MIME_TYPES,
+        FACE_INFERENCE_CONCURRENCY,
+        FACE_INFERENCE_TIMEOUT_SECONDS,
+        MAX_IMAGE_SIZE_MB,
+    )
+    from backend.ai.app.security.internal_auth import verify_internal_token
+    from backend.ai.app.schemas.face import FaceVerifyResponse
+    from backend.ai.app.adapters.legacy_attendance_adapter import LegacyAttendanceAdapter
+except (ImportError, ModuleNotFoundError):
+    try:
+        from app.config import (
+            ALLOWED_MIME_TYPES,
+            FACE_INFERENCE_CONCURRENCY,
+            FACE_INFERENCE_TIMEOUT_SECONDS,
+            MAX_IMAGE_SIZE_MB,
+        )
+        from app.security.internal_auth import verify_internal_token
+        from app.schemas.face import FaceVerifyResponse
+        from app.adapters.legacy_attendance_adapter import LegacyAttendanceAdapter
+    except (ImportError, ModuleNotFoundError):
+        from smartface_pro_api.app.config import (
+            ALLOWED_MIME_TYPES,
+            FACE_INFERENCE_CONCURRENCY,
+            FACE_INFERENCE_TIMEOUT_SECONDS,
+            MAX_IMAGE_SIZE_MB,
+        )
+        from smartface_pro_api.app.security.internal_auth import verify_internal_token
+        from smartface_pro_api.app.schemas.face import FaceVerifyResponse
+        from smartface_pro_api.app.adapters.legacy_attendance_adapter import LegacyAttendanceAdapter
 
 router = APIRouter(prefix="/v1/face", tags=["Face Verification"])
 

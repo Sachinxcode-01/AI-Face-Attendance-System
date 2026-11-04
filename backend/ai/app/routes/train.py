@@ -3,9 +3,19 @@ import sys
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from smartface_pro_api.app.config import ENABLE_FACE_TRAINING
-from smartface_pro_api.app.security.internal_auth import verify_internal_token
-from smartface_pro_api.app.schemas.face import FaceTrainResponse
+try:
+    from backend.ai.app.config import ENABLE_FACE_TRAINING
+    from backend.ai.app.security.internal_auth import verify_internal_token
+    from backend.ai.app.schemas.face import FaceTrainResponse
+except (ImportError, ModuleNotFoundError):
+    try:
+        from app.config import ENABLE_FACE_TRAINING
+        from app.security.internal_auth import verify_internal_token
+        from app.schemas.face import FaceTrainResponse
+    except (ImportError, ModuleNotFoundError):
+        from smartface_pro_api.app.config import ENABLE_FACE_TRAINING
+        from smartface_pro_api.app.security.internal_auth import verify_internal_token
+        from smartface_pro_api.app.schemas.face import FaceTrainResponse
 
 router = APIRouter(prefix="/v1/admin/faces", tags=["Admin Face Training"])
 
