@@ -23,7 +23,7 @@ The platform is split into four primary deployment units:
 
 ---
 
-## 1. Main Backend API Gateway (`smartface_node_api`)
+## 1. Main Backend API Gateway (`backend/api`)
 
 The main gateway is responsible for authentication, database synchronization, reporting, WebSocket dispatching, and audit logging.
 
@@ -35,7 +35,7 @@ The main gateway is responsible for authentication, database synchronization, re
 ### Installation Steps
 1. Navigate to the Node directory:
    ```bash
-   cd smartface_node_api
+   cd backend/api
    ```
 2. Install production dependencies:
    ```bash
@@ -63,13 +63,13 @@ To verify gateway health, make a GET request to `/health`. Response format:
 
 ---
 
-## 2. Web Portal (`smartface_landing_web`)
+## 2. Web Portal (`frontend/web`)
 
 The Next.js web application should be deployed on **Vercel** or **AWS Amplify** for optimal caching and CDN routing.
 
 ### Vercel Deployment Instructions
 1. Import the repository into Vercel.
-2. In Project Settings, set the **Root Directory** to `smartface_landing_web`.
+2. In Project Settings, set the **Root Directory** to `frontend/web`.
 3. Set the build commands:
    - **Build Command**: `next build`
    - **Install Command**: `npm install`
@@ -79,7 +79,7 @@ The Next.js web application should be deployed on **Vercel** or **AWS Amplify** 
 
 ---
 
-## 3. Face Recognition Core (`smartface_pro_api`)
+## 3. Face Recognition Core (`backend/ai`)
 
 The Python AI processing daemon should be deployed on an edge computer (e.g., NVIDIA Jetson, local campus server) with access to video streams or a GPU.
 

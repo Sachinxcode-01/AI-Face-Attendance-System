@@ -100,15 +100,15 @@ class IntroductionCardView extends StatelessWidget {
               borderRadius: BorderRadius.circular(28.0),
               border: Border.all(
                 color: isDark
-                    ? AppColors.accent.withValues(alpha: 0.25)
+                    ? AppColors.primaryBright.withValues(alpha: 0.30)
                     : AppColors.primary.withValues(alpha: 0.20),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
                   color: isDark
-                      ? AppColors.accent.withValues(alpha: 0.12)
-                      : AppColors.primary.withValues(alpha: 0.15),
+                      ? AppColors.primary.withValues(alpha: 0.20)
+                      : const Color(0xFF8B98CE).withValues(alpha: 0.15),
                   blurRadius: 28,
                   spreadRadius: 2,
                   offset: const Offset(0, 10),
@@ -143,10 +143,10 @@ class IntroductionCardView extends StatelessWidget {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.12),
+                        color: AppColors.primaryBright.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: AppColors.accent.withValues(alpha: 0.35),
+                          color: AppColors.primaryBright.withValues(alpha: 0.35),
                         ),
                       ),
                       child: Text(
@@ -156,8 +156,8 @@ class IntroductionCardView extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.4,
                           color: isDark
-                              ? AppColors.accentLight
-                              : AppColors.accentDark,
+                              ? AppColors.primaryLight
+                              : AppColors.primary,
                         ),
                       ),
                     ),
