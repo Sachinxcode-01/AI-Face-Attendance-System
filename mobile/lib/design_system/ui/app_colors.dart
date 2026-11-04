@@ -15,6 +15,9 @@ class AppColors {
   AppColors._();
 
   // ── Brand Core ───────────────────────────────────────────────────────────
+  /// Hero band & base indigo (canonical from design.md)
+  static const Color primaryIndigo = Color(0xFF3D4AB8);
+
   /// Primary brand — rich royal blue
   static const Color primary = Color(0xFF4F46E5);
 
@@ -29,6 +32,14 @@ class AppColors {
 
   /// Primary subtle — for badges, chips
   static const Color primarySoft = Color(0xFFA5B4FC);
+
+  // ── Hero Orbs (Radial Gradient Spheres) ──────────────────────────────────
+  static const Color orbLight = Color(0xFF9AA4EC);
+  static const Color orbMid = Color(0xFF6670D0);
+  static const Color orbDark = Color(0xFF4D58C0);
+
+  // ── Page Background Canvas ───────────────────────────────────────────────
+  static const Color pageBg = Color(0xFFE8EAF6);
 
   // ── Premium Accent (Gold) ────────────────────────────────────────────────
   static const Color gold = Color(0xFFF59E0B);
