@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
@@ -530,9 +532,12 @@ class _SocialIconRowState extends State<SocialIconRow> {
     setState(() => _isGoogleLoading = true);
     try {
       final googleSignIn = GoogleSignIn(
-        clientId: EnvConfig.googleClientId,
+        serverClientId: EnvConfig.googleClientId,
+        clientId: kIsWeb ? EnvConfig.googleClientId : null,
         scopes: ['email', 'profile'],
       );
+      // Ensure previous session is cleared to avoid stale accounts
+      await googleSignIn.signOut().catchError((_) => null);
       final account = await googleSignIn.signIn();
       if (account == null) {
         setState(() => _isGoogleLoading = false);
@@ -559,7 +564,17 @@ class _SocialIconRowState extends State<SocialIconRow> {
       }
     } catch (e) {
       if (mounted) {
-        final errorMsg = e.toString().replaceFirst('Exception: ', '');
+        String errorMsg = e.toString().replaceFirst('Exception: ', '');
+        if (e is PlatformException) {
+          if (e.code == 'sign_in_canceled' || e.code == 'canceled') {
+            return; // User dismissed sign-in prompt; no toast required
+          }
+          if (e.message?.contains('10') == true || e.toString().contains('10')) {
+            errorMsg = 'Google Sign-In configuration error (ApiException: 10). Ensure your SHA-1 key is registered in Firebase Console.';
+          } else {
+            errorMsg = e.message ?? 'Google Sign-In failed. Please try again.';
+          }
+        }
         AppToast.show(context, message: errorMsg, type: ToastType.error);
       }
     } finally {

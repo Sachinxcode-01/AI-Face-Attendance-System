@@ -298,7 +298,8 @@ class _SplashScreenState extends State<SplashScreen> {
           const Spacer(),
 
           // --- THE PERFECT CIRCLE LOGO ---
-          Center(
+          RepaintBoundary(
+            child: Center(
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -379,6 +380,7 @@ class _SplashScreenState extends State<SplashScreen> {
               .animate()
               .fadeIn(duration: 800.ms)
               .scale(curve: Curves.elasticOut, duration: 1000.ms),
+          ),
 
           const SizedBox(height: 45),
 
@@ -449,6 +451,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Widget _buildWelcomeUI(Color primaryColor, Color primaryGlow) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SafeArea(
       key: const ValueKey('welcome_ui'),
       child: Center(
@@ -611,7 +614,8 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget _buildNeuralLoadingIndicator() {
     const primaryColor = AuthDesign.primaryIndigo;
 
-    return Column(
+    return RepaintBoundary(
+      child: Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -660,6 +664,7 @@ class _SplashScreenState extends State<SplashScreen> {
           ),
         ),
       ],
-    );
+    ),
+  );
   }
 }

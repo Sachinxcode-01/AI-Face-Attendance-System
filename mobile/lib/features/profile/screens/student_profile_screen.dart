@@ -28,6 +28,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -663,11 +664,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
         appBar: _buildAppBar(),
         body: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(color: AppColors.gold),
+                child: CircularProgressIndicator(color: Color(0xFF4F46E5)),
               )
             : RefreshIndicator(
                 onRefresh: _fetchProfile,
-                color: AppColors.gold,
+                color: const Color(0xFF4F46E5),
                 backgroundColor: const Color(0xFF070B1A),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -1040,13 +1041,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
             },
             icon: Icon(
               _isEditing ? Icons.close_rounded : Icons.edit_outlined,
-              color: _isEditing ? Colors.redAccent : AppColors.gold,
+              color: _isEditing ? const Color(0xFFEF4444) : const Color(0xFF6366F1),
             ),
           ),
         if (!_isLoading)
           IconButton(
             onPressed: _fetchProfile,
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.gold),
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF6366F1)),
           ),
       ],
     );
@@ -1296,37 +1297,56 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
 
   // ── Save Button ───────────────────────────────────────────────────────────
   Widget _buildSaveButton() {
-    return GlowButton(
-      onPressed: _isSaving ? null : _saveProfile,
-      color: AppColors.gold,
-      glowColor: AppColors.gold.withValues(alpha: 0.3),
-      borderRadius: 18,
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: _isSaving
-          ? const SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-              ),
-            )
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.save_rounded, size: 20, color: Colors.black),
-                const SizedBox(width: 10),
-                Text(
-                  'SAVE PROFILE TO SERVER',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
+    return PressableScale(
+      onTap: _isSaving ? null : () {
+        HapticFeedback.mediumImpact();
+        _saveProfile();
+      },
+      child: Container(
+        height: 52,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
+          ],
+        ),
+        child: _isSaving
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.save_rounded, size: 20, color: Colors.white),
+                  const SizedBox(width: 10),
+                  Text(
+                    'SAVE PROFILE CHANGES',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.8,
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+      ),
     ).animate().scale(delay: 100.ms);
   }
 

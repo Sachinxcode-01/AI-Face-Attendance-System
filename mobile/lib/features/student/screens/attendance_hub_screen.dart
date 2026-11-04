@@ -2,16 +2,20 @@
 |--------------------------------------------------------------------------
 | File: attendance_hub_screen.dart
 |--------------------------------------------------------------------------
-| Project: Nexa AI
+| Project: Nexa AI / SmartFace AI
 |
 | Purpose:
-| Renders the student Attendance Intelligence Hub. Displays health scores,
-| alerts, grids, and check-in logs, and compiles PDF/Excel reports.
+| Renders the student Attendance Intelligence Hub strictly conforming to design.md:
+| - Canonical StudentScreenShell with ethereal orbs and 28px overlapping card
+| - Brand Indigo (#3D4AB8, #4F46E5, #6366F1) palette
+| - Poppins & Inter typography pairing with tactile haptics
+| - Full light (#E8EAF6) & dark (#070A14) responsive parity
 |--------------------------------------------------------------------------
 */
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
@@ -21,14 +25,12 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:http/http.dart' as http;
 
-import 'package:smartface_attendance/app/constants/app_constants.dart';
-import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
-import 'package:smartface_attendance/shared/widgets/glassmorphic_card.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/student/widgets/attendance_components.dart';
+import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
 
 class AttendanceHubScreen extends StatefulWidget {
   const AttendanceHubScreen({super.key});
@@ -297,21 +299,39 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final pageBg = isDark ? const Color(0xFF070A14) : const Color(0xFFE8EAF6);
+
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.bgDark,
-        body: DashboardShimmer(),
+      return Scaffold(
+        backgroundColor: pageBg,
+        body: const DashboardShimmer(),
       );
     }
 
     final data = _dashboardData;
     if (data == null) {
       return Scaffold(
-        backgroundColor: AppColors.bgDark,
+        backgroundColor: pageBg,
         body: Center(
-          child: Text(
-            'No attendance metrics found.',
-            style: AppText.body(color: Colors.white38),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.analytics_outlined,
+                size: 54,
+                color: isDark ? const Color(0xFF7C82A0) : const Color(0xFFA0A0B8),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No attendance metrics found.',
+                style: GoogleFonts.inter(
+                  color: isDark ? const Color(0xFFC8CCDF) : const Color(0xFF3D4260),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -324,95 +344,101 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
     final String standing = data['standing'] ?? 'Good';
     final alerts = data['risk_alerts'] as List<dynamic>? ?? [];
 
-    return AuroraBackground(
-      baseColor: AppColors.bgDark,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => context.go('/student/home'),
-          ),
-          title: Text(
-            'Attendance Intelligence',
-            style: GoogleFonts.outfit(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 18,
-            ),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.white),
-              onPressed: _fetchHubData,
-            ),
-          ],
+    return StudentScreenShell(
+      title: 'Attendance Hub',
+      subtitle: 'Real-time telemetry, heatmaps & verification log',
+      onBackTap: () => context.go('/student/home'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 22),
+          tooltip: 'Refresh Intelligence',
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            _fetchHubData();
+          },
         ),
-        body: RefreshIndicator(
-          onRefresh: _fetchHubData,
-          color: AppColors.gold,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
-            children:
-                [
-                      // 1. Health Score Card
-                      AttendanceHealthCard(
-                        score: healthScore,
-                        percentage: percentage,
-                        lates: lates,
-                        consecutiveAbsences: consecutiveAbsences,
-                        standing: standing,
-                      ),
-                      const SizedBox(height: 20),
+      ],
+      child: RefreshIndicator(
+        onRefresh: _fetchHubData,
+        color: const Color(0xFF4F46E5),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(18, 20, 18, 120),
+          children: [
+            // 1. Health Score Card
+            AttendanceHealthCard(
+              score: healthScore,
+              percentage: percentage,
+              lates: lates,
+              consecutiveAbsences: consecutiveAbsences,
+              standing: standing,
+            ),
+            const SizedBox(height: 18),
 
-                      // 2. Risk Alerts Panel
-                      if (alerts.isNotEmpty) ...[
-                        _buildAlertsPanel(alerts),
-                        const SizedBox(height: 20),
-                      ],
+            // 2. Risk Alerts Panel
+            if (alerts.isNotEmpty) ...[
+              _buildAlertsPanel(alerts),
+              const SizedBox(height: 18),
+            ],
 
-                      // 3. Heatmap Matrix Card
-                      HeatmapGrid(heatmapData: _heatmapData),
-                      const SizedBox(height: 20),
+            // 3. Heatmap Matrix Card
+            HeatmapGrid(heatmapData: _heatmapData),
+            const SizedBox(height: 18),
 
-                      // 4. Export Controls Card
-                      ExportCard(onExportPressed: _exportLedger),
-                      const SizedBox(height: 20),
+            // 4. Export Controls Card
+            ExportCard(onExportPressed: _exportLedger),
+            const SizedBox(height: 18),
 
-                      // 5. Recent Logs List
-                      _buildRecentLogsLedger(),
-                      const SizedBox(height: 40),
-                    ]
-                    .animate(interval: 80.ms)
-                    .fadeIn(duration: 350.ms)
-                    .slideY(
-                      begin: 0.12,
-                      end: 0,
-                      duration: 350.ms,
-                      curve: Curves.easeOutCubic,
-                    ),
-          ),
+            // 5. Recent Logs List
+            _buildRecentLogsLedger(isDark),
+            const SizedBox(height: 40),
+          ]
+              .animate(interval: 70.ms)
+              .fadeIn(duration: 350.ms, curve: Curves.easeOutCubic)
+              .slideY(
+                begin: 0.08,
+                end: 0,
+                duration: 350.ms,
+                curve: Curves.easeOutCubic,
+              ),
         ),
       ),
     );
   }
 
   Widget _buildAlertsPanel(List<dynamic> alerts) {
-    return GlassmorphicCard(
-      borderColor: AppColors.error.withValues(alpha: 0.15),
-      backgroundColor: AppColors.error.withValues(alpha: 0.02),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final alertBg = isDark
+        ? const Color(0xFFEF4444).withValues(alpha: 0.10)
+        : const Color(0xFFFEF2F2);
+    final textHeading = isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: alertBg,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFFEF4444).withValues(alpha: 0.25),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               const Icon(
-                    Icons.warning_amber_rounded,
-                    color: AppColors.errorLight,
-                    size: 20,
-                  )
+                Icons.warning_amber_rounded,
+                color: Color(0xFFEF4444),
+                size: 20,
+              )
                   .animate(onPlay: (c) => c.repeat(reverse: true))
                   .fade(begin: 0.5, end: 1, duration: 900.ms)
                   .scaleXY(
@@ -424,55 +450,98 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
               const SizedBox(width: 8),
               Text(
                 'ATTENDANCE STANDING ALERTS',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.errorLight,
-                  fontSize: 12,
-                  letterSpacing: 1.2,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFFEF4444),
+                  fontSize: 11,
+                  letterSpacing: 1.5,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           ...alerts.asMap().entries.map(
-            (entry) =>
-                Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: Text(
-                        entry.value['message'] ?? '',
-                        style: AppText.body(color: Colors.white70),
+                (entry) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 5,
+                        height: 5,
+                        margin: const EdgeInsets.only(top: 6, right: 8),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFFEF4444),
+                        ),
                       ),
-                    )
-                    .animate()
-                    .fadeIn(delay: (entry.key * 90).ms, duration: 350.ms)
-                    .slideX(
-                      begin: 0.1,
-                      end: 0,
-                      delay: (entry.key * 90).ms,
-                      duration: 350.ms,
-                      curve: Curves.easeOut,
-                    ),
-          ),
+                      Expanded(
+                        child: Text(
+                          entry.value['message'] ?? '',
+                          style: GoogleFonts.inter(
+                            color: textHeading,
+                            fontSize: 13,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
         ],
       ),
     );
   }
 
-  Widget _buildRecentLogsLedger() {
-    return GlassmorphicCard(
+  Widget _buildRecentLogsLedger(bool isDark) {
+    final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
+    final cardBorder = isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0);
+    final textHeading = isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
+    final textBody = isDark ? const Color(0xFFC8CCDF) : const Color(0xFF3D4260);
+    final textLabel = isDark ? const Color(0xFF7C82A0) : const Color(0xFFA0A0B8);
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: cardBorder, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
+            blurRadius: 30,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'RECENT VERIFICATION HISTORY',
-            style: AppText.label(color: Colors.white54),
+          Row(
+            children: [
+              const Icon(Icons.history_rounded, size: 16, color: Color(0xFF4F46E5)),
+              const SizedBox(width: 8),
+              Text(
+                'RECENT VERIFICATION HISTORY',
+                style: GoogleFonts.inter(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                  color: const Color(0xFF4F46E5),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           if (_verificationLogs.isEmpty)
             Center(
-              child: Text(
-                'No recent check-ins recorded.',
-                style: AppText.body(color: Colors.white38),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'No recent check-ins recorded.',
+                  style: GoogleFonts.inter(color: textLabel, fontSize: 13),
+                ),
               ),
             )
           else
@@ -480,59 +549,63 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _verificationLogs.length,
-              separatorBuilder: (context, index) =>
-                  const Divider(color: Colors.white12, height: 16),
+              separatorBuilder: (context, index) => Divider(
+                color: isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0),
+                height: 18,
+              ),
               itemBuilder: (context, index) {
                 final log = _verificationLogs[index];
                 final isFace = log['verified_by'] == 'face';
                 final isPresent =
                     (log['status'] ?? '').toString().toLowerCase() == 'present';
 
+                final Color statusColor = isPresent
+                    ? const Color(0xFF10B981)
+                    : const Color(0xFFEF4444);
+
                 return Row(
-                      children: [
-                        Icon(
-                          isPresent
-                              ? Icons.check_circle_rounded
-                              : Icons.cancel_rounded,
-                          color: isPresent
-                              ? AppColors.success
-                              : AppColors.error,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                log['subject'] ?? 'Lecture Class',
-                                style: AppText.body(
-                                  color: Colors.white,
-                                  weight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Verified via ${isFace ? "Biometric Face Recognition" : "Rotating Classroom QR"}',
-                                style: AppText.caption(color: Colors.white54),
-                              ),
-                            ],
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        isPresent
+                            ? Icons.check_circle_rounded
+                            : Icons.cancel_rounded,
+                        color: statusColor,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            log['subject'] ?? 'Lecture Class',
+                            style: GoogleFonts.poppins(
+                              color: textHeading,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.5,
+                            ),
                           ),
-                        ),
-                        Text(
-                          '${log['time']} • ${log['date']}',
-                          style: AppText.caption(color: Colors.white38),
-                        ),
-                      ],
-                    )
-                    .animate()
-                    .fadeIn(delay: (index * 70).ms, duration: 350.ms)
-                    .slideX(
-                      begin: 0.12,
-                      end: 0,
-                      delay: (index * 70).ms,
-                      duration: 350.ms,
-                      curve: Curves.easeOut,
-                    );
+                          const SizedBox(height: 2),
+                          Text(
+                            'Verified via ${isFace ? "Biometric Face ID" : "Classroom QR"}',
+                            style: GoogleFonts.inter(color: textBody, fontSize: 11.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '${log['time']} • ${log['date']}',
+                      style: GoogleFonts.inter(color: textLabel, fontSize: 11),
+                    ),
+                  ],
+                );
               },
             ),
         ],

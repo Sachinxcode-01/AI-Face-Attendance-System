@@ -10,6 +10,7 @@
 */
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
@@ -60,14 +61,14 @@ class _StudentLeaveDashboardScreenState
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'approved':
-        return Colors.greenAccent;
+        return const Color(0xFF10B981);
       case 'rejected':
-        return Colors.redAccent;
+        return const Color(0xFFEF4444);
       case 'clarification':
-        return Colors.cyanAccent;
+        return const Color(0xFF6366F1);
       case 'pending':
       default:
-        return Colors.amberAccent;
+        return const Color(0xFFF59E0B);
     }
   }
 
@@ -89,7 +90,7 @@ class _StudentLeaveDashboardScreenState
         .length;
 
     return AuroraBackground(
-      baseColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+      baseColor: isDark ? const Color(0xFF070A14) : const Color(0xFFE8EAF6),
       animate: isDark,
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -107,11 +108,11 @@ class _StudentLeaveDashboardScreenState
         ),
         body: RefreshIndicator(
           onRefresh: _refreshData,
-          color: AppColors.gold,
+          color: const Color(0xFF4F46E5),
           backgroundColor: isDark ? AppColors.bgCard : Colors.white,
           child: controller.isLoading && balance == null
               ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.gold),
+                  child: CircularProgressIndicator(color: Color(0xFF4F46E5)),
                 )
               : SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -156,14 +157,14 @@ class _StudentLeaveDashboardScreenState
           style: GoogleFonts.inter(
             fontSize: 11,
             letterSpacing: 2.0,
-            color: AppColors.gold,
+            color: const Color(0xFF4F46E5),
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           'Manage your absences, $name',
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.poppins(
             fontSize: 26,
             fontWeight: FontWeight.bold,
             color: isDark ? Colors.white : AppColors.bgDark,
@@ -236,7 +237,7 @@ class _StudentLeaveDashboardScreenState
                   label: 'Emergency Leave',
                   value: '$emergency Days',
                   icon: Icons.warning_amber_rounded,
-                  accentColor: Colors.redAccent,
+                  accentColor: const Color(0xFFEF4444),
                 ),
               ),
               StaggeredGridItem(
@@ -264,7 +265,7 @@ class _StudentLeaveDashboardScreenState
   ) {
     return GlassContainer(
       padding: const EdgeInsets.all(20),
-      borderColor: AppColors.gold.withValues(alpha: 0.1),
+      borderColor: const Color(0xFF4F46E5).withValues(alpha: 0.1),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -284,19 +285,19 @@ class _StudentLeaveDashboardScreenState
               _buildOverviewItem(
                 'Pending',
                 '$pending',
-                Colors.amberAccent,
+                const Color(0xFFF59E0B),
                 isDark,
               ),
               _buildOverviewItem(
                 'Approved',
                 '$approved',
-                Colors.greenAccent,
+                const Color(0xFF10B981),
                 isDark,
               ),
               _buildOverviewItem(
                 'Rejected',
                 '$rejected',
-                Colors.redAccent,
+                const Color(0xFFEF4444),
                 isDark,
               ),
             ],
@@ -318,7 +319,7 @@ class _StudentLeaveDashboardScreenState
           fit: BoxFit.scaleDown,
           child: Text(
             count,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.poppins(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: color,
@@ -339,47 +340,98 @@ class _StudentLeaveDashboardScreenState
   }
 
   Widget _buildActionButtons(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () async {
+          child: PressableScale(
+            onTap: () async {
+              HapticFeedback.mediumImpact();
               final result = await context.push('/student/leave/apply');
               if (result == true) {
                 _refreshData();
               }
             },
-            icon: const Icon(Icons.add_box_rounded, color: Colors.black),
-            label: const Text(
-              'APPLY LEAVE',
-              style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.gold,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
                 borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-              elevation: 4,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'APPLY LEAVE',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      letterSpacing: 0.8,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 14),
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => context.push('/student/leave/history'),
-            icon: const Icon(Icons.history_rounded, color: AppColors.gold),
-            label: const Text(
-              'VIEW HISTORY',
-              style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.gold,
-              side: const BorderSide(color: AppColors.gold, width: 1.5),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
+          child: PressableScale(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.push('/student/leave/history');
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF141D38) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4F46E5),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark ? Colors.black26 : const Color(0xFF8B98CE).withValues(alpha: 0.10),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.history_rounded,
+                    color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4F46E5),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'VIEW HISTORY',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      letterSpacing: 0.8,
+                      color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4F46E5),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -412,7 +464,7 @@ class _StudentLeaveDashboardScreenState
                 child: const Text(
                   'See All',
                   style: TextStyle(
-                    color: AppColors.gold,
+                    color: Color(0xFF4F46E5),
                     fontWeight: FontWeight.bold,
                   ),
                 ),

@@ -14,6 +14,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -53,6 +54,7 @@ import 'package:smartface_attendance/core/ui_system/app_ui_package_registry.dart
 import 'package:smartface_attendance/features/analytics/models/attendance_analytics_model.dart';
 import 'package:smartface_attendance/features/student/screens/student_timetable_screen.dart';
 import 'package:smartface_attendance/features/student/screens/attendance_calendar_screen.dart';
+import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
 
 /// Screen widget displaying student academic statistics, calendars, and live sessions.
 class StudentDashboard extends StatefulWidget {
@@ -690,7 +692,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+        backgroundColor: isDark ? const Color(0xFF070A14) : const Color(0xFFE8EAF6),
         body: const DashboardShimmer(),
       );
     }
@@ -843,7 +845,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     return ds.PremiumBackground(
       immersive: false,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? const Color(0xFF070A14) : const Color(0xFFE8EAF6),
         body: Column(
           children: [
             ds.DashboardHeader(
@@ -939,11 +941,46 @@ class _StudentDashboardState extends State<StudentDashboard> {
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _showExportOptionsDialog,
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          child: const Icon(Icons.download_rounded),
+        floatingActionButton: PressableScale(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            _showExportOptionsDialog();
+          },
+          child: Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.file_download_outlined, color: Colors.white, size: 18),
+                const SizedBox(width: 6),
+                Text(
+                  'Export Report',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -989,41 +1026,26 @@ class _StudentDashboardState extends State<StudentDashboard> {
   Widget _buildAttendanceSummaryCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final int pct = (_overallPercentage * 100).round();
-    final streakForegroundColor = isDark ? Colors.amber : const Color(0xFFB45309);
+    final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
+    final cardBorder = isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0);
+    final textHeading = isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
+    final textBody = isDark ? const Color(0xFFC8CCDF) : const Color(0xFF3D4260);
+    final textLabel = isDark ? const Color(0xFF7C82A0) : const Color(0xFFA0A0B8);
+    final streakForegroundColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
 
     return AnimatedCardWrapper(
       delay: 100.ms,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(26),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    AppColors.primary.withValues(alpha: 0.28),
-                    const Color(0xFF111827).withValues(alpha: 0.85),
-                    const Color(0xFF0F172A).withValues(alpha: 0.95),
-                  ]
-                : [
-                    Colors.white,
-                    AppColors.primary.withValues(alpha: 0.05),
-                  ],
-          ),
-          border: Border.all(
-            color: isDark
-                ? Colors.cyanAccent.withValues(alpha: 0.22)
-                : AppColors.primary.withValues(alpha: 0.15),
-            width: 1.5,
-          ),
+          color: cardBg,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: cardBorder, width: 1.0),
           boxShadow: [
             BoxShadow(
-              color: isDark
-                  ? AppColors.primary.withValues(alpha: 0.2)
-                  : const Color(0xFF9EAFD8).withValues(alpha: 0.2),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
+              color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
+              blurRadius: 30,
+              offset: const Offset(0, -5),
             ),
           ],
         ),
@@ -1040,14 +1062,14 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       Row(
                         children: [
                           Container(
-                            width: 7,
-                            height: 7,
+                            width: 8,
+                            height: 8,
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.greenAccent,
+                              color: Color(0xFF10B981),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.greenAccent,
+                                  color: Color(0xFF10B981),
                                   blurRadius: 6,
                                   spreadRadius: 1,
                                 ),
@@ -1058,11 +1080,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           Expanded(
                             child: Text(
                               'SEMESTER ATTENDANCE INDEX',
-                              style: GoogleFonts.robotoMono(
-                                fontSize: 9.5,
+                              style: GoogleFonts.inter(
+                                fontSize: 10.5,
                                 letterSpacing: 1.5,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.cyanAccent : AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF4F46E5),
                               ),
                             ),
                           ),
@@ -1071,18 +1093,19 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       const SizedBox(height: 8),
                       Text(
                         _standing,
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.poppins(
                           fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : AppColors.textHeading,
+                          fontWeight: FontWeight.w700,
+                          color: textHeading,
+                          letterSpacing: -0.3,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _rank,
                         style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: isDark ? Colors.white70 : AppColors.textMuted,
+                          fontSize: 12.5,
+                          color: textBody,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1092,24 +1115,25 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 const SizedBox(width: 14),
                 // Circular Ring with Percentage
                 SizedBox(
-                  width: 76,
-                  height: 76,
+                  width: 80,
+                  height: 80,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
                       SizedBox(
-                        width: 76,
-                        height: 76,
+                        width: 80,
+                        height: 80,
                         child: CircularProgressIndicator(
                           value: _overallPercentage,
-                          strokeWidth: 7,
+                          strokeWidth: 8,
+                          strokeCap: StrokeCap.round,
                           backgroundColor: isDark
                               ? Colors.white.withValues(alpha: 0.08)
-                              : Colors.black.withValues(alpha: 0.06),
+                              : const Color(0xFFE8EAF6),
                           valueColor: AlwaysStoppedAnimation<Color>(
                             pct >= 75
-                                ? (isDark ? Colors.cyanAccent : AppColors.primary)
-                                : Colors.amberAccent,
+                                ? const Color(0xFF6366F1)
+                                : const Color(0xFFF59E0B),
                           ),
                         ),
                       ),
@@ -1118,19 +1142,21 @@ class _StudentDashboardState extends State<StudentDashboard> {
                         children: [
                           Text(
                             '$pct%',
-                            style: GoogleFonts.outfit(
-                              fontSize: 18,
+                            style: GoogleFonts.poppins(
+                              fontSize: 19,
                               fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white : AppColors.textHeading,
+                              color: textHeading,
+                              height: 1.0,
                             ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             'HEALTH',
-                            style: GoogleFonts.robotoMono(
-                              fontSize: 7.5,
-                              letterSpacing: 1,
-                              color: isDark ? Colors.white54 : AppColors.textMuted,
-                              fontWeight: FontWeight.bold,
+                            style: GoogleFonts.inter(
+                              fontSize: 8,
+                              letterSpacing: 1.2,
+                              color: textLabel,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
@@ -1140,8 +1166,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            const Divider(color: Colors.white10, height: 1),
+            const SizedBox(height: 18),
+            Divider(
+              color: isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0),
+              height: 1,
+            ),
             const SizedBox(height: 14),
             Wrap(
               alignment: WrapAlignment.spaceBetween,
@@ -1151,67 +1180,67 @@ class _StudentDashboardState extends State<StudentDashboard> {
               children: [
                 // Streak Pill
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Colors.amber.withValues(alpha: 0.12)
-                        : const Color(0xFFFDE68A).withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(12),
+                        ? const Color(0xFFF59E0B).withValues(alpha: 0.12)
+                        : const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isDark
-                          ? Colors.amber.withValues(alpha: 0.3)
-                          : const Color(0xFFD97706).withValues(alpha: 0.4),
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.local_fire_department_rounded, color: streakForegroundColor, size: 14),
-                      const SizedBox(width: 4),
+                      Icon(Icons.local_fire_department_rounded, color: streakForegroundColor, size: 16),
+                      const SizedBox(width: 6),
                       Text(
                         '$_streak Days Streak',
-                        style: GoogleFonts.robotoMono(
+                        style: GoogleFonts.poppins(
                           color: streakForegroundColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
                 // Quick Launch Scan Button
-                InkWell(
-                  onTap: () => context.go('/student/scan'),
-                  borderRadius: BorderRadius.circular(12),
+                PressableScale(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    context.go('/student/scan');
+                  },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primary,
-                          AppColors.primary.withValues(alpha: 0.8),
-                        ],
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.35),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 14),
+                        const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 16),
                         const SizedBox(width: 6),
                         Text(
                           'Scan QR',
-                          style: GoogleFonts.inter(
+                          style: GoogleFonts.poppins(
                             color: Colors.white,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.4,
                           ),
                         ),
                       ],
@@ -1237,19 +1266,20 @@ class _StudentDashboardState extends State<StudentDashboard> {
         Text(
           'ATTENDANCE INTELLIGENCE PORTAL',
           style: GoogleFonts.inter(
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 2,
-            color: AppColors.primary,
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.5,
+            color: const Color(0xFF4F46E5),
           ),
         ),
         const SizedBox(height: 6),
         AppAnimatedHeading(
           text: 'Welcome to SmartFace AI',
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.poppins(
             fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppColors.textHeading,
+            fontWeight: FontWeight.w700,
+            color: isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A),
+            letterSpacing: -0.3,
           ),
         ),
       ],
@@ -1283,26 +1313,50 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Widget _buildSecurityCard(bool isDark) {
-    return ModernDashboardCard(
+    final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
+    final cardBorder = isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0);
+    final textHeading = isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
+    final textLabel = isDark ? const Color(0xFF7C82A0) : const Color(0xFFA0A0B8);
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: cardBorder, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
+            blurRadius: 30,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'ACTIVE DEVICES & SECURITY',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  letterSpacing: 1.5,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  const Icon(Icons.security_rounded, size: 16, color: Color(0xFF4F46E5)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'ACTIVE DEVICES & SECURITY',
+                    style: GoogleFonts.inter(
+                      fontSize: 10.5,
+                      letterSpacing: 1.5,
+                      color: const Color(0xFF4F46E5),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
               IconButton(
                 icon: const Icon(
                   Icons.logout_rounded,
-                  color: Colors.orangeAccent,
+                  color: Color(0xFFF59E0B),
                   size: 18,
                 ),
                 onPressed: _logoutOtherDevices,
@@ -1310,27 +1364,39 @@ class _StudentDashboardState extends State<StudentDashboard> {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          ListView.builder(
+          const SizedBox(height: 14),
+          ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _activeSessions.length,
+            separatorBuilder: (context, index) => Divider(
+              color: isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0),
+              height: 16,
+            ),
             itemBuilder: (context, index) {
               final s = _activeSessions[index];
               final isCurrent = s['is_current'] == true;
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                padding: const EdgeInsets.symmetric(vertical: 2.0),
                 child: Row(
                   children: [
-                    Icon(
-                      s['device'].toString().contains('Windows') ||
-                              s['device'].toString().contains('Mac')
-                          ? Icons.laptop_chromebook_rounded
-                          : Icons.phone_android_rounded,
-                      size: 20,
-                      color: isCurrent
-                          ? AppColors.success
-                          : (isDark ? Colors.white54 : Colors.black54),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: (isCurrent ? const Color(0xFF10B981) : const Color(0xFF4F46E5))
+                            .withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        s['device'].toString().contains('Windows') ||
+                                s['device'].toString().contains('Mac')
+                            ? Icons.laptop_chromebook_rounded
+                            : Icons.phone_android_rounded,
+                        size: 18,
+                        color: isCurrent
+                            ? const Color(0xFF10B981)
+                            : (isDark ? const Color(0xFF818CF8) : const Color(0xFF4F46E5)),
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -1341,23 +1407,17 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             s['device'] ?? 'Unknown Platform',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              color: isDark
-                                  ? Colors.white
-                                  : AppColors.textHeading,
-                              fontWeight: isCurrent
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
+                            style: GoogleFonts.poppins(
+                              color: textHeading,
+                              fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
                               fontSize: 13,
                             ),
                           ),
                           Text(
                             'IP: ${s['ip']} • ${s['location']}',
                             style: GoogleFonts.inter(
-                              color: isDark
-                                  ? Colors.white60
-                                  : AppColors.textMuted,
-                              fontSize: 10,
+                              color: textLabel,
+                              fontSize: 11,
                             ),
                           ),
                         ],
@@ -1367,21 +1427,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
-                          vertical: 2,
+                          vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.1),
-                          border: Border.all(
-                            color: AppColors.success.withValues(alpha: 0.4),
-                          ),
-                          borderRadius: BorderRadius.circular(6),
+                          color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
-                          'CURRENT',
-                          style: TextStyle(
-                            color: AppColors.success,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
+                        child: Text(
+                          'ACTIVE',
+                          style: GoogleFonts.poppins(
+                            color: const Color(0xFF10B981),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -1396,101 +1453,117 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Widget _buildQuickActions(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final int crossAxisCount = screenWidth >= 900 ? 4 : (screenWidth >= 600 ? 3 : 2);
+
+    final actions = [
+      StudentActionTile(
+        label: 'Mark Attendance',
+        description: 'Scan active QR code & verify biometric face ID',
+        icon: Icons.qr_code_scanner_rounded,
+        gradientColors: const [Color(0xFF6366F1), Color(0xFF4F46E5)],
+        onTap: () => context.go('/student/scan'),
+      ),
+      StudentActionTile(
+        label: 'Attendance Hub',
+        description: 'Track attendance health, scores, heatmaps & alerts',
+        icon: Icons.analytics_rounded,
+        gradientColors: const [Color(0xFFEC4899), Color(0xFFDB2777)],
+        onTap: () => context.push(AppRoutes.studentAttendanceHubPath),
+      ),
+      StudentActionTile(
+        label: 'AI Analyst',
+        description: 'Deep AI predictions & tailored advice on grades',
+        icon: Icons.psychology_rounded,
+        gradientColors: const [Color(0xFFF59E0B), Color(0xFFD97706)],
+        onTap: () => context.push('/analytics/analyst'),
+      ),
+      StudentActionTile(
+        label: 'Analytics',
+        description: 'Trends, heatmaps, peer percentiles & department stats',
+        icon: Icons.bar_chart_rounded,
+        gradientColors: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
+        onTap: () => context.push(AppRoutes.analyticsDashboardPath),
+      ),
+      StudentActionTile(
+        label: 'Register Face',
+        description: 'Update and re-train your neural face embeddings',
+        icon: Icons.face_retouching_natural_rounded,
+        gradientColors: const [Color(0xFF10B981), Color(0xFF059669)],
+        onTap: _showFaceRegistrationDialog,
+      ),
+      StudentActionTile(
+        label: 'Apply Leave',
+        description: 'Request formal leave and check approval status',
+        icon: Icons.event_busy_rounded,
+        gradientColors: const [Color(0xFFF97316), Color(0xFFEA580C)],
+        onTap: () => context.push('/student/leave'),
+      ),
+      StudentActionTile(
+        label: 'Reports Center',
+        description: 'Compile and export PDF/CSV/Excel attendance tickets',
+        icon: Icons.download_rounded,
+        gradientColors: const [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+        onTap: _showExportOptionsDialog,
+      ),
+      StudentActionTile(
+        label: 'Class Timetable',
+        description: 'View daily lectures and scheduled classrooms',
+        icon: Icons.calendar_view_week_rounded,
+        gradientColors: const [Color(0xFF06B6D4), Color(0xFF0891B2)],
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const StudentTimetableScreen(),
+            ),
+          );
+        },
+      ),
+      StudentActionTile(
+        label: 'Academic Calendar',
+        description: 'Track leaves, holidays and marked records',
+        icon: Icons.calendar_month_rounded,
+        gradientColors: const [Color(0xFF4F46E5), Color(0xFF3730A3)],
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const AttendanceCalendarScreen(),
+            ),
+          );
+        },
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'QUICK ACTIONS CONSOLE',
-          style: GoogleFonts.inter(
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 2,
-            color: AppColors.primary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        DashboardGrid(
-          crossAxisCount: 2,
-          spacing: 14,
-          runSpacing: 14,
+        Row(
           children: [
-            QuickActionCard(
-              label: 'Mark Attendance',
-              description: 'Scan active classroom QR and verify face ID',
-              icon: Icons.qr_code_scanner_rounded,
-              color: AppColors.accent,
-              onTap: () => context.go('/student/scan'),
-            ),
-            QuickActionCard(
-              label: 'Attendance Hub',
-              description:
-                  'Track attendance health, scores, heatmaps, and alerts',
-              icon: Icons.analytics_outlined,
-              color: Colors.pinkAccent,
-              onTap: () => context.push(AppRoutes.studentAttendanceHubPath),
-            ),
-            QuickActionCard(
-              label: 'AI Analyst',
-              description: 'Get deep predictions & advice on your grades',
-              icon: Icons.psychology_outlined,
-              color: AppColors.gold,
-              onTap: () => context.push('/analytics/analyst'),
-            ),
-            QuickActionCard(
-              label: 'Advanced Analytics',
-              description: 'Trends, heatmaps, risk students & department stats',
-              icon: Icons.bar_chart_rounded,
-              color: Colors.indigoAccent,
-              onTap: () => context.push(AppRoutes.analyticsDashboardPath),
-            ),
-            QuickActionCard(
-              label: 'Register Biometrics',
-              description: 'Update and re-train your AI face embeddings',
-              icon: Icons.face_retouching_natural_rounded,
-              color: Colors.tealAccent,
-              onTap: _showFaceRegistrationDialog,
-            ),
-            QuickActionCard(
-              label: 'Leave Applications',
-              description: 'Apply for leave and check approval status',
-              icon: Icons.event_busy_outlined,
-              color: Colors.orangeAccent,
-              onTap: () => context.push('/student/leave'),
-            ),
-            QuickActionCard(
-              label: 'Reports Center',
-              description: 'Export digital PDF/CSV/Excel reports',
-              icon: Icons.download_rounded,
-              color: Colors.purpleAccent,
-              onTap: _showExportOptionsDialog,
-            ),
-            QuickActionCard(
-              label: 'Class Timetable',
-              description: 'View daily lectures and scheduled rooms',
-              icon: Icons.calendar_view_week_rounded,
-              color: Colors.blueAccent,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const StudentTimetableScreen(),
-                  ),
-                );
-              },
-            ),
-            QuickActionCard(
-              label: 'Academic Calendar',
-              description: 'Track leaves, holidays and marked attendance',
-              icon: Icons.calendar_month_rounded,
-              color: Colors.deepPurpleAccent,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const AttendanceCalendarScreen(),
-                  ),
-                );
-              },
+            const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFF4F46E5)),
+            const SizedBox(width: 8),
+            Text(
+              'QUICK ACTIONS CONSOLE',
+              style: GoogleFonts.inter(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.5,
+                color: const Color(0xFF4F46E5),
+              ),
             ),
           ],
+        ),
+        const SizedBox(height: 14),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: actions.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: screenWidth >= 600 ? 1.25 : 1.10,
+          ),
+          itemBuilder: (context, index) => actions[index],
         ),
       ],
     );

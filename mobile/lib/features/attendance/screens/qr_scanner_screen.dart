@@ -244,8 +244,9 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                     ),
                 ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
+              child: RepaintBoundary(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
                 child: Stack(
                   children: [
                     // Subtle background grid lines
@@ -433,7 +434,8 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                   ],
                 ),
               ),
-            )
+            ),
+          )
                 .animate(target: _resultState == ScanResultState.error ? 1 : 0)
                 .shake(duration: 400.ms, hz: 6)
                 .animate(target: _resultState == ScanResultState.success ? 1 : 0)

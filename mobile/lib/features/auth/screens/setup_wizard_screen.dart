@@ -809,7 +809,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   // ─── FACE ID ─────────────────────────────────────────────────────────────
 
   Widget _buildFaceIdCard() {
-    const p = AuthDesign.primaryIndigo;
     return _buildCardShell(
       children: [
         Text(
