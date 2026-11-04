@@ -28,7 +28,8 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
-import 'package:smartface_attendance/design_system/design_system.dart';
+import 'package:smartface_attendance/design_system/design_system.dart'
+    hide PrimaryButton;
 
 class SetupWizardScreen extends StatefulWidget {
   const SetupWizardScreen({super.key});
@@ -1046,27 +1047,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
 
   Widget _buildNextButton({String? label}) {
     final isLast = _currentPage == _totalPages - 1;
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: _nextPage,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AuthDesign.primaryIndigo,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(13),
-          ),
-          elevation: 0,
-        ),
-        child: Text(
-          label ?? (isLast ? 'Enter Dashboard' : 'Continue'),
-          style: AuthDesign.fontPoppins(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
-      ),
+    return PrimaryButton(
+      text: label ?? (isLast ? 'Enter Dashboard' : 'Continue'),
+      onPressed: _nextPage,
     );
   }
 }
