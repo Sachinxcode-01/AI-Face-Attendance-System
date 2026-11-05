@@ -11,6 +11,7 @@ import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
+import 'package:smartface_attendance/features/sync/services/connectivity_service.dart';
 import 'package:smartface_attendance/design_system/design_system.dart'
     hide PrimaryButton;
 
@@ -22,7 +23,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   String _bootMessage = 'BOOT: INITIALIZING SECURE AI SUITE...';
   Timer? _bootTimer;
   final bool _showWelcome = false;
@@ -609,22 +611,22 @@ class _SplashScreenState extends State<SplashScreen> {
                         _buildBadgeItem('Smart')
                             .animate()
                             .fadeIn(delay: 500.ms, duration: 400.ms)
-                            .slideY(begin: -8.ms),
+                            .slideY(begin: -0.1),
                         _buildBadgeDivider(),
                         _buildBadgeItem('Secure')
                             .animate()
                             .fadeIn(delay: 600.ms, duration: 400.ms)
-                            .slideY(begin: -8.ms),
+                            .slideY(begin: -0.1),
                         _buildBadgeDivider(),
                         _buildBadgeItem('Intelligent')
                             .animate()
                             .fadeIn(delay: 700.ms, duration: 400.ms)
-                            .slideY(begin: -8.ms),
+                            .slideY(begin: -0.1),
                         _buildBadgeDivider(),
                         _buildBadgeItem('Real-Time')
                             .animate()
                             .fadeIn(delay: 800.ms, duration: 400.ms)
-                            .slideY(begin: -8.ms),
+                            .slideY(begin: -0.1),
                       ],
                     ),
                   )

@@ -43,6 +43,7 @@ import 'package:go_router/go_router.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
+import 'package:smartface_attendance/shared/widgets/college_search_picker.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 
 // ======================================================
@@ -810,11 +811,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                             Icons.school_outlined,
                             _courseCtrl,
                           ),
-                          _field(
-                            'College / University',
-                            Icons.account_balance_outlined,
-                            _collegeCtrl,
-                          ),
+                          _collegePickerField(),
                           _field(
                             'Section',
                             Icons.grid_view_outlined,
@@ -1396,6 +1393,26 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
   }
 
   // ── Field Builders ────────────────────────────────────────────────────────
+  Widget _collegePickerField() {
+    if (_isEditing) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: CollegeSearchPicker(
+          controller: _collegeCtrl,
+          label: 'College / University',
+          hint: 'Search College DB...',
+          onChanged: (_) => setState(() => _hasUnsavedChanges = true),
+          isDark: Theme.of(context).brightness == Brightness.dark,
+        ),
+      );
+    }
+    return _field(
+      'College / University',
+      Icons.account_balance_outlined,
+      _collegeCtrl,
+    );
+  }
+
   Widget _field(
     String label,
     IconData icon,

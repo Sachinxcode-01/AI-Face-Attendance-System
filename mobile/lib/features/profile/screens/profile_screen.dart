@@ -39,6 +39,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
+import 'package:smartface_attendance/shared/widgets/college_search_picker.dart';
 
 // ======================================================
 // Core & State Imports
@@ -551,6 +552,9 @@ class _ProfileScreenState extends State<ProfileScreen>
     final parentCtrl = TextEditingController(
       text: _profileData['parent_details'] ?? '',
     );
+    final collegeCtrl = TextEditingController(
+      text: _profileData['college'] ?? '',
+    );
 
     // Teacher fields
     final employeeIdCtrl = TextEditingController(
@@ -789,6 +793,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                           parentCtrl,
                         ),
                       ],
+                      const SizedBox(height: 15),
+                      CollegeSearchPicker(
+                        controller: collegeCtrl,
+                        label: 'College / University',
+                        hint: 'Search verified institutions...',
+                        isDark: true,
+                      ),
                       const SizedBox(height: 35),
                       GlowButton(
                         onPressed: () async {
@@ -804,6 +815,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   'dob': dobCtrl.text.trim(),
                                   'gender': genderCtrl.text.trim(),
                                   'address': addressCtrl.text.trim(),
+                                  'college': collegeCtrl.text.trim(),
                                   'language_preference': langCtrl.text.trim(),
                                   'employee_id': employeeIdCtrl.text.trim(),
                                   'designation': designationCtrl.text.trim(),
@@ -819,6 +831,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   'dob': dobCtrl.text.trim(),
                                   'gender': genderCtrl.text.trim(),
                                   'address': addressCtrl.text.trim(),
+                                  'college': collegeCtrl.text.trim(),
                                   'language_preference': langCtrl.text.trim(),
                                   'usn': usnCtrl.text.trim(),
                                   'student_id': usnCtrl.text.trim(),

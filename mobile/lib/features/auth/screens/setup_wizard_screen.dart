@@ -28,6 +28,7 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
+import 'package:smartface_attendance/shared/widgets/college_search_picker.dart';
 import 'package:smartface_attendance/design_system/design_system.dart'
     hide PrimaryButton;
 
@@ -753,6 +754,12 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           hint: 'e.g. 5',
           type: TextInputType.number,
         ),
+        const SizedBox(height: 16),
+        CollegeSearchPicker(
+          controller: _collegeController,
+          label: 'Affiliated College / School',
+          hint: 'Select or search institution',
+        ),
         const SizedBox(height: 28),
         _buildNextButton(),
       ],
@@ -782,6 +789,12 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           ),
         ),
         const SizedBox(height: 24),
+        CollegeSearchPicker(
+          controller: _collegeController,
+          label: 'College / University',
+          hint: 'Search verified College DB institutions',
+        ),
+        const SizedBox(height: 16),
         _field('Student ID / USN', _usnController, hint: 'e.g. 1AB22CS001'),
         const SizedBox(height: 16),
         _field(

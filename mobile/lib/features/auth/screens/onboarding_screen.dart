@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
+import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart'
+    show AuthDesign;
 import 'package:smartface_attendance/features/auth/widgets/introduction_cards.dart';
 
 class OnboardingScreen extends StatefulWidget {
