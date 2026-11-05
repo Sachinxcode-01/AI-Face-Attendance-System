@@ -606,9 +606,20 @@ class _SocialIconRowState extends State<SocialIconRow> {
         '&redirect_uri=${Uri.encodeComponent(callbackUrl)}',
       );
 
-      if (await canLaunchUrl(authUrl)) {
-        await launchUrl(authUrl, mode: LaunchMode.externalApplication);
-      } else {
+      bool launched = false;
+      try {
+        launched = await launchUrl(authUrl, mode: LaunchMode.externalApplication);
+      } catch (_) {
+        launched = false;
+      }
+      if (!launched) {
+        try {
+          launched = await launchUrl(authUrl, mode: LaunchMode.platformDefault);
+        } catch (_) {
+          launched = false;
+        }
+      }
+      if (!launched) {
         throw Exception('Could not launch GitHub OAuth page');
       }
 

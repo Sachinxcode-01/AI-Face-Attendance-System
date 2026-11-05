@@ -1539,6 +1539,27 @@ class _StudentDashboardState extends State<StudentDashboard> {
           );
         },
       ),
+      StudentActionTile(
+        label: 'Bunk Calculator',
+        description: 'Simulate safe absences & attendance compliance targets',
+        icon: Icons.calculate_rounded,
+        gradientColors: const [Color(0xFF10B981), Color(0xFF047857)],
+        onTap: () => context.push(AppRoutes.studentBunkCalculatorPath),
+      ),
+      StudentActionTile(
+        label: 'Digital ID Card',
+        description: 'Holographic verified student badge & dynamic QR code',
+        icon: Icons.badge_rounded,
+        gradientColors: const [Color(0xFF6366F1), Color(0xFF312E81)],
+        onTap: () => context.push(AppRoutes.studentIdCardPath),
+      ),
+      StudentActionTile(
+        label: 'Face Check-in',
+        description: 'Instant front-camera ArcFace neural selfie verification',
+        icon: Icons.face_unlock_rounded,
+        gradientColors: const [Color(0xFFEC4899), Color(0xFF9D174D)],
+        onTap: () => context.push(AppRoutes.studentFaceCheckinPath),
+      ),
     ];
 
     return Column(

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgTech" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4"/>
+      <stop offset="100%" stop-color="#0E7490"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="60" fill="url(#bgTech)" stroke="#22D3EE" stroke-width="4"/>
+  <path d="M26 116 C26 90 42 78 64 78 C86 78 102 90 102 116 Z" fill="#0F172A"/>
+  <path d="M58 84 L64 102 L70 84 Z" fill="#06B6D4"/>
+  <rect x="56" y="70" width="16" height="18" fill="#FDBA74"/>
+  <ellipse cx="64" cy="54" rx="24" ry="26" fill="#FED7AA"/>
+  <path d="M38 46 C38 28 50 22 64 22 C78 22 90 28 90 46 Z" fill="#1E293B"/>
+  <rect x="44" y="48" width="16" height="12" rx="3" fill="none" stroke="#22D3EE" stroke-width="2.5"/>
+  <rect x="68" y="48" width="16" height="12" rx="3" fill="none" stroke="#22D3EE" stroke-width="2.5"/>
+  <line x1="60" y1="54" x2="68" y2="54" stroke="#22D3EE" stroke-width="2.5"/>
+  <circle cx="52" cy="54" r="2" fill="#22D3EE"/>
+  <circle cx="76" cy="54" r="2" fill="#22D3EE"/>
+  <path d="M58 66 Q64 70 70 66" stroke="#0E7490" stroke-width="2" stroke-linecap="round" fill="none"/>
+</svg>

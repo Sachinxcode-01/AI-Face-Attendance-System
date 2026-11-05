@@ -38,7 +38,14 @@ import 'package:smartface_attendance/features/auth/screens/setup_wizard_screen.d
 // Student Screens
 import 'package:smartface_attendance/features/student/screens/student_home_screen.dart';
 import 'package:smartface_attendance/features/student/screens/attendance_hub_screen.dart';
+import 'package:smartface_attendance/features/student/screens/student_bunk_calculator_screen.dart';
+import 'package:smartface_attendance/features/student/screens/student_id_card_screen.dart';
+import 'package:smartface_attendance/features/student/screens/student_face_checkin_screen.dart';
 import 'package:smartface_attendance/features/teacher/screens/attendance_command_center.dart';
+import 'package:smartface_attendance/features/teacher/screens/teacher_at_risk_screen.dart';
+import 'package:smartface_attendance/features/teacher/screens/teacher_roster_override_screen.dart';
+import 'package:smartface_attendance/features/parent/screens/parent_link_ward_screen.dart';
+import 'package:smartface_attendance/features/admin/screens/admin_intruder_sentinel_screen.dart';
 import 'package:smartface_attendance/features/attendance/screens/qr_scanner_screen.dart';
 import 'package:smartface_attendance/features/leave/screens/leave_history_screen.dart';
 import 'package:smartface_attendance/features/leave/screens/leave_apply_screen.dart';
@@ -482,6 +489,42 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
+    // Student Smart Bunk Calculator
+    GoRoute(
+      path: AppRoutes.studentBunkCalculatorPath,
+      name: AppRoutes.studentBunkCalculatorName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const StudentBunkCalculatorScreen(),
+      ),
+    ),
+
+    // Student Digital Holographic ID Card
+    GoRoute(
+      path: AppRoutes.studentIdCardPath,
+      name: AppRoutes.studentIdCardName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const StudentIdCardScreen(),
+      ),
+    ),
+
+    // Student Biometric Face Check-in Scanner
+    GoRoute(
+      path: AppRoutes.studentFaceCheckinPath,
+      name: AppRoutes.studentFaceCheckinName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const StudentFaceCheckinScreen(),
+      ),
+    ),
+
     // Offline sync dashboard route
     GoRoute(
       path: AppRoutes.syncDashboardPath,
@@ -676,6 +719,46 @@ final GoRouter appRouter = GoRouter(
         context: context,
         state: state,
         child: const AttendanceCommandCenter(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.teacherAtRiskRadarPath,
+      name: AppRoutes.teacherAtRiskRadarName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const TeacherAtRiskRadarScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.teacherRosterOverridePath,
+      name: AppRoutes.teacherRosterOverrideName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const TeacherRosterOverrideScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.parentLinkWardPath,
+      name: AppRoutes.parentLinkWardName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const ParentLinkWardScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.adminIntruderSentinelPath,
+      name: AppRoutes.adminIntruderSentinelName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const AdminIntruderSentinelScreen(),
       ),
     ),
 

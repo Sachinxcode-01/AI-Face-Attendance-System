@@ -116,6 +116,8 @@ flutter:
     - assets/icons/
     - assets/background/
     - assets/knowledge/
+    - assets/lottie/
+    - assets/avatars/
     - .env
     - .env.development
     - .env.staging

@@ -42,8 +42,10 @@ class AuthController extends ChangeNotifier {
     _setError(null);
     try {
       final res = await _repository.loginWithPassword(email, password);
-      if (res.containsKey('detail') && !res.containsKey('token')) {
-        _setError(res['detail'] as String);
+      final token = res['access_token'] ?? res['token'];
+      if (token == null || token.toString().isEmpty) {
+        final err = res['detail'] ?? res['message'] ?? 'Login failed. Please check your credentials.';
+        _setError(err.toString());
       }
       return res;
     } catch (e) {

@@ -23,6 +23,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:smartface_attendance/app/config/app_state.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
+import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 
 // ======================================================
@@ -382,8 +383,11 @@ class _AdminDashboardState extends State<AdminDashboard>
     final textColor = isDark ? Colors.white : AppColors.textHeading;
     final mutedTextColor = isDark ? Colors.white60 : AppColors.textMuted;
 
-    return ModernDashboardCard(
-      child: Row(
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      onTap: () => context.push(AppRoutes.adminIntruderSentinelPath),
+      child: ModernDashboardCard(
+        child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
@@ -429,7 +433,8 @@ class _AdminDashboardState extends State<AdminDashboard>
           StatusBadge(label: statusLabel, color: statusColor, animateDot: true),
         ],
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildQuickActions(BuildContext context) {
@@ -485,6 +490,13 @@ class _AdminDashboardState extends State<AdminDashboard>
               icon: Icons.analytics_outlined,
               color: AppColors.successLight,
               onTap: () => context.go('/admin/analytics'),
+            ),
+            QuickActionCard(
+              label: 'Intruder Sentinel',
+              description: 'CCTV threat gallery & unknown face alerts',
+              icon: Icons.camera_indoor_outlined,
+              color: const Color(0xFFEF4444),
+              onTap: () => context.push(AppRoutes.adminIntruderSentinelPath),
             ),
             QuickActionCard(
               label: 'System Settings',

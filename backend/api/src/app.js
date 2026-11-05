@@ -359,3 +359,11 @@ const gracefulShutdown = (signal) => {
 
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+process.on('unhandledRejection', (reason) => {
+  console.warn('⚠️ [Process] Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('💥 [Process] Uncaught Exception:', err);
+});

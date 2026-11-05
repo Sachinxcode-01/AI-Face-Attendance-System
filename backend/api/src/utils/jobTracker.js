@@ -3,10 +3,13 @@ const pendingPromises = new Set();
 function trackJob(promise) {
   if (promise && typeof promise.then === 'function') {
     pendingPromises.add(promise);
-    promise.then(
-      () => pendingPromises.delete(promise),
-      () => pendingPromises.delete(promise)
-    );
+    promise
+      .catch((err) => {
+        console.warn('⚠️ [Background Job Error]:', err && err.message ? err.message : err);
+      })
+      .finally(() => {
+        pendingPromises.delete(promise);
+      });
   }
   return promise;
 }

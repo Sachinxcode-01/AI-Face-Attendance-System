@@ -111,11 +111,11 @@ class MemoryRateLimiter {
 }
 
 // ── Limit Instances ─────────────────────────────────────────────────────────
-const otpSendLimiter = new MemoryRateLimiter(3, 60, 'otp_send');
-const otpVerifyLimiter = new MemoryRateLimiter(5, 60, 'otp_verify');
-const registerLimiter = new MemoryRateLimiter(5, 300, 'register');
-const loginPasswordLimiter = new MemoryRateLimiter(5, 60, 'login_pw');
-const generalApiLimiter = new MemoryRateLimiter(60, 60, 'api_general');
+const otpSendLimiter = new MemoryRateLimiter(5, 60, 'otp_send');
+const otpVerifyLimiter = new MemoryRateLimiter(10, 60, 'otp_verify');
+const registerLimiter = new MemoryRateLimiter(10, 300, 'register');
+const loginPasswordLimiter = new MemoryRateLimiter(20, 60, 'login_pw');
+const generalApiLimiter = new MemoryRateLimiter(120, 60, 'api_general');
 
 // ── Middleware Generators ───────────────────────────────────────────────────
 const createRateLimitMiddleware = (limiter, messageFn, extractKeyFn) => {
@@ -125,7 +125,8 @@ const createRateLimitMiddleware = (limiter, messageFn, extractKeyFn) => {
       return next();
     }
 
-    const key = extractKeyFn ? extractKeyFn(req) : (req.body?.email || req.ip || 'unknown_client');
+    const rawKey = extractKeyFn ? extractKeyFn(req) : (req.body?.email || req.ip || 'unknown_client');
+    const key = typeof rawKey === 'string' ? rawKey.toLowerCase().trim() : rawKey;
     const result = await limiter.check(key);
 
     if (!result.allowed) {

@@ -25,6 +25,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:http/http.dart' as http;
 
+import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
@@ -371,6 +372,81 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
               lates: lates,
               consecutiveAbsences: consecutiveAbsences,
               standing: standing,
+            ),
+            const SizedBox(height: 18),
+
+            // 1.5. Smart Bunk & Goal Simulator Banner
+            InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push(AppRoutes.studentBunkCalculatorPath);
+              },
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF312E81), Color(0xFF1E1B4B)],
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: const Color(0xFF818CF8).withValues(alpha: 0.4),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4F46E5).withValues(alpha: 0.2),
+                      blurRadius: 18,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.calculate_rounded,
+                        color: Color(0xFF10B981),
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Smart Bunk & Target Calculator',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Calculate safe absences & consecutive classes required to reach 75%+',
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFFA5B4FC),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: Color(0xFFA5B4FC),
+                      size: 14,
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 18),
 

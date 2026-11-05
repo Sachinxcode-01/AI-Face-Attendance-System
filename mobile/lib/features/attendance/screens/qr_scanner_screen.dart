@@ -29,6 +29,7 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/features/sync/repositories/sync_repository.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 
 enum ScanResultState { none, loading, success, error }
@@ -550,6 +551,18 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                         } catch (e) {
                           debugPrint('Torch toggle error: $e');
                         }
+                      },
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Biometric Face Check-in Switch Button
+                    _buildGlassIconButton(
+                      icon: Icons.face_retouching_natural_rounded,
+                      iconColor: const Color(0xFF67E8F9),
+                      glowColor: const Color(0xFF6366F1).withValues(alpha: 0.4),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        context.push(AppRoutes.studentFaceCheckinPath);
                       },
                     ),
                   ],

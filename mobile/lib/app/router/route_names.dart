@@ -76,6 +76,15 @@ class AppRoutes {
   static const String studentTimetableName = 'studentTimetable';
   static const String studentTimetablePath = '/student/timetable';
 
+  static const String studentBunkCalculatorName = 'studentBunkCalculator';
+  static const String studentBunkCalculatorPath = '/student/bunk-calculator';
+
+  static const String studentIdCardName = 'studentIdCard';
+  static const String studentIdCardPath = '/student/id-card';
+
+  static const String studentFaceCheckinName = 'studentFaceCheckin';
+  static const String studentFaceCheckinPath = '/student/face-checkin';
+
   static const String teacherAttendanceCommandName = 'teacherAttendanceCommand';
   static const String teacherAttendanceCommandPath =
       '/teacher/attendance/command';
@@ -102,6 +111,12 @@ class AppRoutes {
   static const String teacherSystemHealthName = 'teacherSystemHealth';
   static const String teacherSystemHealthPath = '/teacher/system-health';
 
+  static const String teacherAtRiskRadarName = 'teacherAtRiskRadar';
+  static const String teacherAtRiskRadarPath = '/teacher/at-risk';
+
+  static const String teacherRosterOverrideName = 'teacherRosterOverride';
+  static const String teacherRosterOverridePath = '/teacher/roster-override';
+
   // Parent Section routes
   static const String parentHomeName = 'parentHome';
   static const String parentHomePath = '/parent/dashboard';
@@ -115,6 +130,9 @@ class AppRoutes {
   static const String parentAlertsName = 'parentAlerts';
   static const String parentAlertsPath = '/parent/alerts';
 
+  static const String parentLinkWardName = 'parentLinkWard';
+  static const String parentLinkWardPath = '/parent/link-ward';
+
   // Admin Shell Tab routes
   static const String adminHomeName = 'adminHome';
   static const String adminHomePath = '/admin/dashboard';
@@ -124,6 +142,9 @@ class AppRoutes {
 
   static const String adminSecurityName = 'adminSecurity';
   static const String adminSecurityPath = '/admin/security';
+
+  static const String adminIntruderSentinelName = 'adminIntruderSentinel';
+  static const String adminIntruderSentinelPath = '/admin/intruder-sentinel';
 
   static const String adminAnalyticsName = 'adminAnalytics';
   static const String adminAnalyticsPath = '/admin/analytics';

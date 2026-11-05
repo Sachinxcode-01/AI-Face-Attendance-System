@@ -89,7 +89,8 @@ class _LoginScreenState extends State<LoginScreen> {
       final result = await ApiService.loginWithPassword(email, password);
       if (!mounted) return;
 
-      if (result.containsKey('access_token')) {
+      final token = result['access_token'] ?? result['token'];
+      if (token != null && token.toString().isNotEmpty) {
         HapticFeedback.heavyImpact();
         final session = context.read<SessionManager>();
 
@@ -109,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final String name = result['full_name'] ?? result['name'] ?? 'User';
 
         await session.saveSession(
-          token: result['access_token'],
+          token: token.toString(),
           refreshToken: result['refresh_token'] as String?,
           email: email,
           role: role,
@@ -154,14 +155,19 @@ class _LoginScreenState extends State<LoginScreen> {
         final msg =
             result['detail'] ??
             result['message'] ??
+            result['error'] ??
             'Login failed. Please check your credentials.';
         AppToast.show(context, message: msg.toString(), type: ToastType.error);
       }
     } catch (e) {
       if (!mounted) return;
+      debugPrint('[LoginScreen] Exception in _handleSignIn: $e');
+      final errStr = e.toString().replaceAll('Exception: ', '');
       AppToast.show(
         context,
-        message: 'An unexpected error occurred. Please try again.',
+        message: errStr.contains('SocketException') || errStr.contains('Failed host lookup')
+            ? 'Unable to connect to server. Please check your connection.'
+            : 'Login error: $errStr',
         type: ToastType.error,
       );
     } finally {

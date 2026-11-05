@@ -251,22 +251,32 @@ class ApiService {
   }
 }
 
-Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
+Map<String, dynamic> normalizeAuthResponse(dynamic rawJson) {
+  if (rawJson == null || rawJson is! Map) {
+    return {
+      'success': false,
+      'detail': 'Invalid response from server.',
+    };
+  }
+  final json = Map<String, dynamic>.from(rawJson);
   final normalized = Map<String, dynamic>.from(json);
 
-  if (json.containsKey('data') && json['data'] is Map<String, dynamic>) {
-    final data = json['data'] as Map<String, dynamic>;
+  // Extract access and refresh tokens safely
+  String? extractedToken;
+  String? extractedRefreshToken;
 
-    if (data.containsKey('accessToken') && data['accessToken'] != null) {
-      normalized['access_token'] = data['accessToken'];
-      normalized['token'] = data['accessToken'];
+  if (json.containsKey('data') && json['data'] is Map) {
+    final data = Map<String, dynamic>.from(json['data'] as Map);
+
+    if (data['accessToken'] != null && data['accessToken'].toString().isNotEmpty) {
+      extractedToken = data['accessToken'].toString();
     }
-    if (data.containsKey('refreshToken') && data['refreshToken'] != null) {
-      normalized['refresh_token'] = data['refreshToken'];
+    if (data['refreshToken'] != null && data['refreshToken'].toString().isNotEmpty) {
+      extractedRefreshToken = data['refreshToken'].toString();
     }
 
-    if (data.containsKey('user') && data['user'] is Map<String, dynamic>) {
-      final user = data['user'] as Map<String, dynamic>;
+    if (data['user'] is Map) {
+      final user = Map<String, dynamic>.from(data['user'] as Map);
       if (user.containsKey('id')) normalized['id'] = user['id'];
       if (user.containsKey('email')) normalized['email'] = user['email'];
       if (user.containsKey('name')) {
@@ -276,8 +286,7 @@ Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
       if (user.containsKey('role')) normalized['role'] = user['role'];
 
       final intro = user['introCompleted'] ?? false;
-      final wizard =
-          user['wizardCompleted'] ??
+      final wizard = user['wizardCompleted'] ??
           user['setup_completed'] ??
           user['biometric_registered'] ??
           false;
@@ -286,36 +295,44 @@ Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
       normalized['biometric_registered'] = wizard;
       normalized['setup_completed'] = wizard;
     }
+  }
+
+  // Fallback to top-level token fields if not in data object
+  if (extractedToken == null || extractedToken.isEmpty) {
+    if (json['access_token'] != null && json['access_token'].toString().isNotEmpty) {
+      extractedToken = json['access_token'].toString();
+    } else if (json['token'] != null && json['token'].toString().isNotEmpty) {
+      extractedToken = json['token'].toString();
+    }
+  }
+
+  if (extractedRefreshToken == null || extractedRefreshToken.isEmpty) {
+    if (json['refresh_token'] != null && json['refresh_token'].toString().isNotEmpty) {
+      extractedRefreshToken = json['refresh_token'].toString();
+    }
+  }
+
+  final bool hasValidToken = extractedToken != null && extractedToken.isNotEmpty;
+
+  if (hasValidToken) {
+    normalized['access_token'] = extractedToken;
+    normalized['token'] = extractedToken;
+    normalized['success'] = true;
   } else {
-    final userMap = <String, dynamic>{};
-    if (json.containsKey('id')) userMap['id'] = json['id'];
-    if (json.containsKey('email')) userMap['email'] = json['email'];
-    if (json.containsKey('full_name') || json.containsKey('name')) {
-      userMap['name'] = json['full_name'] ?? json['name'];
-    }
-    if (json.containsKey('role')) userMap['role'] = json['role'];
+    normalized.remove('access_token');
+    normalized.remove('token');
+    normalized['success'] = json['success'] == true;
+  }
 
-    final wizard =
-        json['biometric_registered'] ?? json['setup_completed'] ?? false;
-    userMap['introCompleted'] = json['introCompleted'] ?? false;
-    userMap['wizardCompleted'] = wizard;
+  if (extractedRefreshToken != null && extractedRefreshToken.isNotEmpty) {
+    normalized['refresh_token'] = extractedRefreshToken;
+  } else {
+    normalized.remove('refresh_token');
+  }
 
-    normalized['success'] = json['success'] ?? !json.containsKey('detail');
-    normalized['message'] = json['message'] ?? json['detail'] ?? '';
-    normalized['data'] = {
-      'accessToken': json['access_token'] ?? json['token'],
-      'refreshToken': json['refresh_token'],
-      'user': userMap,
-    };
-
-    normalized['access_token'] = json['access_token'] ?? json['token'];
-    normalized['token'] = json['access_token'] ?? json['token'];
-    normalized['biometric_registered'] = wizard;
-    normalized['setup_completed'] = wizard;
-    if (json.containsKey('full_name') || json.containsKey('name')) {
-      normalized['full_name'] = json['full_name'] ?? json['name'];
-      normalized['name'] = json['full_name'] ?? json['name'];
-    }
+  if (json.containsKey('full_name') || json.containsKey('name')) {
+    normalized['full_name'] = json['full_name'] ?? json['name'];
+    normalized['name'] = json['full_name'] ?? json['name'];
   }
 
   return normalized;

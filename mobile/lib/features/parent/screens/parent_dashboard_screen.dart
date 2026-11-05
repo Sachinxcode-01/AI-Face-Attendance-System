@@ -647,6 +647,18 @@ class _ParentDashboardState extends State<ParentDashboard> {
                 );
               },
             ),
+            QuickActionCard(
+              label: 'Link student ward',
+              description: 'Connect child using roll number',
+              icon: Icons.person_add_alt_1_outlined,
+              color: AppColors.primary,
+              onTap: () async {
+                final res = await context.push(AppRoutes.parentLinkWardPath);
+                if (res == true) {
+                  _loadWards();
+                }
+              },
+            ),
           ],
         ),
       ],

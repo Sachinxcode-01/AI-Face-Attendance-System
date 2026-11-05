@@ -15,6 +15,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartface_attendance/app/config/env_config.dart';
 import 'package:smartface_attendance/features/leave/models/leave_model.dart';
 import 'package:smartface_attendance/features/leave/models/leave_balance.dart';
@@ -25,6 +26,7 @@ class ApiService {
   static http.Client client = InterceptingClient(http.Client());
   static VoidCallback? onSessionExpired;
   static ValueChanged<String>? onTokenRefreshed;
+  static String? _customBaseUrl;
 
   // In-memory mock database for Leave Management System
   static final List<LeaveModel> _mockLeaves = [
@@ -111,14 +113,19 @@ class ApiService {
     ),
   };
 
-  static String get baseUrl => EnvConfig.apiUrl;
+  static String get baseUrl {
+    if (_customBaseUrl != null && _customBaseUrl!.isNotEmpty) {
+      return _customBaseUrl!;
+    }
+    return EnvConfig.apiUrl;
+  }
 
   static String get serverHost {
     try {
       final uri = Uri.parse(baseUrl);
       return uri.host;
     } catch (_) {
-      return '10.210.101.48';
+      return '10.217.113.48';
     }
   }
 
@@ -132,6 +139,17 @@ class ApiService {
   }
 
   static Future<void> init() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedUrl = prefs.getString('custom_api_url');
+      if (savedUrl != null && savedUrl.isNotEmpty) {
+        _customBaseUrl = savedUrl;
+        debugPrint('[ApiService] 💾 Loaded custom server URL: $_customBaseUrl');
+      }
+    } catch (e) {
+      debugPrint('[ApiService] Error loading saved server URL: $e');
+    }
+
     if (baseUrl.isEmpty) {
       debugPrint(
         '[ApiService] ❌ FATAL: API_URL is empty. Check .env file is loaded and ENV dart-define is correct.',
@@ -273,9 +291,50 @@ class ApiService {
   }
 
   static Future<void> saveServerSettings(String host, String port) async {
-    debugPrint(
-      '[ApiService] saveServerSettings called with $host:$port. EnvConfig is locked to $baseUrl',
-    );
+    final cleanHost = host.trim();
+    final cleanPort = port.trim();
+    if (cleanHost.isNotEmpty) {
+      final scheme = cleanHost.startsWith('https://') || cleanHost.startsWith('http://')
+          ? ''
+          : 'http://';
+      final portSuffix = cleanPort.isNotEmpty ? ':$cleanPort' : '';
+      final fullUrl = '$scheme$cleanHost$portSuffix'.replaceAll(RegExp(r'/+$'), '');
+      _customBaseUrl = fullUrl;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('custom_api_url', fullUrl);
+        await prefs.setString('custom_server_host', cleanHost);
+        await prefs.setString('custom_server_port', cleanPort);
+      } catch (e) {
+        debugPrint('[ApiService] saveServerSettings error: $e');
+      }
+      debugPrint('[ApiService] ✅ Updated server URL to: $_customBaseUrl');
+    }
+  }
+
+  static Future<bool> _tryAutoDetectEndpoint() async {
+    final candidates = [
+      'http://10.217.113.48:8000',
+      'http://10.0.2.2:8000',
+      'http://127.0.0.1:8000',
+      'http://localhost:8000',
+    ];
+    for (final candidate in candidates) {
+      if (candidate == baseUrl) continue;
+      try {
+        final res = await http
+            .get(Uri.parse('$candidate/health'))
+            .timeout(const Duration(seconds: 2));
+        if (res.statusCode == 200) {
+          _customBaseUrl = candidate;
+          final uri = Uri.parse(candidate);
+          saveServerSettings(uri.host, uri.port.toString());
+          debugPrint('[ApiService] 🚀 Auto-recovered connection to: $_customBaseUrl');
+          return true;
+        }
+      } catch (_) {}
+    }
+    return false;
   }
 
   static Future<bool> isServerOnline() async {
@@ -310,9 +369,9 @@ class ApiService {
           .post(
             Uri.parse('$baseUrl/auth/login-otp/send'),
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'email': email}),
+            body: jsonEncode({'email': email.trim().toLowerCase()}),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 20));
       debugPrint('[ApiService] ← Status ${response.statusCode}');
       return _processResponse(response);
     } catch (e) {
@@ -330,9 +389,9 @@ class ApiService {
           .post(
             Uri.parse('$baseUrl/auth/login-otp/verify'),
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'email': email, 'otp': otp}),
+            body: jsonEncode({'email': email.trim().toLowerCase(), 'otp': otp.trim()}),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 20));
       debugPrint('[ApiService] ← Status ${response.statusCode}');
       return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
@@ -344,18 +403,33 @@ class ApiService {
     String email,
     String password,
   ) async {
-    debugPrint('[ApiService] → POST $baseUrl/auth/login');
+    final cleanEmail = email.trim().toLowerCase();
+    debugPrint('[ApiService] → POST $baseUrl/auth/login for $cleanEmail');
     try {
       final response = await client
           .post(
             Uri.parse('$baseUrl/auth/login'),
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'email': email, 'password': password}),
+            body: jsonEncode({'email': cleanEmail, 'password': password}),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 30));
       debugPrint('[ApiService] ← Status ${response.statusCode}');
       return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
+      debugPrint('[ApiService] Connection failure during login: $e. Probing fallback endpoints...');
+      final recovered = await _tryAutoDetectEndpoint();
+      if (recovered) {
+        try {
+          final retryResponse = await client
+              .post(
+                Uri.parse('$baseUrl/auth/login'),
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode({'email': cleanEmail, 'password': password}),
+              )
+              .timeout(const Duration(seconds: 20));
+          return normalizeAuthResponse(_processResponse(retryResponse));
+        } catch (_) {}
+      }
       return _classifyNetworkError(e);
     }
   }
@@ -1569,90 +1643,7 @@ class ApiService {
     } catch (e) {
       debugPrint('getStudentAnalytics error: $e');
     }
-
-    // Fallback fully hydrated analytics payload for student sandbox
-    return {
-      'overall_percentage': 0.94,
-      'predicted_semester_attendance': 96.0,
-      'trend_direction': 'improving',
-      'risk_level': 'low',
-      'missable_classes': 3,
-      'personal_insights': [
-        {
-          'text': 'Your attendance increased by 12% this month.',
-          'type': 'improving',
-        },
-        {'text': 'You are ranked #12 in your department.', 'type': 'champion'},
-        {'text': 'You need 3 more classes to reach 95%.', 'type': 'trend'},
-        {'text': 'Maintain streak to avoid critical warnings.', 'type': 'risk'},
-      ],
-      'leaderboard': [
-        {
-          'name': 'Sachin K',
-          'department': 'CSE',
-          'rank': 12,
-          'score': 94.0,
-          'is_me': true,
-        },
-        {
-          'name': 'Aditya S',
-          'department': 'CSE',
-          'rank': 1,
-          'score': 99.0,
-          'is_me': false,
-        },
-        {
-          'name': 'Neha R',
-          'department': 'ECE',
-          'rank': 2,
-          'score': 98.0,
-          'is_me': false,
-        },
-        {
-          'name': 'Vikram M',
-          'department': 'ME',
-          'rank': 3,
-          'score': 97.0,
-          'is_me': false,
-        },
-      ],
-      'weekly_trends': [
-        {'week': 'Wk 1', 'present': 4},
-        {'week': 'Wk 2', 'present': 5},
-        {'week': 'Wk 3', 'present': 3},
-        {'week': 'Wk 4', 'present': 6},
-        {'week': 'Wk 5', 'present': 5},
-        {'week': 'Wk 6', 'present': 4},
-        {'week': 'Wk 7', 'present': 5},
-      ],
-      'monthly_trends': [
-        {'month': 'Jan', 'percentage': 88.0},
-        {'month': 'Feb', 'percentage': 91.0},
-        {'month': 'Mar', 'percentage': 93.0},
-        {'month': 'Apr', 'percentage': 95.0},
-        {'month': 'May', 'percentage': 94.0},
-      ],
-      'heatmap_data': {
-        '2026-06-01': 'present',
-        '2026-06-02': 'present',
-        '2026-06-03': 'present',
-        '2026-06-04': 'absent',
-        '2026-06-05': 'present',
-        '2026-06-08': 'present',
-        '2026-06-09': 'present',
-        '2026-06-10': 'present',
-        '2026-06-11': 'absent',
-        '2026-06-12': 'present',
-        '2026-06-15': 'present',
-        '2026-06-16': 'present',
-        '2026-06-17': 'present',
-      },
-      'ai_metrics': {
-        'average_confidence': 0.96,
-        'lighting_quality': 'Good',
-        'face_visibility': 'Excellent',
-      },
-    };
+    return null;
   }
 
   static Future<Map<String, dynamic>> getTeacherAnalytics(
@@ -2039,41 +2030,48 @@ class InterceptingClient extends http.BaseClient {
   }
 }
 
-Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
+Map<String, dynamic> normalizeAuthResponse(dynamic rawJson) {
+  if (rawJson == null || rawJson is! Map) {
+    return {
+      'success': false,
+      'detail': 'Invalid response from server.',
+    };
+  }
+  final json = Map<String, dynamic>.from(rawJson);
   final normalized = Map<String, dynamic>.from(json);
 
   Map<String, dynamic>? userData;
-  if (json['data'] is Map<String, dynamic> &&
-      (json['data'] as Map<String, dynamic>)['user'] is Map<String, dynamic>) {
-    userData =
-        (json['data'] as Map<String, dynamic>)['user'] as Map<String, dynamic>;
+  if (json['data'] is Map && (json['data'] as Map)['user'] is Map) {
+    userData = Map<String, dynamic>.from((json['data'] as Map)['user']);
   }
 
-  final String? photoUrl =
-      (json['profilePhotoUrl'] ??
-              json['avatar_url'] ??
-              userData?['profilePhotoUrl'] ??
-              userData?['avatar_url'])
-          as String?;
+  final String? photoUrl = (json['profilePhotoUrl'] ??
+          json['avatar_url'] ??
+          userData?['profilePhotoUrl'] ??
+          userData?['avatar_url'])
+      ?.toString();
 
   if (photoUrl != null && photoUrl.isNotEmpty) {
     normalized['profilePhotoUrl'] = photoUrl;
     normalized['avatar_url'] = photoUrl;
   }
 
-  if (json.containsKey('data') && json['data'] is Map<String, dynamic>) {
-    final data = json['data'] as Map<String, dynamic>;
+  // Extract access and refresh tokens safely
+  String? extractedToken;
+  String? extractedRefreshToken;
 
-    if (data.containsKey('accessToken') && data['accessToken'] != null) {
-      normalized['access_token'] = data['accessToken'];
-      normalized['token'] = data['accessToken'];
+  if (json.containsKey('data') && json['data'] is Map) {
+    final data = Map<String, dynamic>.from(json['data'] as Map);
+
+    if (data['accessToken'] != null && data['accessToken'].toString().isNotEmpty) {
+      extractedToken = data['accessToken'].toString();
     }
-    if (data.containsKey('refreshToken') && data['refreshToken'] != null) {
-      normalized['refresh_token'] = data['refreshToken'];
+    if (data['refreshToken'] != null && data['refreshToken'].toString().isNotEmpty) {
+      extractedRefreshToken = data['refreshToken'].toString();
     }
 
-    if (data.containsKey('user') && data['user'] is Map<String, dynamic>) {
-      final user = data['user'] as Map<String, dynamic>;
+    if (data['user'] is Map) {
+      final user = Map<String, dynamic>.from(data['user'] as Map);
       if (user.containsKey('id')) normalized['id'] = user['id'];
       if (user.containsKey('email')) normalized['email'] = user['email'];
       if (user.containsKey('name')) {
@@ -2088,8 +2086,7 @@ Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
       }
 
       final intro = user['introCompleted'] ?? false;
-      final wizard =
-          user['wizardCompleted'] ??
+      final wizard = user['wizardCompleted'] ??
           user['setup_completed'] ??
           user['biometric_registered'] ??
           false;
@@ -2098,40 +2095,44 @@ Map<String, dynamic> normalizeAuthResponse(Map<String, dynamic> json) {
       normalized['biometric_registered'] = wizard;
       normalized['setup_completed'] = wizard;
     }
+  }
+
+  // Fallback to root level token properties
+  if (extractedToken == null || extractedToken.isEmpty) {
+    if (json['access_token'] != null && json['access_token'].toString().isNotEmpty) {
+      extractedToken = json['access_token'].toString();
+    } else if (json['token'] != null && json['token'].toString().isNotEmpty) {
+      extractedToken = json['token'].toString();
+    }
+  }
+
+  if (extractedRefreshToken == null || extractedRefreshToken.isEmpty) {
+    if (json['refresh_token'] != null && json['refresh_token'].toString().isNotEmpty) {
+      extractedRefreshToken = json['refresh_token'].toString();
+    }
+  }
+
+  final bool hasValidToken = extractedToken != null && extractedToken.isNotEmpty;
+
+  if (hasValidToken) {
+    normalized['access_token'] = extractedToken;
+    normalized['token'] = extractedToken;
+    normalized['success'] = true;
   } else {
-    final userMap = <String, dynamic>{};
-    if (json.containsKey('id')) userMap['id'] = json['id'];
-    if (json.containsKey('email')) userMap['email'] = json['email'];
-    if (json.containsKey('full_name') || json.containsKey('name')) {
-      userMap['name'] = json['full_name'] ?? json['name'];
-    }
-    if (json.containsKey('role')) userMap['role'] = json['role'];
-    if (photoUrl != null && photoUrl.isNotEmpty) {
-      userMap['profilePhotoUrl'] = photoUrl;
-      userMap['avatar_url'] = photoUrl;
-    }
+    normalized.remove('access_token');
+    normalized.remove('token');
+    normalized['success'] = json['success'] == true;
+  }
 
-    final wizard =
-        json['biometric_registered'] ?? json['setup_completed'] ?? false;
-    userMap['introCompleted'] = json['introCompleted'] ?? false;
-    userMap['wizardCompleted'] = wizard;
+  if (extractedRefreshToken != null && extractedRefreshToken.isNotEmpty) {
+    normalized['refresh_token'] = extractedRefreshToken;
+  } else {
+    normalized.remove('refresh_token');
+  }
 
-    normalized['success'] = json['success'] ?? !json.containsKey('detail');
-    normalized['message'] = json['message'] ?? json['detail'] ?? '';
-    normalized['data'] = {
-      'accessToken': json['access_token'] ?? json['token'],
-      'refreshToken': json['refresh_token'],
-      'user': userMap,
-    };
-
-    normalized['access_token'] = json['access_token'] ?? json['token'];
-    normalized['token'] = json['access_token'] ?? json['token'];
-    normalized['biometric_registered'] = wizard;
-    normalized['setup_completed'] = wizard;
-    if (json.containsKey('full_name') || json.containsKey('name')) {
-      normalized['full_name'] = json['full_name'] ?? json['name'];
-      normalized['name'] = json['full_name'] ?? json['name'];
-    }
+  if (json.containsKey('full_name') || json.containsKey('name')) {
+    normalized['full_name'] = json['full_name'] ?? json['name'];
+    normalized['name'] = json['full_name'] ?? json['name'];
   }
 
   return normalized;

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-05T02:23:35.884Z",
-  "total_students": 13,
+  "generated_at": "2026-11-05T14:03:08.542Z",
+  "total_students": 25,
   "total_attendance_logs": 407,
   "students": [
     {
@@ -90,6 +90,126 @@
       "password": "Sachin#001",
       "phone": "9123456789",
       "parentPhone": "7090804228",
+      "department": "Computer Science & Engineering",
+      "semester": "6th"
+    },
+    {
+      "roll": "25EC001",
+      "email": "satishmelagiri65@gmail.com",
+      "name": "Satish",
+      "password": "Satish#001",
+      "phone": "8073244362",
+      "parentPhone": "7090804228",
+      "department": "Electronics & Communication Engineering",
+      "semester": "6th"
+    },
+    {
+      "roll": "25IA001",
+      "email": "sachinkalinganavar18@gmail.com",
+      "name": "Shashank",
+      "password": "Shashank#001",
+      "phone": "9740892674",
+      "parentPhone": "7090804228",
+      "department": "Information Science & Engineering",
+      "semester": "6th"
+    },
+    {
+      "roll": "25AI005",
+      "email": "tejas.25ai005@smartface.pro",
+      "name": "Tejas",
+      "password": "Tejas#005",
+      "phone": "9123456789",
+      "parentPhone": "7090804228",
+      "department": "Artificial Intelligence & Data Science",
+      "semester": "6th"
+    },
+    {
+      "roll": "25CS079",
+      "email": "vrusrbh.25cs079@smartface.pro",
+      "name": "Vrusrbh",
+      "password": "Vrusrbh#079",
+      "phone": "9123456789",
+      "parentPhone": "7090804228",
+      "department": "Computer Science & Engineering",
+      "semester": "6th"
+    },
+    {
+      "roll": "25CS089",
+      "email": "abhikhavasi123@gmail.com",
+      "name": "Abhishek",
+      "password": "Abhishek#089",
+      "phone": "8867442673",
+      "parentPhone": "7090804228",
+      "department": "Computer Science & Engineering",
+      "semester": "6th"
+    },
+    {
+      "roll": "25AI008",
+      "email": "gagansb71@gmail.com",
+      "name": "Gagan B",
+      "password": "Gagan#008",
+      "phone": "8095857977",
+      "parentPhone": "7090804228",
+      "department": "Artificial Intelligence & Data Science",
+      "semester": "6th"
+    },
+    {
+      "roll": "25CS018",
+      "email": "kedarkalmath2007@gmail.com",
+      "name": "Kedar",
+      "password": "Kedar#018",
+      "phone": "6360649728",
+      "parentPhone": "7090804228",
+      "department": "Computer Science & Engineering",
+      "semester": "6th"
+    },
+    {
+      "roll": "25AI015",
+      "email": "manthan.25ai015@smartface.pro",
+      "name": "Manthan",
+      "password": "Manthan#015",
+      "phone": "9123456789",
+      "parentPhone": "7090804228",
+      "department": "Artificial Intelligence & Data Science",
+      "semester": "6th"
+    },
+    {
+      "roll": "25AI011",
+      "email": "mohammadalimattihalli@gmail.com",
+      "name": "Mohammad_Ali",
+      "password": "Mohammad#011",
+      "phone": "6363620623",
+      "parentPhone": "7090804228",
+      "department": "Artificial Intelligence & Data Science",
+      "semester": "6th"
+    },
+    {
+      "roll": "25AI014",
+      "email": "prajwal.25ai014@smartface.pro",
+      "name": "Prajwal",
+      "password": "Prajwal#014",
+      "phone": "9123456789",
+      "parentPhone": "7090804228",
+      "department": "Artificial Intelligence & Data Science",
+      "semester": "6th"
+    },
+    {
+      "roll": "25AI018",
+      "email": "preetam.25ai018@smartface.pro",
+      "name": "Preetam",
+      "password": "Preetam#018",
+      "phone": "9123456789",
+      "parentPhone": "7090804228",
+      "department": "Artificial Intelligence & Data Science",
+      "semester": "6th"
+    },
+    {
+      "roll": "25CS093",
+      "email": "mundargiprem@gmail.com",
+      "name": "Prem",
+      "password": "Prem#093",
+      "phone": "9686909048",
+      "parentPhone": "9743643409",
       "department": "Computer Science & Engineering",
       "semester": "6th"
     },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 
 import 'app_colors.dart';
@@ -149,11 +150,48 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String? fullUrl = (avatarUrl != null && avatarUrl!.isNotEmpty)
+    final bool isAssetAvatar = avatarUrl != null && (avatarUrl!.startsWith('assets/') || avatarUrl!.endsWith('.svg'));
+    final String? fullUrl = (!isAssetAvatar && avatarUrl != null && avatarUrl!.isNotEmpty)
         ? (avatarUrl!.startsWith('http')
               ? avatarUrl!
               : '${ApiService.baseUrl}$avatarUrl')
         : null;
+
+    Widget avatarContent;
+    if (isAssetAvatar) {
+      avatarContent = SvgPicture.asset(
+        avatarUrl!,
+        width: 44,
+        height: 44,
+        fit: BoxFit.cover,
+      );
+    } else if (fullUrl != null) {
+      avatarContent = Image.network(
+        fullUrl,
+        width: 44,
+        height: 44,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Center(
+          child: Text(
+            (text == null || text!.isEmpty) ? 'U' : text!,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      );
+    } else {
+      avatarContent = Text(
+        (text == null || text!.isEmpty) ? 'U' : text!,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+        ),
+      );
+    }
 
     return GestureDetector(
       onTap: onTap,
@@ -166,33 +204,7 @@ class _Avatar extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
         ),
-        child: ClipOval(
-          child: fullUrl != null
-              ? Image.network(
-                  fullUrl,
-                  width: 44,
-                  height: 44,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Center(
-                    child: Text(
-                      (text == null || text!.isEmpty) ? 'U' : text!,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                )
-              : Text(
-                  (text == null || text!.isEmpty) ? 'U' : text!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-        ),
+        child: ClipOval(child: avatarContent),
       ),
     );
   }

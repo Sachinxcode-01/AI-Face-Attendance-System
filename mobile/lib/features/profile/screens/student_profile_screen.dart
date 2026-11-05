@@ -30,12 +30,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartface_attendance/shared/widgets/avatar_picker_sheet.dart';
 
 // ======================================================
 // State & Core Imports
@@ -348,7 +350,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                     },
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _photoSourceBtn(
                     Icons.camera_alt_rounded,
@@ -357,6 +359,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                     () {
                       Navigator.of(ctx).pop();
                       _pickImage(ImageSource.camera);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _photoSourceBtn(
+                    Icons.face_retouching_natural_rounded,
+                    'Avatars',
+                    '3D Presets',
+                    () {
+                      Navigator.of(ctx).pop();
+                      _chooseAvatarPreset();
                     },
                   ),
                 ),
@@ -596,6 +610,25 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
     }
   }
 
+  Future<void> _chooseAvatarPreset() async {
+    final session = context.read<SessionManager>();
+    final current = (_profileData['avatar_url'] ?? session.avatarUrl)?.toString();
+    final chosen = await AvatarPickerBottomSheet.show(
+      context,
+      currentAvatar: current,
+      onUploadCustom: () => _pickImage(ImageSource.gallery),
+    );
+    if (chosen != null && mounted) {
+      setState(() {
+        _localAvatarFile = null;
+        _profileData['avatar_url'] = chosen;
+        _profileData['profilePhotoUrl'] = chosen;
+      });
+      await session.updateAvatarUrl(chosen);
+      _showSuccess('Avatar persona updated!');
+    }
+  }
+
   // ── Snack helpers ─────────────────────────────────────────────────────────
   void _showSuccess(String msg) {
     if (!mounted) return;
@@ -740,6 +773,78 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                       ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
 
                       const SizedBox(height: 28),
+
+                      // ── Digital ID Card Launch Tile ──────────────────────────
+                      GestureDetector(
+                        onTap: () => context.push(AppRoutes.studentIdCardPath),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF312E81), Color(0xFF1E1B4B)],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: const Color(0xFF818CF8).withValues(alpha: 0.5),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF4F46E5).withValues(alpha: 0.25),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF6366F1).withValues(alpha: 0.25),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.badge_rounded,
+                                  color: Color(0xFFA5B4FC),
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Digital Holographic Student ID',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Verified barcode, dynamic QR & printable export',
+                                      style: GoogleFonts.inter(
+                                        color: const Color(0xFFA5B4FC),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                color: Color(0xFFA5B4FC),
+                                size: 14,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ).animate().fadeIn(delay: 220.ms),
+
+                      const SizedBox(height: 14),
 
                       // Edit / Save banner
                       if (!_isEditing) _buildEditBanner(),
@@ -1061,11 +1166,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
         networkUrl.trim().isNotEmpty &&
         networkUrl != 'null';
     final bool hasLocal = _localAvatarFile != null;
+    final bool isAssetAvatar = hasNet &&
+        (networkUrl!.startsWith('assets/') || networkUrl!.endsWith('.svg'));
 
     ImageProvider? avatarImage;
     if (hasLocal) {
       avatarImage = FileImage(_localAvatarFile!);
-    } else if (hasNet) {
+    } else if (hasNet && !isAssetAvatar) {
       final cleanUrl = networkUrl.replaceAll('\\', '/');
       final full = cleanUrl.startsWith('http')
           ? cleanUrl
@@ -1114,22 +1221,31 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
             CircleAvatar(
               radius: 68,
               backgroundColor: const Color(0xFF0D1130),
-              backgroundImage: avatarImage,
-              onBackgroundImageError: avatarImage != null
+              backgroundImage: isAssetAvatar ? null : avatarImage,
+              onBackgroundImageError: (!isAssetAvatar && avatarImage != null)
                   ? (exception, stackTrace) {
                       debugPrint('Avatar image load error: $exception');
                     }
                   : null,
-              child: avatarImage == null
-                  ? Text(
-                      _initials.isNotEmpty ? _initials : 'ST',
-                      style: GoogleFonts.inter(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.gold,
+              child: isAssetAvatar
+                  ? ClipOval(
+                      child: SvgPicture.asset(
+                        networkUrl!,
+                        width: 136,
+                        height: 136,
+                        fit: BoxFit.cover,
                       ),
                     )
-                  : null,
+                  : (avatarImage == null
+                      ? Text(
+                          _initials.isNotEmpty ? _initials : 'ST',
+                          style: GoogleFonts.inter(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.gold,
+                          ),
+                        )
+                      : null),
             ),
             // Upload overlay
             if (_isUploadingPhoto)

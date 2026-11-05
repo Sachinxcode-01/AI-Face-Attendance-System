@@ -167,7 +167,8 @@ class _OTPScreenState extends State<OTPScreen> {
       final result = await ApiService.verifyLoginOtp(email, otp);
       if (!mounted) return;
 
-      if (result.containsKey('access_token')) {
+      final token = result['access_token'] ?? result['token'];
+      if (token != null && token.toString().isNotEmpty) {
         setState(() {
           _success = true;
         });
@@ -184,7 +185,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
         final session = context.read<SessionManager>();
         await session.saveSession(
-          token: result['access_token'],
+          token: token.toString(),
           refreshToken: result['refresh_token'] as String?,
           email: email,
           role: role,
