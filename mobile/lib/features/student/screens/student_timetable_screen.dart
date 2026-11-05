@@ -23,6 +23,7 @@ import 'package:provider/provider.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
+import 'package:smartface_attendance/shared/widgets/smart_empty_state.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
@@ -201,48 +202,12 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
   }
 
   Widget _buildEmptyState(String day, bool isDark) {
-    final textLabel = isDark ? const Color(0xFF7C82A0) : const Color(0xFFA0A0B8);
-    final textHeading = isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: (isDark ? const Color(0xFF1A2340) : const Color(0xFFEEF2FF)),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.menu_book_rounded,
-                color: Color(0xFF4F46E5),
-                size: 48,
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              'No Classes Scheduled',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: textHeading,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Enjoy your open study day on $day!',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: textLabel,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+    return SmartEmptyState(
+      title: 'No Classes Scheduled',
+      subtitle: 'Enjoy your open study day on $day! Review past notes or plan ahead.',
+      lottieAsset: 'assets/lottie/empty.json',
+      fallbackIcon: Icons.menu_book_rounded,
+      animationSize: 170,
     );
   }
 

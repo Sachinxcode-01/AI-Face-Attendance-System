@@ -37,6 +37,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/shared/widgets/avatar_picker_sheet.dart';
 
 // ======================================================
