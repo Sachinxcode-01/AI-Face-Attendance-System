@@ -228,3 +228,4 @@ class SmartLottie extends StatelessWidget {
     );
   }
 }
+

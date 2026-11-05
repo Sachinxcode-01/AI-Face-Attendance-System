@@ -232,3 +232,4 @@ class SmartAvatar extends StatelessWidget {
     );
   }
 }
+

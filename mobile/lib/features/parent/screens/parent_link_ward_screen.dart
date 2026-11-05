@@ -73,7 +73,8 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
       setState(() => _isLoading = false);
       AppToast.show(
         context,
-        message: 'Successfully linked ${_nameController.text.trim()} to your account!',
+        message:
+            'Successfully linked ${_nameController.text.trim()} to your account!',
         type: ToastType.success,
       );
       Navigator.of(context).maybePop(true);
@@ -99,15 +100,23 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF131A33) : const Color(0xFFF8FAFF),
+                  color: isDark
+                      ? const Color(0xFF131A33)
+                      : const Color(0xFFF8FAFF),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0),
+                    color: isDark
+                        ? const Color(0xFF252E4A)
+                        : const Color(0xFFE5E7F0),
                   ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.family_restroom_rounded, color: Color(0xFF4F46E5), size: 28),
+                    const Icon(
+                      Icons.family_restroom_rounded,
+                      color: Color(0xFF4F46E5),
+                      size: 28,
+                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -127,7 +136,9 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
                             'Enter your child’s official University Serial Number (USN) or Roll Number to connect attendance telemetry.',
                             style: GoogleFonts.inter(
                               fontSize: 11,
-                              color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                              color: isDark
+                                  ? Colors.white60
+                                  : const Color(0xFF6B7280),
                             ),
                           ),
                         ],
@@ -146,7 +157,9 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
                 hintText: 'e.g. 1SF23CS108',
                 icon: Icons.badge_outlined,
                 isDark: isDark,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter student USN' : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'Please enter student USN'
+                    : null,
               ),
               const SizedBox(height: 18),
 
@@ -158,7 +171,9 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
                 hintText: 'e.g. Alex Vance',
                 icon: Icons.person_outline_rounded,
                 isDark: isDark,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter student full name' : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'Please enter student full name'
+                    : null,
               ),
               const SizedBox(height: 18),
 
@@ -166,7 +181,9 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
               _buildInputLabel('RELATIONSHIP TO STUDENT', isDark),
               const SizedBox(height: 8),
               Row(
-                children: ['Parent', 'Mother', 'Father', 'Legal Guardian'].map((rel) {
+                children: ['Parent', 'Mother', 'Father', 'Legal Guardian'].map((
+                  rel,
+                ) {
                   final isSelected = _relationship == rel;
                   return Expanded(
                     child: Padding(
@@ -181,12 +198,16 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? const Color(0xFF4F46E5)
-                                : (isDark ? const Color(0xFF131A33) : const Color(0xFFF8FAFF)),
+                                : (isDark
+                                      ? const Color(0xFF131A33)
+                                      : const Color(0xFFF8FAFF)),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
                                   ? const Color(0xFF4F46E5)
-                                  : (isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0)),
+                                  : (isDark
+                                        ? const Color(0xFF252E4A)
+                                        : const Color(0xFFE5E7F0)),
                             ),
                           ),
                           child: Center(
@@ -194,10 +215,14 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
                               rel,
                               style: GoogleFonts.inter(
                                 fontSize: 11,
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
                                 color: isSelected
                                     ? Colors.white
-                                    : (isDark ? Colors.white70 : const Color(0xFF374151)),
+                                    : (isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF374151)),
                               ),
                             ),
                           ),
@@ -317,7 +342,10 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
             fontSize: 13,
             color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 14,
+          ),
         ),
       ),
     );

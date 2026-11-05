@@ -1168,7 +1168,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
         networkUrl != 'null';
     final bool hasLocal = _localAvatarFile != null;
     final bool isAssetAvatar = hasNet &&
-        (networkUrl!.startsWith('assets/') || networkUrl!.endsWith('.svg'));
+        (networkUrl.startsWith('assets/') || networkUrl.endsWith('.svg'));
 
     ImageProvider? avatarImage;
     if (hasLocal) {
@@ -1231,7 +1231,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
               child: isAssetAvatar
                   ? ClipOval(
                       child: SvgPicture.asset(
-                        networkUrl!,
+                        networkUrl,
                         width: 136,
                         height: 136,
                         fit: BoxFit.cover,

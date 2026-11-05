@@ -46,7 +46,8 @@ class AvatarPickerBottomSheet extends StatefulWidget {
   }
 
   @override
-  State<AvatarPickerBottomSheet> createState() => _AvatarPickerBottomSheetState();
+  State<AvatarPickerBottomSheet> createState() =>
+      _AvatarPickerBottomSheetState();
 }
 
 class _AvatarPickerBottomSheetState extends State<AvatarPickerBottomSheet> {
@@ -113,10 +114,7 @@ class _AvatarPickerBottomSheetState extends State<AvatarPickerBottomSheet> {
                   const SizedBox(height: 2),
                   Text(
                     'Select a 3D vector avatar for your campus profile',
-                    style: GoogleFonts.inter(
-                      fontSize: 12.5,
-                      color: textSub,
-                    ),
+                    style: GoogleFonts.inter(fontSize: 12.5, color: textSub),
                   ),
                 ],
               ),
@@ -142,7 +140,8 @@ class _AvatarPickerBottomSheetState extends State<AvatarPickerBottomSheet> {
             ),
             itemBuilder: (context, index) {
               final preset = AppAvatarPresets.presets[index];
-              final isSelected = _selectedId == preset.id || _selectedId == preset.assetPath;
+              final isSelected =
+                  _selectedId == preset.id || _selectedId == preset.assetPath;
 
               return InkWell(
                 onTap: () {
@@ -152,11 +151,16 @@ class _AvatarPickerBottomSheetState extends State<AvatarPickerBottomSheet> {
                 borderRadius: BorderRadius.circular(16),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? preset.themeColor.withValues(alpha: 0.15)
-                        : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
+                        : (isDark
+                              ? const Color(0xFF1E293B)
+                              : const Color(0xFFF8FAFC)),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: isSelected
@@ -199,7 +203,9 @@ class _AvatarPickerBottomSheetState extends State<AvatarPickerBottomSheet> {
                         preset.title,
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w600,
                           color: isSelected ? preset.themeColor : textHeading,
                         ),
                         maxLines: 1,
@@ -207,10 +213,7 @@ class _AvatarPickerBottomSheetState extends State<AvatarPickerBottomSheet> {
                       ),
                       Text(
                         preset.roleTag,
-                        style: GoogleFonts.inter(
-                          fontSize: 9.5,
-                          color: textSub,
-                        ),
+                        style: GoogleFonts.inter(fontSize: 9.5, color: textSub),
                         maxLines: 1,
                       ),
                     ],
@@ -228,13 +231,18 @@ class _AvatarPickerBottomSheetState extends State<AvatarPickerBottomSheet> {
               icon: const Icon(Icons.add_a_photo_rounded, size: 18),
               label: Text(
                 'Upload Real Selfie / Photo',
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 46),
                 foregroundColor: const Color(0xFF6366F1),
                 side: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],

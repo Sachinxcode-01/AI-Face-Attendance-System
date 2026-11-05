@@ -134,3 +134,4 @@ for filename, content in avatars.items():
     with open(path, 'w', encoding='utf-8') as f:
         f.write(content.strip())
     print(f'Wrote {filename}')
+

@@ -113,3 +113,4 @@ class SmartEmptyState extends StatelessWidget {
     );
   }
 }
+
