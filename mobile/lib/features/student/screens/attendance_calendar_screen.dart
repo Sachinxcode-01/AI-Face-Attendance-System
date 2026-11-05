@@ -80,15 +80,21 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
 
   bool _isHoliday(DateTime day) {
     return _holidays.any((h) {
-      final hDate = DateTime.parse(h['start_date']);
-      return isSameDay(hDate, day);
+      final dateStr = h['start_date'] ?? h['date'];
+      if (dateStr == null) return false;
+      final hDate = DateTime.tryParse(dateStr.toString());
+      return hDate != null && isSameDay(hDate, day);
     });
   }
 
   bool _isLeave(DateTime day) {
     return _leaves.any((l) {
-      final start = DateTime.parse(l['start_date']);
-      final end = DateTime.parse(l['end_date']);
+      final startStr = l['start_date'] ?? l['date'];
+      final endStr = l['end_date'] ?? startStr;
+      if (startStr == null) return false;
+      final start = DateTime.tryParse(startStr.toString());
+      final end = DateTime.tryParse(endStr.toString());
+      if (start == null || end == null) return false;
       return l['status'].toString().toLowerCase() == 'approved' &&
           (day.isAfter(start.subtract(const Duration(days: 1))) &&
               day.isBefore(end.add(const Duration(days: 1))));
@@ -97,8 +103,11 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
 
   bool _isPresent(DateTime day) {
     return _attendance.any((a) {
-      final aDate = DateTime.parse(a['start_date']);
-      return isSameDay(aDate, day) && a['status'] == 'Present';
+      final dateStr = a['start_date'] ?? a['date'];
+      if (dateStr == null) return false;
+      final aDate = DateTime.tryParse(dateStr.toString());
+      final status = (a['status'] ?? '').toString().toLowerCase();
+      return aDate != null && isSameDay(aDate, day) && status == 'present';
     });
   }
 
@@ -107,8 +116,12 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
 
     // Check leaves
     final dayLeaves = _leaves.where((l) {
-      final start = DateTime.parse(l['start_date']);
-      final end = DateTime.parse(l['end_date']);
+      final startStr = l['start_date'] ?? l['date'];
+      final endStr = l['end_date'] ?? startStr;
+      if (startStr == null) return false;
+      final start = DateTime.tryParse(startStr.toString());
+      final end = DateTime.tryParse(endStr.toString());
+      if (start == null || end == null) return false;
       return day.isAfter(start.subtract(const Duration(days: 1))) &&
           day.isBefore(end.add(const Duration(days: 1)));
     });
@@ -116,15 +129,19 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
 
     // Check holidays
     final dayHols = _holidays.where((h) {
-      final hDate = DateTime.parse(h['start_date']);
-      return isSameDay(hDate, day);
+      final dateStr = h['start_date'] ?? h['date'];
+      if (dateStr == null) return false;
+      final hDate = DateTime.tryParse(dateStr.toString());
+      return hDate != null && isSameDay(hDate, day);
     });
     events.addAll(dayHols);
 
     // Check attendance
     final dayAtt = _attendance.where((a) {
-      final aDate = DateTime.parse(a['start_date']);
-      return isSameDay(aDate, day);
+      final dateStr = a['start_date'] ?? a['date'];
+      if (dateStr == null) return false;
+      final aDate = DateTime.tryParse(dateStr.toString());
+      return aDate != null && isSameDay(aDate, day);
     });
     events.addAll(dayAtt);
 

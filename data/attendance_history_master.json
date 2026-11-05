@@ -1,0 +1,2988 @@
+{
+  "generated_at": "2026-11-05T02:23:35.884Z",
+  "total_students": 13,
+  "total_attendance_logs": 407,
+  "students": [
+    {
+      "roll": "25CS089",
+      "email": "abhikhavasi123@gmail.com",
+      "name": "Abhishek",
+      "password": "Abhishek#089",
+      "phone": "8867442673",
+      "parentPhone": "7090804228",
+      "department": "Computer Science & Engineering",
+      "semester": "6th"
+    },
+    {
+      "roll": "25AI008",
+      "email": "gagansb71@gmail.com",
+      "name": "Gagan B",
+      "password": "Gagan#008",
+      "phone": "8095857977",
+      "parentPhone": "7090804228",
+      "department": "Artificial Intelligence & Data Science",
+      "semester": "6th"
+    },
+    {
+      "roll": "25CS018",
+      "email": "kedarkalmath2007@gmail.com",
+      "name": "Kedar",
+      "password": "Kedar#018",
+      "phone": "6360649728",
+      "parentPhone": "7090804228",
+      "department": "Computer Science & Engineering",
+      "semester": "6th"
+    },
+    {
+      "roll": "25AI015",
+      "email": "manthan.25ai015@smartface.pro",
+      "name": "Manthan",
+      "password": "Manthan#015",
+      "phone": "9123456789",
+      "parentPhone": "7090804228",
+      "department": "Artificial Intelligence & Data Science",
+      "semester": "6th"
+    },
+    {
+      "roll": "25AI011",
+      "email": "mohammadalimattihalli@gmail.com",
+      "name": "Mohammad_Ali",
+      "password": "Mohammad#011",
+      "phone": "6363620623",
+      "parentPhone": "7090804228",
+      "department": "Artificial Intelligence & Data Science",
+      "semester": "6th"
+    },
+    {
+      "roll": "25AI014",
+      "email": "prajwal.25ai014@smartface.pro",
+      "name": "Prajwal",
+      "password": "Prajwal#014",
+      "phone": "9123456789",
+      "parentPhone": "7090804228",
+      "department": "Artificial Intelligence & Data Science",
+      "semester": "6th"
+    },
+    {
+      "roll": "25AI018",
+      "email": "preetam.25ai018@smartface.pro",
+      "name": "Preetam",
+      "password": "Preetam#018",
+      "phone": "9123456789",
+      "parentPhone": "7090804228",
+      "department": "Artificial Intelligence & Data Science",
+      "semester": "6th"
+    },
+    {
+      "roll": "25CS093",
+      "email": "mundargiprem@gmail.com",
+      "name": "Prem",
+      "password": "Prem#093",
+      "phone": "9686909048",
+      "parentPhone": "9743643409",
+      "department": "Computer Science & Engineering",
+      "semester": "6th"
+    },
+    {
+      "roll": "25CS094",
+      "email": "kalinganavarsachin@gmail.com",
+      "name": "Sachin",
+      "password": "Sachin#001",
+      "phone": "9123456789",
+      "parentPhone": "7090804228",
+      "department": "Computer Science & Engineering",
+      "semester": "6th"
+    },
+    {
+      "roll": "25EC001",
+      "email": "satishmelagiri65@gmail.com",
+      "name": "Satish",
+      "password": "Satish#001",
+      "phone": "8073244362",
+      "parentPhone": "7090804228",
+      "department": "Electronics & Communication Engineering",
+      "semester": "6th"
+    },
+    {
+      "roll": "25IA001",
+      "email": "sachinkalinganavar18@gmail.com",
+      "name": "Shashank",
+      "password": "Shashank#001",
+      "phone": "9740892674",
+      "parentPhone": "7090804228",
+      "department": "Information Science & Engineering",
+      "semester": "6th"
+    },
+    {
+      "roll": "25AI005",
+      "email": "tejas.25ai005@smartface.pro",
+      "name": "Tejas",
+      "password": "Tejas#005",
+      "phone": "9123456789",
+      "parentPhone": "7090804228",
+      "department": "Artificial Intelligence & Data Science",
+      "semester": "6th"
+    },
+    {
+      "roll": "25CS079",
+      "email": "vrusrbh.25cs079@smartface.pro",
+      "name": "Vrusrbh",
+      "password": "Vrusrbh#079",
+      "phone": "9123456789",
+      "parentPhone": "7090804228",
+      "department": "Computer Science & Engineering",
+      "semester": "6th"
+    }
+  ],
+  "attendance_logs": [
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-02-18",
+      "time": "20:03:12",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25AI014",
+      "status": "Present",
+      "date": "2026-02-18",
+      "time": "20:04:59",
+      "confidence": 0.74
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-02-18",
+      "time": "20:05:09",
+      "confidence": 0.66
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-02-18",
+      "time": "20:05:15",
+      "confidence": 0.65
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-02-18",
+      "time": "20:05:19",
+      "confidence": 0.78
+    },
+    {
+      "roll": "25AI018",
+      "status": "Present",
+      "date": "2026-02-18",
+      "time": "20:05:45",
+      "confidence": 0.64
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-02-18",
+      "time": "20:06:34",
+      "confidence": 0.68
+    },
+    {
+      "roll": "25CS018",
+      "status": "Present",
+      "date": "2026-02-18",
+      "time": "20:07:24",
+      "confidence": 0.86
+    },
+    {
+      "roll": "25CS019",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI012",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-02-18",
+      "time": "20:42:38",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-02-18",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-02-20",
+      "time": "10:33:50",
+      "confidence": 0.62
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-02-20",
+      "time": "10:34:04",
+      "confidence": 0.62
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Absent",
+      "date": "2026-02-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-02-26",
+      "time": "21:31:55",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-02-26",
+      "time": "21:32:46",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-02-26",
+      "time": "21:32:55",
+      "confidence": 0.69
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-02-26",
+      "time": "21:33:00",
+      "confidence": 0.72
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-02-26",
+      "time": "21:33:07",
+      "confidence": 0.68
+    },
+    {
+      "roll": "25AI018",
+      "status": "Present",
+      "date": "2026-02-26",
+      "time": "21:33:21",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25AI011",
+      "status": "Present",
+      "date": "2026-02-26",
+      "time": "21:33:29",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-02-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-02-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-02-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-02-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-02-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-02-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-02-26",
+      "time": "22:03:44",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-02-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-02-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-02-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-02-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-02-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-02-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-02-27",
+      "time": "12:57:14",
+      "confidence": 0.62
+    },
+    {
+      "roll": "25AI011",
+      "status": "Present",
+      "date": "2026-02-27",
+      "time": "12:57:30",
+      "confidence": 0.67
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-02-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-02-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-02-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-02-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-02-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-02-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-02-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-02-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-02-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-02-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-02-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-04-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-04-23",
+      "time": "21:41:09",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-04-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-05-09",
+      "time": "11:43:49",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-05-09",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-05-09",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-05-09",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-05-09",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-05-09",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-05-09",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-05-09",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-05-09",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-05-09",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-05-09",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-05-09",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-05-09",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-05-09",
+      "time": "11:54:48",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-05-09",
+      "time": "11:57:03",
+      "confidence": 0.63
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-05-09",
+      "time": "11:57:15",
+      "confidence": 0.64
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-05-14",
+      "time": "13:28:10",
+      "confidence": 0.63
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-05-14",
+      "time": "13:28:29",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-05-14",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-05-14",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-05-14",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-05-14",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-05-14",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-05-14",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-05-14",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-05-14",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-05-14",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-05-14",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-05-14",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-05-23",
+      "time": "07:28:16",
+      "confidence": 0.62
+    },
+    {
+      "roll": "25IA001",
+      "status": "Present",
+      "date": "2026-05-23",
+      "time": "07:28:24",
+      "confidence": 0.62
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-05-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-05-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-05-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-05-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-05-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-05-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-05-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-05-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-05-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-05-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-05-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-05-23",
+      "time": "11:21:05",
+      "confidence": 0.62
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-05-23",
+      "time": "11:21:26",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-05-23",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-05-23",
+      "time": "11:29:07",
+      "confidence": 0.64
+    },
+    {
+      "roll": "25CS089",
+      "status": "Present",
+      "date": "2026-05-23",
+      "time": "11:29:13",
+      "confidence": 0.62
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-05-23",
+      "time": "11:29:23",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-05-23",
+      "time": "11:32:22",
+      "confidence": 0.62
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-05-23",
+      "time": "11:32:22",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS089",
+      "status": "Present",
+      "date": "2026-05-23",
+      "time": "11:32:22",
+      "confidence": 0.62
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-05-24",
+      "time": "12:36:56",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS089",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-05-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-06-05",
+      "time": "20:14:52",
+      "confidence": 0.64
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS089",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-06-05",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-06-24",
+      "time": "23:43:48",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS089",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-06-24",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS089",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-06-25",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-06-25",
+      "time": "00:15:13",
+      "confidence": 0.64
+    },
+    {
+      "roll": "25CS089",
+      "status": "Present",
+      "date": "2026-06-25",
+      "time": "00:15:57",
+      "confidence": 0.62
+    },
+    {
+      "roll": "25AI011",
+      "status": "Present",
+      "date": "2026-06-25",
+      "time": "00:16:50",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-06-25",
+      "time": "00:17:23",
+      "confidence": 0.65
+    },
+    {
+      "roll": "25AI014",
+      "status": "Present",
+      "date": "2026-06-25",
+      "time": "00:17:50",
+      "confidence": 0.79
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-06-25",
+      "time": "00:17:54",
+      "confidence": 0.82
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-06-25",
+      "time": "00:18:02",
+      "confidence": 0.65
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-06-25",
+      "time": "00:18:09",
+      "confidence": 0.75
+    },
+    {
+      "roll": "25CS018",
+      "status": "Present",
+      "date": "2026-06-25",
+      "time": "00:19:07",
+      "confidence": 0.72
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-06-25",
+      "time": "07:51:02",
+      "confidence": 0.67
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-25",
+      "time": "21:24:03",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-25",
+      "time": "21:43:25",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-25",
+      "time": "22:01:45",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-25",
+      "time": "22:06:04",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-26",
+      "time": "11:22:51",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-26",
+      "time": "11:53:26",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-26",
+      "time": "20:12:05",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS089",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-07-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-27",
+      "time": "07:49:14",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-07-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-07-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-07-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-07-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-07-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-07-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-07-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-07-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS089",
+      "status": "Absent",
+      "date": "2026-07-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-07-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-07-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-07-27",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-27",
+      "time": "09:25:04",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-27",
+      "time": "17:43:13",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "09:26:19",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "09:26:25",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "09:28:41",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25AI015",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI011",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25EC001",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS089",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "09:33:07",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "09:34:06",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS079",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "09:36:05",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "09:36:06",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "09:36:14",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "09:36:28",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "09:57:45",
+      "confidence": 0.63
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "09:57:54",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS089",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "09:57:59",
+      "confidence": 0.62
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "10:05:26",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25CS089",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "10:05:28",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-07-28",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "12:05:19",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "12:09:45",
+      "confidence": 0.61
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "12:10:14",
+      "confidence": 0.64
+    },
+    {
+      "roll": "25CS089",
+      "status": "Present",
+      "date": "2026-07-28",
+      "time": "12:10:28",
+      "confidence": 0.6
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "19:01:49",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-01-19",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI012",
+      "status": "Absent",
+      "date": "2026-01-19",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-01-19",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-01-19",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS019",
+      "status": "Absent",
+      "date": "2026-01-19",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "19:15:43",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "19:19:40",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "19:45:01",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "20:45:38",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "21:00:35",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "21:13:31",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Absent",
+      "date": "2026-01-19",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "21:43:02",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "21:43:46",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "21:44:38",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "21:44:56",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "21:45:19",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "21:45:48",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "21:46:18",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "21:46:27",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "21:47:42",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Present",
+      "date": "2026-01-19",
+      "time": "21:49:08",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:12:30",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:12:56",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:13:10",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:13:18",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:13:29",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:13:39",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:15:31",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:15:45",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:15:59",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI012",
+      "status": "Absent",
+      "date": "2026-01-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS019",
+      "status": "Absent",
+      "date": "2026-01-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-01-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:30:28",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:31:39",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:32:10",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:32:30",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:32:36",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:33:49",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:34:22",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:34:31",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "07:34:41",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-01-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-01-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Absent",
+      "date": "2026-01-20",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "10:39:33",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "10:39:51",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "10:40:10",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "10:43:28",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "10:43:30",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "10:43:33",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "10:43:41",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:32:23",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:40:02",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:41:37",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:41:52",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:42:15",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:42:37",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:43:33",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:43:59",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:44:55",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:49:26",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:50:47",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:50:59",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:51:07",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:51:15",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "20:53:21",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "21:33:11",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "21:41:30",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "21:56:30",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "21:58:24",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "22:04:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "22:05:12",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "22:05:21",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "22:05:30",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "22:05:37",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "22:06:19",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "22:07:19",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "22:07:25",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "22:08:01",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "22:11:08",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI024",
+      "status": "Present",
+      "date": "2026-01-20",
+      "time": "22:14:16",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-22",
+      "time": "19:13:29",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI024",
+      "status": "Present",
+      "date": "2026-01-22",
+      "time": "19:13:31",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-01-22",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI012",
+      "status": "Absent",
+      "date": "2026-01-22",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS019",
+      "status": "Absent",
+      "date": "2026-01-22",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-01-22",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-01-22",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-01-26",
+      "time": "19:04:23",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-01-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI012",
+      "status": "Absent",
+      "date": "2026-01-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-01-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS019",
+      "status": "Absent",
+      "date": "2026-01-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-01-26",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI024",
+      "status": "Present",
+      "date": "2026-02-11",
+      "time": "21:50:37",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-02-11",
+      "time": "21:50:38",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25IA001",
+      "status": "Present",
+      "date": "2026-02-11",
+      "time": "21:50:51",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Absent",
+      "date": "2026-02-11",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Absent",
+      "date": "2026-02-11",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-02-11",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS019",
+      "status": "Absent",
+      "date": "2026-02-11",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI012",
+      "status": "Absent",
+      "date": "2026-02-11",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "07:44:34",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI024",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "07:44:38",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "07:45:51",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "07:45:59",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "07:46:08",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "07:46:10",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "07:46:15",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "07:46:26",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI012",
+      "status": "Absent",
+      "date": "2026-02-12",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS095",
+      "status": "Absent",
+      "date": "2026-02-12",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS019",
+      "status": "Absent",
+      "date": "2026-02-12",
+      "time": "17:00:00",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "08:24:48",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS018",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "08:25:24",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS093",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "08:25:58",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "08:26:08",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI008",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "08:26:30",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS079",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "08:26:54",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI014",
+      "status": "Present",
+      "date": "2026-02-12",
+      "time": "08:27:02",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25CS094",
+      "status": "Present",
+      "date": "2026-02-16",
+      "time": "10:58:41",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI018",
+      "status": "Present",
+      "date": "2026-02-16",
+      "time": "10:59:29",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI005",
+      "status": "Present",
+      "date": "2026-02-16",
+      "time": "10:59:31",
+      "confidence": 0.85
+    },
+    {
+      "roll": "25AI015",
+      "status": "Present",
+      "date": "2026-02-16",
+      "time": "10:59:56",
+      "confidence": 0.85
+    }
+  ]
+}

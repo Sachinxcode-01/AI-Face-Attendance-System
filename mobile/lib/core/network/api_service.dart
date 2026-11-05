@@ -1903,6 +1903,56 @@ class ApiService {
     }
     return {'heatmap': []};
   }
+
+  // ── College DB Methods ───────────────────────────────────────────────────
+  /// Search verified colleges, universities, and institutions via College DB
+  static Future<List<Map<String, dynamic>>> searchColleges(String query) async {
+    final cleanQuery = query.trim();
+    if (cleanQuery.length < 2) return [];
+    try {
+      final response = await client
+          .get(
+            Uri.parse('$baseUrl/colleges/search?q=${Uri.encodeQueryComponent(cleanQuery)}'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['results'] is List) {
+          return List<Map<String, dynamic>>.from(
+            (decoded['results'] as List).whereType<Map>().map(
+              (e) => Map<String, dynamic>.from(e),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('[ApiService] searchColleges error: $e');
+    }
+    return [];
+  }
+
+  /// Retrieve full institution details for a given college ID
+  static Future<Map<String, dynamic>?> getCollegeDetails(String id) async {
+    if (id.trim().isEmpty) return null;
+    try {
+      final response = await client
+          .get(
+            Uri.parse('$baseUrl/colleges/${Uri.encodeComponent(id.trim())}'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['college'] is Map) {
+          return Map<String, dynamic>.from(decoded['college']);
+        }
+      }
+    } catch (e) {
+      debugPrint('[ApiService] getCollegeDetails error: $e');
+    }
+    return null;
+  }
 }
 
 class InterceptingClient extends http.BaseClient {

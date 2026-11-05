@@ -563,48 +563,72 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                     ? const Color(0xFF10B981)
                     : const Color(0xFFEF4444);
 
-                return Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          isPresent
+                              ? Icons.check_circle_rounded
+                              : Icons.cancel_rounded,
+                          color: statusColor,
+                          size: 18,
+                        ),
                       ),
-                      child: Icon(
-                        isPresent
-                            ? Icons.check_circle_rounded
-                            : Icons.cancel_rounded,
-                        color: statusColor,
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            log['subject'] ?? 'Lecture Class',
-                            style: GoogleFonts.poppins(
-                              color: textHeading,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13.5,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              log['subject'] ?? 'Lecture Class',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                color: textHeading,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.5,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Verified via ${isFace ? "Biometric Face ID" : "Classroom QR"}',
-                            style: GoogleFonts.inter(color: textBody, fontSize: 11.5),
-                          ),
-                        ],
+                            const SizedBox(height: 2),
+                            Text(
+                              'Verified via ${isFace ? "Biometric Face ID" : "Classroom QR"}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(color: textBody, fontSize: 11.5),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${log['time']} • ${log['date']}',
-                      style: GoogleFonts.inter(color: textLabel, fontSize: 11),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Flexible(
+                        flex: 0,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              log['time'] ?? '',
+                              style: GoogleFonts.inter(
+                                color: textHeading,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              log['date'] ?? '',
+                              style: GoogleFonts.inter(color: textLabel, fontSize: 10.5),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),

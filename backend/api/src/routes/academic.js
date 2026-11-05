@@ -1,3 +1,4 @@
+const datasetService = require('../services/datasetService');
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
@@ -247,21 +248,41 @@ router.get('/calendar', authenticate, async (req, res) => {
     // Fetch marked attendance logs for student
     let attendanceEvents = [];
     if (req.userRole === 'student') {
-      const records = await Attendance.find({ student_email: email }).lean();
-      for (const rec of records) {
-        try {
-          const session = await Session.findById(rec.session_id);
-          if (session) {
+      try {
+        if (require('mongoose').connection.readyState === 1) {
+          const records = await Attendance.find({ student_email: email }).lean();
+          for (const rec of records) {
+            try {
+              const session = await Session.findById(rec.session_id);
+              if (session) {
+                attendanceEvents.push({
+                  id: rec._id.toString(),
+                  title: `Attended: ${session.subject}`,
+                  type: "attendance",
+                  start_date: rec.timestamp,
+                  end_date: rec.timestamp,
+                  status: rec.status || "Present"
+                });
+              }
+            } catch (err) {}
+          }
+        }
+      } catch (_) {}
+
+      if (attendanceEvents.length === 0) {
+        const dsLogs = datasetService.getStudentLogs(email, { limit: 500 }).logs;
+        for (const log of dsLogs) {
+          if (log.status.toLowerCase() === 'present') {
             attendanceEvents.push({
-              id: rec._id.toString(),
-              title: `Attended: ${session.subject}`,
+              id: log.id,
+              title: `Attended: ${log.subject}`,
               type: "attendance",
-              start_date: rec.timestamp,
-              end_date: rec.timestamp,
+              start_date: `${log.date}T${log.time}:00Z`,
+              end_date: `${log.date}T${log.time}:00Z`,
               status: "Present"
             });
           }
-        } catch (err) {}
+        }
       }
     }
 

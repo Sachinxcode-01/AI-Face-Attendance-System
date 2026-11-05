@@ -50,11 +50,15 @@ class StudentStatsModel {
   /// A parsed [StudentStatsModel] instance.
   factory StudentStatsModel.fromJson(Map<String, dynamic> json) {
     final subjectsList = json['subjects'] as List<dynamic>? ?? [];
+    double pct = (json['overall_percentage'] as num?)?.toDouble() ?? 0.82;
+    if (pct > 1.0) {
+      pct = pct / 100.0;
+    }
     return StudentStatsModel(
-      overallPercentage: json['overall_percentage']?.toDouble() ?? 0.82,
+      overallPercentage: pct,
       standing: json['standing'] as String? ?? 'Elite Performer',
       rank: json['rank'] as String? ?? 'Ranked #4 in Department',
-      streak: json['streak'] as int? ?? 0,
+      streak: (json['streak'] as num?)?.toInt() ?? 0,
       subjects: subjectsList
           .map(
             (sub) => SubjectProgressModel.fromJson(sub as Map<String, dynamic>),
@@ -108,11 +112,19 @@ class SubjectProgressModel {
   /// Returns:
   /// A parsed [SubjectProgressModel] instance.
   factory SubjectProgressModel.fromJson(Map<String, dynamic> json) {
+    double pct = (json['percentage'] as num?)?.toDouble() ?? 0.0;
+    if (pct > 1.0) {
+      pct = pct / 100.0;
+    }
+    final int presentCount =
+        (json['present'] ?? json['attended'] as num?)?.toInt() ?? 0;
+    final int totalCount = (json['total'] as num?)?.toInt() ?? 0;
+
     return SubjectProgressModel(
       subject: json['subject'] as String? ?? 'Unknown Subject',
-      percentage: json['percentage']?.toDouble() ?? 0.0,
-      present: json['present'] as int? ?? 0,
-      total: json['total'] as int? ?? 0,
+      percentage: pct,
+      present: presentCount,
+      total: totalCount,
     );
   }
 

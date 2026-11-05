@@ -198,9 +198,12 @@ const parentRoutes = require('./routes/parent');
 const reportRoutes = require('./routes/reports');
 const apiCompatRoutes = require('./routes/apiCompat');
 const analyticsRoutes = require('./routes/analytics');
+const collegeRoutes = require('./routes/colleges');
 
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/colleges', collegeRoutes);
+app.use('/api/colleges', collegeRoutes);
 app.use('/sessions', sessionRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/attendance', attendanceRoutes);

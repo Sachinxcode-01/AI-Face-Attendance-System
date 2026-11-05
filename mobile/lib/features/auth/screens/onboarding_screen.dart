@@ -70,6 +70,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final isReducedMotion = mediaQuery.disableAnimations;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return PopScope(
       canPop: _currentPage == 0,
@@ -79,272 +80,269 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         }
       },
       child: Scaffold(
+        backgroundColor: isDark ? AppColors.bgDark : AuthDesign.pageBg,
         body: PremiumBackground(
           immersive: true,
-          child: AnimatedPageWrapper(
-            child: SafeArea(
-              child: Column(
-                children: [
-                  // Top Bar Navigation with Logo and Skip Button
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0,
-                      vertical: 10.0,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // App Logo & Brand Header
-                        Row(
-                          children: [
-                            Container(
-                              height: 36,
-                              width: 36,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: const Color(0xFF0A1024),
-                                border: Border.all(
-                                  color: AppColors.primaryBright,
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: ClipOval(
-                                child: Image.asset(
-                                  'assets/images/logo.png',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(
-                                        Icons.fingerprint_rounded,
-                                        size: 20,
-                                        color: AppColors.primaryBright,
-                                      ),
-                                ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Top Bar Navigation with Logo and Skip Button
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0,
+                    vertical: 10.0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // App Logo & Brand Header
+                      Row(
+                        children: [
+                          Container(
+                            height: 36,
+                            width: 36,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFF0A1024),
+                              border: Border.all(
+                                color: AppColors.primaryBright,
+                                width: 1.5,
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'SMARTFACE',
-                              style:
-                                  AppTextStyles.label(
-                                    context,
-                                    color: Colors.white.withValues(alpha: 0.9),
-                                  ).copyWith(
-                                    letterSpacing: 1.6,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(
+                                      Icons.fingerprint_rounded,
+                                      size: 20,
+                                      color: AppColors.primaryBright,
+                                    ),
+                              ),
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'SMARTFACE',
+                            style:
+                                AppTextStyles.label(
+                                  context,
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                ).copyWith(
+                                  letterSpacing: 1.6,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
 
-                        // Skip Button (Visible on Card 1 & 2)
-                        AnimatedOpacity(
+                      // Skip Button (Visible on Card 1 & 2)
+                      AnimatedOpacity(
+                        duration: const Duration(milliseconds: 250),
+                        opacity: _currentPage < _totalPages - 1 ? 1.0 : 0.0,
+                        child: IgnorePointer(
+                          ignoring: _currentPage >= _totalPages - 1,
+                          child: Semantics(
+                            button: true,
+                            label: 'Skip introduction cards',
+                            child: TextButton(
+                              onPressed: _skipToFinalCard,
+                              style: TextButton.styleFrom(
+                                minimumSize: const Size(48, 48),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
+                              ),
+                              child: Text(
+                                'SKIP',
+                                style:
+                                    AppTextStyles.label(
+                                      context,
+                                      color: AppColors.primaryBright,
+                                    ).copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.2,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Middle PageView Carousel containing the 3 Introduction Cards
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPage = index;
+                      });
+                    },
+                    itemCount: _totalPages,
+                    itemBuilder: (context, index) {
+                      final cardData = kIntroCardsData[index];
+                      final isActive = index == _currentPage;
+
+                      return Center(
+                        child: SingleChildScrollView(
+                          physics: const ClampingScrollPhysics(),
+                          child: IntroductionCardView(
+                            data: cardData,
+                            isActive: isActive,
+                            isReducedMotion: isReducedMotion,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // Bottom Navigation Control Bar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Previous Navigation Button
+                      SizedBox(
+                        width: 85,
+                        height: 48,
+                        child: AnimatedOpacity(
                           duration: const Duration(milliseconds: 250),
-                          opacity: _currentPage < _totalPages - 1 ? 1.0 : 0.0,
+                          opacity: _currentPage > 0 ? 1.0 : 0.0,
                           child: IgnorePointer(
-                            ignoring: _currentPage >= _totalPages - 1,
+                            ignoring: _currentPage == 0,
                             child: Semantics(
                               button: true,
-                              label: 'Skip introduction cards',
-                              child: TextButton(
-                                onPressed: _skipToFinalCard,
+                              label: 'Previous card',
+                              child: TextButton.icon(
+                                onPressed: _prevPage,
+                                icon: const Icon(
+                                  Icons.arrow_back_ios_rounded,
+                                  size: 14,
+                                  color: Colors.white70,
+                                ),
+                                label: Text(
+                                  'PREV',
+                                  style: AppTextStyles.label(
+                                    context,
+                                    color: Colors.white70,
+                                  ).copyWith(fontWeight: FontWeight.bold),
+                                ),
                                 style: TextButton.styleFrom(
                                   minimumSize: const Size(48, 48),
+                                  padding: EdgeInsets.zero,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Animated Page Indicator (Pill + Dots)
+                      Semantics(
+                        label: 'Page ${_currentPage + 1} of $_totalPages',
+                        child: AnimatedPageIndicator(
+                          count: _totalPages,
+                          currentIndex: _currentPage,
+                          onDotTapped: (index) {
+                            _pageController.animateToPage(
+                              index,
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeInOutCubic,
+                            );
+                          },
+                        ),
+                      ),
+
+                      // Next or Get Started Button
+                      SizedBox(
+                        height: 48,
+                        child: Semantics(
+                          button: true,
+                          label: _currentPage == _totalPages - 1
+                              ? 'Get Started and complete introduction'
+                              : 'Next introduction card',
+                          child: Builder(
+                            builder: (context) {
+                              final button = ElevatedButton(
+                                onPressed: _nextPage,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  elevation: 6,
+                                  shadowColor: AppColors.primary.withValues(
+                                    alpha: 0.35,
+                                  ),
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 8,
+                                    horizontal: 10,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24),
                                   ),
                                 ),
-                                child: Text(
-                                  'SKIP',
-                                  style:
-                                      AppTextStyles.label(
-                                        context,
-                                        color: AppColors.primaryBright,
-                                      ).copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1.2,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        _currentPage == _totalPages - 1
+                                            ? 'GET STARTED'
+                                            : 'NEXT',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 1.0,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Middle PageView Carousel containing the 3 Introduction Cards
-                  Expanded(
-                    child: PageView.builder(
-                      controller: _pageController,
-                      onPageChanged: (index) {
-                        setState(() {
-                          _currentPage = index;
-                        });
-                      },
-                      itemCount: _totalPages,
-                      itemBuilder: (context, index) {
-                        final cardData = kIntroCardsData[index];
-                        final isActive = index == _currentPage;
-
-                        return Center(
-                          child: SingleChildScrollView(
-                            physics: const ClampingScrollPhysics(),
-                            child: IntroductionCardView(
-                              data: cardData,
-                              isActive: isActive,
-                              isReducedMotion: isReducedMotion,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  // Bottom Navigation Control Bar
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Previous Navigation Button
-                        SizedBox(
-                          width: 85,
-                          height: 48,
-                          child: AnimatedOpacity(
-                            duration: const Duration(milliseconds: 250),
-                            opacity: _currentPage > 0 ? 1.0 : 0.0,
-                            child: IgnorePointer(
-                              ignoring: _currentPage == 0,
-                              child: Semantics(
-                                button: true,
-                                label: 'Previous card',
-                                child: TextButton.icon(
-                                  onPressed: _prevPage,
-                                  icon: const Icon(
-                                    Icons.arrow_back_ios_rounded,
-                                    size: 14,
-                                    color: Colors.white70,
-                                  ),
-                                  label: Text(
-                                    'PREV',
-                                    style: AppTextStyles.label(
-                                      context,
-                                      color: Colors.white70,
-                                    ).copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                  style: TextButton.styleFrom(
-                                    minimumSize: const Size(48, 48),
-                                    padding: EdgeInsets.zero,
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        _currentPage == _totalPages - 1
+                                            ? Icons.rocket_launch_rounded
+                                            : Icons.arrow_forward_ios_rounded,
+                                        size: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Animated Page Indicator (Dots & Active Pill)
-                        Semantics(
-                          label: 'Page ${_currentPage + 1} of $_totalPages',
-                          child: AnimatedPageIndicator(
-                            count: _totalPages,
-                            currentIndex: _currentPage,
-                            onDotTapped: (index) {
-                              _pageController.animateToPage(
-                                index,
-                                duration: const Duration(milliseconds: 400),
-                                curve: Curves.easeInOutCubic,
                               );
+
+                              if (isReducedMotion ||
+                                  !animationsEnabled(context)) {
+                                return button;
+                              }
+
+                              return button
+                                  .animate(
+                                    target: _currentPage == 2 ? 1.0 : 0.0,
+                                  )
+                                  .shimmer(
+                                    duration: 1500.ms,
+                                    curve: Curves.easeInOut,
+                                  )
+                                  .glow(
+                                    delay: 800.ms,
+                                    duration: 1200.ms,
+                                    color: AppColors.primaryBright,
+                                    radius: 20.0,
+                                  );
                             },
                           ),
                         ),
-
-                        // Next or Get Started Button
-                        SizedBox(
-                          height: 48,
-                          child: Semantics(
-                            button: true,
-                            label: _currentPage == _totalPages - 1
-                                ? 'Get Started and complete introduction'
-                                : 'Next introduction card',
-                            child: Builder(
-                              builder: (context) {
-                                final button = AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  width: _currentPage == _totalPages - 1
-                                      ? 140
-                                      : 100,
-                                  child: ElevatedButton(
-                                    onPressed: _nextPage,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.primary,
-                                      foregroundColor: Colors.white,
-                                      elevation: 6,
-                                      shadowColor: AppColors.primary.withValues(
-                                        alpha: 0.35,
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(24),
-                                      ),
-                                    ),
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            _currentPage == _totalPages - 1
-                                                ? 'GET STARTED'
-                                                : 'NEXT',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 1.0,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Icon(
-                                            _currentPage == _totalPages - 1
-                                                ? Icons.rocket_launch_rounded
-                                                : Icons
-                                                      .arrow_forward_ios_rounded,
-                                            size: 14,
-                                            color: Colors.white,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-
-                                if (isReducedMotion ||
-                                    !animationsEnabled(context)) {
-                                  return button;
-                                }
-
-                                return button
-                                    .animate(
-                                      target: _currentPage == 2 ? 1.0 : 0.0,
-                                    )
-                                    .shimmer(
-                                      duration: 1500.ms,
-                                      curve: Curves.easeInOut,
-                                    );
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

@@ -1290,17 +1290,24 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
   Widget _buildRecentActivity(bool isDark) {
     final timelineItems = _verificationHistory.map((log) {
-      final isPresent = log['status'].toString().toLowerCase() == 'present';
+      final isPresent = (log['status'] ?? '').toString().toLowerCase() == 'present';
       final isFace = log['verified_by'] == 'face';
+      final conf = log['confidence'] != null ? ' (Conf: ${log['confidence']})' : '';
       final verificationType = isFace
-          ? 'Face Scanner (Conf: ${log['confidence']})'
+          ? 'Face Scanner$conf'
           : 'QR Scan';
 
+      final timeStr = log['time'] ?? '';
+      final dateStr = log['date'] ?? '';
+      final ts = (timeStr.isNotEmpty && dateStr.isNotEmpty)
+          ? '$timeStr • $dateStr'
+          : '$timeStr$dateStr';
+
       return TimelineItem(
-        title: log['subject'] ?? 'Data Science Class',
+        title: log['subject'] ?? 'Lecture Class',
         description:
-            'Status: ${log['status'].toString().toUpperCase()} • Verified via $verificationType',
-        timestamp: '${log['time']} • ${log['date']}',
+            'Status: ${(log['status'] ?? 'PRESENT').toString().toUpperCase()} • Verified via $verificationType',
+        timestamp: ts,
         icon: isPresent ? Icons.check_circle_rounded : Icons.cancel_rounded,
         iconColor: isPresent ? AppColors.success : AppColors.error,
       );

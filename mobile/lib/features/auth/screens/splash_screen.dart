@@ -1,47 +1,18 @@
-/*
-|--------------------------------------------------------------------------
-| File: splash_screen.dart
-|--------------------------------------------------------------------------
-| Project: Nexa AI
-|
-| Purpose:
-| Renders the initial loading screen of the application. Displays a luxury
-| animated logo HUD and manages routing decisions based on stored user sessions.
-|
-| Responsibilities:
-| - Simulates boot check diagnostics in neural animation sequence.
-| - Retrieves persistence state from session manager.
-| - Routes to setup wizard (if first-time biometric signup) or dashboard.
-|
-| Dependencies:
-| - package:flutter/material.dart
-| - package:flutter_animate/flutter_animate.dart
-| - package:google_fonts/google_fonts.dart
-| - package:provider/provider.dart
-| - package:smartface_attendance/core/constants.dart
-| - package:smartface_attendance/core/state/session_manager.dart
-|--------------------------------------------------------------------------
-*/
-
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-// ======================================================
-// Core & State Imports
-// ======================================================
+import 'package:smartface_attendance/app/config/cache_service.dart';
 import 'package:smartface_attendance/core/animation/app_animated_heading.dart';
+import 'package:smartface_attendance/core/di/service_locator.dart';
+import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
 import 'package:smartface_attendance/design_system/design_system.dart'
     hide PrimaryButton;
-import 'package:smartface_attendance/core/di/service_locator.dart';
-import 'package:smartface_attendance/features/sync/services/connectivity_service.dart';
-import 'package:smartface_attendance/app/config/cache_service.dart';
-import 'package:smartface_attendance/core/network/api_service.dart';
 
 /// App startup splash screen widget.
 class SplashScreen extends StatefulWidget {
@@ -55,11 +26,23 @@ class _SplashScreenState extends State<SplashScreen> {
   String _bootMessage = 'BOOT: INITIALIZING SECURE AI SUITE...';
   Timer? _bootTimer;
   final bool _showWelcome = false;
+  late final AnimationController _logoAnimController;
 
   @override
   void initState() {
     super.initState();
+    _logoAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
     _runStartupSequence();
+  }
+
+  @override
+  void dispose() {
+    _bootTimer?.cancel();
+    _logoAnimController.dispose();
+    super.dispose();
   }
 
   Future<void> _runStartupSequence() async {
@@ -208,12 +191,6 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   @override
-  void dispose() {
-    _bootTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     const primaryColor = AuthDesign.primaryIndigo;
     final primaryGlow = AuthDesign.primaryIndigo.withValues(alpha: 0.28);
@@ -223,7 +200,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: isDark ? AppColors.bgDark : AuthDesign.pageBg,
       body: Stack(
         children: [
-          // 🌌 Full-screen background image
+          // Full-screen background image
           Image.asset(
             'assets/background/splash_background.jpeg',
             fit: BoxFit.cover,
@@ -277,7 +254,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget _buildBootUI(Color primaryColor, Color primaryGlow) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Dynamic responsive font sizes and styling properties matching design.md
+    // Dynamic responsive font sizes matching design.md (#0F1225 dark / #1A1A3A light)
     final double titleFontSize = (MediaQuery.of(context).size.width * 0.08)
         .clamp(28.0, 36.0);
     final titleColor = isDark
@@ -286,9 +263,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final subtitleColor = isDark
         ? AppColors.textMutedDark
         : AuthDesign.textLabel;
-    final shadowColor = isDark
-        ? Colors.black54
-        : AuthDesign.primaryIndigo;
+    final shadowColor = isDark ? Colors.black54 : AuthDesign.primaryIndigo;
 
     return SafeArea(
       key: const ValueKey('boot_ui'),
@@ -297,94 +272,166 @@ class _SplashScreenState extends State<SplashScreen> {
         children: [
           const Spacer(),
 
-          // --- THE PERFECT CIRCLE LOGO ---
+          // --- THE PERFECT CIRCLE LOGO WITH HAPTIC SUBTLE BOUNCE ---
           RepaintBoundary(
-            child: Center(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Outer Glowing Ring Wave
-                    Container(
-                          height: 165,
-                          width: 165,
+                child: Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Outer Glowing Ring Wave — subtle pulse
+                      Container(
+                            height: 165,
+                            width: 165,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.primaryBright.withValues(
+                                  alpha: 0.20,
+                                ),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: primaryGlow.withValues(alpha: 0.25),
+                                  blurRadius: 40,
+                                  spreadRadius: 6,
+                                ),
+                              ],
+                            ),
+                          )
+                          .animate(onPlay: (c) => c.repeat(reverse: true))
+                          .scale(
+                            begin: const Offset(1, 1),
+                            end: const Offset(1.12, 1.12),
+                            duration: 2.seconds,
+                            curve: Curves.easeInOut,
+                          ),
+
+                      // Holographic Tracker Ring (Rotating slowly)
+                      Container(
+                            height: 142,
+                            width: 142,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.primaryBright.withValues(
+                                  alpha: 0.35,
+                                ),
+                                width: 1.5,
+                              ),
+                            ),
+                          )
+                          .animate(onPlay: (c) => c.repeat())
+                          .rotate(duration: 10.seconds),
+
+                      // Central logo emblem — fills the circle edge-to-edge
+                      Hero(
+                        tag: 'logo',
+                        child: Container(
+                          height: 116,
+                          width: 116,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
+                            color: const Color(0xFF0A1024),
                             border: Border.all(
-                              color: AppColors.primaryBright.withValues(alpha: 0.20),
-                              width: 1.5,
+                              color: AuthDesign.primaryIndigo,
+                              width: 2.0,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: primaryGlow.withValues(alpha: 0.25),
-                                blurRadius: 40,
-                                spreadRadius: 6,
+                                color: AuthDesign.primaryIndigo.withValues(
+                                  alpha: 0.35,
+                                ),
+                                blurRadius: 22,
+                                spreadRadius: 1,
                               ),
                             ],
                           ),
-                        )
-                        .animate(onPlay: (c) => c.repeat(reverse: true))
-                        .scale(
-                          begin: const Offset(1, 1),
-                          end: const Offset(1.12, 1.12),
-                          duration: 2.seconds,
-                          curve: Curves.easeInOut,
-                        ),
-
-                    // Holographic Tracker Ring (Rotating)
-                    Container(
-                          height: 142,
-                          width: 142,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppColors.primaryBright.withValues(alpha: 0.35),
-                              width: 1.5,
-                            ),
-                          ),
-                        )
-                        .animate(onPlay: (c) => c.repeat())
-                        .rotate(duration: 10.seconds),
-
-                    // Central logo emblem — fills the circle edge-to-edge
-                    Hero(
-                      tag: 'logo',
-                      child: Container(
-                        height: 116,
-                        width: 116,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF0A1024),
-                          border: Border.all(color: AuthDesign.primaryIndigo, width: 2.0),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AuthDesign.primaryIndigo.withValues(alpha: 0.35),
-                              blurRadius: 22,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: Transform.scale(
-                            scale: 1.2,
-                            child: Image.asset(
-                              'assets/images/logo.png',
-                              fit: BoxFit.cover,
+                          child: ClipOval(
+                            child: Transform.scale(
+                              scale: 1.2,
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+
+                      // Floating teardrop accents (Liquid Orb Swirl)
+                      Container(
+                            width: 40,
+                            height: 40,
+                            margin: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.accentLight.withValues(
+                                  alpha: 0.35,
+                                ),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.accentLight.withValues(
+                                    alpha: 0.25,
+                                  ),
+                                  blurRadius: 14,
+                                ),
+                              ],
+                            ),
+                          )
+                          .animate(target: 0.0)
+                          .rotate(duration: 5.seconds, curve: Curves.easeInOut)
+                          .scale(
+                            delay: 100.ms,
+                            duration: 1500.ms,
+                            begin: const Offset(0.6, 0.6),
+                            end: const Offset(1.4, 1.4),
+                          ),
+
+                      Container(
+                            width: 32,
+                            height: 32,
+                            margin: const EdgeInsets.symmetric(horizontal: 20),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.goldBright.withValues(
+                                  alpha: 0.4,
+                                ),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.goldBright.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  blurRadius: 12,
+                                ),
+                              ],
+                            ),
+                          )
+                          .animate(target: 0.0)
+                          .rotate(duration: 6.seconds, curve: Curves.easeInOut)
+                          .scale(
+                            delay: 300.ms,
+                            duration: 1800.ms,
+                            begin: const Offset(0.5, 0.5),
+                            end: const Offset(1.25, 1.25),
+                          ),
+                    ],
+                  ),
                 ),
               )
               .animate()
               .fadeIn(duration: 800.ms)
               .scale(curve: Curves.elasticOut, duration: 1000.ms),
-          ),
 
           const SizedBox(height: 45),
 
-          // --- BRAND TEXT ---
+          // --- BRAND TEXT with Enter Key animation ---
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: AppAnimatedHeading(
@@ -439,9 +486,10 @@ class _SplashScreenState extends State<SplashScreen> {
           const Spacer(),
 
           // --- STYLISH NEURAL LOADING ---
-          _buildNeuralLoadingIndicator().animate().fadeIn(
-            delay: 900.ms,
-            duration: 500.ms,
+          _buildNeuralLoadingIndicator().animate(
+            onPlay: (controller) {
+              controller.repeat(reverse: true);
+            },
           ),
 
           const SizedBox(height: 35),
@@ -461,37 +509,41 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Logo entry — bounce in then settle
               Hero(
-                tag: 'logo',
-                child: Container(
-                  height: 92,
-                  width: 92,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF0A1024),
-                    border: Border.all(
-                      color: primaryColor.withValues(alpha: 0.5),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primaryGlow.withValues(alpha: 0.1),
-                        blurRadius: 20,
-                        spreadRadius: 1,
+                    tag: 'logo',
+                    child: Container(
+                      height: 92,
+                      width: 92,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF0A1024),
+                        border: Border.all(
+                          color: primaryColor.withValues(alpha: 0.5),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryGlow.withValues(alpha: 0.1),
+                            blurRadius: 20,
+                            spreadRadius: 1,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: ClipOval(
-                    child: Transform.scale(
-                      scale: 1.2,
-                      child: Image.asset(
-                        'assets/images/logo.png',
-                        fit: BoxFit.cover,
+                      child: ClipOval(
+                        child: Transform.scale(
+                          scale: 1.2,
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
+                  )
+                  .animate()
+                  .fadeIn(delay: 200.ms)
+                  .scale(curve: Curves.easeOutBack, duration: 600.ms),
 
               const SizedBox(height: 28),
 
@@ -502,12 +554,19 @@ class _SplashScreenState extends State<SplashScreen> {
                       fontSize: 24,
                       height: 1.3,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? AppColors.textHeadingDark : AuthDesign.textHeading,
+                      color: isDark
+                          ? AppColors.textHeadingDark
+                          : AuthDesign.textHeading,
                     ),
                   )
                   .animate()
                   .fadeIn(delay: 200.ms, duration: 500.ms)
-                  .slideY(begin: 0.1, end: 0),
+                  .slideY(
+                    begin: 0.1,
+                    end: 0,
+                    duration: 500.ms,
+                    curve: Curves.easeOutCubic,
+                  ),
 
               const SizedBox(height: 20),
 
@@ -517,42 +576,65 @@ class _SplashScreenState extends State<SplashScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   height: 1.55,
-                  color: isDark ? AppColors.textMutedDark : AuthDesign.textLabel,
+                  color: isDark
+                      ? AppColors.textMutedDark
+                      : AuthDesign.textLabel,
                   fontWeight: FontWeight.w400,
                 ),
               ).animate().fadeIn(delay: 350.ms, duration: 500.ms),
 
               const SizedBox(height: 28),
 
+              // Feature pills — animate upward, staggered
               Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.surfaceDark : const Color(0xFFEEF2FF),
+                      color: isDark
+                          ? AppColors.surfaceDark
+                          : const Color(0xFFEEF2FF),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: isDark ? AppColors.borderDark : const Color(0xFFE2E8F0),
+                        color: isDark
+                            ? AppColors.borderDark
+                            : const Color(0xFFE2E8F0),
                         width: 1.2,
                       ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildBadgeItem('Smart'),
+                        _buildBadgeItem('Smart')
+                            .animate()
+                            .fadeIn(delay: 500.ms, duration: 400.ms)
+                            .slideY(begin: -8.ms),
                         _buildBadgeDivider(),
-                        _buildBadgeItem('Secure'),
+                        _buildBadgeItem('Secure')
+                            .animate()
+                            .fadeIn(delay: 600.ms, duration: 400.ms)
+                            .slideY(begin: -8.ms),
                         _buildBadgeDivider(),
-                        _buildBadgeItem('Intelligent'),
+                        _buildBadgeItem('Intelligent')
+                            .animate()
+                            .fadeIn(delay: 700.ms, duration: 400.ms)
+                            .slideY(begin: -8.ms),
                         _buildBadgeDivider(),
-                        _buildBadgeItem('Real-Time'),
+                        _buildBadgeItem('Real-Time')
+                            .animate()
+                            .fadeIn(delay: 800.ms, duration: 400.ms)
+                            .slideY(begin: -8.ms),
                       ],
                     ),
                   )
                   .animate()
                   .fadeIn(delay: 500.ms, duration: 500.ms)
-                  .scale(begin: const Offset(0.95, 0.95)),
+                  .scale(
+                    delay: 600.ms,
+                    begin: const Offset(0.95, 0.95),
+                    end: const Offset(1, 1),
+                  ),
 
               const SizedBox(height: 28),
 
@@ -562,20 +644,30 @@ class _SplashScreenState extends State<SplashScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   height: 1.5,
-                  color: isDark ? AppColors.textMutedDark : AuthDesign.textLabel,
+                  color: isDark
+                      ? AppColors.textMutedDark
+                      : AuthDesign.textLabel,
                   fontWeight: FontWeight.w500,
                 ),
               ).animate().fadeIn(delay: 650.ms, duration: 500.ms),
 
               const SizedBox(height: 40),
 
+              // CTA button — magnetic pulse glow
               PrimaryButton(
-                text: 'GET STARTED',
-                onPressed: () => context.go('/auth/login'),
-              )
+                    text: 'GET STARTED',
+                    onPressed: () => context.go('/auth/login'),
+                  )
                   .animate()
                   .fadeIn(delay: 800.ms, duration: 500.ms)
-                  .slideY(begin: 0.2, end: 0),
+                  .slideY(
+                    begin: 0.2,
+                    end: 0,
+                    duration: 500.ms,
+                    curve: Curves.easeOutCubic,
+                  )
+                  .then()
+                  .glow(duration: 1800.ms, color: AuthDesign.primaryIndigo),
             ],
           ),
         ),
@@ -616,55 +708,59 @@ class _SplashScreenState extends State<SplashScreen> {
 
     return RepaintBoundary(
       child: Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(3, (index) {
-            return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 5),
-                  height: 6,
-                  width: 6,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: primaryColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: primaryColor,
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                )
-                .animate(onPlay: (controller) => controller.repeat())
-                .scale(
-                  delay: (index * 150).ms,
-                  duration: 500.ms,
-                  begin: const Offset(0.4, 0.4),
-                  end: const Offset(1.4, 1.4),
-                )
-                .fadeIn(delay: (index * 150).ms, duration: 500.ms)
-                .then()
-                .fadeOut(duration: 500.ms);
-          }),
-        ),
-        const SizedBox(height: 16),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: Text(
-            _bootMessage,
-            key: ValueKey<String>(_bootMessage),
-            textAlign: TextAlign.center,
-            style: GoogleFonts.robotoMono(
-              color: const Color(0xFF7F8CA4),
-              fontSize: 10,
-              letterSpacing: 1.5,
-              fontWeight: FontWeight.bold,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(3, (index) {
+              return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
+                    height: 6,
+                    width: 6,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: primaryColor,
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryColor,
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  )
+                  .animate(
+                    onPlay: (controller) {
+                      controller.repeat(reverse: true);
+                    },
+                  )
+                  .scale(
+                    delay: (index * 150).ms,
+                    duration: 500.ms,
+                    begin: const Offset(0.4, 0.4),
+                    end: const Offset(1.4, 1.4),
+                  )
+                  .fadeIn(delay: (index * 150).ms, duration: 500.ms)
+                  .then()
+                  .fadeOut(duration: 500.ms);
+            }),
+          ),
+          const SizedBox(height: 16),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Text(
+              _bootMessage,
+              key: ValueKey<String>(_bootMessage),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.robotoMono(
+                color: const Color(0xFF7F8CA4),
+                fontSize: 10,
+                letterSpacing: 1.5,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
   }
 }

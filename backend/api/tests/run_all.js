@@ -22,7 +22,8 @@ const unitTests = [
   'tests/unit/test_face_attendance_gateway.js',
   'tests/unit/test_nexa_phase2.js',
   'tests/unit/test_predictive_analytics.js',
-  'tests/unit/test_prd_upgrades.js'
+  'tests/unit/test_prd_upgrades.js',
+  'tests/unit/test_colleges.js'
 ];
 
 const integrationTests = [

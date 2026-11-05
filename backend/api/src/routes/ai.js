@@ -1,3 +1,4 @@
+const datasetService = require('../services/datasetService');
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -242,7 +243,16 @@ router.get(['/student/stats/:email', '/ai/student/stats/:email'], authenticate, 
       return res.status(403).json({ detail: "Forbidden: You do not have permission to view these statistics." });
     }
 
-    const stats = await getStudentAttendanceStats(email);
+    let stats = null;
+    try {
+      if (require('mongoose').connection.readyState === 1) {
+        stats = await getStudentAttendanceStats(email);
+      }
+    } catch (_) {}
+
+    if (!stats || !stats.subjects || stats.subjects.length === 0) {
+      stats = datasetService.getStudentStats(email);
+    }
     res.json(stats);
   } catch (error) {
     res.status(500).json({ detail: error.message });

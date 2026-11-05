@@ -17,6 +17,7 @@ const notificationService = require('../services/notificationService');
 const GSheetsManager = require('../services/gsheetsManager');
 const gsheets = new GSheetsManager();
 const faceAiService = require('../services/faceAiService');
+const datasetService = require('../services/datasetService');
 
 const multer = require('multer');
 const upload = multer({
@@ -46,9 +47,22 @@ const auditLog = async (email, role, action, details, req) => {
 // Heuristics Helper: Calculate Student Attendance Health Score
 const calculateHealthScore = async (email) => {
   try {
-    const records = await Attendance.find({ student_email: email }).lean();
+    let records = [];
+    try {
+      if (mongoose.connection.readyState === 1) {
+        records = await Attendance.find({ student_email: email }).lean();
+      }
+    } catch (_) {}
+
     if (records.length === 0) {
-      return { score: 80, standing: 'Good', lates: 0, consecutiveAbsences: 0, percentage: 80 };
+      const fallbackStats = datasetService.getStudentStats(email);
+      return {
+        score: fallbackStats.overall_percentage,
+        standing: fallbackStats.standing,
+        lates: 0,
+        consecutiveAbsences: 0,
+        percentage: fallbackStats.overall_percentage
+      };
     }
 
     const presentCount = records.filter(r => r.status === 'Present').length;
@@ -634,12 +648,25 @@ router.get('/student/:email', authenticate, async (req, res) => {
       filter.timestamp = { $gte: startOfMonth, $lt: endOfMonth };
     }
 
-    const total = await Attendance.countDocuments(filter);
-    const logs = await Attendance.find(filter)
-      .sort({ timestamp: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    let total = 0;
+    let logs = [];
+    try {
+      if (mongoose.connection.readyState === 1) {
+        total = await Attendance.countDocuments(filter);
+        logs = await Attendance.find(filter)
+          .sort({ timestamp: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean();
+      }
+    } catch (_) {}
+
+    if (logs.length === 0) {
+      const fallback = datasetService.getStudentLogs(email, { page, limit, status: req.query.status, month: req.query.month });
+      if (fallback.logs.length > 0) {
+        return res.json(fallback);
+      }
+    }
 
     const result = [];
     for (const log of logs) {
