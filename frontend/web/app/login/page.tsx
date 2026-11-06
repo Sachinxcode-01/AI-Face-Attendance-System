@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import Script from 'next/script';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, 
@@ -10,7 +10,7 @@ import {
   Lock, 
   ArrowRight, 
   Sparkles, 
-  Chrome, 
+  Chrome,
   User, 
   Phone, 
   ShieldCheckIcon,
@@ -22,7 +22,6 @@ import {
   EyeOff,
   GraduationCap,
   Users,
-  BookOpen,
   Camera,
   CheckCircle,
   Calendar,
@@ -56,20 +55,29 @@ const shakeVariants = {
   }
 };
 
-const MicrosoftLogo = () => (
-  <svg className="w-4 h-4 shrink-0" viewBox="0 0 23 23" fill="none">
-    <rect x="0" y="0" width="10.5" height="10.5" fill="#f25022" />
-    <rect x="11.5" y="0" width="10.5" height="10.5" fill="#7fba00" />
-    <rect x="0" y="11.5" width="10.5" height="10.5" fill="#00a4ef" />
-    <rect x="11.5" y="11.5" width="10.5" height="10.5" fill="#ffb900" />
-  </svg>
-);
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (options: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+          }) => void;
+          prompt: (callback?: (notification: {
+            isNotDisplayed: () => boolean;
+            isSkippedMoment: () => boolean;
+          }) => void) => void;
+        };
+      };
+    };
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter();
 
-  // Navigation / Views: 'login' | 'otp-login' | 'mfa' | 'register' | 'forgot-password' | 'profile-setup' | 'biometric-enrollment' | 'activation-success'
-  const [view, setView] = useState<'login' | 'otp-login' | 'mfa' | 'register' | 'forgot-password' | 'forgot-password-success' | 'reset-password' | 'profile-setup' | 'biometric-enrollment' | 'activation-success'>('login');
+  const [view, setView] = useState<'login' | 'otp-login' | 'verify-otp' | 'register' | 'forgot-password' | 'forgot-password-success' | 'reset-password' | 'profile-setup' | 'biometric-enrollment' | 'activation-success'>('login');
   
   // Mouse tracking for premium 3D movement
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -87,13 +95,13 @@ export default function LoginPage() {
   // OTP Verification state
   const [otpCode, setOtpCode] = useState('');
   const [otpTimer, setOtpTimer] = useState(0);
-  const [otpPurpose, setOtpPurpose] = useState<'mfa' | 'otp-login' | 'register' | 'forgot-password'>('mfa');
+  const [otpPurpose, setOtpPurpose] = useState<'otp-login' | 'register' | 'forgot-password'>('otp-login');
 
   // Registration fields (Step 1)
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
-  const [regRole, setRegRole] = useState('student');
+  const [regRole, setRegRole] = useState<'student' | 'parent' | 'teacher'>('student');
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -154,8 +162,17 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const targetEmail = (otpPurpose === 'register') ? regEmail : email;
-      
+      const targetEmail = otpPurpose === 'register'
+        ? regEmail
+        : otpPurpose === 'forgot-password' ? forgotEmail : email;
+
+      if (otpPurpose === 'forgot-password') {
+        setOtpCode(codeValue);
+        setIsLoading(false);
+        setView('reset-password');
+        return;
+      }
+
       const data = await api.verifyOtp(targetEmail, codeValue);
       confetti({ particleCount: 80, spread: 60, origin: { y: 0.8 } });
       
@@ -163,19 +180,11 @@ export default function LoginPage() {
       localStorage.setItem('userRole', data.role);
       localStorage.setItem('userEmail', targetEmail);
       
-      if (otpPurpose === 'otp-login' || otpPurpose === 'mfa') {
+      if (otpPurpose === 'otp-login') {
         if (rememberMe) {
           localStorage.setItem('rememberedUser', email);
         }
-        if (data.role === 'student') {
-          router.push('/student');
-        } else if (data.role === 'teacher') {
-          router.push('/teacher');
-        } else if (data.role === 'admin' || data.role === 'super_admin') {
-          router.push('/admin');
-        } else {
-          router.push('/dashboard');
-        }
+        router.replace('/dashboard');
       } else if (otpPurpose === 'register') {
         setSuccessMsg('Email address verified successfully!');
         setView('profile-setup');
@@ -270,19 +279,19 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // First verify credentials
-      await api.loginPassword(email, password);
-      // Trigger OTP dispatch for MFA (sent to email)
-      await api.sendOtp(email);
-      
-      setOtpPurpose('mfa');
-      setOtpTimer(60);
-      setIsLoading(false);
-      setView('mfa');
+      const data = await api.loginPassword(email, password);
+      const token = data.access_token || data.accessToken;
+      if (!token) throw new Error('Sign-in did not return a session.');
+      localStorage.setItem('token', token);
+      localStorage.setItem('userRole', data.role || 'student');
+      localStorage.setItem('userEmail', data.email || data.user?.email || email);
+      if (rememberMe) localStorage.setItem('rememberedUser', email);
+      router.replace('/dashboard');
     } catch (err: unknown) {
-      setIsLoading(false);
       const message = err instanceof Error ? err.message : 'Authentication failed. Please check credentials.';
       triggerError(message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -300,7 +309,7 @@ export default function LoginPage() {
       setOtpPurpose('otp-login');
       setOtpTimer(60);
       setIsLoading(false);
-      setView('mfa');
+      setView('verify-otp');
     } catch (err: unknown) {
       setIsLoading(false);
       const message = err instanceof Error ? err.message : 'Failed to dispatch OTP verification.';
@@ -308,7 +317,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleMfaSubmit = async (e: React.FormEvent) => {
+  const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await submitVerificationCode(otpCode);
   };
@@ -317,8 +326,12 @@ export default function LoginPage() {
     if (otpTimer > 0) return;
     setErrorMsg('');
     try {
-      const targetEmail = (otpPurpose === 'register') ? regEmail : email;
-      await api.sendOtp(targetEmail);
+      if (otpPurpose === 'forgot-password') {
+        await api.forgotPassword(forgotEmail);
+      } else {
+        const targetEmail = otpPurpose === 'register' ? regEmail : email;
+        await api.sendOtp(targetEmail);
+      }
       setOtpTimer(60);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to resend OTP.';
@@ -352,11 +365,21 @@ export default function LoginPage() {
         role: regRole,
         password: regPassword
       });
+      setEmail(regEmail);
+      try {
+        await api.sendOtp(regEmail);
+      } catch {
+        setIsLoading(false);
+        setOtpPurpose('otp-login');
+        setView('otp-login');
+        triggerError('Account created, but the verification email could not be sent. Request a code to continue.');
+        return;
+      }
       
       setOtpPurpose('register');
       setOtpTimer(60);
       setIsLoading(false);
-      setView('mfa');
+      setView('verify-otp');
     } catch (err: unknown) {
       setIsLoading(false);
       const message = err instanceof Error ? err.message : 'Failed to register account.';
@@ -374,7 +397,11 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await api.sendOtp(forgotEmail);
+      await api.forgotPassword(forgotEmail);
+      setOtpCode('');
+      setOtpArray(Array(6).fill(''));
+      setOtpPurpose('forgot-password');
+      setOtpTimer(60);
       setIsLoading(false);
       setView('forgot-password-success');
     } catch (err: unknown) {
@@ -398,51 +425,60 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await api.resetPassword(forgotEmail || email, newPassword);
+      await api.resetPassword(forgotEmail || email, otpCode, newPassword);
       setSuccessMsg('Password updated successfully! Log in now.');
       setNewPassword('');
       setConfirmNewPassword('');
-      setOtpPurpose('mfa');
+      setOtpPurpose('otp-login');
       setView('login');
       setIsLoading(false);
     } catch (err: unknown) {
       setIsLoading(false);
       const message = err instanceof Error ? err.message : 'Failed to reset password.';
+      if (message.toLowerCase().includes('otp')) {
+        setOtpCode('');
+        setOtpArray(Array(6).fill(''));
+        setView('verify-otp');
+      }
       triggerError(message);
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setErrorMsg('');
-    setIsLoading(true);
-    try {
-      const loginEmail = email || 'google_student@smartface.pro';
-      const loginName = loginEmail.split('@')[0];
-      let resolvedRole = 'student';
-      if (loginEmail.includes('teacher')) resolvedRole = 'teacher';
-      else if (loginEmail.includes('admin')) resolvedRole = 'admin';
-      else if (loginEmail.includes('parent')) resolvedRole = 'parent';
-
-      const data = await api.googleLogin(loginEmail, loginName, resolvedRole);
-      confetti({ particleCount: 80, spread: 60 });
-      setIsLoading(false);
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('userRole', data.role);
-      localStorage.setItem('userEmail', loginEmail);
-      if (data.role === 'student') {
-        router.push('/student');
-      } else if (data.role === 'teacher') {
-        router.push('/teacher');
-      } else if (data.role === 'admin' || data.role === 'super_admin') {
-        router.push('/admin');
-      } else {
-        router.push('/dashboard');
-      }
-    } catch (err: unknown) {
-      setIsLoading(false);
-      const message = err instanceof Error ? err.message : 'Google Auth failed.';
-      triggerError(message);
+  const handleGoogleLogin = () => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const googleIdentity = window.google?.accounts.id;
+    if (!clientId || !googleIdentity) {
+      triggerError('Google sign-in is not configured. Use your email and password instead.');
+      return;
     }
+
+    setErrorMsg('');
+    googleIdentity.initialize({
+      client_id: clientId,
+      callback: async ({ credential }) => {
+        setIsLoading(true);
+        try {
+          const data = await api.googleLogin(credential);
+          const token = data.access_token || data.accessToken;
+          if (!token) throw new Error('Google sign-in did not return a session.');
+          localStorage.setItem('token', token);
+          localStorage.setItem('userRole', data.role);
+          localStorage.setItem('userEmail', data.email || data.user?.email || '');
+          confetti({ particleCount: 80, spread: 60 });
+          router.replace('/dashboard');
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : 'Google sign-in failed.';
+          triggerError(message);
+        } finally {
+          setIsLoading(false);
+        }
+      },
+    });
+    googleIdentity.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        triggerError('Google sign-in could not open. Please use email and password.');
+      }
+    });
   };
 
   // Pre-fill email if remembered
@@ -618,7 +654,10 @@ export default function LoginPage() {
   }, [view, router]);
 
   return (
-    <div className="min-h-screen bg-[#020617] flex relative overflow-hidden font-sans select-none">
+    <div className="min-h-screen bg-space flex relative overflow-hidden font-sans select-none">
+      {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+        <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
+      )}
       
       {/* 3D Canvas Background (Left Panel) */}
       <NetworkBackground />
@@ -630,12 +669,12 @@ export default function LoginPage() {
             key={i}
             className="absolute rounded-full bg-blue-500/10 blur-[2px] animate-pulse-slow"
             style={{
-              width: `${Math.random() * 8 + 4}px`,
-              height: `${Math.random() * 8 + 4}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${Math.random() * 8 + 4}s`
+              width: `${4 + (i * 7) % 8}px`,
+              height: `${4 + (i * 5) % 8}px`,
+              left: `${(i * 37) % 100}%`,
+              top: `${(i * 61) % 100}%`,
+              animationDelay: `${i % 5}s`,
+              animationDuration: `${4 + (i % 8)}s`
             }}
           />
         ))}
@@ -753,7 +792,7 @@ export default function LoginPage() {
             </div>
             <div>
               <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest block">Authorization</span>
-              <span className="text-sm font-bold text-white mt-1 block">MFA Enabled</span>
+              <span className="text-sm font-bold text-white mt-1 block">OTP Sign-in Available</span>
             </div>
           </div>
 
@@ -893,64 +932,31 @@ export default function LoginPage() {
                     </button>
                   </form>
 
-                  <div className="relative my-6 text-center">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-white/5" />
-                    </div>
-                    <span className="relative bg-slate-950 px-3 text-[9px] font-mono text-slate-500 uppercase tracking-widest">
-                      OR CONTINUE WITH
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <button
-                      onClick={handleGoogleLogin}
-                      className="w-full py-3 border border-white/5 hover:border-white/10 bg-slate-900/40 hover:bg-slate-900/60 rounded-xl text-xs text-slate-300 hover:text-white transition flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <Chrome className="w-4 h-4" />
-                      <span>Continue with Google</span>
-                    </button>
-
-                    <button
-                      onClick={handleGoogleLogin}
-                      className="w-full py-3 border border-white/5 hover:border-white/10 bg-slate-900/40 hover:bg-slate-900/60 rounded-xl text-xs text-slate-300 hover:text-white transition flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <MicrosoftLogo />
-                      <span>Continue with Microsoft</span>
-                    </button>
-                  </div>
-
-                  {/* Direct Dedicated Portals Demo Access */}
-                  <div className="pt-4 border-t border-white/5 space-y-2.5">
-                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block text-center font-bold">
-                      Direct Dedicated Websites
-                    </span>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Link
-                        href="/student"
-                        className="p-2.5 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/30 text-center transition flex flex-col items-center gap-1 group cursor-pointer"
+                  {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+                    <>
+                      <div className="relative my-6 text-center">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-white/5" />
+                        </div>
+                        <span className="relative bg-slate-950 px-3 text-[9px] font-mono text-slate-500 uppercase tracking-widest">
+                          OR CONTINUE WITH
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        disabled={isLoading}
+                        className="w-full py-3 border border-white/5 hover:border-white/10 bg-slate-900/40 hover:bg-slate-900/60 rounded-xl text-xs text-slate-300 hover:text-white transition flex items-center justify-center gap-2 disabled:opacity-60"
                       >
-                        <span className="text-xs font-bold text-blue-400 group-hover:text-blue-300">Student</span>
-                        <span className="text-[9px] font-mono text-slate-400">/student</span>
-                      </Link>
+                        <Chrome className="w-4 h-4" />
+                        <span>Continue with Google</span>
+                      </button>
+                    </>
+                  )}
 
-                      <Link
-                        href="/teacher"
-                        className="p-2.5 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-500/30 text-center transition flex flex-col items-center gap-1 group cursor-pointer"
-                      >
-                        <span className="text-xs font-bold text-indigo-400 group-hover:text-indigo-300">Lecturer</span>
-                        <span className="text-[9px] font-mono text-slate-400">/teacher</span>
-                      </Link>
-
-                      <Link
-                        href="/admin"
-                        className="p-2.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 text-center transition flex flex-col items-center gap-1 group cursor-pointer"
-                      >
-                        <span className="text-xs font-bold text-emerald-400 group-hover:text-emerald-300">Admin</span>
-                        <span className="text-[9px] font-mono text-slate-400">/admin</span>
-                      </Link>
-                    </div>
-                  </div>
+                  <p className="pt-3 text-center text-[11px] text-slate-500">
+                    We&apos;ll open the workspace for your account after sign-in.
+                  </p>
 
                   <div className="text-center pt-2">
                     <span className="text-xs text-slate-400">New user? </span>
@@ -1015,10 +1021,10 @@ export default function LoginPage() {
                 </motion.div>
               )}
 
-              {/* 3. MULTI-FACTOR / OTP VERIFICATION PANEL */}
-              {view === 'mfa' && (
+              {/* OTP verification panel */}
+              {view === 'verify-otp' && (
                 <motion.div
-                  key="mfa-verification-view"
+                  key="otp-verification-view"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -1028,18 +1034,18 @@ export default function LoginPage() {
                     <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-2 text-emerald-400 animate-pulse">
                       <ShieldCheck className="w-6 h-6" />
                     </div>
-                    <h3 className="text-lg font-black text-white font-sans uppercase">Identity Verification</h3>
+                    <h3 className="text-lg font-black text-white font-sans uppercase">Verify your email</h3>
                     <p className="text-xs text-slate-400 font-sans max-w-xs mx-auto leading-relaxed">
-                      We dispatched a 6-digit verification code to your institutional mailbox. Enter it below to complete authorization.
+                      Enter the 6-digit code sent to your email to continue.
                     </p>
                   </div>
 
-                  <form onSubmit={handleMfaSubmit} className="space-y-6">
+                  <form onSubmit={handleOtpSubmit} className="space-y-6">
                     
                     {/* Premium 6-box OTP Input */}
                     <div className="space-y-3">
                       <label className="text-[9px] font-mono text-slate-400 uppercase tracking-widest font-bold block text-center">
-                        6-Digit Security Token
+                      6-Digit Verification Code
                       </label>
                       <div className="flex justify-between gap-2 max-w-xs mx-auto">
                         {Array.from({ length: 6 }).map((_, idx) => (
@@ -1063,7 +1069,7 @@ export default function LoginPage() {
                       disabled={isLoading}
                       className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white rounded-xl text-xs font-bold transition border border-emerald-500/20 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)] cursor-pointer"
                     >
-                      {isLoading ? 'Authorizing Context...' : 'Verify Identity Token'}
+                      {isLoading ? 'Verifying Code...' : 'Verify Code'}
                     </button>
 
                     <div className="text-center pt-2">
@@ -1087,7 +1093,7 @@ export default function LoginPage() {
                       onClick={() => setView('login')}
                       className="w-full text-center text-[10px] text-slate-500 hover:text-slate-300 font-mono uppercase tracking-wider mt-4"
                     >
-                      Back to login credentials
+                      Back to sign in
                     </button>
                   </form>
                 </motion.div>
@@ -1124,10 +1130,8 @@ export default function LoginPage() {
                       </label>
                       <div className="grid grid-cols-2 gap-3 mb-2">
                         {[
-                          { id: 'student', title: 'Student', desc: 'Verify & scan check-ins', icon: GraduationCap },
-                          { id: 'parent', title: 'Parent', desc: 'Monitor child logs', icon: Users },
-                          { id: 'teacher', title: 'Teacher', desc: 'Manage check-ins', icon: BookOpen },
-                          { id: 'admin', title: 'Admin', desc: 'Control system nodes', icon: ShieldCheck }
+                          { id: 'student' as const, title: 'Student', desc: 'Verify & scan check-ins', icon: GraduationCap },
+                          { id: 'parent' as const, title: 'Parent', desc: 'Monitor child logs', icon: Users },
                         ].map((roleItem) => {
                           const RoleIcon = roleItem.icon;
                           const isSelected = regRole === roleItem.id;
@@ -1702,9 +1706,9 @@ export default function LoginPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <h3 className="text-lg font-black text-white font-sans uppercase">Recovery Email Sent</h3>
+                    <h3 className="text-lg font-black text-white font-sans uppercase">Recovery Code Sent</h3>
                     <p className="text-xs text-slate-400 font-sans max-w-xs mx-auto leading-relaxed">
-                      A secure link containing a 6-digit OTP verification code has been dispatched to <strong>{forgotEmail}</strong>.
+                      A 6-digit password reset code has been sent to <strong>{forgotEmail}</strong>.
                     </p>
                   </div>
 
@@ -1714,7 +1718,7 @@ export default function LoginPage() {
                         setEmail(forgotEmail);
                         setOtpPurpose('forgot-password');
                         setOtpTimer(60);
-                        setView('mfa');
+                        setView('verify-otp');
                       }}
                       className="w-full py-3.5 bg-primary hover:bg-blue-600 active:scale-[0.98] text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border border-primary/20 cursor-pointer"
                     >

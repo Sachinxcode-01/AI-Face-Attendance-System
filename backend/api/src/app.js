@@ -57,6 +57,7 @@ if (missingEnvVars.length > 0) {
 
 const { connectDB } = require('./config/database');
 const securityAndLogger = require('./middleware/logger');
+const { limitGeneralApi } = require('./middleware/rateLimiter');
 const notificationService = require('./services/notificationService');
 const AuthService = require('./services/authService');
 
@@ -129,6 +130,8 @@ app.use(cors({
       }
     }
   },
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Authorization', 'Content-Type', 'X-Request-ID'],
   credentials: true,
   exposedHeaders: ['X-Request-ID']
 }));
@@ -146,6 +149,9 @@ app.use('/static/avatars', (req, res, next) => {
   next();
 }, express.static(avatarsDir));
 app.use('/static', express.static(path.join(__dirname, '../public')));
+
+// Apply the shared API budget to every route alias so clients cannot bypass it by changing prefixes.
+app.use(limitGeneralApi);
 
 // ─── HTTP Endpoints ─────────────────────────────────────────────────
 app.get('/', (req, res) => {
@@ -241,7 +247,8 @@ app.use((err, req, res, next) => {
   if (err.name === 'CastError' || err.name === 'ValidationError' || (err.message && err.message.includes('Cast to string failed'))) {
     return res.status(400).json({ success: false, detail: "Invalid request data" });
   }
-  res.status(err.status || 500).json({ detail: err.message || "Internal server error" });
+  const status = Number.isInteger(err.status) && err.status >= 400 && err.status < 500 ? err.status : 500;
+  res.status(status).json({ detail: status < 500 ? 'Request could not be processed.' : 'Internal server error.' });
 });
 
 // ─── WebSockets Setup ───────────────────────────────────────────────

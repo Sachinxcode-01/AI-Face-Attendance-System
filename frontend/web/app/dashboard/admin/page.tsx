@@ -1,17 +1,5 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-
-export default function Page() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace('/admin');
-  }, [router]);
-
-  return (
-    <div className="flex items-center justify-center min-h-[50vh] text-slate-400 text-sm font-mono">
-      Redirecting to Dedicated Admin Sentinel Panel (/admin)...
-    </div>
-  );
+export default function AdminDashboardRoute() {
+  redirect('/dashboard');
 }

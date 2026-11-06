@@ -29,6 +29,8 @@ const User        = require('../models/User');
 
 const { authenticate, requireRole } = require('../middleware/auth');
 
+const analyticsReadRoles = ['student', 'teacher', 'admin', 'super_admin', 'hod', 'principal', 'management'];
+
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
 /**
@@ -65,11 +67,12 @@ const monthsAgo = (from, months) => {
  * Response:
  *   { trends: [{ month: "2025-01", rate: 0.87 }, …] }
  */
-router.get('/trends', authenticate, async (req, res) => {
+router.get('/trends', authenticate, requireRole(analyticsReadRoles), async (req, res) => {
   try {
     const now      = new Date();
     const since    = monthsAgo(now, 6);
-    const { role, userEmail } = req;
+    const role = (req.userRole || '').toLowerCase();
+    const userEmail = req.userEmail;
 
     // Match clause: students see only their own records
     const matchStage = {
@@ -345,14 +348,15 @@ router.get(
  * Response:
  *   { heatmap: [{ date: "2025-01-15", count: 34 }] }
  */
-router.get('/heatmap', authenticate, async (req, res) => {
+router.get('/heatmap', authenticate, requireRole(analyticsReadRoles), async (req, res) => {
   try {
     const now   = new Date();
     const since = new Date(now);
     since.setUTCDate(since.getUTCDate() - 30);
     startOfDay(since);
 
-    const { role, userEmail } = req;
+    const role = (req.userRole || '').toLowerCase();
+    const userEmail = req.userEmail;
 
     const matchStage = {
       $match: {
@@ -486,10 +490,10 @@ router.get(
  *   - Admin/Teacher: Campus/Department roster of predictive risk.
  *   - Student: Own personalized trajectory and subject-level recovery simulator.
  */
-router.get('/predictive-risk', authenticate, async (req, res) => {
+router.get('/predictive-risk', authenticate, requireRole(analyticsReadRoles), async (req, res) => {
   try {
-    const role = (req.userRole || req.role || '').toLowerCase();
-    const userEmail = req.userEmail || req.email;
+    const role = (req.userRole || '').toLowerCase();
+    const userEmail = req.userEmail;
     const threshold = Math.min(1, Math.max(0.5, parseFloat(req.query.threshold) || 0.75));
     const lookbackDays = parseInt(req.query.lookbackDays, 10) || 14;
     const department = req.query.department;
@@ -679,10 +683,10 @@ router.get('/predictive-risk', authenticate, async (req, res) => {
  * Analyzes check-ins across days of the week (Mon-Fri) and daily time blocks
  * to discover systemic drop-offs and suggest timetable restructuring.
  */
-router.get('/timetable-insights', authenticate, async (req, res) => {
+router.get('/timetable-insights', authenticate, requireRole(analyticsReadRoles), async (req, res) => {
   try {
-    const role = (req.userRole || req.role || '').toLowerCase();
-    const userEmail = req.userEmail || req.email;
+    const role = (req.userRole || '').toLowerCase();
+    const userEmail = req.userEmail;
     const isStudent = role === 'student';
     const matchClause = {
       status: { $in: ['Present', 'Absent'] },
@@ -832,12 +836,12 @@ router.get('/timetable-insights', authenticate, async (req, res) => {
  */
 router.get('/student-velocity/:email', authenticate, async (req, res) => {
   try {
-    const { email } = req.params;
-    const role = (req.userRole || req.role || '').toLowerCase();
-    const userEmail = req.userEmail || req.email;
+    const email = req.params.email.trim().toLowerCase();
+    const role = (req.userRole || '').toLowerCase();
+    const userEmail = req.userEmail;
 
-    const isSelf = userEmail && userEmail.toLowerCase() === email.toLowerCase();
-    const isStaff = ['admin', 'teacher', 'hod', 'principal', 'management'].includes((role || '').toLowerCase());
+    const isSelf = userEmail && userEmail.toLowerCase() === email;
+    const isStaff = ['admin', 'super_admin', 'teacher', 'hod', 'principal', 'management'].includes(role);
 
     if (!isSelf && !isStaff) {
       return res.status(403).json({ detail: 'Forbidden: Cannot view another student velocity trajectory.' });
@@ -871,9 +875,9 @@ router.get('/student-velocity/:email', authenticate, async (req, res) => {
         },
       ]);
 
-      const wTotal = weekStats[0]?.total || 5;
-      const wPresent = weekStats[0]?.present || Math.min(wTotal, 4);
-      const rate = wTotal > 0 ? parseFloat((wPresent / wTotal).toFixed(4)) : 0.8;
+      const wTotal = weekStats[0]?.total || 0;
+      const wPresent = weekStats[0]?.present || 0;
+      const rate = wTotal > 0 ? parseFloat((wPresent / wTotal).toFixed(4)) : 0;
 
       weeklyData.push({
         weekLabel: `Week ${4 - w}`,
@@ -886,8 +890,8 @@ router.get('/student-velocity/:email', authenticate, async (req, res) => {
     }
 
     // Velocity trend calculation
-    const initialRate = weeklyData[0]?.rate || 0.8;
-    const currentWeekRate = weeklyData[weeklyData.length - 1]?.rate || 0.85;
+    const initialRate = weeklyData[0]?.rate || 0;
+    const currentWeekRate = weeklyData[weeklyData.length - 1]?.rate || 0;
     const velocityDiff = parseFloat((currentWeekRate - initialRate).toFixed(4));
 
     return res.json({
@@ -895,7 +899,7 @@ router.get('/student-velocity/:email', authenticate, async (req, res) => {
       student: {
         name: student.full_name,
         email: student.email,
-        department: student.department || 'Computer Science',
+        department: student.department || null,
       },
       weeklyData,
       velocityTrend: {

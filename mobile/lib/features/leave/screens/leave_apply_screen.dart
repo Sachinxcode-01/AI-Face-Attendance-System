@@ -10,10 +10,13 @@
 |--------------------------------------------------------------------------
 */
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/leave/controllers/leave_controller.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
@@ -32,9 +35,12 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   final _reasonController = TextEditingController();
+  final _speech = SpeechToText();
+  String _dictationPrefix = '';
   String _selectedLeaveType = 'personal';
   String? _attachmentName;
   bool _isSubmitting = false;
+  bool _isListening = false;
 
   final List<Map<String, String>> _leaveTypes = [
     {'value': 'sick', 'label': 'Sick Leave'},
@@ -84,6 +90,75 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
       SnackBar(
         content: Text('Attached: $_attachmentName'),
         backgroundColor: Colors.teal,
+      ),
+    );
+  }
+
+  Future<void> _toggleReasonDictation() async {
+    if (_speech.isListening || _isListening) {
+      await _speech.stop();
+      return;
+    }
+
+    late final bool available;
+    try {
+      available = await _speech.initialize(
+        onStatus: (status) {
+          if (mounted) setState(() => _isListening = status == 'listening');
+        },
+        onError: (_) {
+          if (!mounted) return;
+          setState(() => _isListening = false);
+          _showDictationUnavailable();
+        },
+      );
+    } catch (_) {
+      _showDictationUnavailable();
+      return;
+    }
+
+    if (!mounted) return;
+    if (!available) {
+      _showDictationUnavailable();
+      return;
+    }
+
+    _dictationPrefix = _reasonController.text.trimRight();
+    setState(() => _isListening = true);
+    try {
+      await _speech.listen(
+        onResult: (result) {
+          if (!mounted) return;
+          final transcript = result.recognizedWords.trim();
+          final text = [
+            _dictationPrefix,
+            if (transcript.isNotEmpty) transcript,
+          ].where((part) => part.isNotEmpty).join('\n');
+          _reasonController.value = TextEditingValue(
+            text: text,
+            selection: TextSelection.collapsed(offset: text.length),
+          );
+        },
+        listenOptions: SpeechListenOptions(
+          onDevice: true,
+          listenMode: ListenMode.dictation,
+          pauseFor: Duration(seconds: 3),
+          listenFor: Duration(minutes: 1),
+        ),
+      );
+    } catch (_) {
+      if (mounted) setState(() => _isListening = false);
+      _showDictationUnavailable();
+    }
+  }
+
+  void _showDictationUnavailable() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'On-device speech recognition is unavailable. You can still type your reason.',
+        ),
       ),
     );
   }
@@ -154,6 +229,7 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
   @override
   void dispose() {
     _reasonController.dispose();
+    unawaited(_speech.cancel());
     super.dispose();
   }
 
@@ -313,11 +389,22 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
     return TextFormField(
       controller: _reasonController,
       maxLines: 4,
+      readOnly: _isListening,
       style: TextStyle(color: isDark ? Colors.white : Colors.black87),
       decoration: InputDecoration(
         labelText: 'Detailed Reason for Absence',
         labelStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
         alignLabelWithHint: true,
+        helperText:
+            'Dictation uses on-device speech recognition when supported.',
+        suffixIcon: IconButton(
+          tooltip: _isListening ? 'Stop dictation' : 'Dictate reason',
+          onPressed: _toggleReasonDictation,
+          icon: Icon(
+            _isListening ? Icons.stop_circle_outlined : Icons.mic_none_rounded,
+            color: _isListening ? AppColors.error : AppColors.gold,
+          ),
+        ),
         filled: true,
         fillColor: isDark
             ? Colors.white.withValues(alpha: 0.04)
@@ -331,8 +418,9 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
           borderSide: const BorderSide(color: AppColors.gold, width: 1.5),
         ),
       ),
-      validator: (value) =>
-          value == null || value.isEmpty ? 'Please specify your reason' : null,
+      validator: (value) => value == null || value.trim().isEmpty
+          ? 'Please specify your reason'
+          : null,
     );
   }
 

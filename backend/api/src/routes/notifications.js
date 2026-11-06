@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const { authenticate, requireRole } = require('../middleware/auth');
+const reportInternalError = require('../utils/httpError');
 
 // ─── POST /notifications/announcement ──────────────────────────────
 router.post('/announcement', authenticate, requireRole(['admin']), async (req, res) => {
@@ -46,7 +47,7 @@ router.post('/announcement', authenticate, requireRole(['admin']), async (req, r
       recipient_count: emails.length
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Notifications');
   }
 });
 
@@ -72,7 +73,7 @@ router.get('/:email', authenticate, async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Notifications');
   }
 });
 
@@ -88,7 +89,7 @@ router.get('/unread-count/:email', authenticate, async (req, res) => {
     const count = await Notification.countDocuments({ user_id: email, is_read: { $ne: true } });
     res.json({ unread_count: count });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Notifications');
   }
 });
 
@@ -96,6 +97,10 @@ router.get('/unread-count/:email', authenticate, async (req, res) => {
 router.patch('/mark-read', authenticate, async (req, res) => {
   try {
     const { ids } = req.body;
+
+    if (ids !== undefined && (!Array.isArray(ids) || ids.length > 100 || ids.some(id => typeof id !== 'string'))) {
+      return res.status(400).json({ detail: 'Notification ids must be an array of up to 100 ids.' });
+    }
     
     if (!ids || ids.length === 0) {
       await Notification.updateMany(
@@ -108,14 +113,14 @@ router.patch('/mark-read', authenticate, async (req, res) => {
         .map(id => new mongoose.Types.ObjectId(id));
         
       await Notification.updateMany(
-        { _id: { $in: objectIds } },
+        { _id: { $in: objectIds }, user_id: req.userEmail },
         { $set: { is_read: true } }
       );
     }
 
     res.json({ message: "Notifications marked as read" });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Notifications');
   }
 });
 

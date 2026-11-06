@@ -34,6 +34,7 @@ class ParentLeaveStatusScreen extends StatefulWidget {
 
 class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
   bool _isLoading = true;
+  String? _errorMessage;
   List<LeaveModel> _leaves = [];
 
   @override
@@ -43,15 +44,26 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
   }
 
   Future<void> _fetchLeaves() async {
-    setState(() => _isLoading = true);
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       final session = context.read<SessionManager>();
       final token = session.token;
-      if (token == null) return;
+      if (token == null || token.isEmpty) {
+        throw StateError('Missing session');
+      }
 
       final email = widget.wardEmail ?? session.selectedWard?['email'];
       if (email == null) {
-        setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Select a student to view leave applications.';
+            _isLoading = false;
+          });
+        }
         return;
       }
 
@@ -59,13 +71,16 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
       if (mounted) {
         setState(() {
           _leaves = leaves;
+          _errorMessage = null;
           _isLoading = false;
         });
       }
-    } catch (e) {
-      debugPrint('ParentLeaveStatusScreen fetchLeaves error: $e');
+    } catch (_) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _errorMessage = 'Unable to load leave applications. Try again.';
+          _isLoading = false;
+        });
       }
     }
   }
@@ -93,7 +108,29 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: _leaves.isEmpty
+          child: _errorMessage != null
+              ? Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(color: AppColors.textMuted),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: _fetchLeaves,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : _leaves.isEmpty
               ? Center(
                   child: Text(
                     'No leave applications submitted by this student.',

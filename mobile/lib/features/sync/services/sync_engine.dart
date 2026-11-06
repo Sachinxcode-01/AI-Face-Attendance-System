@@ -14,7 +14,6 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 
-import 'package:smartface_attendance/app/config/env_config.dart';
 import 'package:smartface_attendance/core/services/api_service.dart';
 import 'package:smartface_attendance/features/sync/models/attendance_queue_record.dart';
 import 'package:smartface_attendance/features/sync/models/sync_state.dart';
@@ -120,10 +119,7 @@ class SyncEngine {
               'session_id': record.sessionId,
               'qr_code': record.qrToken,
             },
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Face-Scanner-Token': EnvConfig.faceScannerToken,
-            },
+            headers: {'Content-Type': 'application/json'},
           );
 
           stopwatch.stop();

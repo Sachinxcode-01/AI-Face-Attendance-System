@@ -214,9 +214,9 @@ async function seedDataset() {
 
     // Seed Teacher & Admin Accounts if missing
     const defaultStaff = [
-      { email: 'teacher@smartface.pro', name: 'Dr. Sarah Jenkins', role: 'teacher', pass: 'Teacher#2026', dept: 'Computer Science & Engineering' },
-      { email: 'admin@smartface.pro', name: 'System Administrator', role: 'admin', pass: 'Admin#2026', dept: 'Administration' }
-    ];
+      { email: 'teacher@smartface.pro', name: 'Dr. Sarah Jenkins', role: 'teacher', pass: process.env.DEMO_TEACHER_PASSWORD, dept: 'Computer Science & Engineering' },
+      { email: 'admin@smartface.pro', name: 'System Administrator', role: 'admin', pass: process.env.DEMO_ADMIN_PASSWORD, dept: 'Administration' }
+    ].filter((staff) => staff.pass);
     for (const staff of defaultStaff) {
       const salt = await bcrypt.genSalt(12);
       const hashedPassword = await bcrypt.hash(staff.pass, salt);

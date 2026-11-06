@@ -15,6 +15,14 @@ const loginPasswordSchema = z.object({
   password: z.string().min(1, 'Password is required')
 }).passthrough();
 
+const googleLoginSchema = z.object({
+  idToken: z.string().min(1, 'Google idToken is required').max(8192).trim()
+}).passthrough();
+
+const githubLoginSchema = z.object({
+  code: z.string().min(1, 'GitHub authorization code is required').max(1024).trim()
+}).passthrough();
+
 const otpSendSchema = z.object({
   email: z.string().email('Invalid email address').toLowerCase().trim()
 }).passthrough();
@@ -62,6 +70,8 @@ const leaveActionSchema = z.object({
 module.exports = {
   registerSchema,
   loginPasswordSchema,
+  googleLoginSchema,
+  githubLoginSchema,
   otpSendSchema,
   otpVerifySchema,
   resetPasswordSchema,

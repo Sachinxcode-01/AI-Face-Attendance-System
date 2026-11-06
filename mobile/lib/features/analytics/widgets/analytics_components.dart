@@ -30,7 +30,7 @@ class AttendanceScoreCard extends StatelessWidget {
   final double scoreValue; // 0.0 to 1.0
   final String standing;
   final String departmentRank;
-  final int streak;
+  final int? streak;
 
   const AttendanceScoreCard({
     super.key,
@@ -44,6 +44,7 @@ class AttendanceScoreCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final score = AttendanceScore.fromPercentage(scoreValue);
+    final streakValue = streak;
 
     return ModernDashboardCard(
       padding: const EdgeInsets.all(20),
@@ -108,16 +109,27 @@ class AttendanceScoreCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    GestureDetector(
+                    if (streakValue == null)
+                      Text(
+                        'Streak unavailable',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: isDark
+                              ? Colors.white54
+                              : const Color(0xFF7F8CA4),
+                        ),
+                      )
+                    else
+                      GestureDetector(
                       onTap: () {
                         AppHaptics.medium();
-                        final tier = streak >= 30
+                        final tier = streakValue >= 30
                             ? 'Gold'
-                            : streak >= 14
+                            : streakValue >= 14
                                 ? 'Silver'
                                 : 'Bronze';
                         context.showSuccessToast(
-                          'You are on a $streak-day active attendance streak! ($tier Tier)',
+                          'You are on a $streakValue-day active attendance streak! ($tier Tier)',
                           title: 'Streak Milestone Achieved!',
                         );
                       },
@@ -142,7 +154,7 @@ class AttendanceScoreCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '$streak Days Streak',
+                              '$streakValue Days Streak',
                               style: GoogleFonts.inter(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,

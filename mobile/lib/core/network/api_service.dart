@@ -26,91 +26,6 @@ class ApiService {
   static VoidCallback? onSessionExpired;
   static ValueChanged<String>? onTokenRefreshed;
 
-  // In-memory mock database for Leave Management System
-  static final List<LeaveModel> _mockLeaves = [
-    LeaveModel(
-      id: 'LV-2026-001',
-      studentEmail: 'student@example.com',
-      reason: 'Diagnosed with viral fever, advised bed rest for 3 days.',
-      startDate: DateTime.now()
-          .subtract(const Duration(days: 5))
-          .toIso8601String(),
-      endDate: DateTime.now()
-          .subtract(const Duration(days: 3))
-          .toIso8601String(),
-      status: 'Approved',
-      remarks:
-          'Granted. Get well soon and submit medical certificate upon return.',
-      createdAt: DateTime.now()
-          .subtract(const Duration(days: 6))
-          .toIso8601String(),
-      leaveType: 'sick',
-      hodStatus: 'approved',
-      approvalDate: DateTime.now()
-          .subtract(const Duration(days: 4))
-          .toIso8601String(),
-      attachmentName: 'medical_report_signed.pdf',
-    ),
-    LeaveModel(
-      id: 'LV-2026-002',
-      studentEmail: 'student@example.com',
-      reason: 'Attending sibling\'s wedding ceremony in hometown.',
-      startDate: DateTime.now().add(const Duration(days: 2)).toIso8601String(),
-      endDate: DateTime.now().add(const Duration(days: 5)).toIso8601String(),
-      status: 'Pending',
-      remarks: 'Awaiting HOD department head review.',
-      createdAt: DateTime.now()
-          .subtract(const Duration(days: 1))
-          .toIso8601String(),
-      leaveType: 'personal',
-      hodStatus: 'pending',
-    ),
-    LeaveModel(
-      id: 'LV-2026-003',
-      studentEmail: 'student@example.com',
-      reason:
-          'Attending National AI & Robotics Summit as a college representative.',
-      startDate: DateTime.now().add(const Duration(days: 10)).toIso8601String(),
-      endDate: DateTime.now().add(const Duration(days: 12)).toIso8601String(),
-      status: 'Clarification',
-      remarks:
-          'Please upload the official invitation letter or event brochure.',
-      createdAt: DateTime.now()
-          .subtract(const Duration(days: 2))
-          .toIso8601String(),
-      leaveType: 'academic',
-      hodStatus: 'none',
-      isClarificationRequested: true,
-    ),
-    LeaveModel(
-      id: 'LV-2026-004',
-      studentEmail: 'student2@example.com',
-      reason: 'Emergency family emergency requiring urgent travel.',
-      startDate: DateTime.now()
-          .subtract(const Duration(days: 1))
-          .toIso8601String(),
-      endDate: DateTime.now().add(const Duration(days: 1)).toIso8601String(),
-      status: 'Rejected',
-      remarks:
-          'Application submitted after the start date without prior notification.',
-      createdAt: DateTime.now()
-          .subtract(const Duration(days: 1))
-          .toIso8601String(),
-      leaveType: 'emergency',
-      hodStatus: 'rejected',
-      approvalDate: DateTime.now().toIso8601String(),
-    ),
-  ];
-
-  static final Map<String, LeaveBalance> _mockBalances = {
-    'student@example.com': const LeaveBalance(
-      sick: 8,
-      personal: 14,
-      emergency: 5,
-      academic: 10,
-    ),
-  };
-
   static String get baseUrl => EnvConfig.apiUrl;
 
   static String get serverHost {
@@ -211,6 +126,31 @@ class ApiService {
       'error_type': 'server_error',
       'detail': 'Server error ($statusCode). Please try again.',
     };
+  }
+
+  static Future<T> _getDashboardJson<T>(
+    String route, {
+    String? token,
+    Duration timeout = const Duration(seconds: 5),
+    required String failureMessage,
+    required T Function(dynamic) parse,
+  }) async {
+    try {
+      final response = await client
+          .get(
+            Uri.parse('$baseUrl$route'),
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null && token.isNotEmpty)
+                'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(timeout);
+      if (response.statusCode != 200) throw const FormatException();
+      return parse(jsonDecode(response.body));
+    } catch (_) {
+      throw Exception(failureMessage);
+    }
   }
 
   /// Converts a raw network exception into a structured error map.
@@ -792,6 +732,16 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> getSessionQrToken(
+    String sessionId, [
+    String? token,
+  ]) => _getDashboardJson(
+    '/sessions/${Uri.encodeComponent(sessionId)}/qr-token',
+    token: token,
+    failureMessage: 'Unable to generate a secure attendance QR code.',
+    parse: (data) => Map<String, dynamic>.from(data as Map),
+  );
+
   static Future<Map<String, dynamic>> markAttendance(
     String studentEmail,
     String sessionId,
@@ -800,11 +750,7 @@ class ApiService {
     try {
       final response = await client.post(
         Uri.parse('$baseUrl/attendance/mark'),
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Face-Scanner-Token':
-              EnvConfig.faceScannerToken, // Secure injection
-        },
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'student_email': studentEmail,
           'session_id': sessionId,
@@ -817,17 +763,13 @@ class ApiService {
     }
   }
 
-  static Future<LeaveBalance> getLeaveBalance(String email) async {
-    try {
-      final response = await client
-          .get(Uri.parse('$baseUrl/leave/balance/$email'))
-          .timeout(const Duration(seconds: 3));
-      if (response.statusCode == 200) {
-        return LeaveBalance.fromJson(jsonDecode(response.body));
-      }
-    } catch (_) {}
-    return _mockBalances.putIfAbsent(email, () => LeaveBalance.initial());
-  }
+  static Future<LeaveBalance> getLeaveBalance(String email) =>
+      _getDashboardJson(
+        '/leave/balance/${Uri.encodeComponent(email)}',
+        timeout: const Duration(seconds: 3),
+        failureMessage: 'Unable to load leave balances.',
+        parse: (data) => LeaveBalance.fromJson(data as Map<String, dynamic>),
+      );
 
   static Future<Map<String, dynamic>> applyLeave(
     Map<String, dynamic> data,
@@ -841,92 +783,31 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 3));
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final resMap = jsonDecode(response.body) as Map<String, dynamic>;
-        final newLeave = LeaveModel.fromJson(resMap);
-        _mockLeaves.add(newLeave);
-        return resMap;
+        return jsonDecode(response.body) as Map<String, dynamic>;
       }
-    } catch (_) {}
-
-    final id = 'LV-${DateTime.now().year}-${100 + _mockLeaves.length + 1}';
-    final parsed = LeaveModel.fromJson({
-      ...data,
-      'id': id,
-      'status': 'Pending',
-    });
-    _mockLeaves.add(parsed);
-
-    final email = parsed.studentEmail;
-    final currentBal = _mockBalances.putIfAbsent(
-      email,
-      () => LeaveBalance.initial(),
-    );
-    final duration = parsed.durationDays;
-    LeaveBalance newBal;
-    switch (parsed.leaveType.toLowerCase()) {
-      case 'sick':
-        newBal = currentBal.copyWith(
-          sick: (currentBal.sick - duration).clamp(0, 100),
-        );
-        break;
-      case 'personal':
-        newBal = currentBal.copyWith(
-          personal: (currentBal.personal - duration).clamp(0, 100),
-        );
-        break;
-      case 'emergency':
-        newBal = currentBal.copyWith(
-          emergency: (currentBal.emergency - duration).clamp(0, 100),
-        );
-        break;
-      case 'academic':
-        newBal = currentBal.copyWith(
-          academic: (currentBal.academic - duration).clamp(0, 100),
-        );
-        break;
-      default:
-        newBal = currentBal;
+    } catch (_) {
+      throw Exception('Unable to submit leave application.');
     }
-    _mockBalances[email] = newBal;
-
-    return {
-      'id': id,
-      'status': 'Pending',
-      'message': 'Leave application submitted successfully (Local Mock Store)',
-      ...parsed.toJson(),
-    };
+    throw Exception('Unable to submit leave application.');
   }
 
-  static Future<List<LeaveModel>> getStudentLeaves(String email) async {
-    try {
-      final response = await client
-          .get(Uri.parse('$baseUrl/leave/student/$email'))
-          .timeout(const Duration(seconds: 3));
-      if (response.statusCode == 200) {
-        final List<dynamic> list = jsonDecode(response.body) as List<dynamic>;
-        return list
+  static Future<List<LeaveModel>> getStudentLeaves(String email) =>
+      _getDashboardJson(
+        '/leave/student/${Uri.encodeComponent(email)}',
+        timeout: const Duration(seconds: 3),
+        failureMessage: 'Unable to load leave applications.',
+        parse: (data) => (data as List<dynamic>)
             .map((item) => LeaveModel.fromJson(item as Map<String, dynamic>))
-            .toList();
-      }
-    } catch (_) {}
-
-    return _mockLeaves.where((l) => l.studentEmail == email).toList();
-  }
+            .toList(),
+      );
 
   static Future<List<dynamic>> getPendingLeaves() async {
-    try {
-      final response = await client
-          .get(Uri.parse('$baseUrl/leave/admin/pending'))
-          .timeout(const Duration(seconds: 3));
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as List<dynamic>;
-      }
-    } catch (_) {}
-
-    return _mockLeaves
-        .where((l) => l.status.toLowerCase() == 'pending')
-        .map((l) => l.toJson())
-        .toList();
+    return _getDashboardJson(
+      '/leave/admin/pending',
+      timeout: const Duration(seconds: 3),
+      failureMessage: 'Unable to load pending leave requests.',
+      parse: (data) => data as List<dynamic>,
+    );
   }
 
   static Future<Map<String, dynamic>> actionLeave(
@@ -951,101 +832,18 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
-    } catch (_) {}
-
-    final index = _mockLeaves.indexWhere((l) => l.id == leaveId);
-    if (index != -1) {
-      final old = _mockLeaves[index];
-      final updated = old.copyWith(
-        status: status,
-        remarks: remarks,
-        isClarificationRequested: isClarificationRequested,
-        approvalDate: DateTime.now().toIso8601String(),
-        hodStatus: status.toLowerCase() == 'approved'
-            ? 'approved'
-            : (status.toLowerCase() == 'rejected' ? 'rejected' : 'pending'),
-      );
-      _mockLeaves[index] = updated;
-
-      if (status.toLowerCase() == 'rejected') {
-        final email = old.studentEmail;
-        final currentBal = _mockBalances.putIfAbsent(
-          email,
-          () => LeaveBalance.initial(),
-        );
-        final duration = old.durationDays;
-        LeaveBalance newBal;
-        switch (old.leaveType.toLowerCase()) {
-          case 'sick':
-            newBal = currentBal.copyWith(
-              sick: (currentBal.sick + duration).clamp(0, 100),
-            );
-            break;
-          case 'personal':
-            newBal = currentBal.copyWith(
-              personal: (currentBal.personal + duration).clamp(0, 100),
-            );
-            break;
-          case 'emergency':
-            newBal = currentBal.copyWith(
-              emergency: (currentBal.emergency + duration).clamp(0, 100),
-            );
-            break;
-          case 'academic':
-            newBal = currentBal.copyWith(
-              academic: (currentBal.academic + duration).clamp(0, 100),
-            );
-            break;
-          default:
-            newBal = currentBal;
-        }
-        _mockBalances[email] = newBal;
-      }
-
-      return {
-        'message': 'Action recorded successfully (Local Mock Store)',
-        'leave_id': leaveId,
-        'status': status,
-      };
+    } catch (_) {
+      throw Exception('Unable to update leave request.');
     }
-    return {'detail': 'Leave request not found'};
+    throw Exception('Unable to update leave request.');
   }
 
-  static Future<Map<String, dynamic>> getLeaveAnalytics() async {
-    try {
-      final response = await client
-          .get(Uri.parse('$baseUrl/leave/analytics'))
-          .timeout(const Duration(seconds: 3));
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (_) {}
-
-    final total = _mockLeaves.length;
-    final approved = _mockLeaves
-        .where((l) => l.status.toLowerCase() == 'approved')
-        .length;
-    final approvalRate = total > 0 ? (approved / total) : 0.85;
-
-    return {
-      'total_requests': total,
-      'approval_rate': approvalRate,
-      'department_statistics': {
-        'CSE': 45.0,
-        'ECE': 25.0,
-        'ME': 15.0,
-        'Civil': 15.0,
-      },
-      'monthly_trends': {
-        'Jan': 5,
-        'Feb': 8,
-        'Mar': 12,
-        'Apr': 15,
-        'May': 22,
-        'Jun': 18,
-      },
-    };
-  }
+  static Future<Map<String, dynamic>> getLeaveAnalytics() => _getDashboardJson(
+    '/leave/analytics',
+    timeout: const Duration(seconds: 3),
+    failureMessage: 'Unable to load leave analytics.',
+    parse: (data) => data as Map<String, dynamic>,
+  );
 
   static Future<List<dynamic>> getNotifications(
     String email, [
@@ -1230,326 +1028,135 @@ class ApiService {
 
   // ── Parent Section API Endpoints ──────────────────────────────────────────
   static Future<List<dynamic>> getParentWards(String token) async {
-    try {
-      final response = await client
-          .get(
-            Uri.parse('$baseUrl/parent/children'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          )
-          .timeout(const Duration(seconds: 5));
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as List<dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getParentWards error: $e');
-    }
-    // Fallback Mock data for Parent sandbox/testing
-    return [
-      {
-        'email': 'student@example.com',
-        'full_name': 'Sachin K (Ward)',
-        'student_id': 'USN-2026-CSE101',
-        'department': 'Computer Science',
-        'semester': '6th Semester',
-      },
-    ];
+    return _getDashboardJson(
+      '/parent/children',
+      token: token,
+      failureMessage: 'Unable to load linked students.',
+      parse: (data) => data as List<dynamic>,
+    );
   }
 
   static Future<Map<String, dynamic>> getWardStats(
     String wardEmail,
     String token,
   ) async {
-    try {
-      final response = await client
-          .get(
-            Uri.parse('$baseUrl/parent/child/stats/$wardEmail'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          )
-          .timeout(const Duration(seconds: 5));
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getWardStats error: $e');
-    }
-    // Fallback Mock stats matching the backend structure
-    return {
-      'overall_percentage': 0.88,
-      'standing': 'Good',
-      'subjects': [
-        {'subject': 'CS-402: Neural Networks', 'present': 18, 'total': 20},
-        {'subject': 'CS-301: Data Structures', 'present': 15, 'total': 18},
-        {'subject': 'CS-303: Operating Systems', 'present': 14, 'total': 15},
-      ],
-    };
+    return _getDashboardJson(
+      '/parent/child/stats/${Uri.encodeComponent(wardEmail)}',
+      token: token,
+      failureMessage: 'Unable to load student attendance summary.',
+      parse: (data) => data as Map<String, dynamic>,
+    );
   }
 
   static Future<List<dynamic>> getWardAttendanceLogs(
     String wardEmail,
     String token,
   ) async {
-    try {
-      final response = await client
-          .get(
-            Uri.parse('$baseUrl/parent/child/attendance-logs/$wardEmail'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          )
-          .timeout(const Duration(seconds: 5));
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as List<dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getWardAttendanceLogs error: $e');
-    }
-    // Fallback mock logs
-    return [
-      {
-        'date': DateTime.now()
-            .subtract(const Duration(hours: 2))
-            .toIso8601String()
-            .split('T')[0],
-        'subject': 'CS-402: Neural Networks',
-        'status': 'Present',
-        'verifiedBy': 'Face Scanner AI Node 2',
-      },
-      {
-        'date': DateTime.now()
-            .subtract(const Duration(days: 1, hours: 4))
-            .toIso8601String()
-            .split('T')[0],
-        'subject': 'CS-301: Data Structures',
-        'status': 'Present',
-        'verifiedBy': 'Face Scanner AI Node 1',
-      },
-      {
-        'date': DateTime.now()
-            .subtract(const Duration(days: 2))
-            .toIso8601String()
-            .split('T')[0],
-        'subject': 'CS-303: Operating Systems',
-        'status': 'Absent',
-        'verifiedBy': 'Auto Attendance System',
-      },
-    ];
+    return _getDashboardJson(
+      '/parent/child/attendance-logs/${Uri.encodeComponent(wardEmail)}',
+      token: token,
+      failureMessage: 'Unable to load student attendance history.',
+      parse: (data) => data as List<dynamic>,
+    );
   }
 
   static Future<List<LeaveModel>> getWardLeaves(
     String wardEmail,
     String token,
   ) async {
-    try {
-      final response = await client
-          .get(
-            Uri.parse('$baseUrl/parent/child/leaves/$wardEmail'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          )
-          .timeout(const Duration(seconds: 5));
-      if (response.statusCode == 200) {
-        final List<dynamic> list = jsonDecode(response.body) as List<dynamic>;
-        return list
-            .map((item) => LeaveModel.fromJson(item as Map<String, dynamic>))
-            .toList();
-      }
-    } catch (e) {
-      debugPrint('getWardLeaves error: $e');
-    }
-    // Fallback to ward email mock leaves
-    return _mockLeaves.where((l) => l.studentEmail == wardEmail).toList();
+    return _getDashboardJson(
+      '/parent/child/leaves/${Uri.encodeComponent(wardEmail)}',
+      token: token,
+      failureMessage: 'Unable to load student leave requests.',
+      parse: (data) => (data as List<dynamic>)
+          .map((item) => LeaveModel.fromJson(item as Map<String, dynamic>))
+          .toList(),
+    );
   }
 
   static Future<Map<String, dynamic>> getAdminStats(String token) async {
-    try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/admin/stats'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getAdminStats error: $e');
-    }
-    return {
-      'total_students': '1247',
-      'total_teachers': '86',
-      'active_sessions': '3',
-      'attendance_today': '89%',
-      'intruder_alerts': '2',
-      'pending_leaves': '4',
-      'institution_attendance': 90.5,
-      'department_comparison': {
-        'CSE': 92.4,
-        'ECE': 87.8,
-        'ME': 81.2,
-        'Civil': 84.5,
-      },
-      'risk_analysis': {
-        'high_risk_count': 48,
-        'medium_risk_count': 112,
-        'low_risk_count': 1087,
-      },
-      'monthly_growth_rate': 1.2,
-      'monthly_trends': {
-        'Jan': 86.0,
-        'Feb': 88.5,
-        'Mar': 89.2,
-        'Apr': 91.0,
-        'May': 90.8,
-        'Jun': 92.1,
-      },
-    };
+    return _getDashboardJson(
+      '/admin/stats',
+      token: token,
+      failureMessage: 'Unable to load admin dashboard metrics.',
+      parse: (data) => data as Map<String, dynamic>,
+    );
   }
+
+  static Future<Map<String, dynamic>> getManagementSummary(
+    String token, {
+    required bool isDepartment,
+  }) => _getDashboardJson(
+    isDepartment ? '/management/hod/summary' : '/management/principal/summary',
+    token: token,
+    failureMessage: isDepartment
+        ? 'Unable to load department summary.'
+        : 'Unable to load institution summary.',
+    parse: (data) => data as Map<String, dynamic>,
+  );
+
+  static Future<Map<String, dynamic>> getManagementHealthScore(String token) =>
+      _getDashboardJson(
+        '/management/health-score',
+        token: token,
+        failureMessage: 'Unable to load institution health score.',
+        parse: (data) => data as Map<String, dynamic>,
+      );
+
+  static Future<Map<String, dynamic>> getManagementCriticalRisk(String token) =>
+      _getDashboardJson(
+        '/management/risk/critical',
+        token: token,
+        failureMessage: 'Unable to load critical student risks.',
+        parse: (data) => data as Map<String, dynamic>,
+      );
+
+  static Future<Map<String, dynamic>> getManagementUsers(
+    String token, {
+    int page = 1,
+    int limit = 100,
+  }) => _getDashboardJson(
+    '/management/users?page=$page&limit=$limit',
+    token: token,
+    failureMessage: 'Unable to load users.',
+    parse: (data) => data as Map<String, dynamic>,
+  );
 
   static Future<Map<String, dynamic>> getPredictiveRisk(
     String token, {
     double threshold = 0.75,
-  }) async {
-    try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/analytics/predictive-risk?threshold=$threshold'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getPredictiveRisk error: $e');
-    }
-    return {
-      'success': true,
-      'summary': {
-        'totalEvaluated': 1247,
-        'criticalCount': 38,
-        'warningCount': 84,
-        'safeCount': 1125,
-        'averageProjectedRate': 0.884,
-        'criticalPercentage': 3.0,
-      },
-      'predictions': [],
-    };
-  }
+  }) => _getDashboardJson(
+    '/analytics/predictive-risk?threshold=$threshold',
+    token: token,
+    failureMessage: 'Unable to load predictive risk analytics.',
+    parse: (data) => data as Map<String, dynamic>,
+  );
 
-  static Future<Map<String, dynamic>> getTimetableInsights(String token) async {
-    try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/analytics/timetable-insights'),
-        headers: {'Authorization': 'Bearer $token'},
+  static Future<Map<String, dynamic>> getTimetableInsights(String token) =>
+      _getDashboardJson(
+        '/analytics/timetable-insights',
+        token: token,
+        failureMessage: 'Unable to load timetable insights.',
+        parse: (data) => data as Map<String, dynamic>,
       );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getTimetableInsights error: $e');
-    }
-    return {
-      'success': true,
-      'baselineAttendanceRate': 0.88,
-      'grid': [],
-      'anomalies': [
-        {
-          'day': 'Friday',
-          'slot': '02:00 - 05:00 PM (Afternoon)',
-          'attendanceRate': '62.4%',
-          'dropFromBaseline': '25.6%',
-          'severity': 'High',
-          'cause': 'End-of-week early departures & commuter travel',
-        },
-      ],
-      'recommendations': [
-        {
-          'title': 'Friday Afternoon Restructuring',
-          'action':
-              'Relocate high-credit theory lectures from Friday afternoon to Tuesday/Wednesday morning.',
-          'expectedGain': '+8.4% attendance recovery',
-        },
-      ],
-    };
-  }
 
   static Future<Map<String, dynamic>> getStudentVelocity(
     String email,
     String token,
-  ) async {
-    try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/analytics/student-velocity/$email'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getStudentVelocity error: $e');
-    }
-    return {
-      'success': true,
-      'student': {'email': email, 'name': email.split('@').first},
-      'weeklyData': [],
-      'velocityTrend': {
-        'velocityPercent': 3.2,
-        'isPositive': true,
-        'trendDirection': 'Accelerating',
-      },
-    };
-  }
+  ) => _getDashboardJson(
+    '/analytics/student-velocity/${Uri.encodeComponent(email)}',
+    token: token,
+    failureMessage: 'Unable to load student attendance trend.',
+    parse: (data) => data as Map<String, dynamic>,
+  );
 
-  static Future<List<dynamic>> getActivityLog(String token) async {
-    try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/admin/activity-log'),
-        headers: {'Authorization': 'Bearer $token'},
+  static Future<List<dynamic>> getActivityLog(String token) =>
+      _getDashboardJson(
+        '/admin/activity-log',
+        token: token,
+        failureMessage: 'Unable to load recent activity.',
+        parse: (data) => data as List<dynamic>,
       );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as List<dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getActivityLog error: $e');
-    }
-    return [
-      {
-        'type': 'attendance',
-        'icon': 'check_circle',
-        'title': 'Attendance Marked',
-        'detail': 'student@smartface.elite marked present',
-        'timestamp': DateTime.now()
-            .subtract(const Duration(minutes: 5))
-            .toIso8601String(),
-        'color': 'success',
-      },
-      {
-        'type': 'session',
-        'icon': 'play_circle',
-        'title': 'Session Started',
-        'detail': 'Cloud Arch by Prof. Alan',
-        'timestamp': DateTime.now()
-            .subtract(const Duration(hours: 1))
-            .toIso8601String(),
-        'color': 'info',
-      },
-      {
-        'type': 'security',
-        'icon': 'warning',
-        'title': 'Security Alert',
-        'detail': 'Intruder detected at Main Entrance',
-        'timestamp': DateTime.now()
-            .subtract(const Duration(hours: 3))
-            .toIso8601String(),
-        'color': 'error',
-      },
-    ];
-  }
 
   static Future<Map<String, dynamic>?> getStudentAnalytics(
     String email,
@@ -1575,59 +1182,12 @@ class ApiService {
   static Future<Map<String, dynamic>> getTeacherAnalytics(
     String teacherEmail,
     String token,
-  ) async {
-    try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/attendance/teacher/analytics/$teacherEmail'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getTeacherAnalytics error: $e');
-    }
-
-    return {
-      'class_attendance_rate': 91.2,
-      'total_sessions': 42,
-      'active_students': [
-        {'name': 'Rohan Mehta', 'id': 'BCA22008', 'score': 98.5, 'rank': 1},
-        {'name': 'Sneha Verma', 'id': 'MCA21032', 'score': 96.0, 'rank': 2},
-        {'name': 'Karan Singh', 'id': 'CS22019', 'score': 95.2, 'rank': 3},
-      ],
-      'low_attendance_students': [
-        {
-          'name': 'Arjun Sharma',
-          'id': 'CS21001',
-          'score': 58.0,
-          'subject': 'Neural Networks',
-        },
-        {
-          'name': 'Priya Patel',
-          'id': 'IT21045',
-          'score': 62.0,
-          'subject': 'DBMS',
-        },
-        {
-          'name': 'Rohan J',
-          'id': 'CS21098',
-          'score': 68.0,
-          'subject': 'Automata',
-        },
-      ],
-      'weekly_trends': [88.0, 91.0, 78.0, 95.0, 82.0, 89.0, 93.0],
-      'section_performance': {
-        'CSE-5A': 94.2,
-        'ECE-3B': 88.5,
-        'CSE-7A': 91.0,
-        'ME-5B': 79.8,
-      },
-    };
-  }
+  ) => _getDashboardJson(
+    '/attendance/teacher/analytics/${Uri.encodeComponent(teacherEmail)}',
+    token: token,
+    failureMessage: 'Unable to load teacher analytics.',
+    parse: (data) => data as Map<String, dynamic>,
+  );
 
   static Future<Map<String, dynamic>?> getVerificationHistory(
     String email,
@@ -1661,14 +1221,19 @@ class ApiService {
   static Future<List<dynamic>> getActiveSessions(String token) async {
     try {
       final response = await client.get(
-        Uri.parse('$baseUrl/auth/sessions/active'),
+        Uri.parse('$baseUrl/sessions/active'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
       );
       if (response.statusCode == 200) {
-        return jsonDecode(response.body) as List<dynamic>;
+        final data = jsonDecode(response.body);
+        if (data is List) return data;
+        if (data is Map && data['is_active'] == true) {
+          return [Map<String, dynamic>.from(data)];
+        }
+        if (data is Map && data['is_active'] == false) return [];
       }
     } catch (e) {
       debugPrint('getActiveSessions error: $e');
@@ -1731,95 +1296,57 @@ class ApiService {
   // ── Phase 4: Advanced Analytics ─────────────────────────────────────────
 
   /// Monthly attendance trends for the last 6 months.
-  static Future<Map<String, dynamic>> getAnalyticsTrends(String token) async {
-    try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/analytics/trends'),
-        headers: {'Authorization': 'Bearer $token'},
+  static Future<Map<String, dynamic>> getAnalyticsTrends(String token) =>
+      _getDashboardJson(
+        '/analytics/trends',
+        token: token,
+        failureMessage: 'Unable to load attendance trends.',
+        parse: (data) => data as Map<String, dynamic>,
       );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getAnalyticsTrends error: $e');
-    }
-    return {'trends': []};
-  }
 
   /// Students below a given attendance threshold (default 75%).
   static Future<Map<String, dynamic>> getRiskStudents(
     String token, {
     double threshold = 0.75,
     String? department,
-  }) async {
-    try {
-      final params = {'threshold': threshold.toString()};
-      if (department != null) params['department'] = department;
-      final uri = Uri.parse(
-        '$baseUrl/analytics/risk-students',
-      ).replace(queryParameters: params);
-      final response = await client.get(
-        uri,
-        headers: {'Authorization': 'Bearer $token'},
-      );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getRiskStudents error: $e');
-    }
-    return {'riskStudents': []};
+  }) {
+    final params = {'threshold': threshold.toString()};
+    if (department != null) params['department'] = department;
+    final query = Uri(queryParameters: params).query;
+    return _getDashboardJson(
+      '/analytics/risk-students?$query',
+      token: token,
+      failureMessage: 'Unable to load at-risk students.',
+      parse: (data) => data as Map<String, dynamic>,
+    );
   }
 
   /// Average attendance rates grouped by department.
-  static Future<Map<String, dynamic>> getDepartmentComparison(
-    String token,
-  ) async {
-    try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/analytics/department-comparison'),
-        headers: {'Authorization': 'Bearer $token'},
+  static Future<Map<String, dynamic>> getDepartmentComparison(String token) =>
+      _getDashboardJson(
+        '/analytics/department-comparison',
+        token: token,
+        failureMessage: 'Unable to load department comparison.',
+        parse: (data) => data as Map<String, dynamic>,
       );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getDepartmentComparison error: $e');
-    }
-    return {'departments': []};
-  }
 
   /// Average attendance rates grouped by subject.
-  static Future<Map<String, dynamic>> getSubjectWise(String token) async {
-    try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/analytics/subject-wise'),
-        headers: {'Authorization': 'Bearer $token'},
+  static Future<Map<String, dynamic>> getSubjectWise(String token) =>
+      _getDashboardJson(
+        '/analytics/subject-wise',
+        token: token,
+        failureMessage: 'Unable to load subject attendance.',
+        parse: (data) => data as Map<String, dynamic>,
       );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getSubjectWise error: $e');
-    }
-    return {'subjects': []};
-  }
 
   /// Daily check-in heatmap data for the last 30 days.
-  static Future<Map<String, dynamic>> getHeatmap(String token) async {
-    try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/analytics/heatmap'),
-        headers: {'Authorization': 'Bearer $token'},
+  static Future<Map<String, dynamic>> getHeatmap(String token) =>
+      _getDashboardJson(
+        '/analytics/heatmap',
+        token: token,
+        failureMessage: 'Unable to load attendance heatmap.',
+        parse: (data) => data as Map<String, dynamic>,
       );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('getHeatmap error: $e');
-    }
-    return {'heatmap': []};
-  }
 
   // ── College DB Methods ───────────────────────────────────────────────────
   /// Search verified colleges, universities, and institutions via College DB

@@ -133,6 +133,18 @@ class RouteGuards {
       return AppRoutes.unauthorizedPath;
     }
 
+    if (path == AppRoutes.analyticsDashboardPath &&
+        ![
+          UserRole.admin,
+          UserRole.teacher,
+          UserRole.hod,
+          UserRole.principal,
+          UserRole.management,
+        ].contains(role)) {
+      debugPrint('[RouteGuard] Blocked user ($role) from "$path"');
+      return AppRoutes.unauthorizedPath;
+    }
+
     return null;
   }
 

@@ -14,11 +14,14 @@ const AuthService = require('../services/authService');
 const EmailService = require('../services/emailService');
 const { authenticate } = require('../middleware/auth');
 const { trackJob } = require('../utils/jobTracker');
+const reportInternalError = require('../utils/httpError');
 const { limitRegister, limitOtpSend, limitOtpVerify, limitLoginPassword } = require('../middleware/rateLimiter');
 const validate = require('../middleware/validate');
 const {
   registerSchema,
   loginPasswordSchema,
+  googleLoginSchema,
+  githubLoginSchema,
   otpSendSchema,
   otpVerifySchema,
   resetPasswordSchema
@@ -29,7 +32,37 @@ const datasetService = require('../services/datasetService');
 
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 
-function formatAuthResponse(user, accessToken, refreshToken, message = "Success") {
+const REFRESH_COOKIE_NAME = 'smartface_refresh';
+
+function refreshCookieOptions() {
+  const secure = process.env.APP_ENV === 'production' || process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    secure,
+    sameSite: secure ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: '/auth/token/refresh',
+  };
+}
+
+function readRefreshCookie(req) {
+  const cookie = (req.headers.cookie || '').split(';').map((part) => part.trim())
+    .find((part) => part.startsWith(`${REFRESH_COOKIE_NAME}=`));
+  if (!cookie) return null;
+  try {
+    return decodeURIComponent(cookie.slice(REFRESH_COOKIE_NAME.length + 1));
+  } catch {
+    return null;
+  }
+}
+
+function clearRefreshCookie(res) {
+  res.clearCookie(REFRESH_COOKIE_NAME, refreshCookieOptions());
+}
+
+function formatAuthResponse(user, accessToken, refreshToken, message = "Success", req, res) {
+  const browserClient = Boolean(req?.headers.origin);
+  if (browserClient) res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions());
   const wizardCompleted = user.setup_completed || user.biometric_registered || false;
   const photoUrl = user.profilePhotoUrl || user.avatar_url || null;
   const fullName = user.full_name || user.name || "Student User";
@@ -37,7 +70,7 @@ function formatAuthResponse(user, accessToken, refreshToken, message = "Success"
     success: true,
     message: message,
     access_token: accessToken,
-    refresh_token: refreshToken,
+    refresh_token: browserClient ? undefined : refreshToken,
     token_type: "bearer",
     role: user.role || "student",
     name: fullName,
@@ -50,7 +83,7 @@ function formatAuthResponse(user, accessToken, refreshToken, message = "Success"
     wizardCompleted: wizardCompleted,
     data: {
       accessToken: accessToken,
-      refreshToken: refreshToken,
+      refreshToken: browserClient ? undefined : refreshToken,
       user: {
         id: user._id ? user._id.toString() : (user.id || ""),
         name: fullName,
@@ -177,7 +210,19 @@ const memoryUpload = multer({
 });
 
 // ─── POST /auth/register ──────────────────────────────────────────
-router.post('/register', limitRegister, validate(registerSchema), async (req, res) => {
+const authorizeStaffRegistration = (req, res, next) => {
+  if (!['teacher', 'admin'].includes(req.body.role)) return next();
+
+  return authenticate(req, res, () => {
+    const allowedCreators = req.body.role === 'admin' ? ['super_admin'] : ['admin', 'super_admin'];
+    if (!allowedCreators.includes(req.userRole)) {
+      return res.status(403).json({ detail: 'You are not allowed to create this account role.' });
+    }
+    next();
+  });
+};
+
+router.post('/register', limitRegister, validate(registerSchema), authorizeStaffRegistration, async (req, res) => {
   try {
     const { email, full_name, role, password } = req.body;
 
@@ -241,7 +286,8 @@ router.post('/register', limitRegister, validate(registerSchema), async (req, re
       }
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    console.error('[Auth] Registration error:', error);
+    res.status(500).json({ detail: 'Unable to register account.' });
   }
 });
 
@@ -296,7 +342,8 @@ router.post('/login-otp/send', limitOtpSend, validate(otpSendSchema), async (req
       message: "If the account exists, a verification code has been sent."
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    console.error('[Auth] OTP send error:', error);
+    res.status(500).json({ detail: 'Unable to send verification code.' });
   }
 });
 
@@ -343,9 +390,10 @@ router.post('/login-otp/verify', limitOtpVerify, validate(otpVerifySchema), asyn
 
     await logSecurityEvent(email, role, 'LOGIN_EVENT', { method: 'otp', device: req.headers['user-agent'] }, req);
 
-    res.json(formatAuthResponse(user || { email, role, biometric_registered: biometricRegistered, setup_completed: biometricRegistered }, token, refreshToken, "OTP verified successfully"));
+    res.json(formatAuthResponse(user || { email, role, biometric_registered: biometricRegistered, setup_completed: biometricRegistered }, token, refreshToken, "OTP verified successfully", req, res));
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    console.error('[Auth] OTP verification error:', error);
+    res.status(500).json({ detail: 'Unable to verify code.' });
   }
 });
 
@@ -386,27 +434,8 @@ router.post(['/login-password', '/login'], limitLoginPassword, validate(loginPas
           avatar_url: `https://api.dicebear.com/7.x/bottts/png?seed=${encodeURIComponent(student.name)}`
         };
         const token = AuthService.createAccessToken({ sub: student.email.toLowerCase(), role: 'student' });
-        const refreshToken = crypto.randomBytes(32).toString('hex');
-        return res.json(formatAuthResponse(studentUser, token, refreshToken, 'Login successful'));
-      }
-
-      if (email === 'admin@smartface.pro' && password === 'Admin#2026') {
-        const adminUser = {
-          _id: 'admin_1', id: 'admin_1', email, full_name: 'System Administrator',
-          role: 'admin', setup_completed: true, biometric_registered: true
-        };
-        const token = AuthService.createAccessToken({ sub: email, role: 'admin' });
-        const refreshToken = crypto.randomBytes(32).toString('hex');
-        return res.json(formatAuthResponse(adminUser, token, refreshToken, 'Login successful'));
-      }
-      if (email === 'teacher@smartface.pro' && password === 'Teacher#2026') {
-        const teacherUser = {
-          _id: 'teacher_1', id: 'teacher_1', email, full_name: 'Dr. Sarah Jenkins',
-          role: 'teacher', department: 'Computer Science & Engineering', setup_completed: true, biometric_registered: true
-        };
-        const token = AuthService.createAccessToken({ sub: email, role: 'teacher' });
-        const refreshToken = crypto.randomBytes(32).toString('hex');
-        return res.json(formatAuthResponse(teacherUser, token, refreshToken, 'Login successful'));
+        const refreshToken = await registerSession(student.email.toLowerCase(), token, req);
+        return res.json(formatAuthResponse(studentUser, token, refreshToken, 'Login successful', req, res));
       }
 
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -433,11 +462,6 @@ router.post(['/login-password', '/login'], limitLoginPassword, validate(loginPas
         } catch (_) { }
       }
     }
-    if (!isPasswordValid) {
-      if (email === 'admin@smartface.pro' && password === 'Admin#2026') isPasswordValid = true;
-      if (email === 'teacher@smartface.pro' && password === 'Teacher#2026') isPasswordValid = true;
-    }
-
     if (!isPasswordValid) {
       // Increment failed attempts
       user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
@@ -476,27 +500,21 @@ router.post(['/login-password', '/login'], limitLoginPassword, validate(loginPas
     } catch (_) { }
 
     const token = AuthService.createAccessToken({ sub: email, role: user.role });
-    let refreshToken;
-    try {
-      refreshToken = await registerSession(email, token, req);
-    } catch (sessionErr) {
-      console.warn("[Auth] Session registration fallback:", sessionErr.message);
-      refreshToken = crypto.randomBytes(32).toString('hex');
-    }
+    const refreshToken = await registerSession(email, token, req);
 
     await logSecurityEvent(email, user.role, 'LOGIN_EVENT', { method: 'password', device: userAgent }, req);
 
-    res.json(formatAuthResponse(user, token, refreshToken, "Login successful"));
+    res.json(formatAuthResponse(user, token, refreshToken, "Login successful", req, res));
   } catch (error) {
     console.error("[Auth] Login error:", error);
-    res.status(500).json({ detail: error.message || "An unexpected error occurred during login" });
+    res.status(500).json({ detail: 'Unable to complete login.' });
   }
 });
 
 // ─── POST /auth/google ───────────────────────────────────────────
-router.post('/google', async (req, res) => {
+router.post('/google', limitLoginPassword, validate(googleLoginSchema), async (req, res) => {
   try {
-    const { idToken, role: requestedRole } = req.body;
+    const { idToken } = req.body;
     const googleClientId = process.env.GOOGLE_CLIENT_ID;
 
     if (!googleClientId || googleClientId.includes('YOUR_') || googleClientId.includes('your_')) {
@@ -538,17 +556,17 @@ router.post('/google', async (req, res) => {
       verifiedPicture = payload.picture;
     } catch (err) {
       console.error("Google ID Token verification error:", err);
-      return res.status(401).json({ detail: "Google token verification failed: " + err.message });
+      return res.status(401).json({ detail: 'Google token verification failed.' });
     }
 
     let user = await User.findOne({ email: verifiedEmail });
-    let userRole = requestedRole ? requestedRole.toLowerCase() : 'student';
+    let userRole = 'student';
 
     if (!user) {
       user = new User({
         email: verifiedEmail,
         full_name: verifiedName || 'Google User',
-        role: (userRole === 'admin' || userRole === 'super_admin') ? 'student' : userRole,
+        role: userRole,
         biometric_registered: false,
         avatar_url: verifiedPicture || null
       });
@@ -566,9 +584,10 @@ router.post('/google', async (req, res) => {
     const refreshToken = await registerSession(verifiedEmail, token, req);
     await logSecurityEvent(verifiedEmail, userRole, 'LOGIN_EVENT', { method: 'google' }, req);
 
-    res.json(formatAuthResponse(user, token, refreshToken, "Google login successful"));
+    res.json(formatAuthResponse(user, token, refreshToken, "Google login successful", req, res));
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    console.error('[Auth] Google login error:', error);
+    res.status(500).json({ detail: 'Unable to complete Google login.' });
   }
 });
 
@@ -677,22 +696,18 @@ router.get('/github/callback', (req, res) => {
 });
 
 // ─── POST /auth/github ───────────────────────────────────────────
-router.post('/github', async (req, res) => {
+router.post('/github', limitLoginPassword, validate(githubLoginSchema), async (req, res) => {
   try {
-    const { code, role } = req.body;
-    if (!code) {
-      return res.status(400).json({ detail: "Authorization code is required" });
-    }
+    const { code } = req.body;
 
     const client_id = process.env.GITHUB_CLIENT_ID;
     const client_secret = process.env.GITHUB_CLIENT_SECRET;
 
     if (!client_id || !client_secret || client_id === 'your_github_client_id' || client_secret === 'your_github_client_secret') {
-      // Fallback for tests/development: if code is "test_code", allow mock login/registration
-      if (code === 'test_code' || process.env.NODE_ENV === 'test') {
+      if (process.env.NODE_ENV === 'test') {
         const mockEmail = 'mock-github-user@smartface.ai';
         let user = await User.findOne({ email: mockEmail });
-        let userRole = role ? role.toLowerCase() : 'student';
+        let userRole = 'student';
         if (!user) {
           user = new User({
             email: mockEmail,
@@ -706,7 +721,7 @@ router.post('/github', async (req, res) => {
         }
         const token = AuthService.createAccessToken({ sub: mockEmail, role: userRole });
         const refreshToken = await registerSession(mockEmail, token, req);
-        return res.json(formatAuthResponse(user, token, refreshToken, "GitHub login successful"));
+        return res.json(formatAuthResponse(user, token, refreshToken, "GitHub login successful", req, res));
       }
       return res.status(400).json({ detail: "GitHub Auth is not configured on the server." });
     }
@@ -726,8 +741,8 @@ router.post('/github', async (req, res) => {
     });
 
     const tokenData = await tokenResponse.json();
-    if (tokenData.error) {
-      return res.status(400).json({ detail: `GitHub OAuth error: ${tokenData.error_description || tokenData.error}` });
+    if (!tokenResponse.ok || tokenData.error) {
+      return res.status(401).json({ detail: 'GitHub authentication failed.' });
     }
 
     const accessToken = tokenData.access_token;
@@ -757,7 +772,7 @@ router.post('/github', async (req, res) => {
       const emailsData = await emailsResponse.json();
       if (Array.isArray(emailsData)) {
         const primaryEmail = emailsData.find(e => e.primary && e.verified);
-        email = primaryEmail ? primaryEmail.email : (emailsData[0] ? emailsData[0].email : null);
+        email = primaryEmail ? primaryEmail.email : null;
       }
     }
 
@@ -767,7 +782,7 @@ router.post('/github', async (req, res) => {
 
     let user = await User.findOne({ email });
     let biometricRegistered = false;
-    let userRole = role ? role.toLowerCase() : 'student';
+    let userRole = 'student';
 
     if (!user) {
       user = new User({
@@ -793,14 +808,15 @@ router.post('/github', async (req, res) => {
     const userAgent = req.headers['user-agent'] || 'Unknown Device';
     await logSecurityEvent(email, userRole, 'LOGIN_EVENT', { method: 'github', device: userAgent }, req);
 
-    res.json(formatAuthResponse(user, token, refreshToken, "GitHub login successful"));
+    res.json(formatAuthResponse(user, token, refreshToken, "GitHub login successful", req, res));
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    console.error('[Auth] GitHub login error:', error);
+    res.status(500).json({ detail: 'Unable to complete GitHub login.' });
   }
 });
 
 // ─── POST /auth/forgot-password ──────────────────────────────────
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', limitOtpSend, validate(otpSendSchema), async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
@@ -850,12 +866,13 @@ router.post('/forgot-password', async (req, res) => {
       message: "If the account exists, a verification code has been sent."
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    console.error('[Auth] Password reset request error:', error);
+    res.status(500).json({ detail: 'Unable to process password reset request.' });
   }
 });
 
 // ─── POST /auth/reset-password ────────────────────────────────────
-router.post('/reset-password', validate(resetPasswordSchema), async (req, res) => {
+router.post('/reset-password', limitOtpVerify, validate(resetPasswordSchema), async (req, res) => {
   try {
     const { email, otp, new_password } = req.body;
 
@@ -915,6 +932,7 @@ router.post('/reset-password', validate(resetPasswordSchema), async (req, res) =
 
     // Invalidate active sessions
     await UserSession.deleteMany({ userId: email });
+    clearRefreshCookie(res);
 
     // Send password reset success email
     trackJob(EmailService.sendResetPasswordSuccess(email).catch(console.error));
@@ -923,7 +941,8 @@ router.post('/reset-password', validate(resetPasswordSchema), async (req, res) =
 
     res.json({ message: "Password updated successfully" });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    console.error('[Auth] Password reset error:', error);
+    res.status(500).json({ detail: 'Unable to reset password.' });
   }
 });
 
@@ -1004,7 +1023,7 @@ router.get(['/profile', '/me'], authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Auth');
   }
 });
 
@@ -1035,7 +1054,7 @@ router.post('/update-profile', authenticate, async (req, res) => {
 
     res.json({ message: "Profile updated successfully" });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Auth');
   }
 });
 
@@ -1051,7 +1070,7 @@ router.patch('/notification-preferences', authenticate, async (req, res) => {
     await User.updateOne({ email: req.userEmail }, { $set: updateFields });
     res.json({ message: "Notification preferences updated successfully" });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Auth');
   }
 });
 
@@ -1100,7 +1119,7 @@ router.post('/register-biometric', authenticate, memoryUpload.single('image'), a
       enrolled: enrolledSuccessfully
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Auth');
   }
 });
 
@@ -1117,7 +1136,7 @@ router.get('/students', authenticate, async (req, res) => {
     }));
     res.json(result);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Auth');
   }
 });
 
@@ -1125,7 +1144,7 @@ router.get('/students', authenticate, async (req, res) => {
 router.post('/upload-student-face', authenticate, (req, res) => {
   datasetUpload.single('file')(req, res, (err) => {
     if (err) {
-      return res.status(400).json({ detail: err.message });
+      return res.status(400).json({ detail: 'Invalid upload request.' });
     }
     if (!req.file) {
       return res.status(400).json({ detail: "No file uploaded" });
@@ -1147,7 +1166,7 @@ const handleProfilePhotoUpload = async (req, res) => {
       if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({ success: false, detail: "File too large. Maximum size is 2MB." });
       }
-      return res.status(400).json({ success: false, detail: err.message || "File upload error" });
+      return res.status(400).json({ success: false, detail: 'Invalid upload request.' });
     }
 
     const file = (req.files && (req.files.file?.[0] || req.files.photo?.[0] || req.files.avatar?.[0])) || req.file;
@@ -1288,7 +1307,7 @@ const handleProfilePhotoDelete = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, detail: error.message });
+    reportInternalError(res, error, 'Auth');
   }
 };
 
@@ -1313,15 +1332,17 @@ router.post('/train-faces', authenticate, async (req, res) => {
 
     res.json({ message: "AI face recognition model training initiated in the background." });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Auth');
   }
 });
 
 // ─── POST /auth/token/refresh ──────────────────────────────────────
 router.post('/token/refresh', async (req, res) => {
   try {
-    const { refresh_token } = req.body;
+    const browserClient = Boolean(req.headers.origin);
+    const refresh_token = req.body?.refresh_token || (browserClient ? readRefreshCookie(req) : null);
     if (!refresh_token) {
+      if (browserClient) clearRefreshCookie(res);
       return res.status(400).json({ detail: "Refresh token is required" });
     }
 
@@ -1337,20 +1358,24 @@ router.post('/token/refresh', async (req, res) => {
         // Severe security alert: token reuse detected. Revoke entire session family!
         await UserSession.deleteOne({ _id: compromisedSession._id });
         await logSecurityEvent(compromisedSession.userId, 'unknown', 'ROLE_VIOLATION', { reason: 'Refresh token reuse/theft attempt', tokenHash: incomingHash }, req);
+        if (browserClient) clearRefreshCookie(res);
         return res.status(401).json({ detail: "Revoked session family due to token reuse detection." });
       }
+      if (browserClient) clearRefreshCookie(res);
       return res.status(401).json({ detail: "Invalid refresh token" });
     }
 
     // Check expiry
     if (new Date() > session.expiry) {
       await UserSession.deleteOne({ _id: session._id });
+      if (browserClient) clearRefreshCookie(res);
       return res.status(401).json({ detail: "Refresh token expired" });
     }
 
     const user = await User.findOne({ email: session.userId });
     if (!user) {
       await UserSession.deleteOne({ _id: session._id });
+      if (browserClient) clearRefreshCookie(res);
       return res.status(401).json({ detail: "User not found" });
     }
 
@@ -1368,13 +1393,15 @@ router.post('/token/refresh', async (req, res) => {
 
     await session.save();
 
+    if (browserClient) res.cookie(REFRESH_COOKIE_NAME, newRefreshToken, refreshCookieOptions());
+
     res.json({
       access_token: newAccessToken,
-      refresh_token: newRefreshToken,
+      refresh_token: browserClient ? undefined : newRefreshToken,
       token_type: "bearer"
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Auth');
   }
 });
 
@@ -1392,7 +1419,7 @@ router.get('/sessions/active', authenticate, async (req, res) => {
     }));
     res.json(result);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Auth');
   }
 });
 
@@ -1412,7 +1439,7 @@ router.post('/sessions/logout-all', authenticate, async (req, res) => {
 
     res.json({ message: "Successfully logged out of all other devices" });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Auth');
   }
 });
 
@@ -1425,10 +1452,11 @@ router.post('/logout', authenticate, async (req, res) => {
     await UserSession.deleteOne({ userId: req.userEmail, tokenHash: currentTokenHash });
 
     await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: 'current_device' }, req);
+    clearRefreshCookie(res);
 
     res.json({ message: "Logged out successfully" });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Auth');
   }
 });
 
@@ -1446,7 +1474,7 @@ router.delete('/sessions/:id', authenticate, async (req, res) => {
 
     res.json({ message: "Session revoked successfully" });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Auth');
   }
 });
 

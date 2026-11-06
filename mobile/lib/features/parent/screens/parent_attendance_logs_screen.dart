@@ -34,6 +34,7 @@ class ParentAttendanceLogsScreen extends StatefulWidget {
 class _ParentAttendanceLogsScreenState
     extends State<ParentAttendanceLogsScreen> {
   bool _isLoading = true;
+  String? _errorMessage;
   List<dynamic> _logs = [];
   String _selectedFilter = 'All';
 
@@ -44,15 +45,26 @@ class _ParentAttendanceLogsScreenState
   }
 
   Future<void> _fetchLogs() async {
-    setState(() => _isLoading = true);
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       final session = context.read<SessionManager>();
       final token = session.token;
-      if (token == null) return;
+      if (token == null || token.isEmpty) {
+        throw StateError('Missing session');
+      }
 
       final email = widget.wardEmail ?? session.selectedWard?['email'];
       if (email == null) {
-        setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Select a student to view attendance history.';
+            _isLoading = false;
+          });
+        }
         return;
       }
 
@@ -60,13 +72,16 @@ class _ParentAttendanceLogsScreenState
       if (mounted) {
         setState(() {
           _logs = logs;
+          _errorMessage = null;
           _isLoading = false;
         });
       }
-    } catch (e) {
-      debugPrint('ParentAttendanceLogsScreen fetch error: $e');
+    } catch (_) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _errorMessage = 'Unable to load attendance history. Try again.';
+          _isLoading = false;
+        });
       }
     }
   }
@@ -100,111 +115,138 @@ class _ParentAttendanceLogsScreenState
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Filter chips
-              Row(
-                children: [
-                  _buildFilterChip('All'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Present'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('Absent'),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Roster timeline
-              Expanded(
-                child: filteredLogs.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No check-in logs found for this filter.',
+          child: _errorMessage != null
+              ? Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
                           style: GoogleFonts.inter(color: AppColors.textMuted),
                         ),
-                      )
-                    : ListView.builder(
-                        itemCount: filteredLogs.length,
-                        physics: const BouncingScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          final log = filteredLogs[index];
-                          final isPresent =
-                              (log['status'] as String).toLowerCase() ==
-                              'present';
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: _fetchLogs,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Filter chips
+                    Row(
+                      children: [
+                        _buildFilterChip('All'),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('Present'),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('Absent'),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
 
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10.0),
-                            child: GlassContainer(
-                              padding: const EdgeInsets.all(AppSpacing.md),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 38,
-                                    height: 38,
-                                    decoration: BoxDecoration(
-                                      color: isPresent
-                                          ? AppColors.success.withValues(
-                                              alpha: 0.12,
-                                            )
-                                          : AppColors.error.withValues(
-                                              alpha: 0.12,
-                                            ),
-                                      shape: BoxShape.circle,
+                    // Roster timeline
+                    Expanded(
+                      child: filteredLogs.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No check-in logs found for this filter.',
+                                style: GoogleFonts.inter(
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: filteredLogs.length,
+                              physics: const BouncingScrollPhysics(),
+                              itemBuilder: (context, index) {
+                                final log = filteredLogs[index];
+                                final isPresent =
+                                    (log['status'] as String).toLowerCase() ==
+                                    'present';
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 10.0),
+                                  child: GlassContainer(
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
                                     ),
-                                    child: Icon(
-                                      isPresent
-                                          ? Icons.check_circle_outline_rounded
-                                          : Icons.cancel_outlined,
-                                      color: isPresent
-                                          ? AppColors.success
-                                          : AppColors.error,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                    child: Row(
                                       children: [
-                                        Text(
-                                          log['subject'] as String? ??
-                                              'Class Session',
-                                          style: GoogleFonts.inter(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14,
-                                            color: AppColors.textHeading,
+                                        Container(
+                                          width: 38,
+                                          height: 38,
+                                          decoration: BoxDecoration(
+                                            color: isPresent
+                                                ? AppColors.success.withValues(
+                                                    alpha: 0.12,
+                                                  )
+                                                : AppColors.error.withValues(
+                                                    alpha: 0.12,
+                                                  ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            isPresent
+                                                ? Icons
+                                                      .check_circle_outline_rounded
+                                                : Icons.cancel_outlined,
+                                            color: isPresent
+                                                ? AppColors.success
+                                                : AppColors.error,
+                                            size: 20,
                                           ),
                                         ),
-                                        const SizedBox(height: 2),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                log['subject'] as String? ??
+                                                    'Class Session',
+                                                style: GoogleFonts.inter(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                  color: AppColors.textHeading,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                'Verified via: ${log['verifiedBy'] ?? 'AI Engine'}',
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 11,
+                                                  color: AppColors.textMuted,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                         Text(
-                                          'Verified via: ${log['verifiedBy'] ?? 'AI Engine'}',
-                                          style: GoogleFonts.inter(
-                                            fontSize: 11,
-                                            color: AppColors.textMuted,
+                                          log['date'] as String? ?? '',
+                                          style: GoogleFonts.robotoMono(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.textHeading,
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                  Text(
-                                    log['date'] as String? ?? '',
-                                    style: GoogleFonts.robotoMono(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textHeading,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );

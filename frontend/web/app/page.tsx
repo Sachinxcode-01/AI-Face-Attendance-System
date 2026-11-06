@@ -199,17 +199,17 @@ export default function Home() {
           {/* Left Text Column */}
           <div className="lg:col-span-7 space-y-6 flex flex-col items-start text-left">
             
-            {/* Tagline Announcement - 21st Lime Frost Theme */}
+            {/* Tagline announcement */}
             <motion.div
               initial={{ opacity: 0, y: -16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#aff33e]/10 border border-[#aff33e]/30 text-xs font-medium text-[#aff33e] shadow-sm"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-xs font-medium text-accent shadow-sm"
             >
-              <span className="flex h-2 w-2 rounded-full bg-[#aff33e] animate-pulse" />
+              <span className="flex h-2 w-2 rounded-full bg-accent animate-pulse" />
               <span className="font-mono text-[11px] text-slate-200">v2.4 Enterprise Release</span>
               <span className="text-slate-600">•</span>
-              <span className="text-[11px] text-[#aff33e] font-semibold">ArcFace 512D Biometrics</span>
+              <span className="text-[11px] text-accent font-semibold">ArcFace 512D Biometrics</span>
             </motion.div>
 
             {/* Hero Typography Title */}
@@ -220,7 +220,7 @@ export default function Home() {
               className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white leading-[1.08] font-sans"
             >
               Autonomous Campus Attendance.{' '}
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-[#aff33e] via-emerald-300 to-teal-200">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-primary via-indigo-300 to-violet-200">
                 Engineered for Absolute Precision.
               </span>
             </motion.h1>
@@ -247,7 +247,7 @@ export default function Home() {
                 <div className="text-[10px] text-slate-400">Match Latency</div>
               </div>
               <div className="p-2.5 rounded-xl bg-white/3 border border-white/6 backdrop-blur-sm">
-                <div className="text-base sm:text-lg font-bold text-[#aff33e] font-mono">99.87%</div>
+                <div className="text-base sm:text-lg font-bold text-accent font-mono">99.87%</div>
                 <div className="text-[10px] text-slate-400">Model Accuracy</div>
               </div>
               <div className="p-2.5 rounded-xl bg-white/3 border border-white/6 backdrop-blur-sm">
@@ -265,7 +265,7 @@ export default function Home() {
             >
               <Link
                 href="/login"
-                className="w-full sm:w-auto relative inline-flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold rounded-2xl bg-[#aff33e] hover:bg-[#9de32f] text-slate-950 border border-[#aff33e]/30 overflow-hidden shadow-[0_0_25px_rgba(175,243,62,0.3)] hover:shadow-[0_0_35px_rgba(175,243,62,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                className="w-full sm:w-auto relative inline-flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold rounded-2xl bg-primary hover:bg-indigo-500 text-white border border-primary/30 overflow-hidden shadow-[0_0_25px_rgba(79,70,229,0.3)] hover:shadow-[0_0_35px_rgba(79,70,229,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
               >
                 <span>Launch Portal</span>
                 <ArrowRight className="w-4 h-4" />
@@ -275,7 +275,7 @@ export default function Home() {
                 href="/download"
                 className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold text-white bg-slate-900/90 border border-white/10 hover:bg-slate-800 rounded-2xl transition-all duration-300"
               >
-                <Download className="w-3.5 h-3.5 text-[#aff33e]" />
+                <Download className="w-3.5 h-3.5 text-accent" />
                 <span>Download App</span>
               </Link>
 
@@ -301,20 +301,20 @@ export default function Home() {
         <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-mono text-blue-400">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Dedicated Web Portals & Ecosystem</span>
+            <span>Role-aware workspace</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-            Tailored Experiences for Every Stakeholder
+            One workspace, tailored by role
           </h2>
           <p className="text-xs md:text-sm text-slate-400">
-            Independent, feature-rich web applications with dedicated workflows, camera biometrics, and Gemini 3.8 Flash AI.
+            Secure dashboards for students, families, faculty, and administrators, with one consistent sign-in and navigation flow.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Student Portal Card */}
           <Link
-            href="/student"
+            href="/dashboard"
             className="group relative p-6 rounded-3xl bg-slate-900/80 border border-blue-500/20 hover:border-blue-500/60 shadow-xl hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all duration-300 flex flex-col justify-between overflow-hidden"
           >
             <div className="space-y-4">
@@ -323,7 +323,7 @@ export default function Home() {
                   <User className="w-6 h-6" />
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30">
-                  /student
+                  STUDENT
                 </span>
               </div>
               <div>
@@ -337,14 +337,14 @@ export default function Home() {
             </div>
 
             <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-blue-400">
-              <span>Launch Student Portal</span>
+              <span>Open workspace</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
 
           {/* Lecturer Portal Card */}
           <Link
-            href="/teacher"
+            href="/dashboard"
             className="group relative p-6 rounded-3xl bg-slate-900/80 border border-indigo-500/20 hover:border-indigo-500/60 shadow-xl hover:shadow-[0_0_30px_rgba(99,102,241,0.2)] transition-all duration-300 flex flex-col justify-between overflow-hidden"
           >
             <div className="space-y-4">
@@ -353,7 +353,7 @@ export default function Home() {
                   <Laptop className="w-6 h-6" />
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-                  /teacher
+                  FACULTY
                 </span>
               </div>
               <div>
@@ -367,14 +367,14 @@ export default function Home() {
             </div>
 
             <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-indigo-400">
-              <span>Launch Lecturer Portal</span>
+              <span>Open workspace</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
 
           {/* Admin Sentinel Panel Card */}
           <Link
-            href="/admin"
+            href="/dashboard"
             className="group relative p-6 rounded-3xl bg-slate-900/80 border border-emerald-500/20 hover:border-emerald-500/60 shadow-xl hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] transition-all duration-300 flex flex-col justify-between overflow-hidden"
           >
             <div className="space-y-4">
@@ -383,7 +383,7 @@ export default function Home() {
                   <ShieldCheck className="w-6 h-6" />
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                  /admin
+                  ADMIN
                 </span>
               </div>
               <div>
@@ -397,7 +397,7 @@ export default function Home() {
             </div>
 
             <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-emerald-400">
-              <span>Launch Admin Panel</span>
+              <span>Open workspace</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>

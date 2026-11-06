@@ -23,6 +23,7 @@ import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/features/student/screens/student_timetable_screen.dart';
 import 'package:smartface_attendance/features/admin/screens/admin_users_screen.dart';
+import 'package:smartface_attendance/features/management/screens/management_dashboard_screen.dart';
 
 // Guest / Unauthenticated Screens
 import 'package:smartface_attendance/features/auth/screens/splash_screen.dart';
@@ -111,14 +112,10 @@ Page<dynamic> buildPageWithTransition<T>({
   required GoRouterState state,
   required Widget child,
 }) {
-  final reduceMotion =
-      MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+  final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
   if (reduceMotion) {
-    return NoTransitionPage<T>(
-      key: state.pageKey,
-      child: child,
-    );
+    return NoTransitionPage<T>(key: state.pageKey, child: child);
   }
 
   return CustomTransitionPage<T>(
@@ -160,14 +157,10 @@ Page<dynamic> buildModalPageWithTransition<T>({
   required GoRouterState state,
   required Widget child,
 }) {
-  final reduceMotion =
-      MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+  final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
   if (reduceMotion) {
-    return NoTransitionPage<T>(
-      key: state.pageKey,
-      child: child,
-    );
+    return NoTransitionPage<T>(key: state.pageKey, child: child);
   }
 
   return CustomTransitionPage<T>(
@@ -185,10 +178,7 @@ Page<dynamic> buildModalPageWithTransition<T>({
           begin: const Offset(0.0, 0.08),
           end: Offset.zero,
         ).animate(curve),
-        child: FadeTransition(
-          opacity: curve,
-          child: child,
-        ),
+        child: FadeTransition(opacity: curve, child: child),
       );
     },
     transitionDuration: const Duration(milliseconds: 280),
@@ -274,13 +264,22 @@ final GoRouter appRouter = GoRouter(
           context,
           listen: false,
         ).userRole;
-        if (role == UserRole.student) {
-          return AppRoutes.studentProfilePath;
+        switch (role) {
+          case UserRole.student:
+            return AppRoutes.studentProfilePath;
+          case UserRole.teacher:
+            return AppRoutes.teacherProfilePath;
+          case UserRole.parent:
+            return '/parent/profile';
+          case UserRole.admin:
+            return AppRoutes.adminProfilePath;
+          case UserRole.hod:
+          case UserRole.principal:
+          case UserRole.management:
+            return AppRoutes.managementDashboardPath;
+          default:
+            return AppRoutes.loginPath;
         }
-        if (role == UserRole.teacher || role == UserRole.parent) {
-          return AppRoutes.teacherProfilePath;
-        }
-        return AppRoutes.adminProfilePath;
       },
     ),
 
@@ -870,15 +869,106 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) => buildPageWithTransition(
         context: context,
         state: state,
-        child: const AdminDashboard(),
+        child: const ManagementDashboardScreen(),
       ),
     ),
   ],
 );
 
 // ============================================================================
-// Shell Scaffolds with bottom navigation bars (Preserves IndexedStack state)
+// Shell scaffolds use bottom navigation on phones and a rail in wide windows.
 // ============================================================================
+
+const double _wideNavigationBreakpoint = 840;
+
+Widget _buildRoleShell({
+  required StatefulNavigationShell navigationShell,
+  required String role,
+  required List<SmartSalomonNavItemData> items,
+}) {
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final isWide = constraints.maxWidth >= _wideNavigationBreakpoint;
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final selectedColor = isDark
+          ? AppColors.primaryLight
+          : AppColors.primaryDark;
+      final unselectedColor = isDark
+          ? AppColors.textMutedDark
+          : AppColors.textMuted;
+      final dividerColor = isDark
+          ? const Color(0xFF1E2848)
+          : const Color(0xFFE5E7F0);
+      final content = TabTransitionWrapper(
+        index: navigationShell.currentIndex,
+        child: navigationShell,
+      );
+
+      return Scaffold(
+        extendBody: !isWide,
+        backgroundColor: Colors.transparent,
+        body: FloatingChatbotOverlay(
+          child: isWide
+              ? Row(
+                  children: [
+                    SafeArea(
+                      child: NavigationRail(
+                        selectedIndex: navigationShell.currentIndex,
+                        onDestinationSelected: navigationShell.goBranch,
+                        labelType: NavigationRailLabelType.selected,
+                        groupAlignment: -1,
+                        backgroundColor: isDark
+                            ? AppColors.bgDeep
+                            : AppColors.bgLight,
+                        unselectedIconTheme: IconThemeData(
+                          color: unselectedColor,
+                        ),
+                        selectedIconTheme: IconThemeData(color: selectedColor),
+                        selectedLabelTextStyle: TextStyle(
+                          color: selectedColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        unselectedLabelTextStyle: TextStyle(
+                          color: unselectedColor,
+                        ),
+                        destinations: [
+                          for (final item in items)
+                            NavigationRailDestination(
+                              icon: Tooltip(
+                                message: item.title,
+                                child: Icon(item.icon),
+                              ),
+                              selectedIcon: Tooltip(
+                                message: item.title,
+                                child: Icon(item.activeIcon ?? item.icon),
+                              ),
+                              label: Text(item.title),
+                            ),
+                        ],
+                      ),
+                    ),
+                    VerticalDivider(
+                      width: 1,
+                      thickness: 1,
+                      color: dividerColor,
+                    ),
+                    Expanded(child: content),
+                  ],
+                )
+              : content,
+        ),
+        bottomNavigationBar: isWide
+            ? null
+            : SmartSalomonBottomBar(
+                currentIndex: navigationShell.currentIndex,
+                onTap: navigationShell.goBranch,
+                role: role,
+                items: items,
+              ),
+      );
+    },
+  );
+}
 
 /// Student Shell
 class StudentShell extends StatelessWidget {
@@ -888,57 +978,46 @@ class StudentShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      body: FloatingChatbotOverlay(
-        child: TabTransitionWrapper(
-          index: navigationShell.currentIndex,
-          child: navigationShell,
+    return _buildRoleShell(
+      navigationShell: navigationShell,
+      role: 'student',
+      items: const [
+        SmartSalomonNavItemData(
+          icon: Icons.home_outlined,
+          activeIcon: Icons.home_rounded,
+          animateIcon: AnimateIcons.home,
+          title: 'Home',
+          route: AppRoutes.studentHomePath,
         ),
-      ),
-      bottomNavigationBar: SmartSalomonBottomBar(
-        currentIndex: navigationShell.currentIndex,
-        onTap: navigationShell.goBranch,
-        role: 'student',
-        items: const [
-          SmartSalomonNavItemData(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home_rounded,
-            animateIcon: AnimateIcons.home,
-            title: 'Home',
-            route: AppRoutes.studentHomePath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.calendar_view_week_rounded,
-            activeIcon: Icons.calendar_view_week_rounded,
-            animateIcon: AnimateIcons.calendar,
-            title: 'Schedule',
-            route: AppRoutes.studentTimetablePath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.qr_code_scanner_rounded,
-            activeIcon: Icons.qr_code_scanner_rounded,
-            animateIcon: AnimateIcons.qrCode,
-            title: 'Scan',
-            route: AppRoutes.studentScanPath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.analytics_outlined,
-            activeIcon: Icons.analytics_rounded,
-            animateIcon: AnimateIcons.document,
-            title: 'Reports',
-            route: AppRoutes.studentAttendanceHubPath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.person_outline_rounded,
-            activeIcon: Icons.person_rounded,
-            animateIcon: AnimateIcons.settings,
-            title: 'Profile',
-            route: AppRoutes.studentProfilePath,
-          ),
-        ],
-      ),
+        SmartSalomonNavItemData(
+          icon: Icons.calendar_view_week_rounded,
+          activeIcon: Icons.calendar_view_week_rounded,
+          animateIcon: AnimateIcons.calendar,
+          title: 'Schedule',
+          route: AppRoutes.studentTimetablePath,
+        ),
+        SmartSalomonNavItemData(
+          icon: Icons.qr_code_scanner_rounded,
+          activeIcon: Icons.qr_code_scanner_rounded,
+          animateIcon: AnimateIcons.qrCode,
+          title: 'Scan',
+          route: AppRoutes.studentScanPath,
+        ),
+        SmartSalomonNavItemData(
+          icon: Icons.analytics_outlined,
+          activeIcon: Icons.analytics_rounded,
+          animateIcon: AnimateIcons.document,
+          title: 'Reports',
+          route: AppRoutes.studentAttendanceHubPath,
+        ),
+        SmartSalomonNavItemData(
+          icon: Icons.person_outline_rounded,
+          activeIcon: Icons.person_rounded,
+          animateIcon: AnimateIcons.settings,
+          title: 'Profile',
+          route: AppRoutes.studentProfilePath,
+        ),
+      ],
     );
   }
 }
@@ -951,57 +1030,46 @@ class TeacherShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      body: FloatingChatbotOverlay(
-        child: TabTransitionWrapper(
-          index: navigationShell.currentIndex,
-          child: navigationShell,
+    return _buildRoleShell(
+      navigationShell: navigationShell,
+      role: 'teacher',
+      items: const [
+        SmartSalomonNavItemData(
+          icon: Icons.home_outlined,
+          activeIcon: Icons.home_rounded,
+          animateIcon: AnimateIcons.home,
+          title: 'Home',
+          route: AppRoutes.teacherHomePath,
         ),
-      ),
-      bottomNavigationBar: SmartSalomonBottomBar(
-        currentIndex: navigationShell.currentIndex,
-        onTap: navigationShell.goBranch,
-        role: 'teacher',
-        items: const [
-          SmartSalomonNavItemData(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home_rounded,
-            animateIcon: AnimateIcons.home,
-            title: 'Home',
-            route: AppRoutes.teacherHomePath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.school_outlined,
-            activeIcon: Icons.school_rounded,
-            animateIcon: AnimateIcons.list,
-            title: 'Classes',
-            route: AppRoutes.teacherFeedPath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.qr_code_rounded,
-            activeIcon: Icons.qr_code_rounded,
-            animateIcon: AnimateIcons.checkmarkOk,
-            title: 'Attendance',
-            route: AppRoutes.teacherQrPath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.analytics_outlined,
-            activeIcon: Icons.analytics_rounded,
-            animateIcon: AnimateIcons.document,
-            title: 'Reports',
-            route: AppRoutes.teacherStatsPath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.person_outline_rounded,
-            activeIcon: Icons.person_rounded,
-            animateIcon: AnimateIcons.settings,
-            title: 'Profile',
-            route: AppRoutes.teacherProfilePath,
-          ),
-        ],
-      ),
+        SmartSalomonNavItemData(
+          icon: Icons.school_outlined,
+          activeIcon: Icons.school_rounded,
+          animateIcon: AnimateIcons.list,
+          title: 'Classes',
+          route: AppRoutes.teacherFeedPath,
+        ),
+        SmartSalomonNavItemData(
+          icon: Icons.qr_code_rounded,
+          activeIcon: Icons.qr_code_rounded,
+          animateIcon: AnimateIcons.checkmarkOk,
+          title: 'Attendance',
+          route: AppRoutes.teacherQrPath,
+        ),
+        SmartSalomonNavItemData(
+          icon: Icons.analytics_outlined,
+          activeIcon: Icons.analytics_rounded,
+          animateIcon: AnimateIcons.document,
+          title: 'Reports',
+          route: AppRoutes.teacherStatsPath,
+        ),
+        SmartSalomonNavItemData(
+          icon: Icons.person_outline_rounded,
+          activeIcon: Icons.person_rounded,
+          animateIcon: AnimateIcons.settings,
+          title: 'Profile',
+          route: AppRoutes.teacherProfilePath,
+        ),
+      ],
     );
   }
 }
@@ -1014,57 +1082,46 @@ class ParentShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      body: FloatingChatbotOverlay(
-        child: TabTransitionWrapper(
-          index: navigationShell.currentIndex,
-          child: navigationShell,
+    return _buildRoleShell(
+      navigationShell: navigationShell,
+      role: 'parent',
+      items: const [
+        SmartSalomonNavItemData(
+          icon: Icons.home_outlined,
+          activeIcon: Icons.home_rounded,
+          animateIcon: AnimateIcons.home,
+          title: 'Home',
+          route: AppRoutes.parentHomePath,
         ),
-      ),
-      bottomNavigationBar: SmartSalomonBottomBar(
-        currentIndex: navigationShell.currentIndex,
-        onTap: navigationShell.goBranch,
-        role: 'parent',
-        items: const [
-          SmartSalomonNavItemData(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home_rounded,
-            animateIcon: AnimateIcons.home,
-            title: 'Home',
-            route: AppRoutes.parentHomePath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.event_busy_outlined,
-            activeIcon: Icons.event_busy_rounded,
-            animateIcon: AnimateIcons.smile,
-            title: 'Ward',
-            route: AppRoutes.parentLeaveStatusPath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.analytics_outlined,
-            activeIcon: Icons.analytics_rounded,
-            animateIcon: AnimateIcons.document,
-            title: 'Reports',
-            route: AppRoutes.parentAttendanceLogsPath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.notifications_none_rounded,
-            activeIcon: Icons.notifications_rounded,
-            animateIcon: AnimateIcons.bell,
-            title: 'Alerts',
-            route: AppRoutes.parentAlertsPath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.person_outline_rounded,
-            activeIcon: Icons.person_rounded,
-            animateIcon: AnimateIcons.settings,
-            title: 'Profile',
-            route: '/parent/profile',
-          ),
-        ],
-      ),
+        SmartSalomonNavItemData(
+          icon: Icons.event_busy_outlined,
+          activeIcon: Icons.event_busy_rounded,
+          animateIcon: AnimateIcons.smile,
+          title: 'Ward',
+          route: AppRoutes.parentLeaveStatusPath,
+        ),
+        SmartSalomonNavItemData(
+          icon: Icons.analytics_outlined,
+          activeIcon: Icons.analytics_rounded,
+          animateIcon: AnimateIcons.document,
+          title: 'Reports',
+          route: AppRoutes.parentAttendanceLogsPath,
+        ),
+        SmartSalomonNavItemData(
+          icon: Icons.notifications_none_rounded,
+          activeIcon: Icons.notifications_rounded,
+          animateIcon: AnimateIcons.bell,
+          title: 'Alerts',
+          route: AppRoutes.parentAlertsPath,
+        ),
+        SmartSalomonNavItemData(
+          icon: Icons.person_outline_rounded,
+          activeIcon: Icons.person_rounded,
+          animateIcon: AnimateIcons.settings,
+          title: 'Profile',
+          route: '/parent/profile',
+        ),
+      ],
     );
   }
 }
@@ -1077,57 +1134,46 @@ class AdminShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      body: FloatingChatbotOverlay(
-        child: TabTransitionWrapper(
-          index: navigationShell.currentIndex,
-          child: navigationShell,
+    return _buildRoleShell(
+      navigationShell: navigationShell,
+      role: 'admin',
+      items: const [
+        SmartSalomonNavItemData(
+          icon: Icons.home_outlined,
+          activeIcon: Icons.home_rounded,
+          animateIcon: AnimateIcons.home,
+          title: 'Home',
+          route: AppRoutes.adminHomePath,
         ),
-      ),
-      bottomNavigationBar: SmartSalomonBottomBar(
-        currentIndex: navigationShell.currentIndex,
-        onTap: navigationShell.goBranch,
-        role: 'admin',
-        items: const [
-          SmartSalomonNavItemData(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home_rounded,
-            animateIcon: AnimateIcons.home,
-            title: 'Home',
-            route: AppRoutes.adminHomePath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.people_alt_outlined,
-            activeIcon: Icons.people_alt_rounded,
-            animateIcon: AnimateIcons.list,
-            title: 'Users',
-            route: AppRoutes.adminApprovalsPath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.security_outlined,
-            activeIcon: Icons.security_rounded,
-            animateIcon: AnimateIcons.activity,
-            title: 'Monitor',
-            route: AppRoutes.adminSecurityPath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.analytics_outlined,
-            activeIcon: Icons.analytics_rounded,
-            animateIcon: AnimateIcons.document,
-            title: 'Reports',
-            route: AppRoutes.adminAnalyticsPath,
-          ),
-          SmartSalomonNavItemData(
-            icon: Icons.settings_applications_outlined,
-            activeIcon: Icons.settings_applications_rounded,
-            animateIcon: AnimateIcons.settings,
-            title: 'Settings',
-            route: AppRoutes.adminProfilePath,
-          ),
-        ],
-      ),
+        SmartSalomonNavItemData(
+          icon: Icons.people_alt_outlined,
+          activeIcon: Icons.people_alt_rounded,
+          animateIcon: AnimateIcons.list,
+          title: 'Users',
+          route: AppRoutes.adminApprovalsPath,
+        ),
+        SmartSalomonNavItemData(
+          icon: Icons.security_outlined,
+          activeIcon: Icons.security_rounded,
+          animateIcon: AnimateIcons.activity,
+          title: 'Monitor',
+          route: AppRoutes.adminSecurityPath,
+        ),
+        SmartSalomonNavItemData(
+          icon: Icons.analytics_outlined,
+          activeIcon: Icons.analytics_rounded,
+          animateIcon: AnimateIcons.document,
+          title: 'Reports',
+          route: AppRoutes.adminAnalyticsPath,
+        ),
+        SmartSalomonNavItemData(
+          icon: Icons.settings_applications_outlined,
+          activeIcon: Icons.settings_applications_rounded,
+          animateIcon: AnimateIcons.settings,
+          title: 'Settings',
+          route: AppRoutes.adminProfilePath,
+        ),
+      ],
     );
   }
 }
@@ -1177,6 +1223,14 @@ class UnauthorizedScreen extends StatelessWidget {
                         break;
                       case UserRole.student:
                         context.go(AppRoutes.studentHomePath);
+                        break;
+                      case UserRole.parent:
+                        context.go(AppRoutes.parentHomePath);
+                        break;
+                      case UserRole.hod:
+                      case UserRole.principal:
+                      case UserRole.management:
+                        context.go(AppRoutes.managementDashboardPath);
                         break;
                       default:
                         context.go(AppRoutes.loginPath);

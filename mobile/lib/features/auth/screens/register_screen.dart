@@ -20,7 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  String _selectedRole = 'Student'; // Student or Teacher
+  String _selectedRole = 'Student';
   bool _agreeToTerms = false;
   bool _isLoading = false;
 
@@ -320,16 +320,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           : () => setState(() => _selectedRole = 'Student'),
                     ),
                     _RoleCard(
-                      role: 'Teacher',
-                      icon: Icons.co_present,
-                      isSelected: _selectedRole == 'Teacher',
-                      width: cardWidth,
-                      height: cardHeight,
-                      onTap: _isLoading
-                          ? null
-                          : () => setState(() => _selectedRole = 'Teacher'),
-                    ),
-                    _RoleCard(
                       role: 'Parent',
                       icon: Icons.family_restroom,
                       isSelected: _selectedRole == 'Parent',
@@ -338,16 +328,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onTap: _isLoading
                           ? null
                           : () => setState(() => _selectedRole = 'Parent'),
-                    ),
-                    _RoleCard(
-                      role: 'Admin',
-                      icon: Icons.admin_panel_settings,
-                      isSelected: _selectedRole == 'Admin',
-                      width: cardWidth,
-                      height: cardHeight,
-                      onTap: _isLoading
-                          ? null
-                          : () => setState(() => _selectedRole = 'Admin'),
                     ),
                   ],
                 );

@@ -51,6 +51,7 @@ class _AdminDashboardState extends State<AdminDashboard>
     with SingleTickerProviderStateMixin {
   bool _loading = true;
   bool _serverOnline = false;
+  String? _errorMessage;
   Map<String, dynamic> _stats = {};
   late AnimationController _pulseCtrl;
 
@@ -70,32 +71,25 @@ class _AdminDashboardState extends State<AdminDashboard>
 
   /// Loads/refreshes the dashboard stats and checks server connectivity status.
   Future<void> _loadDashboard() async {
-    setState(() => _loading = true);
+    if (!mounted) return;
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
+    var online = false;
     try {
-      final online = await ApiService.isServerOnline();
+      online = await ApiService.isServerOnline();
       if (!mounted) return;
       final session = context.read<SessionManager>();
       final token = session.token;
-
-      Map<String, dynamic> stats = {};
-      if (token != null) {
-        stats = await ApiService.getAdminStats(token);
+      if (token == null || token.isEmpty) {
+        throw StateError('Missing session');
       }
+      final stats = await ApiService.getAdminStats(token);
 
       setState(() {
         _serverOnline = online;
-        if (stats.isNotEmpty) {
-          _stats = stats;
-        } else {
-          _stats = {
-            'total_students': '0',
-            'total_teachers': '0',
-            'active_sessions': '0',
-            'attendance_today': '0%',
-            'intruder_alerts': '0',
-            'pending_leaves': '0',
-          };
-        }
+        _stats = stats;
         _loading = false;
       });
 
@@ -103,14 +97,22 @@ class _AdminDashboardState extends State<AdminDashboard>
       if (mounted) {
         final appState = context.read<AppState>();
         final email = session.email;
-        if (email != null && token != null) {
-          final count = await ApiService.getUnreadCount(email, token);
-          appState.setUnreadCount(count);
+        if (email != null) {
+          try {
+            final count = await ApiService.getUnreadCount(email, token);
+            if (mounted) appState.setUnreadCount(count);
+          } catch (_) {
+            // Notification failures do not invalidate dashboard metrics.
+          }
         }
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
-        setState(() => _loading = false);
+        setState(() {
+          _serverOnline = online;
+          _errorMessage = 'Unable to load the admin dashboard. Try again.';
+          _loading = false;
+        });
       }
     }
   }
@@ -131,8 +133,47 @@ class _AdminDashboardState extends State<AdminDashboard>
       );
     }
 
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+        appBar: AppBar(title: const Text('Admin Control Panel')),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.cloud_off_rounded,
+                    size: 44,
+                    color: isDark ? Colors.white54 : AppColors.textMuted,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      color: isDark ? Colors.white70 : AppColors.textHeading,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: _loadDashboard,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     final hasIntruderAlert =
-        int.parse(_stats['intruder_alerts']?.toString() ?? '0') > 0;
+        (int.tryParse(_stats['intruder_alerts']?.toString() ?? '') ?? 0) > 0;
 
     // Redesigned components
     final header = _buildWelcomeHeader(isDark, session);
@@ -388,53 +429,60 @@ class _AdminDashboardState extends State<AdminDashboard>
       onTap: () => context.push(AppRoutes.adminIntruderSentinelPath),
       child: ModernDashboardCard(
         child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(
-                color: statusColor.withValues(alpha: 0.2),
-                width: 1.0,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(
+                  color: statusColor.withValues(alpha: 0.2),
+                  width: 1.0,
+                ),
+              ),
+              child: Icon(
+                hasIntruderAlert
+                    ? Icons.warning_amber_rounded
+                    : Icons.gpp_good_outlined,
+                color: statusColor,
+                size: 28,
               ),
             ),
-            child: Icon(
-              hasIntruderAlert
-                  ? Icons.warning_amber_rounded
-                  : Icons.gpp_good_outlined,
-              color: statusColor,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Biometric Security Threat Level',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Biometric Security Threat Level',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  hasIntruderAlert
-                      ? '$alertCount unknown faces captured on campus CCTV feed.'
-                      : 'Zero unauthorized intruder breaches logged today.',
-                  style: GoogleFonts.inter(fontSize: 11, color: mutedTextColor),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    hasIntruderAlert
+                        ? '$alertCount unknown faces captured on campus CCTV feed.'
+                        : 'Zero unauthorized intruder breaches logged today.',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: mutedTextColor,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          StatusBadge(label: statusLabel, color: statusColor, animateDot: true),
-        ],
+            StatusBadge(
+              label: statusLabel,
+              color: statusColor,
+              animateDot: true,
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
 
   Widget _buildQuickActions(BuildContext context) {

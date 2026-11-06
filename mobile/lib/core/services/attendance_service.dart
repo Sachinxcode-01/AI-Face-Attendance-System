@@ -61,11 +61,7 @@ class AttendanceService {
     try {
       final response = await _api.post(
         '/attendance/mark',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Face-Scanner-Token': EnvConfig
-              .faceScannerToken, // Secure injection of face scanner token
-        },
+        headers: {'Content-Type': 'application/json'},
         body: {
           'student_email': studentEmail,
           'session_id': sessionId,
@@ -369,14 +365,19 @@ class AttendanceService {
   Future<List<dynamic>> getActiveSessions(String token) async {
     try {
       final response = await _api.get(
-        '/auth/sessions/active',
+        '/sessions/active',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
       );
       if (response.statusCode == 200) {
-        return jsonDecode(response.body) as List<dynamic>;
+        final data = jsonDecode(response.body);
+        if (data is List) return data;
+        if (data is Map && data['is_active'] == true) {
+          return [Map<String, dynamic>.from(data)];
+        }
+        if (data is Map && data['is_active'] == false) return [];
       }
     } catch (_) {}
     return [];

@@ -22,9 +22,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class EnvConfig {
   static String? _apiUrl;
   static String? _wsUrl;
-  static String? _groqApiKey;
-  static String? _googleApiKey;
-  static String? _faceScannerToken;
   static String? _githubClientId;
   static String? _googleClientId;
 
@@ -39,10 +36,6 @@ class EnvConfig {
   // Release builds load .env.production which must have a valid HTTPS API_URL.
   static String get apiUrl => _apiUrl ?? '';
   static String get wsUrl => _wsUrl ?? '';
-  static String get groqApiKey => _groqApiKey ?? 'gsk_dev_dummykey12345';
-  static String get googleApiKey => _googleApiKey ?? 'AIzaSyDevDummyKey54321';
-  static String get faceScannerToken =>
-      _faceScannerToken ?? 'dev_scanner_secret_token_abc';
   static String get githubClientId =>
       _githubClientId ?? 'YOUR_GITHUB_CLIENT_ID';
   static String get googleClientId =>
@@ -75,10 +68,6 @@ class EnvConfig {
 
       _apiUrl = _getOrThrow('API_URL');
       _wsUrl = _getOrThrow('WS_URL');
-      _groqApiKey = _getOrThrow('GROQ_API_KEY');
-      _googleApiKey = _getOrThrow('GOOGLE_API_KEY');
-      _faceScannerToken = _getOrThrow('FACE_SCANNER_TOKEN');
-
       // GitHub & Google OAuth Client IDs (Optional read to prevent boot crashes if not set)
       _githubClientId = dotenv.env['GITHUB_CLIENT_ID'];
       _googleClientId = dotenv.env['GOOGLE_CLIENT_ID'];

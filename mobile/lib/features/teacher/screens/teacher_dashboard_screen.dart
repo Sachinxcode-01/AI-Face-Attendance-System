@@ -130,11 +130,13 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         ), // /attendance/teacher/analytics/:email
         ApiService.getPendingLeaves(), // /leave/admin/pending (returns count visible to teacher)
         ApiService.getTimetable(token), // /academic/timetable
+        ApiService.getActiveSessions(token),
       ]);
 
       final analytics = results[0] as Map<String, dynamic>;
       final pending = results[1] as List<dynamic>;
       final timetable = results[2] as List<dynamic>;
+      final activeSessions = results[3] as List<dynamic>;
 
       // Filter timetable to today's classes only
       final today = _weekdayLabel(DateTime.now().weekday);
@@ -151,9 +153,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           _analytics = analytics;
           _pendingLeaves = pending.length;
           _todayClasses = todayClasses;
-          _activeSessions = (analytics['total_sessions'] as int? ?? 0) > 0
-              ? 1
-              : 0;
+          _activeSessions = activeSessions.where((activeSession) {
+            return activeSession is Map &&
+                activeSession['teacher_id']?.toString().toLowerCase() ==
+                    email.toLowerCase();
+          }).length;
           _isLoading = false;
         });
       }

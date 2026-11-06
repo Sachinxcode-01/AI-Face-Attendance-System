@@ -26,13 +26,18 @@ import 'package:provider/provider.dart';
 // State & Core Imports
 // ======================================================
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
-import 'package:smartface_attendance/core/di/service_locator.dart';
-import 'package:smartface_attendance/features/sync/repositories/sync_repository.dart';
+import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 
 enum ScanResultState { none, loading, success, error }
+
+class _AttendanceRejected implements Exception {
+  final String message;
+
+  const _AttendanceRejected(this.message);
+}
 
 /// High-tech cyber biometric QR camera scanner screen for students.
 class QRScannerScreen extends StatefulWidget {
@@ -95,59 +100,66 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   String _resolveStudentEmail({bool listen = false}) {
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
     final session = Provider.of<SessionManager>(context, listen: listen);
-    return args?['email'] ?? session.email ?? 'student@smartface.elite';
+    return args?['email'] ?? session.email ?? '';
   }
 
   Future<void> _handleAttendance(String qrData) async {
     try {
       final decoded = jsonDecode(qrData);
+      if (decoded is! Map || decoded['type'] != 'attendance_qr') {
+        throw const FormatException();
+      }
       final sessionId = decoded['session_id'];
       final token = decoded['token'];
+      if (sessionId is! String ||
+          sessionId.isEmpty ||
+          token is! String ||
+          token.isEmpty) {
+        throw const FormatException();
+      }
 
       final studentEmail = _resolveStudentEmail();
-
-      final record = await sl<SyncRepository>().recordAttendance(
-        studentEmail: studentEmail,
-        sessionId: sessionId,
-        qrToken: token,
+      final result = await ApiService.markAttendance(
+        studentEmail,
+        sessionId,
+        token,
       );
-      debugPrint('[QRScanner] Enqueued offline record: ${record.id}');
+      if (result['status'] != 'success') {
+        throw _AttendanceRejected(
+          result['detail']?.toString() ?? 'Attendance could not be verified.',
+        );
+      }
 
       if (!mounted) return;
+      HapticFeedback.vibrate();
+      setState(() {
+        _resultState = ScanResultState.success;
+        _statusMessage = 'VERIFICATION CONFIRMED // ATTENDANCE RECORDED';
+      });
 
-      final success = record.id.isNotEmpty;
-
-      if (success) {
-        HapticFeedback.vibrate();
-        setState(() {
-          _resultState = ScanResultState.success;
-          _statusMessage = 'VERIFICATION CONFIRMED // ATTENDANCE RECORDED';
-        });
-
-        await Future.delayed(const Duration(milliseconds: 1600));
-        if (mounted) {
-          context.go('/student/home');
-        }
-      } else {
-        throw Exception('Failed to record attendance');
+      await Future.delayed(const Duration(milliseconds: 1600));
+      if (mounted) {
+        context.go('/student/home');
       }
     } catch (e, stackTrace) {
       debugPrint('[QRScanner] _handleAttendance error: $e\n$stackTrace');
       if (!mounted) return;
+      final message = e is FormatException
+          ? 'Invalid QR code format.'
+          : 'Attendance could not be verified. Check your connection and scan the current QR code.';
+      final expired =
+          e is _AttendanceRejected &&
+          e.message.toLowerCase().contains('expired');
       HapticFeedback.heavyImpact();
       setState(() {
         _resultState = ScanResultState.error;
         _statusMessage = e is FormatException
             ? 'AUTHENTICATION FAILED // INVALID QR CODE'
-            : 'ATTENDANCE FAILED // REPOSITORY ERROR';
+            : expired
+            ? 'QR EXPIRED // SCAN CURRENT CODE'
+            : 'ATTENDANCE NOT VERIFIED // CHECK CONNECTION';
       });
-      AppToast.show(
-        context,
-        message: e is FormatException
-            ? 'Invalid QR Code Format'
-            : 'Attendance verification failed',
-        type: ToastType.error,
-      );
+      AppToast.show(context, message: message, type: ToastType.error);
 
       await Future.delayed(const Duration(milliseconds: 2200));
       if (mounted) {
@@ -170,10 +182,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
       body: Stack(
         children: [
           // 📷 Live Camera Feed
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _controller, onDetect: _onDetect),
 
           // 🛡️ High-Tech Cyber Mask HUD Overlay
           AnimatedBuilder(
@@ -219,233 +228,260 @@ class _QRScannerScreenState extends State<QRScannerScreen>
 
           // 📟 Centered Viewport & Laser Scan FX
           Center(
-            child: Container(
-              width: cutoutSize,
-              height: cutoutSize,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  if (_resultState == ScanResultState.success)
-                    BoxShadow(
-                      color: Colors.greenAccent.withValues(alpha: 0.45),
-                      blurRadius: 28,
-                      spreadRadius: 6,
-                    )
-                  else if (_resultState == ScanResultState.error)
-                    BoxShadow(
-                      color: Colors.redAccent.withValues(alpha: 0.45),
-                      blurRadius: 28,
-                      spreadRadius: 6,
-                    )
-                  else
-                    BoxShadow(
-                      color: Colors.cyanAccent.withValues(alpha: 0.15),
-                      blurRadius: 18,
-                      spreadRadius: 2,
-                    ),
-                ],
-              ),
-              child: RepaintBoundary(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
-                child: Stack(
-                  children: [
-                    // Subtle background grid lines
-                    CustomPaint(
-                      size: const Size(cutoutSize, cutoutSize),
-                      painter: _ViewfinderGridPainter(
-                        activeColor: _resultState == ScanResultState.success
-                            ? Colors.greenAccent.withValues(alpha: 0.15)
-                            : _resultState == ScanResultState.error
-                                ? Colors.redAccent.withValues(alpha: 0.15)
-                                : Colors.cyanAccent.withValues(alpha: 0.08),
+            child:
+                Container(
+                      width: cutoutSize,
+                      height: cutoutSize,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          if (_resultState == ScanResultState.success)
+                            BoxShadow(
+                              color: Colors.greenAccent.withValues(alpha: 0.45),
+                              blurRadius: 28,
+                              spreadRadius: 6,
+                            )
+                          else if (_resultState == ScanResultState.error)
+                            BoxShadow(
+                              color: Colors.redAccent.withValues(alpha: 0.45),
+                              blurRadius: 28,
+                              spreadRadius: 6,
+                            )
+                          else
+                            BoxShadow(
+                              color: Colors.cyanAccent.withValues(alpha: 0.15),
+                              blurRadius: 18,
+                              spreadRadius: 2,
+                            ),
+                        ],
                       ),
-                    ),
-
-                    // Sweeping Holographic Laser Line
-                    if (_resultState == ScanResultState.none)
-                      AnimatedBuilder(
-                        animation: _laserController,
-                        builder: (context, child) {
-                          final double position =
-                              _laserController.value * cutoutSize;
-                          return Positioned(
-                            top: position - 50.0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              height: 50,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.cyanAccent.withValues(alpha: 0.0),
-                                    Colors.cyanAccent.withValues(alpha: 0.08),
-                                    Colors.cyanAccent.withValues(alpha: 0.35),
-                                  ],
+                      child: RepaintBoundary(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(28),
+                          child: Stack(
+                            children: [
+                              // Subtle background grid lines
+                              CustomPaint(
+                                size: const Size(cutoutSize, cutoutSize),
+                                painter: _ViewfinderGridPainter(
+                                  activeColor:
+                                      _resultState == ScanResultState.success
+                                      ? Colors.greenAccent.withValues(
+                                          alpha: 0.15,
+                                        )
+                                      : _resultState == ScanResultState.error
+                                      ? Colors.redAccent.withValues(alpha: 0.15)
+                                      : Colors.cyanAccent.withValues(
+                                          alpha: 0.08,
+                                        ),
                                 ),
                               ),
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: Container(
-                                  height: 3.0,
-                                  decoration: BoxDecoration(
-                                    color: Colors.cyanAccent,
-                                    borderRadius: BorderRadius.circular(2),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Colors.cyanAccent,
-                                        blurRadius: 12,
-                                        spreadRadius: 2,
+
+                              // Sweeping Holographic Laser Line
+                              if (_resultState == ScanResultState.none)
+                                AnimatedBuilder(
+                                  animation: _laserController,
+                                  builder: (context, child) {
+                                    final double position =
+                                        _laserController.value * cutoutSize;
+                                    return Positioned(
+                                      top: position - 50.0,
+                                      left: 0,
+                                      right: 0,
+                                      child: Container(
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Colors.cyanAccent.withValues(
+                                                alpha: 0.0,
+                                              ),
+                                              Colors.cyanAccent.withValues(
+                                                alpha: 0.08,
+                                              ),
+                                              Colors.cyanAccent.withValues(
+                                                alpha: 0.35,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        child: Align(
+                                          alignment: Alignment.bottomCenter,
+                                          child: Container(
+                                            height: 3.0,
+                                            decoration: BoxDecoration(
+                                              color: Colors.cyanAccent,
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                              boxShadow: const [
+                                                BoxShadow(
+                                                  color: Colors.cyanAccent,
+                                                  blurRadius: 12,
+                                                  spreadRadius: 2,
+                                                ),
+                                                BoxShadow(
+                                                  color: Colors.white,
+                                                  blurRadius: 4,
+                                                  spreadRadius: 1,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                      BoxShadow(
-                                        color: Colors.white,
-                                        blurRadius: 4,
-                                        spreadRadius: 1,
+                                    );
+                                  },
+                                ),
+
+                              // Loading State: High-tech dual spinning biometric rings
+                              if (_resultState == ScanResultState.loading)
+                                Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 72,
+                                            height: 72,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 3,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Colors.cyanAccent
+                                                        .withValues(alpha: 0.3),
+                                                  ),
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 54,
+                                            height: 54,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 4,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Colors.cyanAccent,
+                                                  ),
+                                            ),
+                                          ),
+                                          const Icon(
+                                            Icons.lock_clock_rounded,
+                                            color: Colors.cyanAccent,
+                                            size: 26,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'AUTHENTICATING',
+                                        style: GoogleFonts.robotoMono(
+                                          color: Colors.cyanAccent,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 2,
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
 
-                    // Loading State: High-tech dual spinning biometric rings
-                    if (_resultState == ScanResultState.loading)
-                      Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 72,
-                                  height: 72,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 3,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.cyanAccent.withValues(alpha: 0.3),
-                                    ),
+                              // Success State: Animated Checkmark with radiant aura
+                              if (_resultState == ScanResultState.success)
+                                Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const AnimatedCheckmark(size: 88),
+                                      const SizedBox(height: 12),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.greenAccent.withValues(
+                                            alpha: 0.15,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.greenAccent
+                                                .withValues(alpha: 0.4),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'ATTENDANCE CONFIRMED',
+                                          style: GoogleFonts.robotoMono(
+                                            color: Colors.greenAccent,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 1.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(
-                                  width: 54,
-                                  height: 54,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 4,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.cyanAccent,
-                                    ),
+
+                              // Error State: Cyber alert cross
+                              if (_resultState == ScanResultState.error)
+                                Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.redAccent.withValues(
+                                            alpha: 0.15,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.redAccent,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.close_rounded,
+                                          color: Colors.redAccent,
+                                          size: 54,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 14),
+                                      Text(
+                                        'ACCESS DENIED',
+                                        style: GoogleFonts.robotoMono(
+                                          color: Colors.redAccent,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 2,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const Icon(
-                                  Icons.lock_clock_rounded,
-                                  color: Colors.cyanAccent,
-                                  size: 26,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'AUTHENTICATING',
-                              style: GoogleFonts.robotoMono(
-                                color: Colors.cyanAccent,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-
-                    // Success State: Animated Checkmark with radiant aura
-                    if (_resultState == ScanResultState.success)
-                      Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const AnimatedCheckmark(size: 88),
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.greenAccent.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.greenAccent.withValues(alpha: 0.4),
-                                ),
-                              ),
-                              child: Text(
-                                'ATTENDANCE CONFIRMED',
-                                style: GoogleFonts.robotoMono(
-                                  color: Colors.greenAccent,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.5,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    // Error State: Cyber alert cross
-                    if (_resultState == ScanResultState.error)
-                      Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.redAccent.withValues(alpha: 0.15),
-                                border: Border.all(
-                                  color: Colors.redAccent,
-                                  width: 2,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.close_rounded,
-                                color: Colors.redAccent,
-                                size: 54,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            Text(
-                              'ACCESS DENIED',
-                              style: GoogleFonts.robotoMono(
-                                color: Colors.redAccent,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          )
-                .animate(target: _resultState == ScanResultState.error ? 1 : 0)
-                .shake(duration: 400.ms, hz: 6)
-                .animate(target: _resultState == ScanResultState.success ? 1 : 0)
-                .scale(
-                  begin: const Offset(1, 1),
-                  end: const Offset(1.04, 1.04),
-                  duration: 250.ms,
-                  curve: Curves.easeOutBack,
-                ),
+                    )
+                    .animate(
+                      target: _resultState == ScanResultState.error ? 1 : 0,
+                    )
+                    .shake(duration: 400.ms, hz: 6)
+                    .animate(
+                      target: _resultState == ScanResultState.success ? 1 : 0,
+                    )
+                    .scale(
+                      begin: const Offset(1, 1),
+                      end: const Offset(1.04, 1.04),
+                      duration: 250.ms,
+                      curve: Curves.easeOutBack,
+                    ),
           ),
 
           // 🧭 Top Floating Navigation Bar
@@ -456,7 +492,10 @@ class _QRScannerScreenState extends State<QRScannerScreen>
             child: SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -498,15 +537,17 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                                   color: _resultState == ScanResultState.error
                                       ? Colors.redAccent
                                       : _resultState == ScanResultState.success
-                                          ? Colors.greenAccent
-                                          : Colors.cyanAccent,
+                                      ? Colors.greenAccent
+                                      : Colors.cyanAccent,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: _resultState == ScanResultState.error
+                                      color:
+                                          _resultState == ScanResultState.error
                                           ? Colors.redAccent
-                                          : _resultState == ScanResultState.success
-                                              ? Colors.greenAccent
-                                              : Colors.cyanAccent,
+                                          : _resultState ==
+                                                ScanResultState.success
+                                          ? Colors.greenAccent
+                                          : Colors.cyanAccent,
                                       blurRadius: 6,
                                       spreadRadius: 1,
                                     ),
@@ -650,53 +691,53 @@ class _QRScannerScreenState extends State<QRScannerScreen>
               children: [
                 // Live Status Beacon
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: _resultState == ScanResultState.error
-                          ? Colors.redAccent.withValues(alpha: 0.3)
-                          : _resultState == ScanResultState.success
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _resultState == ScanResultState.error
+                              ? Colors.redAccent.withValues(alpha: 0.3)
+                              : _resultState == ScanResultState.success
                               ? Colors.greenAccent.withValues(alpha: 0.3)
                               : Colors.cyanAccent.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _resultState == ScanResultState.error
-                              ? Colors.redAccent
-                              : _resultState == ScanResultState.success
-                                  ? Colors.greenAccent
-                                  : Colors.cyanAccent,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _statusMessage,
-                        style: GoogleFonts.robotoMono(
-                          color: _resultState == ScanResultState.error
-                              ? Colors.redAccent
-                              : _resultState == ScanResultState.success
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _resultState == ScanResultState.error
+                                  ? Colors.redAccent
+                                  : _resultState == ScanResultState.success
                                   ? Colors.greenAccent
                                   : Colors.cyanAccent,
-                          fontSize: 10,
-                          letterSpacing: 1.5,
-                          fontWeight: FontWeight.bold,
-                        ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _statusMessage,
+                            style: GoogleFonts.robotoMono(
+                              color: _resultState == ScanResultState.error
+                                  ? Colors.redAccent
+                                  : _resultState == ScanResultState.success
+                                  ? Colors.greenAccent
+                                  : Colors.cyanAccent,
+                              fontSize: 10,
+                              letterSpacing: 1.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )
+                    )
                     .animate(onPlay: (c) => c.repeat(reverse: true))
                     .shimmer(duration: 2000.ms, color: Colors.white12),
 
@@ -748,15 +789,16 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                                   value: _resultState == ScanResultState.success
                                       ? 'VERIFIED'
                                       : _resultState == ScanResultState.loading
-                                          ? 'PROCESSING'
-                                          : _resultState == ScanResultState.error
-                                              ? 'FAILED'
-                                              : 'AWAITING CODE',
-                                  valueColor: _resultState == ScanResultState.success
+                                      ? 'PROCESSING'
+                                      : _resultState == ScanResultState.error
+                                      ? 'FAILED'
+                                      : 'AWAITING CODE',
+                                  valueColor:
+                                      _resultState == ScanResultState.success
                                       ? Colors.greenAccent
                                       : _resultState == ScanResultState.error
-                                          ? Colors.redAccent
-                                          : Colors.cyanAccent,
+                                      ? Colors.redAccent
+                                      : Colors.cyanAccent,
                                 ),
                               ),
                             ],
@@ -822,13 +864,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
               color: glowColor ?? Colors.white.withValues(alpha: 0.12),
             ),
             boxShadow: glowColor != null
-                ? [
-                    BoxShadow(
-                      color: glowColor,
-                      blurRadius: 12,
-                      spreadRadius: 2,
-                    ),
-                  ]
+                ? [BoxShadow(color: glowColor, blurRadius: 12, spreadRadius: 2)]
                 : null,
           ),
           child: Material(
@@ -1099,8 +1135,8 @@ class ScannerHUDPainter extends CustomPainter {
     final Color primaryColor = resultState == ScanResultState.success
         ? Colors.greenAccent
         : resultState == ScanResultState.error
-            ? Colors.redAccent
-            : Colors.cyanAccent;
+        ? Colors.redAccent
+        : Colors.cyanAccent;
 
     // Outer subtle border
     final thinBorderPaint = Paint()
@@ -1184,10 +1220,26 @@ class ScannerHUDPainter extends CustomPainter {
     final pipPaint = Paint()..color = primaryColor;
     const double pipRadius = 2.5;
 
-    canvas.drawCircle(Offset(left + bracketLength + 6, top), pipRadius, pipPaint);
-    canvas.drawCircle(Offset(right - bracketLength - 6, top), pipRadius, pipPaint);
-    canvas.drawCircle(Offset(left + bracketLength + 6, bottom), pipRadius, pipPaint);
-    canvas.drawCircle(Offset(right - bracketLength - 6, bottom), pipRadius, pipPaint);
+    canvas.drawCircle(
+      Offset(left + bracketLength + 6, top),
+      pipRadius,
+      pipPaint,
+    );
+    canvas.drawCircle(
+      Offset(right - bracketLength - 6, top),
+      pipRadius,
+      pipPaint,
+    );
+    canvas.drawCircle(
+      Offset(left + bracketLength + 6, bottom),
+      pipRadius,
+      pipPaint,
+    );
+    canvas.drawCircle(
+      Offset(right - bracketLength - 6, bottom),
+      pipRadius,
+      pipPaint,
+    );
 
     // Side measurement tick marks
     final tickPaint = Paint()
@@ -1198,8 +1250,16 @@ class ScannerHUDPainter extends CustomPainter {
     for (int i = -2; i <= 2; i++) {
       final double y = centerY + (i * 18.0);
       final double tickWidth = (i == 0) ? 8.0 : 4.0;
-      canvas.drawLine(Offset(left - tickWidth - 4, y), Offset(left - 4, y), tickPaint);
-      canvas.drawLine(Offset(right + 4, y), Offset(right + tickWidth + 4, y), tickPaint);
+      canvas.drawLine(
+        Offset(left - tickWidth - 4, y),
+        Offset(left - 4, y),
+        tickPaint,
+      );
+      canvas.drawLine(
+        Offset(right + 4, y),
+        Offset(right + tickWidth + 4, y),
+        tickPaint,
+      );
     }
   }
 

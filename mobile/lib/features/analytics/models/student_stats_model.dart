@@ -26,18 +26,20 @@
 /// Combines overall attendance calculations with department rankings,
 /// daily check-in streaks, and detailed class progress breakdowns.
 class StudentStatsModel {
-  final double overallPercentage;
-  final String standing;
-  final String rank;
-  final int streak;
+  final bool hasData;
+  final double? overallPercentage;
+  final String? standing;
+  final String? rank;
+  final int? streak;
   final List<SubjectProgressModel> subjects;
 
   /// Default constructor for creating student statistics model.
   const StudentStatsModel({
-    required this.overallPercentage,
-    required this.standing,
-    required this.rank,
-    required this.streak,
+    required this.hasData,
+    this.overallPercentage,
+    this.standing,
+    this.rank,
+    this.streak,
     required this.subjects,
   });
 
@@ -50,15 +52,16 @@ class StudentStatsModel {
   /// A parsed [StudentStatsModel] instance.
   factory StudentStatsModel.fromJson(Map<String, dynamic> json) {
     final subjectsList = json['subjects'] as List<dynamic>? ?? [];
-    double pct = (json['overall_percentage'] as num?)?.toDouble() ?? 0.82;
-    if (pct > 1.0) {
-      pct = pct / 100.0;
+    double? pct = (json['overall_percentage'] as num?)?.toDouble();
+    if (pct != null && pct > 1.0) {
+      pct /= 100.0;
     }
     return StudentStatsModel(
+      hasData: json['has_data'] as bool? ?? pct != null,
       overallPercentage: pct,
-      standing: json['standing'] as String? ?? 'Elite Performer',
-      rank: json['rank'] as String? ?? 'Ranked #4 in Department',
-      streak: (json['streak'] as num?)?.toInt() ?? 0,
+      standing: json['standing'] as String?,
+      rank: json['rank'] as String?,
+      streak: (json['streak'] as num?)?.toInt(),
       subjects: subjectsList
           .map(
             (sub) => SubjectProgressModel.fromJson(sub as Map<String, dynamic>),
@@ -73,6 +76,7 @@ class StudentStatsModel {
   /// A Map of serialization key-value pairs.
   Map<String, dynamic> toJson() {
     return {
+      'has_data': hasData,
       'overall_percentage': overallPercentage,
       'standing': standing,
       'rank': rank,

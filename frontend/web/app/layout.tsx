@@ -36,14 +36,14 @@ export default function RootLayout({
       <head>
         <style>{`
           :root {
-            --font-geist-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+            --font-geist-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
               "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
             --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
               "Liberation Mono", "Courier New", monospace;
           }
         `}</style>
       </head>
-      <body className="antialiased bg-space text-slate-100">{children}</body>
+      <body className="antialiased bg-space text-primary-text">{children}</body>
     </html>
   );
 }

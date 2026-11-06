@@ -1,26 +1,36 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const Session = require('../models/Session');
 const User = require('../models/User');
 const notificationService = require('../services/notificationService');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { trackJob } = require('../utils/jobTracker');
+const { issueAttendanceQrToken } = require('../utils/attendanceQr');
+const reportInternalError = require('../utils/httpError');
 
-router.post('/start', authenticate, requireRole(['teacher', 'admin']), async (req, res) => {
+router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admin']), async (req, res) => {
   try {
-    const { teacher_email, subject } = req.body;
+    const teacherEmail = typeof req.body.teacher_email === 'string' ? req.body.teacher_email.trim().toLowerCase() : '';
+    const subject = typeof req.body.subject === 'string' ? req.body.subject.trim() : '';
+    if (!teacherEmail || teacherEmail.length > 254 || !subject || subject.length > 120) {
+      return res.status(400).json({ detail: 'A valid teacher email and subject are required.' });
+    }
 
-    if (req.userEmail.toLowerCase() !== teacher_email.toLowerCase() && req.userRole.toLowerCase() !== 'admin') {
+    if (req.userEmail.toLowerCase() !== teacherEmail && !['admin', 'super_admin'].includes(req.userRole.toLowerCase())) {
       return res.status(403).json({ detail: "Forbidden: Cannot start session on behalf of another teacher." });
     }
+    if (!await User.exists({ email: teacherEmail, role: 'teacher' })) {
+      return res.status(404).json({ detail: 'Teacher account not found.' });
+    }
     const sessionId = new mongoose.Types.ObjectId();
-    const qrCode = `QR_${sessionId.toString()}_${Math.floor(1000 + Math.random() * 9000)}`;
+    const qrCode = crypto.randomBytes(32).toString('hex');
 
     const newSession = new Session({
       _id: sessionId,
-      teacher_id: teacher_email,
+      teacher_id: teacherEmail,
       subject,
       duration: "1 Hour",
       start_time: new Date(),
@@ -49,11 +59,34 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin']), async (re
 
     res.json({
       session_id: sessionId.toString(),
-      qr_code: qrCode,
       message: "Attendance session started successfully"
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Sessions');
+  }
+});
+
+router.get('/:sessionId/qr-token', authenticate, requireRole(['teacher', 'admin', 'super_admin']), async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(sessionId)) {
+      return res.status(400).json({ detail: 'Invalid session id.' });
+    }
+
+    const session = await Session.findOne({ _id: sessionId, is_active: true }).lean();
+    if (!session) return res.status(404).json({ detail: 'Active session not found.' });
+    if (!['admin', 'super_admin'].includes(req.userRole.toLowerCase()) && session.teacher_id.toLowerCase() !== req.userEmail.toLowerCase()) {
+      return res.status(403).json({ detail: 'You can only generate QR codes for your own session.' });
+    }
+    if (!/^[a-f0-9]{64}$/i.test(session.qr_code || '')) {
+      return res.status(409).json({ detail: 'Restart this session to enable secure QR codes.' });
+    }
+
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(issueAttendanceQrToken(session));
+  } catch (error) {
+    console.error('[Sessions] QR token error:', error);
+    res.status(500).json({ detail: 'Unable to generate attendance QR code.' });
   }
 });
 
@@ -70,16 +103,15 @@ router.get('/active', async (req, res) => {
       teacher_id: activeSession.teacher_id,
       subject: activeSession.subject,
       start_time: activeSession.start_time,
-      qr_code: activeSession.qr_code,
       duration: activeSession.duration
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Sessions');
   }
 });
 
 // POST /sessions/stop - End an active attendance session
-router.post('/stop', authenticate, requireRole(['teacher', 'admin']), async (req, res) => {
+router.post('/stop', authenticate, requireRole(['teacher', 'admin', 'super_admin']), async (req, res) => {
   try {
     const { session_id } = req.body;
     let query = { is_active: true };
@@ -92,7 +124,7 @@ router.post('/stop', authenticate, requireRole(['teacher', 'admin']), async (req
       return res.status(404).json({ detail: "Active session not found" });
     }
 
-    if (req.userRole.toLowerCase() !== 'admin' && req.userEmail.toLowerCase() !== session.teacher_id.toLowerCase()) {
+    if (!['admin', 'super_admin'].includes(req.userRole.toLowerCase()) && req.userEmail.toLowerCase() !== session.teacher_id.toLowerCase()) {
       return res.status(403).json({ detail: "Forbidden: You can only stop sessions you created" });
     }
 
@@ -104,7 +136,7 @@ router.post('/stop', authenticate, requireRole(['teacher', 'admin']), async (req
       message: "Session ended successfully"
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Sessions');
   }
 });
 

@@ -189,42 +189,6 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   );
 }
 
-// Interactive Dev Role Switcher
-interface DevSwitcherProps {
-  currentRole: string;
-  onRoleChange: (role: 'student' | 'parent' | 'teacher' | 'admin' | 'super_admin') => void;
-}
-
-export function DeveloperRoleSwitcher({ currentRole, onRoleChange }: DevSwitcherProps) {
-  const roles: ('student' | 'parent' | 'teacher' | 'admin' | 'super_admin')[] = ['student', 'parent', 'teacher', 'admin', 'super_admin'];
-
-  return (
-    <div className="bg-slate-950/90 border-b border-white/10 px-4 py-2 flex items-center justify-between gap-4 text-xs z-50">
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-        <span className="font-mono text-slate-400 uppercase tracking-widest font-bold text-[10px]">
-          Developer Sandbox Context:
-        </span>
-      </div>
-      <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-lg border border-white/5">
-        {roles.map((role) => (
-          <button
-            key={role}
-            onClick={() => onRoleChange(role)}
-            className={`px-3 py-1 rounded-md font-mono transition uppercase text-[9px] font-bold ${
-              currentRole === role
-                ? 'bg-primary text-white shadow-md'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            {role === 'super_admin' ? 'Super Admin' : role}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // User Avatar component
 interface UserAvatarProps {
   name: string;

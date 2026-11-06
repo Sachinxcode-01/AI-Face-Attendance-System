@@ -79,7 +79,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
     try {
       final session = context.read<SessionManager>();
       final token = session.token;
-      if (token == null) return;
+      if (token == null || token.isEmpty) {
+        throw StateError('Your session has expired. Please sign in again.');
+      }
 
       final wards = await ApiService.getParentWards(token);
       if (mounted) {
@@ -117,7 +119,9 @@ class _ParentDashboardState extends State<ParentDashboard> {
     try {
       final session = context.read<SessionManager>();
       final token = session.token;
-      if (token == null) return;
+      if (token == null || token.isEmpty) {
+        throw StateError('Your session has expired. Please sign in again.');
+      }
 
       final results = await Future.wait([
         ApiService.getWardStats(email, token),
@@ -149,7 +153,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
     final themeCtrl = context.watch<ThemeController>();
     final isDark = themeCtrl.isDark;
     final session = context.read<SessionManager>();
-    final double screenWidth = MediaQuery.of(context).size.width;
 
     if (_isLoading && _wards.isEmpty) {
       return Scaffold(
@@ -171,75 +174,119 @@ class _ParentDashboardState extends State<ParentDashboard> {
               await _loadWards();
             }
           },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(
-              screenWidth * 0.05,
-              12,
-              screenWidth * 0.05,
-              110,
-            ),
-            child: StaggeredColumn(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_error != null) _buildErrorBanner(_error!),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final horizontalPadding = constraints.maxWidth >= 600
+                  ? 24.0
+                  : 16.0;
+              final contentWidth =
+                  (constraints.maxWidth - 2 * horizontalPadding).clamp(
+                    0.0,
+                    1360.0,
+                  );
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  12,
+                  horizontalPadding,
+                  110,
+                ),
+                child: Center(
+                  child: SizedBox(
+                    width: contentWidth,
+                    child: StaggeredColumn(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_error != null) _buildErrorBanner(_error!),
 
-                // ── Greeting Header ──────────────────────────────────────────
-                _buildGreetingHeader(
-                  session,
-                ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
+                        // ── Greeting Header ──────────────────────────────────────────
+                        _buildGreetingHeader(session)
+                            .animate()
+                            .fadeIn(duration: 400.ms)
+                            .slideY(begin: -0.1),
 
-                const SizedBox(height: 20),
+                        const SizedBox(height: 20),
 
-                // ── Ward Selector (Only if multiple wards exist) ──────────────
-                if (_wards.length > 1) ...[
-                  _buildWardSelector().animate().fadeIn(
-                    delay: 50.ms,
-                    duration: 400.ms,
+                        // ── Ward Selector (Only if multiple wards exist) ──────────────
+                        if (_wards.length > 1) ...[
+                          _buildWardSelector().animate().fadeIn(
+                            delay: 50.ms,
+                            duration: 400.ms,
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+
+                        // ── Overall Attendance card ──────────────────────────────────
+                        _buildOverallAttendanceCard()
+                            .animate()
+                            .fadeIn(delay: 100.ms, duration: 400.ms)
+                            .slideY(begin: 0.05),
+
+                        const SizedBox(height: 20),
+
+                        // ── Subject-Wise Attendance ──────────────────────────────────
+                        if (constraints.maxWidth >= 1000) ...[
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: _buildSubjectAttendanceSection()
+                                    .animate()
+                                    .fadeIn(delay: 150.ms, duration: 400.ms),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: _buildQuickActions(context)
+                                    .animate()
+                                    .fadeIn(delay: 200.ms, duration: 400.ms),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: _buildLeaveRequestsSection()
+                                    .animate()
+                                    .fadeIn(delay: 250.ms, duration: 400.ms),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: _buildRecentActivitySection()
+                                    .animate()
+                                    .fadeIn(delay: 300.ms, duration: 400.ms),
+                              ),
+                            ],
+                          ),
+                        ] else ...[
+                          _buildSubjectAttendanceSection().animate().fadeIn(
+                            delay: 150.ms,
+                            duration: 400.ms,
+                          ),
+                          const SizedBox(height: 20),
+                          _buildQuickActions(
+                            context,
+                          ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
+                          const SizedBox(height: 20),
+                          _buildLeaveRequestsSection().animate().fadeIn(
+                            delay: 250.ms,
+                            duration: 400.ms,
+                          ),
+                          const SizedBox(height: 20),
+                          _buildRecentActivitySection().animate().fadeIn(
+                            delay: 300.ms,
+                            duration: 400.ms,
+                          ),
+                        ],
+                        const SizedBox(height: 40),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                ],
-
-                // ── Overall Attendance card ──────────────────────────────────
-                _buildOverallAttendanceCard()
-                    .animate()
-                    .fadeIn(delay: 100.ms, duration: 400.ms)
-                    .slideY(begin: 0.05),
-
-                const SizedBox(height: 20),
-
-                // ── Subject-Wise Attendance ──────────────────────────────────
-                _buildSubjectAttendanceSection().animate().fadeIn(
-                  delay: 150.ms,
-                  duration: 400.ms,
                 ),
-
-                const SizedBox(height: 20),
-
-                // ── Quick Actions ────────────────────────────────────────────
-                _buildQuickActions(
-                  context,
-                ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
-
-                const SizedBox(height: 20),
-
-                // ── Leave Status Section ─────────────────────────────────────
-                _buildLeaveRequestsSection().animate().fadeIn(
-                  delay: 250.ms,
-                  duration: 400.ms,
-                ),
-
-                const SizedBox(height: 20),
-
-                // ── Recent Activity Logs ─────────────────────────────────────
-                _buildRecentActivitySection().animate().fadeIn(
-                  delay: 300.ms,
-                  duration: 400.ms,
-                ),
-
-                const SizedBox(height: 40),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),

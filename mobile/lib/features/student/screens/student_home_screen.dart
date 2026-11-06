@@ -71,21 +71,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
   bool _isLoading = true;
 
   // HUD Data
-  double _overallPercentage = 0.82;
-  String _standing = 'Elite Performer';
-  String _rank = 'Ranked #4 in Department';
-  int _streak = 12;
+  bool _hasAttendanceData = false;
+  double? _overallPercentage;
+  String? _standing;
+  String? _rank;
+  int? _streak;
+  String? _statsError;
   List<SubjectProgressModel> _subjects = [];
   Map<String, dynamic>? _activeSession;
 
   // Analytics & History
   List<dynamic> _verificationHistory = [];
   List<dynamic> _activeSessions = [];
-  Map<String, dynamic> _aiMetrics = {
-    'average_confidence': 0.96,
-    'lighting_quality': 'Good',
-    'face_visibility': 'Excellent',
-  };
 
   @override
   void initState() {
@@ -125,32 +122,35 @@ class _StudentDashboardState extends State<StudentDashboard> {
       final session = context.read<SessionManager>();
       final email = session.email;
       final token = session.token;
-      if (email == null || token == null) return;
+      if (email == null || token == null) {
+        setState(() {
+          _statsError = 'Sign in to load attendance data.';
+          _isLoading = false;
+        });
+        return;
+      }
 
       final results = await Future.wait([
         ApiService.getStudentStats(email, token),
-        ApiService.getStudentAnalytics(email, token),
         ApiService.getVerificationHistory(email, token, page: 1, limit: 10),
         ApiService.getActiveSessions(token),
       ]);
 
       final stats = results[0] as StudentStatsModel?;
-      final analytics = results[1] as Map<String, dynamic>?;
-      final history = results[2] as Map<String, dynamic>?;
-      final sessions = results[3] as List<dynamic>?;
+      final history = results[1] as Map<String, dynamic>?;
+      final sessions = results[2] as List<dynamic>?;
 
       if (mounted) {
         setState(() {
-          if (stats != null) {
-            _overallPercentage = stats.overallPercentage;
-            _standing = stats.standing;
-            _rank = stats.rank;
-            _streak = stats.streak;
-            _subjects = stats.subjects;
-          }
-          if (analytics != null) {
-            _aiMetrics = analytics['ai_metrics'] ?? _aiMetrics;
-          }
+          _hasAttendanceData = stats?.hasData == true;
+          _overallPercentage = stats?.overallPercentage;
+          _standing = stats?.standing;
+          _rank = stats?.rank;
+          _streak = stats?.streak;
+          _subjects = stats?.subjects ?? [];
+          _statsError = stats == null
+              ? 'Unable to load attendance data. Pull down to retry.'
+              : null;
           if (history != null) {
             _verificationHistory = history['logs'] ?? [];
           }
@@ -162,7 +162,12 @@ class _StudentDashboardState extends State<StudentDashboard> {
       }
     } catch (e) {
       debugPrint('Dashboard Loading Error: $e');
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _statsError = 'Unable to load attendance data. Pull down to retry.';
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -258,10 +263,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   ),
                   pw.SizedBox(height: 10),
                   pw.Text(
-                    'Overall Attendance Percentage: ${(_overallPercentage * 100).toInt()}%',
+                    'Overall Attendance Percentage: ${_overallPercentage == null ? 'Not available' : '${(_overallPercentage! * 100).toInt()}%'}',
                   ),
-                  pw.Text('Overall Standing: $_standing'),
-                  pw.Text('Current Streak: $_streak Days'),
+                  pw.Text('Overall Standing: ${_standing ?? 'Not available'}'),
+                  pw.Text('Department Rank: ${_rank ?? 'Not available'}'),
+                  pw.Text(
+                    'Current Streak: ${_streak == null ? 'Not available' : '$_streak Days'}',
+                  ),
                   pw.SizedBox(height: 30),
                   pw.Text(
                     'SUBJECT PROGRESS DETAILS',
@@ -700,9 +708,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
     // Prepare components to render
     final activeSessionBanner = _activeSession != null
         ? SessionBanner(
-            subject: _activeSession?['subject'] ?? 'Data Structures',
-            teacher: _activeSession?['teacher'] ?? 'Prof. Sharma',
-            minutesRemaining: _activeSession?['minutes_remaining'] ?? 18,
+            subject: _activeSession?['subject'] ?? 'Active class',
+            teacher: _activeSession?['teacher'] ?? 'Not specified',
+            minutesRemaining: _activeSession?['minutes_remaining'] as int?,
             onVerifyTap: () => context.go('/student/scan'),
           )
         : null;
@@ -741,10 +749,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
         );
 
     final healthGrid =
-        AttendanceScoreCard(
-              scoreValue: _overallPercentage,
-              standing: _standing,
-              departmentRank: _rank,
+        (_hasAttendanceData && _overallPercentage != null)
+            ? AttendanceScoreCard(
+              scoreValue: _overallPercentage!,
+              standing: _standing ?? 'Standing unavailable',
+              departmentRank: _rank ?? 'Department rank unavailable',
               streak: _streak,
             )
             .animate()
@@ -755,6 +764,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               duration: 400.ms,
               curve: Curves.easeOutCubic,
             );
+            : const SizedBox.shrink();
 
     final aiInsights =
         Column(
@@ -1023,9 +1033,99 @@ class _StudentDashboardState extends State<StudentDashboard> {
     return '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]}';
   }
 
+  Widget _buildAttendanceUnavailableCard(bool isDark) {
+    final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
+    final cardBorder = isDark
+        ? const Color(0xFF252E4A)
+        : const Color(0xFFE5E7F0);
+    final hasError = _statsError != null;
+
+    return AnimatedCardWrapper(
+      delay: 100.ms,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: cardBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  hasError ? Icons.cloud_off_rounded : Icons.insights_outlined,
+                  color: hasError ? AppColors.warning : AppColors.primary,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'ATTENDANCE SUMMARY',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.5,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              hasError ? 'Attendance data unavailable' : 'Not enough attendance data',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : AppColors.textHeading,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _statsError ??
+                  'Attendance percentage and department rank will appear when scheduled class data is available.',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                height: 1.4,
+                color: isDark ? Colors.white70 : AppColors.textMuted,
+              ),
+            ),
+            if (_streak != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                'Check-in streak: $_streak days',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : AppColors.textMuted,
+                ),
+              ),
+            ],
+            if (hasError) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: _loadDashboardData,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Retry'),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAttendanceSummaryCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final int pct = (_overallPercentage * 100).round();
+    if (_statsError != null || !_hasAttendanceData || _overallPercentage == null) {
+      return _buildAttendanceUnavailableCard(isDark);
+    }
+
+    final percentage = _overallPercentage!;
+    final int pct = (percentage * 100).round();
     final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
     final cardBorder = isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0);
     final textHeading = isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
@@ -1092,7 +1192,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _standing,
+                        _standing ?? 'Standing unavailable',
                         style: GoogleFonts.poppins(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
@@ -1102,7 +1202,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _rank,
+                        _rank ?? 'Department rank unavailable',
                         style: GoogleFonts.inter(
                           fontSize: 12.5,
                           color: textBody,
@@ -1124,7 +1224,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                         width: 80,
                         height: 80,
                         child: CircularProgressIndicator(
-                          value: _overallPercentage,
+                          value: percentage,
                           strokeWidth: 8,
                           strokeCap: StrokeCap.round,
                           backgroundColor: isDark
@@ -1196,7 +1296,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       Icon(Icons.local_fire_department_rounded, color: streakForegroundColor, size: 16),
                       const SizedBox(width: 6),
                       Text(
-                        '$_streak Days Streak',
+                        _streak == null
+                            ? 'Streak unavailable'
+                            : '$_streak Days Streak',
                         style: GoogleFonts.poppins(
                           color: streakForegroundColor,
                           fontSize: 12,
@@ -1484,13 +1586,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
         icon: Icons.psychology_rounded,
         gradientColors: const [Color(0xFFF59E0B), Color(0xFFD97706)],
         onTap: () => context.push('/analytics/analyst'),
-      ),
-      StudentActionTile(
-        label: 'Analytics',
-        description: 'Trends, heatmaps, peer percentiles & department stats',
-        icon: Icons.bar_chart_rounded,
-        gradientColors: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
-        onTap: () => context.push(AppRoutes.analyticsDashboardPath),
       ),
       StudentActionTile(
         label: 'Register Face',

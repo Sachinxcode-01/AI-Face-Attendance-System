@@ -111,11 +111,11 @@ class MemoryRateLimiter {
 }
 
 // ── Limit Instances ─────────────────────────────────────────────────────────
-const otpSendLimiter = new MemoryRateLimiter(5, 60, 'otp_send');
-const otpVerifyLimiter = new MemoryRateLimiter(10, 60, 'otp_verify');
-const registerLimiter = new MemoryRateLimiter(10, 300, 'register');
-const loginPasswordLimiter = new MemoryRateLimiter(20, 60, 'login_pw');
-const generalApiLimiter = new MemoryRateLimiter(120, 60, 'api_general');
+const otpSendLimiter = new MemoryRateLimiter(5, 15 * 60, 'otp_send');
+const otpVerifyLimiter = new MemoryRateLimiter(5, 15 * 60, 'otp_verify');
+const registerLimiter = new MemoryRateLimiter(5, 15 * 60, 'register');
+const loginPasswordLimiter = new MemoryRateLimiter(5, 15 * 60, 'login_pw');
+const generalApiLimiter = new MemoryRateLimiter(60, 60, 'api_general');
 
 // ── Middleware Generators ───────────────────────────────────────────────────
 const createRateLimitMiddleware = (limiter, messageFn, extractKeyFn) => {
@@ -145,27 +145,32 @@ const createRateLimitMiddleware = (limiter, messageFn, extractKeyFn) => {
 
 const limitOtpSend = createRateLimitMiddleware(
   otpSendLimiter,
-  (sec) => `Too many OTP requests. Please wait ${sec}s before requesting again.`
+  (sec) => `Too many OTP requests. Please wait ${sec}s before requesting again.`,
+  (req) => req.ip || 'unknown_client'
 );
 
 const limitOtpVerify = createRateLimitMiddleware(
   otpVerifyLimiter,
-  (sec) => `Too many verification attempts. Please wait ${sec}s.`
+  (sec) => `Too many verification attempts. Please wait ${sec}s.`,
+  (req) => req.ip || 'unknown_client'
 );
 
 const limitRegister = createRateLimitMiddleware(
   registerLimiter,
-  (sec) => `Too many registration attempts. Please wait ${sec}s before trying again.`
+  (sec) => `Too many registration attempts. Please wait ${sec}s before trying again.`,
+  (req) => req.ip || 'unknown_client'
 );
 
 const limitLoginPassword = createRateLimitMiddleware(
   loginPasswordLimiter,
-  (sec) => `Too many login attempts. Please wait ${sec}s before trying again.`
+  (sec) => `Too many login attempts. Please wait ${sec}s before trying again.`,
+  (req) => req.ip || 'unknown_client'
 );
 
 const limitGeneralApi = createRateLimitMiddleware(
   generalApiLimiter,
-  (sec) => `Too many requests. Please wait ${sec}s.`
+  (sec) => `Too many requests. Please wait ${sec}s.`,
+  (req) => req.ip || 'unknown_client'
 );
 
 module.exports = {

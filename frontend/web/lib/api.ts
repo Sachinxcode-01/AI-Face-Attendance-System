@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface RegisterPayload {
   [key: string]: unknown;
@@ -34,20 +34,20 @@ export function formatAvatarUrl(url?: string | null): string | null {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function request<T = any>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T = any>(path: string, options: RequestInit = {}, allowRefresh = true): Promise<T> {
   const url = `${BASE_URL}${path}`;
   const isFormData = options.body instanceof FormData;
+  const headers = new Headers(options.headers);
+  if (!isFormData && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
 
   try {
     const response = await fetch(url, {
       ...options,
+      credentials: options.credentials || 'include',
       signal: options.signal || controller.signal,
-      headers: {
-        ...(isFormData ? {} : { "Content-Type": "application/json" }),
-        ...options.headers,
-      },
+      headers,
     });
 
     const text = await response.text();
@@ -60,6 +60,40 @@ async function request<T = any>(path: string, options: RequestInit = {}): Promis
     }
 
     if (!response.ok) {
+      const skipRefresh = [
+        '/auth/login-password', '/auth/login', '/auth/login-otp/send',
+        '/auth/login-otp/verify', '/auth/register', '/auth/google',
+        '/auth/github', '/auth/forgot-password', '/auth/reset-password',
+        '/auth/token/refresh',
+      ].includes(path);
+      if (response.status === 401 && allowRefresh && !skipRefresh && typeof window !== 'undefined') {
+        try {
+          const refreshResponse = await fetch(`${BASE_URL}/auth/token/refresh`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+            signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
+          });
+          if (refreshResponse.ok) {
+            const refreshed = await refreshResponse.json();
+            const token = refreshed?.access_token;
+            if (typeof token === 'string' && token) {
+              localStorage.setItem('token', token);
+              const retryHeaders = new Headers(options.headers);
+              retryHeaders.set('Authorization', `Bearer ${token}`);
+              return request<T>(path, { ...options, headers: retryHeaders }, false);
+            }
+          } else if ([400, 401].includes(refreshResponse.status)) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userEmail');
+          }
+        } catch {
+          // Preserve the session during transient network failures.
+        }
+      }
+
       const errorMsg =
         typeof data.detail === "string"
           ? data.detail
@@ -116,10 +150,10 @@ export const api = {
       headers: { Authorization: `Bearer ${token}` },
     }),
 
-  googleLogin: (email: string, name: string, role: string = "student") =>
+  googleLogin: (idToken: string) =>
     request("/auth/google", {
       method: "POST",
-      body: JSON.stringify({ email, name, role }),
+      body: JSON.stringify({ idToken }),
     }),
 
   forgotPassword: (email: string) =>
@@ -128,10 +162,10 @@ export const api = {
       body: JSON.stringify({ email }),
     }),
 
-  resetPassword: (email: string, newPassword: string) =>
+  resetPassword: (email: string, otp: string, newPassword: string) =>
     request("/auth/reset-password", {
       method: "POST",
-      body: JSON.stringify({ email, new_password: newPassword }),
+      body: JSON.stringify({ email, otp, new_password: newPassword }),
     }),
 
   // Attendance

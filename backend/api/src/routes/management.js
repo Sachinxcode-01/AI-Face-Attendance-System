@@ -8,6 +8,7 @@ const Attendance = require('../models/Attendance');
 const SecurityLog = require('../models/SecurityLog');
 const Leave = require('../models/Leave');
 const { authenticate, requireRole } = require('../middleware/auth');
+const reportInternalError = require('../utils/httpError');
 
 // Helper: Resolve HOD Department if not provided
 const resolveDepartment = async (req) => {
@@ -15,11 +16,11 @@ const resolveDepartment = async (req) => {
     const user = await User.findOne({ email: req.userEmail });
     return user ? user.department : null;
   }
-  return req.query.dept || 'CSE';
+  return req.query.dept || null;
 };
 
 // ─── GET /management/hod/summary ──────────────────────────────────
-router.get('/hod/summary', authenticate, requireRole(['hod', 'principal', 'management', 'admin']), async (req, res) => {
+router.get('/hod/summary', authenticate, requireRole(['hod', 'principal', 'management', 'admin', 'super_admin']), async (req, res) => {
   try {
     const departmentName = await resolveDepartment(req);
     if (!departmentName) {
@@ -31,9 +32,10 @@ router.get('/hod/summary', authenticate, requireRole(['hod', 'principal', 'manag
     const students = await User.find({ department: departmentName, role: 'student' }).select('email');
     const studentEmails = students.map(s => s.email);
 
-    let dbAttendanceRate = 92.4; // fallback
-    let dbActiveClassesCount = 4;
-    let dbAtRiskCount = 2;
+    let dbAttendanceRate = 0;
+    let dbAtRiskCount = 0;
+    let totalAttendance = 0;
+    let presentAttendance = 0;
 
     if (studentEmails.length > 0) {
       // Calculate attendance rate
@@ -48,6 +50,8 @@ router.get('/hod/summary', authenticate, requireRole(['hod', 'principal', 'manag
         }
       ]);
       if (attendanceAgg.length > 0 && attendanceAgg[0].total > 0) {
+        totalAttendance = attendanceAgg[0].total;
+        presentAttendance = attendanceAgg[0].present;
         dbAttendanceRate = Math.round((attendanceAgg[0].present / attendanceAgg[0].total) * 1000) / 10;
       }
 
@@ -74,68 +78,77 @@ router.get('/hod/summary', authenticate, requireRole(['hod', 'principal', 'manag
       }
     }
 
-    const activeClasses = await Session.countDocuments({ is_active: true });
-    if (activeClasses > 0) {
-      dbActiveClassesCount = activeClasses;
-    }
-
-    // Faculty session logic (conducted / scheduled)
     const teachers = await User.find({ department: departmentName, role: 'teacher' }).lean();
-    const facultySessions = teachers.map(t => {
-      // Mock compliance calculation
-      const scheduled = Math.floor(Math.random() * 10) + 15;
-      const conducted = scheduled - Math.floor(Math.random() * 3);
-      const compliance = Math.round((conducted / scheduled) * 1000) / 10;
+    const teacherEmails = teachers.map((teacher) => teacher.email);
+    const [activeClasses, teacherSessionCounts] = await Promise.all([
+      Session.countDocuments({ is_active: true, teacher_id: { $in: teacherEmails } }),
+      Session.aggregate([
+        { $match: { teacher_id: { $in: teacherEmails } } },
+        { $group: { _id: '$teacher_id', conducted: { $sum: 1 } } },
+      ]),
+    ]);
+    const sessionsByTeacher = new Map(teacherSessionCounts.map((row) => [row._id, row.conducted]));
+    const facultySessions = teachers.map((teacher) => ({
+      name: teacher.full_name,
+      subject: teacher.specialization || null,
+      scheduled: 0,
+      conducted: sessionsByTeacher.get(teacher.email) || 0,
+      compliance: null,
+    }));
+
+    const trendStart = new Date();
+    trendStart.setUTCHours(0, 0, 0, 0);
+    trendStart.setUTCDate(trendStart.getUTCDate() - 4);
+    const dailyRows = await Attendance.aggregate([
+      { $match: { student_email: { $in: studentEmails }, timestamp: { $gte: trendStart } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
+          total: { $sum: 1 },
+          present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
+        },
+      },
+    ]);
+    const dailyByDate = new Map(dailyRows.map((row) => [row._id, row]));
+    const dailyTrend = Array.from({ length: 5 }, (_, index) => {
+      const day = new Date(trendStart.getTime() + index * 24 * 60 * 60 * 1000);
+      const key = day.toISOString().slice(0, 10);
+      const row = dailyByDate.get(key);
       return {
-        name: t.full_name,
-        subject: t.specialization || 'Academic Course',
-        scheduled,
-        conducted,
-        compliance
+        day: day.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }),
+        date: key,
+        rate: row ? Math.round((row.present / row.total) * 1000) / 10 : 0,
+        total: row?.total || 0,
+        present: row?.present || 0,
       };
     });
-
-    if (facultySessions.length === 0) {
-      facultySessions.push(
-        { name: "Dr. Sarah Connor", subject: "Machine Learning", scheduled: 24, conducted: 23, compliance: 95.8 },
-        { name: "Prof. Alan Turing", subject: "Theory of Computation", scheduled: 20, conducted: 20, compliance: 100.0 },
-        { name: "Dr. Grace Hopper", subject: "Compiler Design", scheduled: 22, conducted: 19, compliance: 86.4 }
-      );
-    }
-
-    // Weekly trend
-    const dailyTrend = [
-      { day: "Mon", rate: Math.round(dbAttendanceRate - 1.5) },
-      { day: "Tue", rate: Math.round(dbAttendanceRate + 0.8) },
-      { day: "Wed", rate: Math.round(dbAttendanceRate - 0.2) },
-      { day: "Thu", rate: Math.round(dbAttendanceRate + 1.6) },
-      { day: "Fri", rate: Math.round(dbAttendanceRate - 0.4) }
-    ];
 
     res.json({
       department: departmentName,
       attendance_rate: dbAttendanceRate,
-      weekly_streak: 12,
-      active_classes: dbActiveClassesCount,
+      active_classes: activeClasses,
       faculty_sessions: facultySessions,
       daily_trend: dailyTrend,
-      at_risk_count: dbAtRiskCount
+      at_risk_count: dbAtRiskCount,
+      attendance_total: totalAttendance,
+      attendance_present: presentAttendance,
+      weekly_streak: 0,
     });
 
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Management');
   }
 });
 
 // ─── GET /management/principal/summary ─────────────────────────────
-router.get('/principal/summary', authenticate, requireRole(['principal', 'management', 'admin']), async (req, res) => {
+router.get('/principal/summary', authenticate, requireRole(['principal', 'management', 'admin', 'super_admin']), async (req, res) => {
   try {
     const totalStudents = await User.countDocuments({ role: 'student' });
     const totalFaculty = await User.countDocuments({ role: 'teacher' });
     const activeClasses = await Session.countDocuments({ is_active: true });
 
     // Overall check-in rate
-    let institutionAttendance = 89.5;
+    let institutionAttendance = 0;
     const allAttendance = await Attendance.aggregate([
       {
         $group: {
@@ -149,75 +162,92 @@ router.get('/principal/summary', authenticate, requireRole(['principal', 'manage
       institutionAttendance = Math.round((allAttendance[0].present / allAttendance[0].total) * 1000) / 10;
     }
 
-    // Department comparisons
-    const departments = ['CSE', 'ECE', 'ME', 'Civil'];
+    const studentDepartments = await User.distinct('department', {
+      role: 'student',
+      department: { $exists: true, $nin: ['', null] },
+    });
+    const studentsByDepartment = await User.find(
+      { role: 'student', department: { $in: studentDepartments } },
+      'email department'
+    ).lean();
+    const departmentEmails = new Map();
+    for (const student of studentsByDepartment) {
+      const emails = departmentEmails.get(student.department) || [];
+      emails.push(student.email);
+      departmentEmails.set(student.department, emails);
+    }
     const deptComparison = {};
-    for (const dept of departments) {
-      const deptStudents = await User.find({ department: dept, role: 'student' }).select('email');
-      const emails = deptStudents.map(s => s.email);
-      if (emails.length > 0) {
-        const deptAgg = await Attendance.aggregate([
-          { $match: { student_email: { $in: emails } } },
-          {
-            $group: {
-              _id: null,
-              total: { $sum: 1 },
-              present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } }
-            }
-          }
-        ]);
-        if (deptAgg.length > 0 && deptAgg[0].total > 0) {
-          deptComparison[dept] = Math.round((deptAgg[0].present / deptAgg[0].total) * 1000) / 10;
-          continue;
-        }
-      }
-      // Fallback
-      deptComparison[dept] = dept === 'CSE' ? 92.4 : dept === 'ECE' ? 87.8 : dept === 'ME' ? 81.2 : 84.5;
+    for (const [department, emails] of departmentEmails) {
+      const [summary] = await Attendance.aggregate([
+        { $match: { student_email: { $in: emails } } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
+          },
+        },
+      ]);
+      deptComparison[department] = summary?.total
+        ? Math.round((summary.present / summary.total) * 1000) / 10
+        : 0;
     }
 
-    // Monthly Growth widget
-    const monthlyGrowth = [
-      { month: "Jan", rate: 86.2 },
-      { month: "Feb", rate: 87.5 },
-      { month: "Mar", rate: 88.9 },
-      { month: "Apr", rate: 89.1 },
-      { month: "May", rate: institutionAttendance }
-    ];
+    const monthStart = new Date();
+    monthStart.setUTCDate(1);
+    monthStart.setUTCHours(0, 0, 0, 0);
+    monthStart.setUTCMonth(monthStart.getUTCMonth() - 4);
+    const monthlyRows = await Attendance.aggregate([
+      { $match: { timestamp: { $gte: monthStart } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m', date: '$timestamp' } },
+          total: { $sum: 1 },
+          present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
+        },
+      },
+    ]);
+    const monthlyById = new Map(monthlyRows.map((row) => [row._id, row]));
+    const monthlyGrowth = Array.from({ length: 5 }, (_, index) => {
+      const month = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + index, 1));
+      const key = month.toISOString().slice(0, 7);
+      const row = monthlyById.get(key);
+      return {
+        month: month.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }),
+        rate: row ? Math.round((row.present / row.total) * 1000) / 10 : 0,
+        total: row?.total || 0,
+      };
+    });
 
     // Critical Alerts
-    const securityCount = await SecurityLog.countDocuments({});
-    const pendingLeaves = await Leave.countDocuments({ status: "Pending" });
+    const [securityLogs, pendingLeaves] = await Promise.all([
+      SecurityLog.find({ status: 'Active' }).sort({ timestamp: -1 }).limit(5).lean(),
+      Leave.find({ status: 'Pending' }).sort({ created_at: -1 }).limit(5).lean(),
+    ]);
     const criticalAlerts = [];
-    if (securityCount > 0) {
+    for (const log of securityLogs) {
       criticalAlerts.push({
-        id: "sec-alert",
-        level: "Critical",
-        title: "Intruder Alert Logged",
-        detail: `${securityCount} security alerts detected in the validation checkpoints.`,
-        time: "1 hour ago"
+        id: log._id.toString(),
+        level: 'Critical',
+        title: 'Security alert',
+        detail: log.location,
+        time: log.timestamp?.toISOString() || null,
       });
     }
-    if (pendingLeaves > 0) {
+    for (const leave of pendingLeaves) {
       criticalAlerts.push({
-        id: "leave-alert",
-        level: "Warning",
-        title: "Pending Faculty Leaves",
-        detail: `There are ${pendingLeaves} pending student leaves waiting review.`,
-        time: "3 hours ago"
+        id: leave._id.toString(),
+        level: 'Warning',
+        title: 'Pending leave request',
+        detail: leave.user_id,
+        time: leave.created_at?.toISOString() || null,
       });
-    }
-
-    if (criticalAlerts.length === 0) {
-      criticalAlerts.push(
-        { id: "1", level: "Critical", title: "Severe Low Attendance", detail: "Mechanical Eng. dropped below 75% average this week.", time: "2 hours ago" },
-        { id: "2", level: "Warning", title: "Biometric Retraining Needed", detail: "8 students marked with low confidence face verification.", time: "5 hours ago" }
-      );
     }
 
     res.json({
-      total_students: totalStudents || 1247,
-      total_faculty: totalFaculty || 86,
-      active_classes: activeClasses || 18,
+      total_students: totalStudents,
+      total_faculty: totalFaculty,
+      active_classes: activeClasses,
       institution_attendance: institutionAttendance,
       monthly_growth: monthlyGrowth,
       department_comparison: deptComparison,
@@ -225,16 +255,16 @@ router.get('/principal/summary', authenticate, requireRole(['principal', 'manage
     });
 
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Management');
   }
 });
 
 // ─── GET /management/health-score ─────────────────────────────────
-router.get('/health-score', authenticate, requireRole(['principal', 'management', 'admin']), async (req, res) => {
+router.get('/health-score', authenticate, requireRole(['principal', 'management', 'admin', 'super_admin']), async (req, res) => {
   try {
     // Aggregated Health Score
     // Attendance rate (50%)
-    let attScore = 89.5;
+    let attScore = 0;
     const allAttendance = await Attendance.aggregate([
       {
         $group: {
@@ -249,37 +279,66 @@ router.get('/health-score', authenticate, requireRole(['principal', 'management'
     }
 
     // Security (20%) - derived from absence of security alerts (e.g. 100 - intruder count)
-    const securityLogsCount = await SecurityLog.countDocuments({});
+    const securityLogsCount = await SecurityLog.countDocuments({ status: 'Active' });
     const securityScore = Math.max(100 - (securityLogsCount * 2), 60);
 
-    // Leave Compliance (15%) - approved vs rejected ratio or pending leave metrics
+    // Leave compliance counts only requests that have reached a decision.
     const leavesTotal = await Leave.countDocuments({});
-    const leavesPending = await Leave.countDocuments({ status: "Pending" });
-    const leaveComplianceScore = leavesTotal > 0 ? ((leavesTotal - leavesPending) / leavesTotal) * 100 : 92.0;
+    const leavesResolved = await Leave.countDocuments({ status: { $in: ['Approved', 'Rejected'] } });
+    const leaveComplianceScore = leavesTotal > 0 ? (leavesResolved / leavesTotal) * 100 : 0;
 
-    // Faculty Engagement (15%) - mock or based on conducted sessions
-    const facultyEngagementScore = 88.5;
+    const teachers = await User.find({ role: 'teacher' }, 'email').lean();
+    const teacherEmails = teachers.map((teacher) => teacher.email);
+    const engagedTeachers = teacherEmails.length
+      ? await Session.distinct('teacher_id', { teacher_id: { $in: teacherEmails } })
+      : [];
+    const facultyEngagementScore = teacherEmails.length
+      ? (engagedTeachers.length / teacherEmails.length) * 100
+      : 0;
 
-    const healthScore = Math.round((
+    const hasHealthData = allAttendance[0]?.total > 0 || leavesTotal > 0 || teacherEmails.length > 0 || securityLogsCount > 0;
+    const healthScore = hasHealthData ? Math.round((
       (attScore * 0.5) +
       (securityScore * 0.2) +
       (leaveComplianceScore * 0.15) +
       (facultyEngagementScore * 0.15)
-    ) * 10) / 10;
+    ) * 10) / 10 : 0;
 
-    const departmentRankings = [
-      { rank: 1, department: "Computer Science Eng.", rate: 92.4, change: 1.2 },
-      { rank: 2, department: "Electronics & Comm. Eng.", rate: 87.8, change: -0.5 },
-      { rank: 3, department: "Civil Engineering", rate: 84.5, change: 0.8 },
-      { rank: 4, department: "Mechanical Engineering", rate: 81.2, change: -2.1 }
-    ];
-
-    const facultyCompliance = [
-      { department: "CSE", compliance: 96.5 },
-      { department: "ECE", compliance: 92.0 },
-      { department: "Civil", compliance: 88.0 },
-      { department: "ME", compliance: 85.2 }
-    ];
+    const departments = await User.distinct('department', {
+      role: 'student',
+      department: { $exists: true, $nin: ['', null] },
+    });
+    const students = await User.find(
+      { role: 'student', department: { $in: departments } },
+      'email department'
+    ).lean();
+    const emailsByDepartment = new Map();
+    for (const student of students) {
+      const emails = emailsByDepartment.get(student.department) || [];
+      emails.push(student.email);
+      emailsByDepartment.set(student.department, emails);
+    }
+    const departmentRankings = [];
+    for (const [department, emails] of emailsByDepartment) {
+      const [summary] = await Attendance.aggregate([
+        { $match: { student_email: { $in: emails } } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
+          },
+        },
+      ]);
+      departmentRankings.push({
+        department,
+        rate: summary?.total ? Math.round((summary.present / summary.total) * 1000) / 10 : 0,
+        change: null,
+      });
+    }
+    departmentRankings.sort((a, b) => b.rate - a.rate);
+    departmentRankings.forEach((department, index) => { department.rank = index + 1; });
+    const facultyCompliance = [];
 
     res.json({
       health_score: healthScore,
@@ -294,14 +353,17 @@ router.get('/health-score', authenticate, requireRole(['principal', 'management'
     });
 
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Management');
   }
 });
 
 // ─── GET /management/risk/critical ──────────────────────────────────
-router.get('/risk/critical', authenticate, requireRole(['hod', 'principal', 'management', 'admin']), async (req, res) => {
+router.get('/risk/critical', authenticate, requireRole(['hod', 'principal', 'management', 'admin', 'super_admin']), async (req, res) => {
   try {
     const departmentName = await resolveDepartment(req);
+    if (req.userRole?.toLowerCase() === 'hod' && !departmentName) {
+      return res.status(400).json({ detail: 'Department could not be resolved.' });
+    }
 
     // Fetch department students
     const query = { role: 'student' };
@@ -309,36 +371,56 @@ router.get('/risk/critical', authenticate, requireRole(['hod', 'principal', 'man
       query.department = departmentName;
     }
 
-    const students = await User.find(query).lean();
+    const students = await User.find(query, 'email full_name student_id usn').lean();
     const studentEmails = students.map(s => s.email);
 
     const below_75 = [];
     const below_60 = [];
     const long_absences = [];
+    const [attendanceData = { counts: [], recent: [] }] = studentEmails.length
+      ? await Attendance.aggregate([
+          { $match: { student_email: { $in: studentEmails } } },
+          {
+            $facet: {
+              counts: [
+                {
+                  $group: {
+                    _id: '$student_email',
+                    total: { $sum: 1 },
+                    present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
+                  },
+                },
+              ],
+              recent: [
+                {
+                  $setWindowFields: {
+                    partitionBy: '$student_email',
+                    sortBy: { timestamp: -1 },
+                    output: { position: { $documentNumber: {} } },
+                  },
+                },
+                { $match: { position: { $lte: 5 } } },
+                { $sort: { student_email: 1, timestamp: -1 } },
+                {
+                  $group: {
+                    _id: '$student_email',
+                    logs: { $push: { status: '$status', timestamp: '$timestamp' } },
+                  },
+                },
+              ],
+            },
+          },
+        ])
+      : [];
+    const countsByEmail = new Map(attendanceData.counts.map((row) => [row._id, row]));
+    const recentByEmail = new Map(attendanceData.recent.map((row) => [row._id, row.logs]));
 
-    // Fallbacks if no data in DB
-    if (studentEmails.length === 0) {
-      res.json({
-        below_75: [
-          { student_id: "STU041", name: "Rohan K", email: "rohan.k@college.edu", attendance: 72.4, absences: 8, risk: "High" },
-          { student_id: "STU082", name: "Sanjay N", email: "sanjay.n@college.edu", attendance: 68.9, absences: 10, risk: "High" }
-        ],
-        below_60: [
-          { student_id: "STU015", name: "Vikas P", email: "vikas.p@college.edu", attendance: 55.2, absences: 15, risk: "Critical" }
-        ],
-        long_absences: [
-          { student_id: "STU099", name: "Aditi S", email: "aditi.s@college.edu", consecutive_days: 5, last_active: "2026-06-12", risk: "Critical" }
-        ]
-      });
-      return;
-    }
-
-    // Real DB computation
     for (const student of students) {
-      const totalSessions = await Attendance.countDocuments({ student_email: student.email });
-      if (totalSessions === 0) continue;
+      const attendance = countsByEmail.get(student.email);
+      const totalSessions = attendance?.total || 0;
+      if (!totalSessions) continue;
 
-      const presentSessions = await Attendance.countDocuments({ student_email: student.email, status: 'Present' });
+      const presentSessions = attendance.present || 0;
       const rate = Math.round((presentSessions / totalSessions) * 1000) / 10;
       const absences = totalSessions - presentSessions;
 
@@ -357,8 +439,7 @@ router.get('/risk/critical', authenticate, requireRole(['hod', 'principal', 'man
         below_75.push(studentItem);
       }
 
-      // Check long absences: find last 5 attendance marks. If last 3 consecutive are absent, flag
-      const lastLogs = await Attendance.find({ student_email: student.email }).sort({ timestamp: -1 }).limit(5);
+      const lastLogs = recentByEmail.get(student.email) || [];
       let consecutive_absences = 0;
       for (const log of lastLogs) {
         if (log.status !== 'Present') {
@@ -372,24 +453,10 @@ router.get('/risk/critical', authenticate, requireRole(['hod', 'principal', 'man
           student_id: student.student_id || student.usn || "N/A",
           name: student.full_name,
           consecutive_days: consecutive_absences,
-          last_active: lastLogs[consecutive_absences]?.timestamp ? lastLogs[consecutive_absences].timestamp.toISOString().split('T')[0] : "N/A",
+          last_active: lastLogs[consecutive_absences]?.timestamp?.toISOString().split('T')[0] || null,
           risk: "Critical"
         });
       }
-    }
-
-    // If lists are completely empty, inject standard mock profiles to keep dashboard populated for demo
-    if (below_75.length === 0 && below_60.length === 0 && long_absences.length === 0) {
-      below_75.push(
-        { student_id: "STU041", name: "Rohan K", email: "rohan.k@college.edu", attendance: 72.4, absences: 8, risk: "High" },
-        { student_id: "STU082", name: "Sanjay N", email: "sanjay.n@college.edu", attendance: 68.9, absences: 10, risk: "High" }
-      );
-      below_60.push(
-        { student_id: "STU015", name: "Vikas P", email: "vikas.p@college.edu", attendance: 55.2, absences: 15, risk: "Critical" }
-      );
-      long_absences.push(
-        { student_id: "STU099", name: "Aditi S", email: "aditi.s@college.edu", consecutive_days: 5, last_active: "2026-06-12", risk: "Critical" }
-      );
     }
 
     res.json({
@@ -399,7 +466,7 @@ router.get('/risk/critical', authenticate, requireRole(['hod', 'principal', 'man
     });
 
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Management');
   }
 });
 
@@ -412,23 +479,38 @@ router.get('/users', authenticate, requireRole(['admin', 'super_admin', 'hod', '
 
     const query = {};
     if (req.query.role) {
+      if (typeof req.query.role !== 'string') {
+        return res.status(400).json({ detail: 'Invalid role filter.' });
+      }
       query.role = req.query.role.toLowerCase();
     }
-    if (req.query.department) {
+    if (req.userRole?.toLowerCase() === 'hod') {
+      const staff = await User.findOne({ email: req.userEmail }, 'department').lean();
+      if (!staff?.department) {
+        return res.status(403).json({ detail: 'HOD department is not configured.' });
+      }
+      query.department = staff.department;
+    } else if (req.query.department) {
       query.department = req.query.department;
     }
 
     const total = await User.countDocuments(query);
     const users = await User.find(query)
-      .select('-password')
+      .select('email full_name role department student_id usn roll_number designation created_at')
       .skip(skip)
       .limit(limit)
       .sort({ created_at: -1 })
       .lean();
 
-    const formattedUsers = users.map(u => ({
-      ...u,
-      id: u._id.toString()
+    const formattedUsers = users.map((user) => ({
+      id: user._id.toString(),
+      email: user.email,
+      full_name: user.full_name,
+      role: user.role,
+      department: user.department || null,
+      student_id: user.student_id || user.usn || user.roll_number || null,
+      designation: user.designation || null,
+      created_at: user.created_at,
     }));
 
     res.json({
@@ -439,7 +521,7 @@ router.get('/users', authenticate, requireRole(['admin', 'super_admin', 'hod', '
       users: formattedUsers
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Management');
   }
 });
 

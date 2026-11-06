@@ -19,8 +19,4 @@ class AIRepository {
   Future<Map<String, dynamic>> askAI(String email, String query) async {
     return await _service.askAI(email, query);
   }
-
-  Future<Map<String, dynamic>> directProviderQuery(String prompt) async {
-    return await _service.directProviderQuery(prompt);
-  }
 }

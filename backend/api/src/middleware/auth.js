@@ -39,30 +39,17 @@ const authenticate = async (req, res, next) => {
       return res.status(401).json({ detail: "Invalid or expired token" });
     }
 
-    // Token revocation check: must exist in active UserSession database
-    if (mongoose.connection.readyState === 1) {
-      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-      let session = await UserSession.findOne({ tokenHash });
-      if (!session) {
-          try {
-            session = await UserSession.create({
-              userId: emailVal,
-              device: req.headers['user-agent'] || "SmartFace Client",
-              ip: req.ip || (req.headers['x-forwarded-for'] || '127.0.0.1'),
-              tokenHash,
-              refreshTokenHash: crypto.randomBytes(32).toString('hex'),
-              refreshTokenFamily: crypto.randomUUID(),
-              expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-            });
-        } catch (_) { }
-      }
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ detail: 'Authentication service unavailable.' });
+    }
 
-        // Check session expiry if session exists
-        if (session && new Date() > session.expiry) {
-          await UserSession.deleteOne({ _id: session._id });
-          return res.status(401).json({ detail: "Invalid or expired token" });
-        }
-      }
+    // Only sessions issued during sign-in are valid; never re-register a revoked token.
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const session = await UserSession.findOne({ tokenHash });
+    if (!session || session.userId.toLowerCase() !== emailVal.toLowerCase() || new Date() > session.expiry) {
+      if (session) await UserSession.deleteOne({ _id: session._id });
+      return res.status(401).json({ detail: 'Invalid or expired token' });
+    }
 
       // Attach user metadata to request object
       req.user = payload;

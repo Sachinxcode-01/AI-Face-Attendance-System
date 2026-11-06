@@ -1,17 +1,5 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-
-export default function Page() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace('/student');
-  }, [router]);
-
-  return (
-    <div className="flex items-center justify-center min-h-[50vh] text-slate-400 text-sm font-mono">
-      Loading Student Attendance Records...
-    </div>
-  );
+export default function StudentAttendanceRoute() {
+  redirect('/dashboard?tab=attendance');
 }

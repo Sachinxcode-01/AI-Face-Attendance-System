@@ -27,7 +27,7 @@ import {
   Home,
   Clock
 } from 'lucide-react';
-import { UserAvatar, DeveloperRoleSwitcher } from './ui-helpers';
+import { UserAvatar } from './ui-helpers';
 import { api } from '@/lib/api';
 import GlobalChatbot from './global-chatbot';
 
@@ -50,29 +50,12 @@ const navItems: NavItem[] = [
   { name: 'Settings', icon: Settings, path: '/dashboard/settings', roles: ['student', 'parent', 'teacher', 'admin', 'super_admin'] }
 ];
 
-// Extended Search Index Mock Data
-const mockStudents = [
-  { name: 'Alice Cooper', roll: 'CSE-2026-08', class: 'B.Tech CSE 6th Sem' },
-  { name: 'Bob Dylan', roll: 'ECE-2026-12', class: 'B.Tech ECE 6th Sem' },
-  { name: 'Charlie Watts', roll: 'ME-2026-22', class: 'B.Tech ME 4th Sem' },
-];
-
-const mockTeachers = [
-  { name: 'Prof. Miller', dept: 'Computer Science', room: 'Lab 3B' },
-  { name: 'Dr. Jane Goodall', dept: 'Biology', room: 'Seminar Room' },
-];
-
-const mockReports = [
-  { name: 'Monthly Leaves Report May 2026', type: 'PDF' },
-  { name: 'Incident Threat Sentinel Log', type: 'CSV' },
-  { name: 'Attendance Sheet CSE-302', type: 'Google Sheets' },
-];
-
 interface AppShellProps {
   children: React.ReactNode;
 }
 
 type Role = 'student' | 'parent' | 'teacher' | 'admin' | 'super_admin';
+type NotificationItem = { id: string; type: string; title: string; message: string; time: string; unread: boolean };
 
 // Friendly display names per role context
 const ROLE_NAMES: Record<Role, string> = {
@@ -98,7 +81,8 @@ function AppShellInner({ children }: AppShellProps) {
   const activeTab = searchParams.get('tab');
 
   // App states
-  const [role, setRole] = useState<Role>('admin');
+  const [role, setRole] = useState<Role>('student');
+  const [authReady, setAuthReady] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -129,15 +113,7 @@ function AppShellInner({ children }: AppShellProps) {
     setMobileOpen(false);
   };
 
-  // Notifications Mock Feed
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: 'security', title: 'Critical Intruder Alert', message: 'Unknown guest face captured at Main Lobby Camera.', time: '2m ago', unread: true },
-    { id: 2, type: 'leave', title: 'Leave Application Approved', message: 'Dean approved Alice Cooper\'s medical request.', time: '1h ago', unread: true },
-    { id: 3, type: 'attendance', title: 'Check-In Success', message: 'Attendance logged for Deep Learning session CSE-302.', time: '3h ago', unread: false },
-    { id: 4, type: 'system', title: 'Google Sheets Synced', message: 'Daily attendance sheet sync finished successfully.', time: '12h ago', unread: false }
-  ]);
-
-
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   // Command Search Results
   const [commandResults, setCommandResults] = useState<{ name: string; path: string; icon: React.ComponentType<{ className?: string }> }[]>([]);
@@ -165,97 +141,56 @@ function AppShellInner({ children }: AppShellProps) {
 
     // Filter page navigation
     navItems
-      .filter((item) => item.name.toLowerCase().includes(query))
+      .filter((item) => item.roles.includes(role) && item.name.toLowerCase().includes(query))
       .forEach((item) => {
         results.push({ name: `Navigate to ${item.name}`, path: item.path, icon: item.icon });
       });
 
-    // Filter students
-    mockStudents
-      .filter((s) => s.name.toLowerCase().includes(query) || s.roll.toLowerCase().includes(query))
-      .forEach((s) => {
-        results.push({ name: `Student: ${s.name} (${s.roll}) - ${s.class}`, path: `/dashboard?search=${s.name}`, icon: Users });
-      });
-
-    // Filter teachers
-    mockTeachers
-      .filter((t) => t.name.toLowerCase().includes(query) || t.dept.toLowerCase().includes(query))
-      .forEach((t) => {
-        results.push({ name: `Teacher: ${t.name} (${t.dept})`, path: `/dashboard?search=${t.name}`, icon: User });
-      });
-
-    // Filter reports
-    mockReports
-      .filter((r) => r.name.toLowerCase().includes(query))
-      .forEach((r) => {
-        results.push({ name: `Report: ${r.name} [${r.type}]`, path: `/dashboard/reports`, icon: FileSpreadsheet });
-      });
-
     setCommandResults(results);
-  }, [searchQuery]);
-
-  const handleRoleChange = (newRole: 'student' | 'parent' | 'teacher' | 'admin' | 'super_admin') => {
-    setRole(newRole);
-    localStorage.setItem('userRole', newRole);
-    router.refresh();
-  };
+  }, [role, searchQuery]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('userRole');
     const token = localStorage.getItem('token');
-    let resolvedRole = stored;
-
-    if (token) {
-      try {
-        const payloadBase64 = token.split('.')[1];
-        const decodedJson = atob(payloadBase64);
-        const decoded = JSON.parse(decodedJson);
-        if (decoded.role && decoded.role !== stored) {
-          console.warn("JWT claim role mismatch! Correcting local storage.");
-          resolvedRole = decoded.role;
-          localStorage.setItem('userRole', decoded.role);
-        }
-      } catch (e) {
-        console.error("Failed to verify JWT claims:", e);
-        localStorage.removeItem('token');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userEmail');
-        router.push('/login');
-        return;
-      }
-    } else if (!stored) {
-      router.push('/login');
+    if (!token) {
+      router.replace('/login');
       return;
     }
 
-    if (resolvedRole) {
-      setRole(resolvedRole as 'student' | 'parent' | 'teacher' | 'admin' | 'super_admin');
-    }
-    
-    // Sync cached avatar and profile name
+    let active = true;
     const cachedAvatar = localStorage.getItem('userAvatar');
     const cachedName = localStorage.getItem('userName');
-    if (cachedAvatar) setCustomAvatar(cachedAvatar);
-    if (cachedName) setCustomName(cachedName);
 
-    // Fetch fresh profile state if token is available
-    if (token) {
-      api.getMe(token).then((res) => {
-        if (res) {
-          const userObj = res.data?.user || res.user || res;
-          const avatar = userObj.avatar_url || userObj.profilePhotoUrl || res.avatar_url || res.profilePhotoUrl;
-          if (avatar) {
-            setCustomAvatar(avatar);
-            localStorage.setItem('userAvatar', avatar);
-          }
-          const name = userObj.name || userObj.full_name || res.full_name;
-          if (name) {
-            setCustomName(name);
-            localStorage.setItem('userName', name);
-          }
-        }
-      }).catch(() => {});
-    }
+    api.getMe(token).then((res) => {
+      const user = res.data?.user || res.user || res.data;
+      const roles: Role[] = ['student', 'parent', 'teacher', 'admin', 'super_admin'];
+      if (!user || !roles.includes(user.role)) throw new Error('Invalid account profile');
+      if (!active) return;
+
+      setRole(user.role);
+      localStorage.setItem('userRole', user.role);
+      setCustomAvatar(user.avatar_url || user.profilePhotoUrl || cachedAvatar || null);
+      setCustomName(user.name || user.full_name || cachedName || null);
+      setAuthReady(true);
+      if (user.email) {
+        api.getNotifications(user.email, token).then((items) => {
+          if (!active || !Array.isArray(items)) return;
+          setNotifications(items.map((item: Record<string, unknown>) => ({
+            id: String(item.id),
+            type: String(item.type || 'system'),
+            title: String(item.title || 'Notification'),
+            message: String(item.message || ''),
+            time: item.created_at ? new Date(String(item.created_at)).toLocaleString() : '',
+            unread: item.is_read !== true,
+          })));
+        }).catch(() => {});
+      }
+    }).catch(() => {
+      if (!active) return;
+      localStorage.removeItem('token');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userEmail');
+      router.replace('/login');
+    });
 
     const syncProfileFromStorage = () => {
       const savedAvatar = localStorage.getItem('userAvatar');
@@ -269,14 +204,10 @@ function AppShellInner({ children }: AppShellProps) {
 
     // Initialise display theme
     const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.className = '';
-    if (savedTheme === 'light') {
-      document.documentElement.classList.add('theme-light');
-    } else if (savedTheme === 'cyberpunk') {
-      document.documentElement.classList.add('theme-cyberpunk');
-    }
+    document.documentElement.classList.toggle('theme-light', savedTheme === 'light');
 
     return () => {
+      active = false;
       window.removeEventListener('avatar-updated', syncProfileFromStorage);
       window.removeEventListener('profile-updated', syncProfileFromStorage);
     };
@@ -284,8 +215,15 @@ function AppShellInner({ children }: AppShellProps) {
 
   const unreadCount = notifications.filter(n => n.unread).length;
 
-  const markAllRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, unread: false })));
+  const markAllRead = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      await api.markNotificationsRead([], token);
+      setNotifications((items) => items.map((item) => ({ ...item, unread: false })));
+    } catch (error) {
+      console.error('Could not mark notifications read:', error);
+    }
   };
 
   const handleLogout = async () => {
@@ -304,11 +242,12 @@ function AppShellInner({ children }: AppShellProps) {
     }
   };
 
+  if (!authReady) {
+    return <div className="min-h-screen bg-space" role="status" aria-live="polite">Loading your workspace…</div>;
+  }
+
   return (
     <div className="relative min-h-screen bg-space text-primary-text flex flex-col font-sans overflow-hidden transition-colors duration-300">
-      
-      {/* Dynamic Sandbox Role Context Switcher Bar */}
-      <DeveloperRoleSwitcher currentRole={role} onRoleChange={handleRoleChange} />
 
       {/* Main shell split grid */}
       <div className="flex flex-1 relative">
@@ -757,28 +696,18 @@ function AppShellInner({ children }: AppShellProps) {
                     <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest px-3 py-1 font-bold">
                       Common Shortcuts
                     </div>
-                    {[
-                      { name: 'Change Role Context to Student', action: () => handleRoleChange('student') },
-                      { name: 'Change Role Context to Teacher', action: () => handleRoleChange('teacher') },
-                      { name: 'Change Role Context to Admin', action: () => handleRoleChange('admin') },
-                      { name: 'Configure Security & MFA', path: '/dashboard/settings' },
-                      { name: 'Export Monthly Report', path: '/dashboard/reports' }
-                    ].map((shortcut, idx) => (
+                    {navItems.filter((item) => item.roles.includes(role)).slice(0, 5).map((shortcut) => (
                       <button
-                        key={idx}
+                        key={shortcut.name}
                         onClick={() => {
-                          if (shortcut.action) {
-                            shortcut.action();
-                          } else if (shortcut.path) {
-                            router.push(shortcut.path);
-                          }
+                          router.push(shortcut.path);
                           setSearchOpen(false);
                         }}
                         className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs hover:bg-glass-hover transition text-left group cursor-pointer"
                       >
                         <div className="flex items-center gap-3 text-muted group-hover:text-primary-text">
-                          <Command className="w-3.5 h-3.5 text-slate-400" />
-                          <span className="font-sans">{shortcut.name}</span>
+                          <shortcut.icon className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="font-sans">Open {shortcut.name}</span>
                         </div>
                         <span className="text-[10px] font-mono text-slate-500 tracking-wider font-bold">Enter</span>
                       </button>

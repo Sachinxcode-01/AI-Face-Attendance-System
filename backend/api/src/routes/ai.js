@@ -1,4 +1,3 @@
-const datasetService = require('../services/datasetService');
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -10,6 +9,7 @@ const Attendance = require('../models/Attendance');
 const SecurityLog = require('../models/SecurityLog');
 const Leave = require('../models/Leave');
 const { authenticate, requireRole } = require('../middleware/auth');
+const reportInternalError = require('../utils/httpError');
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
 const MODEL_NAME = "llama-3.3-70b-versatile";
@@ -63,125 +63,44 @@ const getStreak = async (studentEmail) => {
 // Helper: Get student attendance details
 const getStudentAttendanceStats = async (email) => {
   if (mongoose.connection.readyState !== 1) {
-    return {
-      overall_percentage: 0.85,
-      standing: "Elite Performer",
-      rank: "#4 in Department",
-      subjects: [
-        { subject: "Machine Learning", present: 17, total: 20, percentage: 0.85 },
-        { subject: "Data Ethics", present: 23, total: 25, percentage: 0.92 },
-        { subject: "Cloud Arch", present: 14, total: 20, percentage: 0.70 }
-      ],
-      streak: 5
-    };
+    throw new Error('Attendance database is unavailable.');
   }
-  const records = await Attendance.find({ student_email: email });
-  
-  const presentCounts = {};
-  for (const rec of records) {
-    try {
-      const session = await Session.findById(rec.session_id);
-      if (session) {
-        const subject = session.subject;
-        presentCounts[subject] = (presentCounts[subject] || 0) + 1;
-      }
-    } catch (err) {}
-  }
-
-  let subjects = Object.keys(presentCounts);
-  if (subjects.length === 0) {
-    subjects = ["Machine Learning", "Data Ethics", "Cloud Arch"];
-  }
-
-  const subjectDetails = [];
-  let totalPresent = 0;
-  let totalPossible = 0;
-
-  for (const subject of subjects) {
-    const totalSessions = await Session.countDocuments({ subject });
-    let pCount = presentCounts[subject] || 0;
-    let tCount = Math.max(totalSessions, pCount, 1);
-
-    if (totalSessions === 0) {
-      if (subject === 'Machine Learning') {
-        tCount = 20;
-        pCount = Math.min(pCount + 17, 20);
-      } else if (subject === 'Data Ethics') {
-        tCount = 25;
-        pCount = Math.min(pCount + 23, 25);
-      } else if (subject === 'Cloud Arch') {
-        tCount = 20;
-        pCount = Math.min(pCount + 14, 20);
-      } else {
-        tCount = 10;
-        pCount = Math.min(pCount + 8, 10);
-      }
-    }
-
-    const percentage = pCount / tCount;
-    subjectDetails.push({
-      subject,
-      present: pCount,
-      total: tCount,
-      percentage
-    });
-
-    totalPresent += pCount;
-    totalPossible += tCount;
-  }
-
-  const overallPercentage = totalPossible > 0 ? totalPresent / totalPossible : 0.82;
-  
-  let standing = "";
-  let rank = "";
-  if (overallPercentage >= 0.90) {
-    standing = "Elite Scholar";
-    rank = "#2 in Department";
-  } else if (overallPercentage >= 0.80) {
-    standing = "Elite Performer";
-    rank = "#4 in Department";
-  } else if (overallPercentage >= 0.70) {
-    standing = "Strong Contender";
-    rank = "#12 in Department";
-  } else {
-    standing = "Needs Review";
-    rank = "#34 in Department";
-  }
-
+  const attendanceCount = await Attendance.countDocuments({
+    student_email: email,
+    status: 'Present',
+  });
   const streak = await getStreak(email);
 
   return {
-    overall_percentage: overallPercentage,
-    standing,
-    rank,
-    subjects: subjectDetails,
-    streak
+    has_data: attendanceCount > 0,
+    overall_percentage: null,
+    standing: attendanceCount > 0 ? 'Not enough schedule data' : 'No attendance data',
+    rank: null,
+    attended_sessions: attendanceCount,
+    subjects: [],
+    streak,
   };
 };
 
 // Helper: Get attendance summary percentages
 const getAttendanceSummary = async (email) => {
-  if (mongoose.connection.readyState !== 1) return {};
-  const records = await Attendance.find({ student_email: email });
+  const records = await Attendance.find({
+    student_email: email,
+    status: 'Present',
+  }).select('session_id').lean();
   if (records.length === 0) return {};
 
+  const sessionIds = [...new Set(records.map((record) => record.session_id))];
+  const sessions = await Session.find({ _id: { $in: sessionIds } }, 'subject').lean();
+  const subjectById = new Map(sessions.map((session) => [session._id.toString(), session.subject]));
   const summary = {};
-  for (const rec of records) {
-    try {
-      const session = await Session.findById(rec.session_id);
-      if (session) {
-        const subject = session.subject;
-        summary[subject] = (summary[subject] || 0) + 1;
-      }
-    } catch (err) {}
+  for (const record of records) {
+    const subject = subjectById.get(record.session_id.toString());
+    if (subject) summary[subject] = (summary[subject] || 0) + 1;
   }
-
-  const finalSummary = {};
-  Object.keys(summary).forEach(subject => {
-    finalSummary[subject] = `${Math.min(summary[subject] * 10, 100)}%`;
-  });
-
-  return finalSummary;
+  return Object.fromEntries(
+    Object.entries(summary).map(([subject, count]) => [subject, `${count} recorded check-ins`]),
+  );
 };
 
 // Helper: Get student insights from Groq
@@ -201,10 +120,9 @@ const getStudentInsights = async (studentName, attendanceSummary) => {
 Subject-wise Attendance:
 ${summaryLines}
 
-Please provide:
-1. A brief overall assessment of this student's attendance.
-2. Identify any subjects where attendance is critically low (below 75%).
-3. One specific, encouraging piece of advice to help the student improve.
+Course schedule and enrollment records are unavailable, so these check-in counts cannot be converted into attendance percentages or eligibility. Do not infer a percentage, rank, or risk level.
+
+Please summarize the recorded check-ins and give one encouraging, practical suggestion.
 
 Keep the response concise (3-4 sentences) and professional.`;
 
@@ -243,24 +161,15 @@ router.get(['/student/stats/:email', '/ai/student/stats/:email'], authenticate, 
       return res.status(403).json({ detail: "Forbidden: You do not have permission to view these statistics." });
     }
 
-    let stats = null;
-    try {
-      if (require('mongoose').connection.readyState === 1) {
-        stats = await getStudentAttendanceStats(email);
-      }
-    } catch (_) {}
-
-    if (!stats || !stats.subjects || stats.subjects.length === 0) {
-      stats = datasetService.getStudentStats(email);
-    }
+    const stats = await getStudentAttendanceStats(email);
     res.json(stats);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'AI student stats');
   }
 });
 
 // ─── GET /admin/stats ───────────────────────────────────────────
-router.get(['/admin/stats', '/ai/admin/stats'], authenticate, requireRole(['admin', 'teacher']), async (req, res) => {
+router.get(['/admin/stats', '/ai/admin/stats'], authenticate, requireRole(['admin', 'super_admin', 'teacher']), async (req, res) => {
   try {
     const totalStudents = await User.countDocuments({ role: 'student' });
     const totalTeachers = await User.countDocuments({ role: 'teacher' });
@@ -268,34 +177,27 @@ router.get(['/admin/stats', '/ai/admin/stats'], authenticate, requireRole(['admi
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    const attendanceTodayCount = await Attendance.countDocuments({ timestamp: { $gte: todayStart } });
+    const attendanceTodayStudents = await Attendance.distinct('student_email', {
+      status: 'Present',
+      timestamp: { $gte: todayStart },
+    });
+    const attendancePercentage = totalStudents > 0
+      ? `${Math.round((attendanceTodayStudents.length / totalStudents) * 100)}%`
+      : '0%';
 
-    let attendancePercentage = "89%";
-    if (totalStudents > 0) {
-      attendancePercentage = `${Math.min(Math.floor((attendanceTodayCount / totalStudents) * 100), 100)}%`;
-    }
-
-    const intruderAlerts = await SecurityLog.countDocuments({});
+    const intruderAlerts = await SecurityLog.countDocuments({ status: 'Active' });
     const pendingLeaves = await Leave.countDocuments({ status: "Pending" });
 
     res.json({
-      total_students: String(Math.max(totalStudents, 1247)),
-      total_teachers: String(Math.max(totalTeachers, 86)),
+      total_students: String(totalStudents),
+      total_teachers: String(totalTeachers),
       active_sessions: String(activeSessions),
       attendance_today: attendancePercentage,
       intruder_alerts: String(intruderAlerts),
       pending_leaves: String(pendingLeaves)
     });
   } catch (error) {
-    console.error("Error in get_admin_stats:", error);
-    res.json({
-      total_students: "1247",
-      total_teachers: "86",
-      active_sessions: "0",
-      attendance_today: "89%",
-      intruder_alerts: "0",
-      pending_leaves: "0"
-    });
+    reportInternalError(res, error, 'AI admin stats');
   }
 });
 
@@ -350,7 +252,7 @@ router.get(['/student/ai-analysis/:student_id', '/ai/student/ai-analysis/:studen
 });
 
 // ─── GET /admin/activity-log ────────────────────────────────────
-router.get(['/admin/activity-log', '/ai/admin/activity-log'], authenticate, requireRole(['admin', 'teacher']), async (req, res) => {
+router.get(['/admin/activity-log', '/ai/admin/activity-log'], authenticate, requireRole(['admin', 'super_admin']), async (req, res) => {
   try {
     const events = [];
 
@@ -410,34 +312,40 @@ router.get(['/admin/activity-log', '/ai/admin/activity-log'], authenticate, requ
     events.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     res.json(events.slice(0, 80));
   } catch (error) {
-    console.error("Activity log error:", error);
-    res.json([]);
+    reportInternalError(res, error, 'AI activity log');
   }
 });
 
 // ─── POST /ai/ask ───────────────────────────────────────────────
 router.post(['/ask', '/ai/ask'], authenticate, async (req, res) => {
   try {
+    if (req.headers['x-groq-api-key']) {
+      return res.status(400).json({ detail: 'Client-supplied AI credentials are not accepted.' });
+    }
     const { email, query } = req.body;
+    const targetEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    if (!targetEmail) return res.status(400).json({ detail: 'A student email is required.' });
     
     // Enforce data ownership check
-    const isSelf = req.userEmail && req.userEmail.toLowerCase() === email.toLowerCase();
-    const isStaff = req.userRole && ['admin', 'teacher', 'hod', 'principal', 'management'].includes(req.userRole.toLowerCase());
+    const role = (req.userRole || '').toLowerCase();
+    const isSelf = role === 'student' && req.userEmail?.toLowerCase() === targetEmail;
+    const isStaff = ['admin', 'super_admin', 'teacher', 'hod', 'principal', 'management'].includes(role);
 
     if (!isSelf && !isStaff) {
       return res.status(403).json({ detail: "Forbidden: You do not have permission to query this student's AI insights." });
     }
 
-    const student = await User.findOne({ email });
+    const student = await User.findOne({ email: targetEmail, role: 'student' });
     if (!student) {
       return res.status(404).json({ detail: "Student not found." });
     }
 
-    const attendanceSummary = await getAttendanceSummary(email);
+    const attendanceSummary = await getAttendanceSummary(targetEmail);
     const analysis = await getStudentInsights(student.full_name, attendanceSummary);
     res.json({ answer: analysis, response: analysis });
   } catch (error) {
-    res.json({ answer: "AI Engine offline", response: "AI Engine offline" });
+    console.error('[AI] /ask error:', error);
+    res.status(503).json({ detail: 'AI service unavailable.', answer: 'AI Engine offline', response: 'AI Engine offline' });
   }
 });
 
@@ -671,101 +579,98 @@ const handleChatRequest = async (req, res) => {
     let realDataAddendum = "";
 
     if (userRole === 'student') {
-      if (msgLower.includes("my attendance") || msgLower.includes("attendance percentage") || msgLower.includes("overall attendance")) {
+      if (msgLower.includes('my attendance') || msgLower.includes('attendance percentage') || msgLower.includes('overall attendance')) {
         const stats = await getStudentAttendanceStats(userEmail);
-        realDataAddendum = ` [Verified Database Stats for ${userName}: Overall Attendance is ${(stats.overall_percentage * 100).toFixed(0)}%, Standing: "${stats.standing}", Rank: "${stats.rank}", Streak: ${stats.streak} days]`;
-      } else if (msgLower.includes("exam eligibility") || msgLower.includes("eligible for exam") || msgLower.includes("will i be eligible") || msgLower.includes("predictive") || msgLower.includes("velocity")) {
-        const stats = await getStudentAttendanceStats(userEmail);
-        const currRate = stats.overall_percentage;
-        const projected = Math.min(1.0, currRate + 0.02);
-        const isEligible = projected >= 0.75;
-        const safeBuffer = isEligible ? Math.floor((stats.overall_percentage * 20 - 0.75 * 20) / 0.75) : 0;
-        realDataAddendum = ` [AI Predictive Trajectory: Current Attendance ${(currRate * 100).toFixed(1)}%, Projected Final Semester Rate: ${(projected * 100).toFixed(1)}%. Exam Status: ${isEligible ? 'ELIGIBLE' : 'CRITICAL RISK'}. Safe Absence Margin: ${Math.max(0, safeBuffer)} more classes]`;
-      } else if (msgLower.includes("classes today") || msgLower.includes("my schedule") || msgLower.includes("timetable") || msgLower.includes("missing the most")) {
-        realDataAddendum = ` [Schedule & Pattern Insights for ${userName}: 09:00 AM Compiler Design (Room 303), 11:15 AM Machine Learning (Lab 2), 02:00 PM Data Ethics (Room 101). Note: Highest personal absence rate is in Friday Afternoon sessions.]`;
-      } else if (msgLower.includes("below eligibility") || msgLower.includes("low attendance") || msgLower.includes("critical attendance")) {
-        const stats = await getStudentAttendanceStats(userEmail);
-        const lowSubs = stats.subjects.filter(s => s.percentage < 0.75).map(s => `${s.subject} (${(s.percentage * 100).toFixed(0)}%)`);
-        realDataAddendum = lowSubs.length > 0 
-          ? ` [Subjects below 75% eligibility: ${lowSubs.join(', ')}]`
-          : ` [All your subjects are above the 75% eligibility threshold!]`;
-      } else if (msgLower.includes("leave status") || msgLower.includes("my leave")) {
+        realDataAddendum = ` [Attendance data: ${stats.attended_sessions} present check-ins recorded. Percentages and ranking are unavailable because course schedules and enrollment records are not configured.]`;
+      } else if (msgLower.includes('exam eligibility') || msgLower.includes('eligible for exam') || msgLower.includes('will i be eligible') || msgLower.includes('predictive') || msgLower.includes('velocity')) {
+        realDataAddendum = ' [Exam eligibility and attendance projections are unavailable because course schedules, enrollment, and eligibility rules are not configured.]';
+      } else if (msgLower.includes('classes today') || msgLower.includes('my schedule') || msgLower.includes('timetable') || msgLower.includes('missing the most')) {
+        realDataAddendum = ' [No timetable data is available for this account.]';
+      } else if (msgLower.includes('below eligibility') || msgLower.includes('low attendance') || msgLower.includes('critical attendance')) {
+        realDataAddendum = ' [There is not enough subject-level attendance data to assess eligibility.]';
+      } else if (msgLower.includes('leave status') || msgLower.includes('my leave')) {
         if (mongoose.connection.readyState === 1) {
           const leaves = await Leave.find({ user_id: userEmail }).sort({ created_at: -1 }).limit(3);
-          if (leaves.length > 0) {
-            realDataAddendum = ` [Recent Leave Applications: ${leaves.map(l => `${l.category} (${l.status})`).join(', ')}]`;
-          } else {
-            realDataAddendum = ` [No active or past leave applications found on record.]`;
-          }
+          realDataAddendum = leaves.length
+            ? ` [Recent leave applications: ${leaves.map((leave) => `${leave.status}`).join(', ')}]`
+            : ' [No leave applications are recorded.]';
         } else {
-          realDataAddendum = ` [No active or past leave applications found on record.]`;
+          realDataAddendum = ' [Leave application data is unavailable.]';
         }
       }
     } else if (userRole === 'teacher') {
-      if (msgLower.includes("session active") || msgLower.includes("is my session active")) {
+      if (msgLower.includes('session active') || msgLower.includes('is my session active')) {
         if (mongoose.connection.readyState === 1) {
-          const activeSess = await Session.findOne({ teacher_id: userEmail, is_active: true });
-          realDataAddendum = activeSess 
-            ? ` [Active Session: ${activeSess.subject} in Room ${activeSess.room || '303'} started at ${activeSess.start_time.toLocaleTimeString()}]`
-            : ` [No active session currently running for your account.]`;
+          const activeSession = await Session.findOne({ teacher_id: userEmail, is_active: true });
+          realDataAddendum = activeSession
+            ? ` [Active session: ${activeSession.subject}, started at ${activeSession.start_time.toLocaleTimeString()}.]`
+            : ' [No active session is running for your account.]';
         } else {
-          realDataAddendum = ` [No active session currently running for your account.]`;
+          realDataAddendum = ' [Live session data is unavailable.]';
         }
-      } else if (msgLower.includes("students present") || msgLower.includes("present count")) {
+      } else if (msgLower.includes('students present') || msgLower.includes('present count')) {
         if (mongoose.connection.readyState === 1) {
-          const activeSess = await Session.findOne({ is_active: true });
-          if (activeSess) {
-            const count = await Attendance.countDocuments({ session_id: activeSess._id });
-            realDataAddendum = ` [Current Active Session (${activeSess.subject}): ${count} students present]`;
+          const activeSession = await Session.findOne({ teacher_id: userEmail, is_active: true });
+          if (activeSession) {
+            const count = await Attendance.countDocuments({ session_id: activeSession._id });
+            realDataAddendum = ` [Current session (${activeSession.subject}): ${count} students present.]`;
           } else {
-            realDataAddendum = ` [Total attendance marks recorded today: 42 students]`;
+            realDataAddendum = ' [No active session is running for your account.]';
           }
         } else {
-          realDataAddendum = ` [Total attendance marks recorded today: 42 students]`;
+          realDataAddendum = ' [Live attendance data is unavailable.]';
         }
-      } else if (msgLower.includes("pending leave") || msgLower.includes("leave requests")) {
+      } else if (msgLower.includes('pending leave') || msgLower.includes('leave requests')) {
         if (mongoose.connection.readyState === 1) {
-          const pendingCount = await Leave.countDocuments({ status: "Pending" });
-          realDataAddendum = ` [Faculty Dashboard: ${pendingCount} pending leave applications requiring approval]`;
+          const staff = await User.findOne({ email: userEmail }, 'department').lean();
+          const departmentUsers = staff?.department
+            ? await User.find({ department: staff.department }, 'email').lean()
+            : [];
+          const pendingCount = await Leave.countDocuments({
+            user_id: { $in: departmentUsers.map((user) => user.email) },
+            status: 'Pending',
+          });
+          realDataAddendum = ` [${pendingCount} pending leave applications are recorded in your department.]`;
         } else {
-          realDataAddendum = ` [Faculty Dashboard: 0 pending leave applications requiring approval]`;
+          realDataAddendum = ' [Pending leave data is unavailable.]';
         }
       }
     } else if (userRole === 'parent') {
-      if (msgLower.includes("ward") || msgLower.includes("child attendance")) {
-        realDataAddendum = ` [Linked Ward Status (Rahul Sharma): Overall Attendance 88%, Recent Absence: Machine Learning on Friday]`;
-      } else if (msgLower.includes("alert") || msgLower.includes("absence alert")) {
-        realDataAddendum = ` [Alerts: 0 urgent alerts. Ward is compliant with institutional attendance policy.]`;
+      if (msgLower.includes('ward') || msgLower.includes('child attendance')) {
+        realDataAddendum = ' [Linked student attendance data is not available for this account.]';
+      } else if (msgLower.includes('alert') || msgLower.includes('absence alert')) {
+        realDataAddendum = ' [Linked student alert data is not available for this account.]';
       }
-    } else if (['admin', 'hod'].includes(userRole)) {
-      if (msgLower.includes("active sessions") || msgLower.includes("sessions active")) {
+    } else if (userRole === 'hod') {
+      realDataAddendum = ' [Use the department overview for HOD-scoped analytics. Assistant analytics are not yet department-scoped.]';
+    } else if (['admin', 'super_admin', 'principal', 'management'].includes(userRole)) {
+      if (msgLower.includes('active sessions') || msgLower.includes('sessions active')) {
         if (mongoose.connection.readyState === 1) {
           const activeCount = await Session.countDocuments({ is_active: true });
-          realDataAddendum = ` [Admin Telemetry: ${activeCount} active attendance sessions currently running across campus]`;
+          realDataAddendum = ` [There are ${activeCount} active attendance sessions.]`;
         } else {
-          realDataAddendum = ` [Admin Telemetry: 1 active attendance session currently running across campus]`;
+          realDataAddendum = ' [Active session data is unavailable.]';
         }
-      } else if (msgLower.includes("system health") || msgLower.includes("ai service")) {
-        realDataAddendum = ` [System Health Status: Node.js API (Healthy), Python AI Engine (Ready), MongoDB (Connected), Face Recognition Service (Operational)]`;
-      } else if (msgLower.includes("security") || msgLower.includes("alerts")) {
+      } else if (msgLower.includes('system health') || msgLower.includes('ai service')) {
+        realDataAddendum = ` [MongoDB: ${mongoose.connection.readyState === 1 ? 'connected' : 'unavailable'}; AI provider: ${groqClient ? 'configured' : 'unavailable'}. This API does not report face recognition service health.]`;
+      } else if (msgLower.includes('security') || msgLower.includes('alerts')) {
         if (mongoose.connection.readyState === 1) {
-          const secLogsCount = await SecurityLog.countDocuments({});
-          realDataAddendum = ` [Security Ledger: ${secLogsCount} audit entries recorded. 0 critical breaches.]`;
+          const activeAlerts = await SecurityLog.countDocuments({ status: 'Active' });
+          realDataAddendum = ` [There are ${activeAlerts} active security alerts.]`;
         } else {
-          realDataAddendum = ` [Security Ledger: 0 critical breaches recorded.]`;
+          realDataAddendum = ' [Security alert data is unavailable.]';
         }
-      } else if (msgLower.includes("today's attendance") || msgLower.includes("total attendance")) {
+      } else if (msgLower.includes("today's attendance") || msgLower.includes('total attendance')) {
         if (mongoose.connection.readyState === 1) {
           const todayStart = new Date();
           todayStart.setHours(0, 0, 0, 0);
           const count = await Attendance.countDocuments({ timestamp: { $gte: todayStart } });
-          realDataAddendum = ` [Today's Total Attendance Count: ${count > 0 ? count : 142} records validated]`;
+          realDataAddendum = ` [There are ${count} attendance records for today.]`;
         } else {
-          realDataAddendum = ` [Today's Total Attendance Count: 142 records validated]`;
+          realDataAddendum = ' [Today’s attendance data is unavailable.]';
         }
       }
     }
-
     // Match query against knowledge base
     let matchedKnowledge = null;
     for (const item of KNOWLEDGE_BASE) {

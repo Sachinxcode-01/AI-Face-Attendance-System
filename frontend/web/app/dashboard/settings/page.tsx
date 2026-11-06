@@ -32,24 +32,19 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState('');
 
   // Appearance state
-  const [theme, setTheme] = useState<'dark' | 'light' | 'cyberpunk'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'dark' | 'light' | 'cyberpunk';
-    if (savedTheme) {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || savedTheme === 'light') {
       setTheme(savedTheme);
     }
   }, []);
 
-  const handleThemeChange = (newTheme: 'dark' | 'light' | 'cyberpunk') => {
+  const handleThemeChange = (newTheme: 'dark' | 'light') => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    document.documentElement.className = '';
-    if (newTheme === 'light') {
-      document.documentElement.classList.add('theme-light');
-    } else if (newTheme === 'cyberpunk') {
-      document.documentElement.classList.add('theme-cyberpunk');
-    }
+    document.documentElement.classList.toggle('theme-light', newTheme === 'light');
   };
 
   // Notifications state
@@ -249,11 +244,10 @@ export default function SettingsPage() {
             <DashboardCard className="space-y-6">
               <h3 className="font-extrabold text-sm font-sans text-white mb-2">Display Theme</h3>
               
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 {[
-                  { id: 'dark', name: 'Midnight Dark', desc: 'Sleek luxury design background.', color: 'bg-slate-950 border-white/10' },
-                  { id: 'light', name: 'Premium Light', desc: 'Clean, clean layout lines.', color: 'bg-white border-slate-200' },
-                  { id: 'cyberpunk', name: 'Cyberpunk Gold', desc: 'Futuristic high contrast dashboard.', color: 'bg-slate-950 border-amber-500/20 text-amber-400' }
+                  { id: 'dark', name: 'Indigo Dark', desc: 'A calm dark canvas with indigo surfaces.', color: 'bg-slate-950 border-indigo-400/30' },
+                  { id: 'light', name: 'Lavender Light', desc: 'Soft lavender canvas with clean white surfaces.', color: 'bg-white border-indigo-200' }
                 ].map((item) => (
                   <button
                     key={item.id}

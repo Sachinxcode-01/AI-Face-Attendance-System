@@ -50,17 +50,4 @@ class AIController extends ChangeNotifier {
       _setLoading(false);
     }
   }
-
-  Future<Map<String, dynamic>> directProviderQuery(String prompt) async {
-    _setLoading(true);
-    _setError(null);
-    try {
-      return await _repository.directProviderQuery(prompt);
-    } catch (e) {
-      _setError(e.toString());
-      return {'detail': e.toString()};
-    } finally {
-      _setLoading(false);
-    }
-  }
 }

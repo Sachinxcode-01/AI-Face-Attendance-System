@@ -46,6 +46,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   Timer? _timer;
   int _secondsRemaining = 15;
   bool _isInitializing = true;
+  bool _isGenerating = false;
 
   @override
   void initState() {
@@ -70,9 +71,10 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         setState(() {
           _sessionId = result['session_id'];
           _isInitializing = false;
-          _generateNewQR(isInitial: true);
-          _startTimer();
         });
+        await _generateNewQR(isInitial: true);
+        if (!mounted) return;
+        _startTimer();
         context.showSuccessToast(
           'Attendance session started for $_subject',
           title: 'Session Live',
@@ -90,20 +92,39 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     }
   }
 
-  void _generateNewQR({bool isInitial = false}) {
-    if (_sessionId == null) return;
-    setState(() {
-      final token = DateTime.now().millisecondsSinceEpoch.toString();
-      _qrData = jsonEncode({
-        'session_id': _sessionId,
-        'token': token,
-        'type': 'attendance_qr',
+  Future<void> _generateNewQR({bool isInitial = false}) async {
+    if (_sessionId == null || _isGenerating) return;
+    _isGenerating = true;
+    try {
+      final session = context.read<SessionManager>();
+      final issued = await ApiService.getSessionQrToken(
+        _sessionId!,
+        session.token,
+      );
+      final token = issued['token'];
+      if (token is! String || token.isEmpty) throw const FormatException();
+      if (!mounted) return;
+      setState(() {
+        _qrData = jsonEncode({
+          'session_id': _sessionId,
+          'token': token,
+          'type': 'attendance_qr',
+        });
+        _secondsRemaining = 15;
       });
-      _secondsRemaining = 15;
-    });
-
-    if (!isInitial) {
-      AppHaptics.light();
+      if (!isInitial) AppHaptics.light();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _qrData = 'ERROR: QR TOKEN UNAVAILABLE';
+        _secondsRemaining = 0;
+      });
+      context.showErrorToast(
+        'Could not refresh the secure QR code.',
+        title: 'QR Error',
+      );
+    } finally {
+      _isGenerating = false;
     }
   }
 
@@ -148,235 +169,244 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: const PremiumAppBar(
-        title: 'Dynamic Attendance QR',
-      ),
+      appBar: const PremiumAppBar(title: 'Dynamic Attendance QR'),
       body: PremiumScaffold(
         child: _isInitializing
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const PulseGlow(
-                    glowColor: AppColors.gold,
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
-                        strokeWidth: 3,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Initializing Biometric Gateway...',
-                    style: GoogleFonts.inter(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : SafeArea(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            ? Center(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Active Session Indicator Pill
-                    PulseGlow(
-                      glowColor: AppColors.success,
-                      maxBlur: 14,
-                      maxSpread: 2,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(99),
-                          border: Border.all(
-                            color: AppColors.success.withValues(alpha: 0.4),
-                            width: 1.2,
+                    const PulseGlow(
+                      glowColor: AppColors.gold,
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.gold,
                           ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.success,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'SESSION ACTIVE: $_subject',
-                              style: GoogleFonts.inter(
-                                color: AppColors.successLight,
-                                fontSize: 12,
-                                letterSpacing: 1.2,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                          strokeWidth: 3,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 28),
-
-                    // Rotating QR Card with Ambient Glow
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(22),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(28),
-                          border: Border.all(
-                            color: const Color(0xFFFFD700).withValues(alpha: 0.4),
-                            width: 2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: _timerColor.withValues(alpha: 0.25),
-                              blurRadius: 36,
-                              spreadRadius: 2,
-                              offset: const Offset(0, 8),
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.5),
-                              blurRadius: 20,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: SmoothAnimatedSwitcher(
-                          duration: const Duration(milliseconds: 350),
-                          child: QrImageView(
-                            key: ValueKey(_qrData),
-                            data: _qrData,
-                            version: QrVersions.auto,
-                            size: 240.0,
-                            gapless: false,
-                            backgroundColor: Colors.white,
-                          ),
-                        ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Initializing Biometric Gateway...',
+                      style: GoogleFonts.inter(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 32),
-
-                    // Countdown Ring & Label
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          height: 84,
-                          width: 84,
-                          child: TweenAnimationBuilder<double>(
-                            tween: Tween<double>(
-                              begin: 0.0,
-                              end: _secondsRemaining / 15.0,
-                            ),
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeOut,
-                            builder: (context, value, _) {
-                              return CircularProgressIndicator(
-                                value: value,
-                                strokeWidth: 7,
-                                strokeCap: StrokeCap.round,
-                                backgroundColor: Colors.white.withValues(alpha: 0.08),
-                                valueColor: AlwaysStoppedAnimation<Color>(_timerColor),
-                              );
-                            },
-                          ),
-                        ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '$_secondsRemaining',
-                              style: GoogleFonts.inter(
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                color: _timerColor,
-                              ),
-                            ),
-                            Text(
-                              'SEC',
-                              style: GoogleFonts.inter(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white54,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.shield_outlined,
-                          size: 14,
-                          color: Colors.white.withValues(alpha: 0.45),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'ANTI-PROXY: ROTATES EVERY 15 SECONDS',
-                          style: GoogleFonts.inter(
-                            color: Colors.white54,
-                            fontSize: 11,
-                            letterSpacing: 1.1,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 36),
-
-                    // Quick Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: PremiumButton.glass(
-                            onPressed: _copySessionCode,
-                            leadingIcon: const Icon(
-                              Icons.copy_rounded,
-                              size: 18,
-                              color: Colors.white,
-                            ),
-                            child: const Text('Copy Session ID'),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: PremiumButton(
-                            onPressed: () => _generateNewQR(),
-                            leadingIcon: const Icon(
-                              Icons.refresh_rounded,
-                              size: 18,
-                              color: Colors.black,
-                            ),
-                            child: const Text('Rotate Token'),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
                   ],
                 ),
+              )
+            : SafeArea(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                  child: Column(
+                    children: [
+                      // Active Session Indicator Pill
+                      PulseGlow(
+                        glowColor: AppColors.success,
+                        maxBlur: 14,
+                        maxSpread: 2,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(99),
+                            border: Border.all(
+                              color: AppColors.success.withValues(alpha: 0.4),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.success,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'SESSION ACTIVE: $_subject',
+                                style: GoogleFonts.inter(
+                                  color: AppColors.successLight,
+                                  fontSize: 12,
+                                  letterSpacing: 1.2,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+
+                      // Rotating QR Card with Ambient Glow
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(22),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(
+                              color: const Color(
+                                0xFFFFD700,
+                              ).withValues(alpha: 0.4),
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _timerColor.withValues(alpha: 0.25),
+                                blurRadius: 36,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 8),
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                blurRadius: 20,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: SmoothAnimatedSwitcher(
+                            duration: const Duration(milliseconds: 350),
+                            child: QrImageView(
+                              key: ValueKey(_qrData),
+                              data: _qrData,
+                              version: QrVersions.auto,
+                              size: 240.0,
+                              gapless: false,
+                              backgroundColor: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Countdown Ring & Label
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            height: 84,
+                            width: 84,
+                            child: TweenAnimationBuilder<double>(
+                              tween: Tween<double>(
+                                begin: 0.0,
+                                end: _secondsRemaining / 15.0,
+                              ),
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                              builder: (context, value, _) {
+                                return CircularProgressIndicator(
+                                  value: value,
+                                  strokeWidth: 7,
+                                  strokeCap: StrokeCap.round,
+                                  backgroundColor: Colors.white.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    _timerColor,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '$_secondsRemaining',
+                                style: GoogleFonts.inter(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.bold,
+                                  color: _timerColor,
+                                ),
+                              ),
+                              Text(
+                                'SEC',
+                                style: GoogleFonts.inter(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white54,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.shield_outlined,
+                            size: 14,
+                            color: Colors.white.withValues(alpha: 0.45),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'ANTI-PROXY: ROTATES EVERY 15 SECONDS',
+                            style: GoogleFonts.inter(
+                              color: Colors.white54,
+                              fontSize: 11,
+                              letterSpacing: 1.1,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 36),
+
+                      // Quick Action Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: PremiumButton.glass(
+                              onPressed: _copySessionCode,
+                              leadingIcon: const Icon(
+                                Icons.copy_rounded,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                              child: const Text('Copy Session ID'),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: PremiumButton(
+                              onPressed: () => _generateNewQR(),
+                              leadingIcon: const Icon(
+                                Icons.refresh_rounded,
+                                size: 18,
+                                color: Colors.black,
+                              ),
+                              child: const Text('Rotate Token'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
+                ),
               ),
-            ),
       ),
     );
   }

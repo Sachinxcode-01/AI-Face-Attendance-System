@@ -10,11 +10,7 @@ export default function Navbar() {
   const [portalsOpen, setPortalsOpen] = useState(false);
 
 
-  const portals = [
-    { name: 'Student Portal', href: '/student' },
-    { name: 'Lecturer / Teacher Portal', href: '/teacher' },
-    { name: 'Admin Sentinel Panel', href: '/admin' },
-  ];
+  const portals = [{ name: 'Workspace', href: '/dashboard' }];
 
   return (
     <>
@@ -64,7 +60,7 @@ export default function Navbar() {
               <button
                 className="text-xs font-medium font-sans px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/6 transition-all flex items-center gap-1 cursor-pointer outline-none"
               >
-                <span>Portals</span>
+                <span>Workspace</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${portalsOpen ? 'rotate-180' : ''}`} />
               </button>
               
@@ -157,7 +153,7 @@ export default function Navbar() {
               </Link>
               
               <div className="space-y-2 border-b border-white/5 py-2">
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Portals</span>
+                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Workspace</span>
                 {portals.map((portal) => (
                   <Link
                     key={portal.name}

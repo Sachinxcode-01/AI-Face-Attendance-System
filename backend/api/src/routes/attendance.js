@@ -11,6 +11,8 @@ const Leave = require('../models/Leave');
 const AttendanceAnalytics = require('../models/AttendanceAnalytics');
 const DepartmentAnalytics = require('../models/DepartmentAnalytics');
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
+const { verifyAttendanceQrToken } = require('../utils/attendanceQr');
+const reportInternalError = require('../utils/httpError');
 
 // Services
 const notificationService = require('../services/notificationService');
@@ -42,6 +44,14 @@ const auditLog = async (email, role, action, details, req) => {
   } catch (err) {
     console.error("Audit logging failed:", err);
   }
+};
+
+const canReadStudentAttendance = (req, email) => {
+  const role = (req.userRole || '').toLowerCase();
+  const target = (email || '').toLowerCase();
+  const self = role === 'student' && req.userEmail?.toLowerCase() === target;
+  const staff = ['admin', 'super_admin', 'teacher', 'hod', 'principal', 'management'].includes(role);
+  return self || staff;
 };
 
 // Heuristics Helper: Calculate Student Attendance Health Score
@@ -119,40 +129,33 @@ const calculateHealthScore = async (email) => {
 // ─── POST /attendance/mark ────────────────────────────────────────
 router.post('/mark', authenticate, async (req, res) => {
   try {
-    const { student_email, session_id, qr_code } = req.body;
+    const { student_email: requestedStudentEmail, session_id, qr_code } = req.body;
+    const role = (req.userRole || '').toLowerCase();
+    const student_email = role === 'student' ? req.userEmail.toLowerCase() : requestedStudentEmail?.trim().toLowerCase();
+
+    if (!['student', 'admin', 'super_admin', 'teacher'].includes(role)) {
+      return res.status(403).json({ detail: 'Only students and staff can mark attendance.' });
+    }
+    if (!student_email) {
+      return res.status(400).json({ detail: 'A valid student account is required.' });
+    }
+    if (typeof session_id !== 'string' || !mongoose.Types.ObjectId.isValid(session_id) || typeof qr_code !== 'string' || !qr_code) {
+      return res.status(400).json({ detail: 'Session and QR code are required.' });
+    }
 
     const session = await Session.findOne({ _id: session_id, is_active: true });
     if (!session) {
       return res.status(400).json({ detail: "Invalid or expired session" });
     }
 
-    let qrVerified = false;
-
-    // 1. Check rotating token pattern
-    if (qr_code.startsWith("token_")) {
-      const parts = qr_code.split("_");
-      if (parts.length >= 2 && /^\d+$/.test(parts[1])) {
-        const qrTimeMs = parseInt(parts[1], 10);
-        const currentTimeMs = Date.now();
-        if (Math.abs(currentTimeMs - qrTimeMs) <= 30000) {
-          qrVerified = true;
-        }
-      }
+    if (!verifyAttendanceQrToken(session, qr_code)) {
+      return res.status(400).json({ detail: 'Invalid QR code.' });
     }
-    // 2. Check raw timestamp
-    else if (/^\d+$/.test(qr_code)) {
-      const qrTimeMs = parseInt(qr_code, 10);
-      const currentTimeMs = Date.now();
-      if (Math.abs(currentTimeMs - qrTimeMs) <= 30000) {
-        qrVerified = true;
-      }
+    if (!(await User.exists({ email: student_email, role: 'student' }))) {
+      return res.status(404).json({ detail: 'Student not found.' });
     }
-
-    // 3. Fall back to static matching
-    if (!qrVerified) {
-      if (session.qr_code !== qr_code) {
-        return res.status(400).json({ detail: "Invalid QR Code" });
-      }
+    if (role === 'teacher' && session.teacher_id.toLowerCase() !== req.userEmail.toLowerCase()) {
+      return res.status(403).json({ detail: 'You can only mark attendance for your own session.' });
     }
 
     const timestamp = new Date();
@@ -186,7 +189,7 @@ router.post('/mark', authenticate, async (req, res) => {
     if (error.code === 11000) {
       return res.status(409).json({ detail: "Attendance already marked for this session", message: "Attendance already marked for this session" });
     }
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Attendance');
   }
 });
 
@@ -221,7 +224,7 @@ const recordFaceFailure = (userEmail) => {
 };
 
 // ─── POST /attendance/mark/face ───────────────────────────────────
-router.post('/mark/face', authenticate, requireRole(['student', 'admin']), upload.single('image'), async (req, res) => {
+router.post('/mark/face', authenticate, requireRole('student'), upload.single('image'), async (req, res) => {
   try {
     // 1. If an image file is uploaded (Flutter Mobile Flow)
     if (req.file && req.file.buffer) {
@@ -235,13 +238,10 @@ router.post('/mark/face', authenticate, requireRole(['student', 'admin']), uploa
 
       const { session_id } = req.body;
 
-      // Validate session
-      let session = null;
-      if (session_id && mongoose.Types.ObjectId.isValid(session_id)) {
-        session = await Session.findOne({ _id: session_id, is_active: true });
-      } else {
-        session = await Session.findOne({ is_active: true });
+      if (typeof session_id !== 'string' || !mongoose.Types.ObjectId.isValid(session_id)) {
+        return res.status(400).json({ detail: 'A valid active session is required.' });
       }
+      const session = await Session.findOne({ _id: session_id, is_active: true });
 
       if (!session) {
         return res.status(400).json({ detail: "No active attendance session found" });
@@ -336,67 +336,12 @@ router.post('/mark/face', authenticate, requireRole(['student', 'admin']), uploa
       });
     }
 
-    // 2. Legacy Direct Scanner Token Flow (for automated camera scripts)
-    const token = req.headers['token'] || req.headers['authorization']?.split(' ')[1] || req.headers['x-face-scanner-token'];
-    const expectedToken = process.env.FACE_SCANNER_TOKEN;
-    if (!expectedToken || expectedToken.trim() === '') {
-      return res.status(500).json({ detail: "Server misconfiguration: FACE_SCANNER_TOKEN is missing" });
-    }
-    if (!token || token !== expectedToken) {
-      return res.status(401).json({ detail: "Unauthorized face scanner token" });
-    }
-
-    const { student_email, confidence } = req.body;
-
-    const session = await Session.findOne({ is_active: true });
-    if (!session) {
-      return res.status(400).json({ detail: "No active attendance session found" });
-    }
-
-    const existing = await Attendance.findOne({
-      student_email,
-      session_id: session._id.toString()
-    });
-
-    if (existing) {
-      return res.status(409).json({
-        detail: "Attendance already marked for this session",
-        message: "Attendance already marked for this session"
-      });
-    }
-
-    const timestamp = new Date();
-    const newRecord = new Attendance({
-      student_email,
-      session_id: session._id.toString(),
-      timestamp,
-      status: "Present",
-      verified_by: "face",
-      confidence
-    });
-
-    await newRecord.save();
-
-    await auditLog(student_email, 'student', 'ATTENDANCE_MARKED', { method: 'face', session_id: session._id.toString(), confidence }, req);
-
-    trackJob(notificationService.broadcast({
-      type: "attendance_update",
-      student_email,
-      session_id: session._id.toString(),
-      status: "Present",
-      timestamp: timestamp.toISOString(),
-      verified_by: "face",
-      confidence
-    }).catch(console.error));
-
-    trackJob(calculateHealthScore(student_email).catch(console.error));
-
-    res.json({ status: "success", message: "Face attendance marked successfully" });
+    return res.status(400).json({ detail: 'A verified face image is required.' });
   } catch (error) {
     if (error.code === 11000) {
       return res.status(409).json({ detail: "Attendance already marked for this session", message: "Attendance already marked for this session" });
     }
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Attendance');
   }
 });
 
@@ -443,7 +388,7 @@ router.get('/dashboard', authenticate, async (req, res) => {
       risk_alerts: formattedAlerts
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Attendance');
   }
 });
 
@@ -474,7 +419,7 @@ router.get('/command-center', authenticate, requireRole(['admin', 'teacher']), a
       warning_students: warningCount
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Attendance');
   }
 });
 
@@ -503,7 +448,7 @@ router.get('/live-monitor', authenticate, requireRole(['admin', 'teacher']), asy
 
     res.json(sessionsTelemetry);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Attendance');
   }
 });
 
@@ -542,7 +487,7 @@ router.get('/risk-analysis', authenticate, requireRole(['admin', 'teacher']), as
 
     res.json(riskStudentsList);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Attendance');
   }
 });
 
@@ -563,7 +508,7 @@ router.get('/heatmap', authenticate, async (req, res) => {
 
     res.json(heatmap);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Attendance');
   }
 });
 
@@ -613,7 +558,7 @@ router.get('/report/generate', authenticate, async (req, res) => {
       });
     }
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Attendance');
   }
 });
 
@@ -623,14 +568,17 @@ router.get('/audit-logs', authenticate, requireRole('admin'), async (req, res) =
     const logs = await AttendanceAuditLog.find({}).sort({ timestamp: -1 }).limit(100).lean();
     res.json(logs);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Attendance');
   }
 });
 
 // ─── GET /attendance/student/:email ──────────────────────────────
 router.get('/student/:email', authenticate, async (req, res) => {
   try {
-    const { email } = req.params;
+    const email = req.params.email.trim().toLowerCase();
+    if (!canReadStudentAttendance(req, email)) {
+      return res.status(403).json({ detail: 'Forbidden: cannot access this student attendance.' });
+    }
     const page = parseInt(req.query.page || "1", 10);
     const limit = parseInt(req.query.limit || "20", 10);
     const skip = (page - 1) * limit;
@@ -691,29 +639,31 @@ router.get('/student/:email', authenticate, async (req, res) => {
       logs: result
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Attendance');
   }
 });
 
 // ─── GET /attendance/student/analytics/:email ──────────────────────
 router.get('/student/analytics/:email', authenticate, async (req, res) => {
   try {
-    const { email } = req.params;
+    const email = req.params.email.trim().toLowerCase();
+    if (!canReadStudentAttendance(req, email)) {
+      return res.status(403).json({ detail: 'Forbidden: cannot access this student analytics.' });
+    }
     const records = await Attendance.find({ student_email: email }).lean();
     
+    const sessions = await Session.find(
+      { _id: { $in: records.map((record) => record.session_id) } },
+      'subject'
+    ).lean();
+    const subjectBySessionId = new Map(sessions.map((session) => [session._id.toString(), session.subject]));
     const presentCounts = {};
-    for (const rec of records) {
-      const session = await Session.findOne({ _id: rec.session_id }).lean();
-      if (session) {
-        const sub = session.subject;
-        presentCounts[sub] = (presentCounts[sub] || 0) + 1;
-      }
+    for (const record of records) {
+      if (record.status !== 'Present') continue;
+      const subject = subjectBySessionId.get(record.session_id);
+      if (subject) presentCounts[subject] = (presentCounts[subject] || 0) + 1;
     }
-    
-    let subjects = Object.keys(presentCounts);
-    if (subjects.length === 0) {
-      subjects = ["Machine Learning", "Data Ethics", "Cloud Arch"];
-    }
+    const subjects = Object.keys(presentCounts);
 
     const subjectDetails = [];
     let totalPresent = 0;
@@ -721,37 +671,22 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
 
     for (const sub of subjects) {
       const totalSessions = await Session.countDocuments({ subject: sub });
-      let pCount = presentCounts[sub] || 0;
-      let tCount = Math.max(totalSessions, pCount, 1);
-      
-      if (totalSessions === 0) {
-        if (sub === 'Machine Learning') {
-          tCount = 20;
-          pCount = Math.min(pCount + 17, 20);
-        } else if (sub === 'Data Ethics') {
-          tCount = 25;
-          pCount = Math.min(pCount + 23, 25);
-        } else if (sub === 'Cloud Arch') {
-          tCount = 20;
-          pCount = Math.min(pCount + 14, 20);
-        } else {
-          tCount = 10;
-          pCount = Math.min(pCount + 8, 10);
-        }
-      }
+      // shortcut: denominator uses all sessions by subject until enrollment data exists.
+      const pCount = presentCounts[sub] || 0;
+      const tCount = Math.max(totalSessions, pCount);
 
       subjectDetails.push({
         subject: sub,
         present: pCount,
         total: tCount,
-        percentage: pCount / tCount
+        percentage: tCount ? pCount / tCount : 0
       });
       
       totalPresent += pCount;
       totalPossible += tCount;
     }
 
-    const overallPercentage = totalPossible > 0 ? (totalPresent / totalPossible) : 0.82;
+    const overallPercentage = totalPossible > 0 ? totalPresent / totalPossible : 0;
     
     const weeklyTrends = [];
     const now = new Date();
@@ -762,12 +697,13 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
       
       const pCountWeek = await Attendance.countDocuments({
         student_email: email,
+        status: 'Present',
         timestamp: { $gte: startOfWeek, $lt: endOfWeek }
       });
       
       weeklyTrends.push({
         week: `Wk ${7-i}`,
-        present: pCountWeek || Math.round(3 + Math.random() * 2)
+        present: pCountWeek
       });
     }
 
@@ -780,20 +716,21 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
       
       const pCountMonth = await Attendance.countDocuments({
         student_email: email,
+        status: 'Present',
         timestamp: { $gte: startOfMonth, $lt: endOfMonth }
       });
       
       const monthName = startOfMonth.toLocaleString('default', { month: 'short' });
       monthlyTrends.push({
         month: monthName,
-        present: pCountMonth || Math.round(15 + Math.random() * 5)
+        present: pCountMonth
       });
     }
 
-    const faceRecords = records.filter(r => r.verified_by === 'face');
+    const faceRecords = records.filter(r => r.verified_by === 'face' && Number.isFinite(r.confidence));
     const avgConfidence = faceRecords.length > 0
-      ? faceRecords.reduce((sum, r) => sum + (r.confidence || 0.95), 0) / faceRecords.length
-      : 0.96;
+      ? faceRecords.reduce((sum, r) => sum + r.confidence, 0) / faceRecords.length
+      : 0;
 
     res.json({
       overall_percentage: overallPercentage,
@@ -802,12 +739,12 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
       monthly_trends: monthlyTrends,
       ai_metrics: {
         average_confidence: avgConfidence,
-        lighting_quality: "Good",
-        face_visibility: "Excellent"
+        lighting_quality: faceRecords[0]?.lighting_quality || null,
+        face_visibility: faceRecords[0]?.face_visibility || null
       }
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Attendance');
   }
 });
 

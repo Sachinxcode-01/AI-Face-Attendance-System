@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "project": {
+    "name": "smartface_landing_web",
+    "productType": null,
+    "stack": [
+      "nextjs",
+      "react",
+      "tailwind-v4"
+    ]
+  },
+  "sources": {
+    "tokens": [
+      "app/globals.css"
+    ],
+    "components": [],
+    "assets": [],
+    "instructions": []
+  },
+  "design": {
+    "colorMode": "light",
+    "colors": {
+      "--background": {
+        "value": "#E8EAF6",
+        "source": "app/globals.css"
+      },
+      "--foreground": {
+        "value": "#1A1A3A",
+        "source": "app/globals.css"
+      },
+      "--primary": {
+        "value": "#4F46E5",
+        "source": "app/globals.css"
+      },
+      "--accent": {
+        "value": "#3D4AB8",
+        "source": "app/globals.css"
+      },
+      "--card-border": {
+        "value": "rgba(61, 74, 184, 0.12)",
+        "source": "app/globals.css"
+      },
+      "--card-hover-border": {
+        "value": "rgba(79, 70, 229, 0.28)",
+        "source": "app/globals.css"
+      },
+      "--text-primary": {
+        "value": "#1A1A3A",
+        "source": "app/globals.css"
+      },
+      "--text-muted": {
+        "value": "#6D7190",
+        "source": "app/globals.css"
+      },
+      "--border-color": {
+        "value": "rgba(61, 74, 184, 0.1)",
+        "source": "app/globals.css"
+      },
+      "--color-primary": {
+        "value": "var(--primary)",
+        "source": "app/globals.css"
+      },
+      "--color-accent": {
+        "value": "var(--accent)",
+        "source": "app/globals.css"
+      },
+      "--color-success": {
+        "value": "var(--success)",
+        "source": "app/globals.css"
+      },
+      "--color-warning": {
+        "value": "var(--warning)",
+        "source": "app/globals.css"
+      },
+      "--color-danger": {
+        "value": "var(--danger)",
+        "source": "app/globals.css"
+      },
+      "--color-space": {
+        "value": "var(--background)",
+        "source": "app/globals.css"
+      },
+      "--color-space-light": {
+        "value": "var(--card-bg-solid)",
+        "source": "app/globals.css"
+      },
+      "--color-space-card": {
+        "value": "var(--card-bg)",
+        "source": "app/globals.css"
+      },
+      "--color-glass": {
+        "value": "var(--card-bg)",
+        "source": "app/globals.css"
+      },
+      "--color-glass-hover": {
+        "value": "var(--card-hover-bg)",
+        "source": "app/globals.css"
+      },
+      "--color-glass-border": {
+        "value": "var(--card-border)",
+        "source": "app/globals.css"
+      },
+      "--color-glass-border-hover": {
+        "value": "var(--card-hover-border)",
+        "source": "app/globals.css"
+      },
+      "--color-muted": {
+        "value": "var(--text-muted)",
+        "source": "app/globals.css"
+      },
+      "--color-primary-text": {
+        "value": "var(--text-primary)",
+        "source": "app/globals.css"
+      }
+    },
+    "typography": {
+      "--font-display": {
+        "value": "'Poppins', var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif",
+        "source": "app/globals.css"
+      },
+      "--font-sans": {
+        "value": "var(--font-geist-sans), 'Inter', -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "source": "app/globals.css"
+      },
+      "--font-mono": {
+        "value": "var(--font-geist-mono), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
+        "source": "app/globals.css"
+      }
+    },
+    "spacing": {},
+    "radius": {},
+    "shadows": {},
+    "motion": {},
+    "density": "unknown"
+  },
+  "components": {
+    "installed": [],
+    "preferredPrimitives": [],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [],
+    "avoid": []
+  },
+  "decisions": [],
+  "evidence": [
+    {
+      "fact": "design.colorMode:light",
+      "source": "app/globals.css"
+    },
+    {
+      "fact": "design.tokens",
+      "source": "app/globals.css"
+    },
+    {
+      "fact": "project.stack:nextjs",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:react",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:tailwind-v4",
+      "source": "package.json"
+    }
+  ],
+  "generatedAt": "2026-11-06T16:28:29.263Z"
+}

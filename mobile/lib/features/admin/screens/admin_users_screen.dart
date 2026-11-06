@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
+import 'package:smartface_attendance/core/network/api_service.dart';
+import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/shared/widgets/status_badge.dart';
 import 'package:smartface_attendance/features/leave/screens/leave_review_screen.dart';
 
@@ -23,97 +26,98 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
   String _selectedStudentDept = 'All';
   String _studentSearchQuery = '';
   String _facultySearchQuery = '';
-
-  final List<Map<String, dynamic>> _students = [
-    {
-      'name': 'Aarav Sharma',
-      'email': 'aarav.sharma@institution.edu',
-      'dept': 'CSE',
-      'attendance': '94.2%',
-      'status': 'Active',
-      'isRisk': false,
-    },
-    {
-      'name': 'Diya Patel',
-      'email': 'diya.patel@institution.edu',
-      'dept': 'CSE',
-      'attendance': '68.5%',
-      'status': 'Risk',
-      'isRisk': true,
-    },
-    {
-      'name': 'Ishaan Gupta',
-      'email': 'ishaan.gupta@institution.edu',
-      'dept': 'ECE',
-      'attendance': '88.1%',
-      'status': 'Active',
-      'isRisk': false,
-    },
-    {
-      'name': 'Meera Nair',
-      'email': 'meera.nair@institution.edu',
-      'dept': 'ME',
-      'attendance': '71.0%',
-      'status': 'Risk',
-      'isRisk': true,
-    },
-    {
-      'name': 'Rohan Verma',
-      'email': 'rohan.verma@institution.edu',
-      'dept': 'Civil',
-      'attendance': '85.4%',
-      'status': 'Active',
-      'isRisk': false,
-    },
-    {
-      'name': 'Ananya Sen',
-      'email': 'ananya.sen@institution.edu',
-      'dept': 'CSE',
-      'attendance': '97.0%',
-      'status': 'Active',
-      'isRisk': false,
-    },
-  ];
-
-  final List<Map<String, dynamic>> _faculty = [
-    {
-      'name': 'Dr. Ramesh Babu',
-      'email': 'ramesh.babu@faculty.edu',
-      'dept': 'CSE',
-      'role': 'Professor',
-      'status': 'Active',
-      'isOnLeave': false,
-    },
-    {
-      'name': 'Prof. Sneha Kulkarni',
-      'email': 'sneha.kulkarni@faculty.edu',
-      'dept': 'ECE',
-      'role': 'HOD / Professor',
-      'status': 'Active',
-      'isOnLeave': false,
-    },
-    {
-      'name': 'Dr. Anil Kumar',
-      'email': 'anil.kumar@faculty.edu',
-      'dept': 'ME',
-      'role': 'Assistant Professor',
-      'status': 'On Leave',
-      'isOnLeave': true,
-    },
-    {
-      'name': 'Prof. Priya Rao',
-      'email': 'priya.rao@faculty.edu',
-      'dept': 'Civil',
-      'role': 'Associate Professor',
-      'status': 'Active',
-      'isOnLeave': false,
-    },
-  ];
+  bool _usersLoading = true;
+  String? _usersError;
+  List<Map<String, dynamic>> _students = [];
+  List<Map<String, dynamic>> _faculty = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    if (!mounted) return;
+    setState(() {
+      _usersLoading = true;
+      _usersError = null;
+    });
+    try {
+      final token = context.read<SessionManager>().token;
+      if (token == null || token.isEmpty) throw StateError('Missing session');
+
+      final users = <Map<String, dynamic>>[];
+      var page = 1;
+      var total = 0;
+      do {
+        final response = await ApiService.getManagementUsers(token, page: page);
+        final pageUsers = response['users'];
+        if (pageUsers is! List) throw const FormatException();
+        total =
+            int.tryParse(response['total']?.toString() ?? '') ??
+            pageUsers.length;
+        users.addAll(
+          pageUsers.whereType<Map>().map(
+            (user) => Map<String, dynamic>.from(user),
+          ),
+        );
+        if (pageUsers.isEmpty || users.length >= total) break;
+        page++;
+      } while (true);
+
+      final students = <Map<String, dynamic>>[];
+      final faculty = <Map<String, dynamic>>[];
+      const facultyRoles = {
+        'teacher',
+        'faculty',
+        'lecturer',
+        'hod',
+        'principal',
+      };
+      for (final user in users) {
+        final role = (user['role'] ?? '').toString().toLowerCase();
+        final email = (user['email'] ?? '').toString();
+        final name = (user['full_name'] ?? user['name'] ?? email)
+            .toString()
+            .trim();
+        final department = (user['department'] ?? '').toString().trim();
+        final common = {
+          'name': name.isEmpty ? 'Unknown user' : name,
+          'email': email.isEmpty ? 'Email unavailable' : email,
+          'dept': department.isEmpty ? '—' : department,
+          'status': 'Registered',
+        };
+        if (role == 'student') {
+          students.add({
+            ...common,
+            'attendance': 'Not available',
+            'isRisk': false,
+          });
+        } else if (facultyRoles.contains(role)) {
+          faculty.add({
+            ...common,
+            'role': (user['designation'] ?? role).toString(),
+            'isOnLeave': false,
+          });
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _students = students;
+        _faculty = faculty;
+        _usersLoading = false;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _usersError = 'Unable to load users. Try again.';
+          _usersLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -172,6 +176,16 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
   }
 
   Widget _buildStudentsTab(bool isDark) {
+    if (_usersLoading || _usersError != null) return _buildUsersState(isDark);
+
+    final departments =
+        _students
+            .map((student) => student['dept'] as String)
+            .where((department) => department != '—')
+            .toSet()
+            .toList()
+          ..sort();
+    departments.insert(0, 'All');
     final filtered = _students.where((s) {
       final matchesSearch =
           s['name'].toString().toLowerCase().contains(
@@ -209,7 +223,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
                 child: Row(
-                  children: ['All', 'CSE', 'ECE', 'ME', 'Civil'].map((dept) {
+                  children: departments.map((dept) {
                     final isSelected = _selectedStudentDept == dept;
                     return Padding(
                       padding: const EdgeInsets.only(right: 8.0),
@@ -298,7 +312,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                                         ),
                                       ),
                                       const SizedBox(height: 6),
-                                      Row(
+                                      Wrap(
+                                        spacing: 10,
+                                        runSpacing: 6,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
                                         children: [
                                           Container(
                                             padding: const EdgeInsets.symmetric(
@@ -321,7 +339,6 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                                               ),
                                             ),
                                           ),
-                                          const SizedBox(width: 10),
                                           Text(
                                             'Attendance: ${s['attendance']}',
                                             style: GoogleFonts.inter(
@@ -329,7 +346,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                                               fontWeight: FontWeight.w600,
                                               color: s['isRisk']
                                                   ? AppColors.error
-                                                  : AppColors.success,
+                                                  : AppColors.textMuted,
                                             ),
                                           ),
                                         ],
@@ -358,6 +375,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
   }
 
   Widget _buildFacultyTab(bool isDark) {
+    if (_usersLoading || _usersError != null) return _buildUsersState(isDark);
+
     final filtered = _faculty.where((f) {
       return f['name'].toString().toLowerCase().contains(
             _facultySearchQuery.toLowerCase(),
@@ -442,7 +461,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                                         ),
                                       ),
                                       const SizedBox(height: 6),
-                                      Row(
+                                      Wrap(
+                                        spacing: 10,
+                                        runSpacing: 6,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
                                         children: [
                                           Container(
                                             padding: const EdgeInsets.symmetric(
@@ -465,7 +488,6 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                                               ),
                                             ),
                                           ),
-                                          const SizedBox(width: 10),
                                           Text(
                                             f['role'],
                                             style: GoogleFonts.inter(
@@ -497,6 +519,38 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
                 ),
         ),
       ],
+    );
+  }
+
+  Widget _buildUsersState(bool isDark) {
+    if (_usersLoading) {
+      return const Center(child: CircularProgressIndicator.adaptive());
+    }
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _usersError!,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  color: isDark ? Colors.white70 : AppColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _loadUsers,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
