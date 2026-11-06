@@ -24,7 +24,7 @@
 
 **SmartFace Attendance & Biometric Security Suite** is an enterprise-grade, multi-platform biometric ecosystem designed to completely automate attendance logging and enforce robust real-time security. 
 
-Transitioned from a single local computer Python script, the system is now a **fully distributed platform** featuring high-performance AI face recognition, a secure FastAPI REST API backend, live WebSocket streams, an anti-proxy rotating QR verification system, an interactive cross-platform Flutter student application, elegant web dashboards, and LLM-powered natural language insights. It provides organizations with an elite, secure, and touchless administrative workflow.
+Transitioned from a single local computer Python script, the system is now a **fully distributed platform** featuring a high-speed FastAPI ArcFace AI inference microservice, an enterprise Node.js Express REST and WebSocket gateway, an anti-proxy rotating QR verification system, an interactive cross-platform Flutter student application, elegant web dashboards, and LLM-powered natural language insights. It provides organizations with an elite, secure, and touchless administrative workflow.
 
 ---
 
@@ -132,7 +132,7 @@ SmartFace-attendance/
 ## 🛠️ Technology Stack & Core Integrations
 
 * **Programming Language:** Python 3.9+ 🐍, Dart 🎯 (Flutter)
-* **API Framework:** FastAPI ⚡ (Backend REST APIs & WebSockets)
+* **API Frameworks:** Node.js Express ⚡ (REST API & WebSocket Gateway), FastAPI 🚀 (ArcFace AI Inference Microservice)
 * **Frontend Technologies:** Reflex (React/Next.js) 🌐, Streamlit 📊, Flutter 📱
 * **Database & Caching:** MongoDB 🗄️, Local Binary Serializations (`.pkl`, `.csv`)
 * **AI & Machine Learning:** InsightFace (ArcFace model `buffalo_l`), ONNX Runtime 🧠, Groq API & Gemini 3.5 Flash 🤖
@@ -250,7 +250,7 @@ python core/train_faces.py
 
 ## 📈 Key Usage Code & API Examples
 
-### 1. Registering Attendance via WebSocket API (FastAPI)
+### 1. Registering Attendance via WebSocket API (Node.js Express Gateway)
 Using WebSocket links, devices can securely stream and receive real-time attendance events:
 ```python
 import asyncio

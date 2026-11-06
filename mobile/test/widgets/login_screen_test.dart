@@ -8,6 +8,7 @@ import 'package:smartface_attendance/app/config/app_state.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/features/auth/screens/login_screen.dart';
+import 'package:smartface_attendance/features/auth/widgets/auth_shared_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../mocks/mock_api_service.dart';
 
@@ -125,6 +126,8 @@ void main() {
 
       // Verify the reference-styled auth card title is present
       expect(find.text('Welcome back'), findsOneWidget);
+      expect(find.byType(AnimatedWavingHand), findsOneWidget);
+      expect(find.text('👋'), findsOneWidget);
 
       // Verify form elements exist (Email & Password fields)
       expect(find.byType(TextField), findsAtLeast(2));

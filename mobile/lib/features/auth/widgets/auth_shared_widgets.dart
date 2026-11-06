@@ -889,6 +889,172 @@ class _SocialIconRowState extends State<SocialIconRow> {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
+// ANIMATED WAVING HAND GREETING WIDGET
+// ═════════════════════════════════════════════════════════════════════════════
+
+class AnimatedWavingHand extends StatefulWidget {
+  final double size;
+  final double emojiSize;
+  final bool autoPlay;
+
+  const AnimatedWavingHand({
+    super.key,
+    this.size = 38.0,
+    this.emojiSize = 20.0,
+    this.autoPlay = true,
+  });
+
+  @override
+  State<AnimatedWavingHand> createState() => _AnimatedWavingHandState();
+}
+
+class _AnimatedWavingHandState extends State<AnimatedWavingHand>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _waveAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+
+    // Natural 3-pulse wave sequence pivoting at the wrist
+    _waveAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: 0.28)
+            .chain(CurveTween(curve: Curves.easeOutQuad)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.28, end: -0.20)
+            .chain(CurveTween(curve: Curves.easeInOutQuad)),
+        weight: 18,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: -0.20, end: 0.24)
+            .chain(CurveTween(curve: Curves.easeInOutQuad)),
+        weight: 18,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.24, end: -0.12)
+            .chain(CurveTween(curve: Curves.easeInOutQuad)),
+        weight: 16,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: -0.12, end: 0.14)
+            .chain(CurveTween(curve: Curves.easeInOutQuad)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.14, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeOutQuad)),
+        weight: 18,
+      ),
+    ]).animate(_controller);
+
+    if (widget.autoPlay) {
+      Future.delayed(const Duration(milliseconds: 350), () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _triggerWave() {
+    HapticFeedback.lightImpact();
+    _controller.reset();
+    _controller.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isReducedMotion = MediaQuery.of(context).accessibleNavigation;
+
+    return Semantics(
+      label: 'Greeting wave icon',
+      button: true,
+      hint: 'Tap to wave',
+      child: Tooltip(
+        message: 'Tap to wave!',
+        child: GestureDetector(
+          onTap: _triggerWave,
+          child: Container(
+            width: widget.size,
+            height: widget.size,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(11),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [
+                        const Color(0xFF312E81).withValues(alpha: 0.65),
+                        const Color(0xFF1E1B4B).withValues(alpha: 0.85),
+                      ]
+                    : [
+                        const Color(0xFFF0F4FF),
+                        const Color(0xFFE0E7FF),
+                      ],
+              ),
+              border: Border.all(
+                color: isDark
+                    ? const Color(0xFF6366F1).withValues(alpha: 0.4)
+                    : const Color(0xFFC7D2FE).withValues(alpha: 0.8),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark
+                      ? const Color(0x334F46E5)
+                      : const Color(0x1A3D4AB8),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: isReducedMotion
+                ? Text(
+                    '👋',
+                    style: TextStyle(
+                      fontSize: widget.emojiSize,
+                      height: 1.0,
+                    ),
+                  )
+                : AnimatedBuilder(
+                    animation: _waveAnimation,
+                    builder: (context, child) {
+                      return Transform.rotate(
+                        angle: _waveAnimation.value,
+                        alignment: const Alignment(0.65, 0.75),
+                        child: child,
+                      );
+                    },
+                    child: Text(
+                      '👋',
+                      style: TextStyle(
+                        fontSize: widget.emojiSize,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 // COMPACT SCREEN STRUCTURAL LAYOUT WRAPPER
 //
 // Layout strategy:
@@ -905,6 +1071,7 @@ class _SocialIconRowState extends State<SocialIconRow> {
 
 class AuthScreenLayout extends StatelessWidget {
   final String title;
+  final Widget? titleLeading;
   final String? subtitle;
   final Widget? topIcon;
   final VoidCallback? onBackTap;
@@ -914,6 +1081,7 @@ class AuthScreenLayout extends StatelessWidget {
   const AuthScreenLayout({
     super.key,
     required this.title,
+    this.titleLeading,
     this.subtitle,
     this.topIcon,
     this.onBackTap,
@@ -968,6 +1136,7 @@ class AuthScreenLayout extends StatelessWidget {
                   bottom: 0,
                   child: _AuthCardShell(
                     title: title,
+                    titleLeading: titleLeading,
                     subtitle: subtitle,
                     topIcon: topIcon,
                     bottomInset: bottomInset,
@@ -986,6 +1155,7 @@ class AuthScreenLayout extends StatelessWidget {
 
 class _AuthCardShell extends StatelessWidget {
   final String title;
+  final Widget? titleLeading;
   final String? subtitle;
   final Widget? topIcon;
   final Widget child;
@@ -994,6 +1164,7 @@ class _AuthCardShell extends StatelessWidget {
 
   const _AuthCardShell({
     required this.title,
+    this.titleLeading,
     this.subtitle,
     this.topIcon,
     required this.child,
@@ -1047,15 +1218,27 @@ class _AuthCardShell extends StatelessWidget {
                     Center(child: topIcon!),
                     const SizedBox(height: 12),
                   ],
-                  Text(
-                    title,
-                    style: AppTextStyles.heading(
-                      context,
-                      weight: FontWeight.w700,
-                      color: isDark
-                          ? AppColors.textHeadingDark
-                          : AppColors.textHeading,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (titleLeading != null) ...[
+                        titleLeading!,
+                        const SizedBox(width: 10),
+                      ],
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: AppTextStyles.heading(
+                            context,
+                            weight: FontWeight.w700,
+                            color: isDark
+                                ? AppColors.textHeadingDark
+                                : AppColors.textHeading,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 6),

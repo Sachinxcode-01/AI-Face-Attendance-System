@@ -16,7 +16,10 @@ import time
 
 from insightface.app import FaceAnalysis
 from dotenv import load_dotenv  
-import ai_analyst
+try:
+    import core.ai_analyst as ai_analyst
+except ImportError:
+    import ai_analyst
 
 
 import requests

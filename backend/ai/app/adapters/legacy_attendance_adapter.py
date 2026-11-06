@@ -12,7 +12,14 @@ if sys.platform != "win32" and "winsound" not in sys.modules:
     sys.modules["winsound"] = MagicMock()
 
 # Ensure project root and core directory are in sys.path
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
+def _find_project_root() -> Path:
+    p = Path(__file__).resolve()
+    for parent in p.parents:
+        if (parent / "core" / "attendance_system.py").exists():
+            return parent
+    return Path(__file__).resolve().parents[3]
+
+PROJECT_ROOT = _find_project_root()
 CORE_DIR = PROJECT_ROOT / "core"
 
 for p in (str(PROJECT_ROOT), str(CORE_DIR)):
