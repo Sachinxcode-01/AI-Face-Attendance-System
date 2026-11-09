@@ -45,6 +45,218 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _showServerConfigSheet() {
+    final hostController = TextEditingController(text: ApiService.serverHost);
+    final portController = TextEditingController(text: ApiService.serverPort);
+    bool isTesting = false;
+    String? statusMsg;
+    bool? isSuccess;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final isDark = Theme.of(ctx).brightness == Brightness.dark;
+          return Container(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+            ),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E2230) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const Icon(Icons.dns_rounded, color: AuthDesign.primaryIndigo, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Server Connection Settings',
+                      style: AuthDesign.fontPoppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Active: ${ApiService.baseUrl}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: TextField(
+                        controller: hostController,
+                        decoration: InputDecoration(
+                          labelText: 'Host IP or Domain',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 1,
+                      child: TextField(
+                        controller: portController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Port',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    ActionChip(
+                      label: const Text('10.177.216.48 (Wi-Fi)'),
+                      onPressed: () {
+                        setSheetState(() {
+                          hostController.text = '10.177.216.48';
+                          portController.text = '8000';
+                        });
+                      },
+                    ),
+                    ActionChip(
+                      label: const Text('127.0.0.1 (ADB USB)'),
+                      onPressed: () {
+                        setSheetState(() {
+                          hostController.text = '127.0.0.1';
+                          portController.text = '8000';
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                if (statusMsg != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: (isSuccess == true ? Colors.green : Colors.red).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: (isSuccess == true ? Colors.green : Colors.red).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isSuccess == true ? Icons.check_circle : Icons.error_outline,
+                          color: isSuccess == true ? Colors.green : Colors.red,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            statusMsg!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isSuccess == true ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: isTesting
+                            ? null
+                            : () async {
+                                setSheetState(() {
+                                  isTesting = true;
+                                  statusMsg = 'Pinging server...';
+                                  isSuccess = null;
+                                });
+                                final h = hostController.text.trim();
+                                final p = portController.text.trim();
+                                final url = p.isEmpty ? 'http://$h' : 'http://$h:$p';
+                                final ok = await ApiService.testConnection(url);
+                                setSheetState(() {
+                                  isTesting = false;
+                                  isSuccess = ok;
+                                  statusMsg = ok
+                                      ? 'Server Reachable & Database Connected! ✅'
+                                      : 'Connection failed. Check IP & port. ❌';
+                                });
+                              },
+                        child: Text(isTesting ? 'Testing...' : 'Test Connection'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AuthDesign.primaryIndigo,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () async {
+                          final h = hostController.text.trim();
+                          final p = portController.text.trim();
+                          await ApiService.saveServerSettings(h, p);
+                          if (ctx.mounted) {
+                            Navigator.pop(ctx);
+                          }
+                          if (mounted) {
+                            setState(() {});
+                            AppToast.show(
+                              context,
+                              message: 'Server updated to ${ApiService.baseUrl}',
+                              type: ToastType.success,
+                            );
+                          }
+                        },
+                        child: const Text('Save & Apply'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -238,6 +450,36 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Server Endpoint Indicator
+            Align(
+              alignment: Alignment.centerRight,
+              child: InkWell(
+                onTap: _showServerConfigSheet,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.settings_ethernet, size: 13, color: AuthDesign.primaryIndigo),
+                      const SizedBox(width: 4),
+                      Text(
+                        ApiService.serverHost,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AuthDesign.primaryIndigo,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(Icons.arrow_drop_down, size: 14, color: AuthDesign.primaryIndigo),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
             // Email Field
             UnderlineTextField(
               label: 'Email',

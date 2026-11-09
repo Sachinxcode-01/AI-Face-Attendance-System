@@ -15,6 +15,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartface_attendance/app/config/env_config.dart';
 import 'package:smartface_attendance/features/leave/models/leave_model.dart';
 import 'package:smartface_attendance/features/leave/models/leave_balance.dart';
@@ -33,7 +34,7 @@ class ApiService {
       final uri = Uri.parse(baseUrl);
       return uri.host;
     } catch (_) {
-      return '10.40.28.48';
+      return '10.177.216.48';
     }
   }
 
@@ -174,7 +175,7 @@ class ApiService {
         msg.contains('timed out')) {
       return {
         'error_type': 'timeout',
-        'detail': 'Request timed out. Please try again.',
+        'detail': 'Request timed out ($baseUrl). Check server connection.',
       };
     }
     if (msg.contains('socketexception') ||
@@ -195,7 +196,7 @@ class ApiService {
       return {
         'error_type': 'backend_down',
         'detail':
-            'Server not reachable. Check your internet connection or try again later.',
+        'Server not reachable ($baseUrl). Check connection or server settings.',
       };
     }
     if (msg.contains('handshakeexception') ||
@@ -213,9 +214,28 @@ class ApiService {
   }
 
   static Future<void> saveServerSettings(String host, String port) async {
-    debugPrint(
-      '[ApiService] saveServerSettings called with $host:$port. EnvConfig is locked to $baseUrl',
-    );
+    final cleanHost = host.trim();
+    final cleanPort = port.trim();
+    final protocol = cleanHost.startsWith('https://') || cleanPort == '443'
+        ? 'https'
+        : 'http';
+    final hostOnly = cleanHost
+        .replaceAll(RegExp(r'^https?://'), '')
+        .replaceAll(RegExp(r'/.*$'), '');
+    final newUrl =
+        (cleanPort.isEmpty || cleanPort == '80' || cleanPort == '443')
+        ? '$protocol://$hostOnly'
+        : '$protocol://$hostOnly:$cleanPort';
+
+    EnvConfig.updateApiUrl(newUrl);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('saved_api_url', newUrl);
+      await prefs.setString('sf_custom_api_url', newUrl);
+    } catch (e) {
+      debugPrint('[ApiService] Error saving settings: $e');
+    }
+    debugPrint('[ApiService] saveServerSettings applied: $newUrl');
   }
 
   static Future<bool> isServerOnline() async {
@@ -296,6 +316,41 @@ class ApiService {
       debugPrint('[ApiService] ← Status ${response.statusCode}');
       return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
+      debugPrint('[ApiService] Primary login failed on $baseUrl: $e');
+      // If primary failed with timeout or socket exception, try fallback to 127.0.0.1:8000 (ADB reverse) or 10.177.216.48:8000
+      final altUrls = <String>[];
+      if (!baseUrl.contains('127.0.0.1') && !baseUrl.contains('localhost')) {
+        altUrls.add('http://127.0.0.1:8000');
+      }
+      if (!baseUrl.contains('10.177.216.48')) {
+        altUrls.add('http://10.177.216.48:8000');
+      }
+
+      for (final altUrl in altUrls) {
+        try {
+          debugPrint('[ApiService] Trying fallback check on $altUrl...');
+          final healthCheck = await client
+              .get(Uri.parse('$altUrl/health'))
+              .timeout(const Duration(seconds: 3));
+          if (healthCheck.statusCode == 200) {
+            debugPrint(
+              '[ApiService] ✅ Alt URL $altUrl is online! Retrying login with $altUrl',
+            );
+            EnvConfig.updateApiUrl(altUrl);
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('saved_api_url', altUrl);
+            final response = await client
+                .post(
+                  Uri.parse('$altUrl/auth/login'),
+                  headers: {'Content-Type': 'application/json'},
+                  body: jsonEncode({'email': email, 'password': password}),
+                )
+                .timeout(const Duration(seconds: 10));
+            return normalizeAuthResponse(_processResponse(response));
+          }
+        } catch (_) {}
+      }
+
       return _classifyNetworkError(e);
     }
   }

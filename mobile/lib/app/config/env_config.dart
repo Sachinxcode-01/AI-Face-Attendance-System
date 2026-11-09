@@ -18,6 +18,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class EnvConfig {
   static String? _apiUrl;
@@ -40,6 +41,20 @@ class EnvConfig {
       _githubClientId ?? 'YOUR_GITHUB_CLIENT_ID';
   static String get googleClientId =>
       _googleClientId ?? 'YOUR_GOOGLE_CLIENT_ID';
+
+  /// Dynamically updates the API URL and associated WebSocket URL in memory.
+  static void updateApiUrl(String newUrl) {
+    _apiUrl = newUrl.trim();
+    try {
+      final uri = Uri.parse(_apiUrl!);
+      final wsScheme = uri.scheme == 'https' ? 'wss' : 'ws';
+      final portStr = uri.hasPort ? ':${uri.port}' : '';
+      _wsUrl = '$wsScheme://${uri.host}$portStr';
+    } catch (_) {}
+    debugPrint(
+      '[EnvConfig] 🔄 Dynamically updated API URL: $_apiUrl, WS URL: $_wsUrl',
+    );
+  }
 
   // Firebase configurations
   static String get firebaseApiKey => _firebaseApiKey ?? 'AIzaSyDevFirebaseKey';
@@ -68,6 +83,23 @@ class EnvConfig {
 
       _apiUrl = _getOrThrow('API_URL');
       _wsUrl = _getOrThrow('WS_URL');
+
+      // Check for user-saved local override in SharedPreferences
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final savedApi =
+            prefs.getString('saved_api_url') ??
+            prefs.getString('sf_custom_api_url');
+        if (savedApi != null && savedApi.trim().isNotEmpty) {
+          updateApiUrl(savedApi.trim());
+          debugPrint(
+            '[EnvConfig] ⚙️ Overridden API_URL from SharedPreferences: $_apiUrl',
+          );
+        }
+      } catch (prefErr) {
+        debugPrint('[EnvConfig] Note: Could not read saved_api_url ($prefErr)');
+      }
+
       // GitHub & Google OAuth Client IDs (Optional read to prevent boot crashes if not set)
       _githubClientId = dotenv.env['GITHUB_CLIENT_ID'];
       _googleClientId = dotenv.env['GOOGLE_CLIENT_ID'];
