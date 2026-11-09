@@ -116,15 +116,17 @@ void main() {
 
       final stats = StudentStatsModel.fromJson(json);
 
-      expect(stats.overallPercentage, 0.82);
-      expect(stats.standing, 'Elite Performer');
-      expect(stats.rank, 'Ranked #4 in Department');
-      expect(stats.streak, 0);
+      expect(stats.hasData, isFalse);
+      expect(stats.overallPercentage, isNull);
+      expect(stats.standing, isNull);
+      expect(stats.rank, isNull);
+      expect(stats.streak, isNull);
       expect(stats.subjects, isEmpty);
     });
 
     test('toJson serializes nested stats correctly', () {
       const stats = StudentStatsModel(
+        hasData: true,
         overallPercentage: 0.95,
         standing: 'Top Scholar',
         rank: '#1 in class',

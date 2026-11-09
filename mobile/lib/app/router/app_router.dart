@@ -413,7 +413,9 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: AppRoutes.studentTimetablePath,
               name: AppRoutes.studentTimetableName,
-              builder: (context, state) => const StudentTimetableScreen(),
+              builder: (context, state) => StudentTimetableScreen(
+                initialDay: state.uri.queryParameters['day'],
+              ),
             ),
           ],
         ),

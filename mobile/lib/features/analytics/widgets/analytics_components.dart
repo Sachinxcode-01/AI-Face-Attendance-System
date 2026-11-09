@@ -163,7 +163,11 @@ class AttendanceScoreCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 5),
                             Text(
-                              streak >= 30 ? '🥇' : streak >= 14 ? '🥈' : '🥉',
+                              streakValue >= 30
+                                  ? '🥇'
+                                  : streakValue >= 14
+                                      ? '🥈'
+                                      : '🥉',
                               style: const TextStyle(fontSize: 10),
                             ),
                           ],

@@ -67,12 +67,20 @@ This document defines the production implementation and operational workflow for
   * **Individual Read-Aloud:** Each AI message bubble includes an inline speaker icon to vocalize that specific response on demand.
   * **Clean Sanitizer:** Automatically strips Markdown tokens (`*`, `#`, `` ` ``, URLs) prior to sending text to the audio synthesizer to ensure smooth, natural speech cadence.
 
-### 3.2 Mobile App Parity (`mobile/`)
+### 3.2 Mobile App Implementation (`mobile/`)
 
-For Flutter, the identical architecture maps to native device OS engines:
+Implemented in clean architecture via `VoiceAssistantService` (`lib/features/chatbot/services/voice_assistant_service.dart`) and integrated directly into `NexaChatSheet` (`lib/features/chatbot/widgets/nexa_chat_sheet.dart`):
+
 * **Input (STT):** `speech_to_text` plugin (bridges to Google Speech on Android and Apple Dictation on iOS).
+  * Microphone toggle button beside the text input with active pulsing red state and haptic feedback.
+  * Real-time text streaming directly into `_textController` with dynamic selection cursor management.
+  * Active recording banner with animated progress indicator and quick `DONE` tap handler.
+  * Native permission declarations in `AndroidManifest.xml` (`RECORD_AUDIO` and `android.speech.RecognitionService` intent filter in `<queries>`) and iOS `Info.plist` (`NSMicrophoneUsageDescription`, `NSSpeechRecognitionUsageDescription`).
 * **Output (TTS):** `flutter_tts` plugin (bridges to Android TextToSpeech and iOS `AVSpeechSynthesizer`).
-* **Zero Cloud Cost:** 100% on-device speech processing with 0ms server transcription queue.
+  * Inline speaker button on every bot message bubble to listen or stop playback.
+  * Header Auto-Voice toggle button (`volume_up` / `volume_off`) for continuous vocal responses.
+  * Automatic Markdown sanitizer stripping asterisks, headers, URLs, and code blocks for crisp vocal delivery.
+* **Zero Cloud Cost & Latency:** 100% on-device speech processing with 0ms server queue and zero external API fees.
 
 ---
 

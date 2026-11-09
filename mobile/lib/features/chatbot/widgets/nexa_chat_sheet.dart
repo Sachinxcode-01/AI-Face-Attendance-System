@@ -9,6 +9,7 @@ import 'package:smartface_attendance/design_system/ui/app_colors.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/chatbot/controllers/chatbot_controller.dart';
 import 'package:smartface_attendance/features/chatbot/models/chat_message.dart';
+import 'package:smartface_attendance/features/chatbot/services/voice_assistant_service.dart';
 
 class NexaChatSheet extends StatefulWidget {
   const NexaChatSheet({super.key});
@@ -20,9 +21,22 @@ class NexaChatSheet extends StatefulWidget {
 class _NexaChatSheetState extends State<NexaChatSheet> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final VoiceAssistantService _voiceService = VoiceAssistantService();
+
+  bool _isListening = false;
+  bool _autoVoice = false;
+  String? _voiceNotice;
+  String? _activeSpeakingId;
+
+  @override
+  void initState() {
+    super.initState();
+    _voiceService.initTts();
+  }
 
   @override
   void dispose() {
+    _voiceService.dispose();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -95,6 +109,15 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
   void _handleSend(String query) {
     if (query.trim().isEmpty) return;
 
+    if (_isListening) {
+      _voiceService.stopListening();
+      setState(() {
+        _isListening = false;
+        _voiceNotice = null;
+      });
+    }
+    _voiceService.stopSpeaking();
+
     final session = context.read<SessionManager>();
     final chatbot = context.read<ChatbotController>();
     String currentRoute = '/';
@@ -119,6 +142,59 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
 
     _textController.clear();
     _scrollToBottom();
+  }
+
+  void _toggleVoiceInput() async {
+    if (_isListening) {
+      await _voiceService.stopListening();
+      if (mounted) {
+        setState(() {
+          _isListening = false;
+          _voiceNotice = null;
+        });
+      }
+      return;
+    }
+
+    HapticFeedback.mediumImpact();
+    if (mounted) {
+      setState(() {
+        _isListening = true;
+        _voiceNotice = 'Listening... Speak your academic query';
+      });
+    }
+
+    final success = await _voiceService.startListening(
+      onResult: (text) {
+        if (mounted) {
+          setState(() {
+            _textController.text = text;
+            _textController.selection = TextSelection.fromPosition(
+              TextPosition(offset: _textController.text.length),
+            );
+          });
+        }
+      },
+      onError: (err) {
+        if (mounted) {
+          setState(() {
+            _isListening = false;
+            _voiceNotice = 'Voice input stopped';
+          });
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted && !_isListening) {
+              setState(() => _voiceNotice = null);
+            }
+          });
+        }
+      },
+    );
+
+    if (!success && mounted) {
+      setState(() {
+        _isListening = false;
+      });
+    }
   }
 
   @override
@@ -330,13 +406,36 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
             ),
           ),
           IconButton(
+            icon: Icon(
+              _autoVoice ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+              color: _autoVoice ? AppColors.gold : (isDark ? Colors.white54 : Colors.black54),
+              size: 20,
+            ),
+            tooltip: _autoVoice ? 'Auto-voice speech enabled' : 'Auto-voice speech disabled',
+            onPressed: () {
+              setState(() {
+                _autoVoice = !_autoVoice;
+              });
+              if (!_autoVoice) {
+                _voiceService.stopSpeaking();
+              }
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.cleaning_services_outlined, size: 20),
             tooltip: 'Clear Chat',
-            onPressed: () => chatbot.clearMessages(),
+            onPressed: () {
+              _voiceService.stopSpeaking();
+              chatbot.clearMessages();
+            },
           ),
           IconButton(
             icon: const Icon(Icons.close, size: 22),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              _voiceService.stopSpeaking();
+              _voiceService.stopListening();
+              Navigator.of(context).pop();
+            },
           ),
         ],
       ),
@@ -517,25 +616,48 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
                   ],
 
                   if (!isUser) ...[
-                    const SizedBox(height: 4),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: () {
-                          Clipboard.setData(ClipboardData(text: msg.content));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Copied response to clipboard'),
-                              duration: Duration(seconds: 1),
-                            ),
-                          );
-                        },
-                        child: const Icon(
-                          Icons.copy_rounded,
-                          size: 14,
-                          color: Colors.white38,
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            if (_voiceService.isSpeaking && _activeSpeakingId == msg.id) {
+                              _voiceService.stopSpeaking();
+                              setState(() => _activeSpeakingId = null);
+                            } else {
+                              _voiceService.speak(msg.content, messageId: msg.id);
+                              setState(() => _activeSpeakingId = msg.id);
+                            }
+                          },
+                          child: Icon(
+                            _voiceService.isSpeaking && _activeSpeakingId == msg.id
+                                ? Icons.volume_off_rounded
+                                : Icons.volume_up_rounded,
+                            size: 15,
+                            color: _voiceService.isSpeaking && _activeSpeakingId == msg.id
+                                ? AppColors.gold
+                                : Colors.white38,
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: msg.content));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Copied response to clipboard'),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                          child: const Icon(
+                            Icons.copy_rounded,
+                            size: 14,
+                            color: Colors.white38,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ],
@@ -548,62 +670,134 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
   }
 
   Widget _buildInputBar(bool isDark, ChatbotController chatbot) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        8,
-        16,
-        MediaQuery.of(context).viewInsets.bottom + 12,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : Colors.white,
-        border: Border(
-          top: BorderSide(color: isDark ? Colors.white10 : Colors.black12),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (_isListening || _voiceNotice != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            color: isDark
+                ? Colors.amber.withValues(alpha: 0.12)
+                : Colors.amber.withValues(alpha: 0.2),
+            child: Row(
+              children: [
+                const SizedBox(
+                  width: 10,
+                  height: 10,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.amber,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _voiceNotice ?? 'Listening... Speak your query',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? const Color(0xFFFDE68A) : Colors.black87,
+                    ),
+                  ),
+                ),
+                if (_isListening)
+                  GestureDetector(
+                    onTap: _toggleVoiceInput,
+                    child: const Text(
+                      'DONE',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        Container(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            8,
+            16,
+            MediaQuery.of(context).viewInsets.bottom + 12,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+            border: Border(
+              top: BorderSide(color: isDark ? Colors.white10 : Colors.black12),
+            ),
+          ),
+          child: Row(
+            children: [
+              Material(
+                color: _isListening
+                    ? Colors.redAccent
+                    : (isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.05)),
+                shape: const CircleBorder(),
+                child: InkWell(
+                  onTap: _toggleVoiceInput,
+                  customBorder: const CircleBorder(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Icon(
+                      _isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                      color: _isListening
+                          ? Colors.white
+                          : (isDark ? Colors.white70 : Colors.black87),
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _textController,
+                  onSubmitted: _handleSend,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                  decoration: InputDecoration(
+                    hintText: _isListening
+                        ? 'Listening to speech...'
+                        : 'Ask Nexa anything about Smart Attendance...',
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.white38 : Colors.black38,
+                      fontSize: 13,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: isDark
+                        ? Colors.white.withValues(alpha: 0.06)
+                        : Colors.black.withValues(alpha: 0.04),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Material(
+                color: AppColors.primary,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  onTap: () => _handleSend(_textController.text),
+                  customBorder: const CircleBorder(),
+                  child: const Padding(
+                    padding: EdgeInsets.all(10.0),
+                    child: Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _textController,
-              onSubmitted: _handleSend,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-              decoration: InputDecoration(
-                hintText: 'Ask Nexa anything about Smart Attendance...',
-                hintStyle: TextStyle(
-                  color: isDark ? Colors.white38 : Colors.black38,
-                  fontSize: 13,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                filled: true,
-                fillColor: isDark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : Colors.black.withValues(alpha: 0.04),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Material(
-            color: AppColors.primary,
-            shape: const CircleBorder(),
-            child: InkWell(
-              onTap: () => _handleSend(_textController.text),
-              customBorder: const CircleBorder(),
-              child: const Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Icon(Icons.send_rounded, color: Colors.white, size: 20),
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

@@ -28,7 +28,8 @@ import 'package:smartface_attendance/design_system/components/motion_widgets.dar
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
 class StudentTimetableScreen extends StatefulWidget {
-  const StudentTimetableScreen({super.key});
+  final String? initialDay;
+  const StudentTimetableScreen({super.key, this.initialDay});
 
   @override
   State<StudentTimetableScreen> createState() => _StudentTimetableScreenState();
@@ -51,7 +52,24 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _days.length, vsync: this);
+    int initialIndex = 0;
+    if (widget.initialDay != null && widget.initialDay!.isNotEmpty) {
+      final idx = _days.indexWhere(
+        (d) => d.toLowerCase() == widget.initialDay!.toLowerCase(),
+      );
+      if (idx != -1) initialIndex = idx;
+    } else {
+      final weekday = DateTime.now().weekday; // 1 = Mon, 5 = Fri
+      if (weekday >= 1 && weekday <= 5) {
+        initialIndex = weekday - 1;
+      }
+    }
+
+    _tabController = TabController(
+      length: _days.length,
+      vsync: this,
+      initialIndex: initialIndex,
+    );
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
         HapticFeedback.selectionClick();
@@ -185,15 +203,19 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
                     padding: EdgeInsets.all(20),
                     child: DashboardShimmer(),
                   )
-                : TabBarView(
-                    controller: _tabController,
-                    children: _days.map((day) {
-                      final slots = _getSlotsForDay(day);
-                      if (slots.isEmpty) {
-                        return _buildEmptyState(day, isDark);
-                      }
-                      return _buildTimetableList(slots, isDark, textHeading);
-                    }).toList(),
+                : RefreshIndicator(
+                    onRefresh: _loadTimetable,
+                    color: const Color(0xFF6366F1),
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: _days.map((day) {
+                        final slots = _getSlotsForDay(day);
+                        if (slots.isEmpty) {
+                          return _buildEmptyState(day, isDark);
+                        }
+                        return _buildTimetableList(slots, isDark, textHeading);
+                      }).toList(),
+                    ),
                   ),
           ),
         ],

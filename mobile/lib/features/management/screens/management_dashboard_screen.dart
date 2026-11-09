@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
-import 'package:smartface_attendance/design_system/ui/app_colors.dart';
 import 'package:smartface_attendance/design_system/ui/premium_background.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';

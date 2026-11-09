@@ -209,6 +209,10 @@ class ChatbotController extends ChangeNotifier {
               .toList() ??
           [];
 
+      if (actions.isEmpty) {
+        actions.addAll(_extractIntentActions(text.trim()));
+      }
+
       final assistantMsg = ChatMessage(
         id: 'msg_${DateTime.now().millisecondsSinceEpoch + 1}',
         sender: 'assistant',
@@ -222,12 +226,14 @@ class ChatbotController extends ChangeNotifier {
         _unreadCount++;
       }
     } catch (e) {
+      final offlineActions = _extractIntentActions(text.trim());
       final errorMsg = ChatMessage(
         id: 'msg_${DateTime.now().millisecondsSinceEpoch + 1}',
         sender: 'assistant',
         content:
-            'I am currently offline or using local knowledge base. I can help answer questions about QR scanning, face attendance, timetables, and reports!',
+            'I am currently operating via local cache. Here are quick shortcuts based on your query:',
         timestamp: DateTime.now(),
+        suggestedActions: offlineActions,
       );
       _messages.add(errorMsg);
     } finally {
@@ -248,6 +254,61 @@ class ChatbotController extends ChangeNotifier {
     } catch (e) {
       debugPrint('[ChatbotController] Clear error: $e');
     }
+  }
+
+  List<Map<String, dynamic>> _extractIntentActions(String query) {
+    final lower = query.toLowerCase();
+    final List<Map<String, dynamic>> actions = [];
+
+    // Timetable intent with day parsing
+    if (lower.contains('timetable') ||
+        lower.contains('schedule') ||
+        lower.contains('class') ||
+        lower.contains('lecture')) {
+      String dayParam = '';
+      if (lower.contains('monday')) {
+        dayParam = '?day=Monday';
+      } else if (lower.contains('tuesday')) {
+        dayParam = '?day=Tuesday';
+      } else if (lower.contains('wednesday')) {
+        dayParam = '?day=Wednesday';
+      } else if (lower.contains('thursday')) {
+        dayParam = '?day=Thursday';
+      } else if (lower.contains('friday')) {
+        dayParam = '?day=Friday';
+      }
+
+      final label = dayParam.isNotEmpty
+          ? '📅 View ${dayParam.split('=').last} Classes'
+          : '📅 Open Timetable';
+      actions.add({'label': label, 'route': '/student/timetable$dayParam'});
+    }
+
+    // Profile intent
+    if (lower.contains('profile') ||
+        lower.contains('id card') ||
+        lower.contains('usn') ||
+        lower.contains('details')) {
+      actions.add({'label': '👤 View Profile', 'route': '/student/profile'});
+    }
+
+    // Scanner / Check-in intent
+    if (lower.contains('qr') ||
+        lower.contains('scan') ||
+        lower.contains('mark attendance') ||
+        lower.contains('check in')) {
+      actions.add({'label': '📷 Mark Attendance', 'route': '/student/scan'});
+    }
+
+    // Leave intent
+    if (lower.contains('leave') ||
+        lower.contains('sick') ||
+        lower.contains('absent') ||
+        lower.contains('holiday')) {
+      actions.add({'label': '📝 Apply Leave', 'route': '/student/leave'});
+    }
+
+    return actions;
   }
 
   Future<void> _saveMessagesToPrefs() async {

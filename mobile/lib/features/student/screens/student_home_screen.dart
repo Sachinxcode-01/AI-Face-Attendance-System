@@ -710,7 +710,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
         ? SessionBanner(
             subject: _activeSession?['subject'] ?? 'Active class',
             teacher: _activeSession?['teacher'] ?? 'Not specified',
-            minutesRemaining: _activeSession?['minutes_remaining'] as int?,
+            minutesRemaining:
+                (_activeSession?['minutes_remaining'] as num?)?.toInt() ?? 15,
             onVerifyTap: () => context.go('/student/scan'),
           )
         : null;
@@ -763,7 +764,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               end: 0,
               duration: 400.ms,
               curve: Curves.easeOutCubic,
-            );
+            )
             : const SizedBox.shrink();
 
     final aiInsights =

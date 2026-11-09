@@ -142,8 +142,8 @@ class _LeaveApplyScreenState extends State<LeaveApplyScreen> {
         listenOptions: SpeechListenOptions(
           onDevice: true,
           listenMode: ListenMode.dictation,
-          pauseFor: Duration(seconds: 3),
-          listenFor: Duration(minutes: 1),
+          pauseFor: const Duration(seconds: 3),
+          listenFor: const Duration(minutes: 1),
         ),
       );
     } catch (_) {
