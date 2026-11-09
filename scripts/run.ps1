@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   SmartFace Elite — Unified Multi-Platform Command Orchestrator
 .DESCRIPTION
@@ -15,7 +15,7 @@
 
 param (
     [Parameter(Position=0)]
-    [ValidateSet("help", "dev", "backend", "frontend", "admin", "reflex", "mobile", "preflight", "test", "stop", "clean")]
+    [ValidateSet("help", "dev", "backend", "mobile", "preflight", "test", "stop", "clean")]
     [string]$Command = "help"
 )
 
@@ -23,8 +23,6 @@ $ErrorActionPreference = "Continue"
 $ROOT_DIR = (Resolve-Path "$PSScriptRoot\..").Path
 $NODE_DIR = "$ROOT_DIR\backend\api"
 $AI_DIR = "$ROOT_DIR\backend\ai"
-$WEB_DIR = "$ROOT_DIR\frontend\web"
-$ADMIN_DIR = "$ROOT_DIR\frontend\admin"
 $MOBILE_DIR = "$ROOT_DIR\mobile"
 
 function Show-Help {
@@ -35,11 +33,8 @@ function Show-Help {
     Write-Host '  Usage: .\scripts\run.ps1 <command>  (or npm run <command> / make <command>)' -ForegroundColor White
     Write-Host ''
     Write-Host '  Commands:' -ForegroundColor Yellow
-    Write-Host '    dev         Spin up complete stack: Backend (8000+8001) + Web Frontend (3000)' -ForegroundColor White
+    Write-Host '    dev         Spin up complete backend stack: Node.js (8000) + Python AI (8001)' -ForegroundColor White
     Write-Host '    backend     Start Node.js API (Port 8000) and Python AI Service (Port 8001)' -ForegroundColor White
-    Write-Host '    frontend    Start Next.js 15 Web Portal (Port 3000)' -ForegroundColor White
-    Write-Host '    admin       Start Streamlit Real-Time Admin Dashboard (Port 8501)' -ForegroundColor White
-    Write-Host '    reflex      Start Reflex Python Fullstack Web App' -ForegroundColor White
     Write-Host '    mobile      Launch Flutter Mobile Client with automatic ADB reverse' -ForegroundColor White
     Write-Host '    preflight   Run system health diagnostics, port checks, and model validation' -ForegroundColor White
     Write-Host '    test        Run automated test suites for Node.js API and Python AI' -ForegroundColor White
@@ -132,28 +127,7 @@ switch ($Command) {
 
     "dev" {
         Start-BackendServices
-        Write-Host "`n>>> Starting Next.js Web Portal (Port 3000)..." -ForegroundColor Cyan
-        Set-Location $WEB_DIR
-        npm run dev
-    }
-
-    "frontend" {
-        Write-Host "`n>>> Starting Next.js Web Portal (Port 3000)..." -ForegroundColor Cyan
-        Set-Location $WEB_DIR
-        npm run dev
-    }
-
-    "admin" {
-        Write-Host "`n>>> Starting Streamlit Admin Dashboard (Port 8501)..." -ForegroundColor Cyan
-        $pyPath = "$ROOT_DIR\venv\Scripts\python.exe"
-        if (-not (Test-Path $pyPath)) { $pyPath = "python" }
-        & $pyPath -m streamlit run "$ADMIN_DIR\web_dashboard.py" --server.port 8501
-    }
-
-    "reflex" {
-        Write-Host "`n>>> Starting Reflex Web Portal..." -ForegroundColor Cyan
-        Set-Location "$ROOT_DIR\frontend\reflex"
-        reflex run
+        Write-Host "`n>>> Backend ready. Use '.\scripts\run.ps1 mobile' to launch Flutter." -ForegroundColor Cyan
     }
 
     "mobile" {

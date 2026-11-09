@@ -8,13 +8,8 @@
     "dev": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 dev",
     "backend": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 backend",
     "api": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 backend",
-    "frontend": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 frontend",
-    "web": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 frontend",
-    "admin": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 admin",
-    "reflex": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 reflex",
     "mobile": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 mobile",
     "preflight": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 preflight",
-    "build": "npm --prefix frontend/web run build",
     "test": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 test",
     "stop": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 stop",
     "clean": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 clean"
