@@ -92,7 +92,7 @@ void main() {
       );
 
       // Verify the screen loads and displays the title
-      expect(find.text('Attendance Calendar'), findsOneWidget);
+      expect(find.text('Academic Calendar'), findsOneWidget);
     });
 
     test(

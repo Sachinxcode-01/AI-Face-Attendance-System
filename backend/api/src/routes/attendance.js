@@ -129,7 +129,7 @@ const calculateHealthScore = async (email) => {
 // ─── POST /attendance/mark ────────────────────────────────────────
 router.post('/mark', authenticate, async (req, res) => {
   try {
-    const { student_email: requestedStudentEmail, session_id, qr_code } = req.body;
+    const { student_email: requestedStudentEmail, session_id, qr_code, latitude, longitude } = req.body;
     const role = (req.userRole || '').toLowerCase();
     const student_email = role === 'student' ? req.userEmail.toLowerCase() : requestedStudentEmail?.trim().toLowerCase();
 
@@ -156,6 +156,31 @@ router.post('/mark', authenticate, async (req, res) => {
     }
     if (role === 'teacher' && session.teacher_id.toLowerCase() !== req.userEmail.toLowerCase()) {
       return res.status(403).json({ detail: 'You can only mark attendance for your own session.' });
+    }
+
+    // Classroom Geofence verification
+    if (session.latitude != null && session.longitude != null) {
+      if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+        return res.status(403).json({ detail: 'Classroom geofence validation required. Please enable location permissions.' });
+      }
+      const R = 6371e3; // Earth radius in metres
+      const phi1 = (session.latitude * Math.PI) / 180;
+      const phi2 = (latitude * Math.PI) / 180;
+      const deltaPhi = ((latitude - session.latitude) * Math.PI) / 180;
+      const deltaLambda = ((longitude - session.longitude) * Math.PI) / 180;
+
+      const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                Math.cos(phi1) * Math.cos(phi2) *
+                Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c;
+
+      const maxRadius = session.radius_meters || 150;
+      if (distance > maxRadius) {
+        return res.status(403).json({
+          detail: `Geofence validation failed. You are ${Math.round(distance)}m away from the classroom (max: ${maxRadius}m).`
+        });
+      }
     }
 
     const timestamp = new Date();

@@ -745,17 +745,23 @@ class ApiService {
   static Future<Map<String, dynamic>> markAttendance(
     String studentEmail,
     String sessionId,
-    String qrCode,
-  ) async {
+    String qrCode, {
+    double? latitude,
+    double? longitude,
+  }) async {
     try {
+      final Map<String, dynamic> payload = {
+        'student_email': studentEmail,
+        'session_id': sessionId,
+        'qr_code': qrCode,
+      };
+      if (latitude != null) payload['latitude'] = latitude;
+      if (longitude != null) payload['longitude'] = longitude;
+
       final response = await client.post(
         Uri.parse('$baseUrl/attendance/mark'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'student_email': studentEmail,
-          'session_id': sessionId,
-          'qr_code': qrCode,
-        }),
+        body: jsonEncode(payload),
       );
       return jsonDecode(response.body);
     } catch (e) {

@@ -9,6 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_core
   flutter_secure_storage_windows
   flutter_tts
+  geolocator_windows
   printing
   rive_common
   speech_to_text_windows

@@ -408,10 +408,14 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
           IconButton(
             icon: Icon(
               _autoVoice ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-              color: _autoVoice ? AppColors.gold : (isDark ? Colors.white54 : Colors.black54),
+              color: _autoVoice
+                  ? AppColors.gold
+                  : (isDark ? Colors.white54 : Colors.black54),
               size: 20,
             ),
-            tooltip: _autoVoice ? 'Auto-voice speech enabled' : 'Auto-voice speech disabled',
+            tooltip: _autoVoice
+                ? 'Auto-voice speech enabled'
+                : 'Auto-voice speech disabled',
             onPressed: () {
               setState(() {
                 _autoVoice = !_autoVoice;
@@ -622,20 +626,27 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
                       children: [
                         GestureDetector(
                           onTap: () {
-                            if (_voiceService.isSpeaking && _activeSpeakingId == msg.id) {
+                            if (_voiceService.isSpeaking &&
+                                _activeSpeakingId == msg.id) {
                               _voiceService.stopSpeaking();
                               setState(() => _activeSpeakingId = null);
                             } else {
-                              _voiceService.speak(msg.content, messageId: msg.id);
+                              _voiceService.speak(
+                                msg.content,
+                                messageId: msg.id,
+                              );
                               setState(() => _activeSpeakingId = msg.id);
                             }
                           },
                           child: Icon(
-                            _voiceService.isSpeaking && _activeSpeakingId == msg.id
+                            _voiceService.isSpeaking &&
+                                    _activeSpeakingId == msg.id
                                 ? Icons.volume_off_rounded
                                 : Icons.volume_up_rounded,
                             size: 15,
-                            color: _voiceService.isSpeaking && _activeSpeakingId == msg.id
+                            color:
+                                _voiceService.isSpeaking &&
+                                    _activeSpeakingId == msg.id
                                 ? AppColors.gold
                                 : Colors.white38,
                           ),
@@ -734,8 +745,8 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
                 color: _isListening
                     ? Colors.redAccent
                     : (isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.black.withValues(alpha: 0.05)),
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.black.withValues(alpha: 0.05)),
                 shape: const CircleBorder(),
                 child: InkWell(
                   onTap: _toggleVoiceInput,
@@ -757,7 +768,9 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
                 child: TextField(
                   controller: _textController,
                   onSubmitted: _handleSend,
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
                   decoration: InputDecoration(
                     hintText: _isListening
                         ? 'Listening to speech...'
@@ -790,7 +803,11 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
                   customBorder: const CircleBorder(),
                   child: const Padding(
                     padding: EdgeInsets.all(10.0),
-                    child: Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                    child: Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
               ),

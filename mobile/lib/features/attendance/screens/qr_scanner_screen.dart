@@ -27,6 +27,7 @@ import 'package:provider/provider.dart';
 // ======================================================
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
+import 'package:smartface_attendance/core/services/location_service.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
@@ -118,11 +119,32 @@ class _QRScannerScreenState extends State<QRScannerScreen>
         throw const FormatException();
       }
 
+      setState(() {
+        _statusMessage = 'VERIFYING CLASSROOM GEOFENCE...';
+      });
+
+      // Geofence validation
+      final targetLat = (decoded['lat'] as num?)?.toDouble();
+      final targetLng = (decoded['lng'] as num?)?.toDouble();
+      final targetRadius = (decoded['radius'] as num?)?.toDouble();
+
+      final geofence = await LocationService().validateClassroomGeofence(
+        targetLatitude: targetLat,
+        targetLongitude: targetLng,
+        maxRadiusMeters: targetRadius,
+      );
+
+      if (!geofence.isWithin && geofence.reason != null) {
+        throw _AttendanceRejected(geofence.reason!);
+      }
+
       final studentEmail = _resolveStudentEmail();
       final result = await ApiService.markAttendance(
         studentEmail,
         sessionId,
         token,
+        latitude: geofence.latitude,
+        longitude: geofence.longitude,
       );
       if (result['status'] != 'success') {
         throw _AttendanceRejected(
