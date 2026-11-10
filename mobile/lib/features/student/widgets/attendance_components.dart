@@ -356,10 +356,10 @@ class HeatmapGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF141D38) : const Color(0xFFF4F6FC);
     final cardBorder = isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0);
     final textLabel = isDark ? const Color(0xFF7C82A0) : const Color(0xFFA0A0B8);
-    final inactiveCell = isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFE8EAF6);
+    final inactiveCell = isDark ? const Color(0xFF0D1130).withValues(alpha: 0.05) : const Color(0xFFE8EAF6);
 
     final now = DateTime.now();
 
