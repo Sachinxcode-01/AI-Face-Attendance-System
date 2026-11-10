@@ -47,6 +47,8 @@ class AppColors {
   static const Color goldBright = Color(0xFFFCD34D);
   static const Color goldDark = Color(0xFFD97706);
   static const Color goldGlow = Color(0x33F59E0B);
+  /// Accent purple for UI highlights and card tints
+  static const Color purple = Color(0xFF7B2FF7);
 
   // ── Secondary Accent (Cyan/Teal) ─────────────────────────────────────────
   static const Color accent = Color(0xFF06B6D4);

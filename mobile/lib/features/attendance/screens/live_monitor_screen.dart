@@ -214,7 +214,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFF070B1A).withValues(alpha: 0.6),
+              color: AppColors.bgDeep.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.gold.withValues(alpha: 0.2)),
             ),
@@ -281,7 +281,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
               ),
             ),
             backgroundColor: _isIntruderAlertActive
-                ? const Color(0xFFF05050)
+                ? AppColors.error
                 : Colors.white.withValues(alpha: 0.05),
           ),
         )
@@ -400,7 +400,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
                 child: Text(
                   'SCANRATE: ${_mockScanRate.toStringAsFixed(2)}s',
                   style: GoogleFonts.robotoMono(
-                    color: const Color(0xFF76E600),
+                    color: AppColors.warning,
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
                   ),
@@ -439,7 +439,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFF00FFCC), width: 1.5),
+            border: Border.all(color: AppColors.success, width: 1.5),
             color: const Color(0x1000FFCC),
           ),
           child: Column(
@@ -474,7 +474,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
   }
 
   Widget _hudCorner() {
-    return Container(width: 4, height: 4, color: const Color(0xFF00FFCC));
+    return Container(width: 4, height: 4, color: AppColors.success);
   }
 
   Widget _buildHardwareStats() {
@@ -492,7 +492,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
           child: _buildSurveillanceTelemetryBox(
             'PRESENTS',
             '$_presentCount STUDENTS',
-            const Color(0xFF76E600),
+            AppColors.warning,
           ),
         ),
         const SizedBox(width: 12),
@@ -515,7 +515,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF070B1A).withValues(alpha: 0.6),
+        color: AppColors.bgDeep.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
@@ -549,7 +549,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF070B1A).withValues(alpha: 0.6),
+        color: AppColors.bgDeep.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
@@ -564,7 +564,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
           return Row(
             children: [
               CircleAvatar(
-                backgroundColor: const Color(0xFF76E600).withValues(alpha: 0.1),
+                backgroundColor: AppColors.warning.withValues(alpha: 0.1),
                 radius: 18,
                 child: const Icon(
                   Icons.person,
@@ -605,16 +605,16 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00FFCC).withValues(alpha: 0.1),
+                      color: AppColors.success.withValues(alpha: 0.1),
                       border: Border.all(
-                        color: const Color(0xFF00FFCC).withValues(alpha: 0.3),
+                        color: AppColors.success.withValues(alpha: 0.3),
                       ),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       'AI: ${scan['confidence']}',
                       style: GoogleFonts.robotoMono(
-                        color: const Color(0xFF00FFCC),
+                        color: AppColors.success,
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),
@@ -652,7 +652,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF070B1A).withValues(alpha: 0.6),
+            color: AppColors.bgDeep.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),

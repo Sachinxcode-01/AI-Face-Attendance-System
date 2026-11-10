@@ -512,7 +512,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           uiSettings: [
             AndroidUiSettings(
               toolbarTitle: 'Crop Profile Photo',
-              toolbarColor: const Color(0xFF0D1130),
+              toolbarColor: AppColors.bgDeep,
               toolbarWidgetColor: Colors.white,
               statusBarLight: false,
               activeControlsWidgetColor: AppColors.gold,
@@ -767,7 +767,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                                 label: 'Attendance Rate',
                                 value: '92.4%',
                                 icon: Icons.done_all_rounded,
-                                accentColor: Color(0xFF00C6FF),
+                                accentColor: AppColors.primary,
                               ),
                             ),
                             SizedBox(width: AppSpacing.sm),
@@ -776,7 +776,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                                 label: 'Attended',
                                 value: '120/130',
                                 icon: Icons.assignment_turned_in_rounded,
-                                accentColor: Color(0xFFFFD700),
+                                accentColor: AppColors.success,
                               ),
                             ),
                             SizedBox(width: AppSpacing.sm),
@@ -785,7 +785,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                                 label: 'Leave Days',
                                 value: '2 Days',
                                 icon: Icons.time_to_leave_rounded,
-                                accentColor: Color(0xFF7B2FF7),
+                                accentColor: AppColors.purple,
                               ),
                             ),
                           ],
@@ -802,16 +802,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF312E81), Color(0xFF1E1B4B)],
+                              colors: [AppColors.primaryDark, AppColors.bgDeep],
                             ),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: const Color(0xFF818CF8).withValues(alpha: 0.5),
+                              color: AppColors.primaryLight.withValues(alpha: 0.5),
                               width: 1.5,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF4F46E5).withValues(alpha: 0.25),
+                                color: AppColors.primary.withValues(alpha: 0.25),
                                 blurRadius: 16,
                                 offset: const Offset(0, 4),
                               ),
@@ -847,7 +847,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                                     Text(
                                       'Verified barcode, dynamic QR & printable export',
                                       style: GoogleFonts.inter(
-                                        color: const Color(0xFFA5B4FC),
+                                        color: AppColors.cyan,
                                         fontSize: 11,
                                       ),
                                     ),

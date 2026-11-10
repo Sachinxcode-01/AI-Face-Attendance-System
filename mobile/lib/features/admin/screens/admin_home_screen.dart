@@ -543,7 +543,7 @@ class _AdminDashboardState extends State<AdminDashboard>
               label: 'Intruder Sentinel',
               description: 'CCTV threat gallery & unknown face alerts',
               icon: Icons.camera_indoor_outlined,
-              color: const Color(0xFFEF4444),
+              color: AppColors.error,
               onTap: () => context.push(AppRoutes.adminIntruderSentinelPath),
             ),
             QuickActionCard(

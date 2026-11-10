@@ -18,6 +18,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:smartface_attendance/design_system/ui/ui.dart';
 import 'package:provider/provider.dart';
 
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
@@ -216,7 +217,7 @@ class _AdminIntruderSentinelScreenState
                         child: _buildHudTile(
                           'Unresolved',
                           '$unacknowledged',
-                          unacknowledged > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981),
+                          unacknowledged > 0 ? AppColors.error : AppColors.warning,
                           isDark,
                         ),
                       ),
