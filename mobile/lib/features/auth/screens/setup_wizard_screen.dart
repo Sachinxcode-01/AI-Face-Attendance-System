@@ -927,7 +927,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
 
   Widget _buildChecklistRow(_CheckItem step) {
     final color = step.done
-        ? const Color(0xFF22C55E)
+        ? AppColors.success
         : (step.isCurrent
               ? AuthDesign.primaryIndigo
               : AuthDesign.textPlaceholder);

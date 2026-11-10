@@ -67,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
               bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
             ),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E2230) : Colors.white,
+              color: isDark ? AppColors.bgDeep : Colors.white,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(

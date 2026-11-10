@@ -363,7 +363,7 @@ class _SplashScreenState extends State<SplashScreen>
               radius: 1.1,
               colors: isDark
                   ? [
-                      const Color(0xFF101935).withValues(alpha: 0.50),
+                      AppColors.bgDeep.withValues(alpha: 0.50),
                       AppColors.bgDeep.withValues(alpha: 0.98),
                     ]
                   : [
@@ -401,7 +401,7 @@ class _SplashScreenState extends State<SplashScreen>
                 scale: scale,
                 child: _buildOrb(
                   size: size.width * 0.65,
-                  innerColor: isDark ? const Color(0xFF6366F1).withValues(alpha: 0.35) : AuthDesign.orbLight.withValues(alpha: 0.65),
+                  innerColor: isDark ? AppColors.primaryBright.withValues(alpha: 0.35) : AuthDesign.orbLight.withValues(alpha: 0.65),
                   outerColor: isDark ? const Color(0xFF3D4AB8).withValues(alpha: 0.02) : AuthDesign.orbDark.withValues(alpha: 0.02),
                 ),
               ),
@@ -415,7 +415,7 @@ class _SplashScreenState extends State<SplashScreen>
                 scale: 1.05 - (scale - 1.0),
                 child: _buildOrb(
                   size: size.width * 0.50,
-                  innerColor: isDark ? const Color(0xFF4F46E5).withValues(alpha: 0.25) : const Color(0xFFA5B4FC).withValues(alpha: 0.45),
+                  innerColor: isDark ? AppColors.primary.withValues(alpha: 0.25) : AppColors.primarySoft.withValues(alpha: 0.45),
                   outerColor: isDark ? Colors.transparent : Colors.transparent,
                 ),
               ),
@@ -427,7 +427,7 @@ class _SplashScreenState extends State<SplashScreen>
               right: -30,
               child: _buildOrb(
                 size: size.width * 0.42,
-                innerColor: isDark ? const Color(0xFF22D3EE).withValues(alpha: 0.18) : const Color(0xFF818CF8).withValues(alpha: 0.35),
+                innerColor: isDark ? AppColors.accent.withValues(alpha: 0.18) : const Color(0xFF818CF8).withValues(alpha: 0.35),
                 outerColor: Colors.transparent,
               ),
             ),
@@ -483,7 +483,7 @@ class _SplashScreenState extends State<SplashScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF18203E) : const Color(0xFFEEF2FF),
+        color: isDark ? AppColors.bgDeep : AppColors.bgLight,
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
           color: isDark ? const Color(0xFF2C3766) : const Color(0xFFC7D2FE),
@@ -843,10 +843,10 @@ class _SplashScreenState extends State<SplashScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF141C38) : Colors.white.withValues(alpha: 0.85),
+        color: isDark ? AppColors.bgDeep : Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? const Color(0xFF242E54) : const Color(0xFFE2E8F0),
+          color: isDark ? const Color(0xFF242E54) : AppColors.borderLight,
           width: 1.0,
         ),
       ),
@@ -913,7 +913,7 @@ class _SplashScreenState extends State<SplashScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _isDiagnosticsComplete
-                      ? const Color(0xFF10B981)
+                      ? AppColors.success
                       : const Color(0xFF6366F1),
                   boxShadow: [
                     BoxShadow(
@@ -1061,7 +1061,7 @@ class _SplashScreenState extends State<SplashScreen>
             Icon(
               Icons.lock_outline_rounded,
               size: 11,
-              color: isDark ? Colors.white30 : const Color(0xFFA0AEC0),
+              color: isDark ? Colors.white30 : AppColors.textMuted,
             ),
             const SizedBox(width: 4),
             Text(

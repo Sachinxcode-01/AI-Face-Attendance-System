@@ -449,12 +449,12 @@ class _RoleCardState extends State<_RoleCard>
     const selectedColor = AppColors.primaryBright;
     final unselectedColor = isDark
         ? AppColors.textMutedDark
-        : const Color(0xFF94A3B8);
+        : AppColors.textMuted;
     final selectedBg = isDark ? AppColors.surfaceDark : const Color(0xFFEEF2FF);
     final unselectedBg = isDark ? AppColors.cardDark : Colors.white;
     final borderColor = widget.isSelected
         ? selectedColor
-        : (isDark ? AppColors.borderDark : const Color(0xFFE2E8F0));
+        : (isDark ? AppColors.borderDark : AppColors.borderLight);
 
     return GestureDetector(
       onTapDown: widget.onTap == null
