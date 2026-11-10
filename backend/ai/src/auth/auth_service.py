@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -28,9 +28,9 @@ class AuthService:
     def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         to_encode = data.copy()
         if expires_delta:
-            expire = datetime.utcnow() + expires_delta
+            expire = datetime.now(timezone.utc) + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(minutes=15)
+            expire = datetime.now(timezone.utc) + timedelta(minutes=15)
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
@@ -45,10 +45,7 @@ class AuthService:
 
     @staticmethod
     async def get_current_user(auth: HTTPAuthorizationCredentials = Security(HTTPBearer())):
-        try:
-            from src.config.database import db
-        except ImportError:
-            from smartface_pro_api.src.config.database import db
+        from src.config.database import db
         # Check if token is blocklisted
         revoked = await db.revoked_tokens.find_one({"token": auth.credentials})
         if revoked:
