@@ -146,7 +146,7 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
           ],
         ),
         body: _isLoading
-            ? const NotificationShimmer()
+            ? const SecurityLogsShimmer()
             : RefreshIndicator(
                 onRefresh: _loadLogs,
                 color: AppColors.gold,

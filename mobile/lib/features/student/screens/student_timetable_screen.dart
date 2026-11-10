@@ -250,10 +250,7 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
           // ── Tab View Content ─────────────────────────────────────────────
           Expanded(
             child: _isLoading
-                ? const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: DashboardShimmer(),
-                  )
+                ? const TimetableShimmer()
                 : RefreshIndicator(
                     onRefresh: _loadTimetable,
                     color: const Color(0xFF6366F1),

@@ -16,6 +16,7 @@ class ModernAnimatedIcon extends StatelessWidget {
   final String? semanticLabel;
   final String? toolTip;
   final bool animateOnTap;
+  final BoxConstraints? constraints;
 
   const ModernAnimatedIcon({
     super.key,
@@ -30,6 +31,7 @@ class ModernAnimatedIcon extends StatelessWidget {
     this.semanticLabel,
     this.toolTip,
     this.animateOnTap = true,
+    this.constraints,
   });
 
   @override
@@ -76,18 +78,29 @@ class ModernAnimatedIcon extends StatelessWidget {
       child: iconWidget,
     );
 
+    final effectiveConstraints = constraints ??
+        (onTap != null
+            ? const BoxConstraints(minWidth: 48.0, minHeight: 48.0)
+            : BoxConstraints.tightFor(width: size, height: size));
+
+    final content = ConstrainedBox(
+      constraints: effectiveConstraints,
+      child: Center(child: animatedScaleWidget),
+    );
+
+    final interactiveWidget = onTap != null
+        ? InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(size),
+            child: content,
+          )
+        : content;
+
     return Semantics(
       label: semanticLabel ?? toolTip ?? animateIcon.name,
       button: onTap != null,
       selected: isActive,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(size),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 48.0, minHeight: 48.0),
-          child: Center(child: animatedScaleWidget),
-        ),
-      ),
+      child: interactiveWidget,
     );
   }
 }

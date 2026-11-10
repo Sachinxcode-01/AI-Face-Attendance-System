@@ -25,6 +25,7 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
+import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
 class AtRiskStudentItem {
   final String id;
@@ -239,7 +240,7 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
         ),
       ],
       child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AtRiskRosterShimmer()
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Column(

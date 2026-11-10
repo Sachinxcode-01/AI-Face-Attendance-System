@@ -1015,7 +1015,6 @@ class StudentShell extends StatelessWidget {
         SmartSalomonNavItemData(
           icon: Icons.person_outline_rounded,
           activeIcon: Icons.person_rounded,
-          animateIcon: AnimateIcons.settings,
           title: 'Profile',
           route: AppRoutes.studentProfilePath,
         ),
@@ -1067,7 +1066,6 @@ class TeacherShell extends StatelessWidget {
         SmartSalomonNavItemData(
           icon: Icons.person_outline_rounded,
           activeIcon: Icons.person_rounded,
-          animateIcon: AnimateIcons.settings,
           title: 'Profile',
           route: AppRoutes.teacherProfilePath,
         ),
@@ -1119,7 +1117,6 @@ class ParentShell extends StatelessWidget {
         SmartSalomonNavItemData(
           icon: Icons.person_outline_rounded,
           activeIcon: Icons.person_rounded,
-          animateIcon: AnimateIcons.settings,
           title: 'Profile',
           route: '/parent/profile',
         ),

@@ -22,6 +22,7 @@ import 'package:smartface_attendance/features/leave/models/leave_balance.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
+import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
 class StudentLeaveDashboardScreen extends StatefulWidget {
   const StudentLeaveDashboardScreen({super.key});
@@ -111,9 +112,7 @@ class _StudentLeaveDashboardScreenState
           color: const Color(0xFF4F46E5),
           backgroundColor: isDark ? AppColors.bgCard : Colors.white,
           child: controller.isLoading && balance == null
-              ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF4F46E5)),
-                )
+              ? const LeaveDashboardShimmer()
               : SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.symmetric(

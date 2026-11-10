@@ -9,6 +9,7 @@ const SecurityLog = require('../models/SecurityLog');
 const Leave = require('../models/Leave');
 const { authenticate, requireRole } = require('../middleware/auth');
 const reportInternalError = require('../utils/httpError');
+const authService = require('../services/authService');
 
 // Helper: Resolve HOD Department if not provided
 const resolveDepartment = async (req) => {
@@ -494,9 +495,24 @@ router.get('/users', authenticate, requireRole(['admin', 'super_admin', 'hod', '
       query.department = req.query.department;
     }
 
+    if (req.query.college) {
+      query.college = req.query.college;
+    }
+
+    if (req.query.q) {
+      const searchRegex = new RegExp(req.query.q.trim(), 'i');
+      query.$or = [
+        { full_name: searchRegex },
+        { email: searchRegex },
+        { student_id: searchRegex },
+        { usn: searchRegex },
+        { roll_number: searchRegex }
+      ];
+    }
+
     const total = await User.countDocuments(query);
     const users = await User.find(query)
-      .select('email full_name role department student_id usn roll_number designation created_at')
+      .select('email full_name role department semester section college student_id usn roll_number designation phone created_at')
       .skip(skip)
       .limit(limit)
       .sort({ created_at: -1 })
@@ -508,8 +524,12 @@ router.get('/users', authenticate, requireRole(['admin', 'super_admin', 'hod', '
       full_name: user.full_name,
       role: user.role,
       department: user.department || null,
+      semester: user.semester || null,
+      section: user.section || null,
+      college: user.college || null,
       student_id: user.student_id || user.usn || user.roll_number || null,
       designation: user.designation || null,
+      phone: user.phone || null,
       created_at: user.created_at,
     }));
 
@@ -519,6 +539,207 @@ router.get('/users', authenticate, requireRole(['admin', 'super_admin', 'hod', '
       page,
       limit,
       users: formattedUsers
+    });
+  } catch (error) {
+    reportInternalError(res, error, 'Management');
+  }
+});
+
+// ─── POST /management/users (Create Student / Faculty / Admin) ─────
+router.post('/users', authenticate, requireRole(['admin', 'super_admin', 'principal', 'hod']), async (req, res) => {
+  try {
+    const {
+      email,
+      full_name,
+      role,
+      department,
+      semester,
+      section,
+      college,
+      student_id,
+      usn,
+      roll_number,
+      designation,
+      phone,
+      password
+    } = req.body;
+
+    if (!email || !full_name || !role) {
+      return res.status(400).json({ detail: "Missing required fields (email, full_name, role)." });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const existing = await User.findOne({ email: normalizedEmail });
+    if (existing) {
+      return res.status(409).json({ detail: `User with email ${normalizedEmail} already exists.` });
+    }
+
+    const rawPassword = password || `TempPass@${Math.random().toString(36).slice(-6)}`;
+    const hashedPassword = await authService.hashPassword(rawPassword);
+
+    const newUser = new User({
+      email: normalizedEmail,
+      full_name: full_name.trim(),
+      role: role.toLowerCase(),
+      password: hashedPassword,
+      department: department || "",
+      semester: semester ? String(semester) : "",
+      section: section || "",
+      college: college || "",
+      student_id: student_id || usn || roll_number || "",
+      usn: usn || student_id || "",
+      roll_number: roll_number || "",
+      designation: designation || "",
+      phone: phone || "",
+      setup_completed: !password ? false : true
+    });
+
+    await newUser.save();
+
+    const userObj = newUser.toObject();
+    delete userObj.password;
+    userObj.id = userObj._id.toString();
+    delete userObj._id;
+
+    res.status(201).json({
+      success: true,
+      message: "User created successfully.",
+      user: userObj
+    });
+  } catch (error) {
+    reportInternalError(res, error, 'Management');
+  }
+});
+
+// ─── PUT /management/users/:id (Update Student / Faculty / Admin) ───
+router.put('/users/:id', authenticate, requireRole(['admin', 'super_admin', 'principal', 'hod']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ detail: "Invalid user ID." });
+    }
+
+    const updates = {};
+    const allowedFields = [
+      'full_name', 'department', 'semester', 'section', 'college',
+      'student_id', 'usn', 'roll_number', 'designation', 'phone', 'role'
+    ];
+
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    if (req.body.password) {
+      updates.password = await authService.hashPassword(req.body.password);
+    }
+
+    const updated = await User.findByIdAndUpdate(id, updates, { new: true }).select('-password').lean();
+    if (!updated) {
+      return res.status(404).json({ detail: "User not found." });
+    }
+
+    updated.id = updated._id.toString();
+    delete updated._id;
+
+    res.json({
+      success: true,
+      message: "User updated successfully.",
+      user: updated
+    });
+  } catch (error) {
+    reportInternalError(res, error, 'Management');
+  }
+});
+
+// ─── DELETE /management/users/:id (Remove Student / Faculty / Admin) ─
+router.delete('/users/:id', authenticate, requireRole(['admin', 'super_admin', 'principal']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ detail: "Invalid user ID." });
+    }
+
+    const userToDelete = await User.findById(id).lean();
+    if (!userToDelete) {
+      return res.status(404).json({ detail: "User not found." });
+    }
+
+    await User.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: `User ${userToDelete.email} removed successfully.`,
+      deleted_id: id
+    });
+  } catch (error) {
+    reportInternalError(res, error, 'Management');
+  }
+});
+
+// ─── POST /management/users/bulk (Bulk Roster Import for College) ──
+router.post('/users/bulk', authenticate, requireRole(['admin', 'super_admin', 'principal']), async (req, res) => {
+  try {
+    const { users, default_college, default_role } = req.body;
+    if (!Array.isArray(users) || users.length === 0) {
+      return res.status(400).json({ detail: "users array is required and must not be empty." });
+    }
+    if (users.length > 1000) {
+      return res.status(400).json({ detail: "Batch limit exceeded (maximum 1000 records per upload)." });
+    }
+
+    const incomingEmails = users.map(u => (u.email || '').trim().toLowerCase()).filter(Boolean);
+    const existingUsers = await User.find({ email: { $in: incomingEmails } }, 'email').lean();
+    const existingEmailSet = new Set(existingUsers.map(u => u.email));
+
+    const recordsToInsert = [];
+    const skipped = [];
+    const defaultPassHash = await authService.hashPassword('Welcome@SmartFace2026');
+
+    for (const u of users) {
+      const email = (u.email || '').trim().toLowerCase();
+      if (!email || !u.full_name) {
+        skipped.push({ email: u.email || 'unknown', reason: 'Missing email or full_name' });
+        continue;
+      }
+      if (existingEmailSet.has(email)) {
+        skipped.push({ email, reason: 'User already exists' });
+        continue;
+      }
+
+      recordsToInsert.push({
+        email,
+        full_name: u.full_name.trim(),
+        role: (u.role || default_role || 'student').toLowerCase(),
+        password: defaultPassHash,
+        college: u.college || default_college || '',
+        department: u.department || '',
+        semester: u.semester ? String(u.semester) : '',
+        section: u.section || '',
+        student_id: u.student_id || u.usn || u.roll_number || '',
+        usn: u.usn || u.student_id || '',
+        roll_number: u.roll_number || '',
+        designation: u.designation || '',
+        phone: u.phone || '',
+        setup_completed: false
+      });
+      existingEmailSet.add(email); // prevent duplicates within same batch
+    }
+
+    let insertedCount = 0;
+    if (recordsToInsert.length > 0) {
+      const inserted = await User.insertMany(recordsToInsert);
+      insertedCount = inserted.length;
+    }
+
+    res.status(201).json({
+      success: true,
+      total_received: users.length,
+      inserted_count: insertedCount,
+      skipped_count: skipped.length,
+      skipped,
+      message: `Bulk import completed: ${insertedCount} inserted, ${skipped.length} skipped.`
     });
   } catch (error) {
     reportInternalError(res, error, 'Management');

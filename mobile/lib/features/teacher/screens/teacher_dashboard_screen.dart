@@ -197,7 +197,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     if (_isLoading) {
       return Scaffold(
         backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
-        body: const DashboardShimmer(),
+        body: const SafeArea(child: TeacherDashboardShimmer()),
       );
     }
 

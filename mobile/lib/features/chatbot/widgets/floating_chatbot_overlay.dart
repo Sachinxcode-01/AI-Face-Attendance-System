@@ -98,11 +98,21 @@ class _FloatingChatbotOverlayState extends State<FloatingChatbotOverlay>
     final screenHeight = mediaQuery.size.height;
 
     // Default position: Bottom-Right above bottom nav bar
-    final defaultX = screenWidth - 70.0;
+    final defaultX = screenWidth - 72.0;
     final defaultY = screenHeight - 170.0;
 
-    final double currentX = chatbot.posX ?? defaultX;
-    final double currentY = chatbot.posY ?? defaultY;
+    final double maxPosX = (screenWidth - 72.0) < 16.0
+        ? 16.0
+        : (screenWidth - 72.0);
+    final double maxPosY = (screenHeight - 160.0) < 60.0
+        ? 60.0
+        : (screenHeight - 160.0);
+
+    final double currentX = (chatbot.posX ?? defaultX).clamp(16.0, maxPosX);
+    final double currentY = (chatbot.posY ?? defaultY).clamp(
+      mediaQuery.padding.top + 16.0,
+      maxPosY,
+    );
 
     // Reposition safely on camera/QR scanner screens so button doesn't obscure preview
     final bool isCameraScreen = _isCameraOrScannerScreen(currentRoute);
@@ -113,18 +123,8 @@ class _FloatingChatbotOverlayState extends State<FloatingChatbotOverlay>
 
         // Floating Draggable Assistant Button
         Positioned(
-          left: isCameraScreen
-              ? 16.0
-              : currentX.clamp(
-                  16.0,
-                  (screenWidth - 70.0) < 16.0 ? 16.0 : (screenWidth - 70.0),
-                ),
-          top: isCameraScreen
-              ? (mediaQuery.padding.top + 16.0)
-              : currentY.clamp(
-                  60.0,
-                  (screenHeight - 160.0) < 60.0 ? 60.0 : (screenHeight - 160.0),
-                ),
+          left: isCameraScreen ? 16.0 : currentX,
+          top: isCameraScreen ? (mediaQuery.padding.top + 16.0) : currentY,
           child: Semantics(
             button: true,
             label: 'Nexa Attendance Assistant floating help button',
@@ -168,8 +168,8 @@ class _FloatingChatbotOverlayState extends State<FloatingChatbotOverlay>
                   return Transform.scale(
                     scale: pulse,
                     child: Container(
-                      width: 54,
-                      height: 54,
+                      width: 56,
+                      height: 56,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: const LinearGradient(
@@ -179,32 +179,31 @@ class _FloatingChatbotOverlayState extends State<FloatingChatbotOverlay>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.4),
-                            blurRadius: 12,
+                            color: AppColors.primary.withValues(alpha: 0.45),
+                            blurRadius: 14,
                             spreadRadius: 2,
                             offset: const Offset(0, 4),
                           ),
                         ],
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          width: 1.5,
+                          color: Colors.white.withValues(alpha: 0.6),
+                          width: 2.0,
                         ),
                       ),
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
                           ClipOval(
-                            child: Padding(
-                              padding: const EdgeInsets.all(5.0),
-                              child: Image.asset(
-                                AppAssets.chatbotIcon,
-                                fit: BoxFit.contain,
-                                filterQuality: FilterQuality.high,
-                                errorBuilder: (_, _, _) => const Icon(
-                                  Icons.auto_awesome,
-                                  color: Colors.white,
-                                  size: 26,
-                                ),
+                            child: Image.asset(
+                              AppAssets.chatbotIcon,
+                              width: 52,
+                              height: 52,
+                              fit: BoxFit.cover,
+                              filterQuality: FilterQuality.high,
+                              errorBuilder: (_, _, _) => const Icon(
+                                Icons.auto_awesome,
+                                color: Colors.white,
+                                size: 26,
                               ),
                             ),
                           ),
@@ -212,8 +211,8 @@ class _FloatingChatbotOverlayState extends State<FloatingChatbotOverlay>
                           // Unread notification badge
                           if (chatbot.unreadCount > 0)
                             Positioned(
-                              top: 4,
-                              right: 4,
+                              top: 2,
+                              right: 2,
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: const BoxDecoration(

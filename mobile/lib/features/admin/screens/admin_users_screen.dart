@@ -7,6 +7,7 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/shared/widgets/status_badge.dart';
 import 'package:smartface_attendance/features/leave/screens/leave_review_screen.dart';
+import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
@@ -524,7 +525,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen>
 
   Widget _buildUsersState(bool isDark) {
     if (_usersLoading) {
-      return const Center(child: CircularProgressIndicator.adaptive());
+      return const UserListShimmer();
     }
     return Center(
       child: ConstrainedBox(

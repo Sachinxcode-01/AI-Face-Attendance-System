@@ -131,7 +131,7 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.bgDark,
-        body: DashboardShimmer(),
+        body: SafeArea(child: CommandCenterShimmer()),
       );
     }
 

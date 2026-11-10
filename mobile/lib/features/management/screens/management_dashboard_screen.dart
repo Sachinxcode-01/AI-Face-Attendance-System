@@ -8,6 +8,7 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/design_system/ui/premium_background.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
+import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
 class ManagementDashboardScreen extends StatefulWidget {
   const ManagementDashboardScreen({super.key});
@@ -122,7 +123,7 @@ class _ManagementDashboardScreenState extends State<ManagementDashboardScreen> {
           ],
         ),
         body: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? const SafeArea(child: ManagementDashboardShimmer())
             : _error != null
             ? _buildError(brightness)
             : RefreshIndicator(

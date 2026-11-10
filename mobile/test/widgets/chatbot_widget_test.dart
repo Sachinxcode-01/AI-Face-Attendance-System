@@ -109,6 +109,48 @@ void main() {
       expect(find.text('Nexa AI Assistant'), findsOneWidget);
       expect(find.text('SUGGESTED QUESTIONS'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(ClipOval), findsWidgets);
+    });
+
+    testWidgets('NexaChatSheet renders responsively on tablet wide viewport', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(1024, 768);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final sessionManager = SessionManager();
+      final themeController = ThemeController();
+      final chatbotController = ChatbotController();
+      await chatbotController.init();
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<SessionManager>.value(value: sessionManager),
+            ChangeNotifierProvider<ThemeController>.value(
+              value: themeController,
+            ),
+            ChangeNotifierProvider<ChatbotController>.value(
+              value: chatbotController,
+            ),
+          ],
+          child: const MaterialApp(home: Scaffold(body: NexaChatSheet())),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nexa AI Assistant'), findsOneWidget);
+      // Verify constrained box limits width for large screens
+      final constrainedBoxes = tester.widgetList<ConstrainedBox>(
+        find.byType(ConstrainedBox),
+      );
+      final hasResponsiveConstraint = constrainedBoxes.any(
+        (cb) => cb.constraints.maxWidth == 680,
+      );
+      expect(hasResponsiveConstraint, isTrue);
     });
   });
 }

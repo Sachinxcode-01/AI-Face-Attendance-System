@@ -744,17 +744,21 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 value: chatbot.isEnabled,
                 activeThumbColor: AppColors.gold,
                 secondary: Container(
-                  width: 32,
-                  height: 32,
-                  padding: const EdgeInsets.all(3),
-                  decoration: const BoxDecoration(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
                     gradient: AppColors.headerGradient,
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.35),
+                      width: 1.0,
+                    ),
                   ),
                   child: ClipOval(
                     child: Image.asset(
                       AppAssets.chatbotIcon,
-                      fit: BoxFit.contain,
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
                       errorBuilder: (_, _, _) => const Icon(
                         Icons.auto_awesome,
                         color: Colors.white,

@@ -208,7 +208,7 @@ class _StudentBunkCalculatorScreenState
       subtitle: 'Safe Absence Simulator & Attendance Forecaster',
       onBackTap: () => Navigator.of(context).maybePop(),
       child: _isLoading
-          ? const DashboardShimmer()
+          ? const BunkCalculatorShimmer()
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Column(

@@ -46,13 +46,13 @@ import 'package:smartface_attendance/shared/widgets/college_search_picker.dart';
 // ======================================================
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
-import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 
 // ======================================================
 // Services Imports
 // ======================================================
 import 'package:smartface_attendance/core/network/api_service.dart';
+import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
 /// Screen widget for user profile settings and management.
 class ProfileScreen extends StatefulWidget {
@@ -152,10 +152,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   /// Shows bottom sheet to pick source: Gallery or Camera
   void _showImageSourceSheet() {
     final session = context.read<SessionManager>();
-    final String? currentPhoto = (_profileData['profilePhotoUrl'] ??
-            _profileData['avatar_url'] ??
-            session.avatarUrl)
-        ?.toString();
+    final String? currentPhoto =
+        (_profileData['profilePhotoUrl'] ??
+                _profileData['avatar_url'] ??
+                session.avatarUrl)
+            ?.toString();
     final bool hasExistingPhoto =
         (currentPhoto != null &&
             currentPhoto.trim().isNotEmpty &&
@@ -215,32 +216,35 @@ class _ProfileScreenState extends State<ProfileScreen>
               style: GoogleFonts.inter(fontSize: 12, color: Colors.white54),
             ),
             const SizedBox(height: 22),
-            Row(
-              children: [
-                Expanded(
-                  child: _sourceButton(
-                    icon: Icons.photo_library_rounded,
-                    label: 'Gallery',
-                    subtitle: 'Choose image',
-                    onTap: () {
-                      Navigator.of(ctx).pop();
-                      _pickImage(ImageSource.gallery);
-                    },
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _sourceButton(
+                      icon: Icons.photo_library_rounded,
+                      label: 'Gallery',
+                      subtitle: 'Choose image',
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        _pickImage(ImageSource.gallery);
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: _sourceButton(
-                    icon: Icons.camera_alt_rounded,
-                    label: 'Camera',
-                    subtitle: 'Take photo',
-                    onTap: () {
-                      Navigator.of(ctx).pop();
-                      _pickImage(ImageSource.camera);
-                    },
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: _sourceButton(
+                      icon: Icons.camera_alt_rounded,
+                      label: 'Camera',
+                      subtitle: 'Take photo',
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        _pickImage(ImageSource.camera);
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             if (hasExistingPhoto) ...[
               const SizedBox(height: 16),
@@ -306,14 +310,16 @@ class _ProfileScreenState extends State<ProfileScreen>
         splashColor: AppColors.gold.withValues(alpha: 0.15),
         highlightColor: AppColors.gold.withValues(alpha: 0.08),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
+          width: double.infinity,
+          height: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
           decoration: BoxDecoration(
             color: AppColors.gold.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
@@ -324,20 +330,23 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: Icon(icon, color: AppColors.gold, size: 26),
               ),
               const SizedBox(height: 10),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: GoogleFonts.inter(
-                  color: Colors.white54,
-                  fontSize: 11,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  subtitle,
+                  style: GoogleFonts.inter(color: Colors.white54, fontSize: 11),
                 ),
               ),
             ],
@@ -371,14 +380,22 @@ class _ProfileScreenState extends State<ProfileScreen>
               toolbarTitle: 'Crop Profile Photo',
               toolbarColor: const Color(0xFF0D1130),
               toolbarWidgetColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.square,
-              lockAspectRatio: true,
+              statusBarLight: false,
               activeControlsWidgetColor: AppColors.gold,
               backgroundColor: const Color(0xFF070B1A),
+              cropStyle: CropStyle.circle,
+              cropFrameColor: AppColors.gold,
+              cropGridColor: AppColors.gold.withValues(alpha: 0.3),
+              aspectRatioPresets: [CropAspectRatioPreset.square],
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+              hideBottomControls: false,
             ),
             IOSUiSettings(
               title: 'Crop Profile Photo',
               aspectRatioLockEnabled: true,
+              resetAspectRatioEnabled: false,
+              cropStyle: CropStyle.circle,
             ),
           ],
         );
@@ -935,11 +952,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ──────────────────────────────────────────────────────────────────
   Widget _buildAvatarSection(String initials) {
     final session = context.watch<SessionManager>();
-    final String? networkAvatarUrl = (_profileData['profilePhotoUrl'] ??
-            _profileData['avatar_url'] ??
-            session.avatarUrl)
-        ?.toString();
-    final hasNetworkAvatar = networkAvatarUrl != null &&
+    final String? networkAvatarUrl =
+        (_profileData['profilePhotoUrl'] ??
+                _profileData['avatar_url'] ??
+                session.avatarUrl)
+            ?.toString();
+    final hasNetworkAvatar =
+        networkAvatarUrl != null &&
         networkAvatarUrl.trim().isNotEmpty &&
         networkAvatarUrl != 'null';
     final hasLocalPreview = _localAvatarFile != null;
@@ -952,8 +971,8 @@ class _ProfileScreenState extends State<ProfileScreen>
       final fullUrl = cleanUrl.startsWith('http')
           ? cleanUrl
           : cleanUrl.startsWith('/')
-              ? '${ApiService.baseUrl}$cleanUrl'
-              : '${ApiService.baseUrl}/$cleanUrl';
+          ? '${ApiService.baseUrl}$cleanUrl'
+          : '${ApiService.baseUrl}/$cleanUrl';
       avatarImage = CachedNetworkImageProvider(fullUrl);
     }
 
@@ -1134,104 +1153,100 @@ class _ProfileScreenState extends State<ProfileScreen>
         .join()
         .toUpperCase();
 
-    return AuroraBackground(
-      baseColor: isDark ? AppColors.bgDeep : AppColors.bgLight,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: Text(
-            'My Profile',
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.bgDeep : AppColors.bgLight,
+      appBar: AppBar(
+        title: Text(
+          'My Profile',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black87,
           ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(
-              Icons.arrow_back_ios,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-          actions: [
-            if (!_isLoading)
-              IconButton(
-                onPressed: _showEditProfileSheet,
-                icon: const Icon(Icons.edit_outlined, color: AppColors.gold),
-              ),
-          ],
         ),
-        body: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
-                ),
-              )
-            : SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24.0,
-                  vertical: 10.0,
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 10),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          if (!_isLoading)
+            IconButton(
+              onPressed: _showEditProfileSheet,
+              icon: const Icon(Icons.edit_outlined, color: AppColors.gold),
+            ),
+        ],
+      ),
+      body: _isLoading
+          ? const ProfileShimmer()
+          : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 10.0,
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
 
-                    // ── Avatar Upload Section ──────────────────────────
-                    _buildAvatarSection(
-                      initials,
-                    ).animate().fadeIn(duration: 400.ms).scale(delay: 100.ms),
+                  // ── Avatar Upload Section ──────────────────────────
+                  _buildAvatarSection(
+                    initials,
+                  ).animate().fadeIn(duration: 400.ms).scale(delay: 100.ms),
 
-                    const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-                    // Hint text
-                    AnimatedOpacity(
-                      opacity: _isUploading ? 0 : 1,
-                      duration: const Duration(milliseconds: 300),
-                      child: Text(
-                        'Tap or drag an image to update photo',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          color: isDark ? Colors.white30 : Colors.black38,
-                          letterSpacing: 0.3,
-                        ),
+                  // Hint text
+                  AnimatedOpacity(
+                    opacity: _isUploading ? 0 : 1,
+                    duration: const Duration(milliseconds: 300),
+                    child: Text(
+                      'Tap or drag an image to update photo',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: isDark ? Colors.white30 : Colors.black38,
+                        letterSpacing: 0.3,
                       ),
                     ),
+                  ),
 
-                    const SizedBox(height: 18),
+                  const SizedBox(height: 18),
 
-                    // ── Name & Department ─────────────────────────────
-                    Text(
-                      _profileData['full_name'] ?? 'User',
-                      style: GoogleFonts.inter(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
+                  // ── Name & Department ─────────────────────────────
+                  Text(
+                    _profileData['full_name'] ?? 'User',
+                    style: GoogleFonts.inter(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
 
-                    const SizedBox(height: 5),
-                    Text(
-                      isTeacher
-                          ? '${_profileData['designation'] ?? 'Faculty'} • ${_profileData['specialization'] ?? 'Academic'}'
-                          : (_profileData['course'] != null
-                                ? '${_profileData['course']} • Section ${_profileData['section'] ?? 'A'}'
-                                : (_profileData['department'] != null &&
-                                          _profileData['college'] != null
-                                      ? '${_profileData['department']} • ${_profileData['college']}'
-                                      : 'SmartFace Academic Student')),
-                      style: GoogleFonts.inter(
-                        color: isDark ? Colors.white54 : Colors.black54,
-                        fontSize: 13,
-                      ),
-                      textAlign: TextAlign.center,
-                    ).animate().fadeIn(delay: 300.ms),
+                  const SizedBox(height: 5),
+                  Text(
+                    isTeacher
+                        ? '${_profileData['designation'] ?? 'Faculty'} • ${_profileData['specialization'] ?? 'Academic'}'
+                        : (_profileData['course'] != null
+                              ? '${_profileData['course']} • Section ${_profileData['section'] ?? 'A'}'
+                              : (_profileData['department'] != null &&
+                                        _profileData['college'] != null
+                                    ? '${_profileData['department']} • ${_profileData['college']}'
+                                    : 'SmartFace Academic Student')),
+                    style: GoogleFonts.inter(
+                      color: isDark ? Colors.white54 : Colors.black54,
+                      fontSize: 13,
+                    ),
+                    textAlign: TextAlign.center,
+                  ).animate().fadeIn(delay: 300.ms),
 
-                    const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                    // ── Quick Stats Row ──────────────────────────────────────
-                    Row(
+                  // ── Quick Stats Row ──────────────────────────────────────
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
                           child: MetricCard(
@@ -1266,492 +1281,490 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ),
                         ),
                       ],
-                    ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
+                    ),
+                  ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
 
-                    const SizedBox(height: 35),
+                  const SizedBox(height: 35),
 
-                    // ── Profile Fields ────────────────────────────────
-                    if (isTeacher) ...[
-                      _buildProfileCard(
-                        Icons.badge_outlined,
-                        'Employee ID',
-                        _profileData['employee_id'] ?? 'N/A',
-                        1,
-                      ),
-                      _buildProfileCard(
-                        Icons.email_outlined,
-                        'Institutional Email',
-                        _profileData['email'] ?? 'N/A',
-                        2,
-                      ),
-                      _buildProfileCard(
-                        Icons.phone_outlined,
-                        'Phone Number',
-                        _profileData['phone'] ?? 'N/A',
-                        3,
-                      ),
-                      _buildProfileCard(
-                        Icons.work_outline,
-                        'Designation',
-                        _profileData['designation'] ?? 'N/A',
-                        4,
-                      ),
-                      _buildProfileCard(
-                        Icons.menu_book_outlined,
-                        'Subject Specialization',
-                        _profileData['specialization'] ?? 'N/A',
-                        5,
-                      ),
-                      _buildProfileCard(
-                        Icons.school_outlined,
-                        'Qualification',
-                        _profileData['qualification'] ?? 'N/A',
-                        6,
-                      ),
-                      _buildProfileCard(
-                        Icons.timeline_outlined,
-                        'Years of Experience',
-                        _profileData['experience'] ?? 'N/A',
-                        7,
-                      ),
-                      _buildProfileCard(
-                        Icons.wc_outlined,
-                        'Gender',
-                        _profileData['gender'] ?? 'N/A',
-                        8,
-                      ),
-                      _buildProfileCard(
-                        Icons.calendar_today_outlined,
-                        'Date of Birth',
-                        _profileData['dob'] ?? 'N/A',
-                        9,
-                      ),
-                      _buildProfileCard(
-                        Icons.home_outlined,
-                        'Address',
-                        _profileData['address'] ?? 'N/A',
-                        10,
-                      ),
-                      _buildProfileCard(
-                        Icons.language_outlined,
-                        'Language Preference',
-                        _profileData['language_preference'] ?? 'English',
-                        11,
-                      ),
-                    ] else ...[
-                      _buildProfileCard(
-                        Icons.badge_outlined,
-                        'Student ID / USN',
-                        _profileData['usn'] ??
-                            _profileData['student_id'] ??
-                            'N/A',
-                        1,
-                      ),
-                      _buildProfileCard(
-                        Icons.email_outlined,
-                        'Institutional Email',
-                        _profileData['email'] ?? 'N/A',
-                        2,
-                      ),
-                      _buildProfileCard(
-                        Icons.phone_outlined,
-                        'Phone Number',
-                        _profileData['phone'] ?? 'N/A',
-                        3,
-                      ),
-                      _buildProfileCard(
-                        Icons.school_outlined,
-                        'Class / Course',
-                        _profileData['course'] ??
-                            _profileData['college'] ??
-                            'N/A',
-                        4,
-                      ),
-                      _buildProfileCard(
-                        Icons.grid_view_outlined,
-                        'Section',
-                        _profileData['section'] ??
-                            _profileData['department'] ??
-                            'N/A',
-                        5,
-                      ),
-                      _buildProfileCard(
-                        Icons.format_list_numbered_outlined,
-                        'Roll Number',
-                        _profileData['roll_number'] ??
-                            _profileData['semester'] ??
-                            'N/A',
-                        6,
-                      ),
-                      _buildProfileCard(
-                        Icons.wc_outlined,
-                        'Gender',
-                        _profileData['gender'] ?? 'N/A',
-                        7,
-                      ),
-                      _buildProfileCard(
-                        Icons.calendar_today_outlined,
-                        'Date of Birth',
-                        _profileData['dob'] ?? 'N/A',
-                        8,
-                      ),
-                      _buildProfileCard(
-                        Icons.home_outlined,
-                        'Address',
-                        _profileData['address'] ?? 'N/A',
-                        9,
-                      ),
-                      _buildProfileCard(
-                        Icons.family_restroom_outlined,
-                        'Parent / Guardian Details',
-                        _profileData['parent_details'] ?? 'N/A',
-                        10,
-                      ),
-                      _buildProfileCard(
-                        Icons.language_outlined,
-                        'Language Preference',
-                        _profileData['language_preference'] ?? 'English',
-                        11,
-                      ),
-                    ],
+                  // ── Profile Fields ────────────────────────────────
+                  if (isTeacher) ...[
+                    _buildProfileCard(
+                      Icons.badge_outlined,
+                      'Employee ID',
+                      _profileData['employee_id'] ?? 'N/A',
+                      1,
+                    ),
+                    _buildProfileCard(
+                      Icons.email_outlined,
+                      'Institutional Email',
+                      _profileData['email'] ?? 'N/A',
+                      2,
+                    ),
+                    _buildProfileCard(
+                      Icons.phone_outlined,
+                      'Phone Number',
+                      _profileData['phone'] ?? 'N/A',
+                      3,
+                    ),
+                    _buildProfileCard(
+                      Icons.work_outline,
+                      'Designation',
+                      _profileData['designation'] ?? 'N/A',
+                      4,
+                    ),
+                    _buildProfileCard(
+                      Icons.menu_book_outlined,
+                      'Subject Specialization',
+                      _profileData['specialization'] ?? 'N/A',
+                      5,
+                    ),
+                    _buildProfileCard(
+                      Icons.school_outlined,
+                      'Qualification',
+                      _profileData['qualification'] ?? 'N/A',
+                      6,
+                    ),
+                    _buildProfileCard(
+                      Icons.timeline_outlined,
+                      'Years of Experience',
+                      _profileData['experience'] ?? 'N/A',
+                      7,
+                    ),
+                    _buildProfileCard(
+                      Icons.wc_outlined,
+                      'Gender',
+                      _profileData['gender'] ?? 'N/A',
+                      8,
+                    ),
+                    _buildProfileCard(
+                      Icons.calendar_today_outlined,
+                      'Date of Birth',
+                      _profileData['dob'] ?? 'N/A',
+                      9,
+                    ),
+                    _buildProfileCard(
+                      Icons.home_outlined,
+                      'Address',
+                      _profileData['address'] ?? 'N/A',
+                      10,
+                    ),
+                    _buildProfileCard(
+                      Icons.language_outlined,
+                      'Language Preference',
+                      _profileData['language_preference'] ?? 'English',
+                      11,
+                    ),
+                  ] else ...[
+                    _buildProfileCard(
+                      Icons.badge_outlined,
+                      'Student ID / USN',
+                      _profileData['usn'] ??
+                          _profileData['student_id'] ??
+                          'N/A',
+                      1,
+                    ),
+                    _buildProfileCard(
+                      Icons.email_outlined,
+                      'Institutional Email',
+                      _profileData['email'] ?? 'N/A',
+                      2,
+                    ),
+                    _buildProfileCard(
+                      Icons.phone_outlined,
+                      'Phone Number',
+                      _profileData['phone'] ?? 'N/A',
+                      3,
+                    ),
+                    _buildProfileCard(
+                      Icons.school_outlined,
+                      'Class / Course',
+                      _profileData['course'] ??
+                          _profileData['college'] ??
+                          'N/A',
+                      4,
+                    ),
+                    _buildProfileCard(
+                      Icons.grid_view_outlined,
+                      'Section',
+                      _profileData['section'] ??
+                          _profileData['department'] ??
+                          'N/A',
+                      5,
+                    ),
+                    _buildProfileCard(
+                      Icons.format_list_numbered_outlined,
+                      'Roll Number',
+                      _profileData['roll_number'] ??
+                          _profileData['semester'] ??
+                          'N/A',
+                      6,
+                    ),
+                    _buildProfileCard(
+                      Icons.wc_outlined,
+                      'Gender',
+                      _profileData['gender'] ?? 'N/A',
+                      7,
+                    ),
+                    _buildProfileCard(
+                      Icons.calendar_today_outlined,
+                      'Date of Birth',
+                      _profileData['dob'] ?? 'N/A',
+                      8,
+                    ),
+                    _buildProfileCard(
+                      Icons.home_outlined,
+                      'Address',
+                      _profileData['address'] ?? 'N/A',
+                      9,
+                    ),
+                    _buildProfileCard(
+                      Icons.family_restroom_outlined,
+                      'Parent / Guardian Details',
+                      _profileData['parent_details'] ?? 'N/A',
+                      10,
+                    ),
+                    _buildProfileCard(
+                      Icons.language_outlined,
+                      'Language Preference',
+                      _profileData['language_preference'] ?? 'English',
+                      11,
+                    ),
+                  ],
 
-                    const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                    // ── Security & Biometrics ─────────────────────────
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 15),
-                      child: GlassContainer(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 18,
-                        ),
-                        borderColor: Colors.white.withValues(alpha: 0.05),
-                        borderRadius: 20,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blueAccent.withValues(
-                                      alpha: 0.08,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
+                  // ── Security & Biometrics ─────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 15),
+                    child: GlassContainer(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
+                      borderColor: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: 20,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.blueAccent.withValues(
+                                    alpha: 0.08,
                                   ),
-                                  child: const Icon(
-                                    Icons.shield_outlined,
-                                    color: Colors.blueAccent,
-                                    size: 22,
-                                  ),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                const SizedBox(width: 18),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'SECURITY & BIOMETRICS',
-                                        style: GoogleFonts.inter(
-                                          color: Colors.white38,
-                                          fontSize: 10,
-                                          letterSpacing: 1,
-                                        ),
+                                child: const Icon(
+                                  Icons.shield_outlined,
+                                  color: Colors.blueAccent,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 18),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'SECURITY & BIOMETRICS',
+                                      style: GoogleFonts.inter(
+                                        color: Colors.white38,
+                                        fontSize: 10,
+                                        letterSpacing: 1,
                                       ),
-                                      const SizedBox(height: 4),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      (_profileData['biometric_registered'] ??
+                                              false)
+                                          ? 'Biometric ID Active ✓'
+                                          : 'Biometric ID Inactive ⚠',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: GlowButton(
+                                  onPressed: () async {
+                                    final session = context
+                                        .read<SessionManager>();
+                                    final args =
+                                        ModalRoute.of(
+                                              context,
+                                            )?.settings.arguments
+                                            as Map?;
+                                    final token =
+                                        args?['token'] ?? session.token ?? '';
+                                    final email =
+                                        args?['email'] ?? session.email ?? '';
+                                    if (token.isEmpty) {
+                                      _showSuccessSnack(
+                                        'Demo Mode: Face registered successfully.',
+                                      );
+                                      return;
+                                    }
+                                    setState(() => _isLoading = true);
+                                    try {
+                                      await ApiService.registerBiometric(
+                                        email,
+                                        token,
+                                      );
+                                      if (!mounted) return;
+                                      _showSuccessSnack(
+                                        'Biometrics synced successfully!',
+                                      );
+                                      _fetchProfile();
+                                    } catch (e) {
+                                      if (!mounted) return;
+                                      setState(() => _isLoading = false);
+                                      _showErrorSnack(
+                                        'Failed to register biometrics: $e',
+                                      );
+                                    }
+                                  },
+                                  color: AppColors.gold,
+                                  glowColor: AppColors.gold.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  borderRadius: 12,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.face_unlock_outlined,
+                                        size: 16,
+                                        color: Colors.black,
+                                      ),
+                                      const SizedBox(width: 8),
                                       Text(
                                         (_profileData['biometric_registered'] ??
                                                 false)
-                                            ? 'Biometric ID Active ✓'
-                                            : 'Biometric ID Inactive ⚠',
-                                        style: const TextStyle(
-                                          color: Colors.white,
+                                            ? 'RE-REGISTER FACE'
+                                            : 'REGISTER FACE',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          color: Colors.black,
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 15,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ).animate().fadeIn(delay: 750.ms).slideX(begin: 0.05),
+
+                  // ── App Customization ─────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 15),
+                    child: GlassContainer(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      borderColor: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: 20,
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.gold.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            const SizedBox(height: 15),
-                            Row(
+                            child: Icon(
+                              isDark
+                                  ? Icons.dark_mode_outlined
+                                  : Icons.light_mode_outlined,
+                              color: AppColors.gold,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 18),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: GlowButton(
-                                    onPressed: () async {
-                                      final session = context
-                                          .read<SessionManager>();
-                                      final args =
-                                          ModalRoute.of(
-                                                context,
-                                              )?.settings.arguments
-                                              as Map?;
-                                      final token =
-                                          args?['token'] ?? session.token ?? '';
-                                      final email =
-                                          args?['email'] ?? session.email ?? '';
-                                      if (token.isEmpty) {
-                                        _showSuccessSnack(
-                                          'Demo Mode: Face registered successfully.',
-                                        );
-                                        return;
-                                      }
-                                      setState(() => _isLoading = true);
-                                      try {
-                                        await ApiService.registerBiometric(
-                                          email,
-                                          token,
-                                        );
-                                        if (!mounted) return;
-                                        _showSuccessSnack(
-                                          'Biometrics synced successfully!',
-                                        );
-                                        _fetchProfile();
-                                      } catch (e) {
-                                        if (!mounted) return;
-                                        setState(() => _isLoading = false);
-                                        _showErrorSnack(
-                                          'Failed to register biometrics: $e',
-                                        );
-                                      }
-                                    },
-                                    color: AppColors.gold,
-                                    glowColor: AppColors.gold.withValues(
-                                      alpha: 0.3,
-                                    ),
-                                    borderRadius: 12,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.face_unlock_outlined,
-                                          size: 16,
-                                          color: Colors.black,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          (_profileData['biometric_registered'] ??
-                                                  false)
-                                              ? 'RE-REGISTER FACE'
-                                              : 'REGISTER FACE',
-                                          style: GoogleFonts.inter(
-                                            fontSize: 12,
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                Text(
+                                  'THEME SYSTEM',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white38,
+                                    fontSize: 10,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  isDark
+                                      ? 'Dark Mode Active'
+                                      : 'Light Mode Active',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
                                   ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
+                          ),
+                          Switch.adaptive(
+                            value: isDark,
+                            activeTrackColor: AppColors.gold,
+                            activeThumbColor: Colors.black,
+                            onChanged: (_) => themeCtrl.toggle(),
+                          ),
+                        ],
                       ),
-                    ).animate().fadeIn(delay: 750.ms).slideX(begin: 0.05),
+                    ),
+                  ).animate().fadeIn(delay: 800.ms).slideX(begin: 0.05),
 
-                    // ── App Customization ─────────────────────────────
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 15),
-                      child: GlassContainer(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        borderColor: Colors.white.withValues(alpha: 0.05),
-                        borderRadius: 20,
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: AppColors.gold.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                isDark
-                                    ? Icons.dark_mode_outlined
-                                    : Icons.light_mode_outlined,
-                                color: AppColors.gold,
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(width: 18),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'THEME SYSTEM',
-                                    style: GoogleFonts.inter(
-                                      color: Colors.white38,
-                                      fontSize: 10,
-                                      letterSpacing: 1,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    isDark
-                                        ? 'Dark Mode Active'
-                                        : 'Light Mode Active',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Switch.adaptive(
-                              value: isDark,
-                              activeTrackColor: AppColors.gold,
-                              activeThumbColor: Colors.black,
-                              onChanged: (_) => themeCtrl.toggle(),
-                            ),
-                          ],
-                        ),
+                  // ── App About ─────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 15),
+                    child: GlassContainer(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
                       ),
-                    ).animate().fadeIn(delay: 800.ms).slideX(begin: 0.05),
-
-                    // ── App About ─────────────────────────────
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 15),
-                      child: GlassContainer(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        borderColor: Colors.white.withValues(alpha: 0.05),
-                        borderRadius: 20,
-                        onTap: () {
-                          showAboutDialog(
-                            context: context,
-                            applicationName: 'Smart Attendance AI',
-                            applicationVersion: '1.0.0',
-                            applicationIcon: Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: Image.asset(
-                                'assets/images/logo.png',
-                                width: 48,
-                                height: 48,
-                              ),
+                      borderColor: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: 20,
+                      onTap: () {
+                        showAboutDialog(
+                          context: context,
+                          applicationName: 'Smart Attendance AI',
+                          applicationVersion: '1.0.0',
+                          applicationIcon: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              width: 48,
+                              height: 48,
                             ),
-                            applicationLegalese:
-                                '© 2026 SmartFace AI Team. All rights reserved.',
-                          );
-                        },
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: AppColors.cyan.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.info_outline_rounded,
-                                color: AppColors.cyan,
-                                size: 22,
-                              ),
+                          ),
+                          applicationLegalese:
+                              '© 2026 SmartFace AI Team. All rights reserved.',
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.cyan.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            const SizedBox(width: 18),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'ABOUT SMARTFACE',
-                                    style: GoogleFonts.inter(
-                                      color: Colors.white38,
-                                      fontSize: 10,
-                                      letterSpacing: 1,
-                                    ),
+                            child: const Icon(
+                              Icons.info_outline_rounded,
+                              color: AppColors.cyan,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 18),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'ABOUT SMARTFACE',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white38,
+                                    fontSize: 10,
+                                    letterSpacing: 1,
                                   ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    'SmartFace AI Attendance',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'SmartFace AI Attendance',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                            const Icon(
-                              Icons.chevron_right_rounded,
-                              color: Colors.white38,
-                            ),
-                          ],
-                        ),
+                          ),
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            color: Colors.white38,
+                          ),
+                        ],
                       ),
-                    ).animate().fadeIn(delay: 850.ms).slideX(begin: 0.05),
+                    ),
+                  ).animate().fadeIn(delay: 850.ms).slideX(begin: 0.05),
 
-                    const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                    // ── Logout ────────────────────────────────────────
-                    SizedBox(
-                      width: double.infinity,
-                      child: GlowButton(
-                        onPressed: () async {
-                          final confirmed = await PremiumDialogs.showConfirmDialog(
-                            context,
-                            title: 'Confirm Logout',
-                            message:
-                                'Are you sure you want to sign out? Your offline session context will be safely cleared.',
-                            confirmLabel: 'LOGOUT',
-                            cancelLabel: 'CANCEL',
-                            isDestructive: true,
-                            icon: Icons.logout_rounded,
-                          );
-                          if (confirmed == true && context.mounted) {
-                            await context.read<SessionManager>().logout();
-                            if (context.mounted) {
-                              context.go('/auth/login');
-                            }
+                  // ── Logout ────────────────────────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    child: GlowButton(
+                      onPressed: () async {
+                        final confirmed = await PremiumDialogs.showConfirmDialog(
+                          context,
+                          title: 'Confirm Logout',
+                          message:
+                              'Are you sure you want to sign out? Your offline session context will be safely cleared.',
+                          confirmLabel: 'LOGOUT',
+                          cancelLabel: 'CANCEL',
+                          isDestructive: true,
+                          icon: Icons.logout_rounded,
+                        );
+                        if (confirmed == true && context.mounted) {
+                          await context.read<SessionManager>().logout();
+                          if (context.mounted) {
+                            context.go('/auth/login');
                           }
-                        },
-                        color: AppColors.error,
-                        glowColor: AppColors.error.withValues(alpha: 0.4),
-                        borderRadius: 16,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.logout_rounded,
-                              size: 20,
+                        }
+                      },
+                      color: AppColors.error,
+                      glowColor: AppColors.error.withValues(alpha: 0.4),
+                      borderRadius: 16,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.logout_rounded,
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'LOGOUT SESSION',
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.bold,
                               color: Colors.white,
+                              letterSpacing: 1.5,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'LOGOUT SESSION',
-                              style: GoogleFonts.inter(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ).animate().fadeIn(delay: 700.ms),
+                    ),
+                  ).animate().fadeIn(delay: 700.ms),
 
-                    const SizedBox(height: 40),
-                  ],
-                ),
+                  const SizedBox(height: 40),
+                ],
               ),
-      ),
+            ),
     );
   }
 

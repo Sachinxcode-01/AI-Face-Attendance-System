@@ -171,10 +171,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
         ),
       ],
       child: _isLoading
-          ? const Padding(
-              padding: EdgeInsets.all(24),
-              child: DashboardShimmer(),
-            )
+          ? const AttendanceCalendarShimmer()
           : SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(18, 20, 18, 120),
               child: Column(

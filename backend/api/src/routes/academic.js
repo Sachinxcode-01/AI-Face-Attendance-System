@@ -1,6 +1,7 @@
 const datasetService = require('../services/datasetService');
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Timetable = require('../models/Timetable');
 const Holiday = require('../models/Holiday');
@@ -67,9 +68,9 @@ router.get('/timetable', authenticate, async (req, res) => {
 });
 
 // POST /academic/timetable
-router.post('/timetable', authenticate, requireRole(['admin', 'teacher']), async (req, res) => {
+router.post('/timetable', authenticate, requireRole(['admin', 'teacher', 'super_admin']), async (req, res) => {
   try {
-    const { user_id, subject, day, time, room } = req.body;
+    const { user_id, subject, day, time, room, college_id, teacher_email } = req.body;
     if (!user_id || !subject || !day || !time) {
       return res.status(400).json({ detail: "Missing required fields (user_id, subject, day, time)." });
     }
@@ -79,7 +80,9 @@ router.post('/timetable', authenticate, requireRole(['admin', 'teacher']), async
       subject,
       day,
       time,
-      room: room || ""
+      room: room || "",
+      college_id: college_id || "",
+      teacher_email: teacher_email || ""
     });
 
     await entry.save();
@@ -88,6 +91,155 @@ router.post('/timetable', authenticate, requireRole(['admin', 'teacher']), async
     delete entryObj._id;
 
     res.status(201).json(entryObj);
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// PUT /academic/timetable/:id
+router.put('/timetable/:id', authenticate, requireRole(['admin', 'teacher', 'super_admin']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ detail: "Invalid timetable ID." });
+    }
+
+    const updates = {};
+    if (req.body.user_id) updates.user_id = req.body.user_id.toUpperCase();
+    if (req.body.subject) updates.subject = req.body.subject;
+    if (req.body.day) updates.day = req.body.day;
+    if (req.body.time) updates.time = req.body.time;
+    if (req.body.room !== undefined) updates.room = req.body.room;
+    if (req.body.college_id !== undefined) updates.college_id = req.body.college_id;
+    if (req.body.teacher_email !== undefined) updates.teacher_email = req.body.teacher_email;
+
+    const updated = await Timetable.findByIdAndUpdate(id, updates, { new: true }).lean();
+    if (!updated) {
+      return res.status(404).json({ detail: "Timetable slot not found." });
+    }
+
+    updated.id = updated._id.toString();
+    delete updated._id;
+    res.json({ success: true, slot: updated });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// DELETE /academic/timetable/:id
+router.delete('/timetable/:id', authenticate, requireRole(['admin', 'teacher', 'super_admin']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ detail: "Invalid timetable ID." });
+    }
+
+    const deleted = await Timetable.findByIdAndDelete(id).lean();
+    if (!deleted) {
+      return res.status(404).json({ detail: "Timetable slot not found." });
+    }
+
+    res.json({ success: true, message: "Timetable slot deleted successfully.", deleted_id: id });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// POST /academic/timetable/bulk
+router.post('/timetable/bulk', authenticate, requireRole(['admin', 'super_admin']), async (req, res) => {
+  try {
+    const { slots, college_id } = req.body;
+    if (!Array.isArray(slots) || slots.length === 0) {
+      return res.status(400).json({ detail: "slots array is required and must not be empty." });
+    }
+    if (slots.length > 500) {
+      return res.status(400).json({ detail: "Batch limit exceeded (maximum 500 slots per request)." });
+    }
+
+    const validSlots = [];
+    for (const s of slots) {
+      if (!s.user_id || !s.subject || !s.day || !s.time) {
+        return res.status(400).json({ detail: `Invalid entry encountered: ${JSON.stringify(s)}` });
+      }
+      validSlots.push({
+        user_id: s.user_id.toUpperCase(),
+        subject: s.subject,
+        day: s.day,
+        time: s.time,
+        room: s.room || "",
+        college_id: s.college_id || college_id || "",
+        teacher_email: s.teacher_email || ""
+      });
+    }
+
+    const inserted = await Timetable.insertMany(validSlots);
+    res.status(201).json({
+      success: true,
+      count: inserted.length,
+      message: `Successfully created ${inserted.length} timetable entries.`
+    });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// GET /academic/timetable/conflicts (Smart AI/Heuristic Conflict Detector)
+router.get('/timetable/conflicts', authenticate, requireRole(['admin', 'teacher', 'super_admin']), async (req, res) => {
+  try {
+    const { college_id, day } = req.query;
+    const filter = {};
+    if (college_id) filter.college_id = college_id;
+    if (day) filter.day = day;
+
+    const allSlots = await Timetable.find(filter).lean();
+    const roomConflicts = [];
+    const teacherConflicts = [];
+
+    // Group by room & day
+    const roomMap = new Map();
+    const teacherMap = new Map();
+
+    for (const slot of allSlots) {
+      // Room conflict check
+      if (slot.room && slot.room.trim()) {
+        const roomKey = `${slot.day}_${slot.room.trim().toUpperCase()}_${slot.time.trim()}`;
+        if (roomMap.has(roomKey)) {
+          roomConflicts.push({
+            type: "room_double_booked",
+            room: slot.room,
+            day: slot.day,
+            time: slot.time,
+            slots: [roomMap.get(roomKey), { id: slot._id.toString(), subject: slot.subject, class: slot.user_id }]
+          });
+        } else {
+          roomMap.set(roomKey, { id: slot._id.toString(), subject: slot.subject, class: slot.user_id });
+        }
+      }
+
+      // Teacher conflict check
+      if (slot.teacher_email && slot.teacher_email.trim()) {
+        const teacherKey = `${slot.day}_${slot.teacher_email.trim().toLowerCase()}_${slot.time.trim()}`;
+        if (teacherMap.has(teacherKey)) {
+          teacherConflicts.push({
+            type: "teacher_double_booked",
+            teacher_email: slot.teacher_email,
+            day: slot.day,
+            time: slot.time,
+            slots: [teacherMap.get(teacherKey), { id: slot._id.toString(), subject: slot.subject, class: slot.user_id }]
+          });
+        } else {
+          teacherMap.set(teacherKey, { id: slot._id.toString(), subject: slot.subject, class: slot.user_id });
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      total_slots_checked: allSlots.length,
+      conflicts_found: roomConflicts.length + teacherConflicts.length,
+      room_conflicts: roomConflicts,
+      teacher_conflicts: teacherConflicts
+    });
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }
@@ -197,7 +349,7 @@ router.get('/holidays', authenticate, async (req, res) => {
 });
 
 // POST /academic/holidays
-router.post('/holidays', authenticate, requireRole(['admin']), async (req, res) => {
+router.post('/holidays', authenticate, requireRole(['admin', 'super_admin']), async (req, res) => {
   try {
     const { title, date, description } = req.body;
     if (!title || !date) {
@@ -213,6 +365,47 @@ router.post('/holidays', authenticate, requireRole(['admin']), async (req, res) 
     hObj.id = hObj._id.toString();
     delete hObj._id;
     res.status(201).json(hObj);
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// PUT /academic/holidays/:id
+router.put('/holidays/:id', authenticate, requireRole(['admin', 'super_admin']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ detail: "Invalid holiday ID." });
+    }
+    const updates = {};
+    if (req.body.title) updates.title = req.body.title;
+    if (req.body.date) updates.date = new Date(req.body.date);
+    if (req.body.description !== undefined) updates.description = req.body.description;
+
+    const updated = await Holiday.findByIdAndUpdate(id, updates, { new: true }).lean();
+    if (!updated) {
+      return res.status(404).json({ detail: "Holiday not found." });
+    }
+    updated.id = updated._id.toString();
+    delete updated._id;
+    res.json({ success: true, holiday: updated });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// DELETE /academic/holidays/:id
+router.delete('/holidays/:id', authenticate, requireRole(['admin', 'super_admin']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ detail: "Invalid holiday ID." });
+    }
+    const deleted = await Holiday.findByIdAndDelete(id).lean();
+    if (!deleted) {
+      return res.status(404).json({ detail: "Holiday not found." });
+    }
+    res.json({ success: true, message: "Holiday removed successfully.", deleted_id: id });
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }

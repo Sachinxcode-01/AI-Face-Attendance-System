@@ -30,6 +30,7 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
+import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
 class StudentIdCardScreen extends StatefulWidget {
   const StudentIdCardScreen({super.key});
@@ -259,7 +260,7 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
         ),
       ],
       child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const StudentIdCardShimmer()
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Column(

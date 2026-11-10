@@ -25,6 +25,7 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
+import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
 enum StudentStatus { present, late, absent, excused }
 
@@ -200,9 +201,15 @@ class _TeacherRosterOverrideScreenState
           s.usn.toLowerCase().contains(_search.toLowerCase());
     }).toList();
 
-    final presentCount = _students.where((s) => s.status == StudentStatus.present).length;
-    final absentCount = _students.where((s) => s.status == StudentStatus.absent).length;
-    final lateCount = _students.where((s) => s.status == StudentStatus.late).length;
+    final presentCount = _students
+        .where((s) => s.status == StudentStatus.present)
+        .length;
+    final absentCount = _students
+        .where((s) => s.status == StudentStatus.absent)
+        .length;
+    final lateCount = _students
+        .where((s) => s.status == StudentStatus.late)
+        .length;
 
     return StudentScreenShell(
       title: 'Roster Override',
@@ -215,14 +222,17 @@ class _TeacherRosterOverrideScreenState
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
                 )
               : const Icon(Icons.cloud_upload_rounded, color: Colors.white),
           onPressed: _isSaving ? null : _saveAndSync,
         ),
       ],
       child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const UserListShimmer()
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Column(
@@ -232,15 +242,30 @@ class _TeacherRosterOverrideScreenState
                   Row(
                     children: [
                       Expanded(
-                        child: _buildHudCounter('Present', '$presentCount', const Color(0xFF10B981), isDark),
+                        child: _buildHudCounter(
+                          'Present',
+                          '$presentCount',
+                          const Color(0xFF10B981),
+                          isDark,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: _buildHudCounter('Late', '$lateCount', const Color(0xFFF59E0B), isDark),
+                        child: _buildHudCounter(
+                          'Late',
+                          '$lateCount',
+                          const Color(0xFFF59E0B),
+                          isDark,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: _buildHudCounter('Absent', '$absentCount', const Color(0xFFEF4444), isDark),
+                        child: _buildHudCounter(
+                          'Absent',
+                          '$absentCount',
+                          const Color(0xFFEF4444),
+                          isDark,
+                        ),
                       ),
                     ],
                   ),
@@ -253,7 +278,9 @@ class _TeacherRosterOverrideScreenState
                       color: isDark ? const Color(0xFF131A33) : Colors.white,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0),
+                        color: isDark
+                            ? const Color(0xFF252E4A)
+                            : const Color(0xFFE5E7F0),
                       ),
                     ),
                     child: TextField(
@@ -264,10 +291,16 @@ class _TeacherRosterOverrideScreenState
                       ),
                       decoration: InputDecoration(
                         border: InputBorder.none,
-                        icon: const Icon(Icons.search_rounded, color: Color(0xFF6366F1), size: 18),
+                        icon: const Icon(
+                          Icons.search_rounded,
+                          color: Color(0xFF6366F1),
+                          size: 18,
+                        ),
                         hintText: 'Filter roster by name or USN...',
                         hintStyle: GoogleFonts.inter(
-                          color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
+                          color: isDark
+                              ? Colors.white38
+                              : const Color(0xFF9CA3AF),
                           fontSize: 13,
                         ),
                       ),
@@ -284,9 +317,13 @@ class _TeacherRosterOverrideScreenState
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                              color: const Color(
+                                0xFF10B981,
+                              ).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0xFF10B981)),
+                              border: Border.all(
+                                color: const Color(0xFF10B981),
+                              ),
                             ),
                             child: Center(
                               child: Text(
@@ -308,9 +345,13 @@ class _TeacherRosterOverrideScreenState
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                              color: const Color(
+                                0xFFEF4444,
+                              ).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0xFFEF4444)),
+                              border: Border.all(
+                                color: const Color(0xFFEF4444),
+                              ),
                             ),
                             child: Center(
                               child: Text(
@@ -338,7 +379,12 @@ class _TeacherRosterOverrideScreenState
     );
   }
 
-  Widget _buildHudCounter(String label, String value, Color color, bool isDark) {
+  Widget _buildHudCounter(
+    String label,
+    String value,
+    Color color,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
@@ -387,7 +433,9 @@ class _TeacherRosterOverrideScreenState
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+                backgroundColor: const Color(
+                  0xFF4F46E5,
+                ).withValues(alpha: 0.15),
                 child: Text(
                   student.name[0],
                   style: GoogleFonts.poppins(
@@ -414,7 +462,9 @@ class _TeacherRosterOverrideScreenState
                       '${student.usn} ${student.time != null ? '• ${student.time}' : ''}',
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                        color: isDark
+                            ? Colors.white60
+                            : const Color(0xFF6B7280),
                       ),
                     ),
                   ],
@@ -427,13 +477,33 @@ class _TeacherRosterOverrideScreenState
           // 4 Status Pill Buttons
           Row(
             children: [
-              _buildStatusPill(student, StudentStatus.present, 'Present', const Color(0xFF10B981)),
+              _buildStatusPill(
+                student,
+                StudentStatus.present,
+                'Present',
+                const Color(0xFF10B981),
+              ),
               const SizedBox(width: 6),
-              _buildStatusPill(student, StudentStatus.late, 'Late', const Color(0xFFF59E0B)),
+              _buildStatusPill(
+                student,
+                StudentStatus.late,
+                'Late',
+                const Color(0xFFF59E0B),
+              ),
               const SizedBox(width: 6),
-              _buildStatusPill(student, StudentStatus.absent, 'Absent', const Color(0xFFEF4444)),
+              _buildStatusPill(
+                student,
+                StudentStatus.absent,
+                'Absent',
+                const Color(0xFFEF4444),
+              ),
               const SizedBox(width: 6),
-              _buildStatusPill(student, StudentStatus.excused, 'Excused', const Color(0xFF3B82F6)),
+              _buildStatusPill(
+                student,
+                StudentStatus.excused,
+                'Excused',
+                const Color(0xFF3B82F6),
+              ),
             ],
           ),
         ],

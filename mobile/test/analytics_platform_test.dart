@@ -10,7 +10,11 @@
 |--------------------------------------------------------------------------
 */
 
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/analytics/models/attendance_analytics_model.dart';
 import 'package:smartface_attendance/features/analytics/controllers/analytics_controller.dart';
 
@@ -113,7 +117,39 @@ void main() {
     late AnalyticsController controller;
 
     setUp(() {
+      TestWidgetsFlutterBinding.ensureInitialized();
       controller = AnalyticsController();
+      ApiService.client = MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'overall_percentage': 0.94,
+            'predicted_semester_attendance': 96.0,
+            'weekly_trends': [{'week': 'Wk 1', 'present': 5}],
+            'monthly_trends': [{'month': 'Nov', 'rate': 92.0}],
+            'heatmap_data': {'2026-11-10': 'present'},
+            'leaderboard': [
+              {
+                'name': 'Abhishek',
+                'department': 'CSE',
+                'rank': 1,
+                'score': 98.0,
+                'is_me': true,
+              }
+            ],
+            'predictions': {
+              'semester_projection': 96.0,
+              'trend_direction': 'improving',
+              'risk_level': 'low',
+              'missable_classes': 3,
+            },
+          }),
+          200,
+        );
+      });
+    });
+
+    tearDown(() {
+      ApiService.client = http.Client();
     });
 
     test('Initial states should be empty or default values', () {

@@ -12,6 +12,8 @@
 */
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smartface_attendance/shared/widgets/smart_charts.dart';
 import 'package:smartface_attendance/shared/widgets/premium_carousel.dart';
@@ -20,7 +22,6 @@ import 'package:smartface_attendance/shared/widgets/premium_widgets.dart'
 import 'package:smartface_attendance/shared/widgets/attendance_ring.dart';
 import 'package:smartface_attendance/features/analytics/models/attendance_analytics_model.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
-import 'package:smartface_attendance/design_system/design_system.dart';
 
 // ============================================================================
 // 1. AttendanceScoreCard
@@ -121,59 +122,54 @@ class AttendanceScoreCard extends StatelessWidget {
                       )
                     else
                       GestureDetector(
-                      onTap: () {
-                        AppHaptics.medium();
-                        final tier = streakValue >= 30
-                            ? 'Gold'
-                            : streakValue >= 14
-                                ? 'Silver'
-                                : 'Bronze';
-                        context.showSuccessToast(
-                          'You are on a $streakValue-day active attendance streak! ($tier Tier)',
-                          title: 'Streak Milestone Achieved!',
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.redAccent.withValues(alpha: 0.25),
+                        onTap: () {
+                          HapticFeedback.heavyImpact();
+                          showSnapchatStreakCelebration(context, streakValue);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.deepOrangeAccent.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.deepOrangeAccent.withValues(alpha: 0.35),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.local_fire_department_rounded,
+                                color: Colors.deepOrangeAccent,
+                                size: 15,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$streakValue Days Streak',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepOrangeAccent,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                streakValue >= 30
+                                    ? '👑'
+                                    : streakValue >= 14
+                                        ? '🔥'
+                                        : streakValue >= 7
+                                            ? '⚡'
+                                            : '🥉',
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.fireplace_rounded,
-                              color: Colors.redAccent,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '$streakValue Days Streak',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.redAccent,
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              streakValue >= 30
-                                  ? '🥇'
-                                  : streakValue >= 14
-                                      ? '🥈'
-                                      : '🥉',
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                          ],
-                        ),
                       ),
-                    ),
                   ],
                 ),
               ],
@@ -527,26 +523,39 @@ class _TrendChartState extends State<TrendChart> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                _showWeekly ? 'Weekly Attendance Trend' : 'Monthly Performance',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF1B2C56),
+              Expanded(
+                child: Text(
+                  _showWeekly ? 'Weekly Trend' : 'Monthly Performance',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              // Segmented controls
-              Row(
-                children: [
-                  _buildToggleTab('Weekly', _showWeekly),
-                  _buildToggleTab('Monthly', !_showWeekly),
-                ],
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : const Color(0xFFEFF2F8),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildToggleTab('Weekly', _showWeekly),
+                    _buildToggleTab('Monthly', !_showWeekly),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           SizedBox(
             height: 180,
             child: _showWeekly ? _buildBarChart() : _buildLineChart(),
@@ -559,30 +568,26 @@ class _TrendChartState extends State<TrendChart> {
   Widget _buildToggleTab(String text, bool active) {
     return GestureDetector(
       onTap: () {
+        HapticFeedback.selectionClick();
         setState(() {
           _showWeekly = text == 'Weekly';
         });
       },
-      child: Container(
-        margin: const EdgeInsets.only(left: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: active
-              ? const Color(0xFF3559E0).withValues(alpha: 0.15)
+              ? const Color(0xFF3559E0)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: active
-                ? const Color(0xFF3559E0).withValues(alpha: 0.3)
-                : Colors.transparent,
-          ),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
           text,
           style: GoogleFonts.inter(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: active ? const Color(0xFF3559E0) : const Color(0xFF7F8CA4),
+            color: active ? Colors.white : const Color(0xFF7F8CA4),
           ),
         ),
       ),
@@ -592,13 +597,12 @@ class _TrendChartState extends State<TrendChart> {
   Widget _buildBarChart() {
     final trends = widget.weeklyTrends;
     if (trends.isEmpty) {
-      return const Center(child: Text('No trend data available'));
+      return const Center(child: Text('No weekly trend data available'));
     }
 
     final subjectsData = trends.map((t) {
       final String label = t['week']?.toString() ?? t['day']?.toString() ?? '';
-      final double val = ((t['present'] ?? t['percentage'] ?? 0) as num)
-          .toDouble();
+      final double val = ((t['present'] ?? t['rate'] ?? t['percentage'] ?? 0) as num).toDouble();
       return ChartDataPoint(label, val);
     }).toList();
 
@@ -608,13 +612,12 @@ class _TrendChartState extends State<TrendChart> {
   Widget _buildLineChart() {
     final trends = widget.monthlyTrends;
     if (trends.isEmpty) {
-      return const Center(child: Text('No trend data available'));
+      return const Center(child: Text('No monthly trend data available'));
     }
 
     final dataPoints = trends.map((t) {
       final String month = t['month']?.toString() ?? '';
-      final double val = ((t['rate'] ?? t['percentage'] ?? 80) as num)
-          .toDouble();
+      final double val = ((t['rate'] ?? t['percentage'] ?? t['present'] ?? 80) as num).toDouble();
       return ChartDataPoint(month, val);
     }).toList();
 
@@ -660,88 +663,130 @@ class LeaderboardCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          ...List.generate(entries.length, (index) {
-            final entry = entries[index];
-            final Color rankColor = entry.rank == 1
-                ? const Color(0xFF3559E0)
-                : entry.rank == 2
-                ? Colors.grey
-                : entry.rank == 3
-                ? Colors.deepOrangeAccent
-                : const Color(0xFF7F8CA4);
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: entry.isMe
-                    ? const Color(0xFF3559E0).withValues(alpha: 0.06)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: entry.isMe
-                      ? const Color(0xFF3559E0).withValues(alpha: 0.2)
-                      : Colors.transparent,
+          if (entries.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text(
+                  'Standings are calculating in real-time.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: const Color(0xFF7F8CA4),
+                  ),
                 ),
               ),
-              child: Row(
-                children: [
-                  // Rank number
-                  Container(
-                    width: 24,
-                    alignment: Alignment.center,
-                    child: Text(
-                      '#${entry.rank}',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: rankColor,
+            )
+          else
+            ...List.generate(entries.length, (index) {
+              final entry = entries[index];
+              final Color rankColor = entry.rank == 1
+                  ? const Color(0xFFFFB800) // Gold
+                  : entry.rank == 2
+                      ? const Color(0xFF94A3B8) // Silver
+                      : entry.rank == 3
+                          ? const Color(0xFFCD7F32) // Bronze
+                          : const Color(0xFF7F8CA4);
+
+              final String medalIcon = entry.rank == 1
+                  ? '🥇'
+                  : entry.rank == 2
+                      ? '🥈'
+                      : entry.rank == 3
+                          ? '🥉'
+                          : '#${entry.rank}';
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: entry.isMe
+                      ? const Color(0xFF3559E0).withValues(alpha: 0.12)
+                      : (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: entry.isMe
+                        ? const Color(0xFF3559E0).withValues(alpha: 0.4)
+                        : Colors.transparent,
+                    width: entry.isMe ? 1.5 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      alignment: Alignment.center,
+                      child: Text(
+                        medalIcon,
+                        style: GoogleFonts.inter(
+                          fontSize: entry.rank <= 3 ? 16 : 13,
+                          fontWeight: FontWeight.bold,
+                          color: rankColor,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Name and dept
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          entry.name,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: entry.isMe
-                                ? FontWeight.bold
-                                : FontWeight.w600,
-                            color: isDark
-                                ? Colors.white70
-                                : const Color(0xFF1B2C56),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  entry.name,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: entry.isMe ? FontWeight.bold : FontWeight.w600,
+                                    color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (entry.isMe) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF3559E0),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'YOU',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
-                        ),
-                        Text(
-                          entry.department,
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            color: const Color(0xFF7F8CA4),
+                          const SizedBox(height: 2),
+                          Text(
+                            entry.department,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: const Color(0xFF7F8CA4),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  // Score
-                  Text(
-                    '${entry.score.toStringAsFixed(0)}%',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: entry.score >= 90.0
-                          ? Colors.green
-                          : const Color(0xFF3559E0),
+                    Text(
+                      '${entry.score.toStringAsFixed(0)}%',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: entry.score >= 90.0
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFF3559E0),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }),
+                  ],
+                ),
+              );
+            }),
         ],
       ),
     );
@@ -749,20 +794,98 @@ class LeaderboardCard extends StatelessWidget {
 }
 
 // ============================================================================
-// 6. HeatmapCard
+// 6. Real Interactive Calendar & Attendance Heatmap with Snapchat Streaks
 // ============================================================================
 
-class HeatmapCard extends StatelessWidget {
+class HeatmapCard extends StatefulWidget {
   final Map<String, dynamic> heatmapData;
+  final int? streak;
 
-  const HeatmapCard({super.key, required this.heatmapData});
+  const HeatmapCard({
+    super.key,
+    required this.heatmapData,
+    this.streak,
+  });
+
+  @override
+  State<HeatmapCard> createState() => _HeatmapCardState();
+}
+
+class _HeatmapCardState extends State<HeatmapCard> {
+  late DateTime _selectedMonth;
+
+  static const List<String> _monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  static const List<String> _weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _selectedMonth = DateTime(now.year, now.month, 1);
+  }
+
+  void _previousMonth() {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1, 1);
+    });
+  }
+
+  void _nextMonth() {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 1);
+    });
+  }
+
+  int _calculateActiveStreak() {
+    if (widget.streak != null && widget.streak! > 0) {
+      return widget.streak!;
+    }
+    // Calculate from heatmapData
+    final now = DateTime.now();
+    int count = 0;
+    for (int i = 0; i < 45; i++) {
+      final d = now.subtract(Duration(days: i));
+      if (d.weekday == DateTime.saturday || d.weekday == DateTime.sunday) continue;
+      final ds = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      if (widget.heatmapData[ds] == 'present') {
+        count++;
+      } else if (i == 0) {
+        // Not marked today yet, continue checking yesterday
+        continue;
+      } else {
+        break;
+      }
+    }
+    return count > 0 ? count : 5;
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // We render a standard grid representing days of June 2026 (30 days, starts on Monday)
-    // 5 rows, 7 columns
-    final List<int> days = List.generate(30, (i) => i + 1);
+    final now = DateTime.now();
+    final streak = _calculateActiveStreak();
+
+    final daysInMonth = DateUtils.getDaysInMonth(_selectedMonth.year, _selectedMonth.month);
+    final firstDayWeekday = DateTime(_selectedMonth.year, _selectedMonth.month, 1).weekday; // 1 = Mon, 7 = Sun
+    final offset = firstDayWeekday - 1; // 0 to 6
+
+    // Tally current month statistics
+    int presentCount = 0;
+    int absentCount = 0;
+    for (int day = 1; day <= daysInMonth; day++) {
+      final dateStr = '${_selectedMonth.year}-${_selectedMonth.month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+      final status = widget.heatmapData[dateStr]?.toString().toLowerCase();
+      if (status == 'present') presentCount++;
+      if (status == 'absent') absentCount++;
+    }
+
+    final monthTitle = '${_monthNames[_selectedMonth.month - 1].toUpperCase()} ${_selectedMonth.year}';
 
     return ModernDashboardCard(
       padding: const EdgeInsets.all(20),
@@ -770,97 +893,476 @@ class HeatmapCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header with Month Navigation
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'ATTENDANCE HEATMAP (JUNE)',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF7F8CA4),
-                  letterSpacing: 1.5,
-                ),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_month_rounded,
+                    color: Color(0xFF6366F1),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'ATTENDANCE CALENDAR',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF7F8CA4),
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ],
               ),
-              const Icon(
-                Icons.grid_on_rounded,
-                color: Color(0xFF7F8CA4),
-                size: 16,
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left_rounded, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    color: const Color(0xFF7F8CA4),
+                    onPressed: _previousMonth,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    monthTitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right_rounded, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    color: const Color(0xFF7F8CA4),
+                    onPressed: _nextMonth,
+                  ),
+                ],
               ),
             ],
           ),
+
           const SizedBox(height: 16),
+
+          // Snapchat-Style Attendance Streak Banner
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.heavyImpact();
+              showSnapchatStreakCelebration(context, streak);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2E1A11), Color(0xFF1F182F)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.deepOrangeAccent.withValues(alpha: 0.35),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.deepOrangeAccent.withValues(alpha: 0.15),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.deepOrange.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.local_fire_department_rounded,
+                      color: Colors.deepOrangeAccent,
+                      size: 26,
+                    )
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .scale(
+                          begin: const Offset(0.9, 0.9),
+                          end: const Offset(1.12, 1.12),
+                          duration: 800.ms,
+                          curve: Curves.easeInOut,
+                        ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '🔥 $streak DAY STREAK',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orangeAccent,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: Colors.deepOrangeAccent,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                streak >= 14 ? 'ELITE' : 'ACTIVE',
+                                style: GoogleFonts.inter(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Streak on fire! Tap to inspect Snapchat streak milestone.',
+                          style: GoogleFonts.inter(
+                            fontSize: 10.5,
+                            color: Colors.white70,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 13,
+                    color: Colors.orangeAccent,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // Attendance Summary Counters (Attended / Absent)
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 15),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$presentCount Attended',
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF10B981),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.cancel_rounded, color: Color(0xFFEF4444), size: 15),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$absentCount Absent',
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFEF4444),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Weekday Labels
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: _weekdays
+                .map((day) => Expanded(
+                      child: Center(
+                        child: Text(
+                          day,
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF7F8CA4),
+                          ),
+                        ),
+                      ),
+                    ))
+                .toList(),
+          ),
+
+          const SizedBox(height: 10),
+
+          // Real Calendar Grid
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: 30,
+            itemCount: offset + daysInMonth,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
+              crossAxisSpacing: 6,
+              mainAxisSpacing: 6,
+              childAspectRatio: 1.0,
             ),
             itemBuilder: (context, index) {
-              final dayNum = days[index];
-              final dateStr = '2026-06-${dayNum.toString().padLeft(2, '0')}';
-              final status = heatmapData[dateStr] as String?;
-
-              Color cellColor = isDark
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : const Color(0xFFF1F5FD);
-              Border border = Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : const Color(0xFFE2E8F0),
-              );
-
-              if (status == 'present') {
-                cellColor = const Color(0xFF10B981).withValues(alpha: 0.25);
-                border = Border.all(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.4),
-                );
-              } else if (status == 'absent') {
-                cellColor = const Color(0xFFEF4444).withValues(alpha: 0.2);
-                border = Border.all(
-                  color: const Color(0xFFEF4444).withValues(alpha: 0.3),
-                );
+              if (index < offset) {
+                return const SizedBox.shrink();
               }
 
-              return Container(
-                decoration: BoxDecoration(
-                  color: cellColor,
-                  borderRadius: BorderRadius.circular(8),
-                  border: border,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '$dayNum',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: status != null
-                        ? (status == 'present'
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFFEF4444))
-                        : const Color(0xFF7F8CA4),
+              final dayNum = index - offset + 1;
+              final dateStr = '${_selectedMonth.year}-${_selectedMonth.month.toString().padLeft(2, '0')}-${dayNum.toString().padLeft(2, '0')}';
+              final status = widget.heatmapData[dateStr]?.toString().toLowerCase();
+
+              final isToday = now.year == _selectedMonth.year &&
+                  now.month == _selectedMonth.month &&
+                  now.day == dayNum;
+
+              final dayDate = DateTime(_selectedMonth.year, _selectedMonth.month, dayNum);
+              final isWeekend = dayDate.weekday == DateTime.saturday || dayDate.weekday == DateTime.sunday;
+
+              Color cellColor;
+              Border border;
+              Color textColor;
+
+              if (status == 'present') {
+                cellColor = const Color(0xFF10B981).withValues(alpha: isDark ? 0.28 : 0.2);
+                border = Border.all(
+                  color: isToday ? Colors.amberAccent : const Color(0xFF10B981).withValues(alpha: 0.6),
+                  width: isToday ? 2.0 : 1.0,
+                );
+                textColor = const Color(0xFF10B981);
+              } else if (status == 'absent') {
+                cellColor = const Color(0xFFEF4444).withValues(alpha: isDark ? 0.24 : 0.15);
+                border = Border.all(
+                  color: isToday ? Colors.amberAccent : const Color(0xFFEF4444).withValues(alpha: 0.5),
+                  width: isToday ? 2.0 : 1.0,
+                );
+                textColor = const Color(0xFFEF4444);
+              } else if (isToday) {
+                cellColor = const Color(0xFF6366F1).withValues(alpha: 0.18);
+                border = Border.all(color: const Color(0xFF6366F1), width: 1.8);
+                textColor = const Color(0xFF6366F1);
+              } else if (isWeekend) {
+                cellColor = isDark
+                    ? Colors.white.withValues(alpha: 0.02)
+                    : const Color(0xFFF1F5F9);
+                border = Border.all(color: Colors.transparent);
+                textColor = const Color(0xFF475569);
+              } else {
+                cellColor = isDark
+                    ? Colors.white.withValues(alpha: 0.04)
+                    : const Color(0xFFF8FAFC);
+                border = Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFE2E8F0),
+                );
+                textColor = const Color(0xFF7F8CA4);
+              }
+
+              return GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  _showDayAttendanceSheet(context, dayDate, status);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: cellColor,
+                    borderRadius: BorderRadius.circular(8),
+                    border: border,
+                  ),
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '$dayNum',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: (status != null || isToday) ? FontWeight.bold : FontWeight.w500,
+                          color: textColor,
+                        ),
+                      ),
+                      if (status == 'present')
+                        Container(
+                          width: 4,
+                          height: 4,
+                          margin: const EdgeInsets.only(top: 2),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF10B981),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               );
             },
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 14),
+
           // Legend
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               _buildLegendDot(context, const Color(0xFF10B981), 'Present'),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               _buildLegendDot(context, const Color(0xFFEF4444), 'Absent'),
-              const SizedBox(width: 16),
-              _buildLegendDot(context, const Color(0xFFF1F5FD), 'No Class'),
+              const SizedBox(width: 14),
+              _buildLegendDot(context, const Color(0xFF6366F1), 'Today'),
+              const SizedBox(width: 14),
+              _buildLegendDot(context, const Color(0xFF475569), 'No Class'),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  void _showDayAttendanceSheet(BuildContext context, DateTime date, String? status) {
+    final dateFormatted = '${date.day} ${_monthNames[date.month - 1]} ${date.year}';
+    final isPresent = status == 'present';
+    final isAbsent = status == 'absent';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF141D38) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(
+              color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    dateFormatted,
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF1B2C56),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isPresent
+                          ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                          : isAbsent
+                              ? const Color(0xFFEF4444).withValues(alpha: 0.15)
+                              : Colors.grey.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isPresent
+                            ? const Color(0xFF10B981).withValues(alpha: 0.4)
+                            : isAbsent
+                                ? const Color(0xFFEF4444).withValues(alpha: 0.4)
+                                : Colors.grey.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      isPresent
+                          ? 'VERIFIED PRESENT'
+                          : isAbsent
+                              ? 'ABSENT'
+                              : 'NO CLASS SCHEDULED',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isPresent
+                            ? const Color(0xFF10B981)
+                            : isAbsent
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFF7F8CA4),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                isPresent
+                    ? 'Biometric check-in verified successfully. Attendance was logged via front ArcFace neural scanner.'
+                    : isAbsent
+                        ? 'Student recorded as absent for scheduled lectures on this calendar date.'
+                        : 'No mandatory university lecture attendance recorded on this day.',
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3559E0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Close', style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -869,8 +1371,8 @@ class HeatmapCard extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 8,
-          height: 8,
+          width: 7,
+          height: 7,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
@@ -881,7 +1383,7 @@ class HeatmapCard extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 5),
         Text(
           text,
           style: const TextStyle(fontSize: 10, color: Color(0xFF7F8CA4)),
@@ -889,4 +1391,152 @@ class HeatmapCard extends StatelessWidget {
       ],
     );
   }
+}
+
+// ============================================================================
+// 7. Snapchat Streak Celebration Dialog
+// ============================================================================
+
+void showSnapchatStreakCelebration(BuildContext context, int streak) {
+  final tier = streak >= 30
+      ? '👑 Diamond Inferno • Legend Tier'
+      : streak >= 14
+          ? '🔥 Golden Blaze • Master Tier'
+          : streak >= 7
+              ? '⚡ Silver Spark • Consistency Champ'
+              : '🥉 Bronze Flame • Streak Starter';
+
+  showDialog(
+    context: context,
+    builder: (ctx) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Container(
+          padding: const EdgeInsets.all(26),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF1E112A), Color(0xFF2C130B), Color(0xFF140D1D)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: Colors.deepOrangeAccent.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.deepOrangeAccent.withValues(alpha: 0.25),
+                blurRadius: 32,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Pulsing Fire Icon
+              Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.deepOrange.withValues(alpha: 0.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.orange.withValues(alpha: 0.35),
+                      blurRadius: 24,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: const Text('🔥', style: TextStyle(fontSize: 48))
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scale(
+                      begin: const Offset(0.88, 0.88),
+                      end: const Offset(1.15, 1.15),
+                      duration: 700.ms,
+                      curve: Curves.easeInOut,
+                    ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'STREAK ON FIRE!',
+                style: GoogleFonts.outfit(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2,
+                  color: Colors.orangeAccent,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '🔥 $streak DAYS ATTENDANCE',
+                style: GoogleFonts.poppins(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  tier,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orangeAccent,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'You have checked in $streak class days in a row! Like Snapchat streaks, keep checking in every morning to maintain your flame and prevent academic eligibility drops.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  color: Colors.white70,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    Navigator.pop(ctx);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.deepOrangeAccent,
+                    elevation: 6,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Text(
+                    'Keep It Burning! 🔥',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

@@ -1325,25 +1325,35 @@ async def upload_avatar(
     current_user: str = Depends(AuthService.get_current_user)
 ):
     """Upload and update user profile picture. Validates type/size and stores securely."""
-
-    
-    # --- Validation ---
     ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
     ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
     MAX_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
     
-    content_type = file.content_type or ""
+    # Infer and normalize extension
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    content_type = (file.content_type or "").lower().strip()
+    
+    if not ext or ext not in ALLOWED_EXTENSIONS:
+        if "png" in content_type:
+            ext = ".png"
+        elif "webp" in content_type:
+            ext = ".webp"
+        else:
+            ext = ".jpg"
+            
+    # Normalize generic / octet-stream MIME types
+    if content_type in {"application/octet-stream", "", "image/*", "binary/octet-stream", "application/x-binary"}:
+        if ext in {".jpg", ".jpeg"}:
+            content_type = "image/jpeg"
+        elif ext == ".png":
+            content_type = "image/png"
+        elif ext == ".webp":
+            content_type = "image/webp"
+
     if content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid file type '{content_type}'. Only JPEG, PNG, and WEBP are accepted."
-        )
-    
-    ext = os.path.splitext(file.filename or "")[1].lower()
-    if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid file extension '{ext}'. Only .jpg, .jpeg, .png, and .webp are accepted."
         )
     
     contents = await file.read()
@@ -1357,7 +1367,6 @@ async def upload_avatar(
     user = await users_collection.find_one({"email": current_user})
     if user and user.get("avatar_url"):
         old_url = user["avatar_url"]
-        # Extract filename from URL like /static/avatars/avatar_email_ts.png
         old_filename = old_url.split("/")[-1]
         old_path = os.path.join(AVATARS_DIR, old_filename)
         if os.path.exists(old_path):
@@ -1379,12 +1388,40 @@ async def upload_avatar(
     avatar_url = f"/static/avatars/{new_filename}"
     await users_collection.update_one(
         {"email": current_user},
-        {"$set": {"avatar_url": avatar_url}}
+        {"$set": {"avatar_url": avatar_url, "profilePhotoUrl": avatar_url}}
     )
     
     return {
         "message": "Profile picture updated successfully",
-        "avatar_url": avatar_url
+        "avatar_url": avatar_url,
+        "profilePhotoUrl": avatar_url,
+    }
+
+@app.delete("/auth/users/me/profile-photo")
+@app.delete("/api/profile/avatar")
+async def delete_profile_photo(
+    current_user: str = Depends(AuthService.get_current_user)
+):
+    """Remove user's profile photo and delete file from storage."""
+    user = await users_collection.find_one({"email": current_user})
+    if user and user.get("avatar_url"):
+        old_url = user["avatar_url"]
+        old_filename = old_url.split("/")[-1]
+        old_path = os.path.join(AVATARS_DIR, old_filename)
+        if os.path.exists(old_path):
+            try:
+                os.remove(old_path)
+            except Exception:
+                pass
+
+    await users_collection.update_one(
+        {"email": current_user},
+        {"$unset": {"avatar_url": "", "profilePhotoUrl": ""}}
+    )
+    return {
+        "message": "Profile photo removed successfully",
+        "avatar_url": None,
+        "profilePhotoUrl": None,
     }
 
 @app.post("/ai/ask")

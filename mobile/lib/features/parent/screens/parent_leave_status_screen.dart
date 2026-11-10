@@ -88,7 +88,7 @@ class _ParentLeaveStatusScreenState extends State<ParentLeaveStatusScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: DashboardShimmer());
+      return const Scaffold(body: SafeArea(child: LeaveListShimmer()));
     }
 
     return AuthBlobBackground(

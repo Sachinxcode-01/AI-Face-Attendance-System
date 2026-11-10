@@ -400,7 +400,7 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
           ],
         ),
         body: _isLoading || stats.isEmpty
-            ? const DashboardShimmer()
+            ? const AiAnalyticsShimmer()
             : GlowRefreshIndicator(
                 onRefresh: _fetchStats,
                 child: SingleChildScrollView(

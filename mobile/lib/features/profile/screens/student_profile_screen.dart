@@ -48,6 +48,7 @@ import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
 import 'package:smartface_attendance/shared/widgets/college_search_picker.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
 // ======================================================
 // Services Imports
@@ -338,44 +339,47 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
               style: GoogleFonts.inter(fontSize: 12, color: Colors.white54),
             ),
             const SizedBox(height: 22),
-            Row(
-              children: [
-                Expanded(
-                  child: _photoSourceBtn(
-                    Icons.photo_library_rounded,
-                    'Gallery',
-                    'Choose image',
-                    () {
-                      Navigator.of(ctx).pop();
-                      _pickImage(ImageSource.gallery);
-                    },
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _photoSourceBtn(
+                      Icons.photo_library_rounded,
+                      'Gallery',
+                      'Choose image',
+                      () {
+                        Navigator.of(ctx).pop();
+                        _pickImage(ImageSource.gallery);
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _photoSourceBtn(
-                    Icons.camera_alt_rounded,
-                    'Camera',
-                    'Take photo',
-                    () {
-                      Navigator.of(ctx).pop();
-                      _pickImage(ImageSource.camera);
-                    },
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _photoSourceBtn(
+                      Icons.camera_alt_rounded,
+                      'Camera',
+                      'Take photo',
+                      () {
+                        Navigator.of(ctx).pop();
+                        _pickImage(ImageSource.camera);
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _photoSourceBtn(
-                    Icons.face_retouching_natural_rounded,
-                    'Avatars',
-                    '3D Presets',
-                    () {
-                      Navigator.of(ctx).pop();
-                      _chooseAvatarPreset();
-                    },
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _photoSourceBtn(
+                      Icons.face_retouching_natural_rounded,
+                      'Avatars',
+                      '3D Presets',
+                      () {
+                        Navigator.of(ctx).pop();
+                        _chooseAvatarPreset();
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             if (hasExistingPhoto) ...[
               const SizedBox(height: 16),
@@ -441,14 +445,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
         splashColor: AppColors.gold.withValues(alpha: 0.15),
         highlightColor: AppColors.gold.withValues(alpha: 0.08),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
+          width: double.infinity,
+          height: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
           decoration: BoxDecoration(
             color: AppColors.gold.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
@@ -459,20 +465,26 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 child: Icon(icon, color: AppColors.gold, size: 26),
               ),
               const SizedBox(height: 10),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: GoogleFonts.inter(
-                  color: Colors.white54,
-                  fontSize: 11,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    color: Colors.white54,
+                    fontSize: 11,
+                  ),
                 ),
               ),
             ],
@@ -502,14 +514,22 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
               toolbarTitle: 'Crop Profile Photo',
               toolbarColor: const Color(0xFF0D1130),
               toolbarWidgetColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.square,
-              lockAspectRatio: true,
+              statusBarLight: false,
               activeControlsWidgetColor: AppColors.gold,
               backgroundColor: const Color(0xFF070B1A),
+              cropStyle: CropStyle.circle,
+              cropFrameColor: AppColors.gold,
+              cropGridColor: AppColors.gold.withValues(alpha: 0.3),
+              aspectRatioPresets: [CropAspectRatioPreset.square],
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+              hideBottomControls: false,
             ),
             IOSUiSettings(
               title: 'Crop Profile Photo',
               aspectRatioLockEnabled: true,
+              resetAspectRatioEnabled: false,
+              cropStyle: CropStyle.circle,
             ),
           ],
         );
@@ -692,15 +712,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return PremiumBackground(
-      immersive: false,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: _buildAppBar(),
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.bgDeep : AppColors.bgLight,
+      appBar: _buildAppBar(),
         body: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF4F46E5)),
-              )
+            ? const StudentProfileShimmer()
             : RefreshIndicator(
                 onRefresh: _fetchProfile,
                 color: const Color(0xFF4F46E5),
@@ -742,35 +758,38 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                       const SizedBox(height: 20),
 
                       // ── Quick Stats Row ──────────────────────────────────────
-                      const Row(
-                        children: [
-                          Expanded(
-                            child: MetricCard(
-                              label: 'Attendance Rate',
-                              value: '92.4%',
-                              icon: Icons.done_all_rounded,
-                              accentColor: Color(0xFF00C6FF),
+                      const IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: MetricCard(
+                                label: 'Attendance Rate',
+                                value: '92.4%',
+                                icon: Icons.done_all_rounded,
+                                accentColor: Color(0xFF00C6FF),
+                              ),
                             ),
-                          ),
-                          SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: MetricCard(
-                              label: 'Attended',
-                              value: '120/130',
-                              icon: Icons.assignment_turned_in_rounded,
-                              accentColor: Color(0xFFFFD700),
+                            SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: MetricCard(
+                                label: 'Attended',
+                                value: '120/130',
+                                icon: Icons.assignment_turned_in_rounded,
+                                accentColor: Color(0xFFFFD700),
+                              ),
                             ),
-                          ),
-                          SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: MetricCard(
-                              label: 'Leave Days',
-                              value: '2 Days',
-                              icon: Icons.time_to_leave_rounded,
-                              accentColor: Color(0xFF7B2FF7),
+                            SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: MetricCard(
+                                label: 'Leave Days',
+                                value: '2 Days',
+                                icon: Icons.time_to_leave_rounded,
+                                accentColor: Color(0xFF7B2FF7),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
 
                       const SizedBox(height: 28),
@@ -1122,7 +1141,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                   ),
                 ),
               ),
-      ),
     );
   }
 

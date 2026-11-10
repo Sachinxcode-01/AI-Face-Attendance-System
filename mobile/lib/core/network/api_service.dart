@@ -15,6 +15,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartface_attendance/app/config/env_config.dart';
 import 'package:smartface_attendance/features/leave/models/leave_model.dart';
@@ -559,21 +560,50 @@ class ApiService {
   ) async {
     try {
       final uri = Uri.parse('$baseUrl/auth/upload-avatar');
+      String ext = imageFile.path.split('.').last.toLowerCase();
+      if (!['jpg', 'jpeg', 'png', 'webp'].contains(ext)) {
+        ext = 'jpg';
+      }
+      final mimeSubtype = (ext == 'jpg' || ext == 'jpeg') ? 'jpeg' : ext;
+      final filename = 'avatar_${DateTime.now().millisecondsSinceEpoch}.$ext';
+
       final request = http.MultipartRequest('POST', uri)
         ..headers['Authorization'] = 'Bearer $token'
-        ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+        ..files.add(await http.MultipartFile.fromPath(
+          'file',
+          imageFile.path,
+          filename: filename,
+          contentType: MediaType('image', mimeSubtype),
+        ));
 
       final streamedResponse = await client.send(request);
       final response = await http.Response.fromStream(streamedResponse);
-      final Map<String, dynamic> result =
-          jsonDecode(response.body) as Map<String, dynamic>;
-      final String? photoUrl =
-          (result['profilePhotoUrl'] ?? result['avatar_url']) as String?;
-      if (photoUrl != null) {
-        result['profilePhotoUrl'] = photoUrl;
-        result['avatar_url'] = photoUrl;
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final Map<String, dynamic> result =
+            jsonDecode(response.body) as Map<String, dynamic>;
+        final String? photoUrl =
+            (result['profilePhotoUrl'] ?? result['avatar_url']) as String?;
+        if (photoUrl != null) {
+          result['profilePhotoUrl'] = photoUrl;
+          result['avatar_url'] = photoUrl;
+        }
+        return result;
+      } else {
+        try {
+          final errJson = jsonDecode(response.body) as Map<String, dynamic>;
+          return {
+            'detail': errJson['detail'] ??
+                errJson['message'] ??
+                'Upload failed (${response.statusCode})',
+          };
+        } catch (_) {
+          return {
+            'detail':
+                'Upload failed (${response.statusCode}): ${response.reasonPhrase}',
+          };
+        }
       }
-      return result;
     } catch (e) {
       return {'detail': 'Upload failed: $e'};
     }
@@ -1282,7 +1312,7 @@ class ApiService {
   static Future<List<dynamic>> getActiveSessions(String token) async {
     try {
       final response = await client.get(
-        Uri.parse('$baseUrl/sessions/active'),
+        Uri.parse('$baseUrl/auth/sessions/active'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -1291,10 +1321,9 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data is List) return data;
-        if (data is Map && data['is_active'] == true) {
-          return [Map<String, dynamic>.from(data)];
+        if (data is Map && data['sessions'] is List) {
+          return data['sessions'] as List<dynamic>;
         }
-        if (data is Map && data['is_active'] == false) return [];
       }
     } catch (e) {
       debugPrint('getActiveSessions error: $e');

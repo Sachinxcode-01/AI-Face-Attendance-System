@@ -89,7 +89,7 @@ class _ParentAttendanceLogsScreenState
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: DashboardShimmer());
+      return const Scaffold(body: SafeArea(child: AttendanceLogsShimmer()));
     }
 
     final filteredLogs = _logs.where((log) {

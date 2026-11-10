@@ -304,9 +304,11 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
     final pageBg = isDark ? const Color(0xFF070A14) : const Color(0xFFE8EAF6);
 
     if (_isLoading) {
-      return Scaffold(
-        backgroundColor: pageBg,
-        body: const DashboardShimmer(),
+      return StudentScreenShell(
+        title: 'Attendance Hub',
+        subtitle: 'Real-time telemetry, heatmaps & verification log',
+        onBackTap: () => context.go('/student/home'),
+        child: const AttendanceHubShimmer(),
       );
     }
 

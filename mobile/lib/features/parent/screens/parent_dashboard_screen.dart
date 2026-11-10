@@ -157,7 +157,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
     if (_isLoading && _wards.isEmpty) {
       return Scaffold(
         backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
-        body: const DashboardShimmer(),
+        body: const SafeArea(child: ParentDashboardShimmer()),
       );
     }
 

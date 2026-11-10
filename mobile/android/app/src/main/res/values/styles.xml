@@ -15,4 +15,12 @@
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
+    <!-- Theme applied to UCrop activity to ensure it respects safe insets and status bar -->
+    <style name="Theme.App.UCrop" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:fitsSystemWindows">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">#0D1130</item>
+        <item name="colorPrimary">#0D1130</item>
+        <item name="colorPrimaryDark">#070B1A</item>
+    </style>
 </resources>

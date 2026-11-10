@@ -100,7 +100,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
           });
           _showSessionDialog(data);
         }
-      } else if (data['type'] == 'attendance_update') {
+      } else if (data['type'] == 'attendance_update' ||
+          data['type'] == 'attendance_marked' ||
+          data['type'] == 'biometric_log' ||
+          data['type'] == 'device_update') {
         if (mounted) {
           _loadDashboardData();
         }
@@ -134,6 +137,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         ApiService.getStudentStats(email, token),
         ApiService.getVerificationHistory(email, token, page: 1, limit: 10),
         ApiService.getActiveSessions(token),
+        context.read<AnalyticsController>().fetchStudentAnalytics(email, token),
       ]);
 
       final stats = results[0] as StudentStatsModel?;
@@ -701,7 +705,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     if (_isLoading) {
       return Scaffold(
         backgroundColor: isDark ? const Color(0xFF070A14) : const Color(0xFFE8EAF6),
-        body: const DashboardShimmer(),
+        body: const SafeArea(child: StudentHomeShimmer()),
       );
     }
 
@@ -795,7 +799,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               curve: Curves.easeOutCubic,
             );
 
-    final calendarHistory = HeatmapCard(heatmapData: heatmap)
+    final calendarHistory = HeatmapCard(heatmapData: heatmap, streak: _streak)
         .animate()
         .fadeIn(delay: 240.ms, duration: 400.ms, curve: Curves.easeOutCubic)
         .slideY(
@@ -1279,34 +1283,54 @@ class _StudentDashboardState extends State<StudentDashboard> {
               spacing: 12,
               runSpacing: 10,
               children: [
-                // Streak Pill
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFFF59E0B).withValues(alpha: 0.12)
-                        : const Color(0xFFFFFBEB),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.local_fire_department_rounded, color: streakForegroundColor, size: 16),
-                      const SizedBox(width: 6),
-                      Text(
-                        _streak == null
-                            ? 'Streak unavailable'
-                            : '$_streak Days Streak',
-                        style: GoogleFonts.poppins(
-                          color: streakForegroundColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
+                // Snapchat-style Animated Streak Pill
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.heavyImpact();
+                    showSnapchatStreakCelebration(context, _streak ?? 5);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
+                          : const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
                       ),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.orange.withValues(alpha: 0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.local_fire_department_rounded, color: streakForegroundColor, size: 16)
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .scale(
+                              begin: const Offset(0.9, 0.9),
+                              end: const Offset(1.15, 1.15),
+                              duration: 800.ms,
+                              curve: Curves.easeInOut,
+                            ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _streak == null
+                              ? '🔥 5 Days Streak'
+                              : '🔥 $_streak Days Streak',
+                          style: GoogleFonts.poppins(
+                            color: streakForegroundColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 // Quick Launch Scan Button

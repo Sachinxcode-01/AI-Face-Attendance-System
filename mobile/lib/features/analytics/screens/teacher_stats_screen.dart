@@ -359,7 +359,7 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen>
           ],
         ),
         body: _isLoading || analytics.isEmpty
-            ? const DashboardShimmer()
+            ? const TeacherStatsShimmer()
             : RefreshIndicator(
                 onRefresh: _loadStats,
                 color: AppColors.gold,

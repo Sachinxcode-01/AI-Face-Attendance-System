@@ -6,7 +6,11 @@ const TimetableSchema = new mongoose.Schema({
   day: { type: String, required: true }, // Monday, Tuesday, Wednesday, Thursday, Friday, Saturday
   time: { type: String, required: true }, // e.g., "09:00 AM - 10:30 AM"
   room: { type: String, default: "" },
+  college_id: { type: String, default: "", index: true },
+  teacher_email: { type: String, default: "", index: true },
   created_at: { type: Date, default: Date.now }
 });
+
+TimetableSchema.index({ college_id: 1, user_id: 1, day: 1 });
 
 module.exports = mongoose.model('Timetable', TimetableSchema, 'timetable');

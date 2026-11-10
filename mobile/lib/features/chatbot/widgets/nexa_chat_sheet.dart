@@ -205,133 +205,148 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
     final chatbot = context.watch<ChatbotController>();
     final role = session.userRole.name;
 
+    final mediaQuery = MediaQuery.of(context);
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
     final suggestions = _getRoleSuggestions(role);
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.75,
-      minChildSize: 0.4,
-      maxChildSize: 0.92,
+      initialChildSize: isLandscape ? 0.90 : 0.75,
+      minChildSize: isLandscape ? 0.45 : 0.4,
+      maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0F172A) : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Sheet handle
-              const SizedBox(height: 10),
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white24 : Colors.black12,
-                  borderRadius: BorderRadius.circular(2),
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 680),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
                 ),
-              ),
-              const SizedBox(height: 8),
-
-              // Header
-              _buildHeader(context, chatbot, isDark, role),
-              const Divider(height: 1, color: Colors.white10),
-
-              // Body area
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
                   ),
-                  children: [
-                    // Privacy notice (first-time)
-                    if (!chatbot.hasSeenNotice)
-                      _buildPrivacyNotice(context, chatbot, isDark),
-
-                    // Welcome card
-                    _buildWelcomeCard(role, isDark),
-                    const SizedBox(height: 16),
-
-                    // Messages list
-                    ...chatbot.messages.map(
-                      (msg) => _buildMessageBubble(msg, isDark),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Sheet handle
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : Colors.black12,
+                      borderRadius: BorderRadius.circular(2),
                     ),
+                  ),
+                  const SizedBox(height: 8),
 
-                    // Loading indicator
-                    if (chatbot.isLoading) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.gold,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Nexa is thinking...',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: isDark ? Colors.white54 : Colors.black54,
-                            ),
+                  // Header
+                  _buildHeader(context, chatbot, isDark, role),
+                  const Divider(height: 1, color: Colors.white10),
+
+                  // Body area
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      children: [
+                        // Privacy notice (first-time)
+                        if (!chatbot.hasSeenNotice)
+                          _buildPrivacyNotice(context, chatbot, isDark),
+
+                        // Welcome card
+                        _buildWelcomeCard(role, isDark),
+                        const SizedBox(height: 16),
+
+                        // Messages list
+                        ...chatbot.messages.map(
+                          (msg) => _buildMessageBubble(msg, isDark),
+                        ),
+
+                        // Loading indicator
+                        if (chatbot.isLoading) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.gold,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Nexa is thinking...',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: isDark
+                                      ? Colors.white54
+                                      : Colors.black54,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
-                      ),
-                    ],
 
-                    const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                    // Suggestion Chips
-                    Text(
-                      'SUGGESTED QUESTIONS',
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                        color: AppColors.gold,
-                      ),
+                        // Suggestion Chips
+                        Text(
+                          'SUGGESTED QUESTIONS',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                            color: AppColors.gold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: suggestions
+                              .map(
+                                (q) => ActionChip(
+                                  label: Text(
+                                    q,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  backgroundColor: isDark
+                                      ? Colors.white.withValues(alpha: 0.08)
+                                      : AppColors.primary.withValues(
+                                          alpha: 0.08,
+                                        ),
+                                  side: BorderSide(
+                                    color: AppColors.gold.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
+                                  onPressed: () => _handleSend(q),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: suggestions
-                          .map(
-                            (q) => ActionChip(
-                              label: Text(
-                                q,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              backgroundColor: isDark
-                                  ? Colors.white.withValues(alpha: 0.08)
-                                  : AppColors.primary.withValues(alpha: 0.08),
-                              side: BorderSide(
-                                color: AppColors.gold.withValues(alpha: 0.3),
-                              ),
-                              onPressed: () => _handleSend(q),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                ),
+                  ),
+
+                  // Input bar
+                  _buildInputBar(isDark, chatbot),
+                ],
               ),
-
-              // Input bar
-              _buildInputBar(isDark, chatbot),
-            ],
+            ),
           ),
         );
       },
@@ -349,17 +364,27 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
       child: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
               gradient: AppColors.headerGradient,
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.35),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
             ),
             child: ClipOval(
               child: Image.asset(
                 AppAssets.chatbotIcon,
-                fit: BoxFit.contain,
+                fit: BoxFit.cover,
                 filterQuality: FilterQuality.high,
                 errorBuilder: (_, _, _) => const Icon(
                   Icons.auto_awesome,
@@ -373,15 +398,20 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
-                    Text(
-                      'Nexa AI Assistant',
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : AppColors.textHeading,
+                    Flexible(
+                      child: Text(
+                        'Nexa AI Assistant',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppColors.textHeading,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -397,6 +427,8 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
                 ),
                 Text(
                   'Role: ${role.toUpperCase()} • Verified Knowledge Base',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     color: isDark ? Colors.white54 : Colors.black54,
@@ -406,12 +438,14 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
             ),
           ),
           IconButton(
+            iconSize: 20,
+            padding: const EdgeInsets.all(6),
+            constraints: const BoxConstraints(),
             icon: Icon(
               _autoVoice ? Icons.volume_up_rounded : Icons.volume_off_rounded,
               color: _autoVoice
                   ? AppColors.gold
                   : (isDark ? Colors.white54 : Colors.black54),
-              size: 20,
             ),
             tooltip: _autoVoice
                 ? 'Auto-voice speech enabled'
@@ -425,16 +459,24 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
               }
             },
           ),
+          const SizedBox(width: 4),
           IconButton(
-            icon: const Icon(Icons.cleaning_services_outlined, size: 20),
+            iconSize: 20,
+            padding: const EdgeInsets.all(6),
+            constraints: const BoxConstraints(),
+            icon: const Icon(Icons.cleaning_services_outlined),
             tooltip: 'Clear Chat',
             onPressed: () {
               _voiceService.stopSpeaking();
               chatbot.clearMessages();
             },
           ),
+          const SizedBox(width: 4),
           IconButton(
-            icon: const Icon(Icons.close, size: 22),
+            iconSize: 22,
+            padding: const EdgeInsets.all(6),
+            constraints: const BoxConstraints(),
+            icon: const Icon(Icons.close),
             onPressed: () {
               _voiceService.stopSpeaking();
               _voiceService.stopListening();
@@ -519,6 +561,8 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
 
   Widget _buildMessageBubble(ChatMessage msg, bool isDark) {
     final isUser = msg.isUser;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0),
       child: Row(
@@ -529,17 +573,20 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
         children: [
           if (!isUser) ...[
             Container(
-              width: 26,
-              height: 26,
-              padding: const EdgeInsets.all(3),
-              decoration: const BoxDecoration(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
                 gradient: AppColors.headerGradient,
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.35),
+                  width: 1.0,
+                ),
               ),
               child: ClipOval(
                 child: Image.asset(
                   AppAssets.chatbotIcon,
-                  fit: BoxFit.contain,
+                  fit: BoxFit.cover,
                   filterQuality: FilterQuality.high,
                   errorBuilder: (_, _, _) => const Icon(
                     Icons.auto_awesome,
@@ -552,126 +599,133 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isUser
-                    ? AppColors.primary
-                    : (isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : Colors.grey.shade100),
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isUser ? 16 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 16),
-                ),
-                border: Border.all(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: (screenWidth * 0.78).clamp(240.0, 520.0),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
                   color: isUser
                       ? AppColors.primary
-                      : (isDark ? Colors.white12 : Colors.black12),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    msg.content,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      height: 1.4,
-                      color: isUser
-                          ? Colors.white
-                          : (isDark ? Colors.white : Colors.black87),
-                    ),
+                      : (isDark
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : Colors.grey.shade100),
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(16),
+                    topRight: const Radius.circular(16),
+                    bottomLeft: Radius.circular(isUser ? 16 : 4),
+                    bottomRight: Radius.circular(isUser ? 4 : 16),
                   ),
+                  border: Border.all(
+                    color: isUser
+                        ? AppColors.primary
+                        : (isDark ? Colors.white12 : Colors.black12),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      msg.content,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: isUser
+                            ? Colors.white
+                            : (isDark ? Colors.white : Colors.black87),
+                      ),
+                    ),
 
-                  // Suggested Actions buttons (e.g. Open QR Attendance)
-                  if (!isUser && msg.suggestedActions.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 6,
-                      children: msg.suggestedActions.map((action) {
-                        final label = action['label'] as String? ?? 'Open';
-                        final route = action['route'] as String? ?? '';
-                        return ElevatedButton.icon(
-                          onPressed: () {
-                            if (route.isNotEmpty) {
-                              Navigator.of(context).pop();
-                              context.push(route);
-                            }
-                          },
-                          icon: const Icon(Icons.launch, size: 14),
-                          label: Text(
-                            label,
-                            style: const TextStyle(fontSize: 11),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.gold,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
+                    // Suggested Actions buttons (e.g. Open QR Attendance)
+                    if (!isUser && msg.suggestedActions.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 6,
+                        children: msg.suggestedActions.map((action) {
+                          final label = action['label'] as String? ?? 'Open';
+                          final route = action['route'] as String? ?? '';
+                          return ElevatedButton.icon(
+                            onPressed: () {
+                              if (route.isNotEmpty) {
+                                Navigator.of(context).pop();
+                                context.push(route);
+                              }
+                            },
+                            icon: const Icon(Icons.launch, size: 14),
+                            label: Text(
+                              label,
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.gold,
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+
+                    if (!isUser) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              if (_voiceService.isSpeaking &&
+                                  _activeSpeakingId == msg.id) {
+                                _voiceService.stopSpeaking();
+                                setState(() => _activeSpeakingId = null);
+                              } else {
+                                _voiceService.speak(
+                                  msg.content,
+                                  messageId: msg.id,
+                                );
+                                setState(() => _activeSpeakingId = msg.id);
+                              }
+                            },
+                            child: Icon(
+                              _voiceService.isSpeaking &&
+                                      _activeSpeakingId == msg.id
+                                  ? Icons.volume_off_rounded
+                                  : Icons.volume_up_rounded,
+                              size: 15,
+                              color:
+                                  _voiceService.isSpeaking &&
+                                      _activeSpeakingId == msg.id
+                                  ? AppColors.gold
+                                  : Colors.white38,
                             ),
                           ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-
-                  if (!isUser) ...[
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            if (_voiceService.isSpeaking &&
-                                _activeSpeakingId == msg.id) {
-                              _voiceService.stopSpeaking();
-                              setState(() => _activeSpeakingId = null);
-                            } else {
-                              _voiceService.speak(
-                                msg.content,
-                                messageId: msg.id,
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: () {
+                              Clipboard.setData(
+                                ClipboardData(text: msg.content),
                               );
-                              setState(() => _activeSpeakingId = msg.id);
-                            }
-                          },
-                          child: Icon(
-                            _voiceService.isSpeaking &&
-                                    _activeSpeakingId == msg.id
-                                ? Icons.volume_off_rounded
-                                : Icons.volume_up_rounded,
-                            size: 15,
-                            color:
-                                _voiceService.isSpeaking &&
-                                    _activeSpeakingId == msg.id
-                                ? AppColors.gold
-                                : Colors.white38,
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Copied response to clipboard'),
+                                  duration: Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                            child: const Icon(
+                              Icons.copy_rounded,
+                              size: 14,
+                              color: Colors.white38,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        GestureDetector(
-                          onTap: () {
-                            Clipboard.setData(ClipboardData(text: msg.content));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Copied response to clipboard'),
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                          child: const Icon(
-                            Icons.copy_rounded,
-                            size: 14,
-                            color: Colors.white38,
-                          ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -681,6 +735,13 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
   }
 
   Widget _buildInputBar(bool isDark, ChatbotController chatbot) {
+    final mediaQuery = MediaQuery.of(context);
+    final bottomInset = mediaQuery.viewInsets.bottom > 0
+        ? mediaQuery.viewInsets.bottom + 8.0
+        : (mediaQuery.viewPadding.bottom > 0
+              ? mediaQuery.viewPadding.bottom + 8.0
+              : 12.0);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -727,12 +788,7 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
             ),
           ),
         Container(
-          padding: EdgeInsets.fromLTRB(
-            16,
-            8,
-            16,
-            MediaQuery.of(context).viewInsets.bottom + 12,
-          ),
+          padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF0F172A) : Colors.white,
             border: Border(

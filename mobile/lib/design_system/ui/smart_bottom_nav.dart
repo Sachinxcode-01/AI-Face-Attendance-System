@@ -88,8 +88,8 @@ class SmartBottomNav extends StatelessWidget {
     final bool hideText = !showLabels || screenWidth < 320;
     final double horizontalMargin = screenWidth < 380 ? 8 : 16;
     final double internalPaddingHorizontal = screenWidth < 380 ? 6 : 12;
-    final double barHeight = hideText ? 62.0 : 72.0;
-    final double borderRadius = hideText ? 22.0 : 26.0;
+    final double barHeight = hideText ? 62.0 : 68.0;
+    final double borderRadius = hideText ? 22.0 : 24.0;
 
     return SafeArea(
       top: false,
@@ -153,16 +153,16 @@ class SmartBottomNav extends StatelessWidget {
                       // ── Spring-Animated Active Indicator Pill ─────────
                       AnimatedPositioned(
                         duration: animationEnabled
-                            ? const Duration(milliseconds: 400)
+                            ? const Duration(milliseconds: 260)
                             : Duration.zero,
-                        curve: Curves.easeOutCubic,
-                        left: currentIndex * itemWidth + 4,
-                        width: itemWidth - 8,
-                        top: hideText ? 6 : 5,
-                        bottom: hideText ? 6 : 5,
+                        curve: Curves.fastOutSlowIn,
+                        left: currentIndex * itemWidth + 3,
+                        width: itemWidth - 6,
+                        top: 4,
+                        bottom: 4,
                         child: Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(16),
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -172,15 +172,15 @@ class SmartBottomNav extends StatelessWidget {
                               ],
                             ),
                             border: Border.all(
-                              color: activeColor.withValues(alpha: 0.35),
+                              color: activeColor.withValues(alpha: 0.40),
                               width: 1.2,
                             ),
                             boxShadow: [
                               BoxShadow(
                                 color: activeColor.withValues(alpha: 0.16),
-                                blurRadius: 12,
+                                blurRadius: 10,
                                 offset: const Offset(0, 2),
-                                spreadRadius: 1,
+                                spreadRadius: 0.5,
                               ),
                             ],
                           ),
@@ -261,11 +261,11 @@ class _NavItemState extends State<_NavItem>
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 260),
     );
     _pulseAnimation = CurvedAnimation(
       parent: _pulseController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutBack,
     );
 
     if (widget.selected) {
@@ -278,6 +278,8 @@ class _NavItemState extends State<_NavItem>
     super.didUpdateWidget(oldWidget);
     if (widget.selected && !oldWidget.selected) {
       _pulseController.forward(from: 0.0);
+    } else if (!widget.selected && oldWidget.selected) {
+      _pulseController.reverse();
     }
   }
 
@@ -298,77 +300,72 @@ class _NavItemState extends State<_NavItem>
         animation: _pulseAnimation,
         builder: (context, _) {
           final pulse = _pulseAnimation.value;
-          final scale = 1.0 + (widget.selected ? pulse * 0.15 : 0.0);
-          final translateY = widget.selected && !widget.hideText
-              ? -2.0 * pulse
-              : 0.0;
+          final scale = 1.0 + (widget.selected ? pulse * 0.08 : 0.0);
 
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // ── Icon with spring animation ─────────────────────────
-              Transform.translate(
-                offset: Offset(0, translateY),
-                child: Transform.scale(
-                  scale: scale.clamp(1.0, 1.2),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                    padding: EdgeInsets.all(
-                      widget.selected && !widget.hideText ? 2 : 0,
-                    ),
-                    decoration: const BoxDecoration(),
-                    child: widget.item.animateIcon != null
-                        ? ModernAnimatedIcon(
-                            animateIcon: widget.item.animateIcon!,
-                            fallbackIcon: widget.selected
-                                ? (widget.item.activeIcon ?? widget.item.icon)
-                                : widget.item.icon,
-                            size: widget.hideText ? 24 : 22,
-                            activeColor: widget.activeColor,
-                            inactiveColor: widget.inactiveColor,
-                            isActive: widget.selected,
-                            iconType: IconType.animatedOnTap,
-                            semanticLabel: widget.item.label,
-                          )
-                        : Icon(
-                            widget.selected
-                                ? (widget.item.activeIcon ?? widget.item.icon)
-                                : widget.item.icon,
-                            size: widget.hideText ? 24 : 22,
-                            color: widget.selected
-                                ? widget.activeColor
-                                : widget.inactiveColor,
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Icon with subtle spring scale ─────────────────────
+                Transform.scale(
+                  scale: scale.clamp(1.0, 1.1),
+                  child: widget.item.animateIcon != null
+                      ? ModernAnimatedIcon(
+                          animateIcon: widget.item.animateIcon!,
+                          fallbackIcon: widget.selected
+                              ? (widget.item.activeIcon ?? widget.item.icon)
+                              : widget.item.icon,
+                          size: widget.hideText ? 24 : 21,
+                          activeColor: widget.activeColor,
+                          inactiveColor: widget.inactiveColor,
+                          isActive: widget.selected,
+                          iconType: IconType.animatedOnTap,
+                          semanticLabel: widget.item.label,
+                          constraints: BoxConstraints.tightFor(
+                            width: widget.hideText ? 24 : 21,
+                            height: widget.hideText ? 24 : 21,
                           ),
-                  ),
+                        )
+                      : Icon(
+                          widget.selected
+                              ? (widget.item.activeIcon ?? widget.item.icon)
+                              : widget.item.icon,
+                          size: widget.hideText ? 24 : 21,
+                          color: widget.selected
+                              ? widget.activeColor
+                              : widget.inactiveColor,
+                        ),
                 ),
-              ),
 
-              // ── Label with color/shadow transition ──────────────────
-              if (!widget.hideText) ...[
-                const SizedBox(height: 4),
-                AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 9.5,
-                    fontWeight: widget.selected
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                    letterSpacing: widget.selected ? 0.2 : 0.1,
-                    color: widget.selected
-                        ? widget.activeColor
-                        : widget.inactiveColor,
+                // ── Label with minimal gap, enclosed cleanly in box ────
+                if (!widget.hideText) ...[
+                  const SizedBox(height: 2.5),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.fastOutSlowIn,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 9.5,
+                      height: 1.1,
+                      fontWeight: widget.selected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      letterSpacing: widget.selected ? 0.15 : 0.05,
+                      color: widget.selected
+                          ? widget.activeColor
+                          : widget.inactiveColor,
+                    ),
+                    child: Text(
+                      widget.item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                  child: Text(
-                    widget.item.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+                ],
               ],
-            ],
+            ),
           );
         },
       ),

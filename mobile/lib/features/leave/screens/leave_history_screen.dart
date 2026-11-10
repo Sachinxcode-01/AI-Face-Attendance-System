@@ -21,6 +21,7 @@ import 'package:smartface_attendance/features/leave/models/leave_model.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
+import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
 class LeaveHistoryScreen extends StatefulWidget {
   const LeaveHistoryScreen({super.key});
@@ -113,9 +114,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
             _buildSearchAndFilters(controller, isDark),
             Expanded(
               child: controller.isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: AppColors.gold),
-                    )
+                  ? const LeaveListShimmer()
                   : filteredLeaves.isEmpty
                   ? _buildEmptyState(isDark)
                   : AnimationLimiter(

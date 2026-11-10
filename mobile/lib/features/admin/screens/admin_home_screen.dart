@@ -129,7 +129,7 @@ class _AdminDashboardState extends State<AdminDashboard>
     if (_loading) {
       return Scaffold(
         backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
-        body: const DashboardShimmer(),
+        body: const SafeArea(child: AdminDashboardShimmer()),
       );
     }
 

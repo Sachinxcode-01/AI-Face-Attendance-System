@@ -117,6 +117,26 @@ void main() {
                   label: 'Schedule',
                   route: '/schedule',
                 ),
+                BottomNavItemData(
+                  icon: Icons.qr_code_scanner_rounded,
+                  activeIcon: Icons.qr_code_scanner_rounded,
+                  animateIcon: AnimateIcons.qrCode,
+                  label: 'Scan',
+                  route: '/scan',
+                ),
+                BottomNavItemData(
+                  icon: Icons.analytics_outlined,
+                  activeIcon: Icons.analytics_rounded,
+                  animateIcon: AnimateIcons.document,
+                  label: 'Reports',
+                  route: '/reports',
+                ),
+                BottomNavItemData(
+                  icon: Icons.person_outline_rounded,
+                  activeIcon: Icons.person_rounded,
+                  label: 'Profile',
+                  route: '/profile',
+                ),
               ],
             ),
           ),
@@ -127,6 +147,10 @@ void main() {
       expect(find.byType(SmartBottomNav), findsOneWidget);
       expect(find.text('Home'), findsOneWidget);
       expect(find.text('Schedule'), findsOneWidget);
+      expect(find.text('Scan'), findsOneWidget);
+      expect(find.text('Reports'), findsOneWidget);
+      expect(find.text('Profile'), findsOneWidget);
+      expect(find.byIcon(Icons.person_outline_rounded), findsOneWidget);
     });
   });
 }

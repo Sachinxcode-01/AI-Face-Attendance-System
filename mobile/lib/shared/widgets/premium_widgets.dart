@@ -127,6 +127,7 @@ class MetricCard extends StatelessWidget {
       borderRadius: 18.0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -193,15 +194,21 @@ class MetricCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 3),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white70 : const Color(0xFF7F8CA4),
+          SizedBox(
+            height: 28,
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white70 : const Color(0xFF7F8CA4),
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 2),

@@ -604,7 +604,6 @@ class StudentSalomonBottomBar extends StatelessWidget {
         AppSalomonNavItemData(
           icon: Icons.person_outline_rounded,
           activeIcon: Icons.person_rounded,
-          animateIcon: AnimateIcons.settings,
           title: 'Profile',
           route: '/student/profile',
         ),
