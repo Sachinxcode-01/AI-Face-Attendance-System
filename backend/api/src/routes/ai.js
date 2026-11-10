@@ -104,7 +104,7 @@ const getStudentAttendanceStats = async (email) => {
 
     const totalPossible = subjects.reduce((sum, s) => sum + s.total, 0);
     const totalPresent = subjects.reduce((sum, s) => sum + s.present, 0);
-    const overallPercentage = totalPossible > 0 ? parseFloat((totalPresent / totalPossible).toFixed(2)) : 0.88;
+    const overallPercentage = totalPossible > 0 ? parseFloat((totalPresent / totalPossible).toFixed(2)) : 0.0;
 
     let standing = 'Good Standing';
     if (overallPercentage >= 0.90) standing = 'Top Tier (Excellent)';
@@ -116,12 +116,13 @@ const getStudentAttendanceStats = async (email) => {
 
     return {
       has_data: true,
+      source: 'records',
       overall_percentage: overallPercentage,
       standing,
       rank,
       attended_sessions: presentCount,
       subjects,
-      streak: streak > 0 ? streak : (overallPercentage >= 0.8 ? 5 : 2),
+      streak: streak,
     };
   }
 
@@ -132,35 +133,51 @@ const getStudentAttendanceStats = async (email) => {
     const overallPercentage = rawPct > 1.0 ? parseFloat((rawPct / 100.0).toFixed(2)) : parseFloat(rawPct.toFixed(2));
     const subjects = (dsStats.subjects || []).map(s => ({
       subject: s.subject,
-      present: s.attended || s.present || 18,
-      total: s.total || 20,
-      percentage: s.percentage > 1.0 ? parseFloat((s.percentage / 100.0).toFixed(2)) : parseFloat((s.percentage || 0.85).toFixed(2)),
+      present: s.attended || s.present || 0,
+      total: s.total || 0,
+      percentage: s.percentage > 1.0 ? parseFloat((s.percentage / 100.0).toFixed(2)) : parseFloat((s.percentage || 0).toFixed(2)),
     }));
 
     return {
       has_data: true,
+      source: 'dataset',
       overall_percentage: overallPercentage,
       standing: dsStats.standing || (overallPercentage >= 0.75 ? 'Good Standing' : 'Needs Improvement'),
-      rank: dsStats.rank || 'Top 15%',
+      rank: dsStats.rank || null,
       attended_sessions: subjects.reduce((sum, s) => sum + s.present, 0),
       subjects,
-      streak: streak > 0 ? streak : (dsStats.streak || 5),
+      streak: streak,
     };
   }
 
-  // 3. Fallback default active student model
+  // Demo fallback only behind an explicit demo flag or environment variable
+  if (process.env.ENABLE_DEMO_DATA === 'true') {
+    return {
+      has_data: true,
+      source: 'demo',
+      overall_percentage: 0.88,
+      standing: 'Good Standing',
+      rank: 'Top 10%',
+      attended_sessions: 24,
+      subjects: [
+        { subject: 'Machine Learning', present: 19, total: 20, percentage: 0.95 },
+        { subject: 'Cloud Architecture', present: 17, total: 20, percentage: 0.85 },
+        { subject: 'Computer Networks', present: 16, total: 20, percentage: 0.80 }
+      ],
+      streak: streak,
+    };
+  }
+
+  // 3. Fallback when no data exists: return has_data: false and zero or null values
   return {
-    has_data: true,
-    overall_percentage: 0.88,
-    standing: 'Good Standing',
-    rank: 'Top 10%',
-    attended_sessions: 24,
-    subjects: [
-      { subject: 'Machine Learning', present: 19, total: 20, percentage: 0.95 },
-      { subject: 'Cloud Architecture', present: 17, total: 20, percentage: 0.85 },
-      { subject: 'Computer Networks', present: 16, total: 20, percentage: 0.80 }
-    ],
-    streak: streak > 0 ? streak : 5,
+    has_data: false,
+    source: 'none',
+    overall_percentage: 0,
+    standing: null,
+    rank: null,
+    attended_sessions: 0,
+    subjects: [],
+    streak: streak,
   };
 };
 
@@ -663,7 +680,9 @@ const handleChatRequest = async (req, res) => {
     if (userRole === 'student') {
       if (msgLower.includes('my attendance') || msgLower.includes('attendance percentage') || msgLower.includes('overall attendance')) {
         const stats = await getStudentAttendanceStats(userEmail);
-        realDataAddendum = ` [Attendance data: ${stats.attended_sessions} present check-ins recorded. Percentages and ranking are unavailable because course schedules and enrollment records are not configured.]`;
+        realDataAddendum = (stats.has_data && stats.source !== 'none')
+          ? ` [Attendance data: ${stats.attended_sessions} present check-ins recorded (source: ${stats.source}). Percentages and ranking are unavailable because course schedules and enrollment records are not configured.]`
+          : ' [No recorded attendance check-ins found for your account.]';
       } else if (msgLower.includes('exam eligibility') || msgLower.includes('eligible for exam') || msgLower.includes('will i be eligible') || msgLower.includes('predictive') || msgLower.includes('velocity')) {
         realDataAddendum = ' [Exam eligibility and attendance projections are unavailable because course schedules, enrollment, and eligibility rules are not configured.]';
       } else if (msgLower.includes('classes today') || msgLower.includes('my schedule') || msgLower.includes('timetable') || msgLower.includes('missing the most')) {

@@ -69,6 +69,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   StreamSubscription? _notifSubscription;
 
   bool _isLoading = true;
+  int _loadGeneration = 0;
 
   // HUD Data
   bool _hasAttendanceData = false;
@@ -105,7 +106,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
           data['type'] == 'biometric_log' ||
           data['type'] == 'device_update') {
         if (mounted) {
-          _loadDashboardData();
+          _loadDashboardData(isBackground: true);
         }
       }
     });
@@ -117,19 +118,24 @@ class _StudentDashboardState extends State<StudentDashboard> {
     });
   }
 
-  Future<void> _loadDashboardData() async {
+  Future<void> _loadDashboardData({bool isBackground = false}) async {
     if (!mounted) return;
-    setState(() => _isLoading = true);
+    final currentGen = ++_loadGeneration;
+    if (!isBackground) {
+      setState(() => _isLoading = true);
+    }
 
     try {
       final session = context.read<SessionManager>();
       final email = session.email;
       final token = session.token;
       if (email == null || token == null) {
-        setState(() {
-          _statsError = 'Sign in to load attendance data.';
-          _isLoading = false;
-        });
+        if (mounted && currentGen == _loadGeneration) {
+          setState(() {
+            _statsError = 'Sign in to load attendance data.';
+            _isLoading = false;
+          });
+        }
         return;
       }
 
@@ -144,7 +150,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       final history = results[1] as Map<String, dynamic>?;
       final sessions = results[2] as List<dynamic>?;
 
-      if (mounted) {
+      if (mounted && currentGen == _loadGeneration) {
         setState(() {
           _hasAttendanceData = stats?.hasData == true;
           _overallPercentage = stats?.overallPercentage;
@@ -166,9 +172,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
       }
     } catch (e) {
       debugPrint('Dashboard Loading Error: $e');
-      if (mounted) {
+      if (mounted && currentGen == _loadGeneration) {
         setState(() {
-          _statsError = 'Unable to load attendance data. Pull down to retry.';
+          if (!isBackground) {
+            _statsError = 'Unable to load attendance data. Pull down to retry.';
+          }
           _isLoading = false;
         });
       }
@@ -704,7 +712,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: isDark ? const Color(0xFF070A14) : const Color(0xFFE8EAF6),
+        backgroundColor: isDark
+            ? const Color(0xFF070A14)
+            : const Color(0xFFE8EAF6),
         body: const SafeArea(child: StudentHomeShimmer()),
       );
     }
@@ -753,23 +763,26 @@ class _StudentDashboardState extends State<StudentDashboard> {
           curve: Curves.easeOutCubic,
         );
 
-    final healthGrid =
-        (_hasAttendanceData && _overallPercentage != null)
-            ? AttendanceScoreCard(
-              scoreValue: _overallPercentage!,
-              standing: _standing ?? 'Standing unavailable',
-              departmentRank: _rank ?? 'Department rank unavailable',
-              streak: _streak,
-            )
-            .animate()
-            .fadeIn(delay: 60.ms, duration: 400.ms, curve: Curves.easeOutCubic)
-            .slideY(
-              begin: 0.1,
-              end: 0,
-              duration: 400.ms,
-              curve: Curves.easeOutCubic,
-            )
-            : const SizedBox.shrink();
+    final healthGrid = (_hasAttendanceData && _overallPercentage != null)
+        ? AttendanceScoreCard(
+                scoreValue: _overallPercentage!,
+                standing: _standing ?? 'Standing unavailable',
+                departmentRank: _rank ?? 'Department rank unavailable',
+                streak: _streak,
+              )
+              .animate()
+              .fadeIn(
+                delay: 60.ms,
+                duration: 400.ms,
+                curve: Curves.easeOutCubic,
+              )
+              .slideY(
+                begin: 0.1,
+                end: 0,
+                duration: 400.ms,
+                curve: Curves.easeOutCubic,
+              )
+        : const SizedBox.shrink();
 
     final aiInsights =
         Column(
@@ -860,7 +873,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
     return ds.PremiumBackground(
       immersive: false,
       child: Scaffold(
-        backgroundColor: isDark ? const Color(0xFF070A14) : const Color(0xFFE8EAF6),
+        backgroundColor: isDark
+            ? const Color(0xFF070A14)
+            : const Color(0xFFE8EAF6),
         body: Column(
           children: [
             ds.DashboardHeader(
@@ -982,7 +997,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.file_download_outlined, color: Colors.white, size: 18),
+                const Icon(
+                  Icons.file_download_outlined,
+                  color: Colors.white,
+                  size: 18,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Export Report',
@@ -1078,7 +1097,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
             ),
             const SizedBox(height: 14),
             Text(
-              hasError ? 'Attendance data unavailable' : 'Not enough attendance data',
+              hasError
+                  ? 'Attendance data unavailable'
+                  : 'Not enough attendance data',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -1125,18 +1146,28 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
   Widget _buildAttendanceSummaryCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    if (_statsError != null || !_hasAttendanceData || _overallPercentage == null) {
+    if (_statsError != null ||
+        !_hasAttendanceData ||
+        _overallPercentage == null) {
       return _buildAttendanceUnavailableCard(isDark);
     }
 
     final percentage = _overallPercentage!;
     final int pct = (percentage * 100).round();
     final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
-    final cardBorder = isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0);
-    final textHeading = isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
+    final cardBorder = isDark
+        ? const Color(0xFF252E4A)
+        : const Color(0xFFE5E7F0);
+    final textHeading = isDark
+        ? const Color(0xFFF1F3F9)
+        : const Color(0xFF1A1A3A);
     final textBody = isDark ? const Color(0xFFC8CCDF) : const Color(0xFF3D4260);
-    final textLabel = isDark ? const Color(0xFF7C82A0) : const Color(0xFFA0A0B8);
-    final streakForegroundColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
+    final textLabel = isDark
+        ? const Color(0xFF7C82A0)
+        : const Color(0xFFA0A0B8);
+    final streakForegroundColor = isDark
+        ? const Color(0xFFFBBF24)
+        : const Color(0xFFD97706);
 
     return AnimatedCardWrapper(
       delay: 100.ms,
@@ -1148,7 +1179,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
           border: Border.all(color: cardBorder, width: 1.0),
           boxShadow: [
             BoxShadow(
-              color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
+              color: isDark
+                  ? Colors.black38
+                  : const Color(0xFF8B98CE).withValues(alpha: 0.15),
               blurRadius: 30,
               offset: const Offset(0, -5),
             ),
@@ -1285,46 +1318,74 @@ class _StudentDashboardState extends State<StudentDashboard> {
               children: [
                 // Snapchat-style Animated Streak Pill
                 GestureDetector(
-                  onTap: () {
-                    HapticFeedback.heavyImpact();
-                    showSnapchatStreakCelebration(context, _streak ?? 5);
-                  },
+                  onTap: (_streak != null && _streak! > 0)
+                      ? () {
+                          HapticFeedback.heavyImpact();
+                          showSnapchatStreakCelebration(context, _streak!);
+                        }
+                      : null,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
-                          : const Color(0xFFFFFBEB),
+                      color: _streak == null
+                          ? (isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF1F5F9))
+                          : (_streak != null && _streak! > 0)
+                              ? (isDark
+                                  ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
+                                  : const Color(0xFFFFFBEB))
+                              : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF8FAFC)),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
+                        color: (_streak != null && _streak! > 0)
+                            ? const Color(0xFFF59E0B).withValues(alpha: 0.4)
+                            : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.orange.withValues(alpha: 0.12),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      boxShadow: (_streak != null && _streak! > 0)
+                          ? [
+                              BoxShadow(
+                                color: Colors.orange.withValues(alpha: 0.12),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.local_fire_department_rounded, color: streakForegroundColor, size: 16)
-                            .animate(onPlay: (c) => c.repeat(reverse: true))
-                            .scale(
-                              begin: const Offset(0.9, 0.9),
-                              end: const Offset(1.15, 1.15),
-                              duration: 800.ms,
-                              curve: Curves.easeInOut,
-                            ),
+                        if (_streak != null && _streak! > 0)
+                          Icon(
+                                Icons.local_fire_department_rounded,
+                                color: streakForegroundColor,
+                                size: 16,
+                              )
+                              .animate(onPlay: (c) => c.repeat(reverse: true))
+                              .scale(
+                                begin: const Offset(0.9, 0.9),
+                                end: const Offset(1.15, 1.15),
+                                duration: 800.ms,
+                                curve: Curves.easeInOut,
+                              )
+                        else
+                          Icon(
+                            Icons.local_fire_department_outlined,
+                            color: isDark ? const Color(0xFF7F8CA4) : const Color(0xFF94A3B8),
+                            size: 16,
+                          ),
                         const SizedBox(width: 6),
                         Text(
                           _streak == null
-                              ? '🔥 5 Days Streak'
-                              : '🔥 $_streak Days Streak',
+                              ? 'Streak unavailable'
+                              : _streak == 0
+                                  ? '0 Days Streak'
+                                  : '🔥 $_streak Days Streak',
                           style: GoogleFonts.poppins(
-                            color: streakForegroundColor,
+                            color: (_streak != null && _streak! > 0)
+                                ? streakForegroundColor
+                                : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
@@ -1340,7 +1401,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     context.go('/student/scan');
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
@@ -1350,7 +1414,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
+                          color: const Color(
+                            0xFF4F46E5,
+                          ).withValues(alpha: 0.35),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -1359,7 +1425,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 16),
+                        const Icon(
+                          Icons.qr_code_scanner_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Scan QR',
@@ -1417,12 +1487,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
   Widget _buildRecentActivity(bool isDark) {
     final timelineItems = _verificationHistory.map((log) {
-      final isPresent = (log['status'] ?? '').toString().toLowerCase() == 'present';
+      final isPresent =
+          (log['status'] ?? '').toString().toLowerCase() == 'present';
       final isFace = log['verified_by'] == 'face';
-      final conf = log['confidence'] != null ? ' (Conf: ${log['confidence']})' : '';
-      final verificationType = isFace
-          ? 'Face Scanner$conf'
-          : 'QR Scan';
+      final conf = log['confidence'] != null
+          ? ' (Conf: ${log['confidence']})'
+          : '';
+      final verificationType = isFace ? 'Face Scanner$conf' : 'QR Scan';
 
       final timeStr = log['time'] ?? '';
       final dateStr = log['date'] ?? '';
@@ -1448,9 +1519,15 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
   Widget _buildSecurityCard(bool isDark) {
     final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
-    final cardBorder = isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0);
-    final textHeading = isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
-    final textLabel = isDark ? const Color(0xFF7C82A0) : const Color(0xFFA0A0B8);
+    final cardBorder = isDark
+        ? const Color(0xFF252E4A)
+        : const Color(0xFFE5E7F0);
+    final textHeading = isDark
+        ? const Color(0xFFF1F3F9)
+        : const Color(0xFF1A1A3A);
+    final textLabel = isDark
+        ? const Color(0xFF7C82A0)
+        : const Color(0xFFA0A0B8);
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -1460,7 +1537,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
         border: Border.all(color: cardBorder, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
+            color: isDark
+                ? Colors.black38
+                : const Color(0xFF8B98CE).withValues(alpha: 0.15),
             blurRadius: 30,
             offset: const Offset(0, -5),
           ),
@@ -1474,7 +1553,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.security_rounded, size: 16, color: Color(0xFF4F46E5)),
+                  const Icon(
+                    Icons.security_rounded,
+                    size: 16,
+                    color: Color(0xFF4F46E5),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'ACTIVE DEVICES & SECURITY',
@@ -1517,8 +1600,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: (isCurrent ? const Color(0xFF10B981) : const Color(0xFF4F46E5))
-                            .withValues(alpha: 0.12),
+                        color:
+                            (isCurrent
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFF4F46E5))
+                                .withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
@@ -1529,7 +1615,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                         size: 18,
                         color: isCurrent
                             ? const Color(0xFF10B981)
-                            : (isDark ? const Color(0xFF818CF8) : const Color(0xFF4F46E5)),
+                            : (isDark
+                                  ? const Color(0xFF818CF8)
+                                  : const Color(0xFF4F46E5)),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1543,7 +1631,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.poppins(
                               color: textHeading,
-                              fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
+                              fontWeight: isCurrent
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
                               fontSize: 13,
                             ),
                           ),
@@ -1564,7 +1654,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                          color: const Color(
+                            0xFF10B981,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -1588,7 +1680,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
   Widget _buildQuickActions(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
-    final int crossAxisCount = screenWidth >= 900 ? 4 : (screenWidth >= 600 ? 3 : 2);
+    final int crossAxisCount = screenWidth >= 900
+        ? 4
+        : (screenWidth >= 600 ? 3 : 2);
 
     final actions = [
       StudentActionTile(

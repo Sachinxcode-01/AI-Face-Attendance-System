@@ -30,6 +30,15 @@ const upload = multer({
 const { authenticate, requireRole } = require('../middleware/auth');
 const SHEET_URL = process.env.GSHEETS_URL || "";
 
+const toDateKey = (date) => {
+  try {
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
+  } catch (_) {
+    return null;
+  }
+};
+
 // Security Audit Logging Helper
 const auditLog = async (email, role, action, details, req) => {
   try {
@@ -712,142 +721,131 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
 
     let overallPercentage = totalPossible > 0 ? totalPresent / totalPossible : 0;
     
-    // Fallback to datasetService if MongoDB has minimal/no records
-    if (records.length === 0 || subjectDetails.length === 0) {
+    let dataSource = 'records';
+    if (records.length === 0) {
       const dsStats = datasetService.getStudentStats(email);
       if (dsStats) {
-        overallPercentage = dsStats.overall_percentage > 1.0 ? dsStats.overall_percentage / 100.0 : dsStats.overall_percentage;
+        dataSource = 'dataset';
+        overallPercentage = dsStats.overall_percentage > 1.0 ? dsStats.overall_percentage / 100.0 : (dsStats.overall_percentage || 0);
         for (const sub of (dsStats.subjects || [])) {
+          const attended = sub.attended ?? sub.present ?? 0;
+          const total = sub.total ?? attended;
           subjectDetails.push({
             subject: sub.subject,
-            present: sub.attended || sub.present || 18,
-            total: sub.total || 20,
-            percentage: sub.percentage > 1.0 ? sub.percentage / 100.0 : (sub.percentage || 0.85)
+            present: attended,
+            total: total,
+            percentage: total > 0 ? attended / total : (sub.percentage > 1.0 ? sub.percentage / 100.0 : (sub.percentage || 0))
           });
         }
       } else {
-        overallPercentage = 0.88;
-        subjectDetails.push(
-          { subject: 'Machine Learning', present: 19, total: 20, percentage: 0.95 },
-          { subject: 'Cloud Architecture', present: 17, total: 20, percentage: 0.85 },
-          { subject: 'Computer Networks', present: 16, total: 20, percentage: 0.80 }
-        );
+        dataSource = 'none';
+        overallPercentage = 0;
       }
     }
 
     const weeklyTrends = [];
     const now = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const startOfWeek = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-      const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
-      
-      let pCountWeek = 0;
-      try {
-        pCountWeek = await Attendance.countDocuments({
-          student_email: email,
-          status: 'Present',
-          timestamp: { $gte: startOfWeek, $lt: endOfWeek }
-        });
-      } catch (_) {}
+    if (dataSource !== 'none') {
+      for (let i = 6; i >= 0; i--) {
+        const startOfWeek = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
+        
+        let pCountWeek = 0;
+        try {
+          pCountWeek = await Attendance.countDocuments({
+            student_email: email,
+            status: 'Present',
+            timestamp: { $gte: startOfWeek, $lt: endOfWeek }
+          });
+        } catch (_) {}
 
-      // If database has 0 historical logs, populate realistic progression
-      if (pCountWeek === 0 && records.length === 0) {
-        const pattern = [4, 5, 5, 4, 6, 5, 5];
-        pCountWeek = pattern[6 - i] || 5;
+        let totalWeek = 0;
+        try {
+          totalWeek = await Session.countDocuments({
+            start_time: { $gte: startOfWeek, $lt: endOfWeek }
+          });
+        } catch (_) {}
+        if (pCountWeek > totalWeek) totalWeek = pCountWeek;
+
+        const pct = totalWeek > 0 ? Math.min(100, Math.round((pCountWeek / totalWeek) * 100)) : 0;
+        weeklyTrends.push({
+          week: `Wk ${7-i}`,
+          present: pCountWeek,
+          total: totalWeek,
+          percentage: pct,
+          rate: pct
+        });
       }
-      
-      const totalWeek = 6;
-      const pct = Math.min(100, Math.round((pCountWeek / totalWeek) * 100));
-      weeklyTrends.push({
-        week: `Wk ${7-i}`,
-        present: pCountWeek,
-        total: totalWeek,
-        percentage: pct,
-        rate: pct
-      });
     }
 
     const monthlyTrends = [];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    for (let i = 5; i >= 0; i--) {
-      const monthDate = new Date();
-      monthDate.setMonth(monthDate.getMonth() - i);
-      const startOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
-      const endOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1);
-      
-      let pCountMonth = 0;
-      try {
-        pCountMonth = await Attendance.countDocuments({
-          student_email: email,
-          status: 'Present',
-          timestamp: { $gte: startOfMonth, $lt: endOfMonth }
-        });
-      } catch (_) {}
+    if (dataSource !== 'none') {
+      for (let i = 5; i >= 0; i--) {
+        const monthDate = new Date();
+        monthDate.setMonth(monthDate.getMonth() - i);
+        const startOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+        const endOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1);
+        
+        let pCountMonth = 0;
+        try {
+          pCountMonth = await Attendance.countDocuments({
+            student_email: email,
+            status: 'Present',
+            timestamp: { $gte: startOfMonth, $lt: endOfMonth }
+          });
+        } catch (_) {}
 
-      if (pCountMonth === 0 && records.length === 0) {
-        const monthlyPattern = [20, 22, 19, 23, 21, 22];
-        pCountMonth = monthlyPattern[5 - i] || 21;
+        let totalMonth = 0;
+        try {
+          totalMonth = await Session.countDocuments({
+            start_time: { $gte: startOfMonth, $lt: endOfMonth }
+          });
+        } catch (_) {}
+        if (pCountMonth > totalMonth) totalMonth = pCountMonth;
+
+        const monthName = monthNames[startOfMonth.getMonth()];
+        const pct = totalMonth > 0 ? Math.min(100, Math.round((pCountMonth / totalMonth) * 100)) : 0;
+        monthlyTrends.push({
+          month: monthName,
+          present: pCountMonth,
+          total: totalMonth,
+          percentage: pct,
+          rate: pct
+        });
       }
-      
-      const monthName = monthNames[startOfMonth.getMonth()];
-      const totalMonth = 24;
-      const pct = Math.min(100, Math.round((pCountMonth / totalMonth) * 100));
-      monthlyTrends.push({
-        month: monthName,
-        present: pCountMonth,
-        total: totalMonth,
-        percentage: pct,
-        rate: pct
-      });
     }
 
     // Real Heatmap Data (Map of YYYY-MM-DD -> 'present' | 'absent')
     const heatmapData = {};
     for (const r of records) {
       if (r.timestamp) {
-        const dStr = new Date(r.timestamp).toISOString().split('T')[0];
-        heatmapData[dStr] = (r.status || '').toLowerCase() === 'present' ? 'present' : 'absent';
+        const dStr = toDateKey(r.timestamp);
+        if (dStr) {
+          heatmapData[dStr] = (r.status || '').toLowerCase() === 'present' ? 'present' : 'absent';
+        }
       }
     }
 
     // Merge with datasetService heatmap
     const dsHeatmap = datasetService.getHeatmap(email);
     for (const date in dsHeatmap) {
-      if (!heatmapData[date]) {
-        heatmapData[date] = dsHeatmap[date] === 1 ? 'present' : 'absent';
+      const dStr = toDateKey(date) || date;
+      if (!heatmapData[dStr]) {
+        heatmapData[dStr] = dsHeatmap[date] === 1 ? 'present' : 'absent';
       }
     }
 
-    // Populate current month (e.g. November 2026) up to current date for weekdays
-    const curYear = now.getFullYear();
-    const curMonth = now.getMonth();
-    const curDay = now.getDate();
-    for (let d = 1; d <= curDay; d++) {
-      const dayDate = new Date(curYear, curMonth, d);
-      const dayOfWeek = dayDate.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Mon-Fri
-        const dateStr = `${curYear}-${String(curMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        if (!heatmapData[dateStr]) {
-          heatmapData[dateStr] = (d % 7 === 0) ? 'absent' : 'present';
-        }
-      }
-    }
-
-    // Calculate streak
+    // Calculate streak using unified date keys
     let streak = 0;
-    try {
-      const aiRouteStreak = require('./ai'); // or compute from heatmapData
-    } catch (_) {}
-    
-    // Compute current consecutive check-in streak
     const checkDays = [];
     for (let i = 0; i < 30; i++) {
       const checkDate = new Date(now.getTime() - i * 86400000);
-      const dow = checkDate.getDay();
+      const dow = checkDate.getUTCDay();
       if (dow !== 0 && dow !== 6) {
-        const ds = checkDate.toISOString().split('T')[0];
-        checkDays.push(ds);
+        const ds = toDateKey(checkDate);
+        if (ds) checkDays.push(ds);
       }
     }
     for (const ds of checkDays) {
@@ -857,21 +855,50 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
         break;
       }
     }
-    if (streak === 0) streak = 5; // Default healthy streak
 
     // Student identity for leaderboard
     const studentUser = await User.findOne({ email }).lean();
-    const studentName = studentUser?.full_name || 'Abhishek';
-    const dept = studentUser?.department || 'CSE';
-
     const currentScore = Math.round(overallPercentage * 100);
-    const leaderboard = [
-      { name: 'Priya Sharma', department: dept, rank: 1, score: 98.0, is_me: false },
-      { name: 'Rahul Verma', department: dept, rank: 2, score: 95.0, is_me: false },
-      { name: studentName, department: dept, rank: 3, score: currentScore.toDouble ? currentScore.toDouble() : (currentScore * 1.0), is_me: true },
-      { name: 'Neha Patil', department: dept, rank: 4, score: 88.0, is_me: false },
-      { name: 'Karthik R', department: dept, rank: 5, score: 84.0, is_me: false }
-    ];
+    let leaderboard = [];
+
+    if (studentUser && studentUser.department) {
+      const dept = studentUser.department;
+      const peers = await User.find({ department: dept, role: 'student' }).lean();
+      if (peers.length > 0) {
+        const peerEntries = [];
+        for (const peer of peers) {
+          const isMe = peer.email.toLowerCase() === email;
+          let score = 0;
+          if (isMe) {
+            score = currentScore;
+          } else {
+            const peerStats = datasetService.getStudentStats(peer.email);
+            if (peerStats && peerStats.overall_percentage != null) {
+              score = Math.round(peerStats.overall_percentage > 1.0 ? peerStats.overall_percentage : peerStats.overall_percentage * 100);
+            } else {
+              const peerRecords = await Attendance.find({ student_email: peer.email }).lean();
+              if (peerRecords.length > 0) {
+                const peerPresent = peerRecords.filter(r => (r.status || '').toLowerCase() === 'present').length;
+                score = Math.round((peerPresent / peerRecords.length) * 100);
+              } else {
+                score = 0;
+              }
+            }
+          }
+          peerEntries.push({
+            name: peer.full_name || peer.email,
+            department: dept,
+            score: score,
+            is_me: isMe
+          });
+        }
+        peerEntries.sort((a, b) => b.score - a.score);
+        leaderboard = peerEntries.slice(0, 10).map((entry, idx) => ({
+          ...entry,
+          rank: idx + 1
+        }));
+      }
+    }
 
     const predictions = {
       semester_projection: Math.min(100.0, Math.round(overallPercentage * 100 * 1.03 * 10) / 10),
@@ -892,20 +919,24 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
           ? `Overall attendance of ${Math.round(overallPercentage * 100)}% comfortably meets university eligibility.`
           : `Attendance is at ${Math.round(overallPercentage * 100)}%. Avoid unexcused absences to avoid dropping below 75%.`,
         type: overallPercentage >= 0.75 ? 'improving' : 'risk'
-      },
-      {
-        text: 'Biometric face recognition speed and verification accuracy are optimal.',
-        type: 'improving'
       }
     ];
 
     const faceRecords = records.filter(r => r.verified_by === 'face' && Number.isFinite(r.confidence));
     const avgConfidence = faceRecords.length > 0
       ? faceRecords.reduce((sum, r) => sum + r.confidence, 0) / faceRecords.length
-      : 0.94;
+      : null;
+
+    if (faceRecords.length > 0) {
+      personalInsights.push({
+        text: 'Biometric face recognition speed and verification accuracy are optimal.',
+        type: 'improving'
+      });
+    }
 
     res.json({
       overall_percentage: overallPercentage,
+      data_source: dataSource,
       subjects: subjectDetails,
       weekly_trends: weeklyTrends,
       monthly_trends: monthlyTrends,
@@ -916,8 +947,8 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
       streak,
       ai_metrics: {
         average_confidence: avgConfidence,
-        lighting_quality: faceRecords[0]?.lighting_quality || 'Good',
-        face_visibility: faceRecords[0]?.face_visibility || 'Excellent'
+        lighting_quality: faceRecords[0]?.lighting_quality || (faceRecords.length > 0 ? 'Good' : null),
+        face_visibility: faceRecords[0]?.face_visibility || (faceRecords.length > 0 ? 'Excellent' : null)
       }
     });
   } catch (error) {

@@ -152,9 +152,15 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
-    final cardBorder = isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0);
-    final textHeading = isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
-    final textLabel = isDark ? const Color(0xFF7C82A0) : const Color(0xFFA0A0B8);
+    final cardBorder = isDark
+        ? const Color(0xFF252E4A)
+        : const Color(0xFFE5E7F0);
+    final textHeading = isDark
+        ? const Color(0xFFF1F3F9)
+        : const Color(0xFF1A1A3A);
+    final textLabel = isDark
+        ? const Color(0xFF7C82A0)
+        : const Color(0xFFA0A0B8);
 
     return StudentScreenShell(
       title: 'Academic Calendar',
@@ -162,7 +168,11 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
       onBackTap: () => Navigator.of(context).maybePop(),
       actions: [
         IconButton(
-          icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 22),
+          icon: const Icon(
+            Icons.refresh_rounded,
+            color: Colors.white,
+            size: 22,
+          ),
           tooltip: 'Refresh Calendar',
           onPressed: () {
             HapticFeedback.lightImpact();
@@ -179,26 +189,34 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                 children: [
                   // ── 1. Interactive Calendar Card ─────────────────────────
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 18,
+                    ),
                     decoration: BoxDecoration(
                       color: cardBg,
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(color: cardBorder, width: 1.0),
                       boxShadow: [
                         BoxShadow(
-                          color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
+                          color: isDark
+                              ? Colors.black38
+                              : const Color(0xFF8B98CE).withValues(alpha: 0.15),
                           blurRadius: 30,
                           offset: const Offset(0, -5),
                         ),
                       ],
                     ),
                     child: TableCalendar(
-                      firstDay: DateTime.now().subtract(const Duration(days: 365)),
+                      firstDay: DateTime.now().subtract(
+                        const Duration(days: 365),
+                      ),
                       lastDay: DateTime.now().add(const Duration(days: 365)),
                       focusedDay: _focusedDay,
                       calendarFormat: _calendarFormat,
                       startingDayOfWeek: StartingDayOfWeek.monday,
-                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
                       onDaySelected: (selectedDay, focusedDay) {
                         HapticFeedback.selectionClick();
                         setState(() {
@@ -229,9 +247,13 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                           fontSize: 12,
                         ),
                         formatButtonDecoration: BoxDecoration(
-                          color: (isDark ? const Color(0xFF1A2340) : const Color(0xFFEEF2FF)),
+                          color: (isDark
+                              ? const Color(0xFF1A2340)
+                              : const Color(0xFFEEF2FF)),
                           border: Border.all(
-                            color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
+                            color: const Color(
+                              0xFF4F46E5,
+                            ).withValues(alpha: 0.35),
                           ),
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -295,7 +317,9 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
+                              color: const Color(
+                                0xFF4F46E5,
+                              ).withValues(alpha: 0.35),
                               blurRadius: 10,
                               offset: const Offset(0, 3),
                             ),
@@ -311,14 +335,17 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                       calendarBuilders: CalendarBuilders(
                         prioritizedBuilder: (context, day, focusedDay) {
                           final isSel = isSameDay(_selectedDay, day);
-                          if (isSel) return null; // let default selectedDecoration render
+                          if (isSel)
+                            return null; // let default selectedDecoration render
 
                           if (_isPresent(day)) {
                             return Container(
                               margin: const EdgeInsets.all(4),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF10B981).withValues(alpha: 0.14),
+                                color: const Color(
+                                  0xFF10B981,
+                                ).withValues(alpha: 0.14),
                                 border: Border.all(
                                   color: const Color(0xFF10B981),
                                   width: 1.5,
@@ -339,7 +366,9 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                               margin: const EdgeInsets.all(4),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF59E0B).withValues(alpha: 0.14),
+                                color: const Color(
+                                  0xFFF59E0B,
+                                ).withValues(alpha: 0.14),
                                 border: Border.all(
                                   color: const Color(0xFFF59E0B),
                                   width: 1.5,
@@ -360,7 +389,9 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                               margin: const EdgeInsets.all(4),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF8B5CF6).withValues(alpha: 0.14),
+                                color: const Color(
+                                  0xFF8B5CF6,
+                                ).withValues(alpha: 0.14),
                                 border: Border.all(
                                   color: const Color(0xFF8B5CF6),
                                   width: 1.5,
@@ -385,14 +416,19 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
 
                   // ── 2. Legend Card ───────────────────────────────────────
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: cardBg,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: cardBorder, width: 1.0),
                       boxShadow: [
                         BoxShadow(
-                          color: isDark ? Colors.black26 : const Color(0xFF8B98CE).withValues(alpha: 0.10),
+                          color: isDark
+                              ? Colors.black26
+                              : const Color(0xFF8B98CE).withValues(alpha: 0.10),
                           blurRadius: 18,
                           offset: const Offset(0, 4),
                         ),
@@ -401,16 +437,33 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildLegendItem('Present', const Color(0xFF10B981), isDark),
-                        _buildLegendItem('Leave', const Color(0xFFF59E0B), isDark),
-                        _buildLegendItem('Holiday', const Color(0xFF8B5CF6), isDark),
+                        _buildLegendItem(
+                          'Present',
+                          const Color(0xFF10B981),
+                          isDark,
+                        ),
+                        _buildLegendItem(
+                          'Leave',
+                          const Color(0xFFF59E0B),
+                          isDark,
+                        ),
+                        _buildLegendItem(
+                          'Holiday',
+                          const Color(0xFF8B5CF6),
+                          isDark,
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
 
                   // ── 3. Selected Day Events ───────────────────────────────
-                  _buildSelectedDayEvents(isDark, cardBg, cardBorder, textHeading),
+                  _buildSelectedDayEvents(
+                    isDark,
+                    cardBg,
+                    cardBorder,
+                    textHeading,
+                  ),
                 ],
               ),
             ),
@@ -452,7 +505,9 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
     Color textHeading,
   ) {
     final events = _getEventsForDay(_selectedDay ?? DateTime.now());
-    final textLabel = isDark ? const Color(0xFF7C82A0) : const Color(0xFFA0A0B8);
+    final textLabel = isDark
+        ? const Color(0xFF7C82A0)
+        : const Color(0xFFA0A0B8);
     final textBody = isDark ? const Color(0xFFC8CCDF) : const Color(0xFF3D4260);
 
     final selDay = _selectedDay ?? DateTime.now();
@@ -463,7 +518,11 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
       children: [
         Row(
           children: [
-            const Icon(Icons.event_note_rounded, size: 16, color: Color(0xFF4F46E5)),
+            const Icon(
+              Icons.event_note_rounded,
+              size: 16,
+              color: Color(0xFF4F46E5),
+            ),
             const SizedBox(width: 8),
             Text(
               'EVENTS FOR $dayStr',
@@ -528,67 +587,80 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
             }
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 10.0),
-              child: PressableScale(
-                onTap: () => HapticFeedback.lightImpact(),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: cardBorder, width: 1.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: isDark ? Colors.black26 : const Color(0xFF8B98CE).withValues(alpha: 0.10),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
+                  padding: const EdgeInsets.only(bottom: 10.0),
+                  child: PressableScale(
+                    onTap: () => HapticFeedback.lightImpact(),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: cardBg,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: cardBorder, width: 1.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark
+                                ? Colors.black26
+                                : const Color(
+                                    0xFF8B98CE,
+                                  ).withValues(alpha: 0.10),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: badgeColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(icon, color: badgeColor, size: 20),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              style: GoogleFonts.poppins(
-                                color: textHeading,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: badgeColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(14),
                             ),
-                            if (subtitle.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                subtitle,
-                                style: GoogleFonts.inter(
-                                  color: textBody,
-                                  fontSize: 12,
+                            child: Icon(icon, color: badgeColor, size: 20),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: GoogleFonts.poppins(
+                                    color: textHeading,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ],
-                        ),
+                                if (subtitle.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    subtitle,
+                                    style: GoogleFonts.inter(
+                                      color: textBody,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            )
+                )
                 .animate()
-                .fadeIn(delay: (index * 60).ms, duration: 300.ms, curve: Curves.easeOutCubic)
-                .slideY(begin: 0.08, end: 0, delay: (index * 60).ms, duration: 300.ms);
+                .fadeIn(
+                  delay: (index * 60).ms,
+                  duration: 300.ms,
+                  curve: Curves.easeOutCubic,
+                )
+                .slideY(
+                  begin: 0.08,
+                  end: 0,
+                  delay: (index * 60).ms,
+                  duration: 300.ms,
+                );
           }),
       ],
     );

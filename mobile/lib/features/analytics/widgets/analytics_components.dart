@@ -843,7 +843,7 @@ class _HeatmapCardState extends State<HeatmapCard> {
   }
 
   int _calculateActiveStreak() {
-    if (widget.streak != null && widget.streak! > 0) {
+    if (widget.streak != null) {
       return widget.streak!;
     }
     // Calculate from heatmapData
@@ -853,7 +853,8 @@ class _HeatmapCardState extends State<HeatmapCard> {
       final d = now.subtract(Duration(days: i));
       if (d.weekday == DateTime.saturday || d.weekday == DateTime.sunday) continue;
       final ds = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-      if (widget.heatmapData[ds] == 'present') {
+      final status = (widget.heatmapData[ds] ?? '').toString().toLowerCase();
+      if (status == 'present') {
         count++;
       } else if (i == 0) {
         // Not marked today yet, continue checking yesterday
@@ -862,7 +863,7 @@ class _HeatmapCardState extends State<HeatmapCard> {
         break;
       }
     }
-    return count > 0 ? count : 5;
+    return count;
   }
 
   @override
@@ -951,51 +952,73 @@ class _HeatmapCardState extends State<HeatmapCard> {
 
           // Snapchat-Style Attendance Streak Banner
           GestureDetector(
-            onTap: () {
-              HapticFeedback.heavyImpact();
-              showSnapchatStreakCelebration(context, streak);
-            },
+            onTap: streak > 0
+                ? () {
+                    HapticFeedback.heavyImpact();
+                    showSnapchatStreakCelebration(context, streak);
+                  }
+                : null,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF2E1A11), Color(0xFF1F182F)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: streak > 0
+                    ? const LinearGradient(
+                        colors: [Color(0xFF2E1A11), Color(0xFF1F182F)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : LinearGradient(
+                        colors: isDark
+                            ? [const Color(0xFF1E2230), const Color(0xFF141724)]
+                            : [const Color(0xFFF1F5F9), const Color(0xFFE2E8F0)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.deepOrangeAccent.withValues(alpha: 0.35),
+                  color: streak > 0
+                      ? Colors.deepOrangeAccent.withValues(alpha: 0.35)
+                      : (isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFCBD5E1)),
                   width: 1.2,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.deepOrangeAccent.withValues(alpha: 0.15),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                boxShadow: streak > 0
+                    ? [
+                        BoxShadow(
+                          color: Colors.deepOrangeAccent.withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
               ),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.deepOrange.withValues(alpha: 0.2),
+                      color: streak > 0
+                          ? Colors.deepOrange.withValues(alpha: 0.2)
+                          : (isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFE2E8F0)),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Icons.local_fire_department_rounded,
-                      color: Colors.deepOrangeAccent,
-                      size: 26,
-                    )
-                        .animate(onPlay: (c) => c.repeat(reverse: true))
-                        .scale(
-                          begin: const Offset(0.9, 0.9),
-                          end: const Offset(1.12, 1.12),
-                          duration: 800.ms,
-                          curve: Curves.easeInOut,
-                        ),
+                    child: streak > 0
+                        ? const Icon(
+                            Icons.local_fire_department_rounded,
+                            color: Colors.deepOrangeAccent,
+                            size: 26,
+                          )
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .scale(
+                              begin: const Offset(0.9, 0.9),
+                              end: const Offset(1.12, 1.12),
+                              duration: 800.ms,
+                              curve: Curves.easeInOut,
+                            )
+                        : Icon(
+                            Icons.local_fire_department_outlined,
+                            color: isDark ? const Color(0xFF7F8CA4) : const Color(0xFF64748B),
+                            size: 26,
+                          ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1005,11 +1028,13 @@ class _HeatmapCardState extends State<HeatmapCard> {
                         Row(
                           children: [
                             Text(
-                              '🔥 $streak DAY STREAK',
+                              streak > 0 ? '🔥 $streak DAY STREAK' : 'NO ACTIVE STREAK',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.orangeAccent,
+                                color: streak > 0
+                                    ? Colors.orangeAccent
+                                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -1017,15 +1042,21 @@ class _HeatmapCardState extends State<HeatmapCard> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                               decoration: BoxDecoration(
-                                color: Colors.deepOrangeAccent,
+                                color: streak > 0
+                                    ? Colors.deepOrangeAccent
+                                    : (isDark ? Colors.white12 : const Color(0xFFCBD5E1)),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                streak >= 14 ? 'ELITE' : 'ACTIVE',
+                                streak >= 14
+                                    ? 'ELITE'
+                                    : streak > 0
+                                        ? 'ACTIVE'
+                                        : 'INACTIVE',
                                 style: GoogleFonts.inter(
                                   fontSize: 8,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                                  color: streak > 0 ? Colors.black : (isDark ? Colors.white70 : const Color(0xFF475569)),
                                 ),
                               ),
                             ),
@@ -1033,10 +1064,12 @@ class _HeatmapCardState extends State<HeatmapCard> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Streak on fire! Tap to inspect Snapchat streak milestone.',
+                          streak > 0
+                              ? 'Streak on fire! Tap to inspect Snapchat streak milestone.'
+                              : 'Check into your scheduled lectures to build a streak.',
                           style: GoogleFonts.inter(
                             fontSize: 10.5,
-                            color: Colors.white70,
+                            color: isDark ? Colors.white70 : const Color(0xFF64748B),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1044,10 +1077,10 @@ class _HeatmapCardState extends State<HeatmapCard> {
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 13,
-                    color: Colors.orangeAccent,
+                    color: streak > 0 ? Colors.orangeAccent : const Color(0xFF7F8CA4),
                   ),
                 ],
               ),
@@ -1265,8 +1298,25 @@ class _HeatmapCardState extends State<HeatmapCard> {
 
   void _showDayAttendanceSheet(BuildContext context, DateTime date, String? status) {
     final dateFormatted = '${date.day} ${_monthNames[date.month - 1]} ${date.year}';
-    final isPresent = status == 'present';
-    final isAbsent = status == 'absent';
+    final isPresent = (status ?? '').toLowerCase() == 'present';
+    final isAbsent = (status ?? '').toLowerCase() == 'absent';
+    final isFuture = date.isAfter(DateTime.now());
+
+    final statusLabel = isPresent
+        ? 'VERIFIED PRESENT'
+        : isAbsent
+            ? 'ABSENT'
+            : isFuture
+                ? 'UPCOMING'
+                : 'NO RECORD';
+
+    final statusDesc = isPresent
+        ? 'Attendance was verified and recorded for this date.'
+        : isAbsent
+            ? 'Student recorded as absent for scheduled lectures on this calendar date.'
+            : isFuture
+                ? 'Session scheduled for an upcoming date.'
+                : 'No attendance record found for this date.';
 
     showModalBottomSheet(
       context: context,
@@ -1315,11 +1365,7 @@ class _HeatmapCardState extends State<HeatmapCard> {
                       ),
                     ),
                     child: Text(
-                      isPresent
-                          ? 'VERIFIED PRESENT'
-                          : isAbsent
-                              ? 'ABSENT'
-                              : 'NO CLASS SCHEDULED',
+                      statusLabel,
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -1335,11 +1381,7 @@ class _HeatmapCardState extends State<HeatmapCard> {
               ),
               const SizedBox(height: 14),
               Text(
-                isPresent
-                    ? 'Biometric check-in verified successfully. Attendance was logged via front ArcFace neural scanner.'
-                    : isAbsent
-                        ? 'Student recorded as absent for scheduled lectures on this calendar date.'
-                        : 'No mandatory university lecture attendance recorded on this day.',
+                statusDesc,
                 style: GoogleFonts.inter(
                   fontSize: 12.5,
                   color: isDark ? Colors.white70 : const Color(0xFF64748B),

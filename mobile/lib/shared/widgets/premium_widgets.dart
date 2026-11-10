@@ -194,8 +194,8 @@ class MetricCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 3),
-          SizedBox(
-            height: 28,
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 28),
             child: Align(
               alignment: Alignment.topLeft,
               child: Text(

@@ -236,13 +236,20 @@ class _StudentBunkCalculatorScreenState
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.2,
-                          color: isDark ? const Color(0xFFA5B4FC) : const Color(0xFF3D4AB8),
+                          color: isDark
+                              ? const Color(0xFFA5B4FC)
+                              : const Color(0xFF3D4AB8),
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEEF2FF),
+                          color: isDark
+                              ? const Color(0xFF1E293B)
+                              : const Color(0xFFEEF2FF),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -250,7 +257,9 @@ class _StudentBunkCalculatorScreenState
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : const Color(0xFF4F46E5),
+                            color: isDark
+                                ? Colors.white70
+                                : const Color(0xFF4F46E5),
                           ),
                         ),
                       ),
@@ -285,7 +294,11 @@ class _StudentBunkCalculatorScreenState
         children: [
           Row(
             children: [
-              const Icon(Icons.track_changes_rounded, color: Color(0xFF4F46E5), size: 18),
+              const Icon(
+                Icons.track_changes_rounded,
+                color: Color(0xFF4F46E5),
+                size: 18,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Attendance Compliance Target',
@@ -328,16 +341,20 @@ class _StudentBunkCalculatorScreenState
                         border: Border.all(
                           color: isSelected
                               ? const Color(0xFF6366F1)
-                              : (isDark ? const Color(0xFF2E3A59) : const Color(0xFFE2E8F0)),
+                              : (isDark
+                                    ? const Color(0xFF2E3A59)
+                                    : const Color(0xFFE2E8F0)),
                           width: isSelected ? 1.5 : 1.0,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                                  color: const Color(
+                                    0xFF4F46E5,
+                                  ).withValues(alpha: 0.3),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
-                                )
+                                ),
                               ]
                             : null,
                       ),
@@ -347,10 +364,14 @@ class _StudentBunkCalculatorScreenState
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: 11,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
                             color: isSelected
                                 ? Colors.white
-                                : (isDark ? Colors.white70 : const Color(0xFF3D4260)),
+                                : (isDark
+                                      ? Colors.white70
+                                      : const Color(0xFF3D4260)),
                           ),
                         ),
                       ),
@@ -422,17 +443,26 @@ class _StudentBunkCalculatorScreenState
                         style: GoogleFonts.poppins(
                           fontSize: 34,
                           fontWeight: FontWeight.w800,
-                          color: isSafe ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                          color: isSafe
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFFEF4444),
                         ),
                       ),
                       const SizedBox(width: 8),
                       if (delta != 0)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: delta > 0
-                                ? const Color(0xFF10B981).withValues(alpha: 0.15)
-                                : const Color(0xFFEF4444).withValues(alpha: 0.15),
+                                ? const Color(
+                                    0xFF10B981,
+                                  ).withValues(alpha: 0.15)
+                                : const Color(
+                                    0xFFEF4444,
+                                  ).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -440,7 +470,9 @@ class _StudentBunkCalculatorScreenState
                             style: GoogleFonts.robotoMono(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: delta > 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                              color: delta > 0
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFFEF4444),
                             ),
                           ),
                         ),
@@ -449,21 +481,30 @@ class _StudentBunkCalculatorScreenState
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: isSafe
                       ? const Color(0xFF10B981).withValues(alpha: 0.15)
                       : const Color(0xFFEF4444).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isSafe ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                    color: isSafe
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFFEF4444),
                   ),
                 ),
                 child: Column(
                   children: [
                     Icon(
-                      isSafe ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
-                      color: isSafe ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                      isSafe
+                          ? Icons.check_circle_rounded
+                          : Icons.warning_amber_rounded,
+                      color: isSafe
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFFEF4444),
                       size: 24,
                     ),
                     const SizedBox(height: 4),
@@ -473,7 +514,9 @@ class _StudentBunkCalculatorScreenState
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.8,
-                        color: isSafe ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                        color: isSafe
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFFEF4444),
                       ),
                     ),
                   ],
@@ -588,7 +631,9 @@ class _StudentBunkCalculatorScreenState
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.1,
-                  color: isDark ? const Color(0xFFA5B4FC) : const Color(0xFF3D4AB8),
+                  color: isDark
+                      ? const Color(0xFFA5B4FC)
+                      : const Color(0xFF3D4AB8),
                 ),
               ),
               if (_simMissed > 0 || _simAttended > 0)
@@ -638,7 +683,9 @@ class _StudentBunkCalculatorScreenState
           SliderTheme(
             data: SliderThemeData(
               activeTrackColor: const Color(0xFFEF4444),
-              inactiveTrackColor: isDark ? const Color(0xFF1E284A) : const Color(0xFFE2E8F0),
+              inactiveTrackColor: isDark
+                  ? const Color(0xFF1E284A)
+                  : const Color(0xFFE2E8F0),
               thumbColor: const Color(0xFFEF4444),
               trackHeight: 4,
             ),
@@ -680,7 +727,9 @@ class _StudentBunkCalculatorScreenState
           SliderTheme(
             data: SliderThemeData(
               activeTrackColor: const Color(0xFF10B981),
-              inactiveTrackColor: isDark ? const Color(0xFF1E284A) : const Color(0xFFE2E8F0),
+              inactiveTrackColor: isDark
+                  ? const Color(0xFF1E284A)
+                  : const Color(0xFFE2E8F0),
               thumbColor: const Color(0xFF10B981),
               trackHeight: 4,
             ),
@@ -748,14 +797,19 @@ class _StudentBunkCalculatorScreenState
                       '${sub.code} • ${sub.attended} / ${sub.total} Classes',
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                        color: isDark
+                            ? Colors.white60
+                            : const Color(0xFF6B7280),
                       ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: isCompliant
                       ? const Color(0xFF10B981).withValues(alpha: 0.15)
@@ -782,8 +836,12 @@ class _StudentBunkCalculatorScreenState
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: (curPercent / 100.0).clamp(0.0, 1.0),
-              backgroundColor: isDark ? const Color(0xFF1F2942) : const Color(0xFFE2E8F0),
-              color: isCompliant ? const Color(0xFF4F46E5) : const Color(0xFFEF4444),
+              backgroundColor: isDark
+                  ? const Color(0xFF1F2942)
+                  : const Color(0xFFE2E8F0),
+              color: isCompliant
+                  ? const Color(0xFF4F46E5)
+                  : const Color(0xFFEF4444),
               minHeight: 6,
             ),
           ),
@@ -797,7 +855,9 @@ class _StudentBunkCalculatorScreenState
                     ? Icons.check_circle_outline_rounded
                     : Icons.error_outline_rounded,
                 size: 14,
-                color: isCompliant ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                color: isCompliant
+                    ? const Color(0xFF10B981)
+                    : const Color(0xFFEF4444),
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -809,8 +869,12 @@ class _StudentBunkCalculatorScreenState
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     color: isCompliant
-                        ? (isDark ? const Color(0xFF6EE7B7) : const Color(0xFF047857))
-                        : (isDark ? const Color(0xFFFCA5A5) : const Color(0xFFB91C1C)),
+                        ? (isDark
+                              ? const Color(0xFF6EE7B7)
+                              : const Color(0xFF047857))
+                        : (isDark
+                              ? const Color(0xFFFCA5A5)
+                              : const Color(0xFFB91C1C)),
                   ),
                 ),
               ),

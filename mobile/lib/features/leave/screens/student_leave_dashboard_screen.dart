@@ -372,7 +372,11 @@ class _StudentLeaveDashboardScreenState
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 18),
+                  const Icon(
+                    Icons.add_circle_outline_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'APPLY LEAVE',
@@ -401,12 +405,16 @@ class _StudentLeaveDashboardScreenState
                 color: isDark ? const Color(0xFF141D38) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4F46E5),
+                  color: isDark
+                      ? const Color(0xFF818CF8)
+                      : const Color(0xFF4F46E5),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: isDark ? Colors.black26 : const Color(0xFF8B98CE).withValues(alpha: 0.10),
+                    color: isDark
+                        ? Colors.black26
+                        : const Color(0xFF8B98CE).withValues(alpha: 0.10),
                     blurRadius: 14,
                     offset: const Offset(0, 4),
                   ),
@@ -417,7 +425,9 @@ class _StudentLeaveDashboardScreenState
                 children: [
                   Icon(
                     Icons.history_rounded,
-                    color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4F46E5),
+                    color: isDark
+                        ? const Color(0xFF818CF8)
+                        : const Color(0xFF4F46E5),
                     size: 18,
                   ),
                   const SizedBox(width: 8),
@@ -427,7 +437,9 @@ class _StudentLeaveDashboardScreenState
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
                       letterSpacing: 0.8,
-                      color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4F46E5),
+                      color: isDark
+                          ? const Color(0xFF818CF8)
+                          : const Color(0xFF4F46E5),
                     ),
                   ),
                 ],

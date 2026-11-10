@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const User = require('../models/User');
+const UserSession = require('../models/UserSession');
 const Session = require('../models/Session');
 const Attendance = require('../models/Attendance');
 const SecurityLog = require('../models/SecurityLog');
@@ -10,6 +12,17 @@ const Leave = require('../models/Leave');
 const { authenticate, requireRole } = require('../middleware/auth');
 const reportInternalError = require('../utils/httpError');
 const authService = require('../services/authService');
+
+const ROLE_HIERARCHY = {
+  super_admin: 100,
+  admin: 80,
+  principal: 70,
+  management: 60,
+  hod: 50,
+  teacher: 30,
+  faculty: 30,
+  student: 10
+};
 
 // Helper: Resolve HOD Department if not provided
 const resolveDepartment = async (req) => {
@@ -495,19 +508,29 @@ router.get('/users', authenticate, requireRole(['admin', 'super_admin', 'hod', '
       query.department = req.query.department;
     }
 
-    if (req.query.college) {
-      query.college = req.query.college;
+    if (req.query.college !== undefined) {
+      if (typeof req.query.college !== 'string') {
+        return res.status(400).json({ detail: 'Invalid college filter.' });
+      }
+      query.college = req.query.college.trim();
     }
 
-    if (req.query.q) {
-      const searchRegex = new RegExp(req.query.q.trim(), 'i');
-      query.$or = [
-        { full_name: searchRegex },
-        { email: searchRegex },
-        { student_id: searchRegex },
-        { usn: searchRegex },
-        { roll_number: searchRegex }
-      ];
+    if (req.query.q !== undefined) {
+      if (typeof req.query.q !== 'string') {
+        return res.status(400).json({ detail: 'Invalid search query.' });
+      }
+      const trimmedQ = req.query.q.trim();
+      if (trimmedQ) {
+        const escapedQ = trimmedQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const searchRegex = new RegExp(escapedQ, 'i');
+        query.$or = [
+          { full_name: searchRegex },
+          { email: searchRegex },
+          { student_id: searchRegex },
+          { usn: searchRegex },
+          { roll_number: searchRegex }
+        ];
+      }
     }
 
     const total = await User.countDocuments(query);
@@ -564,8 +587,28 @@ router.post('/users', authenticate, requireRole(['admin', 'super_admin', 'princi
       password
     } = req.body;
 
-    if (!email || !full_name || !role) {
-      return res.status(400).json({ detail: "Missing required fields (email, full_name, role)." });
+    if (typeof email !== 'string' || !email.trim() ||
+        typeof full_name !== 'string' || !full_name.trim() ||
+        typeof role !== 'string' || !role.trim()) {
+      return res.status(400).json({ detail: "Missing or invalid required fields (email, full_name, role must be non-empty strings)." });
+    }
+
+    const targetRole = role.trim().toLowerCase();
+    if (req.userRole !== 'super_admin' && (targetRole === 'admin' || targetRole === 'super_admin')) {
+      return res.status(403).json({ detail: "Forbidden: Cannot assign administrative roles." });
+    }
+
+    if (req.userRole?.toLowerCase() === 'hod') {
+      const staff = await User.findOne({ email: req.userEmail }, 'department').lean();
+      if (!staff?.department) {
+        return res.status(403).json({ detail: 'HOD department is not configured.' });
+      }
+      if (!['student', 'teacher', 'faculty'].includes(targetRole)) {
+        return res.status(403).json({ detail: "Forbidden: HOD can only create student or teacher roles." });
+      }
+      if (department && typeof department === 'string' && department.trim().toLowerCase() !== staff.department.toLowerCase()) {
+        return res.status(403).json({ detail: "Forbidden: HOD cannot create users outside their department." });
+      }
     }
 
     const normalizedEmail = email.trim().toLowerCase();
@@ -574,27 +617,34 @@ router.post('/users', authenticate, requireRole(['admin', 'super_admin', 'princi
       return res.status(409).json({ detail: `User with email ${normalizedEmail} already exists.` });
     }
 
-    const rawPassword = password || `TempPass@${Math.random().toString(36).slice(-6)}`;
+    const rawPassword = (typeof password === 'string' && password.trim()) ? password.trim() : `TempPass@${crypto.randomBytes(6).toString('hex')}`;
     const hashedPassword = await authService.hashPassword(rawPassword);
 
     const newUser = new User({
       email: normalizedEmail,
       full_name: full_name.trim(),
-      role: role.toLowerCase(),
+      role: targetRole,
       password: hashedPassword,
-      department: department || "",
-      semester: semester ? String(semester) : "",
-      section: section || "",
-      college: college || "",
-      student_id: student_id || usn || roll_number || "",
-      usn: usn || student_id || "",
-      roll_number: roll_number || "",
-      designation: designation || "",
-      phone: phone || "",
-      setup_completed: !password ? false : true
+      department: typeof department === 'string' ? department.trim() : "",
+      semester: semester ? String(semester).trim() : "",
+      section: typeof section === 'string' ? section.trim() : "",
+      college: typeof college === 'string' ? college.trim() : "",
+      student_id: typeof student_id === 'string' ? student_id.trim() : (typeof usn === 'string' ? usn.trim() : (typeof roll_number === 'string' ? roll_number.trim() : "")),
+      usn: typeof usn === 'string' ? usn.trim() : (typeof student_id === 'string' ? student_id.trim() : ""),
+      roll_number: typeof roll_number === 'string' ? roll_number.trim() : "",
+      designation: typeof designation === 'string' ? designation.trim() : "",
+      phone: typeof phone === 'string' ? phone.trim() : "",
+      setup_completed: Boolean(password)
     });
 
-    await newUser.save();
+    try {
+      await newUser.save();
+    } catch (saveErr) {
+      if (saveErr.code === 11000) {
+        return res.status(409).json({ detail: `User with email ${normalizedEmail} already exists.` });
+      }
+      throw saveErr;
+    }
 
     const userObj = newUser.toObject();
     delete userObj.password;
@@ -619,27 +669,67 @@ router.put('/users/:id', authenticate, requireRole(['admin', 'super_admin', 'pri
       return res.status(400).json({ detail: "Invalid user ID." });
     }
 
-    const updates = {};
-    const allowedFields = [
-      'full_name', 'department', 'semester', 'section', 'college',
-      'student_id', 'usn', 'roll_number', 'designation', 'phone', 'role'
-    ];
-
-    for (const field of allowedFields) {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
-      }
-    }
-
-    if (req.body.password) {
-      updates.password = await authService.hashPassword(req.body.password);
-    }
-
-    const updated = await User.findByIdAndUpdate(id, updates, { new: true }).select('-password').lean();
-    if (!updated) {
+    const targetUser = await User.findById(id);
+    if (!targetUser) {
       return res.status(404).json({ detail: "User not found." });
     }
 
+    const callerRank = ROLE_HIERARCHY[req.userRole?.toLowerCase()] || 0;
+    const targetRank = ROLE_HIERARCHY[targetUser.role?.toLowerCase()] || 0;
+    if (req.userRole !== 'super_admin' && callerRank <= targetRank) {
+      return res.status(403).json({ detail: "Forbidden: Cannot modify a user with equal or higher role." });
+    }
+
+    if (req.userRole?.toLowerCase() === 'hod') {
+      const staff = await User.findOne({ email: req.userEmail }, 'department').lean();
+      if (!staff?.department || targetUser.department?.toLowerCase() !== staff.department.toLowerCase()) {
+        return res.status(403).json({ detail: "Forbidden: HOD cannot modify users outside their department." });
+      }
+      if (req.body.department && typeof req.body.department === 'string' && req.body.department.trim().toLowerCase() !== staff.department.toLowerCase()) {
+        return res.status(403).json({ detail: "Forbidden: HOD cannot reassign user to another department." });
+      }
+    }
+
+    const updates = {};
+    if (req.body.role !== undefined) {
+      if (typeof req.body.role !== 'string' || !req.body.role.trim()) {
+        return res.status(400).json({ detail: "Invalid role." });
+      }
+      const newRole = req.body.role.trim().toLowerCase();
+      const newRoleRank = ROLE_HIERARCHY[newRole] || 0;
+      if (req.userRole !== 'super_admin' && (callerRank <= newRoleRank || ['admin', 'super_admin'].includes(newRole))) {
+        return res.status(403).json({ detail: "Forbidden: Cannot assign equal or higher role." });
+      }
+      updates.role = newRole;
+    }
+
+    const allowedStringFields = [
+      'full_name', 'department', 'section', 'college',
+      'student_id', 'usn', 'roll_number', 'designation', 'phone'
+    ];
+
+    for (const field of allowedStringFields) {
+      if (req.body[field] !== undefined) {
+        if (typeof req.body[field] !== 'string') {
+          return res.status(400).json({ detail: `${field} must be a string.` });
+        }
+        updates[field] = req.body[field].trim();
+      }
+    }
+
+    if (req.body.semester !== undefined) {
+      updates.semester = String(req.body.semester).trim();
+    }
+
+    if (req.body.password !== undefined) {
+      if (typeof req.body.password !== 'string' || req.body.password.length < 6) {
+        return res.status(400).json({ detail: "Password must be a string of at least 6 characters." });
+      }
+      updates.password = await authService.hashPassword(req.body.password);
+      await UserSession.deleteMany({ userId: targetUser.email });
+    }
+
+    const updated = await User.findByIdAndUpdate(id, updates, { new: true }).select('-password').lean();
     updated.id = updated._id.toString();
     delete updated._id;
 
@@ -666,7 +756,18 @@ router.delete('/users/:id', authenticate, requireRole(['admin', 'super_admin', '
       return res.status(404).json({ detail: "User not found." });
     }
 
+    if (userToDelete.email.toLowerCase() === (req.userEmail || '').toLowerCase()) {
+      return res.status(400).json({ detail: "Self-deletion is not permitted." });
+    }
+
+    const callerRank = ROLE_HIERARCHY[req.userRole?.toLowerCase()] || 0;
+    const targetRank = ROLE_HIERARCHY[userToDelete.role?.toLowerCase()] || 0;
+    if (req.userRole !== 'super_admin' && callerRank <= targetRank) {
+      return res.status(403).json({ detail: "Forbidden: Cannot delete a user with equal or higher role." });
+    }
+
     await User.findByIdAndDelete(id);
+    await UserSession.deleteMany({ userId: userToDelete.email });
 
     res.json({
       success: true,
@@ -689,18 +790,26 @@ router.post('/users/bulk', authenticate, requireRole(['admin', 'super_admin', 'p
       return res.status(400).json({ detail: "Batch limit exceeded (maximum 1000 records per upload)." });
     }
 
-    const incomingEmails = users.map(u => (u.email || '').trim().toLowerCase()).filter(Boolean);
+    const incomingEmails = users
+      .filter(u => u && typeof u.email === 'string')
+      .map(u => u.email.trim().toLowerCase())
+      .filter(Boolean);
     const existingUsers = await User.find({ email: { $in: incomingEmails } }, 'email').lean();
     const existingEmailSet = new Set(existingUsers.map(u => u.email));
 
     const recordsToInsert = [];
     const skipped = [];
-    const defaultPassHash = await authService.hashPassword('Welcome@SmartFace2026');
 
     for (const u of users) {
-      const email = (u.email || '').trim().toLowerCase();
-      if (!email || !u.full_name) {
-        skipped.push({ email: u.email || 'unknown', reason: 'Missing email or full_name' });
+      if (!u || typeof u.email !== 'string' || !u.email.trim() || typeof u.full_name !== 'string' || !u.full_name.trim()) {
+        skipped.push({ email: u?.email || 'unknown', reason: 'Missing or invalid email or full_name' });
+        continue;
+      }
+      const email = u.email.trim().toLowerCase();
+      const userRole = (typeof u.role === 'string' && u.role.trim() ? u.role.trim() : (typeof default_role === 'string' && default_role.trim() ? default_role.trim() : 'student')).toLowerCase();
+
+      if (req.userRole !== 'super_admin' && (userRole === 'admin' || userRole === 'super_admin')) {
+        skipped.push({ email, reason: 'Forbidden to create administrative role' });
         continue;
       }
       if (existingEmailSet.has(email)) {
@@ -708,29 +817,46 @@ router.post('/users/bulk', authenticate, requireRole(['admin', 'super_admin', 'p
         continue;
       }
 
+      const individualPass = `Welcome@${crypto.randomBytes(6).toString('hex')}`;
+      const passHash = await authService.hashPassword(individualPass);
+
       recordsToInsert.push({
         email,
         full_name: u.full_name.trim(),
-        role: (u.role || default_role || 'student').toLowerCase(),
-        password: defaultPassHash,
-        college: u.college || default_college || '',
-        department: u.department || '',
-        semester: u.semester ? String(u.semester) : '',
-        section: u.section || '',
-        student_id: u.student_id || u.usn || u.roll_number || '',
-        usn: u.usn || u.student_id || '',
-        roll_number: u.roll_number || '',
-        designation: u.designation || '',
-        phone: u.phone || '',
+        role: userRole,
+        password: passHash,
+        college: typeof u.college === 'string' ? u.college.trim() : (typeof default_college === 'string' ? default_college.trim() : ''),
+        department: typeof u.department === 'string' ? u.department.trim() : '',
+        semester: u.semester ? String(u.semester).trim() : '',
+        section: typeof u.section === 'string' ? u.section.trim() : '',
+        student_id: typeof u.student_id === 'string' ? u.student_id.trim() : (typeof u.usn === 'string' ? u.usn.trim() : ''),
+        usn: typeof u.usn === 'string' ? u.usn.trim() : (typeof u.student_id === 'string' ? u.student_id.trim() : ''),
+        roll_number: typeof u.roll_number === 'string' ? u.roll_number.trim() : '',
+        designation: typeof u.designation === 'string' ? u.designation.trim() : '',
+        phone: typeof u.phone === 'string' ? u.phone.trim() : '',
         setup_completed: false
       });
-      existingEmailSet.add(email); // prevent duplicates within same batch
+      existingEmailSet.add(email);
     }
 
     let insertedCount = 0;
     if (recordsToInsert.length > 0) {
-      const inserted = await User.insertMany(recordsToInsert);
-      insertedCount = inserted.length;
+      try {
+        const inserted = await User.insertMany(recordsToInsert, { ordered: false });
+        insertedCount = inserted.length;
+      } catch (insertErr) {
+        if (insertErr.writeErrors && Array.isArray(insertErr.writeErrors)) {
+          insertedCount = insertErr.insertedDocs ? insertErr.insertedDocs.length : (recordsToInsert.length - insertErr.writeErrors.length);
+          for (const we of insertErr.writeErrors) {
+            skipped.push({
+              email: we.err?.op?.email || 'duplicate',
+              reason: we.err?.errmsg || 'Duplicate key or write error'
+            });
+          }
+        } else {
+          throw insertErr;
+        }
+      }
     }
 
     res.status(201).json({

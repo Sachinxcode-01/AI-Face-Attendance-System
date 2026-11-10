@@ -1362,6 +1362,28 @@ async def upload_avatar(
             status_code=413,
             detail=f"File too large ({len(contents) // 1024}KB). Maximum allowed size is 5MB."
         )
+
+    # Magic byte signature validation
+    is_jpeg = len(contents) >= 3 and contents.startswith(b"\xff\xd8\xff")
+    is_png = len(contents) >= 8 and contents.startswith(b"\x89PNG\r\n\x1a\n")
+    is_webp = len(contents) >= 12 and contents.startswith(b"RIFF") and contents[8:12] == b"WEBP"
+
+    if not (is_jpeg or is_png or is_webp):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid image format. File signature does not match JPEG, PNG, or WebP."
+        )
+
+    # Align extension and content-type with actual byte signature
+    if is_png:
+        ext = ".png"
+        content_type = "image/png"
+    elif is_webp:
+        ext = ".webp"
+        content_type = "image/webp"
+    else:
+        ext = ".jpg"
+        content_type = "image/jpeg"
     
     # --- Delete old avatar if it exists ---
     user = await users_collection.find_one({"email": current_user})

@@ -414,13 +414,21 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
                     children: [
                       _buildMetricCards(stats),
                       const SizedBox(height: 24),
-                      _buildLabel('PREDICTIVE EXAM INELIGIBILITY & VELOCITY AI'),
+                      _buildLabel(
+                        'PREDICTIVE EXAM INELIGIBILITY & VELOCITY AI',
+                      ),
                       const SizedBox(height: 12),
-                      _buildPredictiveExamRiskPanel(analyticsCtrl.predictiveRisk, isDark),
+                      _buildPredictiveExamRiskPanel(
+                        analyticsCtrl.predictiveRisk,
+                        isDark,
+                      ),
                       const SizedBox(height: 28),
                       _buildLabel('TIMETABLE ABSENTEEISM OPTIMIZER'),
                       const SizedBox(height: 12),
-                      _buildTimetableOptimizerPanel(analyticsCtrl.timetableInsights, isDark),
+                      _buildTimetableOptimizerPanel(
+                        analyticsCtrl.timetableInsights,
+                        isDark,
+                      ),
                       const SizedBox(height: 28),
                       _buildLabel('CAMPUS DAILY ATTENDANCE TREND'),
                       const SizedBox(height: 12),
@@ -976,16 +984,19 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
   }
 
   Widget _buildPredictiveExamRiskPanel(Map<String, dynamic> data, bool isDark) {
-    final summary = data['summary'] as Map<String, dynamic>? ?? {
-      'totalEvaluated': 1247,
-      'criticalCount': 38,
-      'warningCount': 84,
-      'safeCount': 1125,
-      'averageProjectedRate': 0.884,
-      'criticalPercentage': 3.0,
-    };
+    final summary =
+        data['summary'] as Map<String, dynamic>? ??
+        {
+          'totalEvaluated': 1247,
+          'criticalCount': 38,
+          'warningCount': 84,
+          'safeCount': 1125,
+          'averageProjectedRate': 0.884,
+          'criticalPercentage': 3.0,
+        };
 
-    final avgProj = ((summary['averageProjectedRate'] as num?)?.toDouble() ?? 0.884) * 100;
+    final avgProj =
+        ((summary['averageProjectedRate'] as num?)?.toDouble() ?? 0.884) * 100;
     final critical = summary['criticalCount'] ?? 38;
     final warning = summary['warningCount'] ?? 84;
     final safe = summary['safeCount'] ?? 1125;
@@ -1004,7 +1015,11 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
                   color: AppColors.cyan.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.auto_graph_rounded, color: AppColors.cyan, size: 20),
+                child: const Icon(
+                  Icons.auto_graph_rounded,
+                  color: AppColors.cyan,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1021,17 +1036,25 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
                     ),
                     Text(
                       'AI Velocity & Linear Trajectory Projections',
-                      style: GoogleFonts.inter(color: Colors.white54, fontSize: 11),
+                      style: GoogleFonts.inter(
+                        color: Colors.white54,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.gold.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Text(
                   '${avgProj.toStringAsFixed(1)}% Avg Final',
@@ -1085,12 +1108,19 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded, color: AppColors.cyan, size: 16),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: AppColors.cyan,
+                  size: 16,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Students with critical velocity require immediate mentoring to maintain final semester exam eligibility.',
-                    style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
+                    style: GoogleFonts.inter(
+                      color: Colors.white70,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
               ],
@@ -1101,7 +1131,12 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
   }
 
-  Widget _buildRiskBadge(String label, String value, String subtext, Color color) {
+  Widget _buildRiskBadge(
+    String label,
+    String value,
+    String subtext,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
@@ -1132,10 +1167,7 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
           const SizedBox(height: 2),
           Text(
             subtext,
-            style: GoogleFonts.inter(
-              color: Colors.white38,
-              fontSize: 8,
-            ),
+            style: GoogleFonts.inter(color: Colors.white38, fontSize: 8),
           ),
         ],
       ),
@@ -1143,24 +1175,29 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
   }
 
   Widget _buildTimetableOptimizerPanel(Map<String, dynamic> data, bool isDark) {
-    final anomalies = data['anomalies'] as List<dynamic>? ?? [
-      {
-        'day': 'Friday',
-        'slot': '02:00 - 05:00 PM (Afternoon)',
-        'attendanceRate': '62.4%',
-        'dropFromBaseline': '25.6%',
-        'severity': 'High',
-        'cause': 'End-of-week early departures & commuter travel',
-      }
-    ];
+    final anomalies =
+        data['anomalies'] as List<dynamic>? ??
+        [
+          {
+            'day': 'Friday',
+            'slot': '02:00 - 05:00 PM (Afternoon)',
+            'attendanceRate': '62.4%',
+            'dropFromBaseline': '25.6%',
+            'severity': 'High',
+            'cause': 'End-of-week early departures & commuter travel',
+          },
+        ];
 
-    final recommendations = data['recommendations'] as List<dynamic>? ?? [
-      {
-        'title': 'Friday Afternoon Restructuring',
-        'action': 'Relocate high-credit theory lectures from Friday afternoon to Tuesday/Wednesday morning.',
-        'expectedGain': '+8.4% attendance recovery',
-      }
-    ];
+    final recommendations =
+        data['recommendations'] as List<dynamic>? ??
+        [
+          {
+            'title': 'Friday Afternoon Restructuring',
+            'action':
+                'Relocate high-credit theory lectures from Friday afternoon to Tuesday/Wednesday morning.',
+            'expectedGain': '+8.4% attendance recovery',
+          },
+        ];
 
     return GlassContainer(
       padding: const EdgeInsets.all(20),
@@ -1176,7 +1213,11 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
                   color: AppColors.indigoLight.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.schedule_rounded, color: AppColors.indigoLight, size: 20),
+                child: const Icon(
+                  Icons.schedule_rounded,
+                  color: AppColors.indigoLight,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1193,7 +1234,10 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
                     ),
                     Text(
                       'AI Timetable Anomaly Detection',
-                      style: GoogleFonts.inter(color: Colors.white54, fontSize: 11),
+                      style: GoogleFonts.inter(
+                        color: Colors.white54,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
@@ -1213,11 +1257,17 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
               decoration: BoxDecoration(
                 color: AppColors.error.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.error.withValues(alpha: 0.15)),
+                border: Border.all(
+                  color: AppColors.error.withValues(alpha: 0.15),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 18),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.error,
+                    size: 18,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -1233,7 +1283,10 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
                         ),
                         Text(
                           cause,
-                          style: GoogleFonts.inter(color: Colors.white54, fontSize: 10),
+                          style: GoogleFonts.inter(
+                            color: Colors.white54,
+                            fontSize: 10,
+                          ),
                         ),
                       ],
                     ),
@@ -1253,14 +1306,20 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
               decoration: BoxDecoration(
                 color: AppColors.success.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: AppColors.success.withValues(alpha: 0.2),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.lightbulb_outline_rounded, color: AppColors.success, size: 16),
+                      const Icon(
+                        Icons.lightbulb_outline_rounded,
+                        color: AppColors.success,
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         title,
@@ -1284,7 +1343,10 @@ class _AIAnalyticsScreenState extends State<AIAnalyticsScreen> {
                   const SizedBox(height: 6),
                   Text(
                     action,
-                    style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
+                    style: GoogleFonts.inter(
+                      color: Colors.white70,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),

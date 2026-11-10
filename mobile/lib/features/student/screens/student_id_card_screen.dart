@@ -296,7 +296,10 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
                       PressableScale(
                         onTap: _flipCard,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
@@ -304,7 +307,9 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
                             borderRadius: BorderRadius.circular(14),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
+                                color: const Color(
+                                  0xFF4F46E5,
+                                ).withValues(alpha: 0.35),
                                 blurRadius: 16,
                                 offset: const Offset(0, 5),
                               ),
@@ -312,7 +317,11 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.flip_rounded, color: Colors.white, size: 18),
+                              const Icon(
+                                Icons.flip_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 _isFront ? 'Flip to Back' : 'Flip to Front',
@@ -330,26 +339,37 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
                       PressableScale(
                         onTap: _printOrExportPdf,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E284A) : Colors.white,
+                            color: isDark
+                                ? const Color(0xFF1E284A)
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                              color: isDark
+                                  ? const Color(0xFF334155)
+                                  : const Color(0xFFCBD5E1),
                             ),
                           ),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.file_download_outlined,
-                                color: isDark ? Colors.white : const Color(0xFF1E293B),
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1E293B),
                                 size: 18,
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 'Save PDF Badge',
                                 style: GoogleFonts.poppins(
-                                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF1E293B),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -366,15 +386,23 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF131A33) : const Color(0xFFF8FAFF),
+                      color: isDark
+                          ? const Color(0xFF131A33)
+                          : const Color(0xFFF8FAFF),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0),
+                        color: isDark
+                            ? const Color(0xFF252E4A)
+                            : const Color(0xFFE5E7F0),
                       ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.verified_user_rounded, color: Color(0xFF10B981), size: 28),
+                        const Icon(
+                          Icons.verified_user_rounded,
+                          color: Color(0xFF10B981),
+                          size: 28,
+                        ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
@@ -394,7 +422,9 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
                                 'Dynamic rotating epoch token with ArcFace embedding hash. Scannable by SmartFace terminals only.',
                                 style: GoogleFonts.inter(
                                   fontSize: 11,
-                                  color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                                  color: isDark
+                                      ? Colors.white60
+                                      : const Color(0xFF6B7280),
                                 ),
                               ),
                             ],
@@ -482,10 +512,16 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
                           Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF6366F1).withValues(alpha: 0.25),
+                              color: const Color(
+                                0xFF6366F1,
+                              ).withValues(alpha: 0.25),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.school_rounded, color: Color(0xFFA5B4FC), size: 18),
+                            child: const Icon(
+                              Icons.school_rounded,
+                              color: Color(0xFFA5B4FC),
+                              size: 18,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Column(
@@ -515,15 +551,25 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF10B981).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFF10B981), width: 1),
+                          border: Border.all(
+                            color: const Color(0xFF10B981),
+                            width: 1,
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.shield_rounded, color: Color(0xFF10B981), size: 12),
+                            const Icon(
+                              Icons.shield_rounded,
+                              color: Color(0xFF10B981),
+                              size: 12,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               'VERIFIED',
@@ -554,7 +600,9 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF6366F1).withValues(alpha: 0.5),
+                              color: const Color(
+                                0xFF6366F1,
+                              ).withValues(alpha: 0.5),
                               blurRadius: 20,
                               offset: const Offset(0, 4),
                             ),
@@ -596,7 +644,10 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
                   ),
                   const SizedBox(height: 2),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF3730A3),
                       borderRadius: BorderRadius.circular(8),
@@ -696,16 +747,10 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1E293B),
-            Color(0xFF0F172A),
-          ],
+          colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFF475569),
-          width: 1.5,
-        ),
+        border: Border.all(color: const Color(0xFF475569), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.4),
@@ -731,7 +776,11 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
                     color: const Color(0xFF818CF8),
                   ),
                 ),
-                const Icon(Icons.local_hospital_rounded, color: Color(0xFFEF4444), size: 18),
+                const Icon(
+                  Icons.local_hospital_rounded,
+                  color: Color(0xFFEF4444),
+                  size: 18,
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -806,16 +855,17 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
     );
   }
 
-  Widget _buildBackRow(String label, String value, {bool isHighlighted = false}) {
+  Widget _buildBackRow(
+    String label,
+    String value, {
+    bool isHighlighted = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            color: Colors.white60,
-          ),
+          style: GoogleFonts.inter(fontSize: 11, color: Colors.white60),
         ),
         Text(
           value,
