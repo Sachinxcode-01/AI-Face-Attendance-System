@@ -643,7 +643,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
               label: 'Leave status',
               description: 'Monitor requests & approvals',
               icon: Icons.event_busy_outlined,
-              color: Colors.orangeAccent,
+              color: AppColors.warning,
               onTap: () =>
                   context.push('/parent/leave-status', extra: wardEmail),
             ),
@@ -757,7 +757,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                         color: isApproved
                             ? AppColors.success.withValues(alpha: 0.15)
                             : (isPending
-                                  ? Colors.orangeAccent.withValues(alpha: 0.15)
+                                  ? AppColors.warning.withValues(alpha: 0.15)
                                   : AppColors.error.withValues(alpha: 0.15)),
                         shape: BoxShape.circle,
                       ),
@@ -770,7 +770,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                         color: isApproved
                             ? AppColors.success
                             : (isPending
-                                  ? Colors.orangeAccent
+                                  ? AppColors.warning
                                   : AppColors.error),
                         size: 20,
                       ),
@@ -816,7 +816,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                         color: isApproved
                             ? AppColors.success.withValues(alpha: 0.1)
                             : (isPending
-                                  ? Colors.orangeAccent.withValues(alpha: 0.1)
+                                  ? AppColors.warning.withValues(alpha: 0.1)
                                   : AppColors.error.withValues(alpha: 0.1)),
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -828,7 +828,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                           color: isApproved
                               ? AppColors.success
                               : (isPending
-                                    ? Colors.orangeAccent
+                                    ? AppColors.warning
                                     : AppColors.error),
                         ),
                       ),

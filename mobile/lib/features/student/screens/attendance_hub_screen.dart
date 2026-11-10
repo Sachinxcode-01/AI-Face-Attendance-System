@@ -31,6 +31,7 @@ import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/student/widgets/attendance_components.dart';
+import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
 
 class AttendanceHubScreen extends StatefulWidget {
@@ -301,7 +302,6 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pageBg = isDark ? const Color(0xFF070A14) : const Color(0xFFE8EAF6);
 
     if (_isLoading) {
       return StudentScreenShell(
@@ -314,28 +314,17 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
 
     final data = _dashboardData;
     if (data == null) {
-      return Scaffold(
-        backgroundColor: pageBg,
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.analytics_outlined,
-                size: 54,
-                color: isDark ? const Color(0xFF7C82A0) : const Color(0xFFA0A0B8),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No attendance metrics found.',
-                style: GoogleFonts.inter(
-                  color: isDark ? const Color(0xFFC8CCDF) : const Color(0xFF3D4260),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
+      // Keep the shell (and back navigation) when the fetch fails, and offer recovery.
+      return StudentScreenShell(
+        title: 'Attendance Hub',
+        subtitle: 'Real-time telemetry, heatmaps & verification log',
+        onBackTap: () => context.go('/student/home'),
+        child: ErrorState(
+          title: 'Attendance metrics unavailable',
+          message:
+              'We could not reach the attendance service. Check your connection and try again.',
+          icon: Icons.cloud_off_rounded,
+          onRetry: _fetchHubData,
         ),
       );
     }
@@ -363,10 +352,48 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
       ],
       child: RefreshIndicator(
         onRefresh: _fetchHubData,
-        color: const Color(0xFF4F46E5),
+        color: AppColors.primary,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(18, 20, 18, 120),
           children: [
+            const SectionHeader(title: 'At a glance'),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _HubStatTile(
+                    label: 'Overall',
+                    value: percentage,
+                    suffix: '%',
+                    icon: Icons.insights_rounded,
+                    accent: AppColors.primary,
+                    semanticsLabel: 'Overall attendance',
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _HubStatTile(
+                    label: 'Late',
+                    value: lates.toDouble(),
+                    icon: Icons.schedule_rounded,
+                    accent: AppColors.upcoming,
+                    semanticsLabel: 'Late arrivals',
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _HubStatTile(
+                    label: 'Absences',
+                    value: consecutiveAbsences.toDouble(),
+                    icon: Icons.event_busy_rounded,
+                    accent: AppColors.error,
+                    semanticsLabel: 'Consecutive absences',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+
             // 1. Health Score Card
             AttendanceHealthCard(
               score: healthScore,
@@ -484,89 +511,29 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
   }
 
   Widget _buildAlertsPanel(List<dynamic> alerts) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final alertBg = isDark
-        ? const Color(0xFFEF4444).withValues(alpha: 0.10)
-        : const Color(0xFFFEF2F2);
-    final textHeading = isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
+    final brightness = Theme.of(context).brightness;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: alertBg,
+        color: AppColors.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFEF4444).withValues(alpha: 0.25),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFEF4444).withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: AppColors.border(brightness), width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                color: Color(0xFFEF4444),
-                size: 20,
-              )
-                  .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .fade(begin: 0.5, end: 1, duration: 900.ms)
-                  .scaleXY(
-                    begin: 0.9,
-                    end: 1.12,
-                    duration: 900.ms,
-                    curve: Curves.easeInOut,
-                  ),
-              const SizedBox(width: 8),
-              Text(
-                'ATTENDANCE STANDING ALERTS',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFFEF4444),
-                  fontSize: 11,
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ],
+          Text(
+            'ATTENDANCE STANDING',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: AppColors.heading(brightness),
+              fontSize: 11,
+              letterSpacing: 1.5,
+            ),
           ),
           const SizedBox(height: 12),
-          ...alerts.asMap().entries.map(
-                (entry) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 5,
-                        height: 5,
-                        margin: const EdgeInsets.only(top: 6, right: 8),
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFFEF4444),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          entry.value['message'] ?? '',
-                          style: GoogleFonts.inter(
-                            color: textHeading,
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          ...alerts.map((alert) => _AlertRow(alert: alert)),
         ],
       ),
     );
@@ -613,14 +580,13 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
           ),
           const SizedBox(height: 18),
           if (_verificationLogs.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Text(
-                  'No recent check-ins recorded.',
-                  style: GoogleFonts.inter(color: textLabel, fontSize: 13),
-                ),
-              ),
+            EmptyState(
+              icon: Icons.history_toggle_off_rounded,
+              title: 'No check-ins yet',
+              message:
+                  'Scan a classroom QR or use face check-in to start your verified history.',
+              actionLabel: 'Refresh',
+              onAction: _fetchHubData,
             )
           else
             ListView.separated(
@@ -710,6 +676,121 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                 );
               },
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Compact KPI tile for the attendance hub summary row.
+class _HubStatTile extends StatelessWidget {
+  final String label;
+  final double value;
+  final String suffix;
+  final IconData icon;
+  final Color accent;
+  final String semanticsLabel;
+
+  const _HubStatTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.accent,
+    required this.semanticsLabel,
+    this.suffix = '',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final isPercent = suffix == '%';
+
+    return Semantics(
+      label: '$semanticsLabel ${value.toStringAsFixed(isPercent ? 1 : 0)}$suffix',
+      child: GlassCard(
+        padding: const EdgeInsets.all(14),
+        radius: 20,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 16, color: accent),
+            ),
+            const SizedBox(height: 12),
+            CountUpText(
+              value: value,
+              formatter: (v) =>
+                  '${v.toStringAsFixed(isPercent ? 1 : 0)}$suffix',
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                height: 1.1,
+                color: AppColors.heading(brightness),
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label.toUpperCase(),
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.1,
+                color: AppColors.muted(brightness),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One risk/standing alert, coloured by its severity.
+class _AlertRow extends StatelessWidget {
+  final dynamic alert;
+  const _AlertRow({required this.alert});
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final type = (alert['type'] ?? 'info').toString().toLowerCase();
+
+    final Color accent;
+    final IconData icon;
+    if (type == 'critical') {
+      accent = AppColors.error;
+      icon = Icons.error_outline_rounded;
+    } else if (type == 'warning') {
+      accent = AppColors.upcoming;
+      icon = Icons.warning_amber_rounded;
+    } else {
+      accent = AppColors.success;
+      icon = Icons.verified_rounded;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: accent),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              alert['message'] ?? '',
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.45,
+                color: AppColors.heading(brightness),
+              ),
+            ),
+          ),
         ],
       ),
     );

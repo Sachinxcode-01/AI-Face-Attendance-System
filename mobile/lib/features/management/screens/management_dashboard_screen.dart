@@ -90,11 +90,6 @@ class _ManagementDashboardScreenState extends State<ManagementDashboardScreen> {
             .where((row) => _asDouble(row['total']) > 0)
             .toList();
     final departmentRows = _departmentRows();
-    final atRisk = [
-      ..._asMaps(_risk['below_60']),
-      ..._asMaps(_risk['below_75']),
-    ];
-
     return PremiumBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -185,7 +180,7 @@ class _ManagementDashboardScreenState extends State<ManagementDashboardScreen> {
                                   maxWidth >= 900,
                                 ),
                                 const SizedBox(height: 20),
-                                _buildRiskPanel(brightness, atRisk),
+                                _buildRiskPanel(brightness),
                                 const SizedBox(height: 20),
                                 Align(
                                   alignment: Alignment.centerRight,
@@ -344,26 +339,28 @@ class _ManagementDashboardScreenState extends State<ManagementDashboardScreen> {
         .toList();
   }
 
-  Widget _buildRiskPanel(
-    Brightness brightness,
-    List<Map<String, dynamic>> atRisk,
-  ) {
+  Widget _buildRiskPanel(Brightness brightness) {
     final longAbsences = _asMaps(_risk['long_absences']);
+    // below_60 is a policy breach; 60-75 is only the watch band. They must not look alike.
+    final tiers = <(Map<String, dynamic>, Color)>[
+      for (final s in _asMaps(_risk['below_60'])) (s, AppColors.error),
+      for (final s in _asMaps(_risk['below_75'])) (s, AppColors.warning),
+    ];
     return _DataPanel(
       title: 'Students needing follow-up',
       emptyText: 'No critical attendance risks are reported.',
-      child: atRisk.isEmpty && longAbsences.isEmpty
+      child: tiers.isEmpty && longAbsences.isEmpty
           ? null
           : Column(
               children: [
-                for (final student in atRisk.take(8))
+                for (final (student, accent) in tiers.take(8))
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: CircleAvatar(
-                      backgroundColor: AppColors.error.withValues(alpha: 0.12),
-                      child: const Icon(
+                      backgroundColor: accent.withValues(alpha: 0.12),
+                      child: Icon(
                         Icons.person_outline,
-                        color: AppColors.error,
+                        color: accent,
                       ),
                     ),
                     title: Text(

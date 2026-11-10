@@ -490,8 +490,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                         height: 8,
                         decoration: BoxDecoration(
                           color: isActive
-                              ? Colors.greenAccent
-                              : Colors.redAccent,
+                              ? AppColors.success
+                              : AppColors.error,
                           shape: BoxShape.circle,
                         ),
                       )
@@ -500,8 +500,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                       .boxShadow(
                         end: BoxShadow(
                           color: isActive
-                              ? Colors.greenAccent
-                              : Colors.redAccent,
+                              ? AppColors.success
+                              : AppColors.error,
                           blurRadius: 6,
                         ),
                       ),
@@ -625,7 +625,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           value: _pendingLeaves.toString(),
           icon: Icons.event_busy_rounded,
           accentColor: _pendingLeaves > 0
-              ? Colors.orangeAccent
+              ? AppColors.warning
               : AppColors.success,
           trend: _pendingLeaves > 0 ? 'REQUIRES ACTION' : 'ALL CLEAR',
           isTrendPositive: _pendingLeaves == 0,
@@ -806,7 +806,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               label: 'Leave Requests',
               description: 'Approve / reject leave',
               icon: Icons.approval_rounded,
-              color: Colors.orangeAccent,
+              color: AppColors.warning,
               onTap: () => context.push(AppRoutes.teacherLeaveDashboardPath),
             ),
             QuickActionCard(
@@ -834,7 +834,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               label: 'System Health',
               description: 'Server & AI diagnostics',
               icon: Icons.health_and_safety_outlined,
-              color: Colors.tealAccent,
+              color: AppColors.cyan,
               onTap: () => context.push(AppRoutes.teacherSystemHealthPath),
             ),
             QuickActionCard(
@@ -848,7 +848,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               label: 'Roster Override',
               description: 'Manual attendance terminal',
               icon: Icons.playlist_add_check_circle_rounded,
-              color: Colors.purpleAccent,
+              color: AppColors.accent,
               onTap: () => context.push(AppRoutes.teacherRosterOverridePath),
             ),
           ],
@@ -888,7 +888,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   children: [
                     const Icon(
                       Icons.warning_rounded,
-                      color: Colors.orangeAccent,
+                      color: AppColors.warning,
                       size: 18,
                     ),
                     const SizedBox(width: 8),
@@ -905,6 +905,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 const SizedBox(height: 12),
                 ...lowRisk.take(3).map((s) {
                   final m = s as Map<String, dynamic>;
+                  final score = (m['score'] as num?)?.toDouble() ?? 0;
+                  final accent = score < 60 ? AppColors.error : AppColors.warning;
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Row(
@@ -913,7 +915,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                           width: 34,
                           height: 34,
                           decoration: BoxDecoration(
-                            color: AppColors.error.withValues(alpha: 0.1),
+                            color: accent.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Center(
@@ -923,7 +925,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                                   .toUpperCase()),
                               style: GoogleFonts.outfit(
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.error,
+                                color: accent,
                                 fontSize: 14,
                               ),
                             ),
@@ -964,7 +966,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.error.withValues(alpha: 0.1),
+                            color: accent.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -972,7 +974,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.error,
+                              color: accent,
                             ),
                           ),
                         ),
