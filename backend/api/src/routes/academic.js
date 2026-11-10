@@ -47,11 +47,15 @@ router.get('/timetable', authenticate, async (req, res) => {
     const timetable = await Timetable.find({ user_id: queryId.toUpperCase() }).lean();
 
     if (timetable.length === 0) {
-      // Fallback mocks
+      // Fallback mocks with Monday to Saturday schedule
       return res.json([
-        { id: "slot-1", subject: "Software Engineering (CSE-302)", day: "Monday", time: "09:00 AM - 10:30 AM", room: "Room 401" },
-        { id: "slot-2", subject: "Machine Learning (CSE-303)", day: "Monday", time: "11:00 AM - 12:30 PM", room: "Lab 3" },
-        { id: "slot-3", subject: "Cloud Computing (CSE-304)", day: "Tuesday", time: "10:00 AM - 11:30 AM", room: "Room 402" }
+        { id: "slot-1", subject: "Software Engineering (CSE-302)", day: "Monday", time: "09:00 AM - 10:30 AM", room: "Room 401", teacher: "Dr. Sarah Jenkins" },
+        { id: "slot-2", subject: "Machine Learning (CSE-303)", day: "Monday", time: "11:00 AM - 12:30 PM", room: "Lab 3", teacher: "Prof. Alan Turing" },
+        { id: "slot-3", subject: "Cloud Computing (CSE-304)", day: "Tuesday", time: "10:00 AM - 11:30 AM", room: "Room 402", teacher: "Dr. Lisa Su" },
+        { id: "slot-4", subject: "Computer Networks (CSE-305)", day: "Wednesday", time: "09:00 AM - 10:30 AM", room: "Room 301", teacher: "Prof. Andrew Tanenbaum" },
+        { id: "slot-5", subject: "Database Systems Lab (CSE-306)", day: "Thursday", time: "02:00 PM - 04:00 PM", room: "Lab 2", teacher: "Dr. Edgar Codd" },
+        { id: "slot-6", subject: "Cybersecurity & Cryptography (CSE-307)", day: "Friday", time: "11:00 AM - 12:30 PM", room: "Auditorium B", teacher: "Prof. Whitfield Diffie" },
+        { id: "slot-7", subject: "Capstone Project & Industry Mentorship (CSE-308)", day: "Saturday", time: "09:30 AM - 12:30 PM", room: "Innovation Hub", teacher: "Dr. Sarah Jenkins" }
       ]);
     }
 

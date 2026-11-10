@@ -1564,7 +1564,7 @@ class _HeatmapCardState extends State<HeatmapCard> {
 // 7. Snapchat Streak Celebration Dialog
 // ============================================================================
 
-void showSnapchatStreakCelebration(BuildContext context, int streak) {
+void showSnapchatStreakCelebration(BuildContext context, int streak, {String? subject}) {
   final tier = streak >= 30
       ? '👑 Diamond Inferno • Legend Tier'
       : streak >= 14
@@ -1630,9 +1630,10 @@ void showSnapchatStreakCelebration(BuildContext context, int streak) {
               ),
               const SizedBox(height: 18),
               Text(
-                'STREAK ON FIRE!',
+                subject != null ? '$subject STREAK' : 'STREAK ON FIRE!',
+                textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 2,
                   color: Colors.orangeAccent,
@@ -1671,7 +1672,9 @@ void showSnapchatStreakCelebration(BuildContext context, int streak) {
               ),
               const SizedBox(height: 16),
               Text(
-                'You have checked in $streak class days in a row! Like Snapchat streaks, keep checking in every morning to maintain your flame and prevent academic eligibility drops.',
+                subject != null
+                    ? 'You have attended $streak $subject lecture sessions without missing! Keep checking in every class to maintain your streak.'
+                    : 'You have checked in $streak class days in a row! Like Snapchat streaks, keep checking in every morning to maintain your flame and prevent academic eligibility drops.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 12.5,

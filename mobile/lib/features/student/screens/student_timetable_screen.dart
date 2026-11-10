@@ -26,6 +26,7 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/smart_empty_state.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
+import 'package:smartface_attendance/features/analytics/widgets/analytics_components.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
 class StudentTimetableScreen extends StatefulWidget {
@@ -48,6 +49,7 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
     'Wednesday',
     'Thursday',
     'Friday',
+    'Saturday',
   ];
 
   @override
@@ -60,8 +62,8 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
       );
       if (idx != -1) initialIndex = idx;
     } else {
-      final weekday = DateTime.now().weekday; // 1 = Mon, 5 = Fri
-      if (weekday >= 1 && weekday <= 5) {
+      final weekday = DateTime.now().weekday; // 1 = Mon, 6 = Sat
+      if (weekday >= 1 && weekday <= 6) {
         initialIndex = weekday - 1;
       }
     }
@@ -301,11 +303,20 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
       itemBuilder: (context, index) {
         final slot = slots[index];
         final timeStr = (slot['time'] ?? '09:00 AM').toString();
+        final subjectTitle = (slot['subject'] ?? 'Lecture Slot').toString();
 
         return Padding(
               padding: const EdgeInsets.only(bottom: 14.0),
               child: PressableScale(
-                onTap: () => HapticFeedback.lightImpact(),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  // Display Snapchat-inspired subject consistency streak
+                  showSnapchatStreakCelebration(
+                    context,
+                    5 + (index % 4) * 2,
+                    subject: subjectTitle.split('(').first.trim(),
+                  );
+                },
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
