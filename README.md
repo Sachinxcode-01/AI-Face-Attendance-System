@@ -49,11 +49,28 @@ Transitioned from a single local computer Python script, the system is now a **f
 * **Production-Ready Security:** Token-bucket rate limiters on critical registration and login endpoints, custom RequestID tracing middleware, JSON structured logger, and secure CORS/HTTP headers.
 
 ### 📱 3. Cross-Platform Student App (`mobile/`)
-* **Modern Flutter UI:** Exquisite, dark-mode native experience for Android and iOS devices.
+* **Modern Flutter UI:** Exquisite, dark-mode native experience for Android and iOS devices adhering to Design System specifications.
+* **Screen-Accurate Skeleton Shimmers:** Custom responsive pulse skeletons matching every app screen's exact layout during live network loads.
 * **Biometric Enrollment:** Connects with device camera and fingerprint scanners to verify student identity before logging attendance.
 * **Dynamic QR Scanner:** Real-time scanner with decoding logic matching rotating server tokens to confirm classroom presence.
+* **Full Monday–Saturday Timetable:** Interactive daily lecture schedule with assigned rooms, professor tags, and automatic 10-minute pre-lecture push reminders.
+* **Snapchat-Inspired Attendance Streaks:** Interactive streak celebrations with flame animations, ranking tiers (Bronze Flame, Silver Spark, Golden Blaze, Diamond Inferno), and per-subject consistency milestones.
 * **Attendance Insights & Chat:** Displays an elegant visual breakdown of personal attendance percentages, paired with an integrated AI Chatbot that replies to questions regarding personal performance logs.
 * **Leave & Alerts:** Submit leave requests directly from the app and receive instant push updates when approved or rejected by the dean.
+
+---
+
+### 🔑 Demo Accounts & Evaluation Credentials
+
+For testing and grading the system across student, faculty, and administrative tiers, use the pre-seeded demo accounts:
+
+| Role | Email | Password | Details |
+| :--- | :--- | :--- | :--- |
+| **Student** | `alice@smartface.pro` | `password123` | Full student profile, 6-day timetable, subject streaks, attendance history |
+| **Student (Alt)** | `bob@smartface.pro` | `password123` | Active student with medical leave applications & attendance logs |
+| **Teacher** | `teacher@smartface.pro` | `password123` | Dr. Sarah Jenkins — classroom control & session launcher |
+| **Admin** | `admin@smartface.pro` | `password123` | Principal Admin — system audit, security alerts & timetable CRUD |
+| **Super Admin** | `superadmin@smartface.pro` | `password123` | Enterprise multi-college configuration & tenant manager |
 
 ### 📊 4. Multi-Platform Web Portals & Dashboards (`frontend/web/`, `frontend/admin/` & `frontend/reflex/`)
 * **Next.js 15 Modern Web Suite (`frontend/web/` - Port 3000):** Dedicated high-performance web portals:
