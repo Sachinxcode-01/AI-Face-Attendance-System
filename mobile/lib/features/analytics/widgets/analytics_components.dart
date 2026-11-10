@@ -882,8 +882,12 @@ class _HeatmapCardState extends State<HeatmapCard> {
     for (int day = 1; day <= daysInMonth; day++) {
       final dateStr = '${_selectedMonth.year}-${_selectedMonth.month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
       final status = widget.heatmapData[dateStr]?.toString().toLowerCase();
-      if (status == 'present') presentCount++;
-      if (status == 'absent') absentCount++;
+      if (status == 'present') {
+        presentCount++;
+      }
+      if (status == 'absent') {
+        absentCount++;
+      }
     }
 
     final monthTitle = '${_monthNames[_selectedMonth.month - 1].toUpperCase()} ${_selectedMonth.year}';

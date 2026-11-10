@@ -335,8 +335,9 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                       calendarBuilders: CalendarBuilders(
                         prioritizedBuilder: (context, day, focusedDay) {
                           final isSel = isSameDay(_selectedDay, day);
-                          if (isSel)
+                          if (isSel) {
                             return null; // let default selectedDecoration render
+                          }
 
                           if (_isPresent(day)) {
                             return Container(

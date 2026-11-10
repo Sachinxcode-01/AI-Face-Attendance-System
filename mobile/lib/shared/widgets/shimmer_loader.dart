@@ -186,8 +186,8 @@ class StudentHomeShimmer extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(5, (i) {
-              return Column(
-                children: const [
+              return const Column(
+                children: [
                   ShimmerBox(width: 54, height: 54, radius: 18),
                   SizedBox(height: 8),
                   ShimmerBox(width: 46, height: 10, radius: 4),
@@ -209,9 +209,9 @@ class StudentHomeShimmer extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     ShimmerBox(width: 140, height: 16, radius: 4),
                     ShimmerBox(width: 70, height: 20, radius: 10),
                   ],
@@ -343,16 +343,16 @@ class TimetableShimmer extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        Row(
-                          children: const [
+                        const Row(
+                          children: [
                             ShimmerBox.circle(size: 26),
                             SizedBox(width: 8),
                             ShimmerBox(width: 100, height: 12, radius: 4),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Row(
-                          children: const [
+                        const Row(
+                          children: [
                             ShimmerBox(width: 65, height: 22, radius: 8),
                             SizedBox(width: 8),
                             ShimmerBox(width: 80, height: 22, radius: 8),
@@ -406,9 +406,9 @@ class AttendanceCalendarShimmer extends StatelessWidget {
             child: Column(
               children: [
                 // Month Header (Month name + arrows)
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     ShimmerBox(width: 32, height: 32, radius: 8),
                     ShimmerBox(width: 140, height: 20, radius: 6),
                     ShimmerBox(width: 32, height: 32, radius: 8),
@@ -471,9 +471,9 @@ class AttendanceCalendarShimmer extends StatelessWidget {
                   : Colors.white.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Column(
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 ShimmerBox(width: 120, height: 14, radius: 4),
                 SizedBox(height: 14),
                 Row(
@@ -558,9 +558,9 @@ class AttendanceHubShimmer extends StatelessWidget {
                 const SizedBox(height: 16),
                 const Divider(height: 1, color: Colors.white12),
                 const SizedBox(height: 14),
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: const [
+                  children: [
                     ShimmerBox(width: 70, height: 32, radius: 8),
                     ShimmerBox(width: 70, height: 32, radius: 8),
                     ShimmerBox(width: 70, height: 32, radius: 8),
@@ -576,8 +576,8 @@ class AttendanceHubShimmer extends StatelessWidget {
           const SizedBox(height: 22),
 
           // 3. Filter Chips Row
-          Row(
-            children: const [
+          const Row(
+            children: [
               ShimmerBox(width: 60, height: 32, radius: 16),
               SizedBox(width: 10),
               ShimmerBox(width: 80, height: 32, radius: 16),
@@ -677,13 +677,13 @@ class BunkCalculatorShimmer extends StatelessWidget {
                     : const Color(0xFFE5E7F0),
               ),
             ),
-            child: Column(
+            child: const Column(
               children: [
-                const Center(child: ShimmerBox.circle(size: 110)),
-                const SizedBox(height: 18),
-                const ShimmerBox(width: 160, height: 26, radius: 13),
-                const SizedBox(height: 12),
-                const ShimmerBox(width: 200, height: 12, radius: 4),
+                Center(child: ShimmerBox.circle(size: 110)),
+                SizedBox(height: 18),
+                ShimmerBox(width: 160, height: 26, radius: 13),
+                SizedBox(height: 12),
+                ShimmerBox(width: 200, height: 12, radius: 4),
               ],
             ),
           ),
@@ -698,9 +698,9 @@ class BunkCalculatorShimmer extends StatelessWidget {
                   : Colors.white.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Column(
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 ShimmerBox(width: 140, height: 14, radius: 4),
                 SizedBox(height: 16),
                 ShimmerBox(width: double.infinity, height: 10, radius: 5),
@@ -731,17 +731,17 @@ class BunkCalculatorShimmer extends StatelessWidget {
                       : Colors.white.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Column(
+                child: const Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         ShimmerBox(width: 130, height: 14, radius: 4),
                         ShimmerBox(width: 50, height: 18, radius: 8),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    const ShimmerBox(
+                    SizedBox(height: 10),
+                    ShimmerBox(
                       width: double.infinity,
                       height: 8,
                       radius: 4,
@@ -792,9 +792,9 @@ class StudentIdCardShimmer extends StatelessWidget {
             child: Column(
               children: [
                 // Institution Header
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     ShimmerBox(width: 44, height: 44, radius: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -835,8 +835,8 @@ class StudentIdCardShimmer extends StatelessWidget {
                     color: Colors.white10,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Column(
-                    children: const [
+                  child: const Column(
+                    children: [
                       ShimmerBox(width: double.infinity, height: 42, radius: 4),
                       SizedBox(height: 6),
                       ShimmerBox(width: 120, height: 10, radius: 2),
@@ -849,9 +849,9 @@ class StudentIdCardShimmer extends StatelessWidget {
           const SizedBox(height: 28),
 
           // Flip & Export Action Buttons
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               ShimmerBox(width: 130, height: 44, radius: 14),
               SizedBox(width: 16),
               ShimmerBox(width: 130, height: 44, radius: 14),
@@ -923,9 +923,9 @@ class TeacherDashboardShimmer extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     ShimmerBox(width: 90, height: 22, radius: 11),
                     ShimmerBox(width: 70, height: 18, radius: 6),
                   ],
@@ -1023,9 +1023,9 @@ class StudentProfileShimmer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // 1. Large Circular Avatar with edit badge
-          Stack(
+          const Stack(
             alignment: Alignment.bottomRight,
-            children: const [
+            children: [
               ShimmerBox.circle(size: 110),
               Positioned(
                 bottom: 0,
@@ -1073,8 +1073,8 @@ class StudentProfileShimmer extends StatelessWidget {
                   : Colors.white.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(18),
             ),
-            child: Row(
-              children: const [
+            child: const Row(
+              children: [
                 ShimmerBox(width: 44, height: 44, radius: 12),
                 SizedBox(width: 14),
                 Expanded(
@@ -1095,9 +1095,9 @@ class StudentProfileShimmer extends StatelessWidget {
 
           // 6. Academic Profile Information Form / Cards
           for (int i = 0; i < 4; i++) ...[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: const ShimmerBox(
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: ShimmerBox(
                 width: double.infinity,
                 height: 56,
                 radius: 14,
@@ -1182,9 +1182,9 @@ class LeaveDashboardShimmer extends StatelessWidget {
           const ShimmerBox(width: 150, height: 14, radius: 4),
           const SizedBox(height: 14),
           for (int i = 0; i < 3; i++) ...[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: const ShimmerBox(
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: ShimmerBox(
                 width: double.infinity,
                 height: 80,
                 radius: 18,
@@ -1220,8 +1220,8 @@ class LeaveListShimmer extends StatelessWidget {
           // Search & Filter Tabs
           const ShimmerBox(width: double.infinity, height: 48, radius: 14),
           const SizedBox(height: 14),
-          Row(
-            children: const [
+          const Row(
+            children: [
               ShimmerBox(width: 60, height: 32, radius: 16),
               SizedBox(width: 8),
               ShimmerBox(width: 80, height: 32, radius: 16),
@@ -1252,16 +1252,16 @@ class LeaveListShimmer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
+                    children: [
                       ShimmerBox(width: 100, height: 22, radius: 11),
                       ShimmerBox(width: 75, height: 22, radius: 11),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       ShimmerBox(width: 18, height: 18, radius: 4),
                       SizedBox(width: 8),
                       ShimmerBox(width: 140, height: 12, radius: 4),
@@ -1299,8 +1299,8 @@ class AttendanceLogsShimmer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Filter Chips Row
-          Row(
-            children: const [
+          const Row(
+            children: [
               ShimmerBox(width: 55, height: 32, radius: 16),
               SizedBox(width: 10),
               ShimmerBox(width: 75, height: 32, radius: 16),
@@ -1427,8 +1427,8 @@ class ParentDashboardShimmer extends StatelessWidget {
           const SizedBox(height: 22),
 
           // Quick Action Cards (Request Leave, View Logs)
-          Row(
-            children: const [
+          const Row(
+            children: [
               Expanded(
                 child: ShimmerBox(
                   width: double.infinity,
@@ -1452,9 +1452,9 @@ class ParentDashboardShimmer extends StatelessWidget {
           const ShimmerBox(width: 150, height: 14, radius: 4),
           const SizedBox(height: 14),
           for (int i = 0; i < 3; i++) ...[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: const ShimmerBox(
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: ShimmerBox(
                 width: double.infinity,
                 height: 64,
                 radius: 16,
@@ -1539,21 +1539,21 @@ class AtRiskRosterShimmer extends StatelessWidget {
                       : Colors.white.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    const ShimmerBox.circle(size: 44),
-                    const SizedBox(width: 14),
+                    ShimmerBox.circle(size: 44),
+                    SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           ShimmerBox(width: 140, height: 14, radius: 4),
                           SizedBox(height: 6),
                           ShimmerBox(width: 90, height: 11, radius: 4),
                         ],
                       ),
                     ),
-                    const ShimmerBox(width: 50, height: 24, radius: 12),
+                    ShimmerBox(width: 50, height: 24, radius: 12),
                   ],
                 ),
               ),
@@ -1629,15 +1629,15 @@ class AiAnalyticsShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+    return const SingleChildScrollView(
+      physics: NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Top Metric Cards (4 cards, 2x2 grid)
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: ShimmerBox(
                   width: double.infinity,
@@ -1655,9 +1655,9 @@ class AiAnalyticsShimmer extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: ShimmerBox(
                   width: double.infinity,
@@ -1675,30 +1675,30 @@ class AiAnalyticsShimmer extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Predictive Exam Ineligibility AI Panel
-          const ShimmerBox(width: 220, height: 12, radius: 4),
-          const SizedBox(height: 12),
-          const ShimmerBox(width: double.infinity, height: 140, radius: 20),
-          const SizedBox(height: 26),
+          ShimmerBox(width: 220, height: 12, radius: 4),
+          SizedBox(height: 12),
+          ShimmerBox(width: double.infinity, height: 140, radius: 20),
+          SizedBox(height: 26),
 
           // Timetable Absenteeism Optimizer
-          const ShimmerBox(width: 200, height: 12, radius: 4),
-          const SizedBox(height: 12),
-          const ShimmerBox(width: double.infinity, height: 130, radius: 20),
-          const SizedBox(height: 26),
+          ShimmerBox(width: 200, height: 12, radius: 4),
+          SizedBox(height: 12),
+          ShimmerBox(width: double.infinity, height: 130, radius: 20),
+          SizedBox(height: 26),
 
           // Campus Daily Trend Chart
-          const ShimmerBox(width: 180, height: 12, radius: 4),
-          const SizedBox(height: 12),
-          const ShimmerBox(width: double.infinity, height: 200, radius: 20),
-          const SizedBox(height: 26),
+          ShimmerBox(width: 180, height: 12, radius: 4),
+          SizedBox(height: 12),
+          ShimmerBox(width: double.infinity, height: 200, radius: 20),
+          SizedBox(height: 26),
 
           // Department Comparison
-          const ShimmerBox(width: 190, height: 12, radius: 4),
-          const SizedBox(height: 12),
-          const ShimmerBox(width: double.infinity, height: 170, radius: 20),
+          ShimmerBox(width: 190, height: 12, radius: 4),
+          SizedBox(height: 12),
+          ShimmerBox(width: double.infinity, height: 170, radius: 20),
         ],
       ),
     );
@@ -1757,9 +1757,9 @@ class TeacherStatsShimmer extends StatelessWidget {
           const ShimmerBox(width: 140, height: 12, radius: 4),
           const SizedBox(height: 12),
           for (int i = 0; i < 3; i++) ...[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: const ShimmerBox(
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: ShimmerBox(
                 width: double.infinity,
                 height: 64,
                 radius: 16,
@@ -1784,21 +1784,21 @@ class AdminDashboardShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+    return const SingleChildScrollView(
+      physics: NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 110),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Welcome Header
-          const ShimmerBox(width: 160, height: 12, radius: 4),
-          const SizedBox(height: 8),
-          const ShimmerBox(width: 230, height: 24, radius: 6),
-          const SizedBox(height: 24),
+          ShimmerBox(width: 160, height: 12, radius: 4),
+          SizedBox(height: 8),
+          ShimmerBox(width: 230, height: 24, radius: 6),
+          SizedBox(height: 24),
 
           // System Metrics Grid (4 cards, 2x2)
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: ShimmerBox(
                   width: double.infinity,
@@ -1816,9 +1816,9 @@ class AdminDashboardShimmer extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: ShimmerBox(
                   width: double.infinity,
@@ -1836,17 +1836,17 @@ class AdminDashboardShimmer extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           // Server Diagnostics & Status Card
-          const ShimmerBox(width: double.infinity, height: 130, radius: 22),
-          const SizedBox(height: 24),
+          ShimmerBox(width: double.infinity, height: 130, radius: 22),
+          SizedBox(height: 24),
 
           // Quick Action Tiles
-          const ShimmerBox(width: 130, height: 14, radius: 4),
-          const SizedBox(height: 14),
+          ShimmerBox(width: 130, height: 14, radius: 4),
+          SizedBox(height: 14),
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: ShimmerBox(
                   width: double.infinity,
@@ -1864,9 +1864,9 @@ class AdminDashboardShimmer extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: ShimmerBox(
                   width: double.infinity,
@@ -1931,27 +1931,27 @@ class SecurityLogsShimmer extends StatelessWidget {
                       : const Color(0xFFE5E7F0),
                 ),
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
+                    children: [
                       ShimmerBox(width: 140, height: 16, radius: 4),
                       ShimmerBox(width: 80, height: 22, radius: 11),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   // CCTV Image Preview Thumbnail
-                  const ShimmerBox(
+                  ShimmerBox(
                     width: double.infinity,
                     height: 160,
                     radius: 14,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
+                    children: [
                       ShimmerBox(width: 110, height: 12, radius: 4),
                       ShimmerBox(width: 90, height: 32, radius: 10),
                     ],
@@ -2086,14 +2086,14 @@ class ManagementDashboardShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+    return const SingleChildScrollView(
+      physics: NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: ShimmerBox(
                   width: double.infinity,
@@ -2111,9 +2111,9 @@ class ManagementDashboardShimmer extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: ShimmerBox(
                   width: double.infinity,
@@ -2131,10 +2131,10 @@ class ManagementDashboardShimmer extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          const ShimmerBox(width: double.infinity, height: 200, radius: 20),
-          const SizedBox(height: 16),
-          const ShimmerBox(width: double.infinity, height: 180, radius: 20),
+          SizedBox(height: 24),
+          ShimmerBox(width: double.infinity, height: 200, radius: 20),
+          SizedBox(height: 16),
+          ShimmerBox(width: double.infinity, height: 180, radius: 20),
         ],
       ),
     );

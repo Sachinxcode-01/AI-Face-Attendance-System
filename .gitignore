@@ -15,6 +15,7 @@ build/
 venv/
 .venv/
 env/
+smartface_pro_api
 
 # ───────────────────────────────────────────────
 # Node.js
