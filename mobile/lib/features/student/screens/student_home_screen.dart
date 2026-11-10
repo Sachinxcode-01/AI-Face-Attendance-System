@@ -1158,12 +1158,12 @@ class _StudentDashboardState extends State<StudentDashboard> {
         ? AppColors.borderDark
         : AppColors.borderLight;
     final textHeading = isDark
-        ? const Color(0xFFF1F3F9)
-        : const Color(0xFF1A1A3A);
-    final textBody = isDark ? AppColors.textMuted : AppColors.textPrimary;
+        ? AppColors.bgLight
+        : AppColors.textHeading;
+    final textBody = isDark ? AppColors.textBodyDark : AppColors.textBody;
     final textLabel = isDark
-        ? const Color(0xFF7C82A0)
-        : const Color(0xFFA0A0B8);
+        ? AppColors.textMuted
+        : AppColors.textMuted;
     final streakForegroundColor = isDark
         ? AppColors.goldDark
         : AppColors.goldBright;
@@ -1203,10 +1203,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             height: 8,
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Color(0xFF10B981),
+                              color: AppColors.success,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Color(0xFF10B981),
+                                  color: AppColors.success,
                                   blurRadius: 6,
                                   spreadRadius: 1,
                                 ),
@@ -1269,8 +1269,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
                               : const Color(0xFFE8EAF6),
                           valueColor: AlwaysStoppedAnimation<Color>(
                             pct >= 75
-                                ? const Color(0xFF6366F1)
-                                : const Color(0xFFF59E0B),
+                                ? AppColors.primarySoft
+                                : AppColors.gold,
                           ),
                         ),
                       ),
@@ -1305,7 +1305,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             ),
             const SizedBox(height: 18),
             Divider(
-              color: isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0),
+              color: isDark ? AppColors.borderDark : AppColors.borderLight,
               height: 1,
             ),
             const SizedBox(height: 14),
@@ -1330,16 +1330,16 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     ),
                     decoration: BoxDecoration(
                       color: _streak == null
-                          ? (isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF1F5F9))
+                          ? (isDark ? AppColors.bgDeep.withValues(alpha: 0.05) : AppColors.bgLight)
                           : (_streak != null && _streak! > 0)
                               ? (isDark
-                                  ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
-                                  : const Color(0xFFFFFBEB))
-                              : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF8FAFC)),
+                                  ? AppColors.gold.withValues(alpha: 0.15)
+                                  : AppColors.bgLight.withValues(alpha: 0.95))
+                              : isDark ? AppColors.bgDeep.withValues(alpha: 0.08) : AppColors.bgLight.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: (_streak != null && _streak! > 0)
-                            ? const Color(0xFFF59E0B).withValues(alpha: 0.4)
+                            ? AppColors.gold.withValues(alpha: 0.4)
                             : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
                       ),
                       boxShadow: (_streak != null && _streak! > 0)
@@ -1522,11 +1522,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
         ? AppColors.borderDark
         : AppColors.borderLight;
     final textHeading = isDark
-        ? const Color(0xFFF1F3F9)
-        : const Color(0xFF1A1A3A);
+        ? AppColors.bgLight
+        : AppColors.textHeading;
     final textLabel = isDark
-        ? const Color(0xFF7C82A0)
-        : const Color(0xFFA0A0B8);
+        ? AppColors.textMuted
+        : AppColors.textMuted;
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -1555,7 +1555,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   const Icon(
                     Icons.security_rounded,
                     size: 16,
-                    color: Color(0xFF4F46E5),
+                    color: AppColors.primary,
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -1586,7 +1586,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _activeSessions.length,
             separatorBuilder: (context, index) => Divider(
-              color: isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0),
+              color: isDark ? AppColors.borderDark : AppColors.borderLight,
               height: 16,
             ),
             itemBuilder: (context, index) {
@@ -1780,7 +1780,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       children: [
         Row(
           children: [
-            const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFF4F46E5)),
+            const Icon(Icons.bolt_rounded, size: 16, color: AppColors.primary),
             const SizedBox(width: 8),
             Text(
               'QUICK ACTIONS CONSOLE',
