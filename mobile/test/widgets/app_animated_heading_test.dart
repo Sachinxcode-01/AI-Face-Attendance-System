@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smartface_attendance/core/animation/app_animated_heading.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 
 void main() {
   group('AppAnimatedHeading', () {
     testWidgets('renders plain text on reduced motion', (tester) async {
       await tester.pumpWidget(
         const MediaQuery(
-          data: MediaQueryData(accessibleNavigation: true),
+          data: MediaQueryData(disableAnimations: true),
           child: MaterialApp(
             home: Scaffold(
               body: AppAnimatedHeading(text: 'Hello'),

@@ -712,8 +712,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
     if (_isLoading) {
       return Scaffold(
         backgroundColor: isDark
-            ? const Color(0xFF070A14)
-            : const Color(0xFFE8EAF6),
+            ? AppColors.bgDeep
+            : AppColors.bgLight,
         body: const SafeArea(child: StudentHomeShimmer()),
       );
     }
@@ -873,8 +873,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
       immersive: false,
       child: Scaffold(
         backgroundColor: isDark
-            ? const Color(0xFF070A14)
-            : const Color(0xFFE8EAF6),
+            ? AppColors.bgDeep
+            : AppColors.bgLight,
         body: Column(
           children: [
             ds.DashboardHeader(
@@ -987,7 +987,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
+                  color: AppColors.primary.withValues(alpha: 0.35),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
@@ -1057,10 +1057,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Widget _buildAttendanceUnavailableCard(bool isDark) {
-    final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF141D38) : AppColors.bgLight;
     final cardBorder = isDark
-        ? const Color(0xFF252E4A)
-        : const Color(0xFFE5E7F0);
+        ? AppColors.borderDark
+        : AppColors.borderLight;
     final hasError = _statsError != null;
 
     return AnimatedCardWrapper(
@@ -1153,20 +1153,20 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
     final percentage = _overallPercentage!;
     final int pct = (percentage * 100).round();
-    final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF141D38) : AppColors.bgLight;
     final cardBorder = isDark
-        ? const Color(0xFF252E4A)
-        : const Color(0xFFE5E7F0);
+        ? AppColors.borderDark
+        : AppColors.borderLight;
     final textHeading = isDark
         ? const Color(0xFFF1F3F9)
         : const Color(0xFF1A1A3A);
-    final textBody = isDark ? const Color(0xFFC8CCDF) : const Color(0xFF3D4260);
+    final textBody = isDark ? AppColors.textMuted : AppColors.textPrimary;
     final textLabel = isDark
         ? const Color(0xFF7C82A0)
         : const Color(0xFFA0A0B8);
     final streakForegroundColor = isDark
-        ? const Color(0xFFFBBF24)
-        : const Color(0xFFD97706);
+        ? AppColors.goldDark
+        : AppColors.goldBright;
 
     return AnimatedCardWrapper(
       delay: 100.ms,
@@ -1517,10 +1517,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Widget _buildSecurityCard(bool isDark) {
-    final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF141D38) : AppColors.bgLight;
     final cardBorder = isDark
-        ? const Color(0xFF252E4A)
-        : const Color(0xFFE5E7F0);
+        ? AppColors.borderDark
+        : AppColors.borderLight;
     final textHeading = isDark
         ? const Color(0xFFF1F3F9)
         : const Color(0xFF1A1A3A);
