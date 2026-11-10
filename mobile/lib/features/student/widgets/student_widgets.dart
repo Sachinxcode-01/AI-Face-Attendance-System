@@ -15,8 +15,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:animated_icon/animated_icon.dart';
-import 'package:smartface_attendance/core/ui_system/app_ui_package_registry.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 
 /// ---------------------------------------------------------------------------
@@ -548,66 +546,6 @@ class StudentActionTile extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// ---------------------------------------------------------------------------
-/// StudentSalomonBottomBar
-/// Standard bottom navigation bar for student role adhering to design.md.
-/// ---------------------------------------------------------------------------
-class StudentSalomonBottomBar extends StatelessWidget {
-  final int currentIndex;
-  final ValueChanged<int> onTap;
-
-  const StudentSalomonBottomBar({
-    super.key,
-    required this.currentIndex,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppBottomNavigation(
-      currentIndex: currentIndex,
-      onTap: onTap,
-      role: 'student',
-      items: const [
-        AppSalomonNavItemData(
-          icon: Icons.home_outlined,
-          activeIcon: Icons.home_rounded,
-          animateIcon: AnimateIcons.home,
-          title: 'Home',
-          route: '/student/home',
-        ),
-        AppSalomonNavItemData(
-          icon: Icons.calendar_month_outlined,
-          activeIcon: Icons.calendar_month_rounded,
-          animateIcon: AnimateIcons.calendar,
-          title: 'Schedule',
-          route: '/student/timetable',
-        ),
-        AppSalomonNavItemData(
-          icon: Icons.qr_code_scanner_outlined,
-          activeIcon: Icons.qr_code_scanner_rounded,
-          animateIcon: AnimateIcons.qrCode,
-          title: 'Scan',
-          route: '/student/scan',
-        ),
-        AppSalomonNavItemData(
-          icon: Icons.bar_chart_outlined,
-          activeIcon: Icons.bar_chart_rounded,
-          animateIcon: AnimateIcons.activity,
-          title: 'Reports',
-          route: '/student/attendance-hub',
-        ),
-        AppSalomonNavItemData(
-          icon: Icons.person_outline_rounded,
-          activeIcon: Icons.person_rounded,
-          title: 'Profile',
-          route: '/student/profile',
-        ),
-      ],
     );
   }
 }

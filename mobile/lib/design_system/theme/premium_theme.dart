@@ -43,6 +43,8 @@ class PremiumTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.bgLight,
+      // Shared widgets read this extension directly, so light mode needs it too.
+      extensions: const <ThemeExtension<dynamic>>[DarkAppColors.light],
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.gold,
@@ -260,6 +262,48 @@ class PremiumTheme {
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.primary,
         linearTrackColor: AppColors.borderLight,
+      ),
+
+      // ── Tooltip & List Tiles ────────────────────────────────────────
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: AppColors.textHeading.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle: GoogleFonts.inter(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+
+      listTileTheme: ListTileThemeData(
+        iconColor: AppColors.textMuted,
+        textColor: AppColors.textBody,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      ),
+
+      // ── Scrollbar ───────────────────────────────────────────────────
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStateProperty.all(
+          AppColors.textMuted.withValues(alpha: 0.35),
+        ),
+        trackColor: WidgetStateProperty.all(
+          AppColors.textMuted.withValues(alpha: 0.08),
+        ),
+        thickness: WidgetStateProperty.all(4),
+        radius: const Radius.circular(8),
+      ),
+
+      // ── Page Transitions (parity with the dark theme) ───────────────
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
       ),
     );
   }

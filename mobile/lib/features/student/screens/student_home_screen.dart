@@ -45,16 +45,15 @@ import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/dashboard_widgets.dart';
-import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/features/analytics/models/student_stats_model.dart';
 import 'package:smartface_attendance/features/analytics/controllers/analytics_controller.dart';
 import 'package:smartface_attendance/features/analytics/widgets/analytics_components.dart';
-import 'package:smartface_attendance/core/ui_system/app_ui_package_registry.dart';
 import 'package:smartface_attendance/features/analytics/models/attendance_analytics_model.dart';
 import 'package:smartface_attendance/features/student/screens/student_timetable_screen.dart';
 import 'package:smartface_attendance/features/student/screens/attendance_calendar_screen.dart';
 import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
+import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 
 /// Screen widget displaying student academic statistics, calendars, and live sessions.
 class StudentDashboard extends StatefulWidget {

@@ -78,6 +78,10 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   final String _selectedLang = 'English';
   bool _isScanLoading = false;
   bool _scanComplete = false;
+  bool _genderInitialised = false;
+
+  /// Per-step inline validation messages, keyed by field id.
+  final Map<String, String> _errors = <String, String>{};
 
   String _role = 'student';
   String _email = '';
@@ -93,6 +97,10 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         .toLowerCase();
     _email = args?['email'] ?? session.email ?? '';
     _token = args?['token'] ?? session.token ?? '';
+    if (!_genderInitialised) {
+      _genderController.text = 'Male';
+      _genderInitialised = true;
+    }
   }
 
   @override
@@ -150,45 +158,45 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
 
   bool _validateCurrentStep() {
     if (_currentPage == 0) return true;
+
+    final errors = <String, String>{};
     if (_currentPage == 1) {
       if (_nameController.text.trim().isEmpty) {
-        AppToast.show(
-          context,
-          message: 'Please enter your Full Name',
-          type: ToastType.warning,
-        );
-        return false;
+        errors['name'] = 'Please enter your full name';
       }
-      if (_phoneController.text.trim().isEmpty) {
-        AppToast.show(
-          context,
-          message: 'Please enter your Phone Number',
-          type: ToastType.warning,
-        );
-        return false;
-      }
-      return true;
-    }
-    if ((_role == 'teacher' || _role == 'faculty' || _role == 'lecturer') &&
-        _currentPage == 2) {
-      if (_employeeIdController.text.trim().isEmpty) {
-        AppToast.show(
-          context,
-          message: 'Please enter your Employee ID',
-          type: ToastType.warning,
-        );
-        return false;
+      final phone = _phoneController.text.trim();
+      if (phone.isEmpty) {
+        errors['phone'] = 'Please enter your phone number';
+      } else if (!RegExp(r'^[0-9+\-\s()]{7,20}$').hasMatch(phone)) {
+        errors['phone'] = 'Enter a valid phone number';
       }
     }
-    if (_role == 'student' && _currentPage == 2) {
-      if (_usnController.text.trim().isEmpty) {
-        AppToast.show(
-          context,
-          message: 'Please enter your Student ID/USN',
-          type: ToastType.warning,
-        );
-        return false;
-      }
+    final isTeacher =
+        _role == 'teacher' || _role == 'faculty' || _role == 'lecturer';
+    if (isTeacher &&
+        _currentPage == 2 &&
+        _employeeIdController.text.trim().isEmpty) {
+      errors['employee'] = 'Please enter your employee ID';
+    }
+    if (_role == 'student' &&
+        _currentPage == 2 &&
+        _usnController.text.trim().isEmpty) {
+      errors['usn'] = 'Please enter your student ID / USN';
+    }
+
+    setState(() {
+      _errors
+        ..clear()
+        ..addAll(errors);
+    });
+
+    if (errors.isNotEmpty) {
+      AppToast.show(
+        context,
+        message: errors.values.first,
+        type: ToastType.warning,
+      );
+      return false;
     }
     return true;
   }
@@ -202,6 +210,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   }
 
   void _nextPage() async {
+    FocusScope.of(context).unfocus();
     if (!_validateCurrentStep()) return;
     if (_isFaceIdPage(_currentPage) && !_scanComplete) {
       AppToast.show(
@@ -406,16 +415,39 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             color: Colors.white,
           ),
         ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: (_currentPage + 1) / _totalPages,
-            minHeight: 3,
-            backgroundColor: Colors.white.withValues(alpha: 0.25),
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+        const SizedBox(height: 10),
+        _buildStepRail(),
+      ],
+    );
+  }
+
+  /// Segmented progress rail; completed steps are tappable to jump back.
+  Widget _buildStepRail() {
+    return Row(
+      children: [
+        for (var i = 0; i < _totalPages; i++)
+          Expanded(
+            child: GestureDetector(
+              onTap: i < _currentPage
+                  ? () => _pageController.jumpToPage(i)
+                  : null,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutCubic,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: i <= _currentPage
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -477,6 +509,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   // ─── CARD SHELL ──────────────────────────────────────────────────────────
 
   Widget _buildCardShell({required List<Widget> children}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -490,34 +523,36 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     horizontal: 20,
                     vertical: 16,
                   ),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.cardDark
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.borderDark
-                            : AppColors.borderLight,
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.black38
-                              : AppColors.primary.withValues(alpha: 0.08),
-                          blurRadius: 24,
-                          offset: const Offset(0, 8),
+                  child: ConstrainedBox(
+                    // Keeps the form readable on tablets instead of stretching.
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.cardDark : Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.borderDark
+                              : AppColors.borderLight,
+                          width: 1,
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: children,
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark
+                                ? Colors.black38
+                                : AppColors.primary.withValues(alpha: 0.08),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: children,
+                      ),
                     ),
                   ),
                 ),
@@ -593,9 +628,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   // ─── PERSONAL ────────────────────────────────────────────────────────────
 
   Widget _buildPersonalCard() {
-    if (_genderController.text.isEmpty) {
-      _genderController.text = 'Male';
-    }
     return _buildCardShell(
       children: [
         Text(
@@ -616,13 +648,19 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        _field('Full Name', _nameController, hint: 'Enter your full name'),
+        _field(
+          'Full Name',
+          _nameController,
+          hint: 'Enter your full name',
+          error: _errors['name'],
+        ),
         const SizedBox(height: 16),
         _field(
           'Phone Number',
           _phoneController,
           hint: '+91 00000 00000',
           type: TextInputType.phone,
+          error: _errors['phone'],
         ),
         const SizedBox(height: 16),
         _field(
@@ -728,7 +766,12 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        _field('Employee ID', _employeeIdController, hint: 'e.g. EMP-1001'),
+        _field(
+          'Employee ID',
+          _employeeIdController,
+          hint: 'e.g. EMP-1001',
+          error: _errors['employee'],
+        ),
         const SizedBox(height: 16),
         _field(
           'Designation',
@@ -795,7 +838,12 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           hint: 'Search verified College DB institutions',
         ),
         const SizedBox(height: 16),
-        _field('Student ID / USN', _usnController, hint: 'e.g. 1AB22CS001'),
+        _field(
+          'Student ID / USN',
+          _usnController,
+          hint: 'e.g. 1AB22CS001',
+          error: _errors['usn'],
+        ),
         const SizedBox(height: 16),
         _field(
           'Class / Course',
@@ -1001,6 +1049,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     bool readOnly = false,
     VoidCallback? onTap,
     TextInputType? type,
+    String? error,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1010,7 +1059,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           style: AuthDesign.fontPoppins(
             fontSize: 10.5,
             fontWeight: FontWeight.w500,
-            color: AuthDesign.textLabel,
+            color: error != null ? AppColors.error : AuthDesign.textLabel,
           ),
         ),
         const SizedBox(height: 6),
@@ -1020,7 +1069,19 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           readOnly: readOnly,
           onTap: onTap,
           keyboardType: type,
+          errorText: error,
         ),
+        if (error != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            error,
+            style: AuthDesign.fontPoppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: AppColors.error,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -1133,6 +1194,7 @@ class _WizardTextField extends StatefulWidget {
   final bool readOnly;
   final VoidCallback? onTap;
   final TextInputType? keyboardType;
+  final String? errorText;
 
   const _WizardTextField({
     required this.controller,
@@ -1140,6 +1202,7 @@ class _WizardTextField extends StatefulWidget {
     this.readOnly = false,
     this.onTap,
     this.keyboardType,
+    this.errorText,
   });
 
   @override
@@ -1171,10 +1234,12 @@ class _WizardTextFieldState extends State<_WizardTextField> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: _isFocused
-                ? AuthDesign.underlineFocused
-                : AuthDesign.underlineUnfocused,
-            width: _isFocused ? 1.8 : 1.2,
+            color: widget.errorText != null
+                ? AppColors.error
+                : _isFocused
+                    ? AuthDesign.underlineFocused
+                    : AuthDesign.underlineUnfocused,
+            width: _isFocused || widget.errorText != null ? 1.8 : 1.2,
           ),
         ),
       ),

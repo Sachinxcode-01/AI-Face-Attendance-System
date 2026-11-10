@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 
 /// Centralized haptic helper so feedback is consistent everywhere.
@@ -422,6 +423,55 @@ class SmoothAnimatedSwitcher extends StatelessWidget {
         );
       },
       child: child,
+    );
+  }
+}
+
+/// Animated headline for splash, greeting and empty-state copy.
+/// Respects the platform reduced-motion setting.
+class AppAnimatedHeading extends StatelessWidget {
+  final String text;
+  final TextStyle? style;
+  final Duration totalDuration;
+  final bool isTypingEffect;
+
+  const AppAnimatedHeading({
+    super.key,
+    required this.text,
+    this.style,
+    this.totalDuration = const Duration(milliseconds: 1800),
+    this.isTypingEffect = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveStyle = style ??
+        TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          color: Theme.of(context).colorScheme.onSurface,
+        );
+
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return Text(text, style: effectiveStyle);
+    }
+
+    final AnimatedText animatedText = isTypingEffect
+        ? TypewriterAnimatedText(
+            text,
+            textStyle: effectiveStyle,
+            speed: const Duration(milliseconds: 40),
+          )
+        : FadeAnimatedText(
+            text,
+            textStyle: effectiveStyle,
+            duration: totalDuration,
+          );
+
+    return AnimatedTextKit(
+      animatedTexts: [animatedText],
+      totalRepeatCount: 1,
+      displayFullTextOnTap: true,
     );
   }
 }
