@@ -66,14 +66,25 @@ const canReadStudentAttendance = (req, email) => {
 // Heuristics Helper: Calculate Student Attendance Health Score
 const calculateHealthScore = async (email) => {
   try {
-    let records = [];
+    // Counts only: loading every attendance document to tally it was the hot
+    // path behind /attendance/dashboard.
+    let totalRecords = 0;
+    let presentCount = 0;
+    let lates = 0;
     try {
       if (mongoose.connection.readyState === 1) {
-        records = await Attendance.find({ student_email: email }).lean();
+        [totalRecords, presentCount, lates] = await Promise.all([
+          Attendance.countDocuments({ student_email: email }),
+          Attendance.countDocuments({ student_email: email, status: 'Present' }),
+          Attendance.countDocuments({
+            student_email: email,
+            $or: [{ verified_by: 'manual' }, { status: 'Late' }]
+          })
+        ]);
       }
     } catch (_) {}
 
-    if (records.length === 0) {
+    if (totalRecords === 0) {
       const fallbackStats = datasetService.getStudentStats(email);
       return {
         score: fallbackStats.overall_percentage,
@@ -84,20 +95,14 @@ const calculateHealthScore = async (email) => {
       };
     }
 
-    const presentCount = records.filter(r => r.status === 'Present').length;
-    const lates = records.filter(r => r.verified_by === 'manual' || r.status === 'Late').length; // Map manual/late indicators
-    
-    // Sort records to check consecutive absences (simulate for demo, or compute dynamically)
-    const sorted = [...records].sort((a, b) => b.timestamp - a.timestamp);
-    let consecutiveAbsences = 0;
-    
-    // Calculate basic attendance percentage
-    // Find sessions that student should have attended (simulate total sessions based on department average if necessary, e.g. 30 sessions)
-    const user = await User.findOne({ email }).lean();
-    let totalSessions = 30; // default baseline
+    const consecutiveAbsences = 0;
+
+    // Percentage is defined against sessions held (baseline 30 when there is no history).
+    const user = await User.findOne({ email }, 'email').lean();
+    let totalSessions = 30;
     if (user) {
       const activeSessionsCount = await Session.countDocuments({});
-      totalSessions = Math.max(activeSessionsCount, records.length, 1);
+      totalSessions = Math.max(activeSessionsCount, totalRecords, 1);
     }
 
     const percentage = (presentCount / totalSessions) * 100;
@@ -430,20 +435,33 @@ router.get('/dashboard', authenticate, async (req, res) => {
 // Centralized command center dashboard for HODs & Admins
 router.get('/command-center', authenticate, requireRole(['admin', 'teacher']), async (req, res) => {
   try {
-    const totalStudents = await User.countDocuments({ role: 'student' });
-    const activeSessionsCount = await Session.countDocuments({ is_active: true });
+    // One aggregate + two counts instead of loading every analytics document.
+    const [[totals], totalStudents, activeSessionsCount] = await Promise.all([
+      AttendanceAnalytics.aggregate([
+        {
+          $group: {
+            _id: null,
+            avgHealth: { $avg: '$health_score' },
+            criticalCount: { $sum: { $cond: [{ $lt: ['$health_score', 60] }, 1, 0] } },
+            warningCount: {
+              $sum: {
+                $cond: [
+                  { $and: [{ $gte: ['$health_score', 60] }, { $lt: ['$health_score', 75] }] },
+                  1,
+                  0
+                ]
+              }
+            }
+          }
+        }
+      ]),
+      User.countDocuments({ role: 'student' }),
+      Session.countDocuments({ is_active: true })
+    ]);
 
-    // Compute metrics
-    const criticalCount = await AttendanceAnalytics.countDocuments({ health_score: { $lt: 60 } });
-    const warningCount = await AttendanceAnalytics.countDocuments({ health_score: { $gte: 60, $lt: 75 } });
-    
-    // Average attendance rate across all students
-    const allStats = await AttendanceAnalytics.find({}).lean();
-    let avgHealth = 85;
-    if (allStats.length > 0) {
-      const sum = allStats.reduce((acc, current) => acc + current.health_score, 0);
-      avgHealth = Math.round(sum / allStats.length);
-    }
+    const criticalCount = (totals && totals.criticalCount) || 0;
+    const warningCount = (totals && totals.warningCount) || 0;
+    const avgHealth = totals ? Math.round(totals.avgHealth) : 85;
 
     res.json({
       average_attendance: avgHealth,
@@ -462,12 +480,36 @@ router.get('/live-monitor', authenticate, requireRole(['admin', 'teacher']), asy
   try {
     const activeSessions = await Session.find({ is_active: true }).lean();
     
+    const sessionIds = activeSessions.map((session) => session._id.toString());
+
+    // One grouped tally + one user lookup replace three queries per session.
+    const [attendanceCounts, teachers] = await Promise.all([
+      Attendance.aggregate([
+        { $match: { session_id: { $in: sessionIds } } },
+        {
+          $group: {
+            _id: '$session_id',
+            presentCount: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
+            faceCount: { $sum: { $cond: [{ $eq: ['$verified_by', 'face'] }, 1, 0] } }
+          }
+        }
+      ]),
+      User.find(
+        { email: { $in: activeSessions.map((session) => session.teacher_id) } },
+        'email full_name'
+      ).lean()
+    ]);
+
+    const countsBySession = new Map(attendanceCounts.map((row) => [row._id, row]));
+    const teacherByEmail = new Map(teachers.map((teacher) => [teacher.email, teacher]));
+
     const sessionsTelemetry = [];
     for (const session of activeSessions) {
-      const presentCount = await Attendance.countDocuments({ session_id: session._id.toString(), status: 'Present' });
-      const faceCount = await Attendance.countDocuments({ session_id: session._id.toString(), verified_by: 'face' });
+      const counts = countsBySession.get(session._id.toString());
+      const presentCount = (counts && counts.presentCount) || 0;
+      const faceCount = (counts && counts.faceCount) || 0;
       
-      const teacher = await User.findOne({ email: session.teacher_id }).lean();
+      const teacher = teacherByEmail.get(session.teacher_id);
       
       sessionsTelemetry.push({
         session_id: session._id.toString(),
@@ -500,11 +542,19 @@ router.get('/risk-analysis', authenticate, requireRole(['admin', 'teacher']), as
       filter = { health_score: { $gte: 60, $lt: 75 } }; // default: below 75 warning
     }
 
-    const analytics = await AttendanceAnalytics.find(filter).lean();
-    
+    const analytics = await AttendanceAnalytics.find(filter)
+      .limit(500)
+      .lean();
+
+    const students = await User.find(
+      { email: { $in: analytics.map((record) => record.student_email) } },
+      'email full_name usn student_id department semester'
+    ).lean();
+    const studentByEmail = new Map(students.map((student) => [student.email, student]));
+
     const riskStudentsList = [];
     for (const record of analytics) {
-      const student = await User.findOne({ email: record.student_email }).lean();
+      const student = studentByEmail.get(record.student_email);
       if (student) {
         riskStudentsList.push({
           name: student.full_name,
@@ -556,6 +606,13 @@ router.get('/report/generate', authenticate, async (req, res) => {
 
     // Fetch student check-ins
     const records = await Attendance.find({ student_email: email }).lean();
+    const reportSessions = await Session.find(
+      { _id: { $in: records.map((record) => record.session_id) } },
+      'subject'
+    ).lean();
+    const reportSubjectBySessionId = new Map(
+      reportSessions.map((session) => [session._id.toString(), session.subject])
+    );
     
     if (format === 'csv') {
       res.setHeader('Content-disposition', 'attachment; filename=attendance_ledger.csv');
@@ -563,10 +620,9 @@ router.get('/report/generate', authenticate, async (req, res) => {
       
       let csv = 'Date,Time,Subject,Verified By,Status\n';
       for (const rec of records) {
-        const session = await Session.findById(rec.session_id).lean();
         const dateStr = rec.timestamp.toISOString().split('T')[0];
         const timeStr = rec.timestamp.toISOString().split('T')[1].substring(0, 5);
-        csv += `${dateStr},${timeStr},"${session ? session.subject : 'Class'}",${rec.verified_by},${rec.status}\n`;
+        csv += `${dateStr},${timeStr},"${reportSubjectBySessionId.get(rec.session_id) || 'Class'}",${rec.verified_by},${rec.status}\n`;
       }
       return res.send(csv);
     } else if (format === 'excel') {
@@ -576,10 +632,9 @@ router.get('/report/generate', authenticate, async (req, res) => {
       
       let xls = 'Date\tTime\tSubject\tVerified By\tStatus\n';
       for (const rec of records) {
-        const session = await Session.findById(rec.session_id).lean();
         const dateStr = rec.timestamp.toISOString().split('T')[0];
         const timeStr = rec.timestamp.toISOString().split('T')[1].substring(0, 5);
-        xls += `${dateStr}\t${timeStr}\t"${session ? session.subject : 'Class'}"\t${rec.verified_by}\t${rec.status}\n`;
+        xls += `${dateStr}\t${timeStr}\t"${reportSubjectBySessionId.get(rec.session_id) || 'Class'}"\t${rec.verified_by}\t${rec.status}\n`;
       }
       return res.send(xls);
     } else {
@@ -650,21 +705,25 @@ router.get(['/student/:email', '/history/:email'], authenticate, async (req, res
       }
     }
 
-    const result = [];
-    for (const log of logs) {
-      const session = await Session.findOne({ _id: log.session_id }).lean();
-      result.push({
-        id: log._id.toString(),
-        date: log.timestamp.toISOString().split('T')[0],
-        time: log.timestamp.toISOString().split('T')[1].substring(0, 5),
-        subject: session ? session.subject : 'AI Class',
-        verified_by: log.verified_by,
-        confidence: log.confidence ? `${Math.round(log.confidence * 100)}%` : 'N/A',
-        status: log.status,
-        lighting_quality: log.lighting_quality || 'Good',
-        face_visibility: log.face_visibility || 'Excellent'
-      });
-    }
+    const pageSessions = await Session.find(
+      { _id: { $in: logs.map((log) => log.session_id) } },
+      'subject'
+    ).lean();
+    const subjectBySessionId = new Map(
+      pageSessions.map((session) => [session._id.toString(), session.subject])
+    );
+
+    const result = logs.map((log) => ({
+      id: log._id.toString(),
+      date: log.timestamp.toISOString().split('T')[0],
+      time: log.timestamp.toISOString().split('T')[1].substring(0, 5),
+      subject: subjectBySessionId.get(log.session_id) || 'AI Class',
+      verified_by: log.verified_by,
+      confidence: log.confidence ? `${Math.round(log.confidence * 100)}%` : 'N/A',
+      status: log.status,
+      lighting_quality: log.lighting_quality || 'Good',
+      face_visibility: log.face_visibility || 'Excellent'
+    }));
 
     res.json({
       total,
@@ -703,8 +762,17 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
     let totalPresent = 0;
     let totalPossible = 0;
 
+    const sessionsPerSubject = new Map(
+      (
+        await Session.aggregate([
+          { $match: { subject: { $in: subjects } } },
+          { $group: { _id: '$subject', total: { $sum: 1 } } }
+        ])
+      ).map((row) => [row._id, row.total])
+    );
+
     for (const sub of subjects) {
-      const totalSessions = await Session.countDocuments({ subject: sub });
+      const totalSessions = sessionsPerSubject.get(sub) || 0;
       const pCount = presentCounts[sub] || 0;
       const tCount = Math.max(totalSessions, pCount);
 
@@ -743,34 +811,37 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
       }
     }
 
-    const weeklyTrends = [];
+    // One session fetch + in-memory buckets replace the ~26 countDocuments
+    // round-trips this endpoint used to make per request.
     const now = new Date();
+    const trendSessions = dataSource === 'none'
+      ? []
+      : await Session.find(
+          { start_time: { $gte: new Date(now.getFullYear(), now.getMonth() - 7, 1) } },
+          'start_time'
+        ).lean();
+
+    const weeklyTrends = [];
     if (dataSource !== 'none') {
       for (let i = 6; i >= 0; i--) {
         const startOfWeek = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
         startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
         const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
-        
-        let pCountWeek = 0;
-        try {
-          pCountWeek = await Attendance.countDocuments({
-            student_email: email,
-            status: 'Present',
-            timestamp: { $gte: startOfWeek, $lt: endOfWeek }
-          });
-        } catch (_) {}
 
-        let totalWeek = 0;
-        try {
-          totalWeek = await Session.countDocuments({
-            start_time: { $gte: startOfWeek, $lt: endOfWeek }
-          });
-        } catch (_) {}
+        const pCountWeek = records.filter(
+          (record) =>
+            record.status === 'Present' &&
+            record.timestamp >= startOfWeek &&
+            record.timestamp < endOfWeek
+        ).length;
+        let totalWeek = trendSessions.filter(
+          (session) => session.start_time >= startOfWeek && session.start_time < endOfWeek
+        ).length;
         if (pCountWeek > totalWeek) totalWeek = pCountWeek;
 
         const pct = totalWeek > 0 ? Math.min(100, Math.round((pCountWeek / totalWeek) * 100)) : 0;
         weeklyTrends.push({
-          week: `Wk ${7-i}`,
+          week: `Wk ${7 - i}`,
           present: pCountWeek,
           total: totalWeek,
           percentage: pct,
@@ -787,22 +858,16 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
         monthDate.setMonth(monthDate.getMonth() - i);
         const startOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
         const endOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 1);
-        
-        let pCountMonth = 0;
-        try {
-          pCountMonth = await Attendance.countDocuments({
-            student_email: email,
-            status: 'Present',
-            timestamp: { $gte: startOfMonth, $lt: endOfMonth }
-          });
-        } catch (_) {}
 
-        let totalMonth = 0;
-        try {
-          totalMonth = await Session.countDocuments({
-            start_time: { $gte: startOfMonth, $lt: endOfMonth }
-          });
-        } catch (_) {}
+        const pCountMonth = records.filter(
+          (record) =>
+            record.status === 'Present' &&
+            record.timestamp >= startOfMonth &&
+            record.timestamp < endOfMonth
+        ).length;
+        let totalMonth = trendSessions.filter(
+          (session) => session.start_time >= startOfMonth && session.start_time < endOfMonth
+        ).length;
         if (pCountMonth > totalMonth) totalMonth = pCountMonth;
 
         const monthName = monthNames[startOfMonth.getMonth()];
@@ -863,35 +928,61 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
 
     if (studentUser && studentUser.department) {
       const dept = studentUser.department;
-      const peers = await User.find({ department: dept, role: 'student' }).lean();
+      const peers = await User.find(
+        { department: dept, role: 'student' },
+        'email full_name'
+      ).lean();
       if (peers.length > 0) {
-        const peerEntries = [];
-        for (const peer of peers) {
-          const isMe = peer.email.toLowerCase() === email;
-          let score = 0;
+        // One grouped read for the cohort instead of one read per peer.
+        const peerRates = await Attendance.aggregate([
+          {
+            $match: {
+              student_email: {
+                $in: peers.map((peer) => String(peer.email).toLowerCase())
+              }
+            }
+          },
+          {
+            $group: {
+              _id: '$student_email',
+              total: { $sum: 1 },
+              present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } }
+            }
+          }
+        ]);
+        const rateByEmail = new Map(
+          peerRates.map((row) => [
+            String(row._id).toLowerCase(),
+            row.total > 0 ? row.present / row.total : 0
+          ])
+        );
+
+        const peerEntries = peers.map((peer) => {
+          const peerEmail = String(peer.email).toLowerCase();
+          const isMe = peerEmail === email;
+          let score;
           if (isMe) {
             score = currentScore;
           } else {
             const peerStats = datasetService.getStudentStats(peer.email);
             if (peerStats && peerStats.overall_percentage != null) {
-              score = Math.round(peerStats.overall_percentage > 1.0 ? peerStats.overall_percentage : peerStats.overall_percentage * 100);
+              score = Math.round(
+                peerStats.overall_percentage > 1.0
+                  ? peerStats.overall_percentage
+                  : peerStats.overall_percentage * 100
+              );
             } else {
-              const peerRecords = await Attendance.find({ student_email: peer.email }).lean();
-              if (peerRecords.length > 0) {
-                const peerPresent = peerRecords.filter(r => (r.status || '').toLowerCase() === 'present').length;
-                score = Math.round((peerPresent / peerRecords.length) * 100);
-              } else {
-                score = 0;
-              }
+              score = Math.round((rateByEmail.get(peerEmail) || 0) * 100);
             }
           }
-          peerEntries.push({
+          return {
             name: peer.full_name || peer.email,
             department: dept,
             score: score,
             is_me: isMe
-          });
-        }
+          };
+        });
+
         peerEntries.sort((a, b) => b.score - a.score);
         leaderboard = peerEntries.slice(0, 10).map((entry, idx) => ({
           ...entry,

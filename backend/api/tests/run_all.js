@@ -23,7 +23,8 @@ const unitTests = [
   'tests/unit/test_nexa_phase2.js',
   'tests/unit/test_predictive_analytics.js',
   'tests/unit/test_prd_upgrades.js',
-  'tests/unit/test_colleges.js'
+  'tests/unit/test_colleges.js',
+  'tests/unit/test_cache.js'
 ];
 
 const integrationTests = [

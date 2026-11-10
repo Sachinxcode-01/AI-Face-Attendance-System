@@ -13,5 +13,9 @@ const AttendanceSchema = new mongoose.Schema({
 
 AttendanceSchema.index({ student_email: 1, timestamp: -1 });
 AttendanceSchema.index({ student_email: 1, session_id: 1 }, { unique: true });
+// Analytics aggregations filter on status over a time window.
+AttendanceSchema.index({ status: 1, timestamp: -1 });
+// Live monitor tallies present/face per session.
+AttendanceSchema.index({ session_id: 1, status: 1, verified_by: 1 });
 
 module.exports = mongoose.model('Attendance', AttendanceSchema, 'attendance');

@@ -15,4 +15,7 @@ const AttendanceAnalyticsSchema = new mongoose.Schema({
   last_calculated: { type: Date, default: Date.now }
 });
 
+// Command center counts and risk-analysis range filters.
+AttendanceAnalyticsSchema.index({ health_score: 1 });
+
 module.exports = mongoose.model('AttendanceAnalytics', AttendanceAnalyticsSchema, 'attendance_analytics');

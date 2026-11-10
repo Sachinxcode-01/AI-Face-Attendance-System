@@ -8,4 +8,6 @@ const SecurityLogSchema = new mongoose.Schema({
   status: { type: String, default: "Active", index: true } // Active, Acknowledged, Safe
 });
 
+SecurityLogSchema.index({ status: 1, timestamp: -1 });
+
 module.exports = mongoose.model('SecurityLog', SecurityLogSchema, 'security_logs');

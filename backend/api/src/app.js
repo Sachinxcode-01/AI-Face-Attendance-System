@@ -58,6 +58,7 @@ if (missingEnvVars.length > 0) {
 const { connectDB } = require('./config/database');
 const securityAndLogger = require('./middleware/logger');
 const { limitGeneralApi } = require('./middleware/rateLimiter');
+const { cacheJson } = require('./utils/cache');
 const notificationService = require('./services/notificationService');
 const AuthService = require('./services/authService');
 
@@ -231,8 +232,10 @@ app.use('/api/parent', parentRoutes);
 app.use('/reports', reportRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api', apiCompatRoutes);
-app.use('/analytics', analyticsRoutes);
-app.use('/api/analytics', analyticsRoutes);
+// Analytics routes are read-only aggregates, so a short shared cache removes
+// repeated heavy pipelines without risking stale writes.
+app.use('/analytics', cacheJson(30 * 1000), analyticsRoutes);
+app.use('/api/analytics', cacheJson(30 * 1000), analyticsRoutes);
 app.use('/', aiRoutes);
 app.use('/api', aiRoutes);
 

@@ -9,4 +9,8 @@ const SessionSchema = new mongoose.Schema({
   qr_code: { type: String, required: true }
 });
 
+// Serves the live-monitor / active-session lookups and per-subject analytics.
+SessionSchema.index({ is_active: 1, start_time: -1 });
+SessionSchema.index({ subject: 1 });
+
 module.exports = mongoose.model('Session', SessionSchema, 'sessions');
