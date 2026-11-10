@@ -10,41 +10,68 @@ import sys
 
 # Configure Python path to resolve restructured subdirectories and workspace core module
 _src_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.extend([
-    _src_dir,
-    os.path.abspath(os.path.join(_src_dir, '..', '..'))
-])
+_ai_dir = os.path.abspath(os.path.join(_src_dir, '..'))
+_root_dir = os.path.abspath(os.path.join(_src_dir, '..', '..'))
+sys.path.extend([_src_dir, _ai_dir, _root_dir])
+
+if "smartface_pro_api" not in sys.modules:
+    try:
+        import backend.ai as smartface_pro_api
+        sys.modules["smartface_pro_api"] = smartface_pro_api
+    except Exception:
+        pass
 
 import time
 import logging
 import logging.config
 import shutil
-from smartface_pro_api.src.models.models import (
-    UserCreate, UserResponse, Token, SessionCreate, SessionStart, 
-    AttendanceRecord, AttendanceMark, LeaveRequest, LeaveApplication, 
-    Notification, OTPRequest, OTPVerification, AIQuery, ProfileUpdate,
-    BiometricRequest, IntruderAlert, GoogleLoginRequest, FaceAttendanceMark,
-    PasswordLoginRequest, SessionStop, LoginSessionResponse, DeviceTrack,
-    CompleteProfileRequest, FaceRegisterRequest, PasswordChangeRequest,
-    NotificationSettingsUpdate
-)
-from smartface_pro_api.src.auth.auth_service import AuthService
-from smartface_pro_api.src.config.database import (
-    db, users_collection, sessions_collection, attendance_collection,
-    login_logs_collection, audit_logs_collection, devices_collection, login_sessions_collection
-)
+try:
+    from src.models.models import (
+        UserCreate, UserResponse, Token, SessionCreate, SessionStart, 
+        AttendanceRecord, AttendanceMark, LeaveRequest, LeaveApplication, 
+        Notification, OTPRequest, OTPVerification, AIQuery, ProfileUpdate,
+        BiometricRequest, IntruderAlert, GoogleLoginRequest, FaceAttendanceMark,
+        PasswordLoginRequest, SessionStop, LoginSessionResponse, DeviceTrack,
+        CompleteProfileRequest, FaceRegisterRequest, PasswordChangeRequest,
+        NotificationSettingsUpdate
+    )
+    from src.auth.auth_service import AuthService
+    from src.config.database import (
+        db, users_collection, sessions_collection, attendance_collection,
+        login_logs_collection, audit_logs_collection, devices_collection, login_sessions_collection
+    )
+    from src.services.email_service import EmailService
+    from src.services.gsheets_manager import GSheetsManager
+    from src.api.middleware import RequestIDMiddleware, RequestLoggingMiddleware, SecurityHeadersMiddleware
+    from src.config.db_indexes import create_indexes
+except ImportError:
+    from smartface_pro_api.src.models.models import (
+        UserCreate, UserResponse, Token, SessionCreate, SessionStart, 
+        AttendanceRecord, AttendanceMark, LeaveRequest, LeaveApplication, 
+        Notification, OTPRequest, OTPVerification, AIQuery, ProfileUpdate,
+        BiometricRequest, IntruderAlert, GoogleLoginRequest, FaceAttendanceMark,
+        PasswordLoginRequest, SessionStop, LoginSessionResponse, DeviceTrack,
+        CompleteProfileRequest, FaceRegisterRequest, PasswordChangeRequest,
+        NotificationSettingsUpdate
+    )
+    from smartface_pro_api.src.auth.auth_service import AuthService
+    from smartface_pro_api.src.config.database import (
+        db, users_collection, sessions_collection, attendance_collection,
+        login_logs_collection, audit_logs_collection, devices_collection, login_sessions_collection
+    )
+    from smartface_pro_api.src.services.email_service import EmailService
+    from smartface_pro_api.src.services.gsheets_manager import GSheetsManager
+    from smartface_pro_api.src.api.middleware import RequestIDMiddleware, RequestLoggingMiddleware, SecurityHeadersMiddleware
+    from smartface_pro_api.src.config.db_indexes import create_indexes
+
 import random
 otps_collection = db.login_otps
-from smartface_pro_api.src.services.email_service import EmailService
-from smartface_pro_api.src.services.gsheets_manager import GSheetsManager
 from bson import ObjectId
 from core.ai_analyst import chat_with_data
 from core.ai_analyst_groq import ai_analyst as groq_analyst
 from core.train_faces import run_training
 import pandas as pd
 import json
-from smartface_pro_api.src.api.middleware import RequestIDMiddleware, RequestLoggingMiddleware, SecurityHeadersMiddleware
-from smartface_pro_api.src.config.db_indexes import create_indexes
 
 # ── Structured logging setup ─────────────────────────────────────────────────
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()

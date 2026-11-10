@@ -45,7 +45,10 @@ class AuthService:
 
     @staticmethod
     async def get_current_user(auth: HTTPAuthorizationCredentials = Security(HTTPBearer())):
-        from smartface_pro_api.src.config.database import db
+        try:
+            from src.config.database import db
+        except ImportError:
+            from smartface_pro_api.src.config.database import db
         # Check if token is blocklisted
         revoked = await db.revoked_tokens.find_one({"token": auth.credentials})
         if revoked:
