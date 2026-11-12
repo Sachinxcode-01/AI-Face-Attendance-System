@@ -70,6 +70,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
   bool _isLoading = true;
   int _loadGeneration = 0;
 
+  /// Responsive scale derived from width in build(); 1.0 on phones.
+  double _uiScale = 1.0;
+
   // HUD Data
   bool _hasAttendanceData = false;
   double? _overallPercentage;
@@ -708,6 +711,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
     final session = context.read<SessionManager>();
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isTablet = screenWidth >= 600;
+    final double hPad = isTablet ? 32.0 : 20.0;
+    _uiScale = isTablet ? 1.08 : 1.0;
 
     if (_isLoading) {
       return Scaffold(
@@ -892,7 +897,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 onRefresh: _loadDashboardData,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 110),
+                  padding: EdgeInsets.fromLTRB(hPad, 16, hPad, 110),
                   child: StaggeredColumn(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1218,7 +1223,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                             child: Text(
                               'SEMESTER ATTENDANCE INDEX',
                               style: GoogleFonts.inter(
-                                fontSize: 10.5,
+                                fontSize: 10.5 * _uiScale,
                                 letterSpacing: 1.5,
                                 fontWeight: FontWeight.w700,
                                 color: const Color(0xFF4F46E5),
@@ -1231,7 +1236,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       Text(
                         _standing ?? 'Standing unavailable',
                         style: GoogleFonts.poppins(
-                          fontSize: 22,
+                          fontSize: 22 * _uiScale,
                           fontWeight: FontWeight.w700,
                           color: textHeading,
                           letterSpacing: -0.3,
@@ -1241,7 +1246,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       Text(
                         _rank ?? 'Department rank unavailable',
                         style: GoogleFonts.inter(
-                          fontSize: 12.5,
+                          fontSize: 12.5 * _uiScale,
                           color: textBody,
                           fontWeight: FontWeight.w500,
                         ),

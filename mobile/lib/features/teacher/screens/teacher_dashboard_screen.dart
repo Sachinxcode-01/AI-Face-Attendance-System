@@ -66,6 +66,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   bool _isLoading = true;
   String? _error;
 
+  /// Responsive scale derived from width in build(); 1.0 on phones.
+  double _uiScale = 1.0;
+
   // Teacher-scoped stats populated from getTeacherAnalytics + getPendingLeaves
   Map<String, dynamic> _analytics = {};
   List<dynamic> _todayClasses = [];
@@ -193,6 +196,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final session = context.read<SessionManager>();
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isTablet = screenWidth >= 600;
+    final double hPad = isTablet ? 32.0 : 20.0;
+    _uiScale = isTablet ? 1.08 : 1.0;
 
     if (_isLoading) {
       return Scaffold(
@@ -210,12 +215,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           onRefresh: () => _loadData(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(
-              screenWidth * 0.05,
-              12,
-              screenWidth * 0.05,
-              110,
-            ),
+            padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 110),
             child: StaggeredColumn(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -396,7 +396,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         Text(
           '${_greeting()}, $firstName 👋',
           style: GoogleFonts.outfit(
-            fontSize: 22,
+            fontSize: 22 * _uiScale,
             fontWeight: FontWeight.bold,
             color: isDark ? Colors.white : AppColors.textHeading,
           ),
@@ -407,7 +407,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               ? 'No classes scheduled today.'
               : 'You have ${_todayClasses.length} class${_todayClasses.length > 1 ? 'es' : ''} today.',
           style: GoogleFonts.inter(
-            fontSize: 12,
+            fontSize: 12 * _uiScale,
             color: isDark ? Colors.white54 : AppColors.textMuted,
           ),
         ),

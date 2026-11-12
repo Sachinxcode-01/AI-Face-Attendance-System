@@ -51,6 +51,9 @@ class _AdminDashboardState extends State<AdminDashboard>
     with SingleTickerProviderStateMixin {
   bool _loading = true;
   bool _serverOnline = false;
+
+  /// Responsive scale derived from width in build(); 1.0 on phones.
+  double _uiScale = 1.0;
   String? _errorMessage;
   Map<String, dynamic> _stats = {};
   late AnimationController _pulseCtrl;
@@ -125,6 +128,8 @@ class _AdminDashboardState extends State<AdminDashboard>
     final isDark = themeCtrl.isDark;
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isTablet = screenWidth >= 600;
+    final double hPad = isTablet ? 32.0 : 20.0;
+    _uiScale = isTablet ? 1.08 : 1.0;
 
     if (_loading) {
       return Scaffold(
@@ -261,7 +266,7 @@ class _AdminDashboardState extends State<AdminDashboard>
           onRefresh: _loadDashboard,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 110),
+            padding: EdgeInsets.fromLTRB(hPad, 10, hPad, 110),
             child: StaggeredColumn(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -339,7 +344,7 @@ class _AdminDashboardState extends State<AdminDashboard>
         Text(
           'Welcome, ${session.name ?? "Administrator"}',
           style: GoogleFonts.outfit(
-            fontSize: 22,
+            fontSize: 22 * _uiScale,
             fontWeight: FontWeight.bold,
             color: isDark ? Colors.white : AppColors.textHeading,
           ),
