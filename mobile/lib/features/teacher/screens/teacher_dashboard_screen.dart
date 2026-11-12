@@ -69,6 +69,10 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   /// Responsive scale derived from width in build(); 1.0 on phones.
   double _uiScale = 1.0;
 
+  /// Tablet card padding / section rhythm, set from isTablet in build().
+  double _cardPad = 20.0;
+  double _sectionGap = 20.0;
+
   // Teacher-scoped stats populated from getTeacherAnalytics + getPendingLeaves
   Map<String, dynamic> _analytics = {};
   List<dynamic> _todayClasses = [];
@@ -198,6 +202,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final bool isTablet = screenWidth >= 600;
     final double hPad = isTablet ? 32.0 : 20.0;
     _uiScale = isTablet ? 1.08 : 1.0;
+    _cardPad = isTablet ? 22.0 : 16.0;
+    _sectionGap = isTablet ? 24.0 : 20.0;
 
     if (_isLoading) {
       return Scaffold(
@@ -227,7 +233,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   session,
                 ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
 
-                const SizedBox(height: 20),
+                SizedBox(height: _sectionGap),
 
                 // ── Active session hero card ──────────────────────────────
                 _buildSessionHeroCard(context)
@@ -235,7 +241,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     .fadeIn(delay: 100.ms, duration: 400.ms)
                     .slideY(begin: 0.08),
 
-                const SizedBox(height: 20),
+                SizedBox(height: _sectionGap),
 
                 // ── Stats grid ────────────────────────────────────────────
                 if (!isTablet)
@@ -252,7 +258,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     ],
                   ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: _sectionGap),
 
                 // ── Today's classes ───────────────────────────────────────
                 _buildTodayClasses().animate().fadeIn(
@@ -260,7 +266,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   duration: 400.ms,
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: _sectionGap),
 
                 // ── Quick actions (mobile only) ───────────────────────────
                 if (!isTablet)
@@ -268,7 +274,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     context,
                   ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
 
-                const SizedBox(height: 20),
+                SizedBox(height: _sectionGap),
 
                 // ── Recent activity ───────────────────────────────────────
                 _buildRecentActivity().animate().fadeIn(
@@ -457,7 +463,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       animation: _pulsingController,
       builder: (context, _) {
         return GlassContainer(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(_cardPad * 1.5),
           borderColor: isActive
               ? AppColors.gold.withValues(
                   alpha: 0.3 + 0.4 * _pulsingController.value,
@@ -660,7 +666,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         const SizedBox(height: 12),
         if (_todayClasses.isEmpty)
           GlassContainer(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(_cardPad),
             child: Row(
               children: [
                 const Icon(
@@ -704,7 +710,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ModernDashboardCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(_cardPad),
       child: Row(
         children: [
           Container(
@@ -880,7 +886,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         // At-risk student alerts
         if (lowRisk.isNotEmpty) ...[
           GlassContainer(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(_cardPad),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -991,7 +997,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         // Top performers
         if (topStudents.isNotEmpty)
           GlassContainer(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(_cardPad),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

@@ -73,6 +73,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
   /// Responsive scale derived from width in build(); 1.0 on phones.
   double _uiScale = 1.0;
 
+  /// Tablet card padding / section rhythm, set from isTablet in build().
+  double _cardPad = 20.0;
+  double _sectionGap = 20.0;
+
   // HUD Data
   bool _hasAttendanceData = false;
   double? _overallPercentage;
@@ -713,6 +717,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
     final bool isTablet = screenWidth >= 600;
     final double hPad = isTablet ? 32.0 : 20.0;
     _uiScale = isTablet ? 1.08 : 1.0;
+    _cardPad = isTablet ? 26.0 : 22.0;
+    _sectionGap = isTablet ? 24.0 : 20.0;
 
     if (_isLoading) {
       return Scaffold(
@@ -792,7 +798,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         Column(
               children: [
                 PredictionCard(predictions: predictions),
-                const SizedBox(height: 20),
+                SizedBox(height: _sectionGap),
                 PersonalInsightCard(insights: insightsList),
               ],
             )
@@ -912,19 +918,19 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       if (!isTablet) ...[
                         // Mobile view layout: Single column high-density details
                         healthGrid,
-                        const SizedBox(height: 20),
+                        SizedBox(height: _sectionGap),
                         aiInsights,
-                        const SizedBox(height: 20),
+                        SizedBox(height: _sectionGap),
                         weeklyMonthlyAnalytics,
-                        const SizedBox(height: 20),
+                        SizedBox(height: _sectionGap),
                         leaderboardCard,
-                        const SizedBox(height: 20),
+                        SizedBox(height: _sectionGap),
                         calendarHistory,
-                        const SizedBox(height: 20),
+                        SizedBox(height: _sectionGap),
                         activityTimeline,
-                        const SizedBox(height: 20),
+                        SizedBox(height: _sectionGap),
                         securityCard,
-                        const SizedBox(height: 20),
+                        SizedBox(height: _sectionGap),
                         quickActions,
                       ] else ...[
                         // Tablet view layout: Premium responsive split screen
@@ -937,13 +943,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   header,
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: _sectionGap),
                                   healthGrid,
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: _sectionGap),
                                   weeklyMonthlyAnalytics,
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: _sectionGap),
                                   leaderboardCard,
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: _sectionGap),
                                   calendarHistory,
                                 ],
                               ),
@@ -955,11 +961,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   aiInsights,
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: _sectionGap),
                                   quickActions,
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: _sectionGap),
                                   activityTimeline,
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: _sectionGap),
                                   securityCard,
                                 ],
                               ),
@@ -1072,7 +1078,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       delay: 100.ms,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(22),
+        padding: EdgeInsets.all(_cardPad),
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(28),
@@ -1176,7 +1182,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     return AnimatedCardWrapper(
       delay: 100.ms,
       child: Container(
-        padding: const EdgeInsets.all(22),
+        padding: EdgeInsets.all(_cardPad),
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(28),
@@ -1534,7 +1540,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         : AppColors.textMuted;
 
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: EdgeInsets.all(_cardPad),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(28),

@@ -110,6 +110,7 @@ class StatCard extends StatelessWidget {
   final String? trend;
   final bool isTrendPositive;
   final VoidCallback? onTap;
+  final EdgeInsetsGeometry? padding;
 
   const StatCard({
     super.key,
@@ -122,6 +123,7 @@ class StatCard extends StatelessWidget {
     this.trend,
     this.isTrendPositive = true,
     this.onTap,
+    this.padding,
   });
 
   @override
@@ -131,7 +133,7 @@ class StatCard extends StatelessWidget {
 
     return ModernDashboardCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: padding ?? const EdgeInsets.all(AppSpacing.md),
       borderColor: color.withValues(alpha: 0.15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

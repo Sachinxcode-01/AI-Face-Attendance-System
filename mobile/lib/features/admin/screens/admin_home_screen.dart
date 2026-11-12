@@ -54,6 +54,10 @@ class _AdminDashboardState extends State<AdminDashboard>
 
   /// Responsive scale derived from width in build(); 1.0 on phones.
   double _uiScale = 1.0;
+
+  /// Tablet card padding / section rhythm, set from isTablet in build().
+  double _cardPad = 20.0;
+  double _sectionGap = 20.0;
   String? _errorMessage;
   Map<String, dynamic> _stats = {};
   late AnimationController _pulseCtrl;
@@ -130,6 +134,8 @@ class _AdminDashboardState extends State<AdminDashboard>
     final bool isTablet = screenWidth >= 600;
     final double hPad = isTablet ? 32.0 : 20.0;
     _uiScale = isTablet ? 1.08 : 1.0;
+    _cardPad = isTablet ? 22.0 : 16.0;
+    _sectionGap = isTablet ? 24.0 : 20.0;
 
     if (_loading) {
       return Scaffold(
@@ -273,13 +279,13 @@ class _AdminDashboardState extends State<AdminDashboard>
                 if (!isTablet) ...[
                   // Mobile layout
                   header,
-                  const SizedBox(height: 20),
+                  SizedBox(height: _sectionGap),
                   statsGrid,
-                  const SizedBox(height: 20),
+                  SizedBox(height: _sectionGap),
                   alertStatus,
-                  const SizedBox(height: 20),
+                  SizedBox(height: _sectionGap),
                   diagnostics,
-                  const SizedBox(height: 20),
+                  SizedBox(height: _sectionGap),
                   quickActions,
                   const SizedBox(height: 24),
                   logoutButton,
@@ -294,9 +300,9 @@ class _AdminDashboardState extends State<AdminDashboard>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             header,
-                            const SizedBox(height: 20),
+                            SizedBox(height: _sectionGap),
                             statsGrid,
-                            const SizedBox(height: 20),
+                            SizedBox(height: _sectionGap),
                             diagnostics,
                           ],
                         ),
@@ -308,7 +314,7 @@ class _AdminDashboardState extends State<AdminDashboard>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             alertStatus,
-                            const SizedBox(height: 20),
+                            SizedBox(height: _sectionGap),
                             quickActions,
                             const SizedBox(height: 24),
                             logoutButton,
@@ -360,6 +366,7 @@ class _AdminDashboardState extends State<AdminDashboard>
       runSpacing: 14,
       children: [
         StatCard(
+          padding: EdgeInsets.all(_cardPad),
           label: 'Students Enrolled',
           value: _stats['total_students']?.toString() ?? '--',
           icon: Icons.people_alt_outlined,
@@ -368,6 +375,7 @@ class _AdminDashboardState extends State<AdminDashboard>
           isTrendPositive: true,
         ),
         StatCard(
+          padding: EdgeInsets.all(_cardPad),
           label: 'Faculty Members',
           value: _stats['total_teachers']?.toString() ?? '--',
           icon: Icons.school_outlined,
@@ -376,6 +384,7 @@ class _AdminDashboardState extends State<AdminDashboard>
           isTrendPositive: true,
         ),
         StatCard(
+          padding: EdgeInsets.all(_cardPad),
           label: 'Active Class Sessions',
           value: _stats['active_sessions']?.toString() ?? '--',
           icon: Icons.sensors_rounded,
@@ -384,6 +393,7 @@ class _AdminDashboardState extends State<AdminDashboard>
           isTrendPositive: true,
         ),
         StatCard(
+          padding: EdgeInsets.all(_cardPad),
           label: 'Daily Attendance Rate',
           value: _stats['attendance_today']?.toString() ?? '--',
           icon: Icons.check_circle_outline_rounded,
@@ -397,6 +407,7 @@ class _AdminDashboardState extends State<AdminDashboard>
 
   Widget _buildDiagnostics(bool isDark) {
     return ModernDashboardCard(
+      padding: EdgeInsets.all(_cardPad),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -433,6 +444,7 @@ class _AdminDashboardState extends State<AdminDashboard>
       borderRadius: BorderRadius.circular(AppRadius.lg),
       onTap: () => context.push(AppRoutes.adminIntruderSentinelPath),
       child: ModernDashboardCard(
+        padding: EdgeInsets.all(_cardPad),
         child: Row(
           children: [
             Container(
