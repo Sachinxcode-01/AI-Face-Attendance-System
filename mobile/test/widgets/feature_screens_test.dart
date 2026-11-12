@@ -8,7 +8,19 @@ import 'package:smartface_attendance/features/sync/repositories/sync_repository.
 import 'package:smartface_attendance/features/sync/models/attendance_queue_record.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:smartface_attendance/core/network/api_service.dart';
+import 'package:smartface_attendance/core/services/location_service.dart';
 import 'package:smartface_attendance/features/attendance/screens/qr_scanner_screen.dart';
+
+/// Geofence stub: the scanner only touches the device GPS when its own
+/// geofenceCheck is null, so tests hand it a fixed "inside classroom" result.
+const GeofenceValidationResult _insideGeofence = GeofenceValidationResult(
+  isWithin: true,
+  distanceMeters: 5,
+  maxAllowedMeters: 100,
+);
 
 // Mock SyncRepository stub
 class MockSyncRepository implements SyncRepository {
@@ -110,12 +122,19 @@ void main() {
     late MockSyncRepository mockSyncRepository;
     late MockSessionManager mockSessionManager;
 
+    late http.Client originalClient;
+
     setUp(() {
       mockSyncRepository = MockSyncRepository();
       mockSessionManager = MockSessionManager();
+      originalClient = ApiService.client;
 
       GetIt.instance.allowReassignment = true;
       GetIt.instance.registerSingleton<SyncRepository>(mockSyncRepository);
+    });
+
+    tearDown(() {
+      ApiService.client = originalClient;
     });
 
     testWidgets('QRScannerScreen renders HUD elements and top info card', (
@@ -135,7 +154,7 @@ void main() {
 
       // Verify the Top Instruction Card is rendered
       expect(
-        find.textContaining('Align the classroom attendance QR code'),
+        find.textContaining('ALIGN ATTENDANCE QR'),
         findsOneWidget,
       );
 
@@ -154,12 +173,19 @@ void main() {
       'QRScannerScreen triggers success checkmark directly on cutout on successful scan',
       (WidgetTester tester) async {
         mockSyncRepository.failNext = false;
+        ApiService.client = MockClient((_) async {
+          // Latency keeps the loading state observable before the result lands.
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          return http.Response('{"status": "success"}', 200);
+        });
 
         await tester.pumpWidget(
           MaterialApp(
             home: ChangeNotifierProvider<SessionManager>.value(
               value: mockSessionManager,
-              child: const QRScannerScreen(),
+              child: QRScannerScreen(
+                geofenceCheck: () async => _insideGeofence,
+              ),
             ),
           ),
         );
@@ -179,7 +205,7 @@ void main() {
           barcodes: [
             Barcode(
               rawValue:
-                  '{"session_id": "session-456", "token": "qr-token-abc"}',
+                  '{"type": "attendance_qr", "session_id": "session-456", "token": "qr-token-abc"}',
             ),
           ],
         );
@@ -189,7 +215,7 @@ void main() {
         await tester.pump(); // Triggers state change to loading
 
         // Verify it displays loading spinner inside cutout
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(find.byType(CircularProgressIndicator), findsAtLeastNWidgets(1));
 
         // Advance clock to let mock recordAttendance future finish and trigger success transition
         await tester.pump(
@@ -216,12 +242,21 @@ void main() {
       'QRScannerScreen triggers error cross directly on cutout on failed scan',
       (WidgetTester tester) async {
         mockSyncRepository.failNext = true;
+        ApiService.client = MockClient((_) async {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          return http.Response(
+            '{"status": "error", "detail": "Attendance window closed"}',
+            200,
+          );
+        });
 
         await tester.pumpWidget(
           MaterialApp(
             home: ChangeNotifierProvider<SessionManager>.value(
               value: mockSessionManager,
-              child: const QRScannerScreen(),
+              child: QRScannerScreen(
+                geofenceCheck: () async => _insideGeofence,
+              ),
             ),
           ),
         );
@@ -241,7 +276,7 @@ void main() {
           barcodes: [
             Barcode(
               rawValue:
-                  '{"session_id": "session-456", "token": "qr-token-abc"}',
+                  '{"type": "attendance_qr", "session_id": "session-456", "token": "qr-token-abc"}',
             ),
           ],
         );
@@ -251,7 +286,7 @@ void main() {
         await tester.pump(); // Triggers loading
 
         // Verify it displays loading spinner inside cutout
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(find.byType(CircularProgressIndicator), findsAtLeastNWidgets(1));
 
         // Advance clock to let mock recordAttendance future fail and trigger error state
         await tester.pump(

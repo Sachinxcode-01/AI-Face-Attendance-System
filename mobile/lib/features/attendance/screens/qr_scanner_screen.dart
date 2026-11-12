@@ -43,7 +43,10 @@ class _AttendanceRejected implements Exception {
 
 /// High-tech cyber biometric QR camera scanner screen for students.
 class QRScannerScreen extends StatefulWidget {
-  const QRScannerScreen({super.key});
+  /// Overrides the device geofence check (widget tests pass a stub).
+  final Future<GeofenceValidationResult> Function()? geofenceCheck;
+
+  const QRScannerScreen({super.key, this.geofenceCheck});
 
   @override
   State<QRScannerScreen> createState() => _QRScannerScreenState();
@@ -129,11 +132,13 @@ class _QRScannerScreenState extends State<QRScannerScreen>
       final targetLng = (decoded['lng'] as num?)?.toDouble();
       final targetRadius = (decoded['radius'] as num?)?.toDouble();
 
-      final geofence = await LocationService().validateClassroomGeofence(
-        targetLatitude: targetLat,
-        targetLongitude: targetLng,
-        maxRadiusMeters: targetRadius,
-      );
+      final geofence = widget.geofenceCheck != null
+          ? await widget.geofenceCheck!()
+          : await LocationService().validateClassroomGeofence(
+              targetLatitude: targetLat,
+              targetLongitude: targetLng,
+              maxRadiusMeters: targetRadius,
+            );
 
       if (!geofence.isWithin && geofence.reason != null) {
         throw _AttendanceRejected(geofence.reason!);
