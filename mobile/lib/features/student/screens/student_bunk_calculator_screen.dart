@@ -25,6 +25,7 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
+import 'package:smartface_attendance/design_system/ui/app_colors.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 
 class SubjectBunkModel {
@@ -760,16 +761,16 @@ class _StudentBunkCalculatorScreenState
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF131A33) : Colors.white,
+        color: isDark ? const Color(0xFF131A33) : AppColors.bgLight,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCompliant
-              ? (isDark ? const Color(0xFF223055) : const Color(0xFFE5E7F0))
-              : const Color(0xFFEF4444).withValues(alpha: 0.4),
+              ? (isDark ? AppColors.borderDark : AppColors.borderLight)
+              : AppColors.error.withValues(alpha: 0.4),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+            color: AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -790,7 +791,7 @@ class _StudentBunkCalculatorScreenState
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : const Color(0xFF1A1A3A),
+                        color: isDark ? Colors.white : AppColors.textBody,
                       ),
                     ),
                     Text(
@@ -799,7 +800,7 @@ class _StudentBunkCalculatorScreenState
                         fontSize: 11,
                         color: isDark
                             ? Colors.white60
-                            : const Color(0xFF6B7280),
+                            : AppColors.textMuted,
                       ),
                     ),
                   ],
