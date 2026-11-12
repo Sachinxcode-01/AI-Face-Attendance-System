@@ -1677,7 +1677,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                             fontWeight: FontWeight.bold,
                             color: isDark
                                 ? Colors.white
-                                : const Color(0xFF1B2C56),
+                                : AppColors.cardElevated,
                           ),
                         ),
                         Text(

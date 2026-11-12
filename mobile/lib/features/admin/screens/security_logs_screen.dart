@@ -113,7 +113,7 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
             content: Text(
               result['message'] ?? 'Alert acknowledged successfully',
             ),
-            backgroundColor: const Color(0xFF0C1033),
+            backgroundColor: AppColors.bgDark,
           ),
         );
         _loadLogs();
@@ -150,7 +150,7 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
             : RefreshIndicator(
                 onRefresh: _loadLogs,
                 color: AppColors.gold,
-                backgroundColor: const Color(0xFF070B1A),
+                backgroundColor: AppColors.bgDeep,
                 child: _logs.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(
@@ -233,7 +233,7 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
                       Icons.warning_amber_rounded,
                       color: isAcknow
                           ? Colors.greenAccent
-                          : const Color(0xFFF05050),
+                          : AppColors.error,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -242,7 +242,7 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
                       style: GoogleFonts.inter(
                         color: isAcknow
                             ? Colors.greenAccent
-                            : const Color(0xFFF05050),
+                            : AppColors.error,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                         letterSpacing: 1,
@@ -259,13 +259,13 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
                     color:
                         (isAcknow
                                 ? Colors.greenAccent
-                                : const Color(0xFFF05050))
+                                : AppColors.error)
                             .withValues(alpha: 0.1),
                     border: Border.all(
                       color:
                           (isAcknow
                                   ? Colors.greenAccent
-                                  : const Color(0xFFF05050))
+                                  : AppColors.error)
                               .withValues(alpha: 0.3),
                     ),
                     borderRadius: BorderRadius.circular(6),
@@ -275,7 +275,7 @@ class _SecurityLogsScreenState extends State<SecurityLogsScreen> {
                     style: TextStyle(
                       color: isAcknow
                           ? Colors.greenAccent
-                          : const Color(0xFFF05050),
+                          : AppColors.error,
                       fontSize: 8,
                       fontWeight: FontWeight.bold,
                     ),

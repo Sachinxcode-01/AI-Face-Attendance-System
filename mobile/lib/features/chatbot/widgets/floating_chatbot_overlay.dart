@@ -216,7 +216,7 @@ class _FloatingChatbotOverlayState extends State<FloatingChatbotOverlay>
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFFEF4444),
+                                  color: AppColors.error,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Text(

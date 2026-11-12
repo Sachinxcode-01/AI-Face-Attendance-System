@@ -555,7 +555,7 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F152B).withValues(alpha: 0.5),
+        color: AppColors.bgModal.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.04),

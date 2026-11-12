@@ -1031,7 +1031,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           child: const Icon(
             Icons.check_circle_outline_rounded,
             size: 80,
-            color: Color(0xFF22C55E),
+            color: AppColors.success,
           ).animate().scale(duration: 700.ms, curve: Curves.elasticOut),
         ),
         const SizedBox(height: 32),

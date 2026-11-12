@@ -15,6 +15,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:smartface_attendance/design_system/ui/app_colors.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -621,8 +622,8 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                     // Biometric Face Check-in Switch Button
                     _buildGlassIconButton(
                       icon: Icons.face_retouching_natural_rounded,
-                      iconColor: const Color(0xFF67E8F9),
-                      glowColor: const Color(0xFF6366F1).withValues(alpha: 0.4),
+                      iconColor: AppColors.accentLight,
+                      glowColor: AppColors.primaryBright.withValues(alpha: 0.4),
                       onTap: () {
                         HapticFeedback.lightImpact();
                         context.push(AppRoutes.studentFaceCheckinPath);

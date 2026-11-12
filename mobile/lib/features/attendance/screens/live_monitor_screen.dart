@@ -221,7 +221,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _selectedClass,
-                dropdownColor: const Color(0xFF070B1A),
+                dropdownColor: AppColors.bgDeep,
                 icon: const Icon(
                   Icons.keyboard_arrow_down_rounded,
                   color: AppColors.gold,
@@ -463,7 +463,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
           child: Text(
             '$label ($conf)',
             style: const TextStyle(
-              color: Color(0xFF00FFCC),
+              color: AppColors.accentLight,
               fontSize: 7,
               fontWeight: FontWeight.bold,
             ),
@@ -484,7 +484,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
           child: _buildSurveillanceTelemetryBox(
             'CAMERA FPS',
             '${_mockFps.toStringAsFixed(1)} FPS',
-            const Color(0xFF00C6FF),
+            AppColors.infoLight,
           ),
         ),
         const SizedBox(width: 12),
@@ -568,7 +568,7 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
                 radius: 18,
                 child: const Icon(
                   Icons.person,
-                  color: Color(0xFF76E600),
+                  color: AppColors.successLight,
                   size: 18,
                 ),
               ),
@@ -736,11 +736,11 @@ class _LiveMonitorScreenState extends State<LiveMonitorScreen> {
   Color _getRiskColor(String risk) {
     switch (risk) {
       case 'High':
-        return const Color(0xFFF05050);
+        return AppColors.error;
       case 'Medium':
         return Colors.orangeAccent;
       default:
-        return const Color(0xFF00C6FF);
+        return AppColors.infoLight;
     }
   }
 }

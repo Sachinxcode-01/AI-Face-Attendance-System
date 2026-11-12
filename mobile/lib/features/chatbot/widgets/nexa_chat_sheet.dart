@@ -220,7 +220,7 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
             constraints: const BoxConstraints(maxWidth: 680),
             child: Container(
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                color: isDark ? AppColors.bgModal : Colors.white,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(24),
                 ),
@@ -419,7 +419,7 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
                       width: 8,
                       height: 8,
                       decoration: const BoxDecoration(
-                        color: Color(0xFF10B981),
+                        color: AppColors.success,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -768,7 +768,7 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: isDark ? const Color(0xFFFDE68A) : Colors.black87,
+                      color: isDark ? AppColors.goldBright : Colors.black87,
                     ),
                   ),
                 ),
@@ -790,7 +790,7 @@ class _NexaChatSheetState extends State<NexaChatSheet> {
         Container(
           padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+            color: isDark ? AppColors.bgModal : Colors.white,
             border: Border(
               top: BorderSide(color: isDark ? Colors.white10 : Colors.black12),
             ),

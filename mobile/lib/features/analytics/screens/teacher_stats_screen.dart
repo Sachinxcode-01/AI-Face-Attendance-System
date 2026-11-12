@@ -860,7 +860,7 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen>
           margin: const EdgeInsets.symmetric(vertical: 6),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFF1C0E0E).withValues(alpha: 0.6),
+            color: AppColors.surfaceErrorDark.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.error.withValues(alpha: 0.15)),
           ),

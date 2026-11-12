@@ -78,6 +78,9 @@ class AppColors {
   /// Modal bottom sheets, dropdowns
   static const Color bgModal = Color(0xFF0F162E);
 
+  /// Error-tinted dark surface (at-risk / alert cards on dark)
+  static const Color surfaceErrorDark = Color(0xFF1C0E0E);
+
   // ── Light Mode Surface Hierarchy ─────────────────────────────────────────
   static const Color bgLight = Color(0xFFF4F6FC);
   static const Color bgLightAlt = Color(0xFFEEF1FA);

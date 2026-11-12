@@ -11,6 +11,7 @@
 */
 
 import 'package:flutter/material.dart';
+import 'package:smartface_attendance/design_system/ui/app_colors.dart';
 
 /// Categories of attendance health
 enum AttendanceCategory { excellent, good, warning, critical }
@@ -31,7 +32,7 @@ class AttendanceScore {
       case AttendanceCategory.excellent:
         return Colors.greenAccent;
       case AttendanceCategory.good:
-        return const Color(0xFF00FF88);
+        return AppColors.successLight;
       case AttendanceCategory.warning:
         return Colors.amberAccent;
       case AttendanceCategory.critical:

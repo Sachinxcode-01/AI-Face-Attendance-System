@@ -89,8 +89,8 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
                     icon: const Icon(Icons.check_circle_outline, size: 16),
                     label: const Text('Success Toast'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981).withValues(alpha: 0.18),
-                      foregroundColor: const Color(0xFF34D399),
+                      backgroundColor: AppColors.success.withValues(alpha: 0.18),
+                      foregroundColor: AppColors.successLight,
                       elevation: 0,
                     ),
                   ),
@@ -106,8 +106,8 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
                     icon: const Icon(Icons.error_outline, size: 16),
                     label: const Text('Error Toast'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.18),
-                      foregroundColor: const Color(0xFFF87171),
+                      backgroundColor: AppColors.error.withValues(alpha: 0.18),
+                      foregroundColor: AppColors.errorLight,
                       elevation: 0,
                     ),
                   ),
@@ -121,8 +121,8 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
                     icon: const Icon(Icons.warning_amber_outlined, size: 16),
                     label: const Text('Warning Toast'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF59E0B).withValues(alpha: 0.18),
-                      foregroundColor: const Color(0xFFFBBF24),
+                      backgroundColor: AppColors.warning.withValues(alpha: 0.18),
+                      foregroundColor: AppColors.warningLight,
                       elevation: 0,
                     ),
                   ),
@@ -136,8 +136,8 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
                     icon: const Icon(Icons.info_outline, size: 16),
                     label: const Text('Info Toast'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6).withValues(alpha: 0.18),
-                      foregroundColor: const Color(0xFF60A5FA),
+                      backgroundColor: AppColors.info.withValues(alpha: 0.18),
+                      foregroundColor: AppColors.infoLight,
                       elevation: 0,
                     ),
                   ),
@@ -159,7 +159,7 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
                           maxSpread: 5,
                           child: CircleAvatar(
                             radius: 24,
-                            backgroundColor: Color(0xFF10B981),
+                            backgroundColor: AppColors.success,
                             child: Icon(Icons.videocam_rounded, color: Colors.white, size: 22),
                           ),
                         ),
@@ -272,9 +272,9 @@ class _ComponentShowcaseScreenState extends State<ComponentShowcaseScreen> {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  const StatusBadge(label: 'Live Feed', color: Color(0xFF10B981)),
-                  const StatusBadge(label: 'Late Check-in', color: Color(0xFFF59E0B)),
-                  const StatusBadge(label: 'Absent', color: Color(0xFFEF4444)),
+                  const StatusBadge(label: 'Live Feed', color: AppColors.success),
+                  const StatusBadge(label: 'Late Check-in', color: AppColors.warning),
+                  const StatusBadge(label: 'Absent', color: AppColors.error),
                   StatusBadge(
                     label: 'System Active',
                     color: Theme.of(context).colorScheme.primary,

@@ -95,7 +95,7 @@ class IntroductionCardView extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: isDark
-                  ? const Color(0xFF10172D).withValues(alpha: 0.85)
+                  ? AppColors.bgModal.withValues(alpha: 0.85)
                   : Colors.white.withValues(alpha: 0.90),
               borderRadius: BorderRadius.circular(28.0),
               border: Border.all(
@@ -108,7 +108,7 @@ class IntroductionCardView extends StatelessWidget {
                 BoxShadow(
                   color: isDark
                       ? AppColors.primary.withValues(alpha: 0.20)
-                      : const Color(0xFF8B98CE).withValues(alpha: 0.15),
+                      : AppColors.orbLight.withValues(alpha: 0.15),
                   blurRadius: 28,
                   spreadRadius: 2,
                   offset: const Offset(0, 10),
@@ -235,7 +235,7 @@ class IntroductionCardView extends StatelessWidget {
     if (!isActive || reduced) {
       return ShaderMask(
         shaderCallback: (bounds) => const LinearGradient(
-          colors: [Colors.white, Color(0xFF67E8F9)],
+          colors: [Colors.white, AppColors.accentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ).createShader(bounds),
@@ -400,7 +400,7 @@ class _SmartAttendanceIllustrationState
       height: 110,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFF0A1024),
+        color: AppColors.bgDeep,
         border: Border.all(
           color: AppColors.accentLight.withValues(alpha: 0.6),
           width: 2.0,
@@ -561,7 +561,7 @@ class _SecureVerificationIllustrationState
       width: 105,
       height: 105,
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
+        color: AppColors.bgModal,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.accentLight, width: 2.0),
       ),
@@ -699,7 +699,7 @@ class InsightsIllustration extends StatelessWidget {
       {
         'icon': Icons.family_restroom_rounded,
         'label': 'Parent',
-        'color': const Color(0xFF38BDF8),
+        'color': AppColors.accentLight,
       },
       {
         'icon': Icons.admin_panel_settings_rounded,
@@ -712,7 +712,7 @@ class InsightsIllustration extends StatelessWidget {
       width: 220,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
+        color: AppColors.bgModal,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: AppColors.primaryLight.withValues(alpha: 0.3),

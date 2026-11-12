@@ -176,7 +176,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           MediaQuery.of(ctx).padding.bottom + 24,
         ),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1130),
+          color: AppColors.bgDark,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           border: Border.all(
             color: AppColors.gold.withValues(alpha: 0.35),
@@ -378,11 +378,11 @@ class _ProfileScreenState extends State<ProfileScreen>
           uiSettings: [
             AndroidUiSettings(
               toolbarTitle: 'Crop Profile Photo',
-              toolbarColor: const Color(0xFF0D1130),
+              toolbarColor: AppColors.bgDark,
               toolbarWidgetColor: Colors.white,
               statusBarLight: false,
               activeControlsWidgetColor: AppColors.gold,
-              backgroundColor: const Color(0xFF070B1A),
+              backgroundColor: AppColors.bgDeep,
               cropStyle: CropStyle.circle,
               cropFrameColor: AppColors.gold,
               cropGridColor: AppColors.gold.withValues(alpha: 0.3),
@@ -510,7 +510,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             Expanded(child: Text(msg, style: GoogleFonts.inter())),
           ],
         ),
-        backgroundColor: const Color(0xFF1A8F5E),
+        backgroundColor: AppColors.successDark,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
@@ -873,7 +873,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   'Profile synced successfully!',
                                   style: GoogleFonts.inter(),
                                 ),
-                                backgroundColor: const Color(0xFF1A8F5E),
+                                backgroundColor: AppColors.successDark,
                               ),
                             );
                             _fetchProfile();

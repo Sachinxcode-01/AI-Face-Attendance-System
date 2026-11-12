@@ -415,16 +415,16 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF312E81), Color(0xFF1E1B4B)],
+                    colors: [AppColors.primaryDark, AppColors.bgModal],
                   ),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: const Color(0xFF818CF8).withValues(alpha: 0.4),
+                    color: AppColors.primaryLight.withValues(alpha: 0.4),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       blurRadius: 18,
                       offset: const Offset(0, 4),
                     ),
@@ -435,12 +435,12 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                        color: AppColors.success.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(
                         Icons.calculate_rounded,
-                        color: Color(0xFF10B981),
+                        color: AppColors.success,
                         size: 26,
                       ),
                     ),
@@ -461,7 +461,7 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                           Text(
                             'Calculate safe absences & consecutive classes required to reach 75%+',
                             style: GoogleFonts.inter(
-                              color: const Color(0xFFA5B4FC),
+                              color: AppColors.primarySoft,
                               fontSize: 11,
                             ),
                           ),
@@ -470,7 +470,7 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                     ),
                     const Icon(
                       Icons.arrow_forward_ios_rounded,
-                      color: Color(0xFFA5B4FC),
+                      color: AppColors.primarySoft,
                       size: 14,
                     ),
                   ],
@@ -540,11 +540,11 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
   }
 
   Widget _buildRecentLogsLedger(bool isDark) {
-    final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
-    final cardBorder = isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0);
-    final textHeading = isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
-    final textBody = isDark ? const Color(0xFFC8CCDF) : const Color(0xFF3D4260);
-    final textLabel = isDark ? const Color(0xFF7C82A0) : const Color(0xFFA0A0B8);
+    final cardBg = isDark ? AppColors.cardDark : Colors.white;
+    final cardBorder = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final textHeading = isDark ? AppColors.textHeadingDark : AppColors.textHeading;
+    final textBody = isDark ? AppColors.textBodyDark : AppColors.textBody;
+    final textLabel = isDark ? AppColors.textMutedDark : AppColors.textMuted;
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -554,7 +554,7 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
         border: Border.all(color: cardBorder, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
+            color: isDark ? Colors.black38 : AppColors.orbLight.withValues(alpha: 0.15),
             blurRadius: 30,
             offset: const Offset(0, -5),
           ),
@@ -565,7 +565,7 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.history_rounded, size: 16, color: Color(0xFF4F46E5)),
+              const Icon(Icons.history_rounded, size: 16, color: AppColors.primary),
               const SizedBox(width: 8),
               Text(
                 'RECENT VERIFICATION HISTORY',
@@ -573,7 +573,7 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.5,
-                  color: const Color(0xFF4F46E5),
+                  color: AppColors.primary,
                 ),
               ),
             ],
@@ -594,7 +594,7 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _verificationLogs.length,
               separatorBuilder: (context, index) => Divider(
-                color: isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0),
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
                 height: 18,
               ),
               itemBuilder: (context, index) {
@@ -604,8 +604,8 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                     (log['status'] ?? '').toString().toLowerCase() == 'present';
 
                 final Color statusColor = isPresent
-                    ? const Color(0xFF10B981)
-                    : const Color(0xFFEF4444);
+                    ? AppColors.success
+                    : AppColors.error;
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),

@@ -450,7 +450,7 @@ class _RoleCardState extends State<_RoleCard>
     final unselectedColor = isDark
         ? AppColors.textMutedDark
         : AppColors.textMuted;
-    final selectedBg = isDark ? AppColors.surfaceDark : const Color(0xFFEEF2FF);
+    final selectedBg = isDark ? AppColors.surfaceDark : AppColors.iconChipLight;
     final unselectedBg = isDark ? AppColors.cardDark : Colors.white;
     final borderColor = widget.isSelected
         ? selectedColor

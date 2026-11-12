@@ -17,6 +17,7 @@
 */
 
 import 'package:flutter/material.dart';
+import 'package:smartface_attendance/design_system/ui/app_colors.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -579,12 +580,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
 
   Color _deptColor(int idx) {
     const palette = [
-      Color(0xFFFFCC00),
-      Color(0xFF4FC3F7),
-      Color(0xFF81C784),
-      Color(0xFFFF8A65),
-      Color(0xFFBA68C8),
-      Color(0xFF4DD0E1),
+      AppColors.gold,
+      AppColors.infoLight,
+      AppColors.successLight,
+      AppColors.upcoming,
+      AppColors.purple,
+      AppColors.accentLight,
     ];
     return palette[idx % palette.length];
   }
