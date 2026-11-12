@@ -70,9 +70,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
   bool _isLoading = true;
   int _loadGeneration = 0;
 
-  /// Responsive scale derived from width in build(); 1.0 on phones.
-  double _uiScale = 1.0;
-
   /// Tablet card padding / section rhythm, set from isTablet in build().
   double _cardPad = 20.0;
   double _sectionGap = 20.0;
@@ -716,7 +713,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isTablet = screenWidth >= 600;
     final double hPad = isTablet ? 32.0 : 20.0;
-    _uiScale = isTablet ? 1.08 : 1.0;
     _cardPad = isTablet ? 26.0 : 22.0;
     _sectionGap = isTablet ? 24.0 : 20.0;
 
@@ -1228,11 +1224,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           Expanded(
                             child: Text(
                               'SEMESTER ATTENDANCE INDEX',
-                              style: GoogleFonts.inter(
-                                fontSize: 10.5 * _uiScale,
-                                letterSpacing: 1.5,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF4F46E5),
+                              style: ds.AppTextStyles.label(
+                                context,
+                                color: AppColors.primary,
+                                weight: FontWeight.w700,
                               ),
                             ),
                           ),
@@ -1241,20 +1236,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
                       const SizedBox(height: 8),
                       Text(
                         _standing ?? 'Standing unavailable',
-                        style: GoogleFonts.poppins(
-                          fontSize: 22 * _uiScale,
-                          fontWeight: FontWeight.w700,
+                        style: ds.AppTextStyles.heading(
+                          context,
                           color: textHeading,
-                          letterSpacing: -0.3,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _rank ?? 'Department rank unavailable',
-                        style: GoogleFonts.inter(
-                          fontSize: 12.5 * _uiScale,
+                        style: ds.AppTextStyles.caption(
+                          context,
                           color: textBody,
-                          fontWeight: FontWeight.w500,
+                          weight: FontWeight.w500,
                         ),
                       ),
                     ],

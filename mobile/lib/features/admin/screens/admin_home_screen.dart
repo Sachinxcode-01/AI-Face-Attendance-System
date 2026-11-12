@@ -52,8 +52,6 @@ class _AdminDashboardState extends State<AdminDashboard>
   bool _loading = true;
   bool _serverOnline = false;
 
-  /// Responsive scale derived from width in build(); 1.0 on phones.
-  double _uiScale = 1.0;
 
   /// Tablet card padding / section rhythm, set from isTablet in build().
   double _cardPad = 20.0;
@@ -133,7 +131,6 @@ class _AdminDashboardState extends State<AdminDashboard>
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isTablet = screenWidth >= 600;
     final double hPad = isTablet ? 32.0 : 20.0;
-    _uiScale = isTablet ? 1.08 : 1.0;
     _cardPad = isTablet ? 22.0 : 16.0;
     _sectionGap = isTablet ? 24.0 : 20.0;
 
@@ -349,9 +346,8 @@ class _AdminDashboardState extends State<AdminDashboard>
         const SizedBox(height: 6),
         Text(
           'Welcome, ${session.name ?? "Administrator"}',
-          style: GoogleFonts.outfit(
-            fontSize: 22 * _uiScale,
-            fontWeight: FontWeight.bold,
+          style: AppTextStyles.heading(
+            context,
             color: isDark ? Colors.white : AppColors.textHeading,
           ),
         ),

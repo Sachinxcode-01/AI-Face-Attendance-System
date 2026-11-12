@@ -66,8 +66,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   bool _isLoading = true;
   String? _error;
 
-  /// Responsive scale derived from width in build(); 1.0 on phones.
-  double _uiScale = 1.0;
 
   /// Tablet card padding / section rhythm, set from isTablet in build().
   double _cardPad = 20.0;
@@ -201,7 +199,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isTablet = screenWidth >= 600;
     final double hPad = isTablet ? 32.0 : 20.0;
-    _uiScale = isTablet ? 1.08 : 1.0;
     _cardPad = isTablet ? 22.0 : 16.0;
     _sectionGap = isTablet ? 24.0 : 20.0;
 
@@ -401,9 +398,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       children: [
         Text(
           '${_greeting()}, $firstName 👋',
-          style: GoogleFonts.outfit(
-            fontSize: 22 * _uiScale,
-            fontWeight: FontWeight.bold,
+          style: AppTextStyles.heading(
+            context,
             color: isDark ? Colors.white : AppColors.textHeading,
           ),
         ),
@@ -412,8 +408,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           _todayClasses.isEmpty
               ? 'No classes scheduled today.'
               : 'You have ${_todayClasses.length} class${_todayClasses.length > 1 ? 'es' : ''} today.',
-          style: GoogleFonts.inter(
-            fontSize: 12 * _uiScale,
+          style: AppTextStyles.caption(
+            context,
             color: isDark ? Colors.white54 : AppColors.textMuted,
           ),
         ),
