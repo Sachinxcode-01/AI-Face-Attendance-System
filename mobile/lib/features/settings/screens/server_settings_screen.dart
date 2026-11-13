@@ -1719,7 +1719,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   ),
                 ),
                 trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-                onTap: () {},
+                onTap: () => _showLegalSheet('Terms of Service', _termsSummary),
               ),
               const Divider(height: AppSpacing.xs),
               ListTile(
@@ -1735,7 +1735,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   ),
                 ),
                 trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-                onTap: () {},
+                onTap: () => _showLegalSheet('Privacy Policy & Telemetry', _privacySummary),
               ),
             ],
           ),
@@ -1747,6 +1747,56 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   // ============================================================================
   // Reusable Widgets & Render Helpers
   // ============================================================================
+
+  // ── Legal summaries ──────────────────────────────────────────────────────
+  // Informational in-app copy; the binding policy is issued by the institution.
+  // Kept as triple-quoted strings so no backslash escapes are needed.
+  static const String _termsSummary = '''
+SmartFace Attendance is an internal academic tool provided by your institution.
+
+• Mark only your own attendance. Shared accounts, proxy check-ins and spoofed location may be revoked by your administrator.
+• Attendance records, face embeddings and check-in coordinates are processed only to verify presence and produce reports.
+• Misuse may lead to disciplinary action under the rules set by your institution.
+
+The binding terms are issued by your institution; this summary is informational only.
+''';
+
+  static const String _privacySummary = '''
+What is stored: your account identity, attendance records, face embeddings (stored as vectors, not photos) and the coordinates captured at check-in.
+
+Why: to verify attendance, power analytics and send alerts.
+
+Who can see it: your institution staff. Parents linked to a ward account see attendance summaries for that ward.
+
+Your controls: notification preferences are managed in Notification Preferences; deletion requests go through your administrator.
+''';
+
+  void _showLegalSheet(String title, String body) {
+    showModernSheet<void>(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: AppText.heading(color: Colors.white)),
+          const SizedBox(height: AppSpacing.sm),
+          Flexible(
+            child: SingleChildScrollView(
+              child: Text(body, style: AppText.body(color: Colors.white70)),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.tonal(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildSectionHeader(String title) {
     return Text(

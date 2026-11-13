@@ -288,7 +288,7 @@ class _NotificationNexusScreenState extends State<NotificationNexusScreen> {
   Widget _buildEmptyState() {
     return const Center(
       child: AppLottieState(
-        assetPath: 'assets/animations/lottie/empty.json',
+        assetPath: 'assets/lottie/empty.json',
         width: 140,
         height: 140,
         fallbackIcon: Icons.notifications_off_outlined,

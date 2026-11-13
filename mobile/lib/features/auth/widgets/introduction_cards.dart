@@ -36,7 +36,7 @@ const List<IntroCardData> kIntroCardsData = [
     highlightedText: 'Smart Attendance',
     description:
         'Mark and manage attendance quickly using intelligent QR and face-verification technology.',
-    lottieAsset: 'assets/animations/smart_attendance.json',
+    lottieAsset: 'assets/lottie/face_scan.json',
   ),
   IntroCardData(
     index: 1,
@@ -45,7 +45,7 @@ const List<IntroCardData> kIntroCardsData = [
     highlightedText: 'Secure Verification',
     description:
         'Prevent proxy and duplicate attendance with secure, real-time identity verification.',
-    lottieAsset: 'assets/animations/secure_verification.json',
+    lottieAsset: 'assets/lottie/scanning.json',
   ),
   IntroCardData(
     index: 2,
@@ -54,7 +54,7 @@ const List<IntroCardData> kIntroCardsData = [
     highlightedText: 'Insights for Everyone',
     description:
         'Students, teachers, parents, and admins can access attendance, reports, schedules, and alerts.',
-    lottieAsset: 'assets/animations/insights.json',
+    lottieAsset: 'assets/lottie/success.json',
   ),
 ];
 
