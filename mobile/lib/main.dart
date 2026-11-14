@@ -22,6 +22,7 @@ import 'package:smartface_attendance/app/config/env_config.dart';
 import 'package:smartface_attendance/app/config/app_state.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/core/di/service_locator.dart';
+import 'package:smartface_attendance/core/services/supabase_service.dart';
 import 'package:smartface_attendance/app/app.dart';
 
 // Controllers
@@ -84,6 +85,9 @@ void main() async {
 
   // Initialize service locator and all core controllers
   await initServiceLocator();
+
+  // Initialize Supabase Client
+  await SupabaseService.instance.initialize();
 
   // Initialize Background Sync Engine for offline queue processing
   await BackgroundSyncService.initialize();
