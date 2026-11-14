@@ -68,6 +68,22 @@ class SessionManager extends ChangeNotifier {
   bool _introCompleted = false;
   bool _wizardCompleted = false;
 
+  int _sessionEpoch = 0;
+  Future<void> _storageLock = Future.value();
+
+  Future<T> _synchronizedStorage<T>(Future<T> Function() action) {
+    final completer = Completer<T>();
+    _storageLock = _storageLock.whenComplete(() async {
+      try {
+        final result = await action();
+        completer.complete(result);
+      } catch (e, st) {
+        completer.completeError(e, st);
+      }
+    });
+    return completer.future;
+  }
+
   // ======================================================
   // Getters
   // ======================================================
@@ -143,35 +159,37 @@ class SessionManager extends ChangeNotifier {
   /// Returns:
   /// A boolean indicating whether a valid active session is recovered.
   Future<bool> init() async {
-    try {
-      _token = await _storage.read(key: _keyToken);
-      _refreshToken = await _storage.read(key: _keyRefreshToken);
-      _email = await _storage.read(key: _keyEmail);
-      _role = await _storage.read(key: _keyRole);
-      _name = await _storage.read(key: _keyName);
-      _avatarUrl = await _storage.read(key: _keyAvatarUrl);
-      final bio = await _storage.read(key: _keyBiometric);
-      _biometricRegistered = bio == 'true';
-      _isLoggedIn = _token != null && _token!.isNotEmpty;
+    return _synchronizedStorage(() async {
+      try {
+        _token = await _storage.read(key: _keyToken);
+        _refreshToken = await _storage.read(key: _keyRefreshToken);
+        _email = await _storage.read(key: _keyEmail);
+        _role = await _storage.read(key: _keyRole);
+        _name = await _storage.read(key: _keyName);
+        _avatarUrl = await _storage.read(key: _keyAvatarUrl);
+        final bio = await _storage.read(key: _keyBiometric);
+        _biometricRegistered = bio == 'true';
+        _isLoggedIn = _token != null && _token!.isNotEmpty;
 
-      _onboardingCompleted =
-          await CacheService.get<bool>('sf_onboarding_completed') ?? false;
-      _introImagesCompleted =
-          await CacheService.get<bool>('sf_intro_images_completed') ?? false;
-      _introCompleted =
-          await CacheService.get<bool>('sf_intro_completed') ?? false;
-      _wizardCompleted =
-          await CacheService.get<bool>('sf_wizard_completed') ?? false;
+        _onboardingCompleted =
+            await CacheService.get<bool>('sf_onboarding_completed') ?? false;
+        _introImagesCompleted =
+            await CacheService.get<bool>('sf_intro_images_completed') ?? false;
+        _introCompleted =
+            await CacheService.get<bool>('sf_intro_completed') ?? false;
+        _wizardCompleted =
+            await CacheService.get<bool>('sf_wizard_completed') ?? false;
 
-      notifyListeners();
-      if (_isLoggedIn && _token != null && _token!.isNotEmpty) {
-        unawaited(refreshUserProfile());
+        notifyListeners();
+        if (_isLoggedIn && _token != null && _token!.isNotEmpty) {
+          unawaited(refreshUserProfile());
+        }
+        return _isLoggedIn;
+      } catch (e) {
+        debugPrint('[SessionManager] init error: $e');
+        return false;
       }
-      return _isLoggedIn;
-    } catch (e) {
-      debugPrint('[SessionManager] init error: $e');
-      return false;
-    }
+    });
   }
 
   /// Fetches the latest authenticated profile details from the backend
@@ -245,6 +263,8 @@ class SessionManager extends ChangeNotifier {
     bool? introCompleted,
     bool? wizardCompleted,
   }) async {
+    final epoch = ++_sessionEpoch;
+
     _token = token;
     if (refreshToken != null) {
       _refreshToken = refreshToken;
@@ -270,29 +290,33 @@ class SessionManager extends ChangeNotifier {
       _wizardCompleted = biometricRegistered;
     }
 
-    await Future.wait([
-      _storage.write(key: _keyToken, value: token),
-      if (refreshToken != null)
-        _storage.write(key: _keyRefreshToken, value: refreshToken),
-      _storage.write(key: _keyEmail, value: email),
-      _storage.write(key: _keyRole, value: role.toLowerCase()),
-      if (name != null) _storage.write(key: _keyName, value: name),
-      if (_avatarUrl != null && _avatarUrl!.isNotEmpty)
-        _storage.write(key: _keyAvatarUrl, value: _avatarUrl!),
-      _storage.write(key: _keyBiometric, value: biometricRegistered.toString()),
-      CacheService.set(
-        'sf_onboarding_completed',
-        _onboardingCompleted,
-        persist: true,
-      ),
-      CacheService.set(
-        'sf_intro_images_completed',
-        _introImagesCompleted,
-        persist: true,
-      ),
-      CacheService.set('sf_intro_completed', _introCompleted, persist: true),
-      CacheService.set('sf_wizard_completed', _wizardCompleted, persist: true),
-    ]);
+    await _synchronizedStorage(() async {
+      if (_sessionEpoch != epoch) return;
+
+      await Future.wait([
+        _storage.write(key: _keyToken, value: token),
+        if (refreshToken != null)
+          _storage.write(key: _keyRefreshToken, value: refreshToken),
+        _storage.write(key: _keyEmail, value: email),
+        _storage.write(key: _keyRole, value: role.toLowerCase()),
+        if (name != null) _storage.write(key: _keyName, value: name),
+        if (_avatarUrl != null && _avatarUrl!.isNotEmpty)
+          _storage.write(key: _keyAvatarUrl, value: _avatarUrl!),
+        _storage.write(key: _keyBiometric, value: biometricRegistered.toString()),
+        CacheService.set(
+          'sf_onboarding_completed',
+          _onboardingCompleted,
+          persist: true,
+        ),
+        CacheService.set(
+          'sf_intro_images_completed',
+          _introImagesCompleted,
+          persist: true,
+        ),
+        CacheService.set('sf_intro_completed', _introCompleted, persist: true),
+        CacheService.set('sf_wizard_completed', _wizardCompleted, persist: true),
+      ]);
+    });
 
     notifyListeners();
 
@@ -363,7 +387,10 @@ class SessionManager extends ChangeNotifier {
   ///
   /// Clears in-memory session and notifies listeners immediately to guarantee an instant UI transition
   /// to the login screen, while remote backend logout runs asynchronously in the background.
+  /// Persistent credential removal completes before logout returns and is serialized so cleanup
+  /// for an old token cannot overwrite or invalidate newer sessions.
   Future<void> logout() async {
+    final epoch = ++_sessionEpoch;
     final currentToken = _token;
 
     _token = null;
@@ -389,7 +416,7 @@ class SessionManager extends ChangeNotifier {
     // Single atomic notification to GoRouter and listeners for instant UI update
     notifyListeners();
 
-    // Remote API revocation in background (never blocks UI or timeouts)
+    // Remote API revocation in background (never blocks UI, timeouts, or local storage cleanup)
     if (currentToken != null && currentToken.isNotEmpty) {
       unawaited(
         ApiService.logout(currentToken)
@@ -401,33 +428,41 @@ class SessionManager extends ChangeNotifier {
       );
     }
 
-    try {
-      // Clear user and session cache without destroying device preferences
-      await CacheService.clearAll(
-        preserveKeys: [
-          'sf_onboarding_completed',
-          'sf_intro_images_completed',
-          'sf_intro_completed',
-        ],
-      );
+    // Persistent credential removal completes before logout returns, serialized with session saves
+    await _synchronizedStorage(() async {
+      // Guard against race conditions: if a newer session was established, do not delete its state
+      if (_sessionEpoch != epoch) return;
 
-      // Clear only session keys, preserving sf_remember_email
-      await Future.wait([
-        _storage.delete(key: _keyToken),
-        _storage.delete(key: _keyRefreshToken),
-        _storage.delete(key: _keyEmail),
-        _storage.delete(key: _keyRole),
-        _storage.delete(key: _keyName),
-        _storage.delete(key: _keyAvatarUrl),
-        _storage.delete(key: _keyBiometric),
-        CacheService.set('sf_onboarding_completed', true, persist: true),
-        CacheService.set('sf_intro_images_completed', true, persist: true),
-        CacheService.set('sf_intro_completed', true, persist: true),
-        CacheService.invalidate('sf_wizard_completed'),
-      ]);
-    } catch (e) {
-      debugPrint('[SessionManager] Storage cleanup error: $e');
-    }
+      try {
+        // Clear user and session cache without destroying device preferences
+        await CacheService.clearAll(
+          preserveKeys: [
+            'sf_onboarding_completed',
+            'sf_intro_images_completed',
+            'sf_intro_completed',
+          ],
+        );
+
+        if (_sessionEpoch != epoch) return;
+
+        // Clear only session keys, preserving sf_remember_email
+        await Future.wait([
+          _storage.delete(key: _keyToken),
+          _storage.delete(key: _keyRefreshToken),
+          _storage.delete(key: _keyEmail),
+          _storage.delete(key: _keyRole),
+          _storage.delete(key: _keyName),
+          _storage.delete(key: _keyAvatarUrl),
+          _storage.delete(key: _keyBiometric),
+          CacheService.set('sf_onboarding_completed', true, persist: true),
+          CacheService.set('sf_intro_images_completed', true, persist: true),
+          CacheService.set('sf_intro_completed', true, persist: true),
+          CacheService.invalidate('sf_wizard_completed'),
+        ]);
+      } catch (e) {
+        debugPrint('[SessionManager] Storage cleanup error: $e');
+      }
+    });
   }
 
   /// Performs a basic signature check on JWT structure format.
