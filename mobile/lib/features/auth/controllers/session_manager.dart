@@ -361,9 +361,8 @@ class SessionManager extends ChangeNotifier {
 
   /// Resets the user's session cache and wipes all secure storage variables.
   ///
-  /// Clears in-memory session immediately to guarantee an instant UI transition
-  /// to the login screen, with remote backend logout and persistent storage cleanup
-  /// running asynchronously in the background.
+  /// Clears in-memory session and notifies listeners immediately to guarantee an instant UI transition
+  /// to the login screen, while remote backend logout runs asynchronously in the background.
   Future<void> logout() async {
     final currentToken = _token;
 
@@ -390,17 +389,16 @@ class SessionManager extends ChangeNotifier {
     // Single atomic notification to GoRouter and listeners for instant UI update
     notifyListeners();
 
-    // Perform remote API revocation and disk storage cleanup in background
-    unawaited(_performBackgroundLogoutCleanup(currentToken));
-  }
-
-  Future<void> _performBackgroundLogoutCleanup(String? token) async {
-    if (token != null && token.isNotEmpty) {
-      try {
-        await ApiService.logout(token).timeout(const Duration(seconds: 4));
-      } catch (e) {
-        debugPrint('[SessionManager] Backend logout failed or timed out: $e');
-      }
+    // Remote API revocation in background (never blocks UI or timeouts)
+    if (currentToken != null && currentToken.isNotEmpty) {
+      unawaited(
+        ApiService.logout(currentToken)
+            .timeout(const Duration(seconds: 4))
+            .catchError((e) {
+              debugPrint('[SessionManager] Backend logout failed: $e');
+              return <String, dynamic>{};
+            }),
+      );
     }
 
     try {
@@ -428,7 +426,7 @@ class SessionManager extends ChangeNotifier {
         CacheService.invalidate('sf_wizard_completed'),
       ]);
     } catch (e) {
-      debugPrint('[SessionManager] Background cleanup error: $e');
+      debugPrint('[SessionManager] Storage cleanup error: $e');
     }
   }
 

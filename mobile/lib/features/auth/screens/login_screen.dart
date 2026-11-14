@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
@@ -29,12 +30,23 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _loadRememberedEmail();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadRememberedEmail();
+    });
+  }
+
+  SessionManager _getSession() {
+    try {
+      if (sl.isRegistered<SessionManager>()) {
+        return sl<SessionManager>();
+      }
+    } catch (_) {}
+    return context.read<SessionManager>();
   }
 
   Future<void> _loadRememberedEmail() async {
     try {
-      final session = sl<SessionManager>();
+      final session = _getSession();
       final email = await session.getRememberedEmail();
       if (email != null && email.isNotEmpty && mounted) {
         setState(() {
@@ -333,7 +345,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final token = result['access_token'] ?? result['token'];
       if (token != null && token.toString().isNotEmpty) {
         HapticFeedback.heavyImpact();
-        final session = sl<SessionManager>();
+        final session = _getSession();
 
         if (_rememberMe) {
           await session.saveRememberedEmail(email);
@@ -428,7 +440,7 @@ class _LoginScreenState extends State<LoginScreen> {
       title: 'Welcome back',
       titleLeading: const AnimatedWavingHand(),
       subtitle: 'Sign in to your SmartFace account',
-      onBackTap: context.canPop() ? () => context.pop() : null,
+      onBackTap: Navigator.canPop(context) ? () => Navigator.maybePop(context) : null,
       bottomLink: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
