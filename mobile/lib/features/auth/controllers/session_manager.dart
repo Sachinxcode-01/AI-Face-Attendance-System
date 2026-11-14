@@ -371,9 +371,6 @@ class SessionManager extends ChangeNotifier {
       }
     }
 
-    final wasOnboardingCompleted = _onboardingCompleted;
-    final wasIntroImagesCompleted = _introImagesCompleted;
-    final wasIntroCompleted = _introCompleted;
     _token = null;
     _refreshToken = null;
     _email = null;
@@ -382,13 +379,23 @@ class SessionManager extends ChangeNotifier {
     _avatarUrl = null;
     _biometricRegistered = false;
     _isLoggedIn = false;
-    _introImagesCompleted = false;
-    _introCompleted = false;
     _wizardCompleted = false;
     _selectedWard = null;
 
-    // Clear offline chat caching and all other local caches
-    await CacheService.clearAll();
+    // Device-level onboarding and intro tours are permanently completed for this device.
+    // When a user logs out, they must land cleanly on the login screen.
+    _onboardingCompleted = true;
+    _introImagesCompleted = true;
+    _introCompleted = true;
+
+    // Clear user and session cache without destroying device preferences
+    await CacheService.clearAll(
+      preserveKeys: [
+        'sf_onboarding_completed',
+        'sf_intro_images_completed',
+        'sf_intro_completed',
+      ],
+    );
 
     // Clear only session keys, preserving sf_remember_email
     await Future.wait([
@@ -399,20 +406,13 @@ class SessionManager extends ChangeNotifier {
       _storage.delete(key: _keyName),
       _storage.delete(key: _keyAvatarUrl),
       _storage.delete(key: _keyBiometric),
+      CacheService.set('sf_onboarding_completed', true, persist: true),
+      CacheService.set('sf_intro_images_completed', true, persist: true),
+      CacheService.set('sf_intro_completed', true, persist: true),
+      CacheService.invalidate('sf_wizard_completed'),
     ]);
 
-    // Restore device-level onboarding/intro flags (they are one-time tours,
-    // not session state) so returning users are not forced through them again.
-    if (wasOnboardingCompleted) {
-      await setOnboardingCompleted(true);
-    }
-    if (wasIntroImagesCompleted) {
-      await setIntroImagesCompleted(true);
-    }
-    if (wasIntroCompleted) {
-      await setIntroCompleted(true);
-    }
-
+    // Single atomic notification to GoRouter and listeners
     notifyListeners();
   }
 

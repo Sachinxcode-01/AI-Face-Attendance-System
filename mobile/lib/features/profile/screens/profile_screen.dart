@@ -30,7 +30,6 @@
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
@@ -44,6 +43,9 @@ import 'package:smartface_attendance/shared/widgets/college_search_picker.dart';
 // ======================================================
 // Core & State Imports
 // ======================================================
+import 'package:smartface_attendance/app/router/app_router.dart';
+import 'package:smartface_attendance/app/router/route_names.dart';
+import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
@@ -1729,11 +1731,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                           isDestructive: true,
                           icon: Icons.logout_rounded,
                         );
-                        if (confirmed == true && context.mounted) {
-                          await context.read<SessionManager>().logout();
-                          if (context.mounted) {
-                            context.go('/auth/login');
-                          }
+                        if (confirmed == true) {
+                          await sl<SessionManager>().logout();
+                          appRouter.go(AppRoutes.loginPath);
                         }
                       },
                       color: AppColors.error,

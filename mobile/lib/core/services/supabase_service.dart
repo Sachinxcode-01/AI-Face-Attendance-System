@@ -54,8 +54,11 @@ class SupabaseService {
     required File imageFile,
   }) async {
     try {
-      final fileName = '$studentId/${DateTime.now().millisecondsSinceEpoch}.jpg';
-      await client.storage.from('avatars').upload(
+      final fileName =
+          '$studentId/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      await client.storage
+          .from('avatars')
+          .upload(
             fileName,
             imageFile,
             fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
@@ -69,4 +72,3 @@ class SupabaseService {
     }
   }
 }
-

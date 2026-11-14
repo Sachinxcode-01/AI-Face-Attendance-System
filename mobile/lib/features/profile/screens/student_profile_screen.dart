@@ -38,6 +38,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smartface_attendance/app/router/route_names.dart';
+import 'package:smartface_attendance/app/router/app_router.dart';
+import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/shared/widgets/avatar_picker_sheet.dart';
 
 // ======================================================
@@ -1103,11 +1105,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                                     isDestructive: true,
                                     icon: Icons.logout_rounded,
                                   );
-                              if (confirmed == true && context.mounted) {
-                                await context.read<SessionManager>().logout();
-                                if (context.mounted) {
-                                  context.go('/auth/login');
-                                }
+                              if (confirmed == true) {
+                                await sl<SessionManager>().logout();
+                                appRouter.go(AppRoutes.loginPath);
                               }
                             },
                             color: AppColors.error,

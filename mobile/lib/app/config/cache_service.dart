@@ -159,16 +159,25 @@ class CacheService {
     } catch (_) {}
   }
 
-  /// Wipes the entire cache database (both memory and disk variables).
-  static Future<void> clearAll() async {
+  /// Wipes the entire cache database (both memory and disk variables),
+  /// with an option to preserve specific keys (e.g. device-level onboarding flags).
+  static Future<void> clearAll({List<String> preserveKeys = const []}) async {
     _memory.clear();
     try {
       final prefs = await SharedPreferences.getInstance();
-      final keys = prefs.getKeys().where((k) => k.startsWith(_diskKeyPrefix));
+      final preserveSet = preserveKeys.map((k) => '$_diskKeyPrefix$k').toSet();
+      final keys = prefs.getKeys().where(
+        (k) => k.startsWith(_diskKeyPrefix) && !preserveSet.contains(k),
+      );
       for (final k in keys) {
         await prefs.remove(k);
       }
     } catch (_) {}
+  }
+
+  /// Clears in-memory cache entries only.
+  static void clearMemory() {
+    _memory.clear();
   }
 }
 

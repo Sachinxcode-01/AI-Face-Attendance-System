@@ -36,8 +36,23 @@ class RouteGuards {
 
     // 1. Unauthenticated users must go to guest-only routes (or splash)
     if (!isLoggedIn) {
+      // Allow Splash screen to run its startup telemetry sequence
+      if (path == AppRoutes.splashPath) {
+        return null;
+      }
+
+      // Allow users to reach and remain on Login, Register, Forgot Password, and OTP without redirection
+      if (path == AppRoutes.loginPath ||
+          path == AppRoutes.registerPath ||
+          path == AppRoutes.forgotPasswordPath ||
+          path == AppRoutes.otpPath ||
+          path == '/reset-password') {
+        return null;
+      }
+
+      // First-time device installation walkthroughs (skipped for users who already reached login or logged out)
       if (!session.onboardingCompleted) {
-        if (path != AppRoutes.onboardingPath && path != AppRoutes.splashPath) {
+        if (path != AppRoutes.onboardingPath) {
           debugPrint(
             '[RouteGuard] Onboarding not completed. Redirecting to Onboarding.',
           );
@@ -47,7 +62,7 @@ class RouteGuards {
       }
 
       if (!session.introImagesCompleted) {
-        if (path != AppRoutes.introImagesPath && path != AppRoutes.splashPath) {
+        if (path != AppRoutes.introImagesPath) {
           debugPrint(
             '[RouteGuard] Intro images not completed. Redirecting to Intro Images.',
           );

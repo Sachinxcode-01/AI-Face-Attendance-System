@@ -20,6 +20,8 @@ import 'package:google_fonts/google_fonts.dart';
 // ======================================================
 // Core & State Imports
 // ======================================================
+import 'package:smartface_attendance/app/router/app_router.dart';
+import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/app/config/app_state.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
@@ -701,11 +703,9 @@ class _AdminDashboardState extends State<AdminDashboard>
               );
             },
           );
-          if (confirmed == true && context.mounted) {
-            await context.read<SessionManager>().logout();
-            if (context.mounted) {
-              context.go('/auth/login');
-            }
+          if (confirmed == true) {
+            await sl<SessionManager>().logout();
+            appRouter.go(AppRoutes.loginPath);
           }
         },
         child: Row(

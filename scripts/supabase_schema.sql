@@ -4,8 +4,11 @@
 
 -- 1. Enable Required Extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-CREATE EXTENSION IF NOT EXISTS "vector";      -- pgvector for face embeddings
+
+CREATE EXTENSION IF NOT EXISTS "vector";
+-- pgvector for face embeddings
 
 -- -----------------------------------------------------------------------------
 -- 2. Students / Users Table
@@ -24,8 +27,9 @@ CREATE TABLE IF NOT EXISTS public.students (
 );
 
 -- Index for searching students
-CREATE INDEX IF NOT EXISTS idx_students_student_id ON public.students(student_id);
-CREATE INDEX IF NOT EXISTS idx_students_dept_sem ON public.students(department, semester);
+CREATE INDEX IF NOT EXISTS idx_students_student_id ON public.students (student_id);
+
+CREATE INDEX IF NOT EXISTS idx_students_dept_sem ON public.students (department, semester);
 
 -- -----------------------------------------------------------------------------
 -- 3. Face Embeddings Table (512-dimensional vector for FaceNet / InsightFace)
@@ -39,12 +43,11 @@ CREATE TABLE IF NOT EXISTS public.face_embeddings (
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_face_embeddings_student_id ON public.face_embeddings(student_id);
+CREATE INDEX IF NOT EXISTS idx_face_embeddings_student_id ON public.face_embeddings (student_id);
 
 -- HNSW Vector Cosine Index for ultra-fast face search (< 2ms)
-CREATE INDEX IF NOT EXISTS idx_face_embeddings_hnsw
-    ON public.face_embeddings USING hnsw (embedding vector_cosine_ops)
-    WITH (m = 16, ef_construction = 64);
+CREATE INDEX IF NOT EXISTS idx_face_embeddings_hnsw ON public.face_embeddings USING hnsw (embedding vector_cosine_ops)
+WITH (m = 16, ef_construction = 64);
 
 -- -----------------------------------------------------------------------------
 -- 4. Class / Exam Sessions Table
@@ -62,7 +65,7 @@ CREATE TABLE IF NOT EXISTS public.sessions (
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_sessions_status_time ON public.sessions(status, start_time);
+CREATE INDEX IF NOT EXISTS idx_sessions_status_time ON public.sessions (status, start_time);
 
 -- -----------------------------------------------------------------------------
 -- 5. Attendance Logs Table
@@ -80,8 +83,9 @@ CREATE TABLE IF NOT EXISTS public.attendance_logs (
 );
 
 -- Compound index for fast student attendance history and duplicate check
-CREATE INDEX IF NOT EXISTS idx_attendance_student_session ON public.attendance_logs(student_id, session_id);
-CREATE INDEX IF NOT EXISTS idx_attendance_marked_at ON public.attendance_logs(marked_at DESC);
+CREATE INDEX IF NOT EXISTS idx_attendance_student_session ON public.attendance_logs (student_id, session_id);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_marked_at ON public.attendance_logs (marked_at DESC);
 
 -- -----------------------------------------------------------------------------
 -- 6. RPC Function: Fast Cosine Similarity Face Matching
@@ -121,19 +125,21 @@ $$;
 -- 7. Row Level Security (RLS)
 -- -----------------------------------------------------------------------------
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE public.face_embeddings ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE public.sessions ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE public.attendance_logs ENABLE ROW LEVEL SECURITY;
 
 -- Read policies for authenticated users
-CREATE POLICY "Allow authenticated read on students"
-    ON public.students FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Allow authenticated read on students" ON public.students FOR
+SELECT TO authenticated USING (true);
 
-CREATE POLICY "Allow authenticated read on sessions"
-    ON public.sessions FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Allow authenticated read on sessions" ON public.sessions FOR
+SELECT TO authenticated USING (true);
 
-CREATE POLICY "Allow authenticated read on attendance_logs"
-    ON public.attendance_logs FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Allow authenticated read on attendance_logs" ON public.attendance_logs FOR
+SELECT TO authenticated USING (true);
 
 -- Service role bypasses RLS automatically for backend mutations
-

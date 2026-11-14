@@ -397,13 +397,7 @@ class _LoginScreenState extends State<LoginScreen> {
       title: 'Welcome back',
       titleLeading: const AnimatedWavingHand(),
       subtitle: 'Sign in to your SmartFace account',
-      onBackTap: () {
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go('/auth/onboarding');
-        }
-      },
+      onBackTap: context.canPop() ? () => context.pop() : null,
       bottomLink: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
