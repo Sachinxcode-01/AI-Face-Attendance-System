@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
+import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
@@ -33,15 +33,17 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _loadRememberedEmail() async {
-    final session = context.read<SessionManager>();
-    final email = await session.getRememberedEmail();
-    if (email != null && email.isNotEmpty) {
-      if (mounted) {
+    try {
+      final session = sl<SessionManager>();
+      final email = await session.getRememberedEmail();
+      if (email != null && email.isNotEmpty && mounted) {
         setState(() {
           _emailController.text = email;
           _rememberMe = true;
         });
       }
+    } catch (e) {
+      debugPrint('[LoginScreen] Error loading remembered email: $e');
     }
   }
 
@@ -68,7 +70,9 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             decoration: BoxDecoration(
               color: isDark ? AppColors.bgDeep : Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -87,7 +91,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    const Icon(Icons.dns_rounded, color: AuthDesign.primaryIndigo, size: 22),
+                    const Icon(
+                      Icons.dns_rounded,
+                      color: AuthDesign.primaryIndigo,
+                      size: 22,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Server Connection Settings',
@@ -116,8 +124,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: hostController,
                         decoration: InputDecoration(
                           labelText: 'Host IP or Domain',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                     ),
@@ -129,8 +142,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: 'Port',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                     ),
@@ -165,16 +183,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: (isSuccess == true ? Colors.green : Colors.red).withValues(alpha: 0.12),
+                      color: (isSuccess == true ? Colors.green : Colors.red)
+                          .withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: (isSuccess == true ? Colors.green : Colors.red).withValues(alpha: 0.3),
+                        color: (isSuccess == true ? Colors.green : Colors.red)
+                            .withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          isSuccess == true ? Icons.check_circle : Icons.error_outline,
+                          isSuccess == true
+                              ? Icons.check_circle
+                              : Icons.error_outline,
                           color: isSuccess == true ? Colors.green : Colors.red,
                           size: 18,
                         ),
@@ -184,7 +206,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             statusMsg!,
                             style: TextStyle(
                               fontSize: 12,
-                              color: isSuccess == true ? Colors.green : Colors.red,
+                              color: isSuccess == true
+                                  ? Colors.green
+                                  : Colors.red,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -208,7 +232,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 });
                                 final h = hostController.text.trim();
                                 final p = portController.text.trim();
-                                final url = p.isEmpty ? 'http://$h' : 'http://$h:$p';
+                                final url = p.isEmpty
+                                    ? 'http://$h'
+                                    : 'http://$h:$p';
                                 final ok = await ApiService.testConnection(url);
                                 setSheetState(() {
                                   isTesting = false;
@@ -218,7 +244,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       : 'Connection failed. Check IP & port. ❌';
                                 });
                               },
-                        child: Text(isTesting ? 'Testing...' : 'Test Connection'),
+                        child: Text(
+                          isTesting ? 'Testing...' : 'Test Connection',
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -239,7 +267,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             setState(() {});
                             AppToast.show(
                               context,
-                              message: 'Server updated to ${ApiService.baseUrl}',
+                              message:
+                                  'Server updated to ${ApiService.baseUrl}',
                               type: ToastType.success,
                             );
                           }
@@ -304,7 +333,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final token = result['access_token'] ?? result['token'];
       if (token != null && token.toString().isNotEmpty) {
         HapticFeedback.heavyImpact();
-        final session = context.read<SessionManager>();
+        final session = sl<SessionManager>();
 
         if (_rememberMe) {
           await session.saveRememberedEmail(email);
@@ -377,7 +406,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final errStr = e.toString().replaceAll('Exception: ', '');
       AppToast.show(
         context,
-        message: errStr.contains('SocketException') || errStr.contains('Failed host lookup')
+        message:
+            errStr.contains('SocketException') ||
+                errStr.contains('Failed host lookup')
             ? 'Unable to connect to server. Please check your connection.'
             : 'Login error: $errStr',
         type: ToastType.error,
@@ -409,8 +440,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: AuthDesign.fontPoppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color:
-                      isDark ? AppColors.textMutedDark : AuthDesign.textLabel,
+                  color: isDark
+                      ? AppColors.textMutedDark
+                      : AuthDesign.textLabel,
                 ),
                 children: [
                   TextSpan(
@@ -451,11 +483,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 onTap: _showServerConfigSheet,
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 4,
+                    horizontal: 2,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.settings_ethernet, size: 13, color: AuthDesign.primaryIndigo),
+                      const Icon(
+                        Icons.settings_ethernet,
+                        size: 13,
+                        color: AuthDesign.primaryIndigo,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         ApiService.serverHost,
@@ -466,7 +505,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(width: 2),
-                      const Icon(Icons.arrow_drop_down, size: 14, color: AuthDesign.primaryIndigo),
+                      const Icon(
+                        Icons.arrow_drop_down,
+                        size: 14,
+                        color: AuthDesign.primaryIndigo,
+                      ),
                     ],
                   ),
                 ),
@@ -505,8 +548,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? Icons.visibility_off_outlined
                       : Icons.visibility_outlined,
                   size: 20,
-                  color:
-                      isDark ? AppColors.textMutedDark : AuthDesign.textLabel,
+                  color: isDark
+                      ? AppColors.textMutedDark
+                      : AuthDesign.textLabel,
                 ),
                 onPressed: () =>
                     setState(() => _obscurePassword = !_obscurePassword),

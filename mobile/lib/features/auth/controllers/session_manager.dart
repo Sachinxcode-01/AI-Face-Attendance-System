@@ -361,15 +361,11 @@ class SessionManager extends ChangeNotifier {
 
   /// Resets the user's session cache and wipes all secure storage variables.
   ///
-  /// Used during user logout or session expiration timeouts.
+  /// Clears in-memory session immediately to guarantee an instant UI transition
+  /// to the login screen, with remote backend logout and persistent storage cleanup
+  /// running asynchronously in the background.
   Future<void> logout() async {
-    if (_token != null && _token!.isNotEmpty) {
-      try {
-        await ApiService.logout(_token!).timeout(const Duration(seconds: 4));
-      } catch (e) {
-        debugPrint('[SessionManager] Backend logout failed or timed out: $e');
-      }
-    }
+    final currentToken = _token;
 
     _token = null;
     _refreshToken = null;
@@ -388,32 +384,52 @@ class SessionManager extends ChangeNotifier {
     _introImagesCompleted = true;
     _introCompleted = true;
 
-    // Clear user and session cache without destroying device preferences
-    await CacheService.clearAll(
-      preserveKeys: [
-        'sf_onboarding_completed',
-        'sf_intro_images_completed',
-        'sf_intro_completed',
-      ],
-    );
+    // Clear in-memory caches instantly
+    CacheService.clearMemory();
 
-    // Clear only session keys, preserving sf_remember_email
-    await Future.wait([
-      _storage.delete(key: _keyToken),
-      _storage.delete(key: _keyRefreshToken),
-      _storage.delete(key: _keyEmail),
-      _storage.delete(key: _keyRole),
-      _storage.delete(key: _keyName),
-      _storage.delete(key: _keyAvatarUrl),
-      _storage.delete(key: _keyBiometric),
-      CacheService.set('sf_onboarding_completed', true, persist: true),
-      CacheService.set('sf_intro_images_completed', true, persist: true),
-      CacheService.set('sf_intro_completed', true, persist: true),
-      CacheService.invalidate('sf_wizard_completed'),
-    ]);
-
-    // Single atomic notification to GoRouter and listeners
+    // Single atomic notification to GoRouter and listeners for instant UI update
     notifyListeners();
+
+    // Perform remote API revocation and disk storage cleanup in background
+    unawaited(_performBackgroundLogoutCleanup(currentToken));
+  }
+
+  Future<void> _performBackgroundLogoutCleanup(String? token) async {
+    if (token != null && token.isNotEmpty) {
+      try {
+        await ApiService.logout(token).timeout(const Duration(seconds: 4));
+      } catch (e) {
+        debugPrint('[SessionManager] Backend logout failed or timed out: $e');
+      }
+    }
+
+    try {
+      // Clear user and session cache without destroying device preferences
+      await CacheService.clearAll(
+        preserveKeys: [
+          'sf_onboarding_completed',
+          'sf_intro_images_completed',
+          'sf_intro_completed',
+        ],
+      );
+
+      // Clear only session keys, preserving sf_remember_email
+      await Future.wait([
+        _storage.delete(key: _keyToken),
+        _storage.delete(key: _keyRefreshToken),
+        _storage.delete(key: _keyEmail),
+        _storage.delete(key: _keyRole),
+        _storage.delete(key: _keyName),
+        _storage.delete(key: _keyAvatarUrl),
+        _storage.delete(key: _keyBiometric),
+        CacheService.set('sf_onboarding_completed', true, persist: true),
+        CacheService.set('sf_intro_images_completed', true, persist: true),
+        CacheService.set('sf_intro_completed', true, persist: true),
+        CacheService.invalidate('sf_wizard_completed'),
+      ]);
+    } catch (e) {
+      debugPrint('[SessionManager] Background cleanup error: $e');
+    }
   }
 
   /// Performs a basic signature check on JWT structure format.
