@@ -419,12 +419,12 @@ class SessionManager extends ChangeNotifier {
     // Remote API revocation in background (never blocks UI, timeouts, or local storage cleanup)
     if (currentToken != null && currentToken.isNotEmpty) {
       unawaited(
-        ApiService.logout(currentToken)
-            .timeout(const Duration(seconds: 4))
-            .catchError((e) {
-              debugPrint('[SessionManager] Backend logout failed: $e');
-              return <String, dynamic>{};
-            }),
+        ApiService.logout(
+          currentToken,
+        ).timeout(const Duration(seconds: 4)).catchError((e) {
+          debugPrint('[SessionManager] Backend logout failed: $e');
+          return <String, dynamic>{};
+        }),
       );
     }
 
