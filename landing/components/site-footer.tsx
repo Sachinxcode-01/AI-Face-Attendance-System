@@ -51,7 +51,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-14 grid gap-10 border-b border-white/[0.06] pb-12 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="lg:col-span-2">
+          <div className="sm:col-span-2">
             <div className="flex items-center gap-3">
               <span className="relative grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-gradient-to-br from-brand-500/25 to-brand-600/5">
                 <ScanFace className="h-5 w-5 text-brand-300" strokeWidth={1.6} />
