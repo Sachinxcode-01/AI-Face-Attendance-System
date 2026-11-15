@@ -8,34 +8,30 @@ import { SectionHeading } from "./ui/section-heading";
 
 const ACCENTS: Record<
   Role["accent"],
-  { badge: string; glow: string; check: string; arrow: string; border: string }
+  { badge: string; glow: string; text: string; border: string }
 > = {
   indigo: {
     badge: "border-brand-400/20 bg-brand-500/10 text-brand-300",
     glow: "bg-brand-500/20",
-    check: "text-brand-300",
-    arrow: "text-brand-300",
+    text: "text-brand-300",
     border: "hover:border-brand-400/40",
   },
   emerald: {
     badge: "border-emerald-400/20 bg-emerald-500/10 text-emerald-300",
     glow: "bg-emerald-500/20",
-    check: "text-emerald-300",
-    arrow: "text-emerald-300",
+    text: "text-emerald-300",
     border: "hover:border-emerald-400/40",
   },
   amber: {
     badge: "border-amber-400/20 bg-amber-500/10 text-amber-300",
     glow: "bg-amber-500/20",
-    check: "text-amber-300",
-    arrow: "text-amber-300",
+    text: "text-amber-300",
     border: "hover:border-amber-400/40",
   },
   sky: {
     badge: "border-sky-400/20 bg-sky-500/10 text-sky-300",
     glow: "bg-sky-500/20",
-    check: "text-sky-300",
-    arrow: "text-sky-300",
+    text: "text-sky-300",
     border: "hover:border-sky-400/40",
   },
 };
@@ -86,7 +82,7 @@ export function RoleGateway() {
                         key={capability}
                         className="flex gap-2 text-[12px] leading-snug text-ink-muted"
                       >
-                        <Check className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${accent.check}`} />
+                        <Check className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${accent.text}`} />
                         {capability}
                       </li>
                     ))}
@@ -100,7 +96,7 @@ export function RoleGateway() {
                       className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-[13px] font-medium text-ink transition group-hover:border-white/20 group-hover:bg-white/[0.05]"
                     >
                       Open {role.label} portal
-                      <ArrowUpRight className={`h-4 w-4 ${accent.arrow}`} />
+                      <ArrowUpRight className={`h-4 w-4 ${accent.text}`} />
                     </a>
                     <p className="mt-2 truncate font-mono text-[9px] tracking-wide text-ink-faint">
                       {role.path}

@@ -43,7 +43,7 @@ export function Hero() {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
             </span>
             <span className="text-[12.5px] text-ink-muted">ArcFace v2.4 Live</span>
-            <span className="h-3 w-px bg-white/15" aria-hidden />
+            <span className="hidden h-3 w-px bg-white/15 sm:block" aria-hidden />
             <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-emerald-300/90">
               99.8% sub-second recognition
             </span>

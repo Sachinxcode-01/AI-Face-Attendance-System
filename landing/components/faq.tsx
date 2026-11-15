@@ -73,8 +73,6 @@ export function Faq() {
                     type="button"
                     onClick={() => setOpenIndex(isOpen ? null : index)}
                     aria-expanded={isOpen}
-                    aria-controls={`faq-panel-${index}`}
-                    id={`faq-button-${index}`}
                     className="flex w-full items-start justify-between gap-6 py-5 text-left"
                   >
                     <span className="text-[15px] font-medium leading-snug text-ink">
@@ -91,9 +89,6 @@ export function Faq() {
                 <AnimatePresence initial={false}>
                   {isOpen ? (
                     <motion.div
-                      id={`faq-panel-${index}`}
-                      role="region"
-                      aria-labelledby={`faq-button-${index}`}
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}

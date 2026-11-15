@@ -2,32 +2,48 @@
 
 import React, { useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
-import { 
-  ShieldAlert, 
-  Activity, 
-  Cpu, 
-  Sliders, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Camera, 
-  Database, 
+import {
+  ShieldAlert,
+  Activity,
+  Cpu,
+  Sliders,
+  AlertTriangle,
+  CheckCircle2,
+  Camera,
+  Database,
   Terminal,
   Download,
   Users,
   Eye,
   BellRing
 } from 'lucide-react';
-import { DEMO_PROFILES, MOCK_INTRUDERS } from '@/lib/demo-data';
+import { DEMO_PROFILES, MOCK_INTRUDERS, MOCK_AUDIT_LOGS } from '@/lib/demo-data';
 
 export default function AdminPortalPage() {
   const profile = DEMO_PROFILES.admin;
   const [similarityThreshold, setSimilarityThreshold] = useState(0.65);
   const [intruders, setIntruders] = useState(MOCK_INTRUDERS);
   const [alertDispatched, setAlertDispatched] = useState(false);
+  const [calibrated, setCalibrated] = useState(false);
 
   const handleDispatchSecurity = () => {
     setAlertDispatched(true);
     setTimeout(() => setAlertDispatched(false), 4000);
+  };
+
+  const handleExportAuditLogs = () => {
+    const blob = new Blob([JSON.stringify(MOCK_AUDIT_LOGS, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `smartface-audit-logs-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSaveCalibration = () => {
+    setCalibrated(true);
+    setTimeout(() => setCalibrated(false), 3000);
   };
 
   return (
@@ -35,7 +51,7 @@ export default function AdminPortalPage() {
       <Navbar currentRole="admin" />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
+
         {/* Top Header & Telemetry Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-white/10 bg-[#0E1428] p-6 backdrop-blur-xl">
           <div>
@@ -61,10 +77,13 @@ export default function AdminPortalPage() {
               <BellRing className="h-4 w-4" />
               <span>{alertDispatched ? 'Security Dispatched!' : 'Broadcast Campus Alert'}</span>
             </button>
-            <button className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10 transition-colors">
-              <Download className="h-4 w-4" />
-              <span>Export Audit Logs</span>
-            </button>
+              <button
+                onClick={handleExportAuditLogs}
+                className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10 transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                <span>Export Audit Logs</span>
+              </button>
           </div>
         </div>
 
@@ -121,7 +140,7 @@ export default function AdminPortalPage() {
 
         {/* 2-Column Grid: Intruder Sentinel & ArcFace Model Calibration */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
+
           {/* Left 7 Cols: Intruder Sentinel Surveillance Engine */}
           <div className="lg:col-span-7 space-y-6">
             <div className="rounded-3xl border border-white/10 bg-[#0E1428] p-6">
@@ -190,9 +209,13 @@ export default function AdminPortalPage() {
                         <span className="rounded bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-400 uppercase border border-red-500/20">
                           {item.status}
                         </span>
-                        <button className="rounded-lg bg-white/5 hover:bg-white/10 px-2.5 py-1 text-xs text-gray-300">
-                          Inspect
-                        </button>
+                          <button
+                            disabled
+                            title="Incident detail view is unavailable in this demo"
+                            className="rounded-lg bg-white/5 px-2.5 py-1 text-xs text-gray-500 cursor-not-allowed"
+                          >
+                            Inspect
+                          </button>
                       </div>
                     </div>
                   ))}
@@ -203,7 +226,7 @@ export default function AdminPortalPage() {
 
           {/* Right 5 Cols: ArcFace Calibration & System Settings */}
           <div className="lg:col-span-5 space-y-6">
-            
+
             {/* Calibration Panel */}
             <div className="rounded-3xl border border-white/10 bg-[#0E1428] p-6">
               <h3 className="font-display text-base font-bold text-white mb-4 flex items-center gap-2">
@@ -214,10 +237,13 @@ export default function AdminPortalPage() {
               <div className="space-y-5">
                 <div>
                   <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-gray-300 font-semibold">Cosine Similarity Threshold</span>
+                    <label htmlFor="cosine-similarity-threshold" className="text-gray-300 font-semibold cursor-pointer">
+                      Cosine Similarity Threshold
+                    </label>
                     <span className="font-mono text-indigo-400 font-bold">{similarityThreshold}</span>
                   </div>
                   <input
+                    id="cosine-similarity-threshold"
                     type="range"
                     min="0.50"
                     max="0.85"
@@ -252,9 +278,12 @@ export default function AdminPortalPage() {
                   </div>
                 </div>
 
-                <button className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-colors shadow-lg shadow-indigo-600/20">
-                  Save & Calibrate Clusters
-                </button>
+                  <button
+                    onClick={handleSaveCalibration}
+                    className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-colors shadow-lg shadow-indigo-600/20"
+                  >
+                    {calibrated ? 'Calibration Saved & Clusters Updated!' : 'Save & Calibrate Clusters'}
+                  </button>
               </div>
             </div>
 

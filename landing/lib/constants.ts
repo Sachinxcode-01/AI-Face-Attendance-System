@@ -4,9 +4,9 @@ const DEFAULT_PORTAL_URL = "https://portal.smartface.pro";
  * Public base URL of Website 2 (the unified portal app).
  * NEXT_PUBLIC_* values are inlined at build time; this is public config, not a secret.
  */
-export const PORTAL_URL = (process.env.NEXT_PUBLIC_PORTAL_URL || DEFAULT_PORTAL_URL)
-  .trim()
-  .replace(/\/+$/, "");
+const configuredPortalUrl = process.env.NEXT_PUBLIC_PORTAL_URL?.trim();
+
+export const PORTAL_URL = (configuredPortalUrl || DEFAULT_PORTAL_URL).replace(/\/+$/, "");
 
 /** Every route below lives on Website 2, never on this marketing site. */
 export const PORTAL_LINKS = {

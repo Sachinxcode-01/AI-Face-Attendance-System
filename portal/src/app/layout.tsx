@@ -1,9 +1,29 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-poppins",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "SmartFace Role Portal Suite | Unified Biometric Campus",
-  description: "Enterprise management portal for Students, Faculty, Administrators, and Parents.",
+  description:
+    "Role-based attendance management for students, faculty, administrators, and parents — ArcFace biometrics, rotating anti-proxy QR codes, and live campus security telemetry.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#070A14",
 };
 
 export default function RootLayout({
@@ -12,17 +32,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="min-h-screen bg-[#070A14] text-[#C8CCDF] antialiased selection:bg-indigo-500 selection:text-white">
-        {children}
+    <html lang="en" className={`dark ${inter.variable} ${poppins.variable}`}>
+      <body className="min-h-screen bg-canvas font-sans text-ink antialiased selection:bg-indigo-500 selection:text-white">
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

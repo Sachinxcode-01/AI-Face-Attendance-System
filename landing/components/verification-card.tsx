@@ -186,11 +186,6 @@ export function VerificationCard() {
         </div>
       </div>
 
-      <div className="absolute -left-5 top-1/3 hidden animate-float items-center gap-2 rounded-xl border border-white/10 bg-surface/90 px-3 py-2 shadow-xl shadow-black/50 backdrop-blur lg:flex">
-        <ShieldCheck className="h-4 w-4 text-success" />
-        <span className="text-[11px] font-medium text-ink">Proxy blocked</span>
-        <span className="font-mono text-[9px] text-ink-faint">QR expired</span>
-      </div>
     </div>
   );
 }

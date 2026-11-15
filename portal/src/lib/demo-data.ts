@@ -1,4 +1,5 @@
 import {
+  UserRole,
   UserProfile,
   AttendanceRecord,
   TimetableSlot,
@@ -15,7 +16,7 @@ import {
   SystemService,
 } from './types';
 
-export const DEMO_PROFILES: Record<string, UserProfile> = {
+export const DEMO_PROFILES: Record<UserRole, UserProfile> = {
   student: {
     id: 'usr_std_01',
     name: 'Alice Smith',
@@ -162,7 +163,7 @@ export const MOCK_DIRECTORY: DirectoryUser[] = [
 
 export const MOCK_NOTIFICATIONS: AppNotification[] = [
   { id: 'ntf_1', title: 'Biometric Check-in at Campus Gate', body: 'Alice verified identity via Face Recognition camera at North Gate entrance.', time: '08:52 AM Today', type: 'checkin', read: false },
-  { id: 'ntf_2', title: 'Class Attendance Logged', body: 'Marked present for Neural Networks & Deep Learning in Lab 402.', time: '09:02 AM Today', type: 'class', read: false },
+  { id: 'ntf_2', title: 'Class Attendance Logged', body: 'Marked present for Neural Networks & Deep Learning in Lab 402.', time: '09:02 AM Today', type: 'checkin', read: false },
   { id: 'ntf_3', title: 'Hackathon Leave Approved', body: 'Dean approved academic leave for 20 Nov - 22 Nov (ACM Regional Hackathon).', time: 'Yesterday 04:15 PM', type: 'leave', read: true },
   { id: 'ntf_4', title: 'Security Drill Scheduled', body: 'Campus-wide biometric failover drill on Saturday 07:00 AM.', time: 'Yesterday 09:00 AM', type: 'system', read: true },
   { id: 'ntf_5', title: 'Attendance Warning Cleared', body: 'Linear Algebra percentage recovered above 75% threshold.', time: '12 Nov 03:30 PM', type: 'system', read: true },

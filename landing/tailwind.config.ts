@@ -6,16 +6,12 @@ const config: Config = {
     extend: {
       colors: {
         canvas: "#070A14",
-        surface: {
-          DEFAULT: "#0E1428",
-          raised: "#131A33",
-        },
+        surface: "#0E1428",
         brand: {
           300: "#A5B4FC",
           400: "#818CF8",
           500: "#6366F1",
           600: "#4F46E5",
-          700: "#4338CA",
         },
         success: "#10B981",
         ink: {
@@ -36,14 +32,9 @@ const config: Config = {
           "88%": { opacity: "1" },
           "100%": { transform: "translateY(330%)", opacity: "0" },
         },
-        float: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-10px)" },
-        },
       },
       animation: {
         scan: "scan 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite",
-        float: "float 7s ease-in-out infinite",
       },
     },
   },

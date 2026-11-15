@@ -50,7 +50,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-14 grid gap-10 border-b border-white/[0.06] pb-12 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-14 grid gap-10 border-b border-white/[0.06] pb-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3">
               <span className="relative grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-gradient-to-br from-brand-500/25 to-brand-600/5">
@@ -105,40 +105,6 @@ export function SiteFooter() {
                   </a>
                 </li>
               ))}
-            </ul>
-          </div>
-
-          <div>
-            <p className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-ink-faint">
-              Contact
-            </p>
-            <ul className="mt-4 space-y-2.5">
-              <li>
-                <a
-                  href={DEMO_MAILTO}
-                  className="text-[13px] text-ink-muted transition hover:text-ink"
-                >
-                  Book a campus demo
-                </a>
-              </li>
-              <li>
-                <a
-                  href="mailto:sales@smartface.pro"
-                  className="text-[13px] text-ink-muted transition hover:text-ink"
-                >
-                  sales@smartface.pro
-                </a>
-              </li>
-              <li>
-                <a
-                  href={PORTAL_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[13px] text-ink-muted transition hover:text-ink"
-                >
-                  Portal sign-in
-                </a>
-              </li>
             </ul>
           </div>
         </div>

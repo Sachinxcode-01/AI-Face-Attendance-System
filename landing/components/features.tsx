@@ -14,7 +14,7 @@ import { Reveal } from "./ui/reveal";
 import { SectionHeading } from "./ui/section-heading";
 
 const CELL =
-  "group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-6 transition-colors duration-300 hover:border-white/[0.16]";
+  "relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-6 transition-colors duration-300 hover:border-white/[0.16]";
 
 const TIERS = ["Bronze", "Silver", "Gold", "Inferno"];
 
