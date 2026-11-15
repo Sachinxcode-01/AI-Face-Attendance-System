@@ -5,11 +5,13 @@
 </p>
 
 <p align="center">
-  <strong>Next-Gen AI Face Recognition Attendance & Enterprise Biometric Security Platform</strong>
+  <strong>Next-Gen AI Face Recognition Attendance & Enterprise Biometric Security Platform</strong><br>
+  🌐 <strong>Live Landing Website:</strong> <a href="https://ai-face-attendance-beta.vercel.app/"><strong>https://ai-face-attendance-beta.vercel.app/</strong></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/Sachinxcode-01/SmartAttendance-by-Using-FaceRecogniition-AI-"><img src="https://img.shields.io/badge/Python-3.9+-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python Version" /></a>
+  <a href="https://ai-face-attendance-beta.vercel.app/"><img src="https://img.shields.io/badge/Live_Landing_Site-ai--face--attendance--beta.vercel.app-6366F1.svg?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Landing Site" /></a>
+  <a href="https://github.com/Sachinxcode-01/AI-Face-Attendance-System"><img src="https://img.shields.io/badge/Python-3.9+-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python Version" /></a>
   <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-v2.0-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" /></a>
   <a href="https://flutter.dev/"><img src="https://img.shields.io/badge/Flutter-v3.0+-02569B.svg?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter" /></a>
   <a href="https://streamlit.io/"><img src="https://img.shields.io/badge/Streamlit-v1.40+-FF4B4B.svg?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit" /></a>
@@ -25,6 +27,11 @@
 **SmartFace Attendance & Biometric Security Suite** is an enterprise-grade, multi-platform biometric ecosystem designed to completely automate attendance logging and enforce robust real-time security. 
 
 Transitioned from a single local computer Python script, the system is now a **fully distributed platform** featuring a high-speed FastAPI ArcFace AI inference microservice, an enterprise Node.js Express REST and WebSocket gateway, an anti-proxy rotating QR verification system, an interactive cross-platform Flutter student application, elegant web dashboards, and LLM-powered natural language insights. It provides organizations with an elite, secure, and touchless administrative workflow.
+
+### 🌐 Live Deployment
+* **Official Marketing & Landing Website:** [https://ai-face-attendance-beta.vercel.app/](https://ai-face-attendance-beta.vercel.app/)
+* **Project GitHub Repository:** [https://github.com/Sachinxcode-01/AI-Face-Attendance-System](https://github.com/Sachinxcode-01/AI-Face-Attendance-System)
+* **Lead Developer:** Sachin K ([kalinganavarsachin@gmail.com](mailto:kalinganavarsachin@gmail.com) · +91 98807 62623) · Gadag, Karnataka, India
 
 ---
 

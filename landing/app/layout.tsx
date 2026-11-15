@@ -10,7 +10,7 @@ const inter = Inter({
   display: "swap",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://smartface.pro";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ai-face-attendance-beta.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
