@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useRouter } from 'next/navigation';
 import { UserProfile, UserRole } from '@/lib/types';
 import { DEMO_PROFILES } from '@/lib/demo-data';
-import { setAuthCookies, clearAuth, getStoredUser, getRole, isAuthenticated } from '@/lib/auth';
+import { setAuthCookies, clearAuth, getStoredUser, getRole, isAuthenticated, DEMO_ACCOUNTS } from '@/lib/auth';
 
 interface AuthContextValue {
   user: UserProfile | null;
@@ -75,8 +75,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
-import { DEMO_ACCOUNTS } from '@/lib/auth';
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
