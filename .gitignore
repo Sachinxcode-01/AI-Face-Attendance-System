@@ -103,3 +103,17 @@ skills-lock.json
 frontend/web/.next/
 frontend/web/public/downloads/
 .kilo/
+
+# Landing / portal Next.js build output
+landing/.next/
+portal/.next/
+
+# IDE and Agent scratch directories
+.augment/
+.codewhale/
+.factory/
+.gemini/
+.kilocode/
+.warp/
+run_trace.sh
+*.tsbuildinfo
