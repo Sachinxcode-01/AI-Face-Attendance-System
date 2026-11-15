@@ -50,7 +50,7 @@ const SECTIONS = [
   {
     heading: "7. Contact",
     body: [
-      "Questions about this policy, data exports, or deletion requests go to privacy@smartface.pro. We respond within 72 hours, and within the statutory window where your local law sets one.",
+      "Questions about this policy, data exports, or deletion requests go to kalinganavarsachin@gmail.com (Sachin K, Lead Developer, Gadag, Karnataka, India - 582103, Phone: +91 98807 62623). Project repository: https://github.com/Sachinxcode-01/AI-Face-Attendance-System.",
     ],
   },
 ];

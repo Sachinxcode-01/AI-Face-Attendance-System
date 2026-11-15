@@ -49,7 +49,7 @@ const SECTIONS = [
   {
     heading: "7. Changes and contact",
     body: [
-      "We may update these terms with 30 days' notice for material changes. Continued use after the effective date is acceptance. Questions go to legal@smartface.pro.",
+      "We may update these terms with 30 days' notice for material changes. Continued use after the effective date is acceptance. Inquiries and licensing questions go to kalinganavarsachin@gmail.com (Sachin K, Lead Developer, Gadag, Karnataka, India - 582103, Phone: +91 98807 62623). GitHub: https://github.com/Sachinxcode-01/AI-Face-Attendance-System.",
     ],
   },
 ];

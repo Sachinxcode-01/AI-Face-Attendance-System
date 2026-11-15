@@ -17,18 +17,24 @@ export const PORTAL_LINKS = {
 } as const;
 
 export const COMPANY_CONTACT = {
-  name: "SmartFace Systems Inc.",
-  address: "500 Technology Square, Suite 400",
-  cityStateZip: "Cambridge, MA 02139, USA",
-  phone: "+1 (888) 582-3223",
-  phoneFormatted: "+1 (888) 582-FACE",
-  salesEmail: "sales@smartface.pro",
-  supportEmail: "support@smartface.pro",
-  privacyEmail: "privacy@smartface.pro",
-  legalEmail: "legal@smartface.pro",
-  hours: "Mon–Fri: 8:00 AM – 8:00 PM EST · 24/7 Enterprise SOC",
+  name: "SmartFace AI Attendance System",
+  developer: "Sachin K",
+  developerRole: "Developer & Creator",
+  location: "Gadag, Karnataka, India - 582103",
+  address: "Gadag, Karnataka",
+  cityStateZip: "India - 582103",
+  phone: "+919880762623",
+  phoneFormatted: "+91 98807 62623",
+  email: "kalinganavarsachin@gmail.com",
+  salesEmail: "kalinganavarsachin@gmail.com",
+  supportEmail: "kalinganavarsachin@gmail.com",
+  privacyEmail: "kalinganavarsachin@gmail.com",
+  legalEmail: "kalinganavarsachin@gmail.com",
+  github: "https://github.com/Sachinxcode-01/AI-Face-Attendance-System",
+  githubRepo: "Sachinxcode-01/AI-Face-Attendance-System",
+  hours: "Gadag, Karnataka, India · IST (UTC+5:30)",
 } as const;
 
 export const DEMO_MAILTO = `mailto:${COMPANY_CONTACT.salesEmail}?subject=${encodeURIComponent(
-  "Campus demo request",
+  "SmartFace Attendance inquiry / demo request",
 )}`;

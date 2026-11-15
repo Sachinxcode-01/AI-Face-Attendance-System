@@ -99,11 +99,11 @@ export default function ThankYouPage() {
 
         <div className="mt-8 border-t border-[var(--hairline)] pt-4 text-center">
           <p className="text-[12px] text-faint">
-            Urgent inquiry? Email directly to{" "}
-            <a href="mailto:sales@smartface.pro" className="text-accent underline">
-              sales@smartface.pro
+            Direct developer inquiry? Email{" "}
+            <a href="mailto:kalinganavarsachin@gmail.com" className="text-accent underline">
+              kalinganavarsachin@gmail.com
             </a>{" "}
-            or call <span className="text-mid">+1 (888) 582-3223</span>.
+            or call/WhatsApp <span className="text-mid font-medium">+91 98807 62623</span> (Sachin K, Gadag, Karnataka, India).
           </p>
         </div>
       </div>

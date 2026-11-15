@@ -1,5 +1,15 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Building2, Mail, Phone, ScanFace } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Code2,
+  Github,
+  Mail,
+  MapPin,
+  Phone,
+  ScanFace,
+  User,
+} from "lucide-react";
 import { COMPANY_CONTACT, DEMO_MAILTO, PORTAL_URL } from "@/lib/constants";
 import { NAV_LINKS, ROLES } from "@/lib/content";
 
@@ -29,7 +39,7 @@ export function SiteFooter({ onOpenDemo }: SiteFooterProps) {
               </h2>
               <p className="mt-4 max-w-lg text-[14.5px] leading-relaxed text-mid">
                 Walk through a live session, a kiosk check-in and the admin sentinel with our team.
-                30 minutes, your scenarios, zero install required.
+                Open-source biometric attendance engine with sub-300ms verification.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-stretch">
@@ -52,16 +62,17 @@ export function SiteFooter({ onOpenDemo }: SiteFooterProps) {
                 </a>
               )}
               <a
-                href={PORTAL_URL}
+                href={COMPANY_CONTACT.github}
                 target="_blank"
                 rel="noreferrer"
                 className="button-primary inline-flex h-12 items-center justify-center gap-2 px-6 transition-colors duration-200 hover:bg-[var(--glass-strong)]"
               >
-                Launch Portal
-                <ArrowUpRight className="h-4 w-4 text-accent" />
+                <Github className="h-4 w-4" />
+                View on GitHub
+                <ArrowUpRight className="h-3.5 w-3.5 text-accent" />
               </a>
               <p className="text-center font-mono text-[9.5px] uppercase tracking-[0.14em] text-faint lg:text-left">
-                30-minute walkthrough · No install needed
+                Developed by Sachin K · Karnataka, India
               </p>
             </div>
           </div>
@@ -84,10 +95,23 @@ export function SiteFooter({ onOpenDemo }: SiteFooterProps) {
               Touchless biometric attendance, anti-proxy session integrity and campus security — one
               platform, four portals.
             </p>
-            <p className="mt-5 inline-flex items-center gap-2 rounded-lg border border-[var(--hairline)] bg-white/[0.02] px-2.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-faint">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#1ed760]" />
-              ArcFace v2.4 · All Systems Live
-            </p>
+
+            {/* Developer pill & status */}
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--hairline)] bg-white/[0.02] px-2.5 py-1.5 font-mono text-[9.5px] uppercase tracking-[0.12em] text-faint">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#1ed760]" />
+                ArcFace v2.4 · All Systems Live
+              </span>
+              <a
+                href={COMPANY_CONTACT.github}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-accent/20 bg-accent/5 px-2.5 py-1.5 font-mono text-[9.5px] text-accent hover:border-accent/40 transition"
+              >
+                <Github className="h-3 w-3" />
+                {COMPANY_CONTACT.githubRepo}
+              </a>
+            </div>
           </div>
 
           {/* Navigation Links */}
@@ -127,33 +151,45 @@ export function SiteFooter({ onOpenDemo }: SiteFooterProps) {
             </ul>
           </div>
 
-          {/* Real Contact & Headquarters Info */}
+          {/* Developer & Contact Info */}
           <div>
-            <p className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-faint">Contact & HQ</p>
+            <p className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-faint">Developer & Contact</p>
             <div className="mt-4 space-y-3 text-[12.5px] text-mid">
-              <div className="flex items-start gap-2">
-                <Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
-                <span>
-                  {COMPANY_CONTACT.address}
-                  <br />
-                  {COMPANY_CONTACT.cityStateZip}
-                </span>
-              </div>
               <div className="flex items-center gap-2">
-                <Phone className="h-3.5 w-3.5 shrink-0 text-accent" />
-                <a href={`tel:${COMPANY_CONTACT.phone}`} className="hover:text-hi">
-                  {COMPANY_CONTACT.phoneFormatted}
-                </a>
+                <User className="h-3.5 w-3.5 shrink-0 text-accent" />
+                <span className="font-medium text-hi">{COMPANY_CONTACT.developer}</span>
+                <span className="text-[11px] text-faint font-mono">Developer</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5 shrink-0 text-accent" />
-                <a href={`mailto:${COMPANY_CONTACT.salesEmail}`} className="hover:text-hi">
-                  {COMPANY_CONTACT.salesEmail}
+                <a href={`mailto:${COMPANY_CONTACT.email}`} className="hover:text-hi transition break-all">
+                  {COMPANY_CONTACT.email}
                 </a>
               </div>
-              <p className="font-mono text-[10px] text-faint pt-1 leading-normal">
-                {COMPANY_CONTACT.hours}
-              </p>
+              <div className="flex items-center gap-2">
+                <Phone className="h-3.5 w-3.5 shrink-0 text-accent" />
+                <a href={`tel:${COMPANY_CONTACT.phone}`} className="hover:text-hi transition">
+                  {COMPANY_CONTACT.phoneFormatted}
+                </a>
+              </div>
+              <div className="flex items-start gap-2">
+                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                <span>
+                  {COMPANY_CONTACT.location}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <Github className="h-3.5 w-3.5 shrink-0 text-accent" />
+                <a
+                  href={COMPANY_CONTACT.github}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-accent hover:underline flex items-center gap-1 text-[12px]"
+                >
+                  GitHub Repository
+                  <ArrowUpRight className="h-3 w-3" />
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -161,7 +197,11 @@ export function SiteFooter({ onOpenDemo }: SiteFooterProps) {
         {/* Bottom bar with Copyright & Legal Links */}
         <div className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[11.5px] text-faint">
-            © {new Date().getFullYear()} {COMPANY_CONTACT.name} All rights reserved.
+            © {new Date().getFullYear()} {COMPANY_CONTACT.name} · Developed by{" "}
+            <a href={COMPANY_CONTACT.github} target="_blank" rel="noreferrer" className="text-hi hover:text-accent font-medium">
+              {COMPANY_CONTACT.developer}
+            </a>{" "}
+            (Gadag, Karnataka, India).
           </p>
 
           <div className="flex flex-wrap items-center gap-5 text-[12px] text-mid">
@@ -174,7 +214,7 @@ export function SiteFooter({ onOpenDemo }: SiteFooterProps) {
             </Link>
             <span className="text-faint">·</span>
             <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint">
-              ArcFace v2.4 · ONNX Runtime · FERPA Compliant
+              ArcFace v2.4 · ONNX Runtime · PIN: 582103
             </span>
           </div>
         </div>
