@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import gsap from "gsap";
-import { ArrowDown, ArrowRight, Activity, Radio } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight, Activity, Radio, Sparkles } from "lucide-react";
 import { PORTAL_URL } from "@/lib/constants";
 import { VerificationCard } from "./verification-card";
 
@@ -68,7 +68,11 @@ function LiveCount() {
   );
 }
 
-export function Hero() {
+interface HeroProps {
+  onOpenDemo?: () => void;
+}
+
+export function Hero({ onOpenDemo }: HeroProps) {
   const reduceMotion = useReducedMotion();
   const headlineRef = useRef<HTMLHeadingElement>(null);
 
@@ -135,7 +139,18 @@ export function Hero() {
             alerts — one platform that verifies an entire campus in under 300ms.
           </motion.p>
 
-          <motion.div variants={item} className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <motion.div variants={item} className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+            {onOpenDemo ? (
+              <button
+                type="button"
+                onClick={onOpenDemo}
+                className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-b from-accent to-[#6a66e8] px-6 text-[14px] font-semibold text-[#0a0a0c] shadow-[0_18px_40px_-18px_rgba(143,139,255,0.9)] transition duration-200 hover:brightness-110 active:scale-[0.98]"
+              >
+                <Sparkles className="h-4 w-4" />
+                Request Campus Demo
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              </button>
+            ) : null}
             <a
               href={PORTAL_URL}
               target="_blank"
@@ -143,13 +158,13 @@ export function Hero() {
               className="group button-primary inline-flex h-12 items-center justify-center gap-2 px-6 transition-colors duration-200 hover:bg-[var(--glass-strong)]"
             >
               Go to Portal
-              <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              <ArrowUpRight className="h-4 w-4 text-accent" />
             </a>
             <a
               href="#how-it-works"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-[999px] border border-[var(--hairline)] bg-transparent px-6 text-[15px] font-medium text-mid transition duration-200 hover:border-[var(--hairline-strong)] hover:text-hi"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-[999px] border border-[var(--hairline)] bg-transparent px-5 text-[14px] font-medium text-mid transition duration-200 hover:border-[var(--hairline-strong)] hover:text-hi"
             >
-              Explore How It Works
+              Explore System
               <ArrowDown className="h-4 w-4 text-faint" />
             </a>
           </motion.div>

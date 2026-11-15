@@ -2,11 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { ArrowUpRight, ChevronDown, Menu, ScanFace, X } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Menu, ScanFace, Sparkles, X } from "lucide-react";
 import { NAV_LINKS, ROLES } from "@/lib/content";
 import { PORTAL_URL } from "@/lib/constants";
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  onOpenDemo?: () => void;
+}
+
+export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [portalOpen, setPortalOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -158,6 +162,17 @@ export function SiteHeader() {
               </AnimatePresence>
             </div>
 
+            {onOpenDemo ? (
+              <button
+                type="button"
+                onClick={onOpenDemo}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-b from-accent to-[#6a66e8] px-3 text-[12px] font-semibold text-[#0a0a0c] shadow-[0_2px_10px_rgba(143,139,255,0.4)] sm:hidden"
+              >
+                <Sparkles className="h-3 w-3" />
+                Demo
+              </button>
+            ) : null}
+
             <button
               type="button"
               onClick={() => setMobileOpen((open) => !open)}
@@ -217,15 +232,31 @@ export function SiteHeader() {
                     );
                   })}
                 </div>
-                <a
-                  href={PORTAL_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-6 flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-accent to-[#6a66e8] text-[14px] font-semibold text-[#0a0a0c]"
-                >
-                  Go to Portal
-                  <ArrowUpRight className="h-4 w-4" />
-                </a>
+
+                <div className="mt-6 flex flex-col gap-2.5">
+                  {onOpenDemo ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        onOpenDemo();
+                      }}
+                      className="flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-accent to-[#6a66e8] text-[14px] font-semibold text-[#0a0a0c]"
+                    >
+                      Request Campus Demo
+                      <Sparkles className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                  <a
+                    href={PORTAL_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex h-12 items-center justify-center gap-2 rounded-xl border border-[var(--hairline)] bg-surface text-[14px] font-medium text-hi"
+                  >
+                    Go to Portal
+                    <ArrowUpRight className="h-4 w-4 text-accent" />
+                  </a>
+                </div>
               </div>
             </div>
           </motion.div>

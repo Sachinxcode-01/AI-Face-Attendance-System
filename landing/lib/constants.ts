@@ -16,6 +16,19 @@ export const PORTAL_LINKS = {
   parent: `${PORTAL_URL}/parent`,
 } as const;
 
-export const DEMO_MAILTO = `mailto:sales@smartface.pro?subject=${encodeURIComponent(
+export const COMPANY_CONTACT = {
+  name: "SmartFace Systems Inc.",
+  address: "500 Technology Square, Suite 400",
+  cityStateZip: "Cambridge, MA 02139, USA",
+  phone: "+1 (888) 582-3223",
+  phoneFormatted: "+1 (888) 582-FACE",
+  salesEmail: "sales@smartface.pro",
+  supportEmail: "support@smartface.pro",
+  privacyEmail: "privacy@smartface.pro",
+  legalEmail: "legal@smartface.pro",
+  hours: "Mon–Fri: 8:00 AM – 8:00 PM EST · 24/7 Enterprise SOC",
+} as const;
+
+export const DEMO_MAILTO = `mailto:${COMPANY_CONTACT.salesEmail}?subject=${encodeURIComponent(
   "Campus demo request",
 )}`;
