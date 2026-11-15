@@ -54,7 +54,6 @@ class _AdminDashboardState extends State<AdminDashboard>
   bool _loading = true;
   bool _serverOnline = false;
 
-
   /// Tablet card padding / section rhythm, set from isTablet in build().
   double _cardPad = 20.0;
   double _sectionGap = 20.0;

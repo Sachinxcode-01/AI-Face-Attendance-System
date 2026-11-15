@@ -302,7 +302,10 @@ class SessionManager extends ChangeNotifier {
         if (name != null) _storage.write(key: _keyName, value: name),
         if (_avatarUrl != null && _avatarUrl!.isNotEmpty)
           _storage.write(key: _keyAvatarUrl, value: _avatarUrl!),
-        _storage.write(key: _keyBiometric, value: biometricRegistered.toString()),
+        _storage.write(
+          key: _keyBiometric,
+          value: biometricRegistered.toString(),
+        ),
         CacheService.set(
           'sf_onboarding_completed',
           _onboardingCompleted,
@@ -314,7 +317,11 @@ class SessionManager extends ChangeNotifier {
           persist: true,
         ),
         CacheService.set('sf_intro_completed', _introCompleted, persist: true),
-        CacheService.set('sf_wizard_completed', _wizardCompleted, persist: true),
+        CacheService.set(
+          'sf_wizard_completed',
+          _wizardCompleted,
+          persist: true,
+        ),
       ]);
     });
 
