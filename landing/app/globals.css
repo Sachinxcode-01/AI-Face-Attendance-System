@@ -30,6 +30,10 @@
       scroll-behavior: auto;
     }
 
+    [data-hero-line] {
+      transform: none !important;
+    }
+
     *,
     *::before,
     *::after {

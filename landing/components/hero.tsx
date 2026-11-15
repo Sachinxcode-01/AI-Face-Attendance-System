@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
+import gsap from "gsap";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { PORTAL_URL } from "@/lib/constants";
 import { VerificationCard } from "./verification-card";
@@ -9,6 +11,16 @@ const METRICS = [
   { value: "99.8%", label: "Recognition accuracy" },
   { value: "<300ms", label: "Verify latency" },
   { value: "512-d", label: "ArcFace embedding" },
+];
+
+const HEADLINE = [
+  { text: "Touchless Biometric Attendance.", className: "text-ink" },
+  { text: "Zero Proxies.", className: "text-ink-muted" },
+  {
+    text: "Instant Proof.",
+    className:
+      "bg-gradient-to-r from-brand-300 via-brand-400 to-emerald-300 bg-clip-text text-transparent",
+  },
 ];
 
 const container: Variants = {
@@ -23,6 +35,31 @@ const item: Variants = {
 
 export function Hero() {
   const reduceMotion = useReducedMotion();
+  const headlineRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    const lines = headlineRef.current?.querySelectorAll<HTMLElement>("[data-hero-line]");
+    if (!lines?.length) return;
+
+    if (reduceMotion) {
+      lines.forEach((line) => {
+        line.style.transform = "none";
+      });
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      gsap.to(lines, {
+        y: 0,
+        duration: 1.1,
+        ease: "expo.out",
+        stagger: 0.1,
+        delay: 0.12,
+      });
+    }, headlineRef);
+
+    return () => ctx.revert();
+  }, [reduceMotion]);
 
   return (
     <section id="top" className="relative overflow-hidden pb-20 pt-32 sm:pt-36 lg:pb-28">
@@ -49,19 +86,24 @@ export function Hero() {
             </span>
           </motion.p>
 
-          <h1 className="mt-6 font-display text-[2.7rem] font-extrabold leading-[1.04] tracking-[-0.035em] sm:text-[3.5rem] xl:text-[4.05rem]">
-            <motion.span variants={item} className="block text-ink">
-              Touchless Biometric Attendance.
-            </motion.span>
-            <motion.span variants={item} className="block text-ink-muted">
-              Zero Proxies.
-            </motion.span>
-            <motion.span
-              variants={item}
-              className="block bg-gradient-to-r from-brand-300 via-brand-400 to-emerald-300 bg-clip-text text-transparent"
-            >
-              Instant Proof.
-            </motion.span>
+          <h1
+            ref={headlineRef}
+            className="mt-6 font-display text-[2.7rem] font-extrabold leading-[1.04] tracking-[-0.035em] sm:text-[3.5rem] xl:text-[4.05rem]"
+          >
+            {HEADLINE.map((line) => (
+              <span
+                key={line.text}
+                className="block overflow-hidden pb-[0.1em] -mb-[0.1em]"
+              >
+                <span
+                  data-hero-line
+                  style={{ transform: "translateY(112%)" }}
+                  className={`block will-change-transform ${line.className}`}
+                >
+                  {line.text}
+                </span>
+              </span>
+            ))}
           </h1>
 
           <motion.p
