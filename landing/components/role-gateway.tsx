@@ -11,16 +11,16 @@ const ACCENTS: Record<
   { badge: string; glow: string; text: string; border: string }
 > = {
   indigo: {
-    badge: "border-brand-400/20 bg-brand-500/10 text-brand-300",
-    glow: "bg-brand-500/20",
-    text: "text-brand-300",
-    border: "hover:border-brand-400/40",
+    badge: "border-accent/20 bg-accent/10 text-accent",
+    glow: "bg-accent/20",
+    text: "text-accent",
+    border: "hover:border-accent/40",
   },
   emerald: {
-    badge: "border-emerald-400/20 bg-emerald-500/10 text-emerald-300",
-    glow: "bg-emerald-500/20",
-    text: "text-emerald-300",
-    border: "hover:border-emerald-400/40",
+    badge: "border-[#1ed760]/20 bg-[#1ed760]/10 text-[#9fe0b6]",
+    glow: "bg-[#1ed760]/20",
+    text: "text-[#9fe0b6]",
+    border: "hover:border-[#1ed760]/40",
   },
   amber: {
     badge: "border-amber-400/20 bg-amber-500/10 text-amber-300",
@@ -40,9 +40,9 @@ export function RoleGateway() {
   return (
     <section
       id="portals"
-      className="relative scroll-mt-24 border-t border-white/[0.06] py-24 sm:py-28"
+      className="relative scroll-mt-24 border-t border-[var(--hairline)] py-24 sm:py-28"
     >
-      <div className="mx-auto w-full max-w-6xl px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
           eyebrow="Portals"
           title="One campus. Four vantage points."
@@ -56,7 +56,7 @@ export function RoleGateway() {
             return (
               <Reveal key={role.key} delay={index * 0.06} className="h-full">
                 <div
-                  className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-6 transition duration-300 hover:-translate-y-1 ${accent.border}`}
+                  className={`group relative flex h-full flex-col overflow-hidden rounded-[22px] border border-[var(--hairline)] bg-surface p-6 transition duration-300 hover:-translate-y-1 ${accent.border}`}
                 >
                   <div
                     aria-hidden
@@ -66,21 +66,21 @@ export function RoleGateway() {
                     <span className={`grid h-11 w-11 place-items-center rounded-xl border ${accent.badge}`}>
                       <Icon className="h-5 w-5" strokeWidth={1.7} />
                     </span>
-                    <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-ink-faint">
+                    <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint">
                       {role.label}
                     </span>
                   </div>
 
-                  <h3 className="mt-5 font-display text-lg font-semibold tracking-tight text-ink">
+                  <h3 className="mt-5 font-display text-[19px] font-medium tracking-tight text-hi">
                     {role.title}
                   </h3>
-                  <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">{role.description}</p>
+                  <p className="mt-2 text-[13px] leading-relaxed text-mid">{role.description}</p>
 
                   <ul className="mt-5 space-y-2">
                     {role.capabilities.map((capability) => (
                       <li
                         key={capability}
-                        className="flex gap-2 text-[12px] leading-snug text-ink-muted"
+                        className="flex gap-2 text-[12px] leading-snug text-mid"
                       >
                         <Check className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${accent.text}`} />
                         {capability}
@@ -93,12 +93,12 @@ export function RoleGateway() {
                       href={role.href}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-[13px] font-medium text-ink transition group-hover:border-white/20 group-hover:bg-white/[0.05]"
+                      className="flex items-center justify-between gap-2 rounded-xl border border-[var(--hairline)] bg-white/[0.02] px-4 py-3 text-[13px] font-medium text-hi transition duration-200 group-hover:border-[var(--hairline-strong)] group-hover:bg-white/[0.04]"
                     >
                       Open {role.label} portal
                       <ArrowUpRight className={`h-4 w-4 ${accent.text}`} />
                     </a>
-                    <p className="mt-2 truncate font-mono text-[9px] tracking-wide text-ink-faint">
+                    <p className="mt-2 truncate font-mono text-[9px] tracking-wide text-faint">
                       {role.path}
                     </p>
                   </div>
@@ -108,13 +108,13 @@ export function RoleGateway() {
           })}
         </div>
 
-        <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
+        <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.14em] text-faint">
           Portals open on{" "}
           <a
             href={PORTAL_URL}
             target="_blank"
             rel="noreferrer"
-            className="text-brand-300 transition hover:text-brand-200"
+            className="text-accent transition hover:text-accent2"
           >
             {PORTAL_URL.replace(/^https?:\/\//, "")}
           </a>

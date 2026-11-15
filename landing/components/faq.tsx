@@ -11,7 +11,7 @@ const FAQS = [
   {
     question: "What happens to students' face data?",
     answer:
-      "Enrollment turns each face into a 512-dimension mathematical embedding. The raw frame is used for that moment only; the embedding and the attendance record are what persist. Admins can delete or re-enroll any profile from the portal, and every access is written to the audit trail.",
+      "Enrollment turns each face into a 512-dimension embedding. The raw frame is used for that moment only; the embedding and the attendance record are what persist. Admins can delete or re-enroll any profile from the portal, and every access is written to the audit trail.",
   },
   {
     question: "How do you stop photos, screens and masks?",
@@ -44,8 +44,8 @@ export function Faq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="relative scroll-mt-24 border-t border-white/[0.06] py-24 sm:py-28">
-      <div className="mx-auto grid w-full max-w-6xl gap-12 px-6 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20 lg:px-8">
+    <section id="faq" className="relative scroll-mt-24 border-t border-[var(--hairline)] py-24 sm:py-28">
+      <div className="mx-auto grid w-full max-w-[var(--container)] gap-12 px-6 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20 lg:px-8">
         <div className="lg:sticky lg:top-28 lg:self-start">
           <SectionHeading
             eyebrow="FAQ"
@@ -55,15 +55,15 @@ export function Faq() {
           <Reveal delay={0.15}>
             <a
               href={DEMO_MAILTO}
-              className="mt-8 inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-[13px] font-medium text-ink transition hover:border-white/20 hover:bg-white/[0.05]"
+              className="mt-8 inline-flex items-center gap-2 rounded-full border border-[var(--hairline)] bg-[var(--glass)] px-5 py-3 text-[14px] font-medium text-hi backdrop-blur-md transition duration-200 hover:border-[var(--hairline-strong)] hover:bg-[var(--glass-strong)]"
             >
               Ask us something specific
-              <ArrowUpRight className="h-4 w-4 text-brand-300" />
+              <ArrowUpRight className="h-4 w-4 text-accent" />
             </a>
           </Reveal>
         </div>
 
-        <div className="divide-y divide-white/[0.06] border-y border-white/[0.06]">
+        <div className="divide-y divide-[var(--hairline)] border-y border-[var(--hairline)]">
           {FAQS.map((faq, index) => {
             const isOpen = openIndex === index;
             return (
@@ -75,13 +75,13 @@ export function Faq() {
                     aria-expanded={isOpen}
                     className="flex w-full items-start justify-between gap-6 py-5 text-left"
                   >
-                    <span className="text-[15px] font-medium leading-snug text-ink">
+                    <span className="text-[15px] font-medium leading-snug text-hi">
                       {faq.question}
                     </span>
                     <Plus
                       aria-hidden
                       className={`mt-0.5 h-4 w-4 shrink-0 transition-transform duration-300 ${
-                        isOpen ? "rotate-45 text-brand-300" : "text-ink-faint"
+                        isOpen ? "rotate-45 text-accent" : "text-faint"
                       }`}
                     />
                   </button>
@@ -95,7 +95,7 @@ export function Faq() {
                       transition={{ duration: 0.28, ease: "easeOut" }}
                       className="overflow-hidden"
                     >
-                      <p className="pb-6 pr-8 text-[13.5px] leading-relaxed text-ink-muted">
+                      <p className="pb-6 pr-8 text-[13.5px] leading-relaxed text-mid">
                         {faq.answer}
                       </p>
                     </motion.div>
