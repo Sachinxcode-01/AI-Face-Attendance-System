@@ -57,15 +57,15 @@ export function VerificationCard() {
       <div
         aria-hidden
         className={`absolute -inset-8 rounded-[40px] blur-2xl transition-colors duration-700 ${
-          matched ? "bg-success/10" : "bg-brand-600/20"
+          matched ? "bg-[#1ed760]/10" : "bg-accent/20"
         }`}
       />
 
-      <div className="relative rounded-[26px] border border-white/10 bg-white/[0.045] p-2 shadow-[0_50px_90px_-50px_rgba(0,0,0,0.95)] backdrop-blur-xl">
-        <div className="overflow-hidden rounded-[20px] border border-white/[0.06] bg-[#080C18]">
-          <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5 font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">
+      <div className="glass-card relative !rounded-[26px] !p-2">
+        <div className="overflow-hidden rounded-[20px] border border-[var(--hairline)] bg-bg1">
+          <div className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-2.5 font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
             <span className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-success shadow-[0_0_8px_#10B981]" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1ed760] shadow-[0_0_8px_#1ed760]" />
               Live · Gate B
             </span>
             <span>ArcFace · ONNX</span>
@@ -75,24 +75,27 @@ export function VerificationCard() {
             <div aria-hidden className="absolute inset-0 bg-grid opacity-40" />
             <div
               aria-hidden
-              className="absolute left-1/2 top-1/2 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-600/25 blur-3xl"
+              className="absolute left-1/2 top-1/2 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/25 blur-3xl"
             />
 
-            <div aria-hidden className="absolute left-1/2 top-[46%] h-40 w-32 -translate-x-1/2 -translate-y-1/2 sm:h-44 sm:w-36">
+            <div
+              aria-hidden
+              className="absolute left-1/2 top-[46%] h-40 w-32 -translate-x-1/2 -translate-y-1/2 sm:h-44 sm:w-36"
+            >
               <div className="absolute left-1/2 top-0 h-24 w-20 -translate-x-1/2 rounded-[45%] bg-gradient-to-b from-slate-400/40 to-slate-600/20 ring-1 ring-white/10" />
               <div className="absolute bottom-0 left-1/2 h-20 w-32 -translate-x-1/2 rounded-t-[3rem] bg-gradient-to-b from-slate-500/30 to-slate-700/10" />
             </div>
 
             <div
               className={`absolute left-1/2 top-1/2 h-[56%] w-[44%] -translate-x-1/2 -translate-y-1/2 transition-colors duration-500 ${
-                matched ? "text-success" : "text-brand-400"
+                matched ? "text-[#1ed760]" : "text-accent"
               }`}
             >
               <div
                 className={`absolute -top-6 left-0 flex items-center gap-1.5 rounded border px-1.5 py-0.5 font-mono text-[8.5px] uppercase tracking-[0.14em] backdrop-blur ${
                   matched
-                    ? "border-success/30 bg-success/10 text-emerald-300"
-                    : "border-white/10 bg-black/50 text-ink-faint"
+                    ? "border-[#1ed760]/30 bg-[#1ed760]/10 text-[#9fe0b6]"
+                    : "border-white/10 bg-black/50 text-faint"
                 }`}
               >
                 <ScanFace className="h-2.5 w-2.5" />
@@ -111,15 +114,16 @@ export function VerificationCard() {
               <div
                 key={runId}
                 aria-hidden
-                className="absolute inset-x-0 top-0 h-24 animate-scan bg-gradient-to-b from-transparent via-success/20 to-transparent"
+                className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-transparent via-[#1ed760]/20 to-transparent"
+                style={{ animation: "Hero_cueSweep 1.1s var(--ease-in-out) infinite" }}
               />
             )}
 
-            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md border border-white/10 bg-black/40 px-2 py-1 font-mono text-[8.5px] uppercase tracking-[0.14em] text-ink-faint backdrop-blur">
+            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md border border-white/10 bg-black/40 px-2 py-1 font-mono text-[8.5px] uppercase tracking-[0.14em] text-faint backdrop-blur">
               <Wifi className="h-3 w-3" />
               Edge node · 12ms
             </div>
-            <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-md border border-success/25 bg-success/10 px-2 py-1 font-mono text-[8.5px] uppercase tracking-[0.14em] text-emerald-300 backdrop-blur">
+            <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-md border border-[#1ed760]/25 bg-[#1ed760]/10 px-2 py-1 font-mono text-[8.5px] uppercase tracking-[0.14em] text-[#9fe0b6] backdrop-blur">
               Liveness 0.98
             </div>
           </div>
@@ -127,22 +131,22 @@ export function VerificationCard() {
           <div className="space-y-4 p-4">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">
+                <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
                   Match confidence
                 </p>
                 <p
-                  className={`mt-1 font-display text-3xl font-semibold tabular-nums transition-colors ${
-                    matched ? "text-success" : "text-ink"
+                  className={`mt-1 font-display text-3xl font-medium tabular-nums transition-colors ${
+                    matched ? "text-[#9fe0b6]" : "text-hi"
                   }`}
                 >
                   {score.toFixed(1)}
-                  <span className="text-lg text-ink-faint">%</span>
+                  <span className="text-lg text-faint">%</span>
                 </p>
               </div>
               <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5">
                 <Flame className="h-4 w-4 text-amber-400" />
-                <span className="text-[12px] font-medium text-ink">14-day streak</span>
-                <span className="font-mono text-[8.5px] uppercase tracking-wider text-ink-faint">
+                <span className="text-[12px] font-medium text-hi">14-day streak</span>
+                <span className="font-mono text-[8.5px] uppercase tracking-wider text-faint">
                   Diamond
                 </span>
               </div>
@@ -152,23 +156,23 @@ export function VerificationCard() {
               <div
                 className={`h-full rounded-full transition-[width] duration-200 ${
                   matched
-                    ? "bg-gradient-to-r from-success/50 to-success"
-                    : "bg-brand-500/60"
+                    ? "bg-gradient-to-r from-[#1ed760]/50 to-[#1ed760]"
+                    : "bg-accent/60"
                 }`}
                 style={{ width: `${score}%` }}
               />
             </div>
 
-            <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] pt-3">
-              <div className="flex min-w-0 items-center gap-2 text-[11.5px] text-ink-muted">
+            <div className="flex items-center justify-between gap-3 border-t border-[var(--hairline)] pt-3">
+              <div className="flex min-w-0 items-center gap-2 text-[11.5px] text-mid">
                 {matched ? (
                   <>
-                    <ShieldCheck className="h-4 w-4 shrink-0 text-success" />
+                    <ShieldCheck className="h-4 w-4 shrink-0 text-[#1ed760]" />
                     <span className="truncate">Identity verified · synced 0.2s ago</span>
                   </>
                 ) : (
                   <>
-                    <ScanFace className="h-4 w-4 shrink-0 animate-pulse text-brand-300" />
+                    <ScanFace className="h-4 w-4 shrink-0 animate-pulse text-accent" />
                     <span className="truncate">Matching 512-d embedding…</span>
                   </>
                 )}
@@ -176,7 +180,7 @@ export function VerificationCard() {
               <button
                 type="button"
                 onClick={run}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[11.5px] text-ink-faint transition hover:bg-white/5 hover:text-ink"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[11.5px] text-faint transition duration-200 hover:bg-white/5 hover:text-hi"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Replay
@@ -185,7 +189,6 @@ export function VerificationCard() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

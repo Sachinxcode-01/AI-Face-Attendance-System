@@ -18,13 +18,13 @@ const config: Config = {
           faint: "#7C82A0",
         },
       },
-      fontFamily: {
-        sans: ["var(--font-inter)", "sans-serif"],
-        display: ["var(--font-poppins)", "sans-serif"],
+        fontFamily: {
+          sans: ["var(--font-inter)", "sans-serif"],
+          display: ["var(--font-poppins)", "sans-serif"],
+        },
       },
     },
-  },
-  plugins: [],
-};
+    plugins: [],
+  };
 
-export default config;
+  export default config;

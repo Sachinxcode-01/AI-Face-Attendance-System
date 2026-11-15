@@ -63,7 +63,7 @@ export function AuthScreenLayout({
           </div>
         </div>
       </main>
-    </div>
+    </div >
   );
 }
 

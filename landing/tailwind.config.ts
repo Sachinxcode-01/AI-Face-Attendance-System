@@ -5,8 +5,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        /* ByTune-measured surfaces */
+        bg0: "var(--bg-0)",
+        bg1: "var(--bg-1)",
+        surface: "var(--surface)",
+        panel: "var(--panel)",
+        elev: "var(--elev)",
+        /* Text ramp */
+        hi: "var(--text-hi)",
+        mid: "var(--text-mid)",
+        low: "var(--text-low)",
+        faint: "var(--text-faint)",
+        /* Accents */
+        accent: "var(--accent)",
+        accent2: "var(--accent-2)",
+        /* Legacy brand aliases (kept for existing components) */
         canvas: "#070A14",
-        surface: "#0E1428",
         brand: {
           300: "#A5B4FC",
           400: "#818CF8",
@@ -21,9 +35,16 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["var(--font-poppins)", "var(--font-inter)", "ui-sans-serif", "sans-serif"],
-        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+        sans: ["var(--font-body)", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "Inter", "ui-sans-serif", "sans-serif"],
+        mono: ["var(--font-mono)"],
+      },
+      borderRadius: {
+        pill: "999px",
+        card: "22px",
+      },
+      boxShadow: {
+        card: "var(--shadow-card)",
       },
       keyframes: {
         scan: {

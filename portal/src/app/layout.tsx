@@ -34,8 +34,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${inter.variable} ${poppins.variable}`}>
       <body className="min-h-screen bg-canvas font-sans text-ink antialiased selection:bg-indigo-500 selection:text-white">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
-    </html>
+    </html >
   );
 }

@@ -1,29 +1,20 @@
 "use client";
 
-import type { ReactNode } from "react";
-import {
-  CloudOff,
-  Fingerprint,
-  Flame,
-  QrCode,
-  Radar,
-  Sparkles,
-  type LucideIcon,
-} from "lucide-react";
+import { CloudOff, Fingerprint, Flame, QrCode, Radar, Sparkles, type LucideIcon } from "lucide-react";
 import { Reveal } from "./ui/reveal";
 import { SectionHeading } from "./ui/section-heading";
 
 const CELL =
-  "relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-surface p-6 transition-colors duration-300 hover:border-white/[0.16]";
+  "relative flex flex-col overflow-hidden rounded-[22px] border border-[var(--hairline)] bg-[var(--surface)] p-6 transition-colors duration-300 hover:border-[var(--hairline-strong)]";
 
 const TIERS = ["Bronze", "Silver", "Gold", "Inferno"];
 
 const OFFLINE_POINTS = ["Local queue", "Auto-reconcile", "No lost records"];
 
-function CellLabel({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
+function CellLabel({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
   return (
-    <p className="flex items-center gap-2 font-mono text-[9.5px] uppercase tracking-[0.16em] text-ink-faint">
-      <Icon className="h-3.5 w-3.5 text-brand-300" strokeWidth={1.8} />
+    <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-faint">
+      <Icon className="h-3.5 w-3.5 text-accent" strokeWidth={1.8} />
       {children}
     </p>
   );
@@ -31,14 +22,15 @@ function CellLabel({ icon: Icon, children }: { icon: LucideIcon; children: React
 
 export function Features() {
   return (
-    <section
-      id="features"
-      className="relative scroll-mt-24 border-t border-white/[0.06] py-24 sm:py-28"
-    >
-      <div className="mx-auto w-full max-w-6xl px-6 lg:px-8">
+    <section id="features" className="relative scroll-mt-24 py-24 sm:py-28">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute left-[-14rem] top-24 h-[24rem] w-[24rem] rounded-full bg-accent/[0.06] blur-[130px]" />
+      </div>
+
+      <div className="relative mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
           eyebrow="Platform"
-          title="Built for the gate, the classroom and the group chat."
+          title="Everything attendance needs. Nothing it doesn't."
           description="Six systems working as one: identity, session integrity, security escalation, habit, assistance and uptime."
         />
 
@@ -46,10 +38,10 @@ export function Features() {
           <Reveal className="lg:col-span-3">
             <div id="biometrics" className={`${CELL} h-full scroll-mt-28`}>
               <CellLabel icon={Fingerprint}>512-dim biometrics</CellLabel>
-              <h3 className="mt-4 font-display text-xl font-semibold tracking-tight text-ink">
+              <h3 className="mt-4 font-display text-xl font-medium tracking-tight text-hi">
                 ArcFace, embedded at the edge
               </h3>
-              <p className="mt-2 max-w-md text-[13.5px] leading-relaxed text-ink-muted">
+              <p className="mt-2 max-w-md text-[14px] leading-relaxed text-mid">
                 Every enrollment becomes a 512-dimension vector. Recognition compares embeddings —
                 never photographs — and returns a confidence score in milliseconds.
               </p>
@@ -60,14 +52,14 @@ export function Features() {
                 {Array.from({ length: 64 }, (_, index) => (
                   <span
                     key={index}
-                    className="aspect-square rounded-[2px] bg-brand-400"
+                    className="aspect-square rounded-[2px] bg-accent"
                     style={{ opacity: 0.12 + (((index * 37) % 11) / 11) * 0.8 }}
                   />
                 ))}
               </div>
-              <div className="mt-4 flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.14em] text-ink-faint">
+              <div className="mt-4 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-faint">
                 <span>Vector · 512</span>
-                <span className="text-emerald-300">Cosine 0.94</span>
+                <span className="text-[#9fe0b6]">Cosine 0.94</span>
               </div>
             </div>
           </Reveal>
@@ -75,24 +67,24 @@ export function Features() {
           <Reveal delay={0.06} className="lg:col-span-3">
             <div className={`${CELL} h-full`}>
               <CellLabel icon={QrCode}>Anti-proxy QR</CellLabel>
-              <h3 className="mt-4 font-display text-xl font-semibold tracking-tight text-ink">
+              <h3 className="mt-4 font-display text-xl font-medium tracking-tight text-hi">
                 Codes that expire before they leak
               </h3>
-              <p className="mt-2 max-w-md text-[13.5px] leading-relaxed text-ink-muted">
+              <p className="mt-2 max-w-md text-[14px] leading-relaxed text-mid">
                 Session tokens rotate on a 30-second drift window and are signed to the live class.
                 A screenshot is useless by the time it reaches the group chat.
               </p>
-              <div className="mt-6 rounded-xl border border-white/[0.06] bg-black/30 p-3">
-                <div className="flex items-center justify-between font-mono text-[8.5px] uppercase tracking-[0.16em] text-ink-faint">
+              <div className="mt-6 rounded-xl border border-[var(--hairline)] bg-black/30 p-3">
+                <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
                   <span>Session token</span>
-                  <span className="text-emerald-300">Rotating</span>
+                  <span className="text-[#9fe0b6]">Rotating</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-3">
-                  <code className="font-mono text-lg tracking-[0.18em] text-ink">8F3A·2C91</code>
-                  <span className="font-mono text-[10px] text-ink-faint">00:30</span>
+                  <code className="font-mono text-lg tracking-[0.18em] text-hi">8F3A·2C91</code>
+                  <span className="font-mono text-[10px] text-faint">00:30</span>
                 </div>
                 <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/[0.06]">
-                  <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-brand-500 to-brand-300" />
+                  <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-accent to-accent2" />
                 </div>
               </div>
             </div>
@@ -101,10 +93,10 @@ export function Features() {
           <Reveal delay={0.1} className="lg:col-span-2">
             <div className={`${CELL} h-full`}>
               <CellLabel icon={Radar}>Sentinel</CellLabel>
-              <h3 className="mt-4 font-display text-lg font-semibold tracking-tight text-ink">
+              <h3 className="mt-4 font-display text-lg font-medium tracking-tight text-hi">
                 Active intruder alerts
               </h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">
+              <p className="mt-2 text-[13px] leading-relaxed text-mid">
                 Unknown faces are flagged with gate, timestamp and frame — before anyone walks in.
               </p>
               <div className="mt-auto pt-6">
@@ -122,10 +114,10 @@ export function Features() {
           <Reveal delay={0.14} className="lg:col-span-2">
             <div className={`${CELL} h-full`}>
               <CellLabel icon={Flame}>Streaks</CellLabel>
-              <h3 className="mt-4 font-display text-lg font-semibold tracking-tight text-ink">
+              <h3 className="mt-4 font-display text-lg font-medium tracking-tight text-hi">
                 Bronze to Diamond Inferno
               </h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">
+              <p className="mt-2 text-[13px] leading-relaxed text-mid">
                 Attendance becomes a habit students actually protect — one clean check-in at a time.
               </p>
               <div className="mt-auto grid grid-cols-4 gap-1.5 pt-6">
@@ -134,8 +126,8 @@ export function Features() {
                     key={tier}
                     className={`rounded-lg border px-1 py-2 text-center font-mono text-[8.5px] uppercase tracking-wider ${
                       index === TIERS.length - 1
-                        ? "border-brand-400/40 bg-brand-500/15 text-brand-200"
-                        : "border-white/[0.06] bg-white/[0.02] text-ink-faint"
+                        ? "border-accent/40 bg-accent/15 text-accent"
+                        : "border-white/[0.06] bg-white/[0.02] text-faint"
                     }`}
                   >
                     {tier}
@@ -148,20 +140,20 @@ export function Features() {
           <Reveal delay={0.18} className="lg:col-span-2">
             <div className={`${CELL} h-full`}>
               <CellLabel icon={Sparkles}>Nexa AI</CellLabel>
-              <h3 className="mt-4 font-display text-lg font-semibold tracking-tight text-ink">
+              <h3 className="mt-4 font-display text-lg font-medium tracking-tight text-hi">
                 A student assistant that knows
               </h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">
+              <p className="mt-2 text-[13px] leading-relaxed text-mid">
                 Ask about attendance, timetables and leave in plain language. Nexa answers from that
-                student&apos;s own records.
+                student's own records.
               </p>
               <div className="mt-auto space-y-2 pt-6">
-                <div className="ml-auto w-fit max-w-[92%] rounded-xl rounded-br-sm bg-brand-600/25 px-3 py-2 text-[11px] leading-snug text-brand-100">
+                <div className="ml-auto w-fit max-w-[92%] rounded-xl rounded-br-sm bg-accent/25 px-3 py-2 text-[11px] leading-snug text-[#d6d4ff]">
                   Did I hit 90% this month?
                 </div>
-                <div className="w-fit max-w-[96%] rounded-xl rounded-bl-sm border border-white/[0.06] bg-white/[0.03] px-3 py-2 text-[11px] leading-snug text-ink-muted">
-                  You&apos;re at <span className="text-emerald-300">92.4%</span> — 3 sessions above
-                  the threshold.
+                <div className="w-fit max-w-[96%] rounded-xl rounded-bl-sm border border-[var(--hairline)] bg-white/[0.03] px-3 py-2 text-[11px] leading-snug text-mid">
+                  You&apos;re at <span className="text-[#9fe0b6]">92.4%</span> — 3 sessions above the
+                  threshold.
                 </div>
               </div>
             </div>
@@ -172,10 +164,10 @@ export function Features() {
               <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div className="max-w-xl">
                   <CellLabel icon={CloudOff}>Resilience</CellLabel>
-                  <h3 className="mt-4 font-display text-lg font-semibold tracking-tight text-ink">
+                  <h3 className="mt-4 font-display text-lg font-medium tracking-tight text-hi">
                     Offline-first edge resiliency
                   </h3>
-                  <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">
+                  <p className="mt-2 text-[13px] leading-relaxed text-mid">
                     Verification runs at the gate. If the uplink drops, check-ins queue locally and
                     reconcile automatically when it returns — no lost attendance, no duplicates.
                   </p>
@@ -184,7 +176,7 @@ export function Features() {
                   {OFFLINE_POINTS.map((point) => (
                     <span
                       key={point}
-                      className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2 font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-muted"
+                      className="rounded-lg border border-[var(--hairline)] bg-white/[0.02] px-3 py-2 font-mono text-[9.5px] uppercase tracking-[0.12em] text-mid"
                     >
                       {point}
                     </span>

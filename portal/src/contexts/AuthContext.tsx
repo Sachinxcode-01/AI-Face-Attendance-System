@@ -10,6 +10,7 @@ interface AuthContextValue {
   user: UserProfile | null;
   role: UserRole | null;
   authed: boolean;
+  loading: boolean;
   login: (role: UserRole) => void;
   loginWithCredentials: (email: string, password: string) => boolean;
   logout: () => void;
@@ -21,12 +22,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [authed, setAuthed] = useState(false);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     setUser(getStoredUser());
     setRole(getRole());
     setAuthed(isAuthenticated());
+    setLoading(false);
   }, []);
 
   const login = useCallback(
@@ -70,14 +73,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ user, role, authed, login, loginWithCredentials, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+      <AuthContext.Provider value={{ user, role, authed, loading, login, loginWithCredentials, logout }}>
+        {children}
+      </AuthContext.Provider>
+      );
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
-  return ctx;
+      if (!ctx) {
+    return {
+        user: null,
+      role: null,
+      authed: false,
+      loading: true,
+      login: () => { },
+      loginWithCredentials: () => false,
+      logout: () => { },
+    };
+  }
+      return ctx;
 }

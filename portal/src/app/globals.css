@@ -8,6 +8,7 @@
   color-scheme: dark;
 }
 
+
 body {
   background-color: #070A14;
   color: #C8CCDF;
@@ -37,8 +38,13 @@ body {
 
 /* Scanning radar animation */
 @keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(1000%); }
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(1000%);
+  }
 }
 
 .animate-scan {

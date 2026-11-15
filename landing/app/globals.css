@@ -2,6 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------------------
+ * Design tokens — measured from the reference page (bytune.space). Reuse verbatim.
+ * ------------------------------------------------------------------------- */
+:root {
+  --bg-0: #050507;
+  --bg-1: #0a0a0e;
+  --surface: #101016;
+  --panel: #16161d;
+  --elev: #1e1e27;
+  --hairline: #ffffff14;
+  --hairline-strong: #ffffff29;
+  --text-hi: #f5f5f8;
+  --text-mid: #b6b6c2;
+  --text-low: #8a8a97;
+  --text-faint: #60606c;
+  --accent: #8f8bff;
+  --accent-2: #6fd8ff;
+  --accent-soft: #8f8bff29;
+  --accent-2-soft: #6fd8ff24;
+  --glass: #ffffff0a;
+  --glass-strong: #ffffff12;
+  --shadow-card: 0 1.5rem 3.75rem -1.5rem #000000b3;
+  --radius-s: 0.625rem;
+  --radius-m: 1rem;
+  --radius-l: 1.375rem;
+  --container: 73.75rem;
+  --wide: 85rem;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+  --dur: 0.55s;
+  --font-display: var(--font-inter), "Inter";
+  --font-body: var(--font-inter), "Inter";
+  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+
+  /* Brand accents for this project (SmartFace) */
+  --brand: #8f8bff;
+  --brand-2: #1ed760;
+  --brand-soft: #8f8bff0e;
+  --brand-mint: #9fe0b6;
+}
+
 @layer base {
   :root {
     color-scheme: dark;
@@ -12,26 +53,30 @@
   }
 
   body {
-    background-color: #070a14;
+    background-color: var(--bg-0);
+    color: var(--text-hi);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 25.6px;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   ::selection {
-    background-color: rgb(99 102 241 / 0.35);
-    color: #f1f3f9;
+    background-color: rgb(143 139 255 / 0.35);
+    color: var(--text-hi);
   }
 
   :focus-visible {
-    outline: 2px solid #a5b4fc;
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
+    border-radius: 4px;
   }
 
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
-    }
-
-    [data-hero-line] {
-      transform: none !important;
     }
 
     *,
@@ -46,20 +91,154 @@
 
 @layer components {
   .skip-link {
-    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white;
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-[var(--accent)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[#0a0a0c];
+  }
+
+  /* Measured component blocks from the reference page */
+  .button-primary {
+    background: #ffffff0a;
+    color: #f5f5f8;
+    border: 0.8px solid #ffffff14;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.15px;
+    backdrop-filter: blur(12px);
+  }
+
+  .glass-card {
+    background: linear-gradient(165deg, #ffffff0e, #ffffff05), none;
+    color: #f5f5f8;
+    border: 0.8px solid #ffffff1a;
+    border-radius: 22px;
+    padding: 18px;
+    font-size: 16px;
+    box-shadow: #ffffff1f 0px 1px 0px 0px inset, #000000e6 0px 44px 90px -34px;
+    backdrop-filter: blur(18px) saturate(1.5);
+  }
+
+  .badge-pill {
+    color: #b6b6c2;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 500;
   }
 }
 
 @layer utilities {
+  .text-gradient {
+    background: linear-gradient(100deg, var(--accent) 0%, var(--accent-2) 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
   .bg-grid {
     background-image:
-      linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
-    background-size: 42px 42px;
+      linear-gradient(to right, rgb(255 255 255 / 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+    background-size: 44px 44px;
   }
 
   .mask-radial {
     -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
     mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Named keyframe animations (reference patterns, retuned for SmartFace)
+ * ------------------------------------------------------------------------- */
+
+/* Hero entrance: lines rise into place */
+@keyframes Hero_cueIn {
+  from {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes Hero_cueFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes Hero_cueSweep {
+  0% {
+    transform: translateX(-120%) skewX(-12deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(220%) skewX(-12deg);
+    opacity: 0;
+  }
+}
+
+@keyframes Hero_cueDip {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+@keyframes Hero_cueOut {
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes Hero_float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+/* Live equalizer bars */
+@keyframes LiveCount_eq {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* Mobile nav sheet */
+@keyframes Nav_sheetIn {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-hero-line],
+  [data-cue] {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
   }
 }

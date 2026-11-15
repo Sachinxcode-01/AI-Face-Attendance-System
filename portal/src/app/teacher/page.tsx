@@ -57,9 +57,8 @@ export default function TeacherDashboardPage() {
         actions={
           <button
             onClick={() => setSessionActive(!sessionActive)}
-            className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-lg transition-all ${
-              sessionActive ? 'bg-red-600 hover:bg-red-500 shadow-red-600/30' : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
-            }`}
+            className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-lg transition-all ${sessionActive ? 'bg-red-600 hover:bg-red-500 shadow-red-600/30' : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
+              }`}
           >
             {sessionActive ? <Square className="h-4 w-4 fill-white" /> : <Play className="h-4 w-4 fill-white" />}
             {sessionActive ? 'Stop Session' : 'Start Live Session'}
@@ -128,11 +127,10 @@ export default function TeacherDashboardPage() {
                     <td className="py-3 text-right">
                       <button
                         onClick={() => toggleStatus(s.id)}
-                        className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all ${
-                          s.status === 'present'
-                            ? 'bg-emerald-500/20 text-emerald-300 hover:bg-red-500/20 hover:text-red-300'
-                            : 'bg-red-500/20 text-red-300 hover:bg-emerald-500/20 hover:text-emerald-300'
-                        }`}
+                        className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all ${s.status === 'present'
+                          ? 'bg-emerald-500/20 text-emerald-300 hover:bg-red-500/20 hover:text-red-300'
+                          : 'bg-red-500/20 text-red-300 hover:bg-emerald-500/20 hover:text-emerald-300'
+                          }`}
                       >
                         {s.status === 'present' ? <CheckCircle className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
                         {s.status === 'present' ? 'Present' : 'Absent'}
@@ -204,6 +202,6 @@ export default function TeacherDashboardPage() {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }

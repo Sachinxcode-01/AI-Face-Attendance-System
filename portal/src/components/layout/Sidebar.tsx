@@ -143,11 +143,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
-                active
-                  ? 'bg-indigo-600/15 text-white shadow-inner shadow-indigo-600/10 ring-1 ring-indigo-500/30'
-                  : 'text-gray-400 hover:bg-white/[0.04] hover:text-white'
-              } ${collapsed ? 'justify-center px-0' : ''}`}
+              className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${active
+                ? 'bg-indigo-600/15 text-white shadow-inner shadow-indigo-600/10 ring-1 ring-indigo-500/30'
+                : 'text-gray-400 hover:bg-white/[0.04] hover:text-white'
+                } ${collapsed ? 'justify-center px-0' : ''}`}
               title={item.label}
             >
               <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-indigo-400' : 'text-gray-500 group-hover:text-gray-300'}`} />
@@ -183,9 +182,8 @@ export function Sidebar() {
     <>
       {/* Desktop */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 hidden border-r border-white/5 bg-[#0A0F1E]/90 backdrop-blur-xl transition-all duration-300 lg:block ${
-          collapsed ? 'w-[72px]' : 'w-60'
-        }`}
+        className={`fixed inset-y-0 left-0 z-40 hidden border-r border-white/5 bg-[#0A0F1E]/90 backdrop-blur-xl transition-all duration-300 lg:block ${collapsed ? 'w-[72px]' : 'w-60'
+          }`}
       >
         {content}
       </aside>
