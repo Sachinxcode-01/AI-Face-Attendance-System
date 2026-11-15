@@ -207,11 +207,10 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               placeholder="Dr. Eleanor Vance"
               aria-invalid={!!errors.fullName}
               aria-describedby={errors.fullName ? "fullName-error" : undefined}
-              className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${
-                errors.fullName && touched.fullName
+              className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${errors.fullName && touched.fullName
                   ? "border-red-500/70 focus:border-red-500 focus:ring-red-500/30"
                   : "border-[var(--hairline)] focus:border-accent focus:ring-accent/30"
-              }`}
+                }`}
             />
             {errors.fullName && touched.fullName && (
               <p id="fullName-error" className="mt-1 flex items-center gap-1.5 text-[12px] text-red-400">
@@ -238,11 +237,10 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 placeholder="vance@cambridge.edu"
                 aria-invalid={!!errors.email}
                 aria-describedby={errors.email ? "email-error" : undefined}
-                className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${
-                  errors.email && touched.email
+                className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${errors.email && touched.email
                     ? "border-red-500/70 focus:border-red-500 focus:ring-red-500/30"
                     : "border-[var(--hairline)] focus:border-accent focus:ring-accent/30"
-                }`}
+                  }`}
               />
               {errors.email && touched.email && (
                 <p id="email-error" className="mt-1 flex items-center gap-1.5 text-[12px] text-red-400">
@@ -266,11 +264,10 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 placeholder="+1 (555) 019-2834"
                 aria-invalid={!!errors.phone}
                 aria-describedby={errors.phone ? "phone-error" : undefined}
-                className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${
-                  errors.phone && touched.phone
+                className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${errors.phone && touched.phone
                     ? "border-red-500/70 focus:border-red-500 focus:ring-red-500/30"
                     : "border-[var(--hairline)] focus:border-accent focus:ring-accent/30"
-                }`}
+                  }`}
               />
               {errors.phone && touched.phone && (
                 <p id="phone-error" className="mt-1 flex items-center gap-1.5 text-[12px] text-red-400">
@@ -298,11 +295,10 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 placeholder="Massachusetts Institute of Tech"
                 aria-invalid={!!errors.institution}
                 aria-describedby={errors.institution ? "institution-error" : undefined}
-                className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${
-                  errors.institution && touched.institution
+                className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${errors.institution && touched.institution
                     ? "border-red-500/70 focus:border-red-500 focus:ring-red-500/30"
                     : "border-[var(--hairline)] focus:border-accent focus:ring-accent/30"
-                }`}
+                  }`}
               />
               {errors.institution && touched.institution && (
                 <p id="institution-error" className="mt-1 flex items-center gap-1.5 text-[12px] text-red-400">
@@ -325,11 +321,10 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 onBlur={handleBlur}
                 aria-invalid={!!errors.campusSize}
                 aria-describedby={errors.campusSize ? "campusSize-error" : undefined}
-                className={`mt-1.5 w-full rounded-xl border bg-bg1 px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${
-                  errors.campusSize && touched.campusSize
+                className={`mt-1.5 w-full rounded-xl border bg-bg1 px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${errors.campusSize && touched.campusSize
                     ? "border-red-500/70 focus:border-red-500 focus:ring-red-500/30"
                     : "border-[var(--hairline)] focus:border-accent focus:ring-accent/30"
-                }`}
+                  }`}
               >
                 <option value="">Select campus size...</option>
                 <option value="under-1k">&lt; 1,000 students</option>

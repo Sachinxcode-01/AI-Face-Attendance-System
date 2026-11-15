@@ -12,7 +12,6 @@
     "preflight": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 preflight",
     "test": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 test",
     "stop": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 stop",
-    "clean": "powershell -ExecutionPolicy Bypass -File ./scripts/run.ps1 clean",
     "backup": "python scripts/db_backup.py",
     "backup:supabase": "python scripts/supabase_backup.py"
   }
