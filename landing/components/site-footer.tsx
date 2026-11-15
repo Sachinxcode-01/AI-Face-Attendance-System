@@ -155,70 +155,70 @@ export function SiteFooter({ onOpenDemo }: SiteFooterProps) {
           <div>
             <p className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-faint">Developer & Contact</p>
             <div className="mt-4 space-y-3 text-[12.5px] text-mid">
-              <div className="flex items-center gap-2">
-                <User className="h-3.5 w-3.5 shrink-0 text-accent" />
-                <span className="font-medium text-hi">{COMPANY_CONTACT.developer}</span>
-                <span className="text-[11px] text-faint font-mono">Developer</span>
+                <div className="flex items-center gap-2">
+                  <User className="h-3.5 w-3.5 shrink-0 text-accent" />
+                  <span className="font-medium text-hi">{COMPANY_CONTACT.developer}</span>
+                  <span className="text-[11px] text-faint font-mono">Developer</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail className="h-3.5 w-3.5 shrink-0 text-accent" />
+                  <a href={`mailto:${COMPANY_CONTACT.email}`} className="hover:text-hi transition break-all">
+                    {COMPANY_CONTACT.email}
+                  </a>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-3.5 w-3.5 shrink-0 text-accent" />
+                    <a href={`tel:${COMPANY_CONTACT.phone}`} className="hover:text-hi transition">
+                      {COMPANY_CONTACT.phoneFormatted}
+                    </a>
+                </div>
+                    <div className="flex items-start gap-2">
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                      <span>
+                        {COMPANY_CONTACT.location}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <Github className="h-3.5 w-3.5 shrink-0 text-accent" />
+                      <a
+                        href={COMPANY_CONTACT.github}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-accent hover:underline flex items-center gap-1 text-[12px]"
+                      >
+                        GitHub Repository
+                        <ArrowUpRight className="h-3 w-3" />
+                      </a>
+                    </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Mail className="h-3.5 w-3.5 shrink-0 text-accent" />
-                <a href={`mailto:${COMPANY_CONTACT.email}`} className="hover:text-hi transition break-all">
-                  {COMPANY_CONTACT.email}
-                </a>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-3.5 w-3.5 shrink-0 text-accent" />
-                <a href={`tel:${COMPANY_CONTACT.phone}`} className="hover:text-hi transition">
-                  {COMPANY_CONTACT.phoneFormatted}
-                </a>
-              </div>
-              <div className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
-                <span>
-                  {COMPANY_CONTACT.location}
+            </div>
+
+            {/* Bottom bar with Copyright & Legal Links */}
+            <div className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-[11.5px] text-faint">
+                © {new Date().getFullYear()} {COMPANY_CONTACT.name} · Developed by{" "}
+                <a href={COMPANY_CONTACT.github} target="_blank" rel="noreferrer" className="text-hi hover:text-accent font-medium">
+                  {COMPANY_CONTACT.developer}
+                </a>{" "}
+                (Gadag, Karnataka, India).
+              </p>
+
+              <div className="flex flex-wrap items-center gap-5 text-[12px] text-mid">
+                <Link href="/privacy" className="hover:text-hi transition">
+                  Privacy Policy
+                </Link>
+                <span className="text-faint">·</span>
+                <Link href="/terms" className="hover:text-hi transition">
+                  Terms & Conditions
+                </Link>
+                <span className="text-faint">·</span>
+                <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint">
+                  ArcFace v2.4 · ONNX Runtime · PIN: 582103
                 </span>
-              </div>
-              <div className="flex items-center gap-2 pt-1">
-                <Github className="h-3.5 w-3.5 shrink-0 text-accent" />
-                <a
-                  href={COMPANY_CONTACT.github}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-accent hover:underline flex items-center gap-1 text-[12px]"
-                >
-                  GitHub Repository
-                  <ArrowUpRight className="h-3 w-3" />
-                </a>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Bottom bar with Copyright & Legal Links */}
-        <div className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[11.5px] text-faint">
-            © {new Date().getFullYear()} {COMPANY_CONTACT.name} · Developed by{" "}
-            <a href={COMPANY_CONTACT.github} target="_blank" rel="noreferrer" className="text-hi hover:text-accent font-medium">
-              {COMPANY_CONTACT.developer}
-            </a>{" "}
-            (Gadag, Karnataka, India).
-          </p>
-
-          <div className="flex flex-wrap items-center gap-5 text-[12px] text-mid">
-            <Link href="/privacy" className="hover:text-hi transition">
-              Privacy Policy
-            </Link>
-            <span className="text-faint">·</span>
-            <Link href="/terms" className="hover:text-hi transition">
-              Terms & Conditions
-            </Link>
-            <span className="text-faint">·</span>
-            <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint">
-              ArcFace v2.4 · ONNX Runtime · PIN: 582103
-            </span>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
+        </footer>
+        );
 }

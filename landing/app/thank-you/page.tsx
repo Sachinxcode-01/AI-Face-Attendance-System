@@ -99,11 +99,11 @@ export default function ThankYouPage() {
 
         <div className="mt-8 border-t border-[var(--hairline)] pt-4 text-center">
           <p className="text-[12px] text-faint">
-            Direct developer inquiry? Email{" "}
-            <a href="mailto:kalinganavarsachin@gmail.com" className="text-accent underline">
-              kalinganavarsachin@gmail.com
-            </a>{" "}
-            or call/WhatsApp <span className="text-mid font-medium">+91 98807 62623</span> (Sachin K, Gadag, Karnataka, India).
+              Direct developer inquiry? Email{" "}
+              <a href="mailto:kalinganavarsachin@gmail.com" className="text-accent underline">
+                kalinganavarsachin@gmail.com
+              </a>{" "}
+              or call/WhatsApp <span className="text-mid font-medium">+91 98807 62623</span> (Sachin K, Gadag, Karnataka, India).
           </p>
         </div>
       </div>
