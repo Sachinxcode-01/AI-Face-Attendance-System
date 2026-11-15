@@ -24,11 +24,12 @@
 
 ## 🌟 Overview
 
-**SmartFace Attendance & Biometric Security Suite** is an enterprise-grade, multi-platform biometric ecosystem designed to completely automate attendance logging and enforce robust real-time security. 
+**SmartFace Attendance & Biometric Security Suite** is an enterprise-grade, multi-platform biometric ecosystem designed to completely automate attendance logging and enforce robust real-time security.
 
 Transitioned from a single local computer Python script, the system is now a **fully distributed platform** featuring a high-speed FastAPI ArcFace AI inference microservice, an enterprise Node.js Express REST and WebSocket gateway, an anti-proxy rotating QR verification system, an interactive cross-platform Flutter student application, elegant web dashboards, and LLM-powered natural language insights. It provides organizations with an elite, secure, and touchless administrative workflow.
 
 ### 🌐 Live Deployment
+
 * **Official Marketing & Landing Website:** [https://ai-face-attendance-beta.vercel.app/](https://ai-face-attendance-beta.vercel.app/)
 * **Project GitHub Repository:** [https://github.com/Sachinxcode-01/AI-Face-Attendance-System](https://github.com/Sachinxcode-01/AI-Face-Attendance-System)
 * **Lead Developer:** Sachin K ([kalinganavarsachin@gmail.com](mailto:kalinganavarsachin@gmail.com) · +91 98807 62623) · Gadag, Karnataka, India
@@ -38,6 +39,7 @@ Transitioned from a single local computer Python script, the system is now a **f
 ## 🚀 Key Modules & System Features
 
 ### 🧠 1. Core Deep Learning Engine (`core/`)
+
 * **High-Accuracy Biometrics:** Employs the **ArcFace (`buffalo_l`)** deep learning model via ONNX runtime for robust, ultra-fast 512-dimensional facial embedding extraction and high-accuracy verification.
 * **Smart Face Training:** Dynamically parses the raw dataset structures, extracts embeddings, and compiles them into a serialized AI binary memory file (`data/face_encodings_arcface.pkl`) without manual data registration.
 * **Active Intruder Engine:** Monitors live video streams. When an unregistered face is caught hovering in the frame, it captures a snapshot, logs a record in MongoDB, triggers WebSocket notifications, and delivers an instant critical SMTP Security Alert to administrators.
@@ -45,6 +47,7 @@ Transitioned from a single local computer Python script, the system is now a **f
 * **AI Student Analyst:** Equipped with built-in LLM modules (`ai_analyst.py` & `ai_analyst_groq.py`) connected to the Groq/Gemini APIs to generate natural-language summaries of student performance trends.
 
 ### ⚡ 2. Backend Microservices (`backend/api/` & `backend/ai/`)
+
 * **Node.js Express API Gateway (`backend/api/` - Port 8000):** Enterprise REST API & WebSocket gateway providing JWT identity flows, OTP verification, attendance analytics, timetable, and leave management.
 * **FastAPI ArcFace AI Microservice (`backend/ai/` - Port 8001):** High-speed facial inference endpoint running ONNX ArcFace models for verified face-match validation.
 * **Secure Authentication:** Complete JSON Web Token (JWT) identity flows paired with Google OAuth2 integrations.
@@ -56,6 +59,7 @@ Transitioned from a single local computer Python script, the system is now a **f
 * **Production-Ready Security:** Token-bucket rate limiters on critical registration and login endpoints, custom RequestID tracing middleware, JSON structured logger, and secure CORS/HTTP headers.
 
 ### 📱 3. Cross-Platform Student App (`mobile/`)
+
 * **Modern Flutter UI:** Exquisite, dark-mode native experience for Android and iOS devices adhering to Design System specifications.
 * **Screen-Accurate Skeleton Shimmers:** Custom responsive pulse skeletons matching every app screen's exact layout during live network loads.
 * **Biometric Enrollment:** Connects with device camera and fingerprint scanners to verify student identity before logging attendance.
@@ -80,6 +84,7 @@ For testing and grading the system across student, faculty, and administrative t
 | **Super Admin** | `superadmin@smartface.pro` | `password123` | Enterprise multi-college configuration & tenant manager |
 
 ### 📊 4. Multi-Platform Web Portals & Dashboards (`frontend/web/`, `frontend/admin/` & `frontend/reflex/`)
+
 * **Next.js 15 Modern Web Suite (`frontend/web/` - Port 3000):** Dedicated high-performance web portals:
   * `/student`: Live webcam check-in, anti-proxy QR scanner, attendance analytics, bunk calculator, dynamic ID card, and Gemini Copilot.
   * `/teacher`: Classroom session controller, full-screen rotating QR projector, biometric podium kiosk, and student roster.
@@ -174,7 +179,9 @@ SmartFace-attendance/
 Launch the full suite, microservices, or client applications with single-line commands:
 
 ### 🌟 1. One-Command Full Stack (`make dev` or `npm run dev`)
+
 Spins up the Node.js API Gateway (port 8000), Python FastAPI AI Microservice (port 8001), and Next.js Web Portal (port 3000):
+
 ```bash
 # Using Makefile
 make dev
@@ -187,45 +194,58 @@ npm run dev
 ```
 
 ### ⚡ 2. Backend Microservices Only (`make backend` or `npm run backend`)
+
 Spins up both Node.js API Gateway (8000) and Python ArcFace AI (8001) in background:
+
 ```bash
 npm run backend
 # Or: make backend
 ```
+
 - Node.js API Gateway: `http://localhost:8000`
-- Python AI Microservice: `http://localhost:8001`
-- Health Probe: `http://localhost:8000/api/health`
+* Python AI Microservice: `http://localhost:8001`
+* Health Probe: `http://localhost:8000/api/health`
 
 ### 🌐 3. Web Frontend (`make frontend` or `npm run frontend`)
+
 Runs the modern Next.js 15 web client on port 3000:
+
 ```bash
 npm run frontend
 # Or: make frontend
 ```
 
 ### 📊 4. Streamlit Admin Dashboard (`make admin` or `npm run admin`)
+
 Runs the real-time class monitoring & intruder inspection panel on port 8501:
+
 ```bash
 npm run admin
 # Or: make admin
 ```
 
 ### 📱 5. Mobile Flutter App (`make mobile` or `npm run mobile`)
+
 Automatically configures ADB reverse port forwarding (8000 & 8001) and launches Flutter:
+
 ```bash
 npm run mobile
 # Or: make mobile
 ```
 
 ### 🛑 6. Graceful Shutdown (`make stop` or `npm run stop`)
+
 Stops all background Node and Python processes running on ports 8000 and 8001:
+
 ```bash
 npm run stop
 # Or: make stop
 ```
 
 ### 📋 7. System Diagnostics & Preflight (`npm run preflight`)
+
 Runs verification across MongoDB, environment files, ports, and models:
+
 ```bash
 npm run preflight
 # Or: make preflight
@@ -236,27 +256,36 @@ npm run preflight
 ---
 
 ### Step 3: Run the Admin Streamlit Dashboard
+
 1. Install core dependencies from the root directory:
+
    ```bash
    cd ..
    pip install -r requirements.txt
    ```
+
 2. Start the interactive admin dashboard:
+
    ```bash
    streamlit run frontend/admin/web_dashboard.py
    ```
+
    *Access the web dashboard in your browser at `http://localhost:8501`*
 
 ---
 
 ### Step 4: Run the Flutter Mobile Application
+
 1. Ensure you have the Flutter SDK configured on your system.
 2. Install package dependencies:
+
    ```bash
    cd mobile
    flutter pub get
    ```
+
 3. Boot up the app on your local emulator or physical device:
+
    ```bash
    flutter run
    ```
@@ -264,10 +293,13 @@ npm run preflight
 ---
 
 ### Step 5: Perform Face Vector Model Training
+
 When you add new student folders containing face images inside the `data/dataset` folder (structured as `Name_RollNo`), trigger the ArcFace embedding generation:
+
 ```bash
 python core/train_faces.py
 ```
+
 *This extracts biometric maps from the images and saves them directly to `data/face_encodings_arcface.pkl` to be matched in real-time camera cycles.*
 
 ---
@@ -275,7 +307,9 @@ python core/train_faces.py
 ## 📈 Key Usage Code & API Examples
 
 ### 1. Registering Attendance via WebSocket API (Node.js Express Gateway)
+
 Using WebSocket links, devices can securely stream and receive real-time attendance events:
+
 ```python
 import asyncio
 import websockets
@@ -295,17 +329,21 @@ asyncio.run(listen_for_marks())
 ```
 
 ### 2. Live Recognition & Security Frame Scan (ArcFace Core)
+
 ```python
 # Start the core recognition engine from the workspace root
 python core/attendance_system.py
 ```
+
 *Runs the OpenCV camera thread. Recognized faces trigger automated audio greets. Unregistered guests lingering for more than 5 seconds trigger local saves under `data/Intruders/` and email a priority intruder alert to the supervisor.*
 
 ### 3. Generate Navy & Gold PDF reports via CLI Admin Portal
+
 ```python
 # Trigger student monthly summaries and email them reports:
 python frontend/admin/student_report.py
 ```
+
 *Prompts the supervisor to search by student Roll Number. Compiles monthly parameters, outputs an elegant PDF into `data/Reports/`, and fires the email directly to the student.*
 
 ---
@@ -313,6 +351,7 @@ python frontend/admin/student_report.py
 ## 🤝 Contributing
 
 We welcome contributions to the SmartFace suite! To submit changes:
+
 1. Fork the project repository.
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).

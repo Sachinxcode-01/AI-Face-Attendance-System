@@ -65,6 +65,12 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  verification: {
+    google: [
+      "9yrBACI3uO5CcVjH3mCRCBeQvX5xfiIz8h4c3hligHk",
+      "sNfD8sdaNFgQ5XBHKz7xegiC4upBLTIfLk-zFZ4OVQY",
+    ],
+  },
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
