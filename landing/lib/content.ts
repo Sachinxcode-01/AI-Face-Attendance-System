@@ -65,9 +65,9 @@ export const ROLES: Role[] = [
 ];
 
 export const NAV_LINKS = [
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Platform", href: "#features" },
-  { label: "Showcase", href: "#showcase" },
-  { label: "Live Demo", href: "#token-demo" },
-  { label: "FAQ", href: "#faq" },
+  { label: "How It Works", href: "/#how-it-works" },
+  { label: "Platform", href: "/#features" },
+  { label: "Showcase", href: "/#showcase" },
+  { label: "Live Demo", href: "/#token-demo" },
+  { label: "FAQ", href: "/#faq" },
 ] as const;

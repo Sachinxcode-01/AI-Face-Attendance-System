@@ -70,7 +70,7 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
         }`}
       >
         <div className="mx-auto flex h-[72px] w-full max-w-[var(--container)] items-center justify-between gap-4 px-6 lg:px-8">
-          <a href="#top" className="flex items-center gap-3" aria-label="SmartFace home">
+          <a href="/" className="flex items-center gap-3" aria-label="SmartFace home">
             <span className="relative grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-gradient-to-br from-accent/25 to-accent/5">
               <ScanFace className="h-5 w-5 text-accent" strokeWidth={1.6} />
               <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[#1ed760] shadow-[0_0_10px_#1ed760] ring-2 ring-bg0" />

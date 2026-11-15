@@ -17,7 +17,10 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "SmartFace Role Portal Suite | Unified Biometric Campus",
+  title: {
+    default: "SmartFace Role Portal Suite | Unified Biometric Campus",
+    template: "%s | SmartFace Portal",
+  },
   description:
     "Role-based attendance management for students, faculty, administrators, and parents — ArcFace biometrics, rotating anti-proxy QR codes, and live campus security telemetry.",
 };

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, Loader2, ScanFace, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, ScanFace, Shield, X } from "lucide-react";
 
 interface DemoModalProps {
   isOpen: boolean;
@@ -40,6 +40,8 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
+  const mountTime = useRef(Date.now());
 
   if (!isOpen) return null;
 
@@ -96,6 +98,20 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 🛡️ Anti-spam bot trap & velocity checks
+    if (honeypot.trim()) {
+      // Bot filled hidden trap input: silently pretend success without storing junk
+      onClose();
+      router.push("/thank-you");
+      return;
+    }
+
+    if (Date.now() - mountTime.current < 900) {
+      // Sub-second automated bot submission
+      return;
+    }
+
     setTouched({
       fullName: true,
       email: true,
@@ -162,6 +178,19 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
+          {/* 🛡️ Hidden bot honeypot */}
+          <div aria-hidden="true" style={{ display: "none" }}>
+            <label htmlFor="website_trap">Leave blank</label>
+            <input
+              id="website_trap"
+              name="website_trap"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+            />
+          </div>
           {/* Full Name */}
           <div>
             <label htmlFor="fullName" className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
