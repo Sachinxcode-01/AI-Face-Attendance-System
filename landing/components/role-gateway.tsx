@@ -44,9 +44,8 @@ export function RoleGateway() {
     >
       <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Portals"
           title="One campus. Four vantage points."
-          description="Every role signs into the same unified portal, on its own route. This page is only the front door — dashboards live on Website 2."
+          description="Every role signs into the same unified portal, on its own route. This page is only the front door: dashboards live on Website 2."
         />
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -56,19 +55,15 @@ export function RoleGateway() {
             return (
               <Reveal key={role.key} delay={index * 0.06} className="h-full">
                 <div
-                  className={`group relative flex h-full flex-col overflow-hidden rounded-[22px] border border-[var(--hairline)] bg-surface p-6 transition duration-300 hover:-translate-y-1 ${accent.border}`}
+                  className={`group relative flex h-full flex-col overflow-hidden rounded-lg border border-[var(--hairline)] bg-surface p-6 transition duration-200 hover:border-white/20`}
                 >
-                  <div
-                    aria-hidden
-                    className={`pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full blur-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100 ${accent.glow}`}
-                  />
                   <div className="flex items-start justify-between">
-                    <span className={`grid h-11 w-11 place-items-center rounded-xl border ${accent.badge}`}>
-                      <Icon className="h-5 w-5" strokeWidth={1.7} />
-                    </span>
-                    <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint">
-                      {role.label}
-                    </span>
+                      <span className={`grid h-10 w-10 place-items-center rounded-md border ${accent.badge}`}>
+                        <Icon className="h-5 w-5" strokeWidth={1.7} />
+                      </span>
+                      <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint">
+                        {role.label}
+                      </span>
                   </div>
 
                   <h3 className="mt-5 font-display text-[19px] font-medium tracking-tight text-hi">
@@ -93,7 +88,7 @@ export function RoleGateway() {
                       href={role.href}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center justify-between gap-2 rounded-xl border border-[var(--hairline)] bg-white/[0.02] px-4 py-3 text-[13px] font-medium text-hi transition duration-200 group-hover:border-[var(--hairline-strong)] group-hover:bg-white/[0.04]"
+                      className="flex items-center justify-between gap-2 rounded-md border border-[var(--hairline)] bg-white/[0.02] px-4 py-2.5 text-[13px] font-medium text-hi transition duration-200 hover:border-[var(--hairline-strong)] hover:bg-white/[0.04]"
                     >
                       Open {role.label} portal
                       <ArrowUpRight className={`h-4 w-4 ${accent.text}`} />

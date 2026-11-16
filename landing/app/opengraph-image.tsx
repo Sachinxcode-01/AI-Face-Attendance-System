@@ -20,23 +20,12 @@ export default function OgImage() {
           fontFamily: "Inter, Arial, sans-serif",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: "-180px",
-            left: "50%",
-            width: "900px",
-            height: "500px",
-            transform: "translateX(-50%)",
-            background: "radial-gradient(closest-side, rgba(143,139,255,0.28), transparent)",
-          }}
-        />
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
           <div
             style={{
               width: "72px",
               height: "72px",
-              borderRadius: "20px",
+              borderRadius: "8px",
               border: "2px solid #8f8bff",
               display: "flex",
               alignItems: "center",
@@ -70,9 +59,9 @@ export default function OgImage() {
           >
             Every face. Every gate.
             <br />
-            <span style={{ background: "linear-gradient(100deg,#8f8bff,#6fd8ff)", WebkitBackgroundClip: "text", color: "transparent" }}>
-              One campus.
-            </span>
+              <span style={{ color: "#8f8bff", fontWeight: 700 }}>
+                One campus.
+              </span>
           </div>
           <div style={{ fontSize: "22px", color: "#b6b6c2", marginTop: "22px" }}>
             Touchless biometric attendance · &lt;300ms verification · 99.8% accuracy
@@ -85,7 +74,7 @@ export default function OgImage() {
               key={chip}
               style={{
                 border: "1px solid rgba(255,255,255,0.14)",
-                borderRadius: "999px",
+                borderRadius: "6px",
                 padding: "10px 18px",
                 color: "#b6b6c2",
                 background: "rgba(255,255,255,0.04)",

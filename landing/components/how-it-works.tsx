@@ -16,7 +16,7 @@ const STEPS: { number: string; icon: LucideIcon; title: string; body: string; me
     number: "02",
     icon: ScanFace,
     title: "Verify identity & liveness",
-    body: "The ArcFace ONNX engine validates face identity and liveness against the enrolled 512-dimension embedding — under 300ms, on any camera.",
+    body: "The ArcFace ONNX engine validates face identity and liveness against the enrolled 512-dimension embedding: under 300ms, on any camera.",
     meta: "<300ms · on-device inference",
   },
   {
@@ -36,7 +36,6 @@ export function HowItWorks() {
     >
       <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
-          eyebrow="How it works"
           title="Three steps from a raised hand to a parent's phone."
           description="No turnstiles, no cards, no end-of-class roll call. One session start, one face, one instant record."
         />
@@ -44,7 +43,7 @@ export function HowItWorks() {
         <div className="relative mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
           <div
             aria-hidden
-            className="absolute left-0 right-0 top-6 hidden h-px bg-gradient-to-r from-transparent via-white/10 to-transparent md:block"
+            className="absolute left-0 right-0 top-6 hidden h-px bg-white/10 md:block"
           />
           {STEPS.map((step, index) => {
             const Icon = step.icon;
@@ -52,12 +51,12 @@ export function HowItWorks() {
               <Reveal key={step.number} delay={index * 0.08}>
                 <div className="relative">
                   <div className="flex items-center gap-4">
-                    <span className="relative z-10 grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-[var(--hairline)] bg-surface text-accent">
-                      <Icon className="h-5 w-5" strokeWidth={1.7} />
-                    </span>
-                    <span className="font-display text-4xl font-medium leading-none text-white/[0.07]">
-                      {step.number}
-                    </span>
+                      <span className="relative z-10 grid h-11 w-11 shrink-0 place-items-center rounded-md border border-[var(--hairline)] bg-surface text-accent">
+                        <Icon className="h-5 w-5" strokeWidth={1.7} />
+                      </span>
+                      <span className="font-display text-4xl font-medium leading-none text-white/[0.07]">
+                        {step.number}
+                      </span>
                   </div>
                   <h3 className="mt-6 font-display text-[19px] font-medium tracking-tight text-hi">
                     {step.title}

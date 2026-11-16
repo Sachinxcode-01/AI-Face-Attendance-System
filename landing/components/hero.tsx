@@ -15,7 +15,7 @@ const METRICS = [
 
 const HEADLINE = [
   { text: "Every face. Every gate.", className: "text-hi" },
-  { text: "One campus.", className: "text-gradient" },
+  { text: "One campus.", className: "text-hi font-bold" },
 ];
 
 const container: Variants = {
@@ -42,7 +42,7 @@ function LiveCount() {
   return (
     <div
       data-cue
-      className="badge-pill inline-flex items-center gap-2.5 border border-[var(--hairline)] bg-[var(--glass)] backdrop-blur-md"
+      className="inline-flex items-center gap-2.5 rounded-md border border-[var(--hairline)] bg-surface px-3 py-1.5"
       style={{ animation: "Hero_cueFade 0.9s var(--ease-out) 1.15s both" }}
     >
       <span className="flex h-3.5 items-end gap-[2.5px]" aria-hidden>
@@ -62,7 +62,7 @@ function LiveCount() {
       </span>
       <span className="hidden h-3 w-px bg-white/15 sm:block" aria-hidden />
       <span className="hidden items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-[#9fe0b6] sm:flex">
-        <Radio className="h-3 w-3" /> Live
+        <span className="h-1.5 w-1.5 rounded-full bg-[#1ed760]" /> Live
       </span>
     </div>
   );
@@ -104,10 +104,7 @@ export function Hero({ onOpenDemo }: HeroProps) {
     <section id="top" className="relative overflow-hidden pb-24 pt-32 sm:pt-40 lg:pb-32">
       {/* Ambient background */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-[-22rem] h-[42rem] w-[42rem] -translate-x-1/2 rounded-full bg-accent/15 blur-[150px]" />
-        <div className="absolute right-[-12rem] top-40 h-[26rem] w-[26rem] rounded-full bg-accent2/10 blur-[130px]" />
-        <div className="absolute bottom-[-14rem] left-[-10rem] h-[28rem] w-[28rem] rounded-full bg-[#1ed760]/[0.05] blur-[140px]" />
-        <div className="absolute inset-0 bg-grid mask-radial opacity-[0.35]" />
+        <div className="absolute inset-0 bg-grid opacity-[0.25]" />
       </div>
 
       <div className="relative mx-auto grid w-full max-w-[var(--wide)] items-center gap-16 px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:px-8">
@@ -136,7 +133,7 @@ export function Hero({ onOpenDemo }: HeroProps) {
             className="mt-7 max-w-[563.2px] text-pretty text-[16px] leading-[25.6px] text-mid"
           >
             Enterprise face recognition, rotating anti-proxy QR codes, and automated campus security
-            alerts — one platform that verifies an entire campus in under 300ms.
+            alerts: one platform that verifies an entire campus in under 300ms.
           </motion.p>
 
           <motion.div variants={item} className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -144,28 +141,24 @@ export function Hero({ onOpenDemo }: HeroProps) {
               <button
                 type="button"
                 onClick={onOpenDemo}
-                className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-b from-accent to-[#6a66e8] px-6 text-[14px] font-semibold text-[#0a0a0c] shadow-[0_18px_40px_-18px_rgba(143,139,255,0.9)] transition duration-200 hover:brightness-110 active:scale-[0.98]"
+                className="inline-flex h-12 items-center justify-center rounded-md bg-accent px-6 text-[14px] font-semibold text-[#050507] transition hover:opacity-90 active:scale-[0.98]"
               >
-                <Sparkles className="h-4 w-4" />
                 Request Campus Demo
-                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </button>
             ) : null}
             <a
               href={PORTAL_URL}
               target="_blank"
               rel="noreferrer"
-              className="group button-primary inline-flex h-12 items-center justify-center gap-2 px-6 transition-colors duration-200 hover:bg-[var(--glass-strong)]"
+              className="button-primary inline-flex h-12 items-center justify-center gap-2 rounded-md px-6 transition-colors duration-200 hover:bg-white/[0.06]"
             >
               Go to Portal
-              <ArrowUpRight className="h-4 w-4 text-accent" />
             </a>
             <a
               href="#how-it-works"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-[999px] border border-[var(--hairline)] bg-transparent px-5 text-[14px] font-medium text-mid transition duration-200 hover:border-[var(--hairline-strong)] hover:text-hi"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-[var(--hairline)] bg-transparent px-5 text-[14px] font-medium text-mid transition duration-200 hover:border-[var(--hairline-strong)] hover:text-hi"
             >
               Explore System
-              <ArrowDown className="h-4 w-4 text-faint" />
             </a>
           </motion.div>
 
@@ -192,7 +185,7 @@ export function Hero({ onOpenDemo }: HeroProps) {
             style={{ animation: "Hero_cueOut 1s var(--ease-in-out) 4.5s forwards" }}
           >
             <span
-              className="grid h-8 w-8 place-items-center rounded-full border border-[var(--hairline)]"
+              className="grid h-8 w-8 place-items-center rounded-md border border-[var(--hairline)]"
               style={{ animation: "Hero_cueDip 2.2s var(--ease-in-out) infinite" }}
             >
               <ArrowDown className="h-3.5 w-3.5" />
@@ -215,7 +208,7 @@ export function Hero({ onOpenDemo }: HeroProps) {
             initial={reduceMotion ? undefined : { opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, ease: "easeOut", delay: 0.55 }}
-            className="absolute -right-2 top-8 hidden items-center gap-2 rounded-full border border-[var(--hairline)] bg-panel/80 px-3.5 py-2 backdrop-blur-xl sm:flex"
+            className="absolute -right-2 top-8 hidden items-center gap-2 rounded-md border border-[var(--hairline)] bg-panel px-3.5 py-2 sm:flex"
             style={{ animation: "Hero_float 6s var(--ease-in-out) 1.2s infinite" }}
           >
             <Activity className="h-3.5 w-3.5 text-[#1ed760]" />

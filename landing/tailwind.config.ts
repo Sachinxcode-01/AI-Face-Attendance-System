@@ -35,13 +35,18 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-body)", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["var(--font-display)", "Inter", "ui-sans-serif", "sans-serif"],
+        sans: ["var(--font-body)", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "sans-serif"],
         mono: ["var(--font-mono)"],
       },
       borderRadius: {
-        pill: "999px",
-        card: "22px",
+        sm: "4px",
+        DEFAULT: "6px",
+        md: "6px",
+        lg: "8px",
+        xl: "10px",
+        card: "8px",
+        pill: "6px",
       },
       boxShadow: {
         card: "var(--shadow-card)",

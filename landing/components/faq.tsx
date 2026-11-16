@@ -16,17 +16,17 @@ const FAQS = [
   {
     question: "How do you stop photos, screens and masks?",
     answer:
-      "ArcFace liveness checks run before a match is accepted, so printed photos, replayed video and flat masks fail. Face verification is paired with the rotating session QR, so a check-in also has to belong to a live class — not a screenshot forwarded to a friend.",
+    "ArcFace liveness checks run before a match is accepted, so printed photos, replayed video and flat masks fail. Face verification is paired with the rotating session QR, so a check-in also has to belong to a live class, not a screenshot forwarded to a friend.",
   },
   {
     question: "Does attendance still work if the internet drops?",
     answer:
-      "Yes. Verification runs on the edge node, and check-ins queue locally if the uplink is lost. When the connection returns, the queue reconciles against the session — nothing is lost, and nothing is counted twice.",
+    "Yes. Verification runs on the edge node, and check-ins queue locally if the uplink is lost. When the connection returns, the queue reconciles against the session: nothing is lost, and nothing is counted twice.",
   },
   {
     question: "What hardware does a campus need?",
     answer:
-      "A camera and a browser. The kiosk runs on an existing IP camera, a USB webcam, or a tablet at the gate — no turnstiles or proprietary readers. Larger fleets can add an optional GPU node for parallel verification.",
+    "A camera and a browser. The kiosk runs on an existing IP camera, a USB webcam, or a tablet at the gate, without turnstiles or proprietary readers. Larger fleets can add an optional GPU node for parallel verification.",
   },
   {
     question: "How accurate is it in real classrooms?",
@@ -48,14 +48,13 @@ export function Faq() {
       <div className="mx-auto grid w-full max-w-[var(--container)] gap-12 px-6 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20 lg:px-8">
         <div className="lg:sticky lg:top-28 lg:self-start">
           <SectionHeading
-            eyebrow="FAQ"
             title="The questions every campus asks first."
-            description="Privacy, spoofing, uptime and installation — answered plainly, before you book a demo."
+            description="Privacy, spoofing, uptime and installation: answered plainly, before you book a demo."
           />
           <Reveal delay={0.15}>
             <a
               href={DEMO_MAILTO}
-              className="mt-8 inline-flex items-center gap-2 rounded-full border border-[var(--hairline)] bg-[var(--glass)] px-5 py-3 text-[14px] font-medium text-hi backdrop-blur-md transition duration-200 hover:border-[var(--hairline-strong)] hover:bg-[var(--glass-strong)]"
+              className="mt-8 inline-flex items-center gap-2 rounded-md border border-[var(--hairline)] bg-surface px-5 py-2.5 text-[14px] font-medium text-hi transition duration-200 hover:border-[var(--hairline-strong)] hover:bg-white/[0.04]"
             >
               Ask us something specific
               <ArrowUpRight className="h-4 w-4 text-accent" />
@@ -80,9 +79,8 @@ export function Faq() {
                     </span>
                     <Plus
                       aria-hidden
-                      className={`mt-0.5 h-4 w-4 shrink-0 transition-transform duration-300 ${
-                        isOpen ? "rotate-45 text-accent" : "text-faint"
-                      }`}
+                      className={`mt-0.5 h-4 w-4 shrink-0 transition-transform duration-300 ${isOpen ? "rotate-45 text-accent" : "text-faint"
+                        }`}
                     />
                   </button>
                 </h3>

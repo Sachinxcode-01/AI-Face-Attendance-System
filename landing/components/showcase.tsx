@@ -19,7 +19,7 @@ const SCREENS: Screen[] = [
     key: "kiosk",
     tab: "Gate kiosk",
     title: "The gate, thinking for itself.",
-    body: "A camera, a browser and a rotating code. The kiosk verifies, stamps and waves students through — no phone swipe, no queue, no proxy.",
+    body: "A camera, a browser and a rotating code. The kiosk verifies, stamps and waves students through: no phone swipe, no queue, no proxy.",
     meta: "Edge node · <300ms",
   },
   {
@@ -33,7 +33,7 @@ const SCREENS: Screen[] = [
     key: "parent",
     tab: "Parent alert",
     title: "The moment they arrive, you know.",
-    body: "Timestamp, gate and confidence score — pushed to the parent's phone before their child reaches the classroom door.",
+    body: "Timestamp, gate and confidence score, pushed to the parent's phone before their child reaches the classroom door.",
     meta: "Push + email · instant",
   },
 ];
@@ -45,30 +45,27 @@ function KioskScreen() {
     <div className="flex h-full flex-col bg-bg1">
       <div className="flex items-center justify-between border-b border-[var(--hairline)] px-5 py-3">
         <span className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#1ed760] shadow-[0_0_8px_#1ed760]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[#1ed760]" />
           Gate B · Kiosk
         </span>
         <span className="font-mono text-[9px] text-faint">07:58:12</span>
       </div>
-      <div className="relative flex flex-1 items-center justify-center">
-        <div aria-hidden className="absolute inset-0 bg-grid opacity-30" />
-        <div aria-hidden className="absolute h-44 w-44 rounded-full bg-accent/20 blur-3xl" />
-        <div className="relative h-28 w-24">
-          <div className="absolute left-1/2 top-0 h-16 w-16 -translate-x-1/2 rounded-[45%] bg-gradient-to-b from-slate-400/40 to-slate-600/20 ring-1 ring-white/10" />
-          <div className="absolute bottom-0 left-1/2 h-14 w-24 -translate-x-1/2 rounded-t-[2.5rem] bg-gradient-to-b from-slate-500/30 to-slate-700/10" />
-        </div>
-        <div className="absolute inset-x-10 top-1/2 h-20 -translate-y-1/2 text-[#1ed760]">
-          {["left-0 top-0 rounded-tl-lg border-l-2 border-t-2", "right-0 top-0 rounded-tr-lg border-r-2 border-t-2", "bottom-0 left-0 rounded-bl-lg border-b-2 border-l-2", "bottom-0 right-0 rounded-br-lg border-b-2 border-r-2"].map(
-            (c) => (
-              <span key={c} aria-hidden className={`absolute h-6 w-6 border-current ${c}`} />
-            ),
-          )}
-        </div>
-        <div
-          aria-hidden
-          className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-transparent via-[#1ed760]/15 to-transparent"
-          style={{ animation: "Hero_cueSweep 1.4s var(--ease-in-out) infinite" }}
+      <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-bg0">
+        <img
+          src="/mobile-screen.png"
+          alt="SmartFace kiosk verification"
+          className="absolute inset-0 h-full w-full object-cover object-top opacity-60"
         />
+        <div aria-hidden className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-x-10 top-1/2 h-20 -translate-y-1/2 text-[#1ed760]">
+          {
+            ["left-0 top-0 rounded-tl-sm border-l-2 border-t-2", "right-0 top-0 rounded-tr-sm border-r-2 border-t-2", "bottom-0 left-0 rounded-bl-sm border-b-2 border-l-2", "bottom-0 right-0 rounded-br-sm border-b-2 border-r-2"].map(
+              (c) => (
+                <span key={c} aria-hidden className={`absolute h-6 w-6 border-current ${c}`} />
+              ),
+            )
+          }
+        </div>
       </div>
       <div className="space-y-2.5 border-t border-[var(--hairline)] p-4">
         <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.14em] text-faint">
@@ -109,9 +106,8 @@ function RosterScreen() {
           >
             <span className="text-[11.5px] text-hi">{row.name}</span>
             <span
-              className={`font-mono text-[8.5px] uppercase tracking-[0.1em] ${
-                row.ok ? "text-[#9fe0b6]" : "text-rose-300"
-              }`}
+              className={`font-mono text-[8.5px] uppercase tracking-[0.1em] ${row.ok ? "text-[#9fe0b6]" : "text-rose-300"
+                }`}
             >
               {row.status}
             </span>
@@ -199,7 +195,6 @@ export function Showcase() {
     <section id="showcase" className="relative scroll-mt-24 border-t border-[var(--hairline)] py-24 sm:py-28">
       <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Showcase"
           title="The whole campus, one screen at a time."
           description="Three roles, one living record. Watch the session move from gate to roster to parent's pocket without anyone lifting a finger."
         />
@@ -215,11 +210,10 @@ export function Showcase() {
                   role="tab"
                   aria-selected={index === i}
                   onClick={() => setIndex(i)}
-                  className={`badge-pill border text-[13px] transition duration-300 ${
-                    index === i
-                      ? "border-accent/40 bg-accent/10 text-hi"
-                      : "border-[var(--hairline)] bg-[var(--glass)] text-mid hover:text-hi"
-                  }`}
+                  className={`rounded-md border px-3.5 py-1.5 text-xs font-medium transition ${index === i
+                    ? "border-accent/40 bg-accent/10 text-hi"
+                    : "border-[var(--hairline)] bg-surface text-mid hover:text-hi"
+                    }`}
                 >
                   {s.tab}
                 </button>
@@ -253,9 +247,8 @@ export function Showcase() {
                   type="button"
                   aria-label={`Show ${s.tab}`}
                   onClick={() => setIndex(i)}
-                  className={`h-1 rounded-full transition-all duration-500 ${
-                    index === i ? "w-8 bg-accent" : "w-3 bg-white/15 hover:bg-white/25"
-                  }`}
+                  className={`h-1 rounded-sm transition-all duration-300 ${index === i ? "w-8 bg-accent" : "w-3 bg-white/15 hover:bg-white/25"
+                    }`}
                 />
               ))}
             </div>
@@ -264,13 +257,8 @@ export function Showcase() {
           {/* Device frame */}
           <Reveal delay={0.1}>
             <div className="relative mx-auto w-full max-w-[440px]">
-              <div
-                aria-hidden
-                className="absolute -inset-6 rounded-[36px] bg-accent/10 blur-3xl"
-                style={{ animation: "Hero_float 8s var(--ease-in-out) infinite" }}
-              />
-              <div className="relative rounded-[26px] border border-[var(--hairline-strong)] bg-panel/60 p-2.5 shadow-card backdrop-blur-xl">
-                <div className="overflow-hidden rounded-[18px] border border-[var(--hairline)]">
+              <div className="relative rounded-lg border border-[var(--hairline)] bg-surface p-2 shadow-sm">
+                <div className="overflow-hidden rounded-md border border-[var(--hairline)]">
                   <div className="relative aspect-[4/4.4]">
                     <AnimatePresence mode="wait">
                       <motion.div
@@ -287,13 +275,15 @@ export function Showcase() {
                   </div>
                 </div>
               </div>
-              <div className="absolute -left-3 top-10 hidden items-center gap-1.5 rounded-full border border-[var(--hairline)] bg-panel/80 px-3 py-1.5 font-mono text-[8.5px] uppercase tracking-[0.14em] text-mid backdrop-blur-xl sm:flex"
+              <div
+                className="absolute -left-3 top-10 hidden items-center gap-1.5 rounded-md border border-[var(--hairline)] bg-panel px-3 py-1.5 font-mono text-[8.5px] uppercase tracking-[0.14em] text-mid sm:flex"
                 style={{ animation: "Hero_float 6.5s var(--ease-in-out) 0.8s infinite" }}
               >
-                <Eye className="h-3 w-3 text-accent2" />
+                <Eye className="h-3 w-3 text-accent" />
                 2,418 faces indexed
               </div>
-              <div className="absolute -right-3 bottom-12 hidden items-center gap-1.5 rounded-full border border-[var(--hairline)] bg-panel/80 px-3 py-1.5 font-mono text-[8.5px] uppercase tracking-[0.14em] text-mid backdrop-blur-xl sm:flex"
+              <div
+                className="absolute -right-3 bottom-12 hidden items-center gap-1.5 rounded-md border border-[var(--hairline)] bg-panel px-3 py-1.5 font-mono text-[8.5px] uppercase tracking-[0.14em] text-mid sm:flex"
                 style={{ animation: "Hero_float 7s var(--ease-in-out) 1.6s infinite" }}
               >
                 <ScanFace className="h-3 w-3 text-[#1ed760]" />
@@ -302,7 +292,7 @@ export function Showcase() {
             </div>
           </Reveal>
         </div>
-      </div>
-    </section>
+  </div >
+</section >
   );
 }

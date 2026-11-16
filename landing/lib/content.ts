@@ -57,7 +57,7 @@ export const ROLES: Role[] = [
     path: "/parent",
     href: PORTAL_LINKS.parent,
     description:
-      "See the moment your child arrives — with timestamp and gate — instead of waiting for end-of-term surprises.",
+    "See the moment your child arrives, with timestamp and gate, instead of waiting for end-of-term surprises.",
     capabilities: ["Real-time check-ins", "Instant arrival alerts", "Leave requests in one place"],
     icon: Users,
     accent: "sky",

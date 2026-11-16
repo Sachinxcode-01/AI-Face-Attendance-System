@@ -23,7 +23,7 @@ export function Statement() {
           ))}
           <Reveal delay={0.28}>
             <p className="mt-8 max-w-[563.2px] text-[15px] leading-relaxed text-low">
-              One identity graph, one session token, one audit trail — from the gate to the group
+              One identity graph, one session token, one audit trail: from the gate to the group
               chat.
             </p>
           </Reveal>

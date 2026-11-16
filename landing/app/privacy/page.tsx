@@ -4,14 +4,14 @@ import { ShieldCheck } from "lucide-react";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "How SmartFace collects, stores and deletes face data — embeddings only, raw frames never persisted, every access audit-logged.",
+  "How SmartFace collects, stores and deletes face data: embeddings only, raw frames never persisted, every access audit-logged.",
 };
 
 const SECTIONS = [
   {
     heading: "1. What we collect",
     body: [
-      "When a campus enrolls a student or staff member, SmartFace converts the captured face frame into a 512-dimension mathematical embedding. The raw photograph is used for that single enrollment moment and is then discarded — it is never stored, never backed up, and never sent to a third party.",
+      "When a campus enrolls a student or staff member, SmartFace converts the captured face frame into a 512-dimension mathematical embedding. The raw photograph is used for that single enrollment moment and is then discarded: it is never stored, never backed up, and never sent to a third party.",
       "What persists is: the embedding, the attendance records it produces (gate, timestamp, confidence score), and the account details your institution provides (name, role, email).",
     ],
   },
@@ -58,10 +58,6 @@ const SECTIONS = [
 export default function PrivacyPage() {
   return (
     <main className="relative min-h-screen pb-28 pt-36">
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-[-18rem] h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-accent/10 blur-[150px]" />
-      </div>
-
       <div className="relative mx-auto w-full max-w-[46rem] px-6">
         <p className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-accent">
           <ShieldCheck className="h-4 w-4" strokeWidth={1.8} />

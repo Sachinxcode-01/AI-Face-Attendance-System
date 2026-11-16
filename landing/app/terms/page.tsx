@@ -4,7 +4,7 @@ import { Scale } from "lucide-react";
 export const metadata: Metadata = {
   title: "Terms & Conditions",
   description:
-    "The terms that govern use of the SmartFace platform — acceptable use, service levels, data ownership, and liability.",
+  "The terms that govern use of the SmartFace platform: acceptable use, service levels, data ownership, and liability.",
 };
 
 const SECTIONS = [
@@ -30,7 +30,7 @@ const SECTIONS = [
   {
     heading: "4. Service levels",
     body: [
-      "We target 99.9% monthly availability for the verification API and publish status in real time. Scheduled maintenance is announced at least 72 hours ahead. If we miss the target, the remedy is service credit as set out in your order form — this is the exclusive remedy for downtime.",
+      "We target 99.9% monthly availability for the verification API and publish status in real time. Scheduled maintenance is announced at least 72 hours ahead. If we miss the target, the remedy is service credit as set out in your order form. This is the exclusive remedy for downtime.",
     ],
   },
   {
@@ -57,10 +57,6 @@ const SECTIONS = [
 export default function TermsPage() {
   return (
     <main className="relative min-h-screen pb-28 pt-36">
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-[-18rem] h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-accent/10 blur-[150px]" />
-      </div>
-
       <div className="relative mx-auto w-full max-w-[46rem] px-6">
         <p className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-accent">
           <Scale className="h-4 w-4" strokeWidth={1.8} />

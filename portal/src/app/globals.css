@@ -40,46 +40,77 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Glassmorphism bytune utility */
-.bytune-glass-card {
-  backdrop-filter: blur(18px) saturate(1.5);
-  background-color: rgba(12, 12, 17, 0.65);
-  background-image: linear-gradient(165deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015));
-  border: 0.8px solid rgba(255, 255, 255, 0.09);
-  border-radius: 22px;
-  box-shadow: rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.85) 0px 32px 70px -25px;
+/* Solid panel & card styling - designed, not generated */
+.portal-card {
+  background-color: #0D0F17;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
 }
 
-.bytune-glass-card:hover {
-  border-color: rgba(143, 139, 255, 0.35);
-  box-shadow: rgba(143, 139, 255, 0.15) 0px 0px 30px, rgba(255, 255, 255, 0.1) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.9) 0px 40px 80px -28px;
+.portal-card-subtle {
+  background-color: #090A10;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
 }
 
-.bytune-chip {
+.portal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  background-color: #131520;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-hi);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  padding: 8px 16px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.portal-btn:hover {
+  background-color: #1A1D2B;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.portal-btn-primary {
+  background-color: #8F8BFF;
+  border-color: #8F8BFF;
+  color: #050507;
+  font-weight: 600;
+}
+
+.portal-btn-primary:hover {
+  background-color: #9F9CFF;
+  border-color: #9F9CFF;
+  color: #050507;
+}
+
+.portal-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border-radius: 999px;
-  background-color: rgba(255, 255, 255, 0.035);
-  border: 0.8px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-mid);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
-  line-height: 20px;
-  padding: 4px 14px;
-  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  line-height: 18px;
+  padding: 4px 12px;
+  transition: all 0.15s ease;
 }
 
-.bytune-chip:hover {
+.portal-chip:hover {
   background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.18);
   color: var(--text-hi);
 }
 
-.bytune-chip-active {
-  background-color: #FFFFFF !important;
-  border-color: #FFFFFF !important;
-  color: #0A0A0C !important;
+.portal-chip-active {
+  background-color: #F5F5F8 !important;
+  border-color: #F5F5F8 !important;
+  color: #050507 !important;
   font-weight: 600;
 }
 
@@ -123,23 +154,5 @@ body {
 }
 
 .animate-scan {
-  animation: scanline 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-}
-
-@keyframes heroCueSweep {
-  0% { transform: translateX(-100%) rotate(25deg); }
-  100% { transform: translateX(250%) rotate(25deg); }
-}
-
-.animate-sweep {
-  animation: heroCueSweep 6s infinite;
-}
-
-@keyframes pipFloat {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-}
-
-.animate-pip-float {
-  animation: pipFloat 4s ease-in-out infinite;
+  animation: scanline 2.8s linear infinite;
 }

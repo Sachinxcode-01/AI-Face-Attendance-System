@@ -1,4 +1,4 @@
-const DEFAULT_PORTAL_URL = "https://portal.smartface.pro";
+const DEFAULT_PORTAL_URL = "https://ai-face-attendance-system-portal.vercel.app";
 
 /**
  * Public base URL of Website 2 (the unified portal app).
