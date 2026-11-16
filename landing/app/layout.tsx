@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { CookieBanner } from "@/components/cookie-banner";
 import { Analytics } from "@/components/analytics";
+import { SpaceBackground } from "@/components/space-background";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ai-face-attendance-beta.vercel.app";
@@ -83,23 +84,26 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-  <html lang="en">
-    <head>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-      />
-    </head>
-    <body className="min-h-screen bg-bg0 font-sans text-hi antialiased selection:bg-accent/30 selection:text-white">
-      <a href="#main" className="skip-link">
-        Skip to content
-      </a>
-      {children}
-      <CookieBanner />
-      <Analytics />
-    </body>
-  </html>
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-screen bg-bg0 font-sans text-hi antialiased selection:bg-accent/30 selection:text-white">
+        <SpaceBackground />
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
+        <div className="relative z-10 flex min-h-screen flex-col">
+          {children}
+        </div>
+        <CookieBanner />
+        <Analytics />
+      </body>
+    </html>
   );
 }
