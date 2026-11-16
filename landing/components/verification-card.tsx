@@ -68,11 +68,11 @@ export function VerificationCard() {
 
           <div className="relative aspect-[4/3.3] overflow-hidden bg-bg0">
             <img
-              src="/mobile-screen.png"
-              alt="SmartFace live verification interface"
-              className="absolute inset-0 h-full w-full object-cover object-top opacity-75"
+              src="/hero-verification.jpg"
+              alt="SmartFace live camera verification feed"
+              className="absolute inset-0 h-full w-full object-cover object-center"
             />
-            <div aria-hidden className="absolute inset-0 bg-black/40" />
+            <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#101016]/80 via-transparent to-black/30 pointer-events-none" />
 
             <div
               className={`absolute left-1/2 top-1/2 h-[56%] w-[44%] -translate-x-1/2 -translate-y-1/2 transition-colors duration-500 ${matched ? "text-spotify" : "text-accent"
@@ -142,11 +142,11 @@ export function VerificationCard() {
 
         {/* Status chip beneath inner feed */}
         <div className="mt-3 flex items-center justify-between px-1 text-[11px] font-mono text-mid">
-            <span className={`flex items-center gap-1.5 ${matched ? "text-spotify" : "text-mid"}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${matched ? "bg-spotify" : "bg-accent animate-pulse"}`} />
-              {matched ? "Verified in 192ms" : "Matching in progress..."}
-            </span>
-            <span className="text-faint">ArcFace Embedding · 512-d</span>
+          <span className={`flex items-center gap-1.5 ${matched ? "text-spotify" : "text-mid"}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${matched ? "bg-spotify" : "bg-accent animate-pulse"}`} />
+            {matched ? "Verified in 192ms" : "Matching in progress..."}
+          </span>
+          <span className="text-faint">ArcFace Embedding · 512-d</span>
         </div>
       </div>
     </div>
