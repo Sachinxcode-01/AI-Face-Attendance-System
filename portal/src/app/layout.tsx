@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   },
   description:
     "Role-based attendance management for students, faculty, administrators, and parents — ArcFace biometrics, rotating anti-proxy QR codes, and live campus security telemetry.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export const viewport: Viewport = {

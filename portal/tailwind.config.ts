@@ -10,21 +10,36 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        canvas: "#070A14",
+        canvas: "#050507",
+        surface: "#101016",
+        panel: "#16161D",
         card: "#0E1428",
+        elev: "#1E1E27",
+        accent: {
+          DEFAULT: "#8F8BFF",
+          glow: "rgb(143, 139, 255)",
+          cyan: "#6FD8FF",
+        },
         ink: {
-          DEFAULT: "#F1F3F9",
-          muted: "#A8AFC7",
-          faint: "#7C82A0",
+          DEFAULT: "#F5F5F8",
+          muted: "#B6B6C2",
+          faint: "#8A8A97",
+          dim: "#60606C",
         },
       },
-        fontFamily: {
-          sans: ["var(--font-inter)", "sans-serif"],
-          display: ["var(--font-poppins)", "sans-serif"],
-        },
+      borderRadius: {
+        '22': '22px',
+      },
+      fontFamily: {
+        sans: ["var(--font-inter)", "sans-serif"],
+        display: ["var(--font-poppins)", "sans-serif"],
+      },
+      transitionTimingFunction: {
+        'bytune': 'cubic-bezier(0.22, 1, 0.36, 1)',
       },
     },
-    plugins: [],
-  };
+},
+  plugins: [],
+};
 
-  export default config;
+export default config;
