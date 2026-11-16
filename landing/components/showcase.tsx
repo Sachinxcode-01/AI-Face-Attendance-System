@@ -247,8 +247,11 @@ export function Showcase() {
                   type="button"
                   aria-label={`Show ${s.tab}`}
                   onClick={() => setIndex(i)}
-                  className={`h-1 rounded-sm transition-all duration-300 ${index === i ? "w-8 bg-accent" : "w-3 bg-white/15 hover:bg-white/25"
-                    }`}
+                  className={
+                    index === i
+                      ? "h-1 w-8 rounded-sm bg-accent transition-all duration-300"
+                      : "h-1 w-3 rounded-sm bg-white/15 transition-all duration-300 hover:bg-white/25"
+                  }
                 />
               ))}
             </div>
@@ -292,7 +295,7 @@ export function Showcase() {
             </div>
           </Reveal>
         </div>
-  </div >
-</section >
+      </div >
+    </section >
   );
 }

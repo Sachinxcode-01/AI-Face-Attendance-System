@@ -163,3 +163,4 @@ export function VerificationCard() {
     </div>
   );
 }
+
