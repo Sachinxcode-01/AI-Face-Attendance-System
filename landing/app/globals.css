@@ -11,19 +11,20 @@
   --surface: #101016;
   --panel: #16161d;
   --elev: #1e1e27;
-  --hairline: #ffffff14;
-  --hairline-strong: #ffffff29;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.16);
   --text-hi: #f5f5f8;
-  --text-mid: #c0c0cf;
-  --text-low: #9898a8;
-  --text-faint: #828292;
+  --text-mid: #b6b6c2;
+  --text-low: #8a8a97;
+  --text-faint: #60606c;
   --accent: #8f8bff;
   --accent-2: #6fd8ff;
-  --accent-soft: #8f8bff29;
-  --accent-2-soft: #6fd8ff24;
-  --glass: #ffffff0a;
-  --glass-strong: #ffffff12;
-  --shadow-card: 0 1.5rem 3.75rem -1.5rem #000000b3;
+  --accent-soft: rgba(143, 139, 255, 0.16);
+  --accent-2-soft: rgba(111, 216, 255, 0.14);
+  --glow: rgb(143, 139, 255);
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-strong: rgba(255, 255, 255, 0.07);
+  --shadow-card: 0 1.5rem 3.75rem -1.5rem rgba(0, 0, 0, 0.7);
   --radius-s: 4px;
   --radius-m: 6px;
   --radius-l: 8px;
@@ -39,7 +40,7 @@
   /* Brand accents for this project (SmartFace) */
   --brand: #8f8bff;
   --brand-2: #1ed760;
-  --brand-soft: #8f8bff0e;
+  --brand-soft: rgba(143, 139, 255, 0.06);
   --brand-mint: #9fe0b6;
 }
 
