@@ -16,17 +16,17 @@ const FAQS = [
   {
     question: "How do you stop photos, screens and masks?",
     answer:
-    "ArcFace liveness checks run before a match is accepted, so printed photos, replayed video and flat masks fail. Face verification is paired with the rotating session QR, so a check-in also has to belong to a live class, not a screenshot forwarded to a friend.",
+      "ArcFace liveness checks run before a match is accepted, so printed photos, replayed video and flat masks fail. Face verification is paired with the rotating session QR, so a check-in also has to belong to a live class, not a screenshot forwarded to a friend.",
   },
   {
     question: "Does attendance still work if the internet drops?",
     answer:
-    "Yes. Verification runs on the edge node, and check-ins queue locally if the uplink is lost. When the connection returns, the queue reconciles against the session: nothing is lost, and nothing is counted twice.",
+      "Yes. Verification runs on the edge node, and check-ins queue locally if the uplink is lost. When the connection returns, the queue reconciles against the session: nothing is lost, and nothing is counted twice.",
   },
   {
     question: "What hardware does a campus need?",
     answer:
-    "A camera and a browser. The kiosk runs on an existing IP camera, a USB webcam, or a tablet at the gate, without turnstiles or proprietary readers. Larger fleets can add an optional GPU node for parallel verification.",
+      "A camera and a browser. The kiosk runs on an existing IP camera, a USB webcam, or a tablet at the gate, without turnstiles or proprietary readers. Larger fleets can add an optional GPU node for parallel verification.",
   },
   {
     question: "How accurate is it in real classrooms?",
@@ -44,7 +44,7 @@ export function Faq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-      <section id="faq" className="relative scroll-mt-24 border-t border-[var(--hairline)] py-28 sm:py-36 lg:py-[168px]">
+      <section id="faq" className="relative scroll-mt-24 border-t border-[var(--hairline)] py-16 sm:py-24 lg:py-[140px]">
         <div className="mx-auto grid w-full max-w-[var(--container)] gap-12 px-6 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20 lg:px-8">
           <div className="lg:sticky lg:top-28 lg:self-start">
             <SectionHeading
@@ -74,15 +74,15 @@ export function Faq() {
                       aria-expanded={isOpen}
                       className="flex w-full items-start justify-between gap-6 py-6 text-left transition-colors hover:text-white"
                     >
-                        <span className="text-[17px] font-medium leading-snug text-hi">
-                          {faq.question}
-                        </span>
-                            < span className="grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-white/[0.03] shrink-0 mt-0.5">
-                          <Plus
-                            aria-hidden
-                            className={`h-4 w-4 transition-transform duration-300 ${isOpen ? "rotate-45 text-accent" : "text-faint"
-                              }`}
-                      />
+                      <span className="text-[17px] font-medium leading-snug text-hi">
+                        {faq.question}
+                      </span>
+                      < span className="grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-white/[0.03] shrink-0 mt-0.5">
+                        <Plus
+                          aria-hidden
+                          className={`h-4 w-4 transition-transform duration-300 ${isOpen ? "rotate-45 text-accent" : "text-faint"
+                            }`}
+                        />
                       </span>
                     </button>
                   </h3>
@@ -95,9 +95,9 @@ export function Faq() {
                         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                         className="overflow-hidden"
                       >
-                          <p className="pb-7 pr-8 text-[14.5px] leading-[23.9px] text-mid">
-                            {faq.answer}
-                          </p>
+                        <p className="pb-7 pr-8 text-[14.5px] leading-[23.9px] text-mid">
+                          {faq.answer}
+                        </p>
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
