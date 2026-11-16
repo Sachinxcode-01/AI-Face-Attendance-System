@@ -12,7 +12,7 @@ import {
   Shield,
   Zap,
 } from "lucide-react";
-import { COMPANY_CONTACT, DEMO_MAILTO, PORTAL_LINKS } from "@/lib/constants";
+import { COMPANY_CONTACT, DEMO_MAILTO } from "@/lib/constants";
 import { NAV_LINKS, ROLES } from "@/lib/content";
 
 interface SiteFooterProps {
@@ -179,102 +179,102 @@ export function SiteFooter({ onOpenDemo }: SiteFooterProps) {
             </ul>
           </div>
 
-              {/* Column 2: Campus Portals */}
-              <div>
-                <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
-                  Portals
-                </h3>
-                <ul className="mt-4 space-y-2.5 text-[13.5px]">
-                  {ROLES.map((role) => (
-                    <li key={role.key}>
-                      <a
-                        href={role.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-mid transition-colors hover:text-hi"
-                      >
-                        {role.title}
-                        <ArrowUpRight className="h-3 w-3 text-faint" />
-                      </a>
-          </li>
+          {/* Column 2: Campus Portals */ }
+                < div >
+            <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
+              Portals
+            </h3>
+            <ul className="mt-4 space-y-2.5 text-[13.5px]">
+              {ROLES.map((role) => (
+                <li key={role.key}>
+                  <a
+                    href={role.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 text-mid transition-colors hover:text-hi"
+                  >
+                    {role.title}
+                    <ArrowUpRight className="h-3 w-3 text-faint" />
+                  </a>
+                </li>
               ))}
         </ul>
       </div>
 
-          {/* Column 3: Trust & Legal */}
-          <div>
-            <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
-              Trust & Legal
-            </h3>
-            <ul className="mt-4 space-y-2.5 text-[13.5px]">
-              <li>
-                <Link
-                  href="/privacy"
-                  className="text-mid transition-colors hover:text-hi"
-                >
-                  Privacy Architecture
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms"
-                  className="text-mid transition-colors hover:text-hi"
-                >
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <a
-                  href={COMPANY_CONTACT.github}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-mid transition-colors hover:text-hi"
-                >
-          GitHub Source
-          <ArrowUpRight className="h-3 w-3 text-faint" />
-        </a>
-      </li>
-      <li>
-        <a
-          href={DEMO_MAILTO}
-          className="text-mid transition-colors hover:text-hi"
-        >
-          Security Contact
-        </a>
-      </li>
-    </ul>
+      {/* Column 3: Trust & Legal */}
+      <div>
+        <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
+          Trust & Legal
+        </h3>
+        <ul className="mt-4 space-y-2.5 text-[13.5px]">
+          <li>
+            <Link
+              href="/privacy"
+              className="text-mid transition-colors hover:text-hi"
+            >
+              Privacy Architecture
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/terms"
+              className="text-mid transition-colors hover:text-hi"
+            >
+              Terms of Service
+            </Link>
+          </li>
+          <li>
+            <a
+              href={COMPANY_CONTACT.github}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-mid transition-colors hover:text-hi"
+            >
+                  GitHub Source
+    < ArrowUpRight className = "h-3 w-3 text-faint" />
+                </a >
+              </li >
+    <li>
+      <a
+        href={DEMO_MAILTO}
+        className="text-mid transition-colors hover:text-hi"
+      >
+        Security Contact
+      </a>
+    </li>
+            </ul >
           </div >
         </div >
 
-  {/* ===================================================================
+        {/* ===================================================================
          * Divider & Bottom Bar
          * =================================================================== */}
-    < div className = "mt-12 pt-8 border-t border-[var(--hairline)] flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-[12px] text-faint" >
-          <div>
-            <span>© {new Date().getFullYear()} SmartFace Systems.</span>{" "}
-            <span className="hidden sm:inline">All rights reserved.</span>
-          </div>
+      <div className="mt-12 pt-8 border-t border-[var(--hairline)] flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-[12px] text-faint">
+        <div>
+          <span>© {new Date().getFullYear()} SmartFace Systems.</span>{" "}
+          <span className="hidden sm:inline">All rights reserved.</span>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-4">
-            <span>
-              Built by{" "}
-              <a
-                href={COMPANY_CONTACT.github}
-                target="_blank"
-                rel="noreferrer"
-                className="text-mid hover:text-accent transition-colors underline underline-offset-4 decoration-white/20"
-              >
-                {COMPANY_CONTACT.developer}
-              </a>{" "}
-              ({COMPANY_CONTACT.address}, India)
-            </span>
-          </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <span>
+            Built by{" "}
+            <a
+              href={COMPANY_CONTACT.github}
+              target="_blank"
+              rel="noreferrer"
+              className="text-mid hover:text-accent transition-colors underline underline-offset-4 decoration-white/20"
+            >
+              {COMPANY_CONTACT.developer}
+            </a>{" "}
+            ({COMPANY_CONTACT.address}, India)
+          </span>
+        </div>
         </div >
 
     {/* Data Governance / Privacy Notice */ }
     < div className = "mt-6 rounded-[14px] border border-white/[0.05] bg-white/[0.015] p-3.5 sm:p-4 text-[11.5px] leading-relaxed text-faint font-mono" >
       <p>
-        <strong className="text-mid font-semibold">Data Governance Notice:</strong> Facial images are processed ephemerally in volatile RAM at edge kiosks and are never written to permanent disk or unencrypted storage. Only 512-dimensional mathematical embeddings are persisted to verify identity. Admins maintain full autonomy to purge or re-calibrate biometric profiles at any time.
+        <strong className="text-mid font-semibold">Data Governance Notice:</strong> Attendance verification frames are processed ephemerally in memory at edge kiosks, and identity matching relies on 512-dimensional mathematical embeddings. Enrollment image datasets and audit snapshots are restricted to authorized institutional storage, and admins maintain full autonomy to purge or re-calibrate biometric profiles at any time.
       </p>
         </div >
       </div >

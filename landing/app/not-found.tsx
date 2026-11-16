@@ -25,7 +25,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/"
-          className="button-primary mt-9 inline-flex h-12 items-center gap-2 px-6 transition-colors duration-200 hover:bg-[var(--glass-strong)]"
+          className="btn-pill-accent mt-9 inline-flex h-12 items-center gap-2 px-6 font-semibold text-[14px]"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to the front door
