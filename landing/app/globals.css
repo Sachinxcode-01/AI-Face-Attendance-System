@@ -300,6 +300,29 @@
   .badge-pill {
     @apply chip-bytune;
   }
+
+  /* ------------------------------------------------------------------
+   * Progressive scroll reveal (safe for SSR / no-JS / crawlers)
+   * ------------------------------------------------------------------ */
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.65s var(--ease-out),
+      transform 0.65s var(--ease-out);
+    will-change: opacity, transform;
+  }
+
+  /* Only hide content when JS is confirmed running (class set on <html>) */
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  .js .reveal.reveal-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @layer utilities {

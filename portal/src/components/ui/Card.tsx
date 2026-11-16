@@ -10,9 +10,8 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 export function Card({ elevated = false, className = '', children, ...rest }: CardProps) {
   return (
     <div
-      className={`rounded-2xl border border-white/10 p-5 backdrop-blur-xl transition-colors ${
-        elevated ? 'bg-[#141D38]/85 border-white/12' : 'bg-[#0E1428]'
-      } ${className}`}
+      className={`rounded-[22px] border border-[rgba(255,255,255,0.08)] p-6 transition-all ${elevated ? 'card-bytune' : 'card-surface'
+        } ${className}`}
       {...rest}
     >
       {children}

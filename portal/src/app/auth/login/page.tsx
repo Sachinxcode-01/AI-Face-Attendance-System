@@ -81,43 +81,43 @@ export default function LoginPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <button className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold text-white hover:bg-white/10 transition-colors">
-          <Chrome className="h-4 w-4" /> Google
-        </button>
-        <button className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold text-white hover:bg-white/10 transition-colors">
-          <Github className="h-4 w-4" /> GitHub
-        </button>
-      </div>
-
-      <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-wider text-gray-500">
-        <span className="h-px flex-1 bg-white/10" /> demo access <span className="h-px flex-1 bg-white/10" />
-      </div>
-
-      <div className="grid grid-cols-2 gap-2.5">
-        {ROLE_BUTTONS.map(({ role, label, icon: Icon, hint }) => (
-          <button
-            key={role}
-            onClick={() => demoLogin(role)}
-            className="group flex flex-col items-start gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-left transition-all hover:border-indigo-500/40 hover:bg-indigo-500/10"
-          >
-            <Icon className="h-4 w-4 text-indigo-400" />
-            <span className="text-xs font-bold text-white">{label}</span>
-            <span className="truncate font-mono text-[9px] text-gray-500">{hint}</span>
+          <button className="btn-pill-glass py-2.5 text-xs font-semibold gap-2">
+            <Chrome className="h-4 w-4" /> Google
           </button>
-        ))}
-      </div>
-      <p className="mt-3 text-center text-[10px] text-gray-600">
-        Demo password for all roles: <span className="font-mono text-gray-400">demo1234</span>
-      </p>
+            <button className="btn-pill-glass py-2.5 text-xs font-semibold gap-2">
+              <Github className="h-4 w-4" /> GitHub
+            </button>
+          </div>
 
-      <div className="mt-4 flex items-center justify-between text-[11px]">
-        <Link href="/auth/forgot-password" className="text-gray-500 hover:text-indigo-400">
-          Forgot password?
-        </Link>
-        <Link href="/auth/verify" className="text-gray-500 hover:text-indigo-400">
-          Verify email / OTP
-        </Link>
-      </div>
-    </AuthScreenLayout>
-  );
+          <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-wider text-gray-500">
+            <span className="h-px flex-1 bg-white/10" /> demo access <span className="h-px flex-1 bg-white/10" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            {ROLE_BUTTONS.map(({ role, label, icon: Icon, hint }) => (
+              <button
+                key={role}
+                onClick={() => demoLogin(role)}
+                className="group flex flex-col items-start gap-1.5 rounded-[18px] border border-[var(--hairline)] bg-surface p-3.5 text-left transition-all hover:border-accent hover:bg-[#16161d]"
+              >
+                <Icon className="h-4 w-4 text-accent" />
+                <span className="text-xs font-bold text-white">{label}</span>
+                <span className="truncate font-mono text-[9px] text-faint">{hint}</span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-center text-[10px] text-gray-600">
+            Demo password for all roles: <span className="font-mono text-gray-400">demo1234</span>
+          </p>
+
+          <div className="mt-4 flex items-center justify-between text-[11px]">
+            <Link href="/auth/forgot-password" className="text-gray-500 hover:text-indigo-400">
+              Forgot password?
+            </Link>
+            <Link href="/auth/verify" className="text-gray-500 hover:text-indigo-400">
+              Verify email / OTP
+            </Link>
+          </div>
+        </AuthScreenLayout>
+        );
 }
