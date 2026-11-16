@@ -5,11 +5,13 @@ import { COMPANY_CONTACT } from "@/lib/constants";
 
 interface GitHubButtonProps {
   href?: string;
+  title?: string;
   className?: string;
 }
 
 export function GitHubButton({
-  href = COMPANY_CONTACT.github,
+  href = COMPANY_CONTACT.github ?? "https://github.com/rishiteja21/ByTune",
+  title = "Star ByTune on GitHub",
   className = "",
 }: GitHubButtonProps) {
   const btnRef = useRef<HTMLAnchorElement>(null);
@@ -23,75 +25,97 @@ export function GitHubButton({
     btnRef.current.style.setProperty("--my", `${y}px`);
   };
 
+  const handleMouseLeave = () => {
+    if (!btnRef.current) return;
+    btnRef.current.style.setProperty("--mx", "-21.599952697753906px");
+    btnRef.current.style.setProperty("--my", "19.800003051757812px");
+  };
+
   return (
     <>
       <style>{`
-        .Nav_gh__vzMpe.pill - glow.sp - e1 {
-          display: inline-flex;
-        position: relative;
-        box-sizing: border-box;
-        overflow: hidden;
-        color: rgb(182, 182, 194);
-        background-color: rgba(255, 255, 255, 0.04);
-        font-family: Inter, "Inter Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
-        font-size: 14px;
-        font-weight: 500;
-        line-height: 22.4px;
-        height: 40px;
-        padding-right: 16px;
-        padding-left: 16px;
-        border: 0.8px solid rgba(255, 255, 255, 0.08);
-        border-radius: 999px;
-        align-items: center;
-        gap: 7px;
-        cursor: pointer;
-        text-decoration: none;
-        transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-        -webkit-font-smoothing: antialiased;
-        }
-
-        .Nav_gh__vzMpe.pill-glow::before {
-          content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        background: radial-gradient(
-        var(--glow-d, 471px) circle at var(--mx, 50%) var(--my, 50%),
-        rgba(143, 139, 255, 0.2),
-        transparent 70%
-        );
-        }
-
-        .Nav_gh__vzMpe.pill-glow:hover::before {
-          opacity: 1;
+        .sp-e1 {
+          display: flex;
+          position: relative;
+          box-sizing: border-box;
+          overflow: hidden;
+          overflow-x: hidden;
+          overflow-y: hidden;
+          color: rgb(182, 182, 194);
+          background-color: rgba(255, 255, 255, 0.04);
+          font-family: Inter, "Inter Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          line-height: 22.4px;
+          height: 40px;
+          padding-right: 16px;
+          padding-left: 16px;
+          border-top: 0.8px solid rgba(255, 255, 255, 0.08);
+          border-right: 0.8px solid rgba(255, 255, 255, 0.08);
+          border-bottom: 0.8px solid rgba(255, 255, 255, 0.08);
+          border-left: 0.8px solid rgba(255, 255, 255, 0.08);
+          border-radius: 999px;
+          align-items: center;
+          gap: 7px;
+          row-gap: 7px;
+          column-gap: 7px;
+          cursor: pointer;
+          text-decoration: none;
+          transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
         }
 
         .sp-e2 {
           display: block;
-        overflow: hidden;
-        flex-shrink: 0;
+          overflow: hidden;
+          overflow-x: hidden;
+          overflow-y: hidden;
+          flex-shrink: 0;
         }
 
         .sp-e3 {
           display: block;
-        overflow: hidden;
-        opacity: 0.9;
-        margin-left: -1px;
-        flex-shrink: 0;
+          overflow: hidden;
+          overflow-x: hidden;
+          overflow-y: hidden;
+          opacity: 0.9;
+          margin-left: -1px;
+          flex-shrink: 0;
         }
 
-        .Nav_gh__vzMpe.pill-glow.sp-e1:hover {
-          color: var(--text-hi);
-        border-color: var(--hairline-strong);
-        background: var(--glass-strong);
+        .pill-glow::before {
+          content: "";
+          position: absolute;
+          inset: -1px;
+          border-radius: 999px;
+          pointer-events: none;
+          background: radial-gradient(
+            var(--glow-d, 471px) circle at var(--mx, 50%) var(--my, 50%),
+            rgba(255, 255, 255, 0.22),
+            transparent 50%
+          );
+          opacity: 0;
+          transition: opacity 0.25s ease;
+          z-index: 0;
+        }
+
+        .pill-glow > * {
+          position: relative;
+          z-index: 1;
+        }
+
+        .pill-glow:hover::before {
+          opacity: 1;
+        }
+
+        .Nav_gh__vzMpe:hover {
+          color: var(--text-hi, #f5f5f8);
+          border-color: var(--hairline-strong, rgba(255, 255, 255, 0.16));
+          background: var(--glass-strong, rgba(255, 255, 255, 0.07));
         }
 
         @media (max-width: 880px) {
-          .Nav_gh__vzMpe {
-          display: none !important;
+          .Nav_gh__vzMpe, .Nav_links__TBJFU {
+            display: none;
           }
         }
       `}</style>
@@ -102,13 +126,14 @@ export function GitHubButton({
         target="_blank"
         rel="noreferrer"
         onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
         className={`Nav_gh__vzMpe pill-glow sp-e1 ${className}`}
-        title="Star on GitHub"
+        title={title}
         style={
           {
             "--glow-d": "471px",
-            "--mx": "-40.400001525878906px",
-            "--my": "16.600006103515625px",
+            "--mx": "-21.599952697753906px",
+            "--my": "19.800003051757812px",
           } as React.CSSProperties
         }
       >
