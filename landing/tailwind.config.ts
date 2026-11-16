@@ -19,37 +19,29 @@ const config: Config = {
         /* Accents */
         accent: "var(--accent)",
         accent2: "var(--accent-2)",
-        /* Legacy brand aliases (kept for existing components) */
-        canvas: "#070A14",
-        brand: {
-          300: "#A5B4FC",
-          400: "#818CF8",
-          500: "#6366F1",
-          600: "#4F46E5",
-        },
-        success: "#10B981",
-        ink: {
-          DEFAULT: "#F1F3F9",
-          muted: "#A8AFC7",
-          faint: "#7C82A0",
-        },
+        spotify: "#1ed760",
+        amber: "#f3c64f",
       },
       fontFamily: {
-        sans: ["var(--font-body)", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["var(--font-display)", "sans-serif"],
+        sans: ["var(--font-body)", "Inter", "system-ui", "-apple-system", "sans-serif"],
+        display: ["var(--font-display)", "Inter", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)"],
       },
       borderRadius: {
         sm: "4px",
-        DEFAULT: "6px",
-        md: "6px",
-        lg: "8px",
-        xl: "10px",
-        card: "8px",
-        pill: "6px",
+        DEFAULT: "10px",
+        md: "10px",
+        lg: "16px",
+        xl: "22px",
+        "2xl": "22px",
+        card: "22px",
+        pill: "999px",
+        full: "999px",
       },
       boxShadow: {
         card: "var(--shadow-card)",
+        elevated: "var(--shadow-card-elevated)",
+        inset: "var(--shadow-inset-highlight)",
       },
       keyframes: {
         scan: {
@@ -61,6 +53,8 @@ const config: Config = {
       },
       animation: {
         scan: "scan 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite",
+        float: "Hero_float 7.5s cubic-bezier(0.22, 1, 0.36, 1) infinite",
+        pipFloat: "DesktopSection_pipFloat 6s cubic-bezier(0.22, 1, 0.36, 1) infinite",
       },
     },
   },

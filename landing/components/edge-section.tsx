@@ -97,157 +97,99 @@ export function EdgeSection() {
   return (
     <section
       id="edge"
-      className="relative scroll-mt-24 overflow-hidden border-t border-[var(--hairline)] bg-bg1 py-24 sm:py-28"
+      className="relative scroll-mt-24 overflow-hidden border-t border-[var(--hairline)] bg-bg1 py-28 sm:py-36 lg:py-[168px]"
     >
       <div className="relative mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
-        <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
-          <Reveal>
-              <h2 className="text-balance font-display text-[2.2rem] font-medium leading-[1.08] tracking-[-0.03em] text-hi sm:text-[3.25rem] lg:text-[4rem]">
-                Built for the campus, not squeezed onto it.
-              </h2>
-              <p className="mt-5 max-w-[563.2px] text-pretty text-[16px] leading-[25.6px] text-mid">
-                SmartFace runs where the gate is: on the camera, the box, the browser. No server
-                room, no proprietary readers, no weekend install. If it can mount a camera, it can
-                verify a face.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-2">
-                {["IP camera", "USB webcam", "Tablet kiosk", "GPU node"].map((chip) => (
-                  <span
-                    key={chip}
-                    className="rounded-md border border-[var(--hairline)] bg-surface px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-mid"
-                  >
-                    {chip}
-                  </span>
-                ))}
-              </div>
-          </Reveal>
+        <div className="grid items-start gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
+          <div>
+            <p className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-accent">
+              <span className="h-px w-6 bg-accent/60" aria-hidden />
+              Decentralized Edge Fleet
+            </p>
+            <h2 className="mt-3 text-balance font-display text-[32px] font-medium leading-[1.04] tracking-[-0.028em] text-hi sm:text-[46px] lg:text-[58px]">
+              Every device is a gate. Every gate keeps running.
+            </h2>
+            <p className="mt-5 max-w-[560px] text-pretty text-[16px] sm:text-[19px] leading-[30.4px] tracking-[-0.015em] text-mid">
+              No single point of failure. If the campus backbone goes dark, turnstiles and cameras
+              verify against their local SQLite replica, queuing encrypted punches to sync on reconnect.
+            </p>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {DEVICES.map((device, index) => {
-              const Icon = device.icon;
-              return (
-                <Reveal key={device.name} delay={index * 0.06}>
-                      <div className="group h-full rounded-md border border-[var(--hairline)] bg-surface p-4 transition-colors duration-200 hover:border-white/20">
-                        <span className="grid h-9 w-9 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-accent">
-                          <Icon className="h-4 w-4" strokeWidth={1.7} />
-                        </span>
-                          <h3 className="mt-3 font-display text-[15px] font-medium tracking-tight text-hi">
-                            {device.name}
-                          </h3>
-                          <p className="mt-1 text-[12.5px] leading-relaxed text-low">{device.body}</p>
-                      </div>
-                    </Reveal>
-                    );
-            })}
+            <div className="mt-10 grid grid-cols-2 gap-4">
+              {DEVICES.map((d) => {
+                const Icon = d.icon;
+                return (
+                  <div
+                    key={d.name}
+                    className="group rounded-[18px] border border-[var(--hairline)] bg-surface p-5 transition hover:border-[var(--hairline-strong)] hover:bg-[#16161d]"
+                  >
+                    <Icon className="h-5 w-5 text-accent group-hover:text-accent2 transition-colors" />
+                    <h3 className="mt-3 text-[15px] font-medium text-hi">{d.name}</h3>
+                    <p className="mt-1 text-[13px] leading-[20px] text-mid">{d.body}</p>
                   </div>
+              );
+              })}
+            </div>
+        </div>
+
+              <div className="space-y-3.5">
+                <div className="flex items-center justify-between pb-2 font-mono text-[11px] uppercase tracking-wider text-faint">
+                  <span className="flex items-center gap-2 text-spotify">
+                    <span className="h-2 w-2 rounded-full bg-spotify animate-ping" />
+                    Live Fleet Telemetry
+                  </span>
+                  <span>4 Nodes Reporting</span>
                 </div>
 
-              {/* Live Edge Telemetry Console */ }
-              <Reveal delay={0.1}>
-                        <div className="relative mt-14 overflow-hidden rounded-lg border border-[var(--hairline-strong)] bg-bg0 shadow-sm">
-                          {/* Top Console Bar */}
-                          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--hairline)] bg-white/[0.02] px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <span className="relative flex h-2.5 w-2.5">
-                                <span className="h-2.5 w-2.5 rounded-full bg-[#1ed760]" />
-                              </span>
-                              <span className="font-mono text-[11.5px] font-semibold uppercase tracking-[0.2em] text-hi">
-                                Live Edge Campus Telemetry
-                              </span>
-                              <span className="hidden sm:inline-block rounded-md border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-faint">
-                                Cluster: METRO-MAIN-42
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-4 text-xs font-mono">
-                              <span className="hidden md:flex items-center gap-1.5 text-mid">
-                                <Activity className="h-3.5 w-3.5 text-accent" />
-                                P95 Latency: <strong className="text-hi">212ms</strong>
-                              </span>
-                              <span className="flex items-center gap-1.5 text-mid">
-                                <Wifi className="h-3.5 w-3.5 text-[#1ed760]" />
-                                Sync: <strong className="text-[#9fe0b6]">Real-time</strong>
-                              </span>
-                              <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#9fe0b6]">
-                                42 Nodes Online
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Nodes Visualizer Grid */}
-                          <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-4">
-                            {EDGE_NODES.map((node, i) => {
-                              const isSelected = i === pulseIndex;
-                              return (
-                  <div
-                    key={node.id}
-                    className={`relative rounded-md border p-4 transition-colors duration-300 ${
-                      isSelected
-                        ? "border-accent bg-accent/[0.08]"
-                        : "border-[var(--hairline)] bg-surface/50 hover:border-white/20"
-                    }`}
-                  >
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-faint">
-                        {node.id}
-                      </span>
-                      <span className="inline-flex items-center gap-1 font-mono text-[10px] text-[#9fe0b6]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#1ed760]" />
-                        {node.latency}
-                      </span>
-                    </div>
-
-                    <h4 className="mt-2 text-[14px] font-medium text-hi tracking-tight">
-                      {node.name}
-                    </h4>
-                    <p className="font-mono text-[10px] text-low">{node.type}</p>
-
-                                  {/* Camera Viewport Simulation / Verification status */}
-                                  <div className="relative mt-3 overflow-hidden rounded-md border border-white/10 bg-bg0 p-3">
-                                    <div className="flex items-center justify-between text-[11px]">
-                                      <span className="flex items-center gap-1.5 font-medium text-hi">
-                                        <ScanFace className="h-3.5 w-3.5 text-accent" />
-                                        {node.verifiedStudent}
+                          {EDGE_NODES.map((node, i) => (
+                            <Reveal key={node.id} delay={i * 0.06}>
+                              <div
+                                className={`group relative flex flex-col justify-between gap-4 rounded-[22px] border p-5 sm:p-6 transition-all duration-300 ${pulseIndex === i
+                                    ? "border-accent/40 bg-[#16161d] shadow-[0_4px_24px_rgba(143,139,255,0.08)]"
+                                    : "border-[var(--hairline)] bg-surface hover:border-[var(--hairline-strong)]"
+                                  }`}
+                              >
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2.5">
+                                    <span
+                                      className={`h-2 w-2 rounded-full ${pulseIndex === i ? "bg-spotify animate-pulse" : "bg-spotify/60"
+                                        }`}
+                                    />
+                                    <span className="font-mono text-[11px] font-semibold text-hi">
+                                      {node.id}
+                                    </span>
+                                      <span className="text-[14px] font-medium text-hi">
+                                        {node.name}
                                       </span>
-                                      <span className="font-mono text-[9px] text-faint">
-                                        {node.studentId}
-                                      </span>
-                                    </div>
-
-                                      <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2">
-                                        <span className="inline-flex items-center gap-1 text-[10px] text-[#9fe0b6]">
-                                          <CheckCircle2 className="h-3 w-3 text-[#1ed760]" />
-                                          Verified
-                                        </span>
-                                        <span className="font-mono text-[10px] font-semibold text-accent">
-                                          {node.confidence}
-                                        </span>
-                                      </div>
-                                    </div>
                                   </div>
-                                );
-              })}
-                              </div>
-
-                              {/* Bottom Real-time Telemetry Status Band */ }
-                              <div className="flex flex-col gap-3 border-t border-[var(--hairline)] bg-white/[0.01] px-6 py-3.5 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="flex items-center gap-2">
-                                  <span className="h-2 w-2 rounded-full bg-[#1ed760]" />
-                                  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-mid">
-                                    42 edge nodes · one campus · zero lost records on WAN outage
-                                  </p>
+                                  <span className="chip-bytune h-6 text-[10.5px] px-3 font-mono">
+                                    {node.type}
+                                  </span>
                                 </div>
 
-                                <div className="flex items-center gap-6 font-mono text-[10px] text-faint">
-                                  <span>ONNX Runtime: <strong className="text-mid">v1.18.1</strong></span>
-                                  <span className="hidden sm:inline">Local Buffer: <strong className="text-[#9fe0b6]">0 dropped</strong></span>
-                                  <span>Uptime: <strong className="text-mid">99.98%</strong></span>
-                                </div>
-                              </div>
-          </div>
-                        </Reveal>
+                      <div className="grid grid-cols-2 gap-4 border-t border-white/[0.06] pt-3 sm:grid-cols-4 font-mono text-[11px]">
+                        <div>
+                          <span className="text-faint block text-[9.5px] uppercase tracking-wider">Status</span>
+                          <span className="text-spotify font-medium">{node.status}</span>
+                        </div>
+                        <div>
+                          <span className="text-faint block text-[9.5px] uppercase tracking-wider">Latency</span>
+                          <span className="text-hi">{node.latency}</span>
+                        </div>
+                        <div>
+                          <span className="text-faint block text-[9.5px] uppercase tracking-wider">Last Subject</span>
+                          <span className="text-mid truncate block">{node.verifiedStudent}</span>
+                        </div>
+                        <div>
+                          <span className="text-faint block text-[9.5px] uppercase tracking-wider">Confidence</span>
+                          <span className="text-[#9fe0b6] font-medium">{node.confidence}</span>
+                        </div>
+                      </div>
                     </div>
-                  </section>
-                  );
+              </Reveal>
+            ))}
+            </div>
+        </div >
+      </div >
+    </section >
+  );
 }

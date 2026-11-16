@@ -37,52 +37,55 @@ const VALUES: Value[] = [
 
 export function ValueProps() {
   return (
-      <section id="biometrics" className="relative scroll-mt-24 border-t border-[var(--hairline)] py-24 sm:py-28">
-        <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
-          <SectionHeading
-            title="Built for the realities of a campus, not a lab."
-            description="Four guarantees every administrator asks for on the first call, and gets in writing."
-          />
+        <section id="biometrics" className="relative scroll-mt-24 border-t border-[var(--hairline)] py-28 sm:py-36 lg:py-[168px]">
+          <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
+            <SectionHeading
+              title="Built for the realities of a campus, not a lab."
+              description="Four guarantees every administrator asks for on the first call, and gets in writing."
+            />
 
-                      <div className="mt-14 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-                        <Reveal>
-                          <div className="relative overflow-hidden rounded-lg border border-[var(--hairline)] bg-surface p-2 shadow-sm">
-                            <img
-                              src="/product-banner.png"
-                              alt="SmartFace Platform Suite Architecture and Kiosk Interface"
-                              className="w-full rounded-md object-cover"
-                            />
-                            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--hairline)] px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-mid">
-                              <span>SmartFace Suite · Live Architecture</span>
-                              <span className="text-[#9fe0b6]">ArcFace ONNX · Active</span>
-                            </div>
-                          </div>
-                        </Reveal>
-
-                        <div className="divide-y divide-[var(--hairline)] border-y border-[var(--hairline)]">
-                          {VALUES.map((value, index) => (
-                            <Reveal key={value.title} delay={index * 0.06}>
-                              <div className="py-5">
-                                <div className="flex items-center justify-between gap-4">
-                                  <span className="font-mono text-xs font-semibold text-accent">
-                                    {value.num}
-                                  </span>
-                                  <span className="font-mono text-[10px] uppercase tracking-wider text-faint">
-                                    {value.meta}
-                                  </span>
-                                </div>
-                                <h3 className="mt-2 font-display text-[17px] font-medium tracking-tight text-hi">
-                                  {value.title}
-                                </h3>
-                                  <p className="mt-1.5 text-[13.5px] leading-relaxed text-mid">
-                                    {value.body}
-                                  </p>
-                              </div>
-                            </Reveal>
-            ))}
-                        </div>
-                      </div>
+              <div className="mt-14 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+                <Reveal>
+                  <div className="relative overflow-hidden card-bytune p-3 shadow-xl">
+                    <img
+                      src="/product-banner.png"
+                      alt="SmartFace Platform Suite Architecture and Kiosk Interface"
+                      className="w-full rounded-[16px] object-cover"
+                    />
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--hairline)] px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-mid">
+                      <span>SmartFace Suite · Live Architecture</span>
+                      <span className="text-[#9fe0b6] flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-spotify animate-pulse" />
+                        ArcFace ONNX · Active
+                      </span>
+                    </div>
                   </div>
-                </section>
-              );
-            }
+                </Reveal>
+
+          <div className="space-y-4">
+            {VALUES.map((val, index) => (
+              <Reveal key={val.num} delay={index * 0.08}>
+                <div className="group relative rounded-[22px] border border-[var(--hairline)] bg-surface p-5 sm:p-6 transition-all duration-300 hover:border-[var(--hairline-strong)] hover:bg-[#16161d]">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-accent">
+                      {val.num}
+                    </span>
+                    <span className="chip-bytune h-6 text-[11px] px-3">
+                      {val.meta}
+                    </span>
+                  </div>
+                  <h3 className="mt-3 font-display text-[18px] sm:text-[19px] font-medium tracking-tight text-hi">
+                    {val.title}
+                  </h3>
+                  <p className="mt-2 text-[14px] sm:text-[14.5px] leading-[23.9px] text-mid">
+                    {val.body}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+      </div>
+    </div>
+    </section >
+  );
+}

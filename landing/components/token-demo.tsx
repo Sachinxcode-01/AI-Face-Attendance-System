@@ -40,99 +40,89 @@ export function TokenDemo() {
   return (
     <section
       id="token-demo"
-      className="relative scroll-mt-24 overflow-hidden border-t border-[var(--hairline)] bg-bg1 py-24 sm:py-28"
+      className="relative scroll-mt-24 overflow-hidden border-t border-[var(--hairline)] bg-bg1 py-28 sm:py-36 lg:py-[168px]"
     >
       <div className="relative mx-auto grid w-full max-w-[var(--container)] items-center gap-14 px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20 lg:px-8">
         <Reveal>
-            <h2 className="text-balance font-display text-[2.2rem] font-medium leading-[1.08] tracking-[-0.03em] text-hi sm:text-[3.25rem] lg:text-[4rem]">
-              Every code, right on time.
-            </h2>
-            <p className="mt-5 max-w-[563.2px] text-pretty text-[16px] leading-[25.6px] text-mid">
-              This is the token your campus sees. It rotates on a 30-second drift window, it is signed
-              to this exact class, and by the time a screenshot reaches a group chat, it is already
-              dead. Watch it burn.
-            </p>
-                <div className="mt-8 flex flex-wrap gap-2.5">
-                  <span className="rounded-md border border-[var(--hairline)] bg-surface px-3 py-1.5 font-mono text-[11px] text-mid">
-                    Class-scoped signature
+          <h2 className="text-balance font-display text-[32px] font-medium leading-[1.04] tracking-[-0.028em] text-hi sm:text-[46px] lg:text-[58px]">
+            Every code, right on time.
+          </h2>
+          <p className="mt-5 max-w-[560px] text-pretty text-[16px] sm:text-[19px] leading-[30.4px] tracking-[-0.015em] text-mid">
+            This is the token your campus sees. It rotates on a 30-second drift window, it is signed
+            to this exact class, and by the time a screenshot reaches a group chat, it is already
+            dead. Watch it burn.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-2.5">
+            <span className="chip-bytune">
+              Class-scoped signature
+            </span>
+            <span className="chip-bytune">
+              30s drift window
+            </span>
+            <span className="chip-bytune">
+              HMAC-SHA256 verified
+            </span>
+          </div>
+        </Reveal>
+
+        <Reveal delay={0.12}>
+          <div className="relative mx-auto w-full max-w-[420px]">
+            {/* Radial glow */}
+            <div
+              aria-hidden
+              className="absolute inset-0 -inset-x-6 -inset-y-6 rounded-[36px] pointer-events-none opacity-80 card-glow-bg"
+            />
+
+            <div className="relative card-bytune p-6 sm:p-7 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-[var(--hairline)] pb-4">
+                <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-mid">
+                  <ShieldCheck className="h-4 w-4 text-spotify" />
+                  Live Token Engine
+                </span>
+                <span className="chip-bytune h-6 text-[10px] text-accent">
+                  Rotating HMAC
+                </span>
+              </div>
+
+              {/* Central Token Display */}
+              <div className="my-8 text-center">
+                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-faint">
+                  Active Session Token
+                </span>
+                <div className="mt-2 font-mono text-5xl font-semibold tracking-wider text-hi sm:text-6xl">
+                  {token}
+                </div>
+                <p className="mt-2 text-xs text-mid">
+                  Valid for:{" "}
+                  <span className="font-mono font-medium text-spotify tabular-nums">
+                    {seconds}s
                   </span>
-                    <span className="rounded-md border border-[var(--hairline)] bg-surface px-3 py-1.5 font-mono text-[11px] text-mid">
-                      30s drift window
-                    </span>
-                      <span className="rounded-md border border-[var(--hairline)] bg-surface px-3 py-1.5 font-mono text-[11px] text-mid">
-                        Screenshot-proof
-                      </span>
-                    </div>
-                  </Reveal>
+                </p>
+              </div>
 
-                  <Reveal delay={0.12}>
-                    <div className="relative mx-auto w-full max-w-[380px]">
-                        <div className="relative rounded-lg border border-[var(--hairline)] bg-surface p-6 shadow-sm">
-                          <div className="flex items-center justify-between">
-                            <span className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
-                              <span className="h-1.5 w-1.5 rounded-full bg-[#1ed760]" />
-                              Session · CS-204
-                            </span>
-                            <ShieldCheck className="h-4 w-4 text-[#9fe0b6]" />
-                          </div>
+              {/* Progress Slider (ByTune Recipe Input 1) */}
+              <div className="space-y-2">
+                <div className="flex justify-between font-mono text-[10px] text-faint">
+                  <span>Drift Window</span>
+                  <span>{Math.round(fraction * 100)}% remaining</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-white/10 p-[1px]">
+                  <motion.div
+                    className="h-full rounded-full bg-gradient-to-r from-accent to-accent2"
+                    style={{ width: `${fraction * 100}%` }}
+                    transition={reduceMotion ? undefined : { ease: "linear", duration: 0.3 }}
+                  />
+                </div>
+              </div>
 
-                          {/* QR placeholder */}
-                            <div className="mt-5 grid h-36 place-items-center rounded-md border border-[var(--hairline)] bg-bg0">
-                              <div className="relative">
-                                <QrCode className="h-16 w-16 text-hi" strokeWidth={1.2} />
-                                <div
-                                  aria-hidden
-                                  className="absolute inset-0 bg-accent/10"
-                                  style={{
-                                    animation: reduceMotion
-                                      ? "none"
-                                      : "Hero_cueSweep 2.4s var(--ease-in-out) infinite",
-                                  }}
-                                />
-                              </div>
-                            </div>
-
-                            <div className="mt-5 flex items-end justify-between">
-                              <div>
-                                <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
-                                  Signed token
-                                </p>
-                                <p className="mt-1 font-mono text-2xl tracking-[0.18em] text-hi tabular-nums">
-                                  {token}
-                                </p>
-                              </div>
-                              <p className="font-mono text-[11px] tabular-nums text-mid">
-                                <span className="text-hi">{String(seconds).padStart(2, "0")}</span>s
-                              </p>
-                            </div>
-
-                              <div className="mt-4 h-1.5 overflow-hidden rounded-sm bg-white/[0.06]">
-                                <div
-                                  className="h-full rounded-sm bg-accent transition-all duration-300"
-                                  style={{ width: `${fraction * 100}%` }}
-                                />
-                              </div>
-                              <p className="mt-3 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-faint">
-                                Rotating · next token in {seconds}s
-                              </p>
-                            </div>
-
-                            {/* Floating confirmation chip */}
-                            <motion.div
-                              initial={reduceMotion ? undefined : { opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.5, duration: 0.6, ease: "easeOut" }}
-                              className="absolute -bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-md border border-[var(--hairline)] bg-panel px-3.5 py-1.5 shadow-sm"
-                              style={{ animation: "Hero_float 7s var(--ease-in-out) 1s infinite" }}
-                            >
-                              <ShieldCheck className="h-3.5 w-3.5 text-[#1ed760]" />
-                              <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-mid">
-                                Verified · synced 0.2s ago
-                              </span>
-                            </motion.div>
-                          </div>
-                        </Reveal>
-                      </div>
-                    </section>
-                    );
+              <div className="mt-6 flex items-center justify-between rounded-full border border-white/5 bg-white/[0.02] px-4 py-2 font-mono text-[10px] text-faint">
+                <span>Next rotation: {(seconds % 5) + 1}s</span>
+                <span className="text-[#9fe0b6]">Anti-replay Armed</span>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
 }

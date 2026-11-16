@@ -32,7 +32,7 @@ export function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative scroll-mt-24 border-t border-[var(--hairline)] py-24 sm:py-28"
+      className="relative scroll-mt-24 border-t border-[var(--hairline)] py-28 sm:py-36 lg:py-[168px]"
     >
       <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
@@ -40,37 +40,41 @@ export function HowItWorks() {
           description="No turnstiles, no cards, no end-of-class roll call. One session start, one face, one instant record."
         />
 
-        <div className="relative mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
-          <div
-            aria-hidden
-            className="absolute left-0 right-0 top-6 hidden h-px bg-white/10 md:block"
-          />
-          {STEPS.map((step, index) => {
-            const Icon = step.icon;
-            return (
-              <Reveal key={step.number} delay={index * 0.08}>
-                <div className="relative">
-                  <div className="flex items-center gap-4">
-                      <span className="relative z-10 grid h-11 w-11 shrink-0 place-items-center rounded-md border border-[var(--hairline)] bg-surface text-accent">
-                        <Icon className="h-5 w-5" strokeWidth={1.7} />
-                      </span>
-                      <span className="font-display text-4xl font-medium leading-none text-white/[0.07]">
-                        {step.number}
-                      </span>
-                  </div>
-                  <h3 className="mt-6 font-display text-[19px] font-medium tracking-tight text-hi">
-                    {step.title}
-                  </h3>
-                  <p className="mt-2.5 text-[14px] leading-relaxed text-mid">{step.body}</p>
-                  <p className="mt-4 inline-flex rounded-md border border-[var(--hairline)] bg-white/[0.02] px-2.5 py-1 font-mono text-[9.5px] uppercase tracking-[0.12em] text-faint">
-                    {step.meta}
-                  </p>
-                </div>
-              </Reveal>
-            );
+          <div className="relative mt-14 grid gap-6 md:grid-cols-3">
+            {STEPS.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <Reveal key={step.number} delay={index * 0.08}>
+                        <div className="group relative flex h-full flex-col justify-between rounded-[22px] border border-[var(--hairline)] bg-surface p-7 transition-all duration-300 hover:border-[var(--hairline-strong)] hover:bg-[#16161d]">
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <span className="grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-accent transition-colors group-hover:text-accent2 group-hover:border-accent/40">
+                                <Icon className="h-5 w-5" strokeWidth={1.8} />
+                              </span>
+                                <span className="font-display text-4xl font-medium leading-none text-white/[0.08] group-hover:text-white/[0.16] transition-colors">
+                                  {step.number}
+                                </span>
+                            </div>
+
+                            <h3 className="mt-6 font-display text-[20px] font-medium tracking-tight text-hi">
+                              {step.title}
+                            </h3>
+                            <p className="mt-2.5 text-[14.5px] leading-[23.9px] text-mid">
+                              {step.body}
+                            </p>
+                          </div>
+
+                          <div className="mt-8 pt-4 border-t border-white/[0.06]">
+                            <span className="chip-bytune h-6 text-[10.5px] px-3">
+                              {step.meta}
+                            </span>
+                          </div>
+                        </div>
+                      </Reveal>
+                      );
           })}
-        </div>
-      </div>
-    </section>
-  );
-}
+                    </div>
+                  </div>
+                </section>
+              );
+            }

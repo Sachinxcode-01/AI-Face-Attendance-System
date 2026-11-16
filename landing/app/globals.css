@@ -3,45 +3,65 @@
 @tailwind utilities;
 
 /* ---------------------------------------------------------------------------
- * Design tokens — measured from the reference page (bytune.space). Reuse verbatim.
+ * Design tokens — measured verbatim from ByTune (https://bytune.space/#new)
  * ------------------------------------------------------------------------- */
 :root {
+  /* Dimensions & Spacing */
+  --container: 73.75rem;
+  --wide: 85rem;
+  --dur: 0.55s;
+
+  /* Surfaces & Backgrounds */
   --bg-0: #050507;
   --bg-1: #0a0a0e;
   --surface: #101016;
   --panel: #16161d;
   --elev: #1e1e27;
+
+  /* Glass & Hairlines */
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-strong: rgba(255, 255, 255, 0.07);
   --hairline: rgba(255, 255, 255, 0.08);
   --hairline-strong: rgba(255, 255, 255, 0.16);
+
+  /* Text Hierarchy */
   --text-hi: #f5f5f8;
   --text-mid: #b6b6c2;
   --text-low: #8a8a97;
   --text-faint: #60606c;
+
+  /* Accents & Glows */
   --accent: #8f8bff;
   --accent-2: #6fd8ff;
   --accent-soft: rgba(143, 139, 255, 0.16);
   --accent-2-soft: rgba(111, 216, 255, 0.14);
   --glow: rgb(143, 139, 255);
-  --glass: rgba(255, 255, 255, 0.04);
-  --glass-strong: rgba(255, 255, 255, 0.07);
+  --brand-spotify: #1ed760;
+  --brand-amber: #f3c64f;
+
+  /* Radii */
+  --radius-s: 0.625rem;
+  /* 10px */
+  --radius-m: 1rem;
+  /* 16px */
+  --radius-l: 1.375rem;
+  /* 22px - signature ByTune card radius */
+  --radius-pill: 999px;
+
+  /* Shadows */
   --shadow-card: 0 1.5rem 3.75rem -1.5rem rgba(0, 0, 0, 0.7);
-  --radius-s: 4px;
-  --radius-m: 6px;
-  --radius-l: 8px;
-  --container: 73.75rem;
-  --wide: 85rem;
+  --shadow-card-elevated: rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.9) 0px 44px 90px -34px;
+  --shadow-inset-highlight: rgba(255, 255, 255, 0.06) 0px 1px 0px 0px inset;
+
+  /* Timing & Motion */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
-  --dur: 0.55s;
-  --font-display: "Chivo", "Inter Fallback", system-ui, sans-serif;
+
+  /* Typography */
+  --next-font-inter: "Inter", "Inter Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Inter", "Inter Fallback", system-ui, -apple-system, sans-serif;
   --font-body: "Inter", "Inter Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
-
-  /* Brand accents for this project (SmartFace) */
-  --brand: #8f8bff;
-  --brand-2: #1ed760;
-  --brand-soft: rgba(143, 139, 255, 0.06);
-  --brand-mint: #9fe0b6;
 }
 
 @layer base {
@@ -51,21 +71,22 @@
 
   html {
     scroll-behavior: smooth;
+    background-color: var(--bg-0);
   }
 
   body {
     background-color: var(--bg-0);
     color: var(--text-hi);
     font-family: var(--font-body);
-    font-size: 16px;
-    line-height: 25.6px;
+    font-size: 14.5px;
+    line-height: 23.925px;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
   ::selection {
-    background-color: rgb(143 139 255 / 0.35);
+    background-color: rgba(143, 139, 255, 0.35);
     color: var(--text-hi);
   }
 
@@ -92,163 +113,347 @@
 
 @layer components {
   .skip-link {
-    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-[var(--accent)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[#0a0a0c];
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-[var(--accent)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[#0a0a0c];
   }
 
-  /* Solid component blocks replacing frosted glass */
-  .button-primary {
-    background: #16161d;
-    color: #f5f5f8;
-    border: 1px solid var(--hairline);
-    border-radius: 6px;
+
+  /* ByTune Hero Floating Glass Card (Recipe Card 2) */
+  .card-bytune {
+    backdrop-filter: blur(18px) saturate(1.5);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    background-color: rgba(12, 12, 17, 0.55);
+    background-image: linear-gradient(165deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+    border: 0.8px solid rgba(255, 255, 255, 0.1);
+    border-radius: 22px;
+    box-shadow: rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.9) 0px 44px 90px -34px;
+    color: var(--text-hi);
+  }
+
+  /* ByTune Standard Surface Container (Recipe Button/Card Layer 2) */
+  .card-surface {
+    background-color: rgb(16, 16, 22);
+    background-image: linear-gradient(rgba(255, 255, 255, 0.027), rgba(255, 255, 255, 0.008));
+    border: 0.8px solid rgba(255, 255, 255, 0.08);
+    border-radius: 22px;
+    box-shadow: rgba(255, 255, 255, 0.06) 0px 1px 0px 0px inset;
+  }
+
+  /* ByTune Radial Accent Glow (Recipe Card 3) */
+  .card-glow-bg {
+    background-image: radial-gradient(58% 58% at 50% 62%, rgba(143, 139, 255, 0.2), rgba(0, 0, 0, 0) 72%);
+  }
+
+  /* ByTune Chip Button (Recipe Button 1 - default) */
+  .chip-bytune {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 0.8px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    color: rgb(182, 182, 194);
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 20px;
+    padding: 0 14px;
+    height: 32px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+  }
+
+  .chip-bytune:hover {
+    color: var(--text-hi);
+    border-color: rgba(255, 255, 255, 0.16);
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  /* ByTune Chip Button Active (Recipe Button 2) */
+  .chip-bytune-active {
+    background-color: rgb(255, 255, 255);
+    border-color: rgb(255, 255, 255);
+    color: rgb(10, 10, 12);
+  }
+
+  /* ByTune Primary White Pill Button */
+  .btn-pill-white {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: rgb(255, 255, 255);
+    color: rgb(10, 10, 12);
+    border: 0.8px solid rgb(255, 255, 255);
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 22.4px;
+    height: 40px;
+    padding: 0 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+
+  .btn-pill-white:hover {
+    opacity: 0.92;
+  }
+
+
+  .btn-pill-white:active {
+    transform: scale(0.98);
+  }
+
+  /* ByTune Accent Gradient Pill Button */
+  .btn-pill-accent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-image: linear-gradient(90deg, rgb(143, 139, 255), rgb(111, 216, 255));
+    color: rgb(10, 10, 12);
+    border: none;
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 22.4px;
+    height: 40px;
+    padding: 0 20px;
+    box-shadow: 0 4px 18px rgba(143, 139, 255, 0.25);
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: opacity 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  }
+
+  .btn-pill-accent:hover {
+    opacity: 0.95;
+    box-shadow: 0 6px 24px rgba(143, 139, 255, 0.38);
+  }
+
+  .btn-pill-accent:active {
+    transform: scale(0.98);
+  }
+
+  /* ByTune Glass Secondary Pill Button */
+  .btn-pill-glass {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--text-mid);
+    border: 0.8px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    font-family: var(--font-body);
     font-size: 14px;
     font-weight: 500;
-    letter-spacing: -0.15px;
+    line-height: 22.4px;
+    height: 40px;
+    padding: 0 18px;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
   }
+
+  .btn-pill-glass:hover {
+    color: var(--text-hi);
+    border-color: rgba(255, 255, 255, 0.16);
+    background-color: rgba(255, 255, 255, 0.07);
+  }
+
+
+  /* ByTune Range Slider (Recipe Input 1) */
+  .slider-bytune {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: rgba(255, 255, 255, 0.12);
+    background-image: linear-gradient(90deg, rgb(143, 139, 255), rgb(111, 216, 255));
+    border-radius: 999px;
+    height: 5px;
+    outline: none;
+  }
+
+  .slider-bytune::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Backward compatibility helpers */
+  .button-primary {
+    @apply btn-pill-white;
+  }
+
 
   .glass-card {
-    background: #101016;
-    color: #f5f5f8;
-    border: 1px solid var(--hairline);
-    border-radius: 8px;
-    padding: 20px;
-    font-size: 15px;
+    @apply card-bytune p-6;
   }
+
 
   .badge-pill {
-    background: #101016;
-    color: #b6b6c2;
-    border: 1px solid var(--hairline);
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 13px;
-    font-weight: 500;
+    @apply chip-bytune;
   }
 }
 
-@layer utilities {
-  .text-gradient {
-    color: var(--text-hi);
-    font-weight: 700;
-  }
+    .text-gradient {
+      @apply bg-clip-text text-transparent;
+      background-image: linear-gradient(135deg, #f5f5f8 40%, #b6b6c2 100%);
+    }
 
-  .bg-grid {
-    background-image:
-      linear-gradient(to right, rgb(255 255 255 / 0.045) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(255 255 255 / 0.045) 1px, transparent 1px);
-    background-size: 44px 44px;
-  }
+        background-image:
+          linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
+          linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
 
-  .mask-radial {
-    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
+      background-size: 44px 44px;
+    }
+
+    .mask-radial {
+      -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
+    }
   }
-}
 
 /* ---------------------------------------------------------------------------
- * Named keyframe animations (reference patterns, retuned for SmartFace)
+ * Keyframe animations verbatim from ByTune reference
  * ------------------------------------------------------------------------- */
 
-/* Hero entrance: lines rise into place */
-@keyframes Hero_cueIn {
-  from {
-    transform: translateY(110%);
-    opacity: 0;
-  }
 
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
+    /* Lines rise into place */
+    @keyframes Hero_cueIn {
+      from {
+        transform: translateY(110%);
+        opacity: 0;
+      }
 
-@keyframes Hero_cueFade {
-  from {
-    opacity: 0;
-  }
 
-  to {
-    opacity: 1;
-  }
-}
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
 
-@keyframes Hero_cueSweep {
-  0% {
-    transform: translateX(-120%) skewX(-12deg);
-    opacity: 0;
-  }
 
-  25% {
-    opacity: 1;
-  }
+        @keyframes Hero_cueFade {
+          from {
+            opacity: 0;
+          }
 
-  100% {
-    transform: translateX(220%) skewX(-12deg);
-    opacity: 0;
-  }
-}
+            to {
+              opacity: 1;
+            }
+          }
 
-@keyframes Hero_cueDip {
 
-  0%,
-  100% {
-    transform: translateY(0);
-  }
+        /* Sheen sweep */
+        @keyframes Hero_cueSweep {
+          0% {
+            transform: translateX(-120%) skewX(-12deg);
+            opacity: 0;
+          }
 
-  50% {
-    transform: translateY(8px);
-  }
-}
 
-@keyframes Hero_cueOut {
-  to {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-}
+          25% {
+            opacity: 1;
+          }
 
-@keyframes Hero_float {
+            100% {
+              transform: translateX(220%) skewX(-12deg);
+              opacity: 0;
+            }
+          }
 
-  0%,
-  100% {
-    transform: translateY(0);
-  }
 
-  50% {
-    transform: translateY(-14px);
-  }
-}
+        @keyframes Hero_cueDip {
 
-/* Live equalizer bars */
-@keyframes LiveCount_eq {
+            0%,
+            100% {
+              transform: translateY(0);
+            }
 
-  0%,
-  100% {
-    transform: scaleY(0.35);
-  }
 
-  50% {
-    transform: scaleY(1);
-  }
-}
+            50% {
+              transform: translateY(8px);
+            }
+          }
 
-/* Mobile nav sheet */
-@keyframes Nav_sheetIn {
-  from {
-    transform: translateY(100%);
-  }
 
-  to {
-    transform: translateY(0);
-  }
-}
+        @keyframes Hero_cueOut {
+          to {
+            opacity: 0;
+            transform: translateY(-6px);
+          }
+        }
 
-@media (prefers-reduced-motion: reduce) {
 
-  [data-hero-line],
-  [data-cue] {
-    animation: none !important;
-    transform: none !important;
-    opacity: 1 !important;
-  }
-}
+        /* Hero primary floating card (measured at 7.5s cubic-bezier(0.22, 1, 0.36, 1)) */
+        @keyframes Hero_float {
+
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+
+
+          50% {
+            transform: translateY(-14px);
+          }
+        }
+
+        /* Secondary pip element floating with subtle rotation */
+        @keyframes DesktopSection_pipFloat {
+
+          0%,
+          100% {
+            transform: translateY(0) rotate(0deg);
+          }
+
+          50% {
+            transform: translateY(-8px) rotate(1.2deg);
+          }
+        }
+
+        /* Equalizer bar animation */
+        @keyframes LiveCount_eq {
+
+          0%,
+          100% {
+            transform: scaleY(0.35);
+          }
+
+          50% {
+            transform: scaleY(1);
+          }
+        }
+
+        /* Mobile nav slide in */
+        @keyframes Nav_sheetIn {
+          from {
+            transform: translateY(100%);
+          }
+
+          to {
+            transform: translateY(0);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+          [data-hero-line],
+          [data-cue] {
+            animation: none !important;
+            transform: none !important;
+            opacity: 1 !important;
+          }
+        }

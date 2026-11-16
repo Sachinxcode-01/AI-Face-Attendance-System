@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMotionValueEvent, useScroll } from "framer-motion";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { PORTAL_URL } from "@/lib/constants";
 
 interface StickyMobileCtaProps {
@@ -24,7 +24,7 @@ export function StickyMobileCta({ onOpenDemo }: StickyMobileCtaProps) {
     <div
       role="region"
       aria-label="Quick mobile actions"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--hairline-strong)] bg-bg0 px-4 py-3 shadow-lg lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--hairline-strong)] bg-bg0/95 backdrop-blur-xl px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.5)] lg:hidden"
       style={{
         paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
       }}
@@ -33,7 +33,7 @@ export function StickyMobileCta({ onOpenDemo }: StickyMobileCtaProps) {
         <button
           type="button"
           onClick={onOpenDemo}
-          className="flex-1 inline-flex h-11 items-center justify-center rounded-md bg-accent px-3 text-[13px] font-semibold text-[#050507] transition hover:opacity-90 active:scale-[0.98]"
+          className="flex-1 btn-pill-accent h-[42px] text-[13.5px]"
         >
           Request Demo
         </button>
@@ -42,7 +42,7 @@ export function StickyMobileCta({ onOpenDemo }: StickyMobileCtaProps) {
           href={PORTAL_URL}
           target="_blank"
           rel="noreferrer"
-          className="flex-1 inline-flex h-11 items-center justify-center gap-1.5 rounded-md border border-[var(--hairline)] bg-surface px-3 text-[13px] font-medium text-hi transition hover:bg-white/[0.08] active:scale-[0.98]"
+          className="flex-1 btn-pill-glass h-[42px] text-[13.5px]"
         >
           Launch Portal
           <ArrowUpRight className="h-3.5 w-3.5 text-accent" />

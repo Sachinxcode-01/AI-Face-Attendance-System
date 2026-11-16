@@ -17,22 +17,22 @@ const ACCENTS: Record<
     border: "hover:border-accent/40",
   },
   emerald: {
-    badge: "border-[#1ed760]/20 bg-[#1ed760]/10 text-[#9fe0b6]",
-    glow: "bg-[#1ed760]/20",
+    badge: "border-spotify/20 bg-spotify/10 text-[#9fe0b6]",
+    glow: "bg-spotify/20",
     text: "text-[#9fe0b6]",
-    border: "hover:border-[#1ed760]/40",
+    border: "hover:border-spotify/40",
   },
   amber: {
-    badge: "border-amber-400/20 bg-amber-500/10 text-amber-300",
-    glow: "bg-amber-500/20",
-    text: "text-amber-300",
-    border: "hover:border-amber-400/40",
+    badge: "border-amber/20 bg-amber/10 text-amber",
+    glow: "bg-amber/20",
+    text: "text-amber",
+    border: "hover:border-amber/40",
   },
   sky: {
-    badge: "border-sky-400/20 bg-sky-500/10 text-sky-300",
-    glow: "bg-sky-500/20",
-    text: "text-sky-300",
-    border: "hover:border-sky-400/40",
+    badge: "border-accent2/20 bg-accent2/10 text-accent2",
+    glow: "bg-accent2/20",
+    text: "text-accent2",
+    border: "hover:border-accent2/40",
   },
 };
 
@@ -40,7 +40,7 @@ export function RoleGateway() {
   return (
     <section
       id="portals"
-      className="relative scroll-mt-24 border-t border-[var(--hairline)] py-24 sm:py-28"
+      className="relative scroll-mt-24 border-t border-[var(--hairline)] py-28 sm:py-36 lg:py-[168px]"
     >
       <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
@@ -48,73 +48,59 @@ export function RoleGateway() {
           description="Every role signs into the same unified portal, on its own route. This page is only the front door: dashboards live on Website 2."
         />
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {ROLES.map((role, index) => {
-            const Icon = role.icon;
-            const accent = ACCENTS[role.accent];
-            return (
-              <Reveal key={role.key} delay={index * 0.06} className="h-full">
-                <div
-                  className={`group relative flex h-full flex-col overflow-hidden rounded-lg border border-[var(--hairline)] bg-surface p-6 transition duration-200 hover:border-white/20`}
-                >
-                  <div className="flex items-start justify-between">
-                      <span className={`grid h-10 w-10 place-items-center rounded-md border ${accent.badge}`}>
-                        <Icon className="h-5 w-5" strokeWidth={1.7} />
-                      </span>
-                      <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-faint">
-                        {role.label}
-                      </span>
-                  </div>
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            {ROLES.map((role, index) => {
+              const Icon = role.icon;
+              const accent = ACCENTS[role.accent];
+              return (
+                <Reveal key={role.key} delay={index * 0.06} className="h-full">
+                  <div
+                    className={`group relative flex h-full flex-col justify-between overflow-hidden rounded-[22px] border border-[var(--hairline)] bg-surface p-6 sm:p-7 transition-all duration-300 hover:border-[var(--hairline-strong)] hover:bg-[#16161d]`}
+                  >
+                        <div>
+                          <div className="flex items-start justify-between">
+                            <span className="grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-accent transition-colors duration-300 group-hover:text-accent2 group-hover:border-accent/40">
+                              <Icon className="h-5 w-5" strokeWidth={1.8} />
+                            </span>
+                              <span className={`chip-bytune h-6 text-[10px] uppercase tracking-wider font-mono ${accent.badge}`}>
+                                {role.accent}
+                              </span>
+                        </div>
 
-                  <h3 className="mt-5 font-display text-[19px] font-medium tracking-tight text-hi">
-                    {role.title}
-                  </h3>
-                  <p className="mt-2 text-[13px] leading-relaxed text-mid">{role.description}</p>
+                        <h3 className="mt-5 font-display text-[20px] font-medium tracking-tight text-hi">
+                          {role.title}
+                        </h3>
+                        <p className="mt-2 text-[14px] leading-[22px] text-mid">
+                          {role.description}
+                        </p>
 
-                  <ul className="mt-5 space-y-2">
-                    {role.capabilities.map((capability) => (
-                      <li
-                        key={capability}
-                        className="flex gap-2 text-[12px] leading-snug text-mid"
-                      >
-                        <Check className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${accent.text}`} />
-                        {capability}
-                      </li>
-                    ))}
-                  </ul>
+                        <ul className="mt-6 space-y-2 border-t border-white/[0.06] pt-4 font-mono text-[11px] text-faint">
+                          {role.capabilities.map((b) => (
+                            <li key={b} className="flex items-center gap-2">
+                              <Check className="h-3 w-3 text-spotify shrink-0" />
+                              <span className="text-mid">{b}</span>
+                            </li>
+                          ))}
+                        </ul>
+                    </div>
 
-                  <div className="mt-auto pt-6">
-                    <a
-                      href={role.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-between gap-2 rounded-md border border-[var(--hairline)] bg-white/[0.02] px-4 py-2.5 text-[13px] font-medium text-hi transition duration-200 hover:border-[var(--hairline-strong)] hover:bg-white/[0.04]"
-                    >
-                      Open {role.label} portal
-                      <ArrowUpRight className={`h-4 w-4 ${accent.text}`} />
-                    </a>
-                    <p className="mt-2 truncate font-mono text-[9px] tracking-wide text-faint">
-                      {role.path}
-                    </p>
-                  </div>
-                </div>
-              </Reveal>
-            );
-          })}
+                      <div className="mt-8 pt-4 border-t border-white/[0.06]">
+                        <a
+                          href={role.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-pill-glass w-full justify-between group-hover:border-white/20 group-hover:text-hi"
+                        >
+                          <span className="text-[13px] font-medium">Open {role.title}</span>
+                          <ArrowUpRight className="h-3.5 w-3.5 text-accent" />
+                        </a>
+                      </div>
+                    </div>
+                </Reveal>
+              );
+            })}
+          </div>
         </div>
-
-        <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.14em] text-faint">
-          Portals open on{" "}
-          <a
-            href={PORTAL_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="text-accent transition hover:text-accent2"
-          >
-            {PORTAL_URL.replace(/^https?:\/\//, "")}
-          </a>
-        </p>
-      </div>
     </section>
   );
 }
