@@ -69,12 +69,12 @@ export default function ParentPortalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070A14] text-[#C8CCDF]">
-      <Navbar currentRole="parent" />
+      <div className="min-h-screen bg-[#050507] text-[#B6B6C2]">
+        <Navbar currentRole="parent" />
 
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-        {/* Child Profile & Campus Status Banner */}
+          {/* Child Profile & Campus Status Banner */}
           <div className="relative overflow-hidden rounded-[22px] card-bytune p-6 sm:p-8 shadow-2xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div className="flex items-center gap-4">
@@ -111,124 +111,124 @@ export default function ParentPortalPage() {
 
             {/* Left 7 Cols: Real-time Arrival & Lecture Alerts Feed */}
             <div className="lg:col-span-7 space-y-6">
-                <div className="rounded-[22px] card-surface p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-display text-base font-bold text-white flex items-center gap-2">
-                      <Bell className="h-5 w-5 text-amber-400" />
-                      <span>Real-Time Attendance & Arrival Alerts</span>
-                    </h3>
-                    <span className="text-xs text-emerald-400 font-mono">Live Push Sync</span>
-                  </div>
-
-                  <div className="space-y-4">
-                    {notifications.map((notif) => (
-                      <div
-                        key={notif.id}
-                        className="flex items-start gap-3.5 rounded-2xl border border-white/5 bg-white/[0.02] p-4 hover:border-amber-500/30 transition-all"
-                      >
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 mt-0.5">
-                          <CheckCircle2 className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-xs font-bold text-white">{notif.title}</h4>
-                            <span className="text-[11px] text-gray-500 font-mono">{notif.time}</span>
-                          </div>
-                          <p className="text-xs text-gray-300 mt-1">{notif.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              <div className="rounded-[22px] card-surface p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-display text-base font-bold text-white flex items-center gap-2">
+                    <Bell className="h-5 w-5 text-amber-400" />
+                    <span>Real-Time Attendance & Arrival Alerts</span>
+                  </h3>
+                  <span className="text-xs text-emerald-400 font-mono">Live Push Sync</span>
                 </div>
 
-                {/* Subject Attendance Health Radar */}
-                  <div className="rounded-[22px] card-surface p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-display text-base font-bold text-white flex items-center gap-2">
-                        <Calendar className="h-5 w-5 text-indigo-400" />
-                        <span>Academic Attendance Health</span>
-                      </h3>
-                      <span className="text-xs text-emerald-400 font-semibold">88.6% Total (Safe Zone)</span>
-                    </div>
-
-                    <div className="space-y-3">
-                      {MOCK_SUBJECT_STATS.map((sub, idx) => (
-                        <div key={idx} className="flex items-center justify-between rounded-xl bg-white/[0.02] p-3 border border-white/5">
-                          <div>
-                            <p className="text-xs font-bold text-white">{sub.subject}</p>
-                            <span className="text-[11px] text-gray-400">{sub.attended} of {sub.total} classes attended</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm font-extrabold text-white">{sub.percentage}%</span>
-                            <span className="block text-[10px] text-emerald-400">Eligible</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right 5 Cols: Direct Absence Submission & Department Contacts */}
-                <div className="lg:col-span-5 space-y-6">
-
-                  {/* Submit Absence Notice */}
-                    <div className="rounded-[22px] card-surface p-6">
-                      <h3 className="font-display text-base font-bold text-white mb-2 flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-amber-400" />
-                        <span>Submit Absence or Medical Notice</span>
-                      </h3>
-                      <p className="text-xs text-gray-400 mb-4">
-                        Directly notify faculty and administration about upcoming sick leaves or appointments.
-                      </p>
-
-                      <form onSubmit={handleAbsenceSubmit} className="space-y-4">
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-300 mb-1">
-                            Absence Reason & Dates
-                          </label>
-                          <textarea
-                            rows={3}
-                            value={absenceNotice}
-                            onChange={(e) => setAbsenceNotice(e.target.value)}
-                            placeholder="e.g. Alice has a medical appointment on Thursday morning..."
-                            className="w-full rounded-xl bg-white/[0.04] border border-white/10 p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500"
-                          />
-                        </div>
-
-                        <button
-                          type="submit"
-                          className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-xs font-bold text-white transition-colors shadow-lg shadow-amber-600/20 flex items-center justify-center gap-2"
-                        >
-                          <Send className="h-3.5 w-3.5" />
-                          <span>{absenceSubmitted ? 'Notice Dispatched to Dean!' : 'Submit Parent Notice'}</span>
-                        </button>
-                      </form>
-                    </div>
-
-                    {/* Department Contacts */}
-                      <div className="rounded-[22px] card-surface p-6">
-                        <h3 className="font-display text-base font-bold text-white mb-3 flex items-center gap-2">
-                          <PhoneCall className="h-5 w-5 text-emerald-400" />
-                          <span>Department Faculty Contacts</span>
-                        </h3>
-
-                        <div className="space-y-3 text-xs">
-                          <div className="rounded-xl bg-white/[0.02] p-3 border border-white/5">
-                            <p className="font-bold text-white">Prof. Marcus Vance (Head of AI)</p>
-                            <p className="text-gray-400 text-[11px] mt-0.5">marcus.vance@smartface.pro</p>
-                          </div>
-                          <div className="rounded-xl bg-white/[0.02] p-3 border border-white/5">
-                            <p className="font-bold text-white">Campus Student Welfare Office</p>
-                            <p className="text-gray-400 text-[11px] mt-0.5">+1 (555) 019-2834</p>
-                          </div>
-                        </div>
+                <div className="space-y-4">
+                  {notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      className="flex items-start gap-3.5 rounded-2xl border border-white/5 bg-white/[0.02] p-4 hover:border-amber-500/30 transition-all"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 mt-0.5">
+                        <CheckCircle2 className="h-4 w-4" />
                       </div>
-
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold text-white">{notif.title}</h4>
+                          <span className="text-[11px] text-gray-500 font-mono">{notif.time}</span>
+                        </div>
+                        <p className="text-xs text-gray-300 mt-1">{notif.description}</p>
+                      </div>
                     </div>
-
-                  </div>
-
-                </main>
+                  ))}
+                </div>
               </div>
-              );
+
+              {/* Subject Attendance Health Radar */}
+              <div className="rounded-[22px] card-surface p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-display text-base font-bold text-white flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-indigo-400" />
+                    <span>Academic Attendance Health</span>
+                  </h3>
+                  <span className="text-xs text-emerald-400 font-semibold">88.6% Total (Safe Zone)</span>
+                </div>
+
+                <div className="space-y-3">
+                  {MOCK_SUBJECT_STATS.map((sub, idx) => (
+                    <div key={idx} className="flex items-center justify-between rounded-xl bg-white/[0.02] p-3 border border-white/5">
+                      <div>
+                        <p className="text-xs font-bold text-white">{sub.subject}</p>
+                        <span className="text-[11px] text-gray-400">{sub.attended} of {sub.total} classes attended</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-extrabold text-white">{sub.percentage}%</span>
+                        <span className="block text-[10px] text-emerald-400">Eligible</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right 5 Cols: Direct Absence Submission & Department Contacts */}
+            <div className="lg:col-span-5 space-y-6">
+
+              {/* Submit Absence Notice */}
+              <div className="rounded-[22px] card-surface p-6">
+                <h3 className="font-display text-base font-bold text-white mb-2 flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-amber-400" />
+                  <span>Submit Absence or Medical Notice</span>
+                </h3>
+                <p className="text-xs text-gray-400 mb-4">
+                  Directly notify faculty and administration about upcoming sick leaves or appointments.
+                </p>
+
+                <form onSubmit={handleAbsenceSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1">
+                      Absence Reason & Dates
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={absenceNotice}
+                      onChange={(e) => setAbsenceNotice(e.target.value)}
+                      placeholder="e.g. Alice has a medical appointment on Thursday morning..."
+                      className="w-full rounded-xl bg-white/[0.04] border border-white/10 p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-xs font-bold text-white transition-colors shadow-lg shadow-amber-600/20 flex items-center justify-center gap-2"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    <span>{absenceSubmitted ? 'Notice Dispatched to Dean!' : 'Submit Parent Notice'}</span>
+                  </button>
+                </form>
+              </div>
+
+              {/* Department Contacts */}
+              <div className="rounded-[22px] card-surface p-6">
+                <h3 className="font-display text-base font-bold text-white mb-3 flex items-center gap-2">
+                  <PhoneCall className="h-5 w-5 text-emerald-400" />
+                  <span>Department Faculty Contacts</span>
+                </h3>
+
+                <div className="space-y-3 text-xs">
+                  <div className="rounded-xl bg-white/[0.02] p-3 border border-white/5">
+                    <p className="font-bold text-white">Prof. Marcus Vance (Head of AI)</p>
+                    <p className="text-gray-400 text-[11px] mt-0.5">marcus.vance@smartface.pro</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.02] p-3 border border-white/5">
+                    <p className="font-bold text-white">Campus Student Welfare Office</p>
+                    <p className="text-gray-400 text-[11px] mt-0.5">+1 (555) 019-2834</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </main>
+      </div>
+      );
   }

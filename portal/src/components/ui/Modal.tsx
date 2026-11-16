@@ -26,7 +26,7 @@ export function Modal({ open, onClose, title, children, wide = false }: ModalPro
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div
-        className={`relative z-10 w-full ${wide ? 'max-w-2xl' : 'max-w-md'} rounded-2xl border border-white/10 bg-[#0E1428] p-6 shadow-2xl shadow-black/60`}
+        className={`relative z-10 w-full ${wide ? 'max-w-2xl' : 'max-w-md'} rounded-[22px] border border-white/10 bg-[#101016] card-bytune p-6 shadow-2xl shadow-black/80`}
         role="dialog"
         aria-modal="true"
       >

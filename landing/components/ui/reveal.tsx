@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 type RevealProps = {
   children: ReactNode;
@@ -9,51 +9,27 @@ type RevealProps = {
 };
 
 /**
- * Scroll-reveal wrapper, progressive-enhancement style:
- * - SSR / no-JS / crawlers: content is fully visible (CSS default).
- * - With JS: the `js` class arms the hidden state, and an
- *   IntersectionObserver adds `.reveal-in` when the block scrolls
- *   into view, running the ByTune ease-out rise animation.
- * - prefers-reduced-motion: transitions disabled globally in CSS.
+ * Entrance-animation wrapper (ByTune load-time motion model).
+ *
+ * Visibility rules:
+ * - No-JS / crawlers / preview tools: content is fully visible — the
+ *   hidden state only exists when <html> carries the `.js` class, which
+ *   is set by an inline blocking script in the document <head>.
+ * - With JS: mounts hidden, then flips to `.reveal-in` on the next
+ *   frame so the fade/rise transition always plays exactly once.
+ * - prefers-reduced-motion: transitions are globally disabled in CSS.
  */
 export function Reveal({ children, className, delay = 0 }: RevealProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Arm the animation system once per session.
-    if (!document.documentElement.classList.contains("js")) {
-      document.documentElement.classList.add("js");
-    }
-
-    const el = ref.current;
-    if (!el) return;
-
-    if (typeof IntersectionObserver === "undefined") {
-      setInView(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setInView(true);
-            observer.disconnect();
-          }
-        }
-      },
-      { rootMargin: "0px 0px -60px 0px", threshold: 0.05 }
-    );
-    observer.observe(el);
-
-    return () => observer.disconnect();
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   return (
     <div
-      ref={ref}
-      className={`reveal ${inView ? "reveal-in" : ""} ${className ?? ""}`}
+      className={`reveal ${mounted ? "reveal-in" : ""} ${className ?? ""}`}
       style={{ transitionDelay: `${delay}s` }}
     >
       {children}

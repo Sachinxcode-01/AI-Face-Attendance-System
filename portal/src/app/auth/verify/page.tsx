@@ -24,20 +24,20 @@ export default function VerifyPage() {
   };
 
   return (
-    <AuthScreenLayout title="Verify your identity" subtitle="Enter the 6-digit code sent to your email.">
+    <AuthScreenLayout title="Verify your identity" subtitle="Enter the 6-digit confirmation code sent to your email.">
       {done ? (
         <div className="py-4 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400">
+          <div className="mx-auto mb-3.5 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             <ShieldCheck className="h-6 w-6" />
           </div>
-          <p className="text-sm font-semibold text-white">Identity verified</p>
-          <p className="mt-1 text-xs text-gray-400">Your account is now fully activated.</p>
+          <p className="font-display text-sm font-semibold text-hi">Identity verified</p>
+          <p className="mt-1 font-mono text-xs text-mid">Your account is fully activated with ArcFace credentials.</p>
           <Link href="/auth/login" className="mt-5 inline-block">
             <Button>Go to sign in</Button>
           </Link>
         </div>
       ) : (
-        <div className="flex justify-center gap-2 py-2">
+        <div className="flex justify-center gap-2.5 py-3">
           {digits.map((d, i) => (
             <input
               key={i}
@@ -49,15 +49,15 @@ export default function VerifyPage() {
               onKeyDown={(e) => {
                 if (e.key === 'Backspace' && !d && i > 0) document.getElementById(`otp-${i - 1}`)?.focus();
               }}
-              className="h-12 w-11 rounded-xl border border-white/10 bg-white/[0.04] text-center font-mono text-base font-bold text-white focus:border-indigo-500 focus:outline-none"
+              className="h-12 w-11 rounded-[14px] border border-[var(--hairline)] bg-surface text-center font-mono text-base font-bold text-hi focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
             />
           ))}
         </div>
       )}
       {!done && (
-        <p className="mt-4 text-center text-[11px] text-gray-500">
+        <p className="mt-5 text-center font-mono text-[11px] text-faint">
           Didn&apos;t receive it?{' '}
-          <button className="font-semibold text-indigo-400 hover:text-indigo-300">Resend code</button>
+          <button className="font-semibold text-accent hover:text-accent2 transition-colors">Resend code</button>
         </p>
       )}
     </AuthScreenLayout>

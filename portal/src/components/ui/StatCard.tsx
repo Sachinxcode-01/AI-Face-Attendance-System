@@ -13,22 +13,41 @@ interface StatCardProps {
   footnote?: string;
 }
 
-export function StatCard({ label, value, delta, deltaUp = true, icon, accent = 'text-indigo-400', footnote }: StatCardProps) {
-  return (
-    <Card className="relative overflow-hidden">
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400">{label}</span>
-        <span className={accent}>{icon}</span>
-      </div>
-      <div className="mt-2 flex items-baseline gap-2">
-        <span className="font-display text-3xl font-bold text-white">{value}</span>
-        {delta && (
-          <span className={`text-xs font-medium ${deltaUp ? 'text-emerald-400' : 'text-red-400'}`}>
-            {delta}
-          </span>
+  export function StatCard({
+    label,
+    value,
+    delta,
+    deltaUp = true,
+    icon,
+    accent = 'text-accent',
+    footnote,
+  }: StatCardProps) {
+    return (
+        <Card className="relative overflow-hidden group hover:border-[var(--hairline-strong)] transition-all">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-faint">
+              {label}
+            </span>
+            <span className={`${accent} transition-transform group-hover:scale-105`}>
+              {icon}
+            </span>
+          </div>
+            <div className="mt-3 flex items-baseline gap-2.5">
+              <span className="font-display text-2xl sm:text-3xl font-semibold tracking-tight text-hi">
+                {value}
+              </span>
+              {delta && (
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10.5px] font-medium border ${deltaUp
+                        ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400'
+                        : 'border-red-500/25 bg-red-500/10 text-red-400'
+                      }`}
+                  >
+                    {delta}
+                  </span>
         )}
-      </div>
-      {footnote && <p className="mt-2 text-xs text-gray-500">{footnote}</p>}
-    </Card>
-  );
+                </div>
+              {footnote && <p className="mt-2.5 font-mono text-[11px] text-faint">{footnote}</p>}
+            </Card>
+            );
 }

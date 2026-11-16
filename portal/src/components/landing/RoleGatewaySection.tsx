@@ -111,106 +111,106 @@ export function RoleGatewaySection() {
   };
 
   return (
-    <section id="role-gateway" className="relative scroll-mt-24 border-t border-white/[0.08] py-20 bg-[#070A14]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Left-Aligned Section Header - No pill badges */}
-        <div className="max-w-2xl mb-12">
-          <p className="text-xs font-mono uppercase tracking-wider text-[#8F8BFF] mb-2">
-            Campus Ecosystem
-          </p>
-          <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-[#F5F5F8]">
-            Role-Based Command Portals
-          </h2>
-          <p className="mt-3 text-sm text-[#B6B6C2] leading-relaxed">
-            One biometric database serving four dedicated web interfaces. Select a portal below to enter the demonstration dashboard.
-          </p>
-        </div>
+      <section id="role-gateway" className="relative scroll-mt-24 border-t border-white/[0.08] py-20 bg-[#050507]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Left-Aligned Section Header - No pill badges */}
+          <div className="max-w-2xl mb-12">
+            <p className="text-xs font-mono uppercase tracking-wider text-[#8F8BFF] mb-2">
+              Campus Ecosystem
+            </p>
+            <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-[#F5F5F8]">
+              Role-Based Command Portals
+            </h2>
+            <p className="mt-3 text-sm text-[#B6B6C2] leading-relaxed">
+              One biometric database serving four dedicated web interfaces. Select a portal below to enter the demonstration dashboard.
+            </p>
+          </div>
 
-        {/* 4 Role Cards Grid (The only icon-card grid on page) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {ROLE_PORTALS.map((portal) => {
-            const IconComponent = portal.icon;
-            const MetricIcon = portal.metric.icon;
-            const isLoading = navigatingRole === portal.role;
+          {/* 4 Role Cards Grid (The only icon-card grid on page) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {ROLE_PORTALS.map((portal) => {
+              const IconComponent = portal.icon;
+              const MetricIcon = portal.metric.icon;
+              const isLoading = navigatingRole === portal.role;
 
-            return (
-              <div
-                key={portal.role}
-                className="portal-card p-5 sm:p-6 flex flex-col justify-between"
-              >
-                <div>
-                  {/* Top unboxed icon & plain role badge */}
-                  <div className="flex items-center justify-between mb-4">
-                    <IconComponent className="h-6 w-6 text-[#8F8BFF]" />
-                    <span className="text-[10px] font-mono font-semibold tracking-wider px-2 py-0.5 rounded bg-white/[0.04] border border-white/10 text-[#B6B6C2]">
-                      {portal.badge}
-                    </span>
-                  </div>
-
-                  <h3 className="font-display text-base font-semibold text-white mb-1">
-                    {portal.title}
-                  </h3>
-                  <p className="text-[11px] font-medium text-[#8F8BFF] mb-2">
-                    {portal.tagline}
-                  </p>
-                  <p className="text-xs text-[#B6B6C2] leading-relaxed mb-4">
-                    {portal.description}
-                  </p>
-
-                  {/* Metric Pill */}
-                  <div className="mb-4 flex items-center justify-between rounded bg-[#050507] border border-white/[0.06] px-3 py-2 text-xs">
-                    <span className="text-[#8A8A97] text-[11px] flex items-center gap-1.5">
-                      <MetricIcon className="h-3.5 w-3.5 text-[#8F8BFF]" />
-                      {portal.metric.label}:
-                    </span>
-                    <span className="font-mono font-semibold text-white text-[11px]">
-                      {portal.metric.value}
-                    </span>
-                  </div>
-
-                  {/* Features List */}
-                  <div className="space-y-2 border-t border-white/[0.06] pt-3.5 mb-5">
-                    {portal.features.map((feat, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-xs text-[#F5F5F8]">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                        <span className="truncate">{feat}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-3 rounded bg-[#050507] border border-white/[0.06] p-2.5 text-[11px] text-[#B6B6C2]">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#8A8A97]">Demo Profile:</span>
-                      <span className="text-white font-semibold">{portal.demoUser}</span>
+              return (
+                <div
+                  key={portal.role}
+                  className="portal-card p-5 sm:p-6 flex flex-col justify-between"
+                >
+                  <div>
+                    {/* Top unboxed icon & plain role badge */}
+                    <div className="flex items-center justify-between mb-4">
+                      <IconComponent className="h-6 w-6 text-[#8F8BFF]" />
+                      <span className="text-[10px] font-mono font-semibold tracking-wider px-2 py-0.5 rounded bg-white/[0.04] border border-white/10 text-[#B6B6C2]">
+                        {portal.badge}
+                      </span>
                     </div>
-                    <div className="text-[10px] text-[#8A8A97] mt-0.5 truncate">{portal.demoDetails}</div>
+
+                    <h3 className="font-display text-base font-semibold text-white mb-1">
+                      {portal.title}
+                    </h3>
+                    <p className="text-[11px] font-medium text-[#8F8BFF] mb-2">
+                      {portal.tagline}
+                    </p>
+                    <p className="text-xs text-[#B6B6C2] leading-relaxed mb-4">
+                      {portal.description}
+                    </p>
+
+                    {/* Metric Pill */}
+                    <div className="mb-4 flex items-center justify-between rounded bg-[#050507] border border-white/[0.06] px-3 py-2 text-xs">
+                      <span className="text-[#8A8A97] text-[11px] flex items-center gap-1.5">
+                        <MetricIcon className="h-3.5 w-3.5 text-[#8F8BFF]" />
+                        {portal.metric.label}:
+                      </span>
+                      <span className="font-mono font-semibold text-white text-[11px]">
+                        {portal.metric.value}
+                      </span>
+                    </div>
+
+                    {/* Features List */}
+                    <div className="space-y-2 border-t border-white/[0.06] pt-3.5 mb-5">
+                      {portal.features.map((feat, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-xs text-[#F5F5F8]">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                          <span className="truncate">{feat}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
-                  <button
-                    onClick={() => handleLaunchRole(portal.role)}
-                    disabled={isLoading}
-                    className="portal-btn portal-btn-primary w-full py-2 px-3 text-xs justify-center"
-                  >
-                    <span>{isLoading ? 'Opening Session...' : 'Enter Dashboard'}</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
+                  <div>
+                    <div className="mb-3 rounded bg-[#050507] border border-white/[0.06] p-2.5 text-[11px] text-[#B6B6C2]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[#8A8A97]">Demo Profile:</span>
+                        <span className="text-white font-semibold">{portal.demoUser}</span>
+                      </div>
+                      <div className="text-[10px] text-[#8A8A97] mt-0.5 truncate">{portal.demoDetails}</div>
+                    </div>
 
-                  <div className="mt-2 text-center">
-                    <Link
-                      href={`/auth/login?role=${portal.role}`}
-                      className="text-[11px] text-[#8A8A97] hover:text-[#F5F5F8] transition-colors"
+                    <button
+                      onClick={() => handleLaunchRole(portal.role)}
+                      disabled={isLoading}
+                      className="portal-btn portal-btn-primary w-full py-2 px-3 text-xs justify-center"
                     >
-                      Sign in with password →
-                    </Link>
+                      <span>{isLoading ? 'Opening Session...' : 'Enter Dashboard'}</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+
+                    <div className="mt-2 text-center">
+                      <Link
+                        href={`/auth/login?role=${portal.role}`}
+                        className="text-[11px] text-[#8A8A97] hover:text-[#F5F5F8] transition-colors"
+                      >
+                        Sign in with password →
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
-    </section>
-  );
+      </section>
+      );
 }

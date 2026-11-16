@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SpaceBackground } from "@/components/layout/SpaceBackground";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,7 +30,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#070A14",
+  themeColor: "#050507",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -39,11 +43,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`dark ${inter.variable} ${poppins.variable}`}>
-      <body className="min-h-screen bg-canvas font-sans text-ink antialiased selection:bg-indigo-500 selection:text-white">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
-      </body>
+        <head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+          />
+        </head>
+        <body className="min-h-screen bg-bg0 font-sans text-hi antialiased selection:bg-accent/30 selection:text-white overflow-x-hidden">
+          <SpaceBackground />
+          <div className="relative z-10 flex min-h-screen flex-col">
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </div>
+        </body>
     </html >
   );
 }

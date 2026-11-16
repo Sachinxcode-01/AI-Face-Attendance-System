@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { DataTable } from '@/components/ui/DataTable';
-import { Badge, statusTone } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/Badge';
 import { ScanFace, QrCode, Clock, Download, Filter } from 'lucide-react';
 import { MOCK_STUDENT_ATTENDANCE } from '@/lib/demo-data';
 import type { AttendanceRecord } from '@/lib/types';
@@ -30,60 +30,93 @@ export default function StudentAttendancePage() {
       <PageHeader
         kicker="Attendance Ledger"
         title="Attendance History"
-        subtitle="Every biometric and QR verification, searchable and exportable."
+        subtitle="Every biometric and QR verification, searchable and exportable with cryptographic timestamps."
         actions={
-          <button className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/10 transition-colors">
-            <Download className="h-3.5 w-3.5" /> Export CSV
+          <button className="btn-pill-glass h-9 px-4 text-xs font-medium flex items-center gap-2">
+            <Download className="h-3.5 w-3.5 text-accent" /> Export CSV
           </button>
         }
       />
 
       <div className="page-enter mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
-          { label: 'Total Records', value: String(MOCK_STUDENT_ATTENDANCE.length), cls: 'text-white' },
+          { label: 'Total Records', value: String(MOCK_STUDENT_ATTENDANCE.length), cls: 'text-hi' },
           { label: 'Verified Present', value: String(present), cls: 'text-emerald-400' },
           { label: 'Late Arrivals', value: String(MOCK_STUDENT_ATTENDANCE.filter((r) => r.status === 'late').length), cls: 'text-amber-400' },
           { label: 'Absences', value: String(MOCK_STUDENT_ATTENDANCE.filter((r) => r.status === 'absent').length), cls: 'text-red-400' },
         ].map((s) => (
-          <Card key={s.label} className="p-4">
-            <p className="text-xs text-gray-400">{s.label}</p>
-            <p className={`mt-1 font-display text-2xl font-bold ${s.cls}`}>{s.value}</p>
+          <Card key={s.label} className="p-5">
+            <p className="font-mono text-[11px] uppercase tracking-wider text-faint">{s.label}</p>
+            <p className={`mt-2 font-display text-2xl font-semibold tracking-tight ${s.cls}`}>{s.value}</p>
           </Card>
         ))}
       </div>
 
-      <Card className="page-enter">
+      <Card className="page-enter p-6">
         <CardHeader
-          icon={<Filter className="h-5 w-5 text-indigo-400" />}
+          icon={<Filter className="h-5 w-5 text-accent" />}
           title="Filter Records"
         />
-        <div className="mb-4 flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                filter === f
-                  ? 'bg-indigo-600 text-white shadow-md'
-                  : 'bg-white/[0.04] text-gray-400 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              {f === 'all' ? 'All' : f.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-            </button>
-          ))}
+        <div className="mb-5 flex flex-wrap gap-2">
+          {FILTERS.map((f) => {
+            const isSelected = filter === f;
+            return (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`chip-bytune text-xs h-8 px-4 ${isSelected ? 'chip-bytune-active' : ''}`}
+              >
+                {f === 'all' ? 'All' : f.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+              </button>
+            );
+          })}
         </div>
 
         <DataTable<AttendanceRecord>
           rowKey={(r) => r.id}
           columns={[
-            { key: 'subject', header: 'Subject', sortable: true, sortValue: (r) => r.subject, render: (r) => <span className="font-semibold text-white">{r.subject}</span> },
-            { key: 'when', header: 'Date & Time', render: (r) => <span className="text-gray-400">{r.date} • {r.time}</span> },
-            { key: 'room', header: 'Location', render: (r) => <span className="font-mono text-gray-400">{r.room}</span> },
             {
-              key: 'status', header: 'Verification', render: (r) => {
-                if (r.status === 'verified_face') return <Badge tone="success"><ScanFace className="h-3 w-3" /> ArcFace {(((r.confidence ?? 0.99) * 100).toFixed(1))}%</Badge>;
-                if (r.status === 'verified_qr') return <Badge tone="info"><QrCode className="h-3 w-3" /> QR Verified</Badge>;
-                if (r.status === 'late') return <Badge tone="warning"><Clock className="h-3 w-3" /> Late</Badge>;
+              key: 'subject',
+              header: 'Subject',
+              sortable: true,
+              sortValue: (r) => r.subject,
+              render: (r) => <span className="font-semibold text-hi">{r.subject}</span>,
+            },
+            {
+              key: 'when',
+              header: 'Date & Time',
+              render: (r) => <span className="font-mono text-mid text-[11.5px]">{r.date} · {r.time}</span>,
+            },
+            {
+              key: 'room',
+              header: 'Location',
+              render: (r) => <span className="font-mono text-mid text-[11.5px]">{r.room}</span>,
+            },
+            {
+              key: 'status',
+              header: 'Verification',
+              render: (r) => {
+                if (r.status === 'verified_face') {
+                  return (
+                    <Badge tone="success">
+                      <ScanFace className="h-3 w-3" /> ArcFace {(((r.confidence ?? 0.99) * 100).toFixed(1))}%
+                    </Badge>
+                  );
+                }
+                if (r.status === 'verified_qr') {
+                  return (
+                    <Badge tone="info">
+                      <QrCode className="h-3 w-3" /> QR Verified
+                    </Badge>
+                  );
+                }
+                if (r.status === 'late') {
+                  return (
+                    <Badge tone="warning">
+                      <Clock className="h-3 w-3" /> Late
+                    </Badge>
+                  );
+                }
                 return <Badge tone="danger">Absent</Badge>;
               },
             },

@@ -11,18 +11,22 @@ interface TabsProps<T extends string> {
 
 export function Tabs<T extends string>({ tabs, active, onChange, className = '' }: TabsProps<T>) {
   return (
-    <div className={`inline-flex rounded-xl bg-white/[0.04] p-1 border border-white/5 ${className}`}>
-      {tabs.map((t) => (
-        <button
-          key={t.value}
-          onClick={() => onChange(t.value)}
-          className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-            active === t.value ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
-  );
+      <div className={`inline-flex items-center gap-1.5 rounded-full bg-white/[0.03] p-1 border border-white/[0.08] ${className}`}>
+        {tabs.map((t) => {
+          const isSelected = active === t.value;
+          return (
+            <button
+              key={t.value}
+              onClick={() => onChange(t.value)}
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${isSelected
+                  ? 'bg-white text-[#050507] font-bold shadow-sm'
+                  : 'text-mid hover:text-white hover:bg-white/[0.05]'
+                }`}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+      );
 }

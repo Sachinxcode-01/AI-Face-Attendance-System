@@ -4,24 +4,24 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { Card, CardHeader } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Badge, statusTone } from '@/components/ui/Badge';
-import { FileCheck2, Plus, CalendarRange } from 'lucide-react';
+import { Plus, CalendarRange } from 'lucide-react';
 import { MOCK_LEAVE_REQUESTS } from '@/lib/demo-data';
 
 export default function StudentLeavePage() {
-  const [requests, setRequests] = useState(MOCK_LEAVE_REQUESTS.filter((r) => r.rollNo === 'CS-2024-042'));
+  const [requests] = useState(MOCK_LEAVE_REQUESTS.filter((r) => r.rollNo === 'CS-2024-042'));
 
   return (
     <DashboardLayout>
       <PageHeader
         kicker="Leave Management"
         title="Leave Requests"
-        subtitle="Track the status of every application submitted to the Dean's office."
+        subtitle="Track the status of every application submitted to faculty and dean advisors."
         actions={
           <Link
             href="/student/leave/apply"
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition-all hover:from-indigo-500 hover:to-indigo-600"
+            className="btn-pill-accent h-9 px-4 text-xs font-semibold flex items-center gap-2"
           >
             <Plus className="h-4 w-4" /> New Request
           </Link>
@@ -36,34 +36,41 @@ export default function StudentLeavePage() {
             { label: 'Rejected', value: requests.filter((r) => r.status === 'rejected').length, tone: 'danger' as const },
           ]
         ).map((s) => (
-          <Card key={s.label} className="p-4 text-center">
-            <p className={`font-display text-2xl font-bold ${s.tone === 'success' ? 'text-emerald-400' : s.tone === 'warning' ? 'text-amber-400' : 'text-red-400'}`}>
+          <Card key={s.label} className="p-5 text-center">
+            <p className={`font-display text-2xl font-semibold tracking-tight ${s.tone === 'success' ? 'text-emerald-400' : s.tone === 'warning' ? 'text-amber-400' : 'text-red-400'}`}>
               {s.value}
             </p>
-            <p className="mt-1 text-xs text-gray-400">{s.label}</p>
+            <p className="mt-1 font-mono text-[11px] uppercase tracking-wider text-faint">{s.label}</p>
           </Card>
         ))}
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3.5">
         {requests.length === 0 && (
-          <Card className="page-enter py-10 text-center text-xs text-gray-500">
-            No leave requests yet. <Link href="/student/leave/apply" className="text-indigo-400 hover:underline">Submit your first request</Link>.
+          <Card className="page-enter py-12 text-center text-xs text-faint font-mono">
+            No leave requests yet.{' '}
+            <Link href="/student/leave/apply" className="text-accent underline hover:text-accent2">
+              Submit your first request
+            </Link>
+            .
           </Card>
         )}
         {requests.map((req) => (
           <Card key={req.id} className="page-enter flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-bold text-white">{req.category} Leave</span>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="font-display text-sm font-semibold text-hi">{req.category} Leave</span>
                 <Badge tone={statusTone(req.status)}>{req.status}</Badge>
               </div>
-              <p className="mt-1 text-xs text-gray-300">{req.reason}</p>
-              <p className="mt-1 flex items-center gap-1 text-[11px] text-gray-500">
-                <CalendarRange className="h-3 w-3" /> {req.startDate} → {req.endDate}
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs font-mono text-faint">
+                <CalendarRange className="h-3.5 w-3.5 text-accent" /> {req.startDate} to {req.endDate}
               </p>
+              <p className="mt-2 text-xs leading-relaxed text-mid">{req.reason}</p>
             </div>
-            <span className="font-mono text-[10px] text-gray-600">{req.id.toUpperCase()}</span>
+            <div className="text-left font-mono text-[11px] text-faint sm:text-right">
+              <p>Requested: {req.startDate}</p>
+              <p className="mt-0.5 text-accent">{req.id}</p>
+            </div>
           </Card>
         ))}
       </div>

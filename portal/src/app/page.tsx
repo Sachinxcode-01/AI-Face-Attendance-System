@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ScanFace, ArrowRight } from 'lucide-react';
+import { ScanFace, ArrowRight, ArrowUpRight } from 'lucide-react';
 
 // Section components
 import { BiometricHeroVisual } from '@/components/landing/BiometricHeroVisual';
@@ -14,22 +14,18 @@ import { ArchitectureFaqSection } from '@/components/landing/ArchitectureFaqSect
 
 export default function PortalGatewayPage() {
   return (
-    <div className="min-h-screen bg-[#050507] text-[#B6B6C2] flex flex-col justify-between selection:bg-[#8F8BFF] selection:text-black font-sans">
-      {/* Top Header Navigation - Only top bar may use backdrop-blur */}
-      <header className="sticky top-0 z-50 w-full border-b border-white/[0.08] bg-[#050507]/90 backdrop-blur-md py-3.5 px-4 sm:px-8 lg:px-12">
+    <div className="min-h-screen bg-[#050507] text-[#B6B6C2] flex flex-col justify-between selection:bg-[#8F8BFF]/30 selection:text-white font-sans">
+      {/* Top Header Navigation — ByTune Glass Bar */}
+      <header className="sticky top-0 z-50 w-full border-b border-white/[0.08] bg-[#050507]/85 backdrop-blur-xl py-3 px-4 sm:px-8 lg:px-12">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
-          {/* Logo & Platform Tag - Plain unboxed icon without tinted tiles */}
-          <Link href="/" className="flex items-center gap-3">
-            <ScanFace className="h-6 w-6 text-[#8F8BFF]" />
+          {/* Logo & Platform Tag */}
+          <Link href="/" className="group flex items-center gap-2.5">
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[#050507] shadow-lg shadow-accent/25 transition-transform duration-200 group-hover:scale-105">
+              <ScanFace className="h-4 w-4" strokeWidth={2.4} />
+            </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-display font-semibold text-white tracking-tight text-base sm:text-lg">
-                  SmartFace
-                </span>
-                <span className="text-[10px] font-mono font-medium uppercase tracking-wider text-[#8A8A97] bg-white/[0.04] border border-white/10 px-2 py-0.5 rounded">
-                  Portal Suite
-                </span>
-              </div>
+              <span className="font-display text-base font-semibold tracking-tight text-white">SmartFace</span>
+              <span className="ml-1.5 font-mono text-[9px] uppercase tracking-[0.2em] text-accent">Portal Suite</span>
             </div>
           </Link>
 
@@ -39,7 +35,7 @@ export default function PortalGatewayPage() {
               How It Works
             </a>
             <a href="#smart-attendance" className="hover:text-white transition-colors">
-              About Smart Attendance
+              Smart Attendance
             </a>
             <a href="#anti-proxy-craft" className="hover:text-white transition-colors">
               Anti-Proxy Tech
@@ -48,27 +44,27 @@ export default function PortalGatewayPage() {
               Role Portals
             </a>
             <a href="#faq" className="hover:text-white transition-colors">
-              FAQ
+              Architecture & FAQ
             </a>
           </nav>
 
-          {/* Right Header Action Buttons - Clean neutral styles */}
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline-flex items-center gap-2 text-xs font-mono text-[#8A8A97]">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              ArcFace: Online
-            </span>
+          {/* Right Header Action Buttons */}
+          <div className="flex items-center gap-2.5">
+            <div className="hidden sm:inline-flex items-center gap-2 chip-bytune h-7 text-xs text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-mono text-[10.5px]">ArcFace: Online</span>
+            </div>
 
             <Link
               href="/auth/login"
-              className="portal-chip text-xs py-1.5 px-3 hover:text-white"
+              className="btn-pill-glass h-8 px-4 text-xs font-medium"
             >
               Sign In
             </Link>
 
             <a
               href="#role-gateway"
-              className="portal-btn portal-btn-primary text-xs py-1.5 px-3.5"
+              className="btn-pill-accent h-8 px-4 text-xs font-semibold"
             >
               Role Portals
             </a>
@@ -76,69 +72,77 @@ export default function PortalGatewayPage() {
         </div>
       </header>
 
-      {/* Main Page Content - Clean solid dark background, zero glowing blobs */}
+      {/* Main Page Content */}
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="px-4 sm:px-6 lg:px-8 pt-12 pb-16 sm:pt-16 sm:pb-24">
+        <section className="px-4 sm:px-6 lg:px-8 pt-12 pb-16 sm:pt-20 sm:pb-24">
           <div className="mx-auto max-w-7xl">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-              {/* Left Column: Left-aligned, no pill badges, solid single-color headline */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+              {/* Left Column */}
               <div className="lg:col-span-6 space-y-6">
-                <h1 className="font-display text-3xl sm:text-5xl font-semibold tracking-tight text-[#F5F5F8] leading-[1.15]">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 chip-bytune">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="font-mono text-[10.5px] uppercase tracking-wider text-mid">
+                    Unified Campus Biometric Engine
+                  </span>
+                </div>
+
+                <h1 className="text-balance font-display text-3xl sm:text-5xl lg:text-[52px] font-medium leading-[1.08] tracking-[-0.028em] text-hi">
                   Biometric precision without roll call delays.
                 </h1>
 
-                <p className="text-sm sm:text-base text-[#B6B6C2] max-w-xl leading-relaxed">
-                  SmartFace replaces manual roll calls and proxy sign-ins with 512-dimension ArcFace neural recognition, 30-second rotating cryptographic salts, and synchronized dashboards for students, teachers, administrators, and parents.
+                <p className="text-pretty text-sm sm:text-base leading-[26px] text-mid max-w-xl">
+                  SmartFace replaces manual paper sign-ins and proxy fraud with 512-dimension ArcFace neural embeddings, 30-second rotating cryptographic salts, and synchronized portals for students, faculty, administrators, and parents.
                 </p>
 
-                {/* Plain, clean action buttons without colored glow halos */}
-                <div className="flex flex-wrap items-center gap-3 pt-1">
+                {/* Pill Action Buttons */}
+                <div className="flex flex-wrap items-center gap-3 pt-2">
                   <a
                     href="#role-gateway"
-                    className="portal-btn portal-btn-primary py-2.5 px-5 text-xs font-semibold"
+                    className="btn-pill-accent h-11 px-6 text-xs font-semibold flex items-center gap-2"
                   >
                     <span>Launch Role Portals</span>
-                    <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                    <ArrowRight className="h-4 w-4" />
                   </a>
 
                   <a
                     href="#how-it-works"
-                    className="portal-btn py-2.5 px-5 text-xs font-medium"
+                    className="btn-pill-glass h-11 px-5 text-xs font-medium"
                   >
-                    <span>How It Works Process</span>
+                    <span>How It Works</span>
                   </a>
 
                   <a
                     href="#anti-proxy-craft"
-                    className="portal-btn py-2.5 px-5 text-xs font-medium"
+                    className="btn-pill-glass h-11 px-5 text-xs font-medium"
                   >
                     <span>Anti-Proxy Demo</span>
                   </a>
                 </div>
 
                 {/* Concrete measured telemetry facts */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-white/[0.06] text-xs font-mono">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-white/[0.08] text-xs font-mono">
                   <div>
-                    <span className="text-[#8A8A97] block text-[11px]">Inference</span>
-                    <span className="text-white font-semibold">&lt;120ms latency</span>
+                    <span className="text-faint block text-[10.5px] uppercase tracking-wider">Inference</span>
+                    <span className="text-hi font-semibold text-sm">&lt;120ms latency</span>
                   </div>
                   <div>
-                    <span className="text-[#8A8A97] block text-[11px]">Liveness</span>
-                    <span className="text-emerald-400 font-semibold">99.8% confirmed</span>
+                    <span className="text-faint block text-[10.5px] uppercase tracking-wider">Liveness</span>
+                    <span className="text-emerald-400 font-semibold text-sm">99.8% confirmed</span>
                   </div>
                   <div>
-                    <span className="text-[#8A8A97] block text-[11px]">QR Salt</span>
-                    <span className="text-white font-semibold">30s drift window</span>
+                    <span className="text-faint block text-[10.5px] uppercase tracking-wider">QR Salt</span>
+                    <span className="text-hi font-semibold text-sm">30s drift window</span>
                   </div>
                   <div>
-                    <span className="text-[#8A8A97] block text-[11px]">Buddy Proxy</span>
-                    <span className="text-[#8F8BFF] font-semibold">0% hardware lock</span>
+                    <span className="text-faint block text-[10.5px] uppercase tracking-wider">Buddy Proxy</span>
+                    <span className="text-accent font-semibold text-sm">0% hardware lock</span>
                   </div>
                 </div>
               </div>
 
-              {/* Right Column: Hero Visualizer showcasing real UI screen and interactive test */}
+              {/* Right Column: Hero Visualizer */}
               <div className="lg:col-span-6 flex justify-center">
                 <BiometricHeroVisual />
               </div>
@@ -163,25 +167,27 @@ export default function PortalGatewayPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.08] bg-[#050507] py-10 px-6 sm:px-12 text-xs text-[#8A8A97]">
+      <footer className="border-t border-white/[0.08] bg-[#050507] py-12 px-6 sm:px-12 text-xs text-faint">
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <ScanFace className="h-5 w-5 text-[#8F8BFF]" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[#050507]">
+              <ScanFace className="h-3.5 w-3.5" strokeWidth={2.4} />
+            </div>
             <div>
               <p className="font-semibold text-white">SmartFace Attendance Ecosystem</p>
-              <p className="text-[11px] text-[#8A8A97]">ArcFace 512-D ONNX • Zero-Knowledge Vector Privacy • FERPA & GDPR Compliant</p>
+              <p className="text-[11px] font-mono text-faint">ArcFace 512-D ONNX · Zero-Knowledge Privacy · FERPA & GDPR</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-6 text-[11px]">
-            <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
-            <a href="#smart-attendance" className="hover:text-white transition-colors">Smart Attendance</a>
-            <a href="#role-gateway" className="hover:text-white transition-colors">Portals</a>
-            <a href="#faq" className="hover:text-white transition-colors">Privacy & FAQ</a>
-            <Link href="/auth/login" className="hover:text-white transition-colors">Portal Login</Link>
+          <div className="flex flex-wrap items-center gap-6 font-mono text-[11px]">
+            <a href="#how-it-works" className="text-mid hover:text-white transition-colors">How It Works</a>
+            <a href="#smart-attendance" className="text-mid hover:text-white transition-colors">Smart Attendance</a>
+            <a href="#role-gateway" className="text-mid hover:text-white transition-colors">Portals</a>
+            <a href="#faq" className="text-mid hover:text-white transition-colors">Privacy & FAQ</a>
+            <Link href="/auth/login" className="text-accent hover:text-accent2 transition-colors">Portal Login</Link>
           </div>
 
-          <p className="text-[11px] text-[#60606C]">
+          <p className="font-mono text-[11px] text-[#60606C]">
             © {new Date().getFullYear()} SmartFace Suite.
           </p>
         </div>

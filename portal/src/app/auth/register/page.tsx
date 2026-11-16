@@ -47,7 +47,7 @@ export default function RegisterPage() {
       footer={
         <>
           Already have an account?{' '}
-          <Link href="/auth/login" className="font-semibold text-indigo-400 hover:text-indigo-300">
+          <Link href="/auth/login" className="font-semibold text-accent hover:text-accent2 transition-colors">
             Sign in
           </Link>
         </>
@@ -58,20 +58,20 @@ export default function RegisterPage() {
         <AuthInput label="Email" type="email" value={email} onChange={setEmail} placeholder="you@smartface.pro" autoComplete="email" />
 
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-gray-300">Role</label>
+          <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-mid">Role</label>
           <div className="grid grid-cols-4 gap-2">
             {ROLES.map(({ value, label, icon: Icon }) => (
               <button
                 key={value}
                 type="button"
                 onClick={() => setRole(value)}
-                className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 text-[10px] font-semibold transition-all ${
+                className={`flex flex-col items-center gap-1.5 rounded-[14px] border p-2.5 text-[10.5px] font-semibold transition-all cursor-pointer ${
                   role === value
-                    ? 'border-indigo-500/50 bg-indigo-500/10 text-white'
-                    : 'border-white/10 bg-white/[0.03] text-gray-400 hover:border-white/20'
+                    ? 'border-accent bg-accent/15 text-white shadow-[0_0_12px_rgba(143,139,255,0.2)]'
+                    : 'border-white/[0.08] bg-surface text-mid hover:border-white/20'
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className={`h-4 w-4 ${role === value ? 'text-accent' : 'text-faint'}`} />
                 {label}
               </button>
             ))}
@@ -80,7 +80,7 @@ export default function RegisterPage() {
 
         <AuthInput label="Password" type="password" value={password} onChange={setPassword} placeholder="Min. 8 characters" autoComplete="new-password" />
 
-        {error && <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
+        {error && <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300 font-mono">{error}</p>}
 
         <Button type="submit" loading={busy} className="w-full py-3">
           <UserRound className="h-4 w-4" /> Create Account

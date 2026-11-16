@@ -24,21 +24,21 @@ export default function ForgotPasswordPage() {
   return (
     <AuthScreenLayout
       title="Reset your password"
-      subtitle="We will send a one-time passcode to your registered email."
+      subtitle="We will send a one-time passcode to your registered campus email."
       footer={
-        <Link href="/auth/login" className="inline-flex items-center gap-1 font-semibold text-indigo-400 hover:text-indigo-300">
-          <ArrowLeft className="h-3 w-3" /> Back to sign in
+        <Link href="/auth/login" className="inline-flex items-center gap-1 font-semibold text-accent hover:text-accent2 transition-colors">
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
         </Link>
       }
     >
       {sent ? (
         <div className="py-4 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400">
+          <div className="mx-auto mb-3.5 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             <Mail className="h-6 w-6" />
           </div>
-          <p className="text-sm font-semibold text-white">Passcode sent</p>
-          <p className="mt-1 text-xs text-gray-400">
-            Check <span className="font-mono text-indigo-300">{email}</span> for your OTP. It expires in 10 minutes.
+          <p className="font-display text-sm font-semibold text-hi">Passcode sent</p>
+          <p className="mt-1.5 font-mono text-xs text-mid">
+            Check <span className="text-accent">{email}</span> for your OTP. It expires in 10 minutes.
           </p>
           <Link href="/auth/reset-password" className="mt-5 inline-block">
             <Button>Continue to reset</Button>

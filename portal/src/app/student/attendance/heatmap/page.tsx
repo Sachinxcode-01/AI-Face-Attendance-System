@@ -4,14 +4,15 @@ import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
+import { CalendarDays } from 'lucide-react';
 import { MOCK_HEATMAP } from '@/lib/demo-data';
 
 const LEVELS = [
-  'bg-white/[0.04]',
-  'bg-indigo-500/25',
-  'bg-indigo-500/45',
-  'bg-indigo-500/70',
-  'bg-indigo-400',
+  'bg-white/[0.04] text-faint',
+  'bg-accent/20 border-accent/30 text-accent',
+  'bg-accent/40 border-accent/50 text-white',
+  'bg-accent/70 border-accent/80 text-white',
+  'bg-accent text-[#050507] font-bold shadow-md shadow-accent/25',
 ];
 
 export default function StudentHeatmapPage() {
@@ -23,55 +24,46 @@ export default function StudentHeatmapPage() {
       <PageHeader
         kicker="Attendance Analytics"
         title="Check-in Heatmap"
-        subtitle="Daily check-in intensity across the last 30 days."
+        subtitle="Daily biometric verification intensity across the last 30 calendar days."
       />
 
       <div className="page-enter mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <Card className="p-4">
-          <p className="text-xs text-gray-400">Total Check-ins</p>
-          <p className="mt-1 font-display text-2xl font-bold text-white">{total}</p>
+        <Card className="p-5">
+          <p className="font-mono text-[11px] uppercase tracking-wider text-faint">Total Check-ins</p>
+          <p className="mt-1.5 font-display text-2xl font-semibold text-hi">{total}</p>
         </Card>
-        <Card className="p-4">
-          <p className="text-xs text-gray-400">Active Days</p>
-          <p className="mt-1 font-display text-2xl font-bold text-emerald-400">{activeDays}</p>
+        <Card className="p-5">
+          <p className="font-mono text-[11px] uppercase tracking-wider text-faint">Active Days</p>
+          <p className="mt-1.5 font-display text-2xl font-semibold text-emerald-400">{activeDays}</p>
         </Card>
-        <Card className="p-4">
-          <p className="text-xs text-gray-400">Avg / Day</p>
-          <p className="mt-1 font-display text-2xl font-bold text-indigo-400">{(total / Math.max(activeDays, 1)).toFixed(1)}</p>
+        <Card className="p-5">
+          <p className="font-mono text-[11px] uppercase tracking-wider text-faint">Avg / Day</p>
+          <p className="mt-1.5 font-display text-2xl font-semibold text-accent">{(total / Math.max(activeDays, 1)).toFixed(1)}</p>
         </Card>
       </div>
 
-      <Card className="page-enter">
-        <CardHeader icon={<CalendarDaysIcon />} title="Last 30 Days" subtitle="Darker cells indicate more check-ins that day" />
-        <div className="grid grid-cols-7 gap-2">
+      <Card className="page-enter p-6">
+        <CardHeader icon={<CalendarDays className="h-5 w-5 text-accent" />} title="Last 30 Days" subtitle="Cell luminance correlates with daily gate and lecture verification count" />
+        <div className="grid grid-cols-7 gap-2.5 pt-2">
           {MOCK_HEATMAP.map((d) => (
             <div
               key={d.date}
               title={`${d.date}: ${d.count} check-ins`}
-              className={`flex aspect-square flex-col items-center justify-center rounded-xl border border-white/5 ${LEVELS[d.intensity]} transition-transform hover:scale-105`}
+              className={`flex aspect-square flex-col items-center justify-center rounded-[14px] border border-white/[0.06] ${LEVELS[d.intensity]} transition-transform hover:scale-105`}
             >
-              <span className="text-[10px] font-bold text-white/90">{d.count}</span>
-              <span className="text-[8px] text-gray-400">{d.day}</span>
+              <span className="font-mono text-[11px] font-bold">{d.count}</span>
+              <span className="font-mono text-[8.5px] uppercase opacity-75">{d.day}</span>
             </div>
           ))}
         </div>
-        <div className="mt-4 flex items-center justify-end gap-1.5 text-[10px] text-gray-500">
-          Less
+        <div className="mt-5 flex items-center justify-end gap-2 font-mono text-[11px] text-faint">
+          <span>Less</span>
           {LEVELS.map((l, i) => (
-            <span key={i} className={`h-3 w-3 rounded ${l}`} />
+            <span key={i} className={`h-3.5 w-3.5 rounded-md border border-white/5 ${l}`} />
           ))}
-          More
+          <span>More</span>
         </div>
       </Card>
     </DashboardLayout>
-  );
-}
-
-function CalendarDaysIcon() {
-  return (
-    <svg className="h-5 w-5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <path d="M16 2v4M8 2v4M3 10h18" />
-    </svg>
   );
 }

@@ -7,13 +7,13 @@ import type { ToastItem } from '@/hooks/useToast';
 const icons = {
   success: <CheckCircle2 className="h-4 w-4 text-emerald-400" />,
   error: <AlertTriangle className="h-4 w-4 text-red-400" />,
-  info: <Info className="h-4 w-4 text-indigo-400" />,
+  info: <Info className="h-4 w-4 text-accent" />,
 };
 
 const borders = {
   success: 'border-emerald-500/30',
   error: 'border-red-500/30',
-  info: 'border-indigo-500/30',
+  info: 'border-accent/30',
 };
 
 export function ToastContainer({ toasts, dismiss }: { toasts: ToastItem[]; dismiss: (id: string) => void }) {
@@ -22,7 +22,7 @@ export function ToastContainer({ toasts, dismiss }: { toasts: ToastItem[]; dismi
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`pointer-events-auto flex items-start gap-3 rounded-2xl border bg-[#141D38]/95 p-4 shadow-2xl shadow-black/50 backdrop-blur-xl ${borders[t.variant]}`}
+          className={`pointer-events-auto flex items-start gap-3 rounded-[18px] border bg-[#101016]/95 p-4 shadow-2xl shadow-black/70 backdrop-blur-xl ${borders[t.variant]}`}
         >
           <div className="mt-0.5 shrink-0">{icons[t.variant]}</div>
           <div className="min-w-0 flex-1">

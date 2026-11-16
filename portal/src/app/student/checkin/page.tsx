@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { ScanFace, QrCode, CheckCircle2, Loader2, Video, VideoOff, KeyRound } from 'lucide-react';
+import { ScanFace, QrCode, CheckCircle2, Video, KeyRound } from 'lucide-react';
 
 export default function StudentCheckinPage() {
   const [mode, setMode] = useState<'face' | 'qr'>('face');
@@ -56,43 +56,53 @@ export default function StudentCheckinPage() {
       <div className="page-enter grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader
-            icon={mode === 'face' ? <ScanFace className="h-5 w-5 text-indigo-400" /> : <QrCode className="h-5 w-5 text-indigo-400" />}
+            icon={mode === 'face' ? <ScanFace className="h-5 w-5 text-accent" /> : <QrCode className="h-5 w-5 text-accent" />}
             title={mode === 'face' ? 'Face Verification' : 'QR Token Scanner'}
-            subtitle={mode === 'face' ? 'Live webcam feed with liveness detection' : 'Scan the projector code or enter the token'}
+            subtitle={mode === 'face' ? 'Live webcam feed with ArcFace liveness detection' : 'Scan the projector code or enter the token'}
           />
 
           {mode === 'face' ? (
-            <div className="relative mx-auto aspect-[4/3] w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-black">
-              <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover opacity-80" />
+            <div className="relative mx-auto aspect-[4/3] w-full max-w-sm overflow-hidden rounded-[20px] border border-white/[0.08] bg-black">
+              <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover opacity-85" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-32 w-32 rounded-2xl border-2 border-indigo-500/70 bg-indigo-500/5" />
+                <div className="h-32 w-32 rounded-[22px] border-2 border-accent/70 bg-accent/5 shadow-[0_0_24px_rgba(143,139,255,0.25)]" />
               </div>
-              <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent animate-scan pointer-events-none" />
-              <div className="absolute bottom-3 left-3 rounded-lg bg-black/80 px-2.5 py-1 font-mono text-[10px] text-emerald-400">
-                ArcFace buffalo_l • 512-dim • 30 FPS
+              <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent animate-scan pointer-events-none" />
+              <div className="absolute bottom-3 left-3 rounded-full border border-white/[0.08] bg-[#050507]/90 px-3 py-1 font-mono text-[10.5px] text-emerald-400">
+                ArcFace buffalo_l · 512-dim · 30 FPS
               </div>
             </div>
           ) : (
-            <div className="mx-auto flex h-64 w-64 items-center justify-center rounded-2xl border-2 border-indigo-500/40 bg-white p-4 shadow-2xl shadow-indigo-500/20">
-              <div className="relative flex h-full w-full flex-col items-center justify-center rounded-lg bg-gray-50 text-black">
+            <div className="mx-auto flex h-64 w-64 items-center justify-center rounded-[22px] border border-accent/40 bg-white p-4 shadow-2xl shadow-accent/20">
+              <div className="relative flex h-full w-full flex-col items-center justify-center rounded-xl bg-gray-50 text-black">
                 <QrCode className="h-40 w-40 text-slate-900" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 font-bold text-xs text-white">SF</div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-[#050507] font-bold text-xs shadow-md">
+                    SF
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="mt-4 flex gap-2">
-            <Button onClick={() => { setMode('face'); setResult(null); }} variant={mode === 'face' ? 'primary' : 'secondary'} className="flex-1">
+          <div className="mt-5 flex gap-2.5">
+            <Button
+              onClick={() => { setMode('face'); setResult(null); }}
+              variant={mode === 'face' ? 'primary' : 'secondary'}
+              className="flex-1"
+            >
               <Video className="h-4 w-4" /> Face Mode
             </Button>
-            <Button onClick={() => { setMode('qr'); setResult(null); }} variant={mode === 'qr' ? 'primary' : 'secondary'} className="flex-1">
+            <Button
+              onClick={() => { setMode('qr'); setResult(null); }}
+              variant={mode === 'qr' ? 'primary' : 'secondary'}
+              className="flex-1"
+            >
               <QrCode className="h-4 w-4" /> QR Mode
             </Button>
           </div>
 
-          <Button onClick={runScan} loading={scanning} className="mt-3 w-full py-3">
+          <Button onClick={runScan} loading={scanning} className="mt-3.5 w-full py-3">
             {scanning ? 'Verifying…' : mode === 'face' ? 'Verify Face' : 'Scan Token'}
           </Button>
         </Card>
@@ -100,11 +110,15 @@ export default function StudentCheckinPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader title="Live Token" subtitle="Refreshes every 15 seconds (anti-proxy window)" />
-            <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4 text-center">
-              <p className="font-mono text-lg font-bold tracking-widest text-indigo-300">{token}</p>
-              <p className="mt-2 text-[10px] text-gray-500">Signed with campus HSM • TOTP epoch 30s</p>
+            <div className="rounded-[18px] border border-white/[0.06] bg-surface p-5 text-center">
+              <p className="font-mono text-xl font-bold tracking-widest text-accent">{token}</p>
+              <p className="mt-2 font-mono text-[10.5px] text-faint">Signed with campus HSM · TOTP epoch 30s</p>
             </div>
-            <Button variant="secondary" className="mt-3 w-full" onClick={() => setToken('SMARTFACE_SEC_' + Math.random().toString(36).slice(2, 9).toUpperCase())}>
+            <Button
+              variant="secondary"
+              className="mt-3.5 w-full"
+              onClick={() => setToken('SMARTFACE_SEC_' + Math.random().toString(36).slice(2, 9).toUpperCase())}
+            >
               <KeyRound className="h-4 w-4" /> Refresh Token
             </Button>
           </Card>
@@ -114,8 +128,8 @@ export default function StudentCheckinPage() {
               <div className="flex items-start gap-3">
                 <CheckCircle2 className={`mt-0.5 h-5 w-5 shrink-0 ${result.ok ? 'text-emerald-400' : 'text-red-400'}`} />
                 <div>
-                  <p className="text-sm font-bold text-white">{result.ok ? 'Check-in confirmed' : 'Verification failed'}</p>
-                  <p className="mt-1 text-xs text-gray-400">{result.text}</p>
+                  <p className="text-sm font-semibold text-hi">{result.ok ? 'Check-in confirmed' : 'Verification failed'}</p>
+                  <p className="mt-1 text-xs text-mid">{result.text}</p>
                 </div>
               </div>
             </Card>
@@ -123,10 +137,10 @@ export default function StudentCheckinPage() {
 
           <Card>
             <CardHeader title="How anti-proxy works" />
-            <ul className="space-y-2 text-xs text-gray-400">
-              <li className="flex gap-2"><Badge tone="info">01</Badge> QR tokens rotate every 15 seconds and expire instantly.</li>
-              <li className="flex gap-2"><Badge tone="info">02</Badge> Each token is bound to your device fingerprint.</li>
-              <li className="flex gap-2"><Badge tone="info">03</Badge> Replayed or screenshot tokens are rejected server-side.</li>
+            <ul className="space-y-2.5 text-xs text-mid">
+              <li className="flex gap-2.5 items-center"><Badge tone="purple">01</Badge> QR tokens rotate every 15 seconds and expire instantly.</li>
+              <li className="flex gap-2.5 items-center"><Badge tone="purple">02</Badge> Each token is bound to your device fingerprint.</li>
+              <li className="flex gap-2.5 items-center"><Badge tone="purple">03</Badge> Replayed or screenshot tokens are rejected server-side.</li>
             </ul>
           </Card>
         </div>

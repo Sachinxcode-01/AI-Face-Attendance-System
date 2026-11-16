@@ -68,7 +68,7 @@ export function DataTable<T>({
   return (
     <div>
       {onSearch && (
-        <div className="mb-3">
+        <div className="mb-4">
           <input
             type="text"
             value={search ?? ''}
@@ -77,31 +77,31 @@ export function DataTable<T>({
               setPage(1);
             }}
             placeholder={searchPlaceholder}
-            className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-2 text-xs text-hi placeholder:text-faint transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
           />
         </div>
       )}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs">
-          <thead className="border-b border-white/5 text-gray-400">
+          <thead className="border-b border-white/[0.08] font-mono text-[11px] uppercase tracking-wider text-faint">
             <tr>
               {columns.map((c) => (
                 <th
                   key={c.key}
-                  className={`pb-3 font-semibold ${c.sortable ? 'cursor-pointer select-none hover:text-white' : ''}`}
+                  className={`pb-3 font-semibold ${c.sortable ? 'cursor-pointer select-none hover:text-hi' : ''}`}
                   onClick={() => c.sortable && toggleSort(c.key)}
                 >
                   {c.header}
-                  {sortKey === c.key && <span className="ml-1 text-indigo-400">{sortDir === 'asc' ? '↑' : '↓'}</span>}
+                  {sortKey === c.key && <span className="ml-1 text-accent">{sortDir === 'asc' ? '↑' : '↓'}</span>}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-white/[0.05]">
             {pageRows.map((row) => (
-              <tr key={rowKey(row)} className="hover:bg-white/[0.02]">
+              <tr key={rowKey(row)} className="hover:bg-white/[0.02] transition-colors">
                 {columns.map((c) => (
-                  <td key={c.key} className="py-3">
+                  <td key={c.key} className="py-3.5">
                     {c.render(row)}
                   </td>
                 ))}
@@ -110,11 +110,11 @@ export function DataTable<T>({
           </tbody>
         </table>
         {pageRows.length === 0 && (
-          <p className="py-8 text-center text-xs text-gray-500">{emptyTitle}</p>
+          <p className="py-8 text-center text-xs text-faint font-mono">{emptyTitle}</p>
         )}
       </div>
       {filtered.length > pageSize && (
-        <div className="mt-3 flex items-center justify-between text-[11px] text-gray-500">
+        <div className="mt-4 flex items-center justify-between text-xs font-mono text-faint">
           <span>
             Page {page} of {pageCount}
           </span>
@@ -122,14 +122,14 @@ export function DataTable<T>({
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 font-semibold text-gray-300 hover:bg-white/10 disabled:opacity-40"
+              className="chip-bytune h-7 px-3 text-[11px] disabled:opacity-40"
             >
               Prev
             </button>
             <button
               onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
               disabled={page === pageCount}
-              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 font-semibold text-gray-300 hover:bg-white/10 disabled:opacity-40"
+              className="chip-bytune h-7 px-3 text-[11px] disabled:opacity-40"
             >
               Next
             </button>

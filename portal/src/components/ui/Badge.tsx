@@ -5,18 +5,18 @@ import React from 'react';
 type Tone = 'success' | 'danger' | 'warning' | 'info' | 'neutral' | 'purple';
 
 const tones: Record<Tone, string> = {
-  success: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  danger: 'bg-red-500/10 text-red-400 border-red-500/20',
-  warning: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  info: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  neutral: 'bg-white/5 text-gray-400 border-white/10',
-  purple: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  success: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25',
+  danger: 'bg-red-500/10 text-red-400 border-red-500/25',
+  warning: 'bg-amber-500/10 text-amber-400 border-amber-500/25',
+  info: 'bg-[#6FD8FF]/15 text-[#6FD8FF] border-[#6FD8FF]/25',
+  neutral: 'bg-white/[0.04] text-mid border-white/[0.08]',
+  purple: 'bg-accent/15 text-accent border-accent/25',
 };
 
 export function Badge({ tone = 'neutral', children, pulse = false, className = '' }: { tone?: Tone; children: React.ReactNode; pulse?: boolean; className?: string }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tones[tone]} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider ${tones[tone]} ${className}`}
     >
       {pulse && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />}
       {children}
