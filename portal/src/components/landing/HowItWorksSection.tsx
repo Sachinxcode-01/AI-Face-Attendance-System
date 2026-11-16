@@ -78,44 +78,45 @@ export function HowItWorksSection() {
   return (
     <section id="how-it-works" className="relative scroll-mt-24 border-t border-white/[0.08] py-20 bg-[#050507]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Left-Aligned Section Header - No pill badges */}
+        {/* Left-Aligned Section Header */}
         <div className="max-w-2xl mb-12">
-          <p className="text-xs font-mono uppercase tracking-wider text-[#8F8BFF] mb-2">
-            Verification Pipeline
-          </p>
-          <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-[#F5F5F8]">
-            How SmartFace Works
-          </h2>
-          <p className="mt-3 text-sm text-[#B6B6C2] leading-relaxed">
-            Faculty opens a session, the ArcFace engine verifies each student in under 120ms, and parents receive arrival timestamps directly on their phones.
-          </p>
-        </div>
+            <div className="inline-flex items-center gap-2 chip-bytune mb-3">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+              <span className="font-mono text-[10.5px] uppercase tracking-wider text-accent">Verification Pipeline</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl font-medium tracking-[-0.028em] text-hi">
+              How SmartFace Works
+            </h2>
+              <p className="mt-3 text-[14.5px] leading-[23.9px] text-mid">
+                Faculty opens a session, the ArcFace engine verifies each student in under 120ms, and parents receive arrival timestamps directly on their phones.
+              </p>
+            </div>
 
-        {/* Structured Editorial 4-Step Layout (Replaced the 4 icon-card grid) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Numbered Step List */}
-          <div className="lg:col-span-5 space-y-3">
-            {STEPS.map((step, idx) => {
-              const isSelected = activeStepIndex === idx;
-              return (
+            {/* Structured Editorial 4-Step Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Left Column: Numbered Step List */}
+              <div className="lg:col-span-5 space-y-3">
+                {STEPS.map((step, idx) => {
+                  const isSelected = activeStepIndex === idx;
+                  return (
                 <div
                   key={step.number}
                   onClick={() => setActiveStepIndex(idx)}
-                  className={`cursor-pointer rounded-xl p-4 transition-colors border ${
+                  className={`cursor-pointer rounded-[18px] p-4 sm:p-5 transition-all border ${
                     isSelected
-                      ? 'bg-[#0D0F17] border-white/20'
-                      : 'bg-[#090A10] border-white/[0.06] hover:border-white/10'
+                      ? 'card-bytune border-accent/40 shadow-lg shadow-accent/10'
+                      : 'card-surface border-white/[0.06] hover:border-white/15'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-mono text-xs text-[#8F8BFF] font-semibold">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-mono text-xs text-accent font-semibold">
                       Step {step.number}
                     </span>
-                    <span className="font-mono text-[10px] text-[#8A8A97] px-2 py-0.5 rounded bg-white/[0.04]">
+                    <span className="chip-bytune font-mono text-[10px] text-faint">
                       {step.roleBadge}
                     </span>
                   </div>
-                  <h3 className="font-display text-sm font-semibold text-[#F5F5F8]">
+                  <h3 className="font-display text-[15px] font-medium text-hi">
                     {step.title}
                   </h3>
                 </div>
@@ -124,37 +125,37 @@ export function HowItWorksSection() {
           </div>
 
           {/* Right Column: Active Phase Specs & Telemetry Log */}
-          <div className="lg:col-span-7 portal-card p-6 sm:p-7">
+          <div className="lg:col-span-7 card-bytune rounded-[22px] p-6 sm:p-8 shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-4 mb-5">
               <div>
-                <span className="text-xs font-mono text-[#8F8BFF]">Phase {activeStep.number}</span>
-                <h3 className="font-display text-lg font-semibold text-[#F5F5F8] mt-0.5">
+                <span className="text-xs font-mono text-accent">Phase {activeStep.number}</span>
+                <h3 className="font-display text-lg font-medium text-hi mt-0.5">
                   {activeStep.title}
                 </h3>
               </div>
-              <span className="rounded bg-white/[0.04] border border-white/10 px-2.5 py-1 text-[11px] font-mono text-[#B6B6C2]">
+              <span className="chip-bytune font-mono text-[10.5px] text-mid">
                 {activeStep.roleBadge}
               </span>
             </div>
 
-            <p className="text-xs sm:text-sm text-[#B6B6C2] leading-relaxed mb-6">
+            <p className="text-[14.5px] leading-[23.9px] text-mid mb-6">
               {activeStep.description}
             </p>
 
             {/* Technical Specifications Table */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
               {activeStep.specs.map((item, i) => (
-                <div key={i} className="rounded-lg bg-[#050507] border border-white/[0.06] p-3">
-                  <span className="text-[11px] text-[#8A8A97] block">{item.label}</span>
-                  <span className="text-xs font-mono font-semibold text-[#F5F5F8] mt-0.5 block">
+                <div key={i} className="rounded-[14px] bg-[#050507] border border-white/[0.06] p-3.5">
+                  <span className="text-[11px] text-faint block">{item.label}</span>
+                  <span className="text-xs font-mono font-semibold text-hi mt-0.5 block">
                     {item.value}
                   </span>
                 </div>
               ))}
             </div>
 
-            {/* Clean Code/Telemetry Log (No traffic light dots) */}
-            <div className="rounded-lg bg-[#050507] border border-white/[0.08] p-4 font-mono text-[11.5px] text-[#6FD8FF] leading-relaxed whitespace-pre overflow-x-auto">
+            {/* Clean Code/Telemetry Log */}
+            <div className="rounded-[16px] bg-[#050507] border border-white/[0.08] p-4 font-mono text-[11.5px] text-accent2 leading-relaxed whitespace-pre overflow-x-auto">
               {activeStep.codeLog}
             </div>
           </div>

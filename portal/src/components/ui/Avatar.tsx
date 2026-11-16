@@ -27,9 +27,8 @@ export function Avatar({ src, name, size = 'md', ring = true }: AvatarProps) {
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent2 font-bold text-[#050507] ${sizes[size]} ${
-        ring ? 'ring-2 ring-white/20' : ''
-      }`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent2 font-bold text-[#050507] ${sizes[size]} ${ring ? 'ring-2 ring-white/20' : ''
+        }`}
     >
       {src ? (
         <img src={src} alt={name} className={`${sizes[size]} rounded-full object-cover`} loading="lazy" />

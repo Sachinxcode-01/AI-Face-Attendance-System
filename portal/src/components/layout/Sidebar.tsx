@@ -126,7 +126,7 @@ export function Sidebar() {
         )}
         <button
           onClick={() => setCollapsed((c) => !c)}
-          className="ml-auto hidden rounded-lg p-1 text-gray-500 hover:bg-white/5 hover:text-white lg:block"
+          className="ml-auto hidden rounded-full p-1 text-faint hover:bg-white/5 hover:text-white lg:block"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -158,43 +158,43 @@ export function Sidebar() {
 
       {/* User */}
       <div className="border-t border-white/5 p-3">
-        <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] p-3">
-          <Avatar src={user?.avatar} name={user?.name ?? 'User'} size="sm" />
-          {!collapsed && (
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-white">{user?.name}</p>
-              <p className="truncate text-[10px] text-gray-500 capitalize">{user?.role}</p>
-            </div>
-          )}
-          <button
-            onClick={logout}
-            className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
-            title="Sign out"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-3 rounded-[16px] bg-white/[0.03] p-3 border border-white/5">
+            <Avatar src={user?.avatar} name={user?.name ?? 'User'} size="sm" />
+            {!collapsed && (
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-hi">{user?.name}</p>
+                <p className="truncate text-[10px] text-faint capitalize">{user?.role}</p>
+              </div>
+            )}
+            <button
+              onClick={logout}
+              className="rounded-full p-1.5 text-faint transition-colors hover:bg-red-500/10 hover:text-red-400"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+      );
 
-  return (
+      return (
       <>
-      {/* Desktop */}
-      <aside
+        {/* Desktop */}
+        <aside
           className={`fixed inset-y-0 left-0 z-40 hidden border-r border-white/[0.08] bg-[#050507]/95 backdrop-blur-xl transition-all duration-300 lg:block ${collapsed ? 'w-[72px]' : 'w-60'
-          }`}
-      >
-        {content}
-      </aside>
+            }`}
+        >
+          {content}
+        </aside>
 
-      {/* Mobile top bar */}
+        {/* Mobile top bar */}
         <div className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-white/[0.08] bg-[#050507]/90 px-4 backdrop-blur-xl lg:hidden">
           <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[#050507] shadow-lg shadow-accent/25">
-                <ScanFace className="h-4 w-4" strokeWidth={2.4} />
-              </div>
-              <span className="font-display text-sm font-bold text-white">SmartFace</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[#050507] shadow-lg shadow-accent/25">
+              <ScanFace className="h-4 w-4" strokeWidth={2.4} />
+            </div>
+            <span className="font-display text-sm font-bold text-white">SmartFace</span>
           </Link>
           <button
             onClick={() => setMobileOpen(true)}
@@ -209,16 +209,16 @@ export function Sidebar() {
         {mobileOpen && (
           <div className="fixed inset-0 z-50 lg:hidden">
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-              <aside className="absolute inset-y-0 left-0 w-64 border-r border-white/[0.08] bg-[#050507]">
-                <button
-                  onClick={() => setMobileOpen(false)}
-                  className="absolute right-3 top-4 rounded-lg p-1 text-gray-500 hover:text-white"
-                  aria-label="Close menu"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                {content}
-              </aside>
+            <aside className="absolute inset-y-0 left-0 w-64 border-r border-white/[0.08] bg-[#050507]">
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="absolute right-3 top-4 rounded-lg p-1 text-gray-500 hover:text-white"
+                aria-label="Close menu"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              {content}
+            </aside>
           </div>
         )}
       </>
