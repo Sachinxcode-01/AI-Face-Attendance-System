@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const runtime = "edge";
+export const dynamic = "force-static";
 export const alt = "SmartFace — Touchless biometric attendance for modern campuses";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -30,12 +30,13 @@ export default function OgImage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "34px",
+              fontSize: "26px",
+              fontWeight: 700,
               color: "#8f8bff",
               background: "rgba(143,139,255,0.08)",
             }}
           >
-            ◉
+            SF
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <span style={{ fontSize: "30px", fontWeight: 600, color: "#f5f5f8", letterSpacing: "-0.5px" }}>
@@ -47,9 +48,11 @@ export default function OgImage() {
           </div>
         </div>
 
-        <div>
+        <div style={{ display: "flex", flexDirection: "column" }}>
           <div
             style={{
+              display: "flex",
+              flexDirection: "column",
               fontSize: "64px",
               fontWeight: 500,
               lineHeight: 1.05,
@@ -57,14 +60,13 @@ export default function OgImage() {
               color: "#f5f5f8",
             }}
           >
-            Every face. Every gate.
-            <br />
-              <span style={{ color: "#8f8bff", fontWeight: 700 }}>
-                One campus.
-              </span>
+            <span>Every face. Every gate.</span>
+            <span style={{ color: "#8f8bff", fontWeight: 700 }}>
+              One campus.
+            </span>
           </div>
-          <div style={{ fontSize: "22px", color: "#b6b6c2", marginTop: "22px" }}>
-            Touchless biometric attendance · &lt;300ms verification · 99.8% accuracy
+          <div style={{ display: "flex", fontSize: "22px", color: "#b6b6c2", marginTop: "22px" }}>
+            Touchless biometric attendance · sub-300ms verification · 99.8% accuracy
           </div>
         </div>
 

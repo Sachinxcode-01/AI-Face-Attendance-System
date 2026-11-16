@@ -1,13 +1,5 @@
 import Link from "next/link";
-import type { Metadata } from "next";
 import { ArrowLeft, ScanFace } from "lucide-react";
-
-export const metadata: Metadata = {
-  title: "Page not found — SmartFace",
-  description:
-    "This page wandered off campus. Head back to the SmartFace landing page for touchless biometric attendance.",
-  robots: { index: false, follow: false },
-};
 
 export default function NotFound() {
   return (
