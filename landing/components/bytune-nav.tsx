@@ -285,7 +285,7 @@ export function ByTuneNav() {
           background: rgba(255, 255, 255, 0.06);
         }
 
-        .Nav_gh__vzMpe:hover {
+        .Nav_gh__vzMpe.pill-glow.sp-e9:hover {
           color: var(--text-hi);
           border-color: var(--hairline-strong);
           background: var(--glass-strong);

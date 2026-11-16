@@ -25,44 +25,44 @@ export function GitHubButton({
 
   return (
     <>
-      <style jsx>{`
-        .Nav_gh__vzMpe.pill-glow.sp-e1 {
+      <style>{`
+        .Nav_gh__vzMpe.pill - glow.sp - e1 {
           display: inline-flex;
-          position: relative;
-          box-sizing: border-box;
-          overflow: hidden;
-          color: rgb(182, 182, 194);
-          background-color: rgba(255, 255, 255, 0.04);
-          font-family: Inter, "Inter Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
-          font-size: 14px;
-          font-weight: 500;
-          line-height: 22.4px;
-          height: 40px;
-          padding-right: 16px;
-          padding-left: 16px;
-          border: 0.8px solid rgba(255, 255, 255, 0.08);
-          border-radius: 999px;
-          align-items: center;
-          gap: 7px;
-          cursor: pointer;
-          text-decoration: none;
-          transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-          -webkit-font-smoothing: antialiased;
+        position: relative;
+        box-sizing: border-box;
+        overflow: hidden;
+        color: rgb(182, 182, 194);
+        background-color: rgba(255, 255, 255, 0.04);
+        font-family: Inter, "Inter Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 22.4px;
+        height: 40px;
+        padding-right: 16px;
+        padding-left: 16px;
+        border: 0.8px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        -webkit-font-smoothing: antialiased;
         }
 
         .Nav_gh__vzMpe.pill-glow::before {
           content: "";
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          pointer-events: none;
-          opacity: 0;
-          transition: opacity 0.3s ease;
-          background: radial-gradient(
-            var(--glow-d, 471px) circle at var(--mx, 50%) var(--my, 50%),
-            rgba(143, 139, 255, 0.2),
-            transparent 70%
-          );
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        background: radial-gradient(
+        var(--glow-d, 471px) circle at var(--mx, 50%) var(--my, 50%),
+        rgba(143, 139, 255, 0.2),
+        transparent 70%
+        );
         }
 
         .Nav_gh__vzMpe.pill-glow:hover::before {
@@ -71,27 +71,27 @@ export function GitHubButton({
 
         .sp-e2 {
           display: block;
-          overflow: hidden;
-          flex-shrink: 0;
+        overflow: hidden;
+        flex-shrink: 0;
         }
 
         .sp-e3 {
           display: block;
-          overflow: hidden;
-          opacity: 0.9;
-          margin-left: -1px;
-          flex-shrink: 0;
+        overflow: hidden;
+        opacity: 0.9;
+        margin-left: -1px;
+        flex-shrink: 0;
         }
 
-        .Nav_gh__vzMpe:hover {
+        .Nav_gh__vzMpe.pill-glow.sp-e1:hover {
           color: var(--text-hi);
-          border-color: var(--hairline-strong);
-          background: var(--glass-strong);
+        border-color: var(--hairline-strong);
+        background: var(--glass-strong);
         }
 
         @media (max-width: 880px) {
           .Nav_gh__vzMpe {
-            display: none !important;
+          display: none !important;
           }
         }
       `}</style>
