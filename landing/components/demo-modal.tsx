@@ -110,7 +110,19 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
 
             const elapsed = Date.now() - mountTime.current;
             if (elapsed < 1200) {
-              onClose();
+              setTouched({
+                fullName: true,
+                email: true,
+                institution: true,
+                campusSize: true,
+                phone: true,
+              });
+              const validationErrors = validate(formData);
+              setErrors(
+                Object.keys(validationErrors).length > 0
+                  ? validationErrors
+                  : { fullName: "Submission was too fast. Please retry." }
+              );
               return;
             }
 

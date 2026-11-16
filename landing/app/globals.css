@@ -116,7 +116,6 @@
     @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-[var(--accent)] focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-[#0a0a0c];
   }
 
-
   /* ByTune Hero Floating Glass Card (Recipe Card 2) */
   .card-bytune {
     backdrop-filter: blur(18px) saturate(1.5);
@@ -203,7 +202,6 @@
     opacity: 0.92;
   }
 
-
   .btn-pill-white:active {
     transform: scale(0.98);
   }
@@ -268,7 +266,6 @@
     background-color: rgba(255, 255, 255, 0.07);
   }
 
-
   /* ByTune Range Slider (Recipe Input 1) */
   .slider-bytune {
     -webkit-appearance: none;
@@ -296,164 +293,139 @@
     @apply btn-pill-white;
   }
 
-
   .glass-card {
     @apply card-bytune p-6;
   }
-
 
   .badge-pill {
     @apply chip-bytune;
   }
 }
 
-    .text-gradient {
-      @apply bg-clip-text text-transparent;
-      background-image: linear-gradient(135deg, #f5f5f8 40%, #b6b6c2 100%);
-    }
-
-        background-image:
-          linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
-          linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
-
-      background-size: 44px 44px;
-    }
-
-    .mask-radial {
-      -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
-      mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
-    }
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #f5f5f8 40%, #b6b6c2 100%);
   }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  .mask-radial {
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 35%, transparent 100%);
+  }
+}
 
 /* ---------------------------------------------------------------------------
  * Keyframe animations verbatim from ByTune reference
  * ------------------------------------------------------------------------- */
 
+/* Lines rise into place */
+@keyframes Hero_cueIn {
+  from {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
 
-    /* Lines rise into place */
-    @keyframes Hero_cueIn {
-      from {
-        transform: translateY(110%);
-        opacity: 0;
-      }
+@keyframes Hero_cueFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 
+/* Sheen sweep */
+@keyframes Hero_cueSweep {
+  0% {
+    transform: translateX(-120%) skewX(-12deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(220%) skewX(-12deg);
+    opacity: 0;
+  }
+}
 
-        to {
-          transform: translateY(0);
-          opacity: 1;
-        }
-      }
+@keyframes Hero_cueDip {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
 
+@keyframes Hero_cueOut {
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
 
-        @keyframes Hero_cueFade {
-          from {
-            opacity: 0;
-          }
+/* Hero primary floating card (measured at 7.5s cubic-bezier(0.22, 1, 0.36, 1)) */
+@keyframes Hero_float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
 
-            to {
-              opacity: 1;
-            }
-          }
+/* Secondary pip element floating with subtle rotation */
+@keyframes DesktopSection_pipFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1.2deg);
+  }
+}
 
+/* Equalizer bar animation */
+@keyframes LiveCount_eq {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
 
-        /* Sheen sweep */
-        @keyframes Hero_cueSweep {
-          0% {
-            transform: translateX(-120%) skewX(-12deg);
-            opacity: 0;
-          }
+/* Mobile nav slide in */
+@keyframes Nav_sheetIn {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
 
-
-          25% {
-            opacity: 1;
-          }
-
-            100% {
-              transform: translateX(220%) skewX(-12deg);
-              opacity: 0;
-            }
-          }
-
-
-        @keyframes Hero_cueDip {
-
-            0%,
-            100% {
-              transform: translateY(0);
-            }
-
-
-            50% {
-              transform: translateY(8px);
-            }
-          }
-
-
-        @keyframes Hero_cueOut {
-          to {
-            opacity: 0;
-            transform: translateY(-6px);
-          }
-        }
-
-
-        /* Hero primary floating card (measured at 7.5s cubic-bezier(0.22, 1, 0.36, 1)) */
-        @keyframes Hero_float {
-
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-
-
-          50% {
-            transform: translateY(-14px);
-          }
-        }
-
-        /* Secondary pip element floating with subtle rotation */
-        @keyframes DesktopSection_pipFloat {
-
-          0%,
-          100% {
-            transform: translateY(0) rotate(0deg);
-          }
-
-          50% {
-            transform: translateY(-8px) rotate(1.2deg);
-          }
-        }
-
-        /* Equalizer bar animation */
-        @keyframes LiveCount_eq {
-
-          0%,
-          100% {
-            transform: scaleY(0.35);
-          }
-
-          50% {
-            transform: scaleY(1);
-          }
-        }
-
-        /* Mobile nav slide in */
-        @keyframes Nav_sheetIn {
-          from {
-            transform: translateY(100%);
-          }
-
-          to {
-            transform: translateY(0);
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-
-          [data-hero-line],
-          [data-cue] {
-            animation: none !important;
-            transform: none !important;
-            opacity: 1 !important;
-          }
-        }
+@media (prefers-reduced-motion: reduce) {
+  [data-hero-line],
+  [data-cue] {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}

@@ -116,7 +116,7 @@ export function TokenDemo() {
               </div>
 
               <div className="mt-6 flex items-center justify-between rounded-full border border-white/5 bg-white/[0.02] px-4 py-2 font-mono text-[10px] text-faint">
-                <span>Next rotation: {(seconds % 5) + 1}s</span>
+                <span>Next rotation: {seconds < 5 ? seconds : (seconds % 5) + 1}s</span>
                 <span className="text-[#9fe0b6]">Anti-replay Armed</span>
               </div>
             </div>

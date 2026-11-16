@@ -101,28 +101,28 @@ export function Hero({ onOpenDemo }: HeroProps) {
   }, [reduceMotion]);
 
   return (
-        <section id="top" className="relative overflow-hidden pb-24 pt-32 sm:pt-40 lg:pb-36">
-          {/* Ambient ByTune radial glow background */}
-          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-            <div className="absolute inset-0 bg-grid opacity-[0.2]" />
-            <div
-              className="absolute -top-[120px] left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full opacity-30 blur-[120px] pointer-events-none"
-              style={{
-                background: "radial-gradient(circle, rgba(143,139,255,0.3) 0%, rgba(111,216,255,0.15) 50%, transparent 75%)",
-              }}
-            />
-          </div>
+    <section id="top" className="relative overflow-hidden pb-24 pt-32 sm:pt-40 lg:pb-36">
+      {/* Ambient ByTune radial glow background */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-grid opacity-[0.2]" />
+        <div
+          className="absolute -top-[120px] left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full opacity-30 blur-[120px] pointer-events-none"
+          style={{
+            background: "radial-gradient(circle, rgba(143,139,255,0.3) 0%, rgba(111,216,255,0.15) 50%, transparent 75%)",
+          }}
+        />
+      </div>
 
-            <div className="relative mx-auto grid w-full max-w-[var(--wide)] items-center gap-14 px-6 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12 lg:px-8">
-              <motion.div variants={container} initial={reduceMotion ? "show" : "hidden"} animate="show">
-                <LiveCount />
+      <div className="relative mx-auto grid w-full max-w-[var(--wide)] items-center gap-14 px-6 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12 lg:px-8">
+        <motion.div variants={container} initial={reduceMotion ? "show" : "hidden"} animate="show">
+          <LiveCount />
 
-                {/* ByTune Hero Heading (92px 500 line-height 92px tracking -3.22px) */}
-                <h1
-                  ref={headlineRef}
-                  className="mt-6 font-display text-[2.75rem] font-medium leading-[1.02] tracking-[-0.035em] text-hi sm:text-[4rem] lg:text-[5.25rem] xl:text-[92px] xl:leading-[92px] xl:tracking-[-3.22px]"
-                >
-                  {HEADLINE.map((line) => (
+          {/* ByTune Hero Heading (92px 500 line-height 92px tracking -3.22px) */}
+          <h1
+            ref={headlineRef}
+            className="mt-6 font-display text-[2.75rem] font-medium leading-[1.02] tracking-[-0.035em] text-hi sm:text-[4rem] lg:text-[5.25rem] xl:text-[92px] xl:leading-[92px] xl:tracking-[-3.22px]"
+          >
+            {HEADLINE.map((line) => (
               <span key={line.text} className="block overflow-hidden pb-[0.1em] -mb-[0.1em]">
                 <span
                   data-hero-line
@@ -204,38 +204,38 @@ export function Hero({ onOpenDemo }: HeroProps) {
           </div>
         </motion.div>
 
-        {/* Floating Hero Card with ByTune Radial Glow & 7.5s float animation */ }
-                    < motion.div
-          initial = { reduceMotion? undefined: { opacity: 0, y: 28, scale: 0.98 } }
-          animate = {{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-                  className="relative lg:pl-4"
+        {/* Floating Hero Card with ByTune Radial Glow & 7.5s float animation */}
+        < motion.div
+          initial={reduceMotion ? undefined : { opacity: 0, y: 28, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+          className="relative lg:pl-4"
         >
-                  {/* Card glow behind */}
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 -inset-x-8 -inset-y-8 rounded-[36px] pointer-events-none opacity-90 card-glow-bg"
-                  />
+          {/* Card glow behind */}
+          <div
+            aria-hidden
+            className="absolute inset-0 -inset-x-8 -inset-y-8 rounded-[36px] pointer-events-none opacity-90 card-glow-bg"
+          />
 
-                  <div style={{ animation: "Hero_float 7.5s cubic-bezier(0.22, 1, 0.36, 1) infinite" }}>
-                    <VerificationCard />
-                  </div>
-
-                  {/* Floating liveness chip */}
-                  <motion.div
-                    initial={reduceMotion ? undefined : { opacity: 0, x: 16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.55 }}
-                    className="absolute -right-3 top-10 hidden items-center gap-2 rounded-full border border-[var(--hairline)] bg-[rgba(16,16,22,0.85)] px-4 py-2 backdrop-blur-md shadow-lg sm:flex"
-                    style={{ animation: "DesktopSection_pipFloat 6s cubic-bezier(0.22, 1, 0.36, 1) infinite" }}
-                  >
-                    <Activity className="h-3.5 w-3.5 text-spotify" />
-                    <span className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-mid">
-                      Liveness gate · online
-                    </span>
-                  </motion.div>
-              </motion.div>
+            <div style={reduceMotion ? undefined : { animation: "Hero_float 7.5s cubic-bezier(0.22, 1, 0.36, 1) infinite" }}>
+              <VerificationCard />
             </div>
-        </section>
-        );
+
+            {/* Floating liveness chip */}
+            <motion.div
+              initial={reduceMotion ? undefined : { opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.55 }}
+              className="absolute -right-3 top-10 hidden items-center gap-2 rounded-full border border-[var(--hairline)] bg-[rgba(16,16,22,0.85)] px-4 py-2 backdrop-blur-md shadow-lg sm:flex"
+              style={reduceMotion ? undefined : { animation: "DesktopSection_pipFloat 6s cubic-bezier(0.22, 1, 0.36, 1) infinite" }}
+            >
+              <Activity className="h-3.5 w-3.5 text-spotify" />
+              <span className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-mid">
+                Liveness gate · online
+              </span>
+            </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
 }
