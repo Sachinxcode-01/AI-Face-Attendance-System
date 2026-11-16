@@ -1,37 +1,64 @@
-import React from "react";
+"use client";
+
+import React, { useRef } from "react";
 
 export function ByTuneNav() {
+  const ghRef = useRef<HTMLAnchorElement>(null);
+  const dlRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (
+    e: React.MouseEvent<HTMLElement>,
+    ref: React.RefObject<HTMLElement | null>,
+  ) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    ref.current.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+    ref.current.style.setProperty("--my", `${e.clientY - rect.top}px`);
+  };
+
   return (
-    <div className="w-full max-w-[1060px] flex justify-center py-4 px-4 font-sans">
+    <div className="w-full flex justify-center py-4 px-3 font-sans">
       <style>{`
         :root {
           --text-hi: #f5f5f8;
+          --text-mid: #b6b6c2;
+          --text-low: #8a8a97;
+          --text-faint: #60606c;
           --hairline-strong: rgba(255, 255, 255, 0.16);
           --glass-strong: rgba(255, 255, 255, 0.07);
         }
 
+        /* div.Nav_inner__asKaF · exact dimensions: 1020 × 56 px */
         .Nav_inner__asKaF.sp-e1 {
           display: flex;
           position: relative;
           box-sizing: border-box;
-          color: rgb(245, 245, 248);
-          font-family: Inter, "Inter Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
-          font-size: 16px;
-          line-height: 25.6px;
-          padding-top: 8px;
-          padding-right: 18px;
-          padding-bottom: 8px;
-          padding-left: 18px;
+          width: 1020px;
+          max-width: 100%;
+          height: 56px;
+          padding: 8px 18px;
+          margin: 0 auto;
           border-radius: 999px;
           align-items: center;
           justify-content: space-between;
           gap: 28px;
-          max-width: 1020px;
-          width: 100%;
+          row-gap: 28px;
+          column-gap: 28px;
+          color: rgb(245, 245, 248);
+          font-family: Inter, "Inter Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
+          font-size: 16px;
+          line-height: 25.6px;
           background: rgba(14, 14, 18, 0.85);
           border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.06) inset, 0 16px 36px -12px rgba(0, 0, 0, 0.6);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
+        }
+
+        @media (min-width: 1536px) {
+          .Nav_inner__asKaF.sp-e1 {
+            margin: 0 239px;
+          }
         }
 
         .sp-e2 {
@@ -48,6 +75,8 @@ export function ByTuneNav() {
           display: flex;
           align-items: center;
           gap: 8px;
+          row-gap: 8px;
+          column-gap: 8px;
         }
 
         .sp-e4 {
@@ -67,9 +96,14 @@ export function ByTuneNav() {
 
         .sp-e6 {
           display: flex;
+          align-items: center;
           margin-right: 16.4625px;
           margin-left: 16.4625px;
           gap: 4px;
+          row-gap: 4px;
+          column-gap: 4px;
+          transform: matrix(1, 0, 0, 1, 0, 0);
+          transform-origin: 246px 19.2px;
         }
 
         .sp-e7 {
@@ -78,11 +112,15 @@ export function ByTuneNav() {
           font-size: 14px;
           font-weight: 500;
           line-height: 22.4px;
-          padding: 8px 14px;
+          padding-top: 8px;
+          padding-right: 14px;
+          padding-bottom: 8px;
+          padding-left: 14px;
           border-radius: 999px;
           cursor: pointer;
           text-decoration: none;
           transition: color 0.15s ease, background-color 0.15s ease;
+          white-space: nowrap;
         }
 
         .sp-e8 {
@@ -90,10 +128,12 @@ export function ByTuneNav() {
           align-items: center;
           flex-shrink: 0;
           gap: 10px;
+          row-gap: 10px;
+          column-gap: 10px;
         }
 
         .sp-e9 {
-          display: flex;
+          display: inline-flex;
           position: relative;
           overflow: hidden;
           color: rgb(182, 182, 194);
@@ -101,20 +141,44 @@ export function ByTuneNav() {
           font-size: 14px;
           font-weight: 500;
           line-height: 22.4px;
-          height: 38px;
-          padding: 0 16px;
+          height: 40px;
+          padding-right: 16px;
+          padding-left: 16px;
           border: 0.8px solid rgba(255, 255, 255, 0.08);
           border-radius: 999px;
           align-items: center;
           gap: 7px;
+          row-gap: 7px;
+          column-gap: 7px;
           cursor: pointer;
           text-decoration: none;
           transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+          white-space: nowrap;
+        }
+
+        .Nav_gh__vzMpe.pill-glow::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+          background: radial-gradient(
+            var(--glow-d, 471px) circle at var(--mx, 50%) var(--my, 50%),
+            rgba(143, 139, 255, 0.22),
+            transparent 70%
+          );
+        }
+
+        .Nav_gh__vzMpe.pill-glow:hover::before {
+          opacity: 1;
         }
 
         .sp-e10 {
           display: block;
           overflow: hidden;
+          flex-shrink: 0;
         }
 
         .sp-e11 {
@@ -122,6 +186,7 @@ export function ByTuneNav() {
           overflow: hidden;
           opacity: 0.9;
           margin-left: -1px;
+          flex-shrink: 0;
         }
 
         .sp-e12 {
@@ -130,7 +195,7 @@ export function ByTuneNav() {
         }
 
         .sp-e13 {
-          display: flex;
+          display: inline-flex;
           position: relative;
           overflow: hidden;
           color: rgb(10, 10, 12);
@@ -143,8 +208,27 @@ export function ByTuneNav() {
           border-radius: 999px;
           align-items: center;
           justify-content: center;
-          height: 38px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+          height: 40px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        }
+
+        .DownloadSplit_pillSplit__0QzLR::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+          background: radial-gradient(
+            var(--glow-d, 613px) circle at var(--mx, 50%) var(--my, 50%),
+            rgba(255, 255, 255, 0.5),
+            transparent 70%
+          );
+        }
+
+        .DownloadSplit_pillSplit__0QzLR:hover::before {
+          opacity: 1;
         }
 
         .sp-e14 {
@@ -183,7 +267,7 @@ export function ByTuneNav() {
           text-align: center;
           height: 100%;
           padding-left: 8px;
-          padding-right: 12px;
+          padding-right: 14px;
           border-left: 1px solid rgba(10, 10, 12, 0.12);
           border-radius: 0px 999px 999px 0px;
           align-items: center;
@@ -209,11 +293,13 @@ export function ByTuneNav() {
 
         @media (max-width: 880px) {
           .Nav_gh__vzMpe, .Nav_links__TBJFU {
-            display: none;
+            display: none !important;
           }
           .Nav_inner__asKaF.sp-e1 {
             padding-left: 14px;
             padding-right: 14px;
+            width: 100%;
+            height: 52px;
           }
         }
       `}</style>
@@ -251,11 +337,20 @@ export function ByTuneNav() {
         </nav>
         <div className="Nav_actions__Llzp1 sp-e8">
           <a
+            ref={ghRef}
             href="https://github.com/rishiteja21/ByTune"
             target="_blank"
             rel="noreferrer"
+            onMouseMove={(e) => handleMouseMove(e, ghRef)}
             className="Nav_gh__vzMpe pill-glow sp-e9"
             title="Star ByTune on GitHub"
+            style={
+              {
+                "--glow-d": "471px",
+                "--mx": "-40.400001525878906px",
+                "--my": "16.600006103515625px",
+              } as React.CSSProperties
+            }
           >
             <svg
               width="16"
@@ -288,7 +383,18 @@ export function ByTuneNav() {
             </svg>
           </a>
           <div className="DownloadSplit_wrap__DMUZP DownloadSplit_small__RYWvF sp-e12">
-            <div className="pill pill--primary DownloadSplit_pillSplit__0QzLR sp-e13">
+            <div
+              ref={dlRef}
+              onMouseMove={(e) => handleMouseMove(e, dlRef)}
+              className="pill pill--primary DownloadSplit_pillSplit__0QzLR sp-e13"
+              style={
+                {
+                  "--glow-d": "613px",
+                  "--mx": "-44.70000457763672px",
+                  "--my": "-3.399993896484375px",
+                } as React.CSSProperties
+              }
+            >
               <a
                 className="DownloadSplit_main__RBB4M sp-e14"
                 href="https://github.com/rishiteja21/ByTune/releases/latest/download/ByTune-Setup.exe"
