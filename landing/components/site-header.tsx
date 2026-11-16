@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-
 import { ArrowUpRight, ChevronDown, Menu, ScanFace, Sparkles, X } from "lucide-react";
 import { NAV_LINKS, ROLES } from "@/lib/content";
 import { PORTAL_URL } from "@/lib/constants";
+import { GitHubButton } from "./github-button";
 
 interface SiteHeaderProps {
   onOpenDemo?: () => void;
@@ -97,6 +98,7 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
           </nav>
 
           <div className="flex items-center gap-2">
+            <GitHubButton />
             <div
               ref={dropdownRef}
               className="relative hidden sm:block"
