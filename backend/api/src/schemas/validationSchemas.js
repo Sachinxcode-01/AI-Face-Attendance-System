@@ -38,6 +38,11 @@ const resetPasswordSchema = z.object({
   new_password: z.string().min(6, 'New password must be at least 6 characters')
 }).passthrough();
 
+const changePasswordSchema = z.object({
+  current_password: z.string().min(1, 'Current password is required'),
+  new_password: z.string().min(8, 'New password must be at least 8 characters')
+}).passthrough();
+
 // ── Attendance Schemas ────────────────────────────────────────────────────────
 const attendanceMarkSchema = z.object({
   session_id: z.string().optional(),
@@ -75,6 +80,7 @@ module.exports = {
   otpSendSchema,
   otpVerifySchema,
   resetPasswordSchema,
+  changePasswordSchema,
   attendanceMarkSchema,
   sessionCreateSchema,
   leaveApplySchema,

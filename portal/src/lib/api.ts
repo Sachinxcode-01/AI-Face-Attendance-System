@@ -66,4 +66,61 @@ export const api = {
   sessions: {
     active: () => apiFetch('/sessions/active'),
   },
+  teacher: {
+    dashboard: () => apiFetch('/teacher/dashboard'),
+    sessions: () => apiFetch('/teacher/sessions'),
+    students: (search = '') =>
+      apiFetch(`/teacher/students${search ? `?search=${encodeURIComponent(search)}` : ''}`),
+    analytics: () => apiFetch('/teacher/analytics'),
+    reportSummary: (params: Record<string, string>) => {
+      const qs = new URLSearchParams(params).toString();
+      return apiFetch(`/teacher/reports/summary${qs ? `?${qs}` : ''}`);
+    },
+    exportReport: (params: Record<string, string>) => {
+      const qs = new URLSearchParams(params).toString();
+      const url = `${BASE_URL}/teacher/reports/export${qs ? `?${qs}` : ''}`;
+      const token = getToken();
+      return fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+    },
+    broadcast: (title: string, message: string, priority = 'Normal') =>
+      apiFetch('/teacher/notifications/broadcast', {
+        method: 'POST',
+        body: JSON.stringify({ title, message, priority }),
+      }),
+    // Session lifecycle (teacher-scoped, complements /sessions/*)
+    startSession: (teacherEmail: string, subject: string, room = 'Main Hall', durationMinutes = 60) =>
+      apiFetch('/sessions/start', {
+        method: 'POST',
+        body: JSON.stringify({
+          teacher_email: teacherEmail,
+          subject,
+          room,
+          duration_minutes: durationMinutes,
+        }),
+      }),
+    timetable: {
+      list: () => apiFetch('/teacher/timetable'),
+      create: (body: Record<string, string>) =>
+        apiFetch('/teacher/timetable', { method: 'POST', body: JSON.stringify(body) }),
+      update: (id: string, body: Record<string, string>) =>
+        apiFetch(`/teacher/timetable/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+      remove: (id: string) => apiFetch(`/teacher/timetable/${id}`, { method: 'DELETE' }),
+    },
+    stopSession: (sessionId: string) =>
+      apiFetch('/sessions/stop', {
+        method: 'POST',
+        body: JSON.stringify({ session_id: sessionId }),
+      }),
+    qrToken: (sessionId: string) => apiFetch(`/sessions/${sessionId}/qr-token`),
+  },
+  leave: {
+    pending: () => apiFetch('/leave/admin/pending'),
+    action: (leaveId: string, status: string, remarks: string) =>
+      apiFetch('/leave/action', {
+        method: 'PATCH',
+        body: JSON.stringify({ leave_id: leaveId, status, remarks }),
+      }),
+  },
 };

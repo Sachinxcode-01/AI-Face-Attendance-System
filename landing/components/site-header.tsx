@@ -100,7 +100,7 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
                 </nav>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="flex items-center gap-2 sm:gap-6">
                     <div className="hidden sm:block">
                       <GitHubButton />
                     </div>

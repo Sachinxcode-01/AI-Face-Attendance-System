@@ -53,7 +53,7 @@ export function Features() {
                   />
                 ))}
               </div>
-              <div className="mt-5 flex items-center justify-between font-mono text-[10.5px] uppercase tracking-[0.14em] text-faint border-t border-white/[0.06] pt-3">
+              <div className="mt-5 flex items-center justify-between font-mono text-[11.5px] font-medium uppercase tracking-[0.14em] text-faint border-t border-white/[0.06] pt-3">
                 <span>Vector · 512</span>
                 <span className="text-[#9fe0b6] font-medium">Cosine 0.94</span>
               </div>
@@ -77,7 +77,7 @@ export function Features() {
                 </span>
                 <span className="font-mono text-xs text-faint">rotates in 18s</span>
               </div>
-              <div className="mt-5 flex items-center justify-between font-mono text-[10.5px] uppercase tracking-[0.14em] text-faint border-t border-white/[0.06] pt-3">
+              <div className="mt-5 flex items-center justify-between font-mono text-[11.5px] font-medium uppercase tracking-[0.14em] text-faint border-t border-white/[0.06] pt-3">
                 <span>HMAC · SHA256</span>
                 <span className="text-accent font-medium">30s drift window</span>
               </div>

@@ -10,7 +10,7 @@ Usage | Original CSS value | sRGB hex | CSS Variable
 Text High | `rgb(245, 245, 248)` | `#F5F5F8` | `--text-hi`
 Text Mid | `rgb(182, 182, 194)` | `#B6B6C2` | `--text-mid`
 Text Low | `rgb(138, 138, 151)` | `#8A8A97` | `--text-low`
-Text Faint | `rgb(96, 96, 108)` | `#60606C` | `--text-faint`
+Text Faint | `rgb(96, 96, 108)` | `#60606C` | `--text-faint` (raised to `#85858F` in `globals.css` to reach WCAG AA 4.5:1 on all dark surfaces)
 Surface 0 (Deep Canvas) | `rgb(5, 5, 7)` | `#050507` | `--bg-0`
 Surface 1 (Base Layer) | `rgb(10, 10, 14)` | `#0A0A0E` | `--bg-1`
 Surface (Card Background) | `rgb(16, 16, 22)` | `#101016` | `--surface`

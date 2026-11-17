@@ -114,7 +114,7 @@ export function VerificationCard() {
                 {matched ? "Alex Rivera" : "Scanning subject..."}
               </p>
               <p className="font-mono text-[10px] text-faint">
-                {matched ? "ID: STU-88219 · CS-301" : "Acquiring 512-d embedding..."}
+                {matched ? "ID: STU-88219 · CS-301" : "Acquiring 512-dim embedding..."}
               </p>
             </div>
 
@@ -146,7 +146,7 @@ export function VerificationCard() {
             <span className={`h-1.5 w-1.5 rounded-full ${matched ? "bg-spotify" : "bg-accent animate-pulse"}`} />
             {matched ? "Verified in 192ms" : "Matching in progress..."}
           </span>
-          <span className="text-faint">ArcFace Embedding · 512-d</span>
+          <span className="text-faint">ArcFace Embedding · 512-dim</span>
         </div>
       </div>
     </div>

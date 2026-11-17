@@ -115,7 +115,7 @@ export function Release() {
                                               <span className="font-mono text-[9.5px] uppercase tracking-wider text-faint">
                                                 Vector Dimension
                                               </span>
-                                              <p className="mt-1 font-display text-lg font-medium text-hi">512-d</p>
+                                              <p className="mt-1 font-display text-lg font-medium text-hi">512-dim</p>
                                               <span className="font-mono text-[9px] text-accent">ArcFace ResNet</span>
                                             </div>
 

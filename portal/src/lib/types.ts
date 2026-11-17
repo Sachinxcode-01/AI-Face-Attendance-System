@@ -139,3 +139,81 @@ export interface SystemService {
   latency: string;
   uptime: string;
 }
+
+export interface TeacherDashboard {
+  teacher_name: string;
+  department: string | null;
+  active_sessions: number;
+  total_sessions: number;
+  attendance_today: number;
+  students_monitored: number;
+  pending_leaves: number;
+}
+
+export interface TeacherSession {
+  id: string;
+  subject: string;
+  room: string | null;
+  duration: string;
+  start_time: string;
+  is_active: boolean;
+  students_checked_in: number;
+  total_enrolled_seen: number;
+  attendance_rate: number;
+}
+
+export interface TeacherStudent {
+  id: string;
+  email: string;
+  full_name: string;
+  student_id: string | null;
+  department: string | null;
+  semester: string | null;
+  avatar_url: string | null;
+  present_count: number;
+  total_count: number;
+  attendance_rate: number;
+  last_seen: string | null;
+}
+
+export interface TeacherAnalytics {
+  total_sessions: number;
+  present_marks: number;
+  face_scans: number;
+  qr_scans: number;
+  manual_scans: number;
+  avg_confidence: number | null;
+  attendance_rate: number;
+  weekly_trends: {
+    year: number;
+    week: number;
+    present: number;
+    total: number;
+    rate: number;
+  }[];
+}
+
+export interface TeacherReportSummary {
+  period: { start_date: string; end_date: string };
+  summary: {
+    total_marks: number;
+    attendance_rate: number;
+    present_count: number;
+    absent_count: number;
+    late_count: number;
+    face_scans: number;
+    qr_scans: number;
+  };
+}
+
+export interface TeacherLeaveRequest {
+  id: string;
+  user_id: string;
+  reason: string;
+  start_date: string;
+  end_date: string;
+  status: 'Pending' | 'Under Review' | 'Approved' | 'Rejected';
+  document_url?: string;
+  remarks?: string;
+  created_at: string;
+}

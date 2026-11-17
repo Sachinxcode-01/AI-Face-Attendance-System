@@ -63,6 +63,8 @@ const NAV: Record<string, NavItem[]> = {
     { label: 'Leave Approvals', href: '/teacher/leave-approvals', icon: FileCheck2 },
     { label: 'Analytics', href: '/teacher/analytics', icon: BarChart3 },
     { label: 'Timetable', href: '/teacher/timetable', icon: CalendarDays },
+    { label: 'Notifications', href: '/teacher/notifications', icon: BellRing },
+    { label: 'Reports', href: '/teacher/reports', icon: FileSpreadsheet },
     { label: 'Profile', href: '/teacher/profile', icon: UserRound },
   ],
   admin: [

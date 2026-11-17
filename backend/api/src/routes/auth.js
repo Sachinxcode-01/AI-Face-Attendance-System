@@ -24,7 +24,8 @@ const {
   githubLoginSchema,
   otpSendSchema,
   otpVerifySchema,
-  resetPasswordSchema
+  resetPasswordSchema,
+  changePasswordSchema
 } = require('../schemas/validationSchemas');
 const BiometricProfile = require('../models/BiometricProfile');
 const faceAiService = require('../services/faceAiService');

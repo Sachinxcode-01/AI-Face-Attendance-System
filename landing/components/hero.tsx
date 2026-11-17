@@ -10,7 +10,7 @@ import { VerificationCard } from "./verification-card";
 const METRICS = [
   { value: "99.8%", label: "Recognition accuracy" },
   { value: "<300ms", label: "Verify latency" },
-  { value: "512-d", label: "ArcFace embedding" },
+  { value: "512-dim", label: "ArcFace embedding" },
 ];
 
 const HEADLINE = [
@@ -165,7 +165,7 @@ export function Hero({ onOpenDemo }: HeroProps) {
             </a>
             <a
               href="#how-it-works"
-              className="btn-pill-glass"
+              className="btn-pill-outline"
             >
               Explore System
             </a>

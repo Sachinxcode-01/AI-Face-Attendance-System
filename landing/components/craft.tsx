@@ -7,7 +7,7 @@ const DETAILS = [
     body: "Late by 90 seconds? The bell decides, not the bureaucracy. Configurable per class, per campus.",
   },
   {
-    title: "Leave, folded in",
+    title: "Leave, integrated",
     body: "Approved leave silently blanks a seat on the roster, no more chasing notes on WhatsApp.",
   },
   {
@@ -19,7 +19,7 @@ const DETAILS = [
     body: "New enrollments appear on the right roster automatically once the timetable maps them.",
   },
   {
-    title: "Nexa, on call",
+    title: "Nexa AI assistant",
     body: "Students ask attendance questions in plain language; Nexa answers from their own records only.",
   },
   {

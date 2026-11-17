@@ -211,21 +211,6 @@ export function Showcase() {
               </motion.div>
             </AnimatePresence>
 
-            <div className="mt-8 flex gap-1.5" aria-hidden>
-              {SCREENS.map((s, i) => (
-                <button
-                  key={s.key}
-                  type="button"
-                  aria-label={`Show ${s.tab}`}
-                  onClick={() => setIndex(i)}
-                  className={
-                    index === i
-                      ? "h-1 w-8 rounded-full bg-accent transition-all duration-300"
-                      : "h-1 w-3 rounded-full bg-white/15 transition-all duration-300 hover:bg-white/25"
-                  }
-                />
-              ))}
-            </div>
           </div>
 
           {/* Device frame styled with ByTune card-bytune recipe */}

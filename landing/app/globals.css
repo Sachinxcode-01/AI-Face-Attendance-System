@@ -28,7 +28,8 @@
   --text-hi: #f5f5f8;
   --text-mid: #b6b6c2;
   --text-low: #8a8a97;
-  --text-faint: #60606c;
+  /* Raised from #60606c (~3.3:1) to meet WCAG AA 4.5:1 on bg-0/surface/panel */
+  --text-faint: #85858f;
 
   /* Accents & Glows */
   --accent: #8f8bff;
@@ -264,6 +265,38 @@
     color: var(--text-hi);
     border-color: rgba(255, 255, 255, 0.16);
     background-color: rgba(255, 255, 255, 0.07);
+  }
+
+  /* ByTune Outlined Pill Button — secondary action, matches the white pill shape */
+  .btn-pill-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: transparent;
+    color: var(--text-hi);
+    border: 0.8px solid rgba(255, 255, 255, 0.24);
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 22.4px;
+    height: 40px;
+    padding: 0 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+  }
+
+  .btn-pill-outline:hover {
+    color: var(--text-hi);
+    border-color: rgba(255, 255, 255, 0.45);
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .btn-pill-outline:active {
+    transform: scale(0.98);
   }
 
   /* ByTune Range Slider (Recipe Input 1) */
