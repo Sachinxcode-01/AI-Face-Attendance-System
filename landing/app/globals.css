@@ -477,9 +477,153 @@
   }
 }
 
+/* Biometric laser scan line */
+@keyframes LaserScan {
+  0% {
+    top: 0%;
+    opacity: 0.9;
+  }
+  50% {
+    top: 98%;
+    opacity: 1;
+  }
+  100% {
+    top: 0%;
+    opacity: 0.9;
+  }
+}
+
+/* Radar cone sweep */
+@keyframes RadarSweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Shimmer light sweep for badges and text */
+@keyframes TextShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Pulsing radar ring */
+@keyframes PulseRing {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* Subtle glow breathing */
+@keyframes GlowBreathe {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.05);
+  }
+}
+
+/* Floating animation for cards & badges */
+@keyframes SubtleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Flowing data beam */
+@keyframes FlowBeam {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Class utilities for animations */
+.animate-laser-scan {
+  animation: LaserScan 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-radar-sweep {
+  animation: RadarSweep 4s linear infinite;
+}
+
+.animate-pulse-ring {
+  animation: PulseRing 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+.animate-glow-breathe {
+  animation: GlowBreathe 4s ease-in-out infinite;
+}
+
+.animate-subtle-float {
+  animation: SubtleFloat 5s ease-in-out infinite;
+}
+
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    #b6b6c2 0%,
+    #ffffff 25%,
+    #8f8bff 50%,
+    #ffffff 75%,
+    #b6b6c2 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: TextShimmer 4s linear infinite;
+}
+
+.text-shimmer-accent {
+  background: linear-gradient(
+    90deg,
+    #8f8bff 0%,
+    #ffffff 25%,
+    #6fd8ff 50%,
+    #ffffff 75%,
+    #8f8bff 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: TextShimmer 3.5s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-hero-line],
-  [data-cue] {
+  [data-cue],
+  .animate-laser-scan,
+  .animate-radar-sweep,
+  .animate-pulse-ring,
+  .animate-glow-breathe,
+  .animate-subtle-float,
+  .text-shimmer,
+  .text-shimmer-accent {
     animation: none !important;
     transform: none !important;
     opacity: 1 !important;

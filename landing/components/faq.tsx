@@ -44,46 +44,62 @@ export function Faq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-      <section id="faq" className="relative scroll-mt-24 border-t border-[var(--hairline)] py-16 sm:py-24 lg:py-[140px]">
-        <div className="mx-auto grid w-full max-w-[var(--container)] gap-12 px-6 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20 lg:px-8">
-          <div className="lg:sticky lg:top-28 lg:self-start">
-            <SectionHeading
-              title="The questions every campus asks first."
-              description="Privacy, spoofing, uptime and installation: answered plainly, before you book a demo."
-            />
-            <Reveal delay={0.15}>
-              <a
-                href={DEMO_MAILTO}
-                className="mt-8 btn-pill-glass"
-              >
-                Ask us something specific
-                <ArrowUpRight className="h-4 w-4 text-accent" />
-              </a>
-            </Reveal>
-          </div>
+    <section
+      id="faq"
+      className="relative scroll-mt-24 border-t border-[var(--hairline)] py-16 sm:py-24 lg:py-[140px]"
+    >
+      <div className="mx-auto grid w-full max-w-[var(--container)] gap-12 px-6 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20 lg:px-8">
+        <div className="lg:sticky lg:top-28 lg:self-start">
+          <SectionHeading
+            eyebrow="Campus FAQ"
+            title="The questions every campus asks first."
+            description="Privacy, spoofing, uptime and installation: answered plainly, before you book a demo."
+          />
+          <Reveal delay={0.15}>
+            <motion.a
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.98 }}
+              href={DEMO_MAILTO}
+              className="mt-8 btn-pill-glass group"
+            >
+              <span>Ask us something specific</span>
+              <ArrowUpRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </motion.a>
+          </Reveal>
+        </div>
 
-          <div className="divide-y divide-[var(--hairline)] border-y border-[var(--hairline)]">
-            {FAQS.map((faq, index) => {
-              const isOpen = openIndex === index;
-              return (
-                <div key={faq.question}>
+        <div className="divide-y divide-[var(--hairline)] border-y border-[var(--hairline)]">
+          {FAQS.map((faq, index) => {
+            const isOpen = openIndex === index;
+            return (
+              <Reveal key={faq.question} delay={index * 0.05} direction="up" distance={16}>
+                <div>
                   <h3>
                     <button
                       type="button"
                       onClick={() => setOpenIndex(isOpen ? null : index)}
                       aria-expanded={isOpen}
-                      className="flex w-full items-start justify-between gap-6 py-6 text-left transition-colors hover:text-white"
+                      className="flex w-full items-start justify-between gap-6 py-6 text-left transition-colors hover:text-white group"
                     >
-                      <span className="text-[17px] font-medium leading-snug text-hi">
+                      <span className={`text-[17px] font-medium leading-snug transition-colors ${
+                        isOpen ? "text-white" : "text-hi group-hover:text-white"
+                      }`}>
                         {faq.question}
                       </span>
-                      < span className="grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-white/[0.03] shrink-0 mt-0.5">
+                      <motion.span
+                        animate={{
+                          backgroundColor: isOpen ? "rgba(143,139,255,0.15)" : "rgba(255,255,255,0.03)",
+                          borderColor: isOpen ? "rgba(143,139,255,0.35)" : "rgba(255,255,255,0.1)",
+                        }}
+                        className="grid h-7 w-7 place-items-center rounded-full border shrink-0 mt-0.5 transition-colors"
+                      >
                         <Plus
                           aria-hidden
-                          className={`h-4 w-4 transition-transform duration-300 ${isOpen ? "rotate-45 text-accent" : "text-faint"
-                            }`}
+                          className={`h-4 w-4 transition-transform duration-300 ${
+                            isOpen ? "rotate-45 text-accent" : "text-faint group-hover:text-hi"
+                          }`}
                         />
-                      </span>
+                      </motion.span>
                     </button>
                   </h3>
                   <AnimatePresence initial={false}>
@@ -92,7 +108,7 @@ export function Faq() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                         className="overflow-hidden"
                       >
                         <p className="pb-7 pr-8 text-[14.5px] leading-[23.9px] text-mid">
@@ -102,10 +118,11 @@ export function Faq() {
                     ) : null}
                   </AnimatePresence>
                 </div>
-              );
-            })}
-          </div>
+              </Reveal>
+            );
+          })}
         </div>
-      </section>
-      );
+      </div>
+    </section>
+  );
 }

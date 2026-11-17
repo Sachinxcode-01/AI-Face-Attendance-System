@@ -15,6 +15,9 @@ import {
 import { COMPANY_CONTACT, DEMO_MAILTO } from "@/lib/constants";
 import { NAV_LINKS, ROLES } from "@/lib/content";
 
+import { Reveal } from "./ui/reveal";
+import { SpotlightCard } from "./ui/spotlight-card";
+
 interface SiteFooterProps {
   onOpenDemo?: () => void;
 }
@@ -24,99 +27,107 @@ export function SiteFooter({ onOpenDemo }: SiteFooterProps) {
     <footer className="relative border-t border-[var(--hairline)] bg-bg0 pt-16 pb-32 sm:pt-20 sm:pb-36 lg:pb-16">
       <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         {/* ===================================================================
-         * Top CTA Banner — ByTune Card 2 Specification
+         * Top CTA Banner — ByTune Card 2 Specification with Spotlight Glow
          * =================================================================== */}
-        <div className="relative mb-16 overflow-hidden rounded-[22px] card-bytune p-7 sm:p-10 lg:p-14 shadow-2xl">
-          {/* Subtle background grid & radial glow */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-grid opacity-20 pointer-events-none"
-          />
-          <div
-            aria-hidden="true"
-            className="absolute -top-24 -right-24 h-72 w-72 rounded-full card-glow-bg opacity-75 blur-2xl pointer-events-none"
-          />
+        <Reveal direction="up" duration={0.8}>
+          <SpotlightCard
+            spotlightColor="rgba(143, 139, 255, 0.25)"
+            className="relative mb-16 overflow-hidden p-7 sm:p-10 lg:p-14 shadow-2xl backdrop-blur-xl"
+          >
+            {/* Subtle background grid & radial glow */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-grid opacity-20 pointer-events-none"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute -top-24 -right-24 h-72 w-72 rounded-full card-glow-bg opacity-75 blur-2xl pointer-events-none animate-glow-breathe"
+            />
 
-          <div className="relative z-10 grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
-            <div>
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 chip-bytune mb-5">
-                <span className="h-2 w-2 rounded-full bg-spotify animate-pulse" />
-                <span className="font-mono text-[10.5px] uppercase tracking-wider text-mid">
-                  Ready to Deploy · Sub-300ms Verification
-                </span>
+            <div className="relative z-10 grid gap-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
+              <div>
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 chip-bytune mb-5">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-spotify opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-spotify" />
+                  </span>
+                  <span className="font-mono text-[10.5px] uppercase tracking-wider text-mid">
+                    Ready to Deploy · Sub-300ms Verification
+                  </span>
+                </div>
+
+                {/* Headline */}
+                <h2 className="text-balance font-display text-3xl font-medium leading-[1.08] tracking-[-0.028em] text-hi sm:text-[40px] lg:text-[48px]">
+                  Put your campus on the record.
+                </h2>
+
+                {/* Subtext */}
+                <p className="mt-4 max-w-xl text-[15px] sm:text-[16px] leading-[25.6px] text-mid">
+                  Walk through a live session, test touchless kiosk check-in, and inspect the real-time admin sentinel.
+                  Open-source biometric attendance with zero proxy loopholes and edge-first privacy.
+                </p>
+
+                {/* Value stats */}
+                <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/[0.08] pt-6 sm:grid-cols-4 font-mono text-[12px]">
+                  <div>
+                    <span className="block font-semibold text-hi text-[17px]">99.8%</span>
+                    <span className="text-[10px] uppercase tracking-wider text-faint">ArcFace Accuracy</span>
+                  </div>
+                  <div>
+                    <span className="block font-semibold text-spotify text-[17px]">192ms</span>
+                    <span className="text-[10px] uppercase tracking-wider text-faint">Edge Inference</span>
+                  </div>
+                  <div>
+                    <span className="block font-semibold text-accent text-[17px]">30s</span>
+                    <span className="text-[10px] uppercase tracking-wider text-faint">HMAC Rotation</span>
+                  </div>
+                  <div>
+                    <span className="block font-semibold text-accent2 text-[17px]">100%</span>
+                    <span className="text-[10px] uppercase tracking-wider text-faint">Offline Capable</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Headline */}
-              <h2 className="text-balance font-display text-3xl font-medium leading-[1.08] tracking-[-0.028em] text-hi sm:text-[40px] lg:text-[48px]">
-                Put your campus on the record.
-              </h2>
+              {/* Actions */}
+              <div className="flex flex-col gap-3.5 sm:flex-row lg:flex-col lg:items-stretch lg:justify-center">
+                {onOpenDemo ? (
+                  <button
+                    type="button"
+                    onClick={onOpenDemo}
+                    className="btn-pill-accent h-[48px] text-[14px] font-semibold flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(143,139,255,0.3)] transition-transform hover:scale-[1.02] active:scale-98"
+                  >
+                    Request a Campus Demo
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <a
+                    href={DEMO_MAILTO}
+                    className="btn-pill-accent h-[48px] text-[14px] font-semibold flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(143,139,255,0.3)] transition-transform hover:scale-[1.02] active:scale-98"
+                  >
+                    Request a Campus Demo
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                )}
 
-              {/* Subtext */}
-              <p className="mt-4 max-w-xl text-[15px] sm:text-[16px] leading-[25.6px] text-mid">
-                Walk through a live session, test touchless kiosk check-in, and inspect the real-time admin sentinel.
-                Open-source biometric attendance with zero proxy loopholes and edge-first privacy.
-              </p>
-
-              {/* Value stats */}
-              <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/[0.08] pt-6 sm:grid-cols-4 font-mono text-[12px]">
-                <div>
-                  <span className="block font-medium text-hi text-[17px]">99.8%</span>
-                  <span className="text-[10px] uppercase tracking-wider text-faint">ArcFace Accuracy</span>
-                </div>
-                <div>
-                  <span className="block font-medium text-spotify text-[17px]">192ms</span>
-                  <span className="text-[10px] uppercase tracking-wider text-faint">Edge Inference</span>
-                </div>
-                <div>
-                  <span className="block font-medium text-accent text-[17px]">30s</span>
-                  <span className="text-[10px] uppercase tracking-wider text-faint">HMAC Rotation</span>
-                </div>
-                <div>
-                  <span className="block font-medium text-accent2 text-[17px]">100%</span>
-                  <span className="text-[10px] uppercase tracking-wider text-faint">Offline Capable</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col gap-3.5 sm:flex-row lg:flex-col lg:items-stretch lg:justify-center">
-              {onOpenDemo ? (
-                <button
-                  type="button"
-                  onClick={onOpenDemo}
-                  className="btn-pill-accent h-[48px] text-[14px] font-semibold flex items-center justify-center gap-2"
-                >
-                  Request a Campus Demo
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              ) : (
                 <a
-                  href={DEMO_MAILTO}
-                  className="btn-pill-accent h-[48px] text-[14px] font-semibold flex items-center justify-center gap-2"
+                  href={COMPANY_CONTACT.github}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-pill-glass h-[48px] text-[14px] font-medium flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-98"
                 >
-                  Request a Campus Demo
-                  <ArrowRight className="h-4 w-4" />
+                  <Github className="h-4 w-4" />
+                  View on GitHub
+                  <ArrowUpRight className="h-3.5 w-3.5 text-faint" />
                 </a>
-              )}
 
-              <a
-                href={COMPANY_CONTACT.github}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-pill-glass h-[48px] text-[14px] font-medium flex items-center justify-center gap-2"
-              >
-                <Github className="h-4 w-4" />
-                View on GitHub
-                <ArrowUpRight className="h-3.5 w-3.5 text-faint" />
-              </a>
-
-              <p className="text-center font-mono text-[10px] text-faint">
-                Free & open source under MIT · Zero vendor lock-in
-              </p>
+                <p className="text-center font-mono text-[10px] text-faint">
+                  Free & open source under MIT · Zero vendor lock-in
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
+          </SpotlightCard>
+        </Reveal>
 
         {/* ===================================================================
          * Main Footer Grid (Brand + Navigation Columns)
