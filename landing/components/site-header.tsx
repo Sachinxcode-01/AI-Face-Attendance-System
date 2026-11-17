@@ -2,9 +2,24 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion";
-import { ChevronDown, Menu, ScanFace, Sparkles, X, ArrowUpRight } from "lucide-react";
+import {
+  ChevronDown,
+  Menu,
+  ScanFace,
+  Sparkles,
+  X,
+  ArrowUpRight,
+  ArrowRight,
+  Github,
+  CheckCircle2,
+  Shield,
+  GraduationCap,
+  Presentation,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import { NAV_LINKS, ROLES } from "@/lib/content";
-import { PORTAL_URL } from "@/lib/constants";
+import { PORTAL_URL, COMPANY_CONTACT } from "@/lib/constants";
 import { GitHubButton } from "./github-button";
 
 interface SiteHeaderProps {
@@ -74,12 +89,12 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 flex justify-center py-3.5 px-3 pointer-events-none">
+      <header className="fixed inset-x-0 top-0 z-50 flex justify-center py-2.5 sm:py-3.5 px-3 pointer-events-none">
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="pointer-events-auto relative flex items-center justify-between w-full max-w-[1020px] h-[56px] px-3.5 sm:px-4 md:px-5 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(14,14,18,0.85)] backdrop-blur-[16px] shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_16px_36px_-12px_rgba(0,0,0,0.6)] overflow-hidden"
+          className="pointer-events-auto relative flex items-center justify-between w-full max-w-[1020px] h-[52px] sm:h-[56px] px-3 sm:px-4 md:px-5 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(14,14,18,0.85)] backdrop-blur-[16px] shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_16px_36px_-12px_rgba(0,0,0,0.6)] overflow-hidden"
         >
           {/* Scroll Progress Bar at the bottom of the capsule */}
           <motion.div
@@ -90,14 +105,14 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
           {/* Brand */}
           <a
             href="/"
-            className="flex items-center gap-2.5 text-hi shrink-0 cursor-pointer text-decoration-none group"
+            className="flex items-center gap-2 sm:gap-2.5 text-hi shrink-0 cursor-pointer text-decoration-none group"
             aria-label="SmartFace home"
           >
             <span className="relative grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-surface group-hover:border-accent/40 transition-colors">
               <ScanFace className="h-4 w-4 text-accent transition-transform duration-300 group-hover:scale-110" strokeWidth={1.8} />
               <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-spotify ring-2 ring-bg0" />
             </span>
-            <span className="font-display text-[15px] font-semibold tracking-tight text-hi group-hover:text-white transition-colors">
+            <span className="font-display text-[14.5px] sm:text-[15px] font-semibold tracking-tight text-hi group-hover:text-white transition-colors">
               SmartFace
             </span>
           </a>
@@ -116,12 +131,12 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:block">
               <GitHubButton />
             </div>
 
-            {/* Launch Portal Split Pill Button */}
+            {/* Launch Portal Split Pill Button (Desktop) */}
             <div
               ref={dropdownRef}
               className="relative hidden sm:block"
@@ -217,23 +232,24 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
               </AnimatePresence>
             </div>
 
+            {/* Compact Mobile Demo Button */}
             {onOpenDemo ? (
               <button
                 type="button"
                 onClick={onOpenDemo}
-                className="btn-pill-accent h-[36px] px-3.5 text-[12.5px] sm:hidden"
+                className="btn-pill-accent h-[34px] px-3 text-[11.5px] font-semibold sm:hidden active:scale-95"
               >
                 Demo
               </button>
             ) : null}
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Toggle Button */}
             <button
               type="button"
               onClick={() => setMobileOpen((open) => !open)}
               aria-expanded={mobileOpen}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-hi transition duration-200 hover:bg-white/[0.08] lg:hidden"
+              className="grid h-[36px] w-[36px] sm:h-9 sm:w-9 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-hi transition active:scale-95 hover:bg-white/[0.08] lg:hidden"
             >
               {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
@@ -241,39 +257,112 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
         </motion.div>
       </header>
 
-      {/* Mobile Drawer */}
+      {/* Full-Screen Modern Mobile Navigation Drawer */}
       <AnimatePresence>
         {mobileOpen ? (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-x-0 bottom-0 top-[68px] z-40 overflow-y-auto border-t border-[var(--hairline)] bg-bg0/95 px-6 py-8 backdrop-blur-2xl lg:hidden"
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-0 z-50 flex flex-col bg-[#050507]/98 backdrop-blur-3xl lg:hidden"
           >
-            <div className="animate-[Nav_sheetIn_0.35s_var(--ease-out)]">
-              <nav aria-label="Mobile" className="flex flex-col gap-1.5">
-                {NAV_LINKS.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="rounded-xl px-4 py-3 text-[16px] font-medium text-mid transition hover:bg-white/[0.05] hover:text-hi"
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </nav>
+            {/* Top Bar inside Drawer (Aligns with header capsule) */}
+            <div className="flex items-center justify-between px-5 pt-3.5 pb-3 border-b border-[var(--hairline)]">
+              <a
+                href="/"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2.5 text-hi group"
+              >
+                <span className="relative grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-surface">
+                  <ScanFace className="h-4 w-4 text-accent" strokeWidth={1.8} />
+                  <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-spotify ring-2 ring-bg0" />
+                </span>
+                <span className="font-display text-[16px] font-semibold tracking-tight text-white">
+                  SmartFace
+                </span>
+              </a>
 
-              <div className="mt-8 border-t border-[var(--hairline)] pt-6 space-y-3">
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close menu"
+                className="grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/[0.06] text-white hover:bg-white/10 transition active:scale-95"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Mobile Menu Content */}
+            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6">
+              {/* Primary Navigation Links */}
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-faint mb-2 px-3">
+                  Navigation
+                </p>
+                <nav aria-label="Mobile Navigation" className="flex flex-col gap-1">
+                  {NAV_LINKS.map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-between rounded-xl px-3.5 py-3 text-[15px] font-medium text-hi transition hover:bg-white/[0.06] active:bg-white/[0.08]"
+                    >
+                      <span>{link.label}</span>
+                      <ArrowRight className="h-3.5 w-3.5 text-faint" />
+                    </a>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Campus Portals Section */}
+              <div className="border-t border-[var(--hairline)] pt-5">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-faint mb-3 px-3">
+                  Campus Portals
+                </p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {ROLES.map((role) => {
+                    const Icon = role.icon;
+                    return (
+                      <a
+                        key={role.key}
+                        href={role.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => setMobileOpen(false)}
+                        className="group flex flex-col justify-between p-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.06] transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/[0.04] text-accent">
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <ArrowUpRight className="h-3.5 w-3.5 text-faint group-hover:text-white transition-colors" />
+                        </div>
+                        <div className="mt-3">
+                          <span className="block text-[13px] font-semibold text-hi group-hover:text-white">
+                            {role.title}
+                          </span>
+                          <span className="block font-mono text-[9.5px] text-faint">
+                            {role.path}
+                          </span>
+                        </div>
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="border-t border-[var(--hairline)] pt-5 space-y-3">
                 <a
                   href={PORTAL_URL}
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => setMobileOpen(false)}
-                  className="btn-pill-white w-full"
+                  className="btn-pill-white w-full h-[46px] text-[14px] font-semibold flex items-center justify-center gap-2"
                 >
-                  Launch Portal
+                  Launch Unified Portal
+                  <ArrowRight className="h-4 w-4" />
                 </a>
                 {onOpenDemo ? (
                   <button
@@ -282,11 +371,29 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
                       setMobileOpen(false);
                       onOpenDemo();
                     }}
-                    className="btn-pill-accent w-full"
+                    className="btn-pill-accent w-full h-[46px] text-[14px] font-semibold flex items-center justify-center gap-2"
                   >
+                    <Sparkles className="h-4 w-4" />
                     Request Campus Demo
                   </button>
                 ) : null}
+              </div>
+
+              {/* Footer info in drawer */}
+              <div className="pt-2 flex flex-col items-center gap-3 text-center">
+                <a
+                  href={COMPANY_CONTACT.github}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 text-xs font-mono text-mid hover:text-white transition-colors"
+                >
+                  <Github className="h-3.5 w-3.5" />
+                  <span>GitHub Repository · Open Source</span>
+                </a>
+                <div className="inline-flex items-center gap-1.5 font-mono text-[9.5px] uppercase tracking-wider text-faint">
+                  <span className="h-1.5 w-1.5 rounded-full bg-spotify animate-pulse" />
+                  <span>ArcFace v2.4 · All Systems Online</span>
+                </div>
               </div>
             </div>
           </motion.div>
