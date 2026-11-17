@@ -106,7 +106,7 @@ export function Hero({ onOpenDemo }: HeroProps) {
   }, [reduceMotion]);
 
   return (
-    <section id="top" className="relative overflow-hidden pb-24 pt-32 sm:pt-40 lg:pb-36">
+    <section id="top" className="relative overflow-hidden pb-20 pt-28 sm:pt-36 lg:pb-28">
       {/* Ambient background glows */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute inset-0 bg-grid opacity-[0.2]" />
@@ -125,7 +125,7 @@ export function Hero({ onOpenDemo }: HeroProps) {
         />
       </div>
 
-      <div className="relative mx-auto grid w-full max-w-[var(--wide)] items-center gap-14 px-6 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12 lg:px-8">
+      <div className="relative mx-auto grid w-full max-w-[var(--wide)] items-start gap-12 px-6 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14 lg:px-8">
         <motion.div variants={container} initial={reduceMotion ? "show" : "hidden"} animate="show">
           <LiveCount />
 
@@ -235,49 +235,22 @@ export function Hero({ onOpenDemo }: HeroProps) {
           </div>
         </motion.div>
 
-        {/* Floating Hero Card with Radial Glow & Float */}
+        {/* Hero Card Column - Straight, Clean, and Perfectly Top-Aligned */}
         <motion.div
-          initial={reduceMotion ? undefined : { opacity: 0, y: 32, scale: 0.96 }}
+          initial={reduceMotion ? undefined : { opacity: 0, y: 20, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-          className="relative lg:pl-4"
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+          className="relative w-full lg:pt-1"
         >
           {/* Card glow behind */}
           <div
             aria-hidden
-            className="absolute inset-0 -inset-x-8 -inset-y-8 rounded-[36px] pointer-events-none opacity-90 card-glow-bg"
+            className="absolute inset-0 -inset-x-6 -inset-y-6 rounded-[36px] pointer-events-none opacity-85 card-glow-bg"
           />
 
-          <div style={reduceMotion ? undefined : { animation: "Hero_float 8s cubic-bezier(0.22, 1, 0.36, 1) infinite" }}>
+          <div className="relative">
             <VerificationCard />
           </div>
-
-          {/* Floating Liveness Chip */}
-          <motion.div
-            initial={reduceMotion ? undefined : { opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.6 }}
-            className="absolute -right-4 top-12 hidden items-center gap-2.5 rounded-full border border-[var(--hairline-strong)] bg-[rgba(16,16,22,0.9)] px-4 py-2 backdrop-blur-md shadow-xl sm:flex animate-subtle-float"
-          >
-            <Activity className="h-3.5 w-3.5 text-spotify animate-pulse" />
-            <span className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-hi font-medium">
-              Liveness Gate · Online
-            </span>
-          </motion.div>
-
-          {/* Floating Edge Node Chip */}
-          <motion.div
-            initial={reduceMotion ? undefined : { opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.75 }}
-            className="absolute -left-6 bottom-16 hidden items-center gap-2.5 rounded-full border border-[var(--hairline-strong)] bg-[rgba(16,16,22,0.9)] px-4 py-2 backdrop-blur-md shadow-xl sm:flex"
-            style={{ animation: "DesktopSection_pipFloat 6.5s cubic-bezier(0.22, 1, 0.36, 1) infinite" }}
-          >
-            <Cpu className="h-3.5 w-3.5 text-accent" />
-            <span className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-mid">
-              Edge ONNX · 192ms
-            </span>
-          </motion.div>
         </motion.div>
       </div>
     </section>

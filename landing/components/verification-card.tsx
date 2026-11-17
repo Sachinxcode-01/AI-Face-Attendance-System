@@ -72,16 +72,16 @@ export function VerificationCard() {
   }, [runVerification]);
 
   return (
-    <div className="relative mx-auto w-full max-w-[440px]">
+    <div className="relative mx-auto w-full max-w-[430px]">
       {/* Outer Card with ByTune blur, gradient border, and shadow */}
       <motion.div
-        whileHover={{ y: -4, transition: { duration: 0.3 } }}
-        className="card-bytune relative p-[18px] shadow-[0_24px_50px_-12px_rgba(0,0,0,0.8)] backdrop-blur-xl"
+        whileHover={{ y: -3, transition: { duration: 0.25 } }}
+        className="card-bytune relative p-4 sm:p-[18px] shadow-[0_24px_50px_-12px_rgba(0,0,0,0.8)] backdrop-blur-xl"
       >
         {/* Inner feed container */}
         <div className="relative overflow-hidden rounded-[18px] border border-[rgba(255,255,255,0.08)] bg-bg1">
           {/* Status Bar */}
-          <div className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-3 font-mono text-[9.5px] uppercase tracking-[0.16em] text-faint bg-[rgba(16,16,22,0.7)] backdrop-blur-md">
+          <div className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-2.5 font-mono text-[9.5px] uppercase tracking-[0.16em] text-faint bg-[rgba(16,16,22,0.7)] backdrop-blur-md">
             <span className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-spotify opacity-75" />
@@ -95,7 +95,7 @@ export function VerificationCard() {
           </div>
 
           {/* Camera Feed with Holographic HUD Overlay */}
-          <div className="relative aspect-[4/3.3] overflow-hidden bg-bg0">
+          <div className="relative aspect-[4/3] overflow-hidden bg-bg0">
             <img
               src="/hero-verification.jpg"
               alt="SmartFace live camera verification feed"
