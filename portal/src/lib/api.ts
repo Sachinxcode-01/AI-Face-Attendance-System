@@ -236,4 +236,45 @@ export const api = {
         body: JSON.stringify(data),
       }),
   },
+  devices: {
+    list: () => apiFetch<{ success: boolean; count: number; devices: any[] }>('/sessions/devices'),
+    disconnect: (id: string) =>
+      apiFetch<{ success: boolean; message: string }>(`/sessions/devices/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }),
+    logoutAll: () =>
+      apiFetch<{ success: boolean; message: string; revokedCount: number }>('/sessions/logout-all', {
+        method: 'POST',
+      }),
+  },
+  accuracy: {
+    metrics: (hours = 168) =>
+      apiFetch<{
+        success: boolean;
+        summary: {
+          totalAttempts: number;
+          successfulVerifications: number;
+          successRate: number;
+          overallAccuracy: number;
+          estimatedFar: number;
+          estimatedFrr: number;
+          biometricEngine: string;
+        };
+        failureBreakdown: Record<string, number>;
+        recentFailures: any[];
+      }>(`/api/v1/accuracy/metrics?hours=${hours}`),
+  },
+  superAdmin: {
+    colleges: () => apiFetch<{ success: boolean; count: number; colleges: any[] }>('/api/v1/super-admin/colleges'),
+    createCollege: (data: { name: string; code: string; plan?: string; adminEmail?: string }) =>
+      apiFetch('/api/v1/super-admin/colleges', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    admins: () => apiFetch<{ success: boolean; count: number; admins: any[] }>('/api/v1/super-admin/admins'),
+    globalAnalytics: () => apiFetch<{ success: boolean; platform: any }>('/api/v1/super-admin/global-analytics'),
+    globalAttendance: () => apiFetch<{ success: boolean; recentScans: any[] }>('/api/v1/super-admin/global-attendance'),
+    healthOverview: () => apiFetch<{ success: boolean; services: any }>('/api/v1/super-admin/health-overview'),
+    securityDashboard: () => apiFetch<{ success: boolean; recentAlerts: any[]; activeSessionsCount: number }>('/api/v1/super-admin/security-dashboard'),
+  },
 };

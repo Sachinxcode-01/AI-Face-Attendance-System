@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { useAttendanceLive } from '@/hooks/useAttendanceLive';
 import {
@@ -145,6 +146,13 @@ export default function AdminPortalPage() {
               <BellRing className="h-4 w-4" />
               <span>{alertDispatched ? 'Security Dispatched!' : 'Broadcast Campus Alert'}</span>
             </button>
+            <Link
+              href="/admin/super-admin"
+              className="btn-pill-glass text-xs font-semibold text-accent border-accent/30 bg-accent/10 hover:bg-accent/20 flex items-center gap-1.5"
+            >
+              <Cpu className="h-4 w-4" />
+              <span>Super Admin Plane</span>
+            </Link>
             <button
               onClick={handleExportAuditLogs}
               className="btn-pill-glass text-xs font-semibold"

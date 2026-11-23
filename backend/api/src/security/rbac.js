@@ -1,0 +1,89 @@
+const { ROLES } = require('./roles');
+const { PERMISSIONS } = require('./permissions');
+
+/**
+ * Role to Permissions Matrix mapping
+ */
+const ROLE_PERMISSIONS_MATRIX = {
+  [ROLES.STUDENT]: [
+    PERMISSIONS.ATTENDANCE_READ_OWN,
+    PERMISSIONS.ATTENDANCE_WRITE,
+    PERMISSIONS.ATTENDANCE_WRITE_FACE,
+    PERMISSIONS.ATTENDANCE_WRITE_QR,
+    PERMISSIONS.SESSION_READ,
+    PERMISSIONS.LEAVE_APPLY,
+    PERMISSIONS.LEAVE_READ_OWN,
+    PERMISSIONS.ANALYTICS_VIEW_OWN,
+    PERMISSIONS.BIOMETRIC_ENROLL,
+    PERMISSIONS.NOTIFICATION_READ
+  ],
+
+  [ROLES.PARENT]: [
+    PERMISSIONS.ATTENDANCE_READ_OWN,
+    PERMISSIONS.LEAVE_APPLY,
+    PERMISSIONS.LEAVE_READ_WARD,
+    PERMISSIONS.ANALYTICS_VIEW_OWN,
+    PERMISSIONS.NOTIFICATION_READ
+  ],
+
+  [ROLES.TEACHER]: [
+    PERMISSIONS.ATTENDANCE_READ,
+    PERMISSIONS.ATTENDANCE_WRITE,
+    PERMISSIONS.ATTENDANCE_MANAGE,
+    PERMISSIONS.SESSION_READ,
+    PERMISSIONS.SESSION_CREATE,
+    PERMISSIONS.SESSION_MANAGE,
+    PERMISSIONS.LEAVE_APPROVE,
+    PERMISSIONS.ANALYTICS_VIEW_CLASS,
+    PERMISSIONS.NOTIFICATION_READ,
+    PERMISSIONS.NOTIFICATION_BROADCAST
+  ],
+
+  [ROLES.ADMIN]: [
+    PERMISSIONS.ATTENDANCE_READ,
+    PERMISSIONS.ATTENDANCE_WRITE,
+    PERMISSIONS.ATTENDANCE_MANAGE,
+    PERMISSIONS.SESSION_READ,
+    PERMISSIONS.SESSION_CREATE,
+    PERMISSIONS.SESSION_MANAGE,
+    PERMISSIONS.LEAVE_APPROVE,
+    PERMISSIONS.LEAVE_MANAGE,
+    PERMISSIONS.ANALYTICS_VIEW_CLASS,
+    PERMISSIONS.ANALYTICS_VIEW_SYSTEM,
+    PERMISSIONS.ANALYTICS_EXPORT,
+    PERMISSIONS.USER_READ,
+    PERMISSIONS.USER_MANAGE,
+    PERMISSIONS.BIOMETRIC_ENROLL,
+    PERMISSIONS.BIOMETRIC_MANAGE,
+    PERMISSIONS.NOTIFICATION_READ,
+    PERMISSIONS.NOTIFICATION_BROADCAST,
+    PERMISSIONS.AI_STATUS_READ,
+    PERMISSIONS.AI_TRAIN
+  ],
+
+  [ROLES.SUPER_ADMIN]: Object.values(PERMISSIONS)
+};
+
+function hasPermission(userRole, requiredPermission) {
+  if (!userRole) return false;
+  const role = String(userRole).toLowerCase().trim();
+  const permissions = ROLE_PERMISSIONS_MATRIX[role] || [];
+  return permissions.includes(requiredPermission);
+}
+
+function hasAnyPermission(userRole, requiredPermissions = []) {
+  if (!userRole || !Array.isArray(requiredPermissions)) return false;
+  return requiredPermissions.some((perm) => hasPermission(userRole, perm));
+}
+
+function hasAllPermissions(userRole, requiredPermissions = []) {
+  if (!userRole || !Array.isArray(requiredPermissions)) return false;
+  return requiredPermissions.every((perm) => hasPermission(userRole, perm));
+}
+
+module.exports = {
+  ROLE_PERMISSIONS_MATRIX,
+  hasPermission,
+  hasAnyPermission,
+  hasAllPermissions
+};

@@ -102,7 +102,21 @@ const authenticate = async (req, res, next) => {
           };
         };
 
-        module.exports = {
-          authenticate,
-          requireRole
+        const { hasPermission } = require('../config/rbac');
+        const requirePermission = (permission) => {
+          return (req, res, next) => {
+            if (!req.userRole) {
+              return res.status(403).json({ detail: "Forbidden: No role assigned" });
+            }
+            if (!hasPermission(req.userRole, permission)) {
+              return res.status(403).json({ detail: `Forbidden: Missing required permission [${permission}]` });
+            }
+            next();
+          };
         };
+
+        module.exports = {
+  authenticate,
+  requireRole,
+  requirePermission
+};

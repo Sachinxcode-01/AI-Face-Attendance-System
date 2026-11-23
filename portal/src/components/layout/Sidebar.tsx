@@ -78,6 +78,17 @@ const NAV: Record<string, NavItem[]> = {
     { label: 'Generate Report', href: '/admin/reports/generate', icon: FileSpreadsheet },
     { label: 'Security', href: '/admin/security', icon: ShieldAlert },
     { label: 'System Health', href: '/admin/system-health', icon: Activity },
+    { label: 'Super Admin', href: '/admin/super-admin', icon: Settings2 },
+    { label: 'Settings', href: '/admin/settings', icon: Settings2 },
+  ],
+  super_admin: [
+    { label: 'Super Admin Console', href: '/admin/super-admin', icon: Settings2 },
+    { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { label: 'Telemetry', href: '/admin/telemetry', icon: Activity },
+    { label: 'User Directory', href: '/admin/directory', icon: Users },
+    { label: 'System Health', href: '/admin/system-health', icon: Activity },
+    { label: 'Security', href: '/admin/security', icon: ShieldAlert },
+    { label: 'Reports', href: '/admin/reports', icon: FileSpreadsheet },
     { label: 'Settings', href: '/admin/settings', icon: Settings2 },
   ],
   parent: [
@@ -95,6 +106,7 @@ const ROLE_LABEL: Record<string, string> = {
   teacher: 'Teacher Portal',
   admin: 'Admin Sentinel',
   parent: 'Parent Portal',
+  super_admin: 'Super Admin Console',
 };
 
 export function Sidebar() {

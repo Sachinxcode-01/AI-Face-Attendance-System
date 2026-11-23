@@ -5,6 +5,7 @@ const crypto = require('crypto');
 
 const Session = require('../models/Session');
 const User = require('../models/User');
+const UserSession = require('../models/UserSession');
 const notificationService = require('../services/notificationService');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { trackJob } = require('../utils/jobTracker');
@@ -142,6 +143,92 @@ router.post('/stop', authenticate, requireRole(['teacher', 'admin', 'super_admin
     });
   } catch (error) {
     reportInternalError(res, error, 'Sessions');
+  }
+});
+
+// ─── User Device Session Tracking & Remote Revocation ─────────────────
+
+/**
+ * GET /sessions/devices - Retrieve all active logged-in devices for the authenticated user
+ */
+router.get('/devices', authenticate, async (req, res) => {
+  try {
+    const userEmail = req.userEmail.toLowerCase();
+    const activeSessions = await UserSession.find({
+      userId: userEmail,
+      expiry: { $gt: new Date() }
+    }).sort({ lastActive: -1 }).lean();
+
+    const currentToken = req.headers['authorization']?.split(' ')[1];
+    const currentTokenHash = currentToken
+      ? crypto.createHash('sha256').update(currentToken).digest('hex')
+      : null;
+
+    const devices = activeSessions.map((s) => ({
+      id: s._id.toString(),
+      device: s.device || 'Unknown Browser / Device',
+      ip: s.ip || '127.0.0.1',
+      location: s.location || 'Local Network',
+      lastActive: s.lastActive || s.created_at,
+      createdAt: s.created_at,
+      isCurrent: s.tokenHash === currentTokenHash
+    }));
+
+    res.json({
+      success: true,
+      count: devices.length,
+      devices
+    });
+  } catch (error) {
+    reportInternalError(res, error, 'Sessions:Devices');
+  }
+});
+
+/**
+ * DELETE /sessions/devices/:id - Disconnect a specific remote device/session
+ */
+router.delete('/devices/:id', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, detail: 'Invalid session ID' });
+    }
+
+    const session = await UserSession.findOne({
+      _id: id,
+      userId: req.userEmail.toLowerCase()
+    });
+
+    if (!session) {
+      return res.status(404).json({ success: false, detail: 'Active session not found' });
+    }
+
+    await UserSession.deleteOne({ _id: session._id });
+
+    res.json({
+      success: true,
+      message: 'Device session successfully revoked.'
+    });
+  } catch (error) {
+    reportInternalError(res, error, 'Sessions:DisconnectDevice');
+  }
+});
+
+/**
+ * POST /sessions/logout-all - Logout from all devices and invalidate all active refresh/access tokens
+ */
+router.post('/logout-all', authenticate, async (req, res) => {
+  try {
+    const userEmail = req.userEmail.toLowerCase();
+    const result = await UserSession.deleteMany({ userId: userEmail });
+
+    res.json({
+      success: true,
+      message: 'All device sessions revoked successfully.',
+      revokedCount: result.deletedCount
+    });
+  } catch (error) {
+    reportInternalError(res, error, 'Sessions:LogoutAll');
   }
 });
 

@@ -12,6 +12,7 @@ const ROLE_PATHS: Record<string, string> = {
   teacher: '/teacher',
   admin: '/admin',
   parent: '/parent',
+  super_admin: '/admin',
 };
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {

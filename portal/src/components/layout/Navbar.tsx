@@ -7,17 +7,18 @@ import { ScanFace, LogOut } from 'lucide-react';
 import { DEMO_PROFILES } from '@/lib/demo-data';
 
 interface NavbarProps {
-  currentRole?: 'student' | 'teacher' | 'admin' | 'parent';
+  currentRole?: 'student' | 'teacher' | 'admin' | 'parent' | 'super_admin';
 }
 
 export function Navbar({ currentRole = 'student' }: NavbarProps) {
   const pathname = usePathname();
-  const profile = DEMO_PROFILES[currentRole] || DEMO_PROFILES.student;
+  const profile = DEMO_PROFILES[currentRole as keyof typeof DEMO_PROFILES] || DEMO_PROFILES.admin || DEMO_PROFILES.student;
 
   const roleNavItems = [
     { label: 'Student', href: '/student', active: pathname.startsWith('/student') },
     { label: 'Teacher', href: '/teacher', active: pathname.startsWith('/teacher') },
-    { label: 'Admin Sentinel', href: '/admin', active: pathname.startsWith('/admin') },
+    { label: 'Admin Sentinel', href: '/admin', active: pathname.startsWith('/admin') && !pathname.startsWith('/admin/super-admin') },
+    { label: 'Super Admin', href: '/admin/super-admin', active: pathname.startsWith('/admin/super-admin') },
     { label: 'Parent', href: '/parent', active: pathname.startsWith('/parent') },
   ];
 

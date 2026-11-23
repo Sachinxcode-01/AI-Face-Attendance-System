@@ -168,7 +168,7 @@ app.get('/', (req, res) => {
   res.json({ message: "SmartAttendance - Node.js API is online" });
 });
 
-app.get(['/health', '/api/health'], async (req, res) => {
+app.get(['/health', '/api/health', '/api/v1/health'], async (req, res) => {
   let dbStatus = "connected";
   try {
     const mongoose = require('mongoose');
@@ -199,6 +199,46 @@ app.get(['/health', '/api/health'], async (req, res) => {
   });
 });
 
+// Kubernetes / Docker Liveness & Readiness Probes
+app.get(['/liveness', '/api/liveness', '/api/v1/liveness'], (req, res) => {
+  res.status(200).json({ status: 'alive', uptime: process.uptime() });
+});
+
+app.get(['/readiness', '/api/readiness', '/api/v1/readiness'], async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const isDbReady = mongoose.connection.readyState === 1;
+    if (!isDbReady) {
+      return res.status(503).json({ status: 'not_ready', detail: 'Database unavailable' });
+    }
+    res.status(200).json({ status: 'ready', database: 'connected' });
+  } catch (e) {
+    res.status(503).json({ status: 'not_ready', detail: e.message });
+  }
+});
+
+const healthRoutes = require('./routes/health');
+const { register } = require('./monitoring/metrics');
+const { initScheduledJobs } = require('./jobs');
+
+// Initialize background jobs
+initScheduledJobs();
+
+// Health checks
+app.use('/health', healthRoutes);
+app.use('/api/health', healthRoutes);
+app.use('/api/v1/health', healthRoutes);
+
+// Prometheus Metrics Route
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (ex) {
+    res.status(500).end(ex.message);
+  }
+});
+
 // Import and mount routes
 const authRoutes = require('./routes/auth');
 const sessionRoutes = require('./routes/sessions');
@@ -217,42 +257,85 @@ const apiCompatRoutes = require('./routes/apiCompat');
 const analyticsRoutes = require('./routes/analytics');
 const collegeRoutes = require('./routes/colleges');
 const demoRoutes = require('./routes/demo');
+const superAdminRoutes = require('./routes/superAdmin');
+const accuracyRoutes = require('./routes/accuracy');
 
+// ─── Standard, /api, and /api/v1 API Mounts ──────────────────────────
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/v1/auth', authRoutes);
+
 app.use('/demo', demoRoutes);
 app.use('/api/demo', demoRoutes);
+app.use('/api/v1/demo', demoRoutes);
+
 app.use('/colleges', collegeRoutes);
 app.use('/api/colleges', collegeRoutes);
+app.use('/api/v1/colleges', collegeRoutes);
+
 app.use('/sessions', sessionRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/v1/sessions', sessionRoutes);
+
 app.use('/attendance', attendanceRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/v1/attendance', attendanceRoutes);
+
+app.use('/attendance/accuracy', accuracyRoutes);
+app.use('/api/attendance/accuracy', accuracyRoutes);
+app.use('/api/v1/accuracy', accuracyRoutes);
+
+app.use('/super-admin', superAdminRoutes);
+app.use('/api/super-admin', superAdminRoutes);
+app.use('/api/v1/super-admin', superAdminRoutes);
+
 app.use('/leave', leaveRoutes);
 app.use('/api/leave', leaveRoutes);
+app.use('/api/v1/leave', leaveRoutes);
+
 app.use('/security', securityRoutes);
 app.use('/api/security', securityRoutes);
+app.use('/api/v1/security', securityRoutes);
+
 app.use('/notifications', notificationRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
+
 app.use('/telemetry', telemetryRoutes);
 app.use('/api/telemetry', telemetryRoutes);
+app.use('/api/v1/telemetry', telemetryRoutes);
+
 app.use('/management', managementRoutes);
 app.use('/api/management', managementRoutes);
+app.use('/api/v1/management', managementRoutes);
+
 app.use('/teacher', teacherRoutes);
 app.use('/api/teacher', teacherRoutes);
+app.use('/api/v1/teacher', teacherRoutes);
+
 app.use('/academic', academicRoutes);
 app.use('/api/academic', academicRoutes);
+app.use('/api/v1/academic', academicRoutes);
+
 app.use('/parent', parentRoutes);
 app.use('/api/parent', parentRoutes);
+app.use('/api/v1/parent', parentRoutes);
+
 app.use('/reports', reportRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/v1/reports', reportRoutes);
+
 app.use('/api', apiCompatRoutes);
-// Analytics routes are read-only aggregates, so a short shared cache removes
-// repeated heavy pipelines without risking stale writes.
+app.use('/api/v1', apiCompatRoutes);
+
+// Analytics routes with cache
 app.use('/analytics', cacheJson(30 * 1000), analyticsRoutes);
 app.use('/api/analytics', cacheJson(30 * 1000), analyticsRoutes);
+app.use('/api/v1/analytics', cacheJson(30 * 1000), analyticsRoutes);
+
 app.use('/', aiRoutes);
 app.use('/api', aiRoutes);
+app.use('/api/v1', aiRoutes);
 
 // 404 JSON fallback handler (replaces default Express HTML 404)
 app.use((req, res, next) => {

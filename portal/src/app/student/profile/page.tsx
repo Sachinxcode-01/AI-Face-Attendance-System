@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRound, Mail, Phone, Building2, Hash, ShieldCheck, Save, CheckCircle2, ScanFace, Upload } from 'lucide-react';
+import { UserRound, Mail, Phone, Building2, Hash, ShieldCheck, Save, CheckCircle2, ScanFace, Upload, Laptop, Smartphone, Trash2, LogOut, Shield } from 'lucide-react';
 import { DEMO_PROFILES } from '@/lib/demo-data';
 import { api, ApiError } from '@/lib/api';
 
@@ -19,6 +19,45 @@ export default function StudentProfilePage() {
   const [avatar, setAvatar] = useState(profile.avatar);
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [devices, setDevices] = useState<any[]>([
+    { id: 'dev-1', deviceType: 'desktop', userAgent: 'Chrome on macOS (Current)', ipAddress: '192.168.1.42', lastActive: 'Now', current: true },
+    { id: 'dev-2', deviceType: 'mobile', userAgent: 'SmartFace Flutter App (iOS 17)', ipAddress: '10.0.4.19', lastActive: '2 hours ago', current: false },
+  ]);
+  const [deviceMsg, setDeviceMsg] = useState('');
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadDevices() {
+      try {
+        const res = await api.devices.list();
+        if (mounted && res?.devices && res.devices.length > 0) {
+          setDevices(res.devices);
+        }
+      } catch {}
+    }
+    loadDevices();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handleDisconnectDevice = async (id: string) => {
+    try {
+      await api.devices.disconnect(id);
+    } catch {}
+    setDevices((prev) => prev.filter((d) => d.id !== id));
+    setDeviceMsg('Device disconnected successfully.');
+    setTimeout(() => setDeviceMsg(''), 3000);
+  };
+
+  const handleLogoutAllDevices = async () => {
+    try {
+      await api.devices.logoutAll();
+    } catch {}
+    setDevices((prev) => prev.filter((d) => d.current));
+    setDeviceMsg('All remote sessions terminated.');
+    setTimeout(() => setDeviceMsg(''), 3000);
+  };
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,6 +188,61 @@ export default function StudentProfilePage() {
               <p>• Active session: <span className="text-accent">web-{profile.id}</span></p>
               <p>• Enrolled ArcFace vector: <span className="text-emerald-400">512-float FP16 (Encrypted HSM)</span></p>
               <p>• Hardware token: <span className="text-white">Active (UUID: dev-89a1-43ef-992a)</span></p>
+            </div>
+          </div>
+
+          {/* Active Devices & Session Management */}
+          <div className="mt-6 rounded-[18px] border border-white/[0.06] bg-surface p-5">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+              <div>
+                <h3 className="font-semibold text-hi text-sm flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-accent" /> Active Devices & Sessions
+                </h3>
+                <p className="text-[11px] text-faint">Manage hardware sessions authorized to mark attendance</p>
+              </div>
+              <Button size="sm" variant="ghost" onClick={handleLogoutAllDevices} className="text-xs text-red-400 hover:text-red-300">
+                <LogOut className="h-3.5 w-3.5 mr-1" /> Revoke Others
+              </Button>
+            </div>
+
+            {deviceMsg && (
+              <p className="mt-3 text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-lg">
+                {deviceMsg}
+              </p>
+            )}
+
+            <div className="mt-4 space-y-3">
+              {devices.map((dev) => (
+                <div key={dev.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-accent/10 text-accent">
+                      {dev.deviceType === 'mobile' ? <Smartphone className="h-4 w-4" /> : <Laptop className="h-4 w-4" />}
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-hi flex items-center gap-2">
+                        {dev.userAgent || 'Authorized Client'}
+                        {dev.current && (
+                          <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono">
+                            THIS DEVICE
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] font-mono text-faint">
+                        IP: {dev.ipAddress || '127.0.0.1'} • Active: {dev.lastActive || 'Recently'}
+                      </div>
+                    </div>
+                  </div>
+                  {!dev.current && (
+                    <button
+                      onClick={() => handleDisconnectDevice(dev.id)}
+                      className="text-faint hover:text-red-400 p-1.5 transition-colors"
+                      title="Disconnect session"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </Card>
