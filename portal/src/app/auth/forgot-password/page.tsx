@@ -5,20 +5,27 @@ import Link from 'next/link';
 import { Mail, ArrowLeft } from 'lucide-react';
 import { AuthScreenLayout, AuthInput } from '@/components/auth/AuthScreenLayout';
 import { Button } from '@/components/ui/Button';
+import { api } from '@/lib/api';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
+    setError('');
     setBusy(true);
-    setTimeout(() => {
-      setBusy(false);
+    try {
+      await api.auth.forgotPassword(email.trim());
       setSent(true);
-    }, 800);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to send reset passcode. Please check email address.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -47,6 +54,7 @@ export default function ForgotPasswordPage() {
       ) : (
         <form onSubmit={submit} className="space-y-4">
           <AuthInput label="Registered email" type="email" value={email} onChange={setEmail} placeholder="you@smartface.pro" autoComplete="email" />
+          {error && <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
           <Button type="submit" loading={busy} className="w-full py-3">
             Send Reset Link
           </Button>

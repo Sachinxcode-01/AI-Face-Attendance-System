@@ -1,11 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { CalendarDays } from 'lucide-react';
 import { MOCK_HEATMAP } from '@/lib/demo-data';
+import { api } from '@/lib/api';
+import type { HeatmapDay } from '@/lib/types';
 
 const LEVELS = [
   'bg-white/[0.04] text-faint',
@@ -16,8 +18,20 @@ const LEVELS = [
 ];
 
 export default function StudentHeatmapPage() {
-  const total = MOCK_HEATMAP.reduce((a, d) => a + d.count, 0);
-  const activeDays = MOCK_HEATMAP.filter((d) => d.count > 0).length;
+  const [heatmap, setHeatmap] = useState<HeatmapDay[]>(MOCK_HEATMAP);
+
+  useEffect(() => {
+    api.attendance.heatmap()
+      .then((data: any) => {
+        if (data && Array.isArray(data.heatmap) && data.heatmap.length > 0) {
+          setHeatmap(data.heatmap);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const total = heatmap.reduce((a, d) => a + d.count, 0);
+  const activeDays = heatmap.filter((d) => d.count > 0).length;
 
   return (
     <DashboardLayout>
@@ -45,7 +59,7 @@ export default function StudentHeatmapPage() {
       <Card className="page-enter p-6">
         <CardHeader icon={<CalendarDays className="h-5 w-5 text-accent" />} title="Last 30 Days" subtitle="Cell luminance correlates with daily gate and lecture verification count" />
         <div className="grid grid-cols-7 gap-2.5 pt-2">
-          {MOCK_HEATMAP.map((d) => (
+          {heatmap.map((d) => (
             <div
               key={d.date}
               title={`${d.date}: ${d.count} check-ins`}

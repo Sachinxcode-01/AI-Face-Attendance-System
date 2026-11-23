@@ -1,6 +1,13 @@
 import unittest
 from pydantic import ValidationError
-from smartface_pro_api.src.models.models import FaceRegisterRequest, IntruderAlert
+
+try:
+    from backend.ai.src.models.models import FaceRegisterRequest, IntruderAlert
+except (ImportError, ModuleNotFoundError):
+    try:
+        from src.models.models import FaceRegisterRequest, IntruderAlert
+    except (ImportError, ModuleNotFoundError):
+        from smartface_pro_api.src.models.models import FaceRegisterRequest, IntruderAlert
 
 
 class TestApiSecurity(unittest.TestCase):

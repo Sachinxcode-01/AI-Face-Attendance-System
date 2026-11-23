@@ -96,7 +96,7 @@ router.get('/:sessionId/qr-token', authenticate, requireRole(['teacher', 'admin'
 });
 
 // GET /sessions/active - Get currently active attendance session
-router.get('/active', async (req, res) => {
+router.get('/active', authenticate, async (req, res) => {
   try {
     const activeSession = await Session.findOne({ is_active: true }).sort({ start_time: -1 }).lean();
     if (!activeSession) {

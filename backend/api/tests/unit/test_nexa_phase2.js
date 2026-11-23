@@ -3,6 +3,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const path = require('path');
 const http = require('http');
+const mongoose = require('mongoose');
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 process.env.NODE_ENV = 'test';
@@ -21,6 +22,13 @@ const adminToken = AuthService.createAccessToken({ sub: 'admin@example.com', ema
 
 async function runTests() {
   console.log("🧪 --- Running Nexa Assistant Phase 2 Unit Tests ---");
+
+  let selfConnected = false;
+  if (mongoose.connection.readyState !== 1) {
+    const mongoUrl = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/smartface';
+    await mongoose.connect(mongoUrl, { dbName: 'smartface' });
+    selfConnected = true;
+  }
 
   const server = http.createServer(app);
   await new Promise((resolve) => server.listen(0, resolve));
@@ -165,6 +173,9 @@ async function runTests() {
     console.log("🏁 All Nexa Phase 2 unit tests passed successfully!\n");
   } finally {
     server.close();
+    if (selfConnected && mongoose.connection.readyState === 1) {
+      await mongoose.disconnect();
+    }
   }
 }
 

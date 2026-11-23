@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
@@ -9,14 +9,40 @@ import { Button } from '@/components/ui/Button';
 import { Clock, MapPin, UserRound, QrCode, ScanFace } from 'lucide-react';
 import Link from 'next/link';
 import { MOCK_TIMETABLE } from '@/lib/demo-data';
+import { api } from '@/lib/api';
+import type { TimetableSlot } from '@/lib/types';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
 export default function StudentTimetablePage() {
   const [day, setDay] = useState<(typeof DAYS)[number]>('Mon');
   const [view, setView] = useState<'day' | 'week'>('day');
+  const [slots, setSlots] = useState<TimetableSlot[]>(MOCK_TIMETABLE);
 
-  const daySlots = MOCK_TIMETABLE.filter((s) => s.day === day);
+  useEffect(() => {
+    api.academic.timetable()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((item, idx) => {
+            const rawDay = (item.day || 'Monday').slice(0, 3) as (typeof DAYS)[number];
+            const validDay = DAYS.includes(rawDay) ? rawDay : 'Mon';
+            return {
+              id: item.id || `slot_${idx}`,
+              day: validDay,
+              time: item.time || '10:00 AM - 11:30 AM',
+              subject: item.subject || 'Core Subject',
+              professor: item.teacher || item.professor || 'Faculty Member',
+              room: item.room || 'Room 401',
+              status: idx === 0 ? ('live' as const) : ('upcoming' as const),
+            };
+          });
+          setSlots(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const daySlots = slots.filter((s) => s.day === day);
 
   return (
     <DashboardLayout>
@@ -107,15 +133,15 @@ export default function StudentTimetablePage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {DAYS.map((d) => {
-            const slots = MOCK_TIMETABLE.filter((s) => s.day === d);
+            const daySlotList = slots.filter((s) => s.day === d);
             return (
               <Card key={d} className="p-5">
                 <h3 className="mb-3 font-mono text-xs uppercase tracking-wider text-accent font-semibold">{d}</h3>
-                {slots.length === 0 ? (
+                {daySlotList.length === 0 ? (
                   <p className="text-xs text-faint font-mono">No lectures</p>
                 ) : (
                   <ul className="space-y-2.5">
-                    {slots.map((s) => (
+                    {daySlotList.map((s) => (
                       <li key={s.id} className="rounded-[14px] border border-white/[0.06] bg-surface p-3 text-xs">
                         <p className="font-semibold text-hi">{s.subject}</p>
                         <p className="font-mono text-[10.5px] text-accent mt-0.5">{s.time}</p>

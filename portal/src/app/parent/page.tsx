@@ -16,17 +16,20 @@ import {
   PhoneCall
 } from 'lucide-react';
 import { DEMO_PROFILES, MOCK_SUBJECT_STATS } from '@/lib/demo-data';
+import { api } from '@/lib/api';
 
 export default function ParentPortalPage() {
   const profile = DEMO_PROFILES.parent;
   const [absenceNotice, setAbsenceNotice] = useState('');
   const [absenceSubmitted, setAbsenceSubmitted] = useState(false);
+  const [liveWards, setLiveWards] = useState<any[]>([]);
 
-  // Multi-ward linked students
-  const wards = [
+  // Multi-ward linked students default
+  const defaultWards = [
     {
       id: 'w1',
       name: profile.childName || 'Alice Smith',
+      email: 'alice.smith@smartface.pro',
       rollNo: profile.childRollNo || 'CS-2024-042',
       department: 'Computer Science & Engineering',
       status: 'In Lecture: Lab 402',
@@ -37,6 +40,7 @@ export default function ParentPortalPage() {
     {
       id: 'w2',
       name: 'Ethan Smith',
+      email: 'ethan.smith@smartface.pro',
       rollNo: 'ECE-2025-019',
       department: 'Electronics & Communication',
       status: 'Checked-in: Main Library',
@@ -49,8 +53,56 @@ export default function ParentPortalPage() {
       ],
     },
   ];
+  const wards = liveWards.length > 0 ? liveWards : defaultWards;
   const [selectedWardId, setSelectedWardId] = useState('w1');
   const activeWard = wards.find((w) => w.id === selectedWardId) || wards[0];
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchParentData() {
+      try {
+        const children = await api.parent.children();
+        if (isMounted && Array.isArray(children) && children.length > 0) {
+          const mapped = await Promise.all(
+            children.map(async (c: any, idx: number) => {
+              let stats = MOCK_SUBJECT_STATS;
+              try {
+                const liveStats = await api.parent.childStats(c.email);
+                if (liveStats && liveStats.subjects) {
+                  stats = liveStats.subjects.map((s: any) => ({
+                    subject: s.subject || 'Core Session',
+                    attended: s.present || 0,
+                    total: s.total || 0,
+                    percentage: s.total > 0 ? Math.round((s.present / s.total) * 100) : 100,
+                    color: '#10B981',
+                  }));
+                }
+              } catch {}
+              return {
+                id: `ward-${idx}`,
+                name: c.full_name || c.email,
+                email: c.email,
+                rollNo: c.student_id || 'STU-001',
+                department: c.department || 'General',
+                status: 'Checked-in',
+                location: 'Campus Biometric Gate',
+                onCampus: true,
+                stats,
+              };
+            })
+          );
+          setLiveWards(mapped);
+          setSelectedWardId(mapped[0].id);
+        }
+      } catch {
+        // Keep default demonstration wards if not authenticated as parent
+      }
+    }
+    fetchParentData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const notifications = [
     {
@@ -84,14 +136,23 @@ export default function ParentPortalPage() {
     };
   }, []);
 
-  const handleAbsenceSubmit = (e: React.FormEvent) => {
+  const handleAbsenceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!absenceNotice.trim()) return;
     if (submitTimerRef.current) {
       clearTimeout(submitTimerRef.current);
     }
+    const reasonToSend = absenceNotice;
     setAbsenceNotice('');
     setAbsenceSubmitted(true);
+    try {
+      if (activeWard.email) {
+        await api.parent.submitAbsenceNotice({
+          childEmail: activeWard.email,
+          reason: reasonToSend,
+        });
+      }
+    } catch {}
     submitTimerRef.current = setTimeout(() => {
       setAbsenceSubmitted(false);
       submitTimerRef.current = null;
@@ -201,7 +262,7 @@ export default function ParentPortalPage() {
                         </div>
 
                         <div className="space-y-3">
-                          {activeWard.stats.map((sub, idx) => (
+                          {activeWard.stats.map((sub: any, idx: number) => (
                               <div key={idx} className="flex items-center justify-between rounded-[16px] bg-white/[0.02] p-3 border border-white/5">
                                 <div>
                                   <p className="text-xs font-bold text-hi">{sub.subject}</p>

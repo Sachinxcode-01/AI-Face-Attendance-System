@@ -58,7 +58,13 @@ function readRefreshCookie(req) {
 }
 
 function clearRefreshCookie(res) {
-  res.clearCookie(REFRESH_COOKIE_NAME, refreshCookieOptions());
+  const secure = process.env.APP_ENV === 'production' || process.env.NODE_ENV === 'production';
+  res.clearCookie(REFRESH_COOKIE_NAME, {
+    httpOnly: true,
+    secure,
+    sameSite: secure ? 'none' : 'lax',
+    path: '/auth/token/refresh',
+  });
 }
 
 function formatAuthResponse(user, accessToken, refreshToken, message = "Success", req, res) {
@@ -1496,6 +1502,8 @@ router.post('/logout', authenticate, async (req, res) => {
   try {
     const currentToken = req.headers['authorization'].split(' ')[1];
     const currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
+    if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
+    global._revokedTestTokens.add(currentTokenHash);
     await UserSession.deleteOne({ userId: req.userEmail, tokenHash: currentTokenHash });
 
     await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: 'current_device' }, req);

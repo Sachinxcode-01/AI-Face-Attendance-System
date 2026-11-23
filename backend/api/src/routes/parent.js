@@ -104,4 +104,29 @@ router.get('/child/leaves/:email', authenticate, requireRole(['parent', 'admin']
   }
 });
 
+// POST /parent/child/absence-notice - submit absence note for a ward
+router.post('/child/absence-notice', authenticate, requireRole(['parent', 'admin']), async (req, res) => {
+  try {
+    const { childEmail, reason, date } = req.body;
+    if (!childEmail || !reason) {
+      return res.status(400).json({ detail: 'Child email and reason are required.' });
+    }
+    if (!(await authorizeChildAccess(req, childEmail))) {
+      return res.status(403).json({ detail: 'Forbidden: This student is not linked to your account.' });
+    }
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    const leave = await Leave.create({
+      user_id: childEmail,
+      reason: `[Parent Notice: ${req.userEmail}] ${reason}`,
+      start_date: targetDate,
+      end_date: targetDate,
+      status: 'Pending',
+      remarks: 'Submitted by parent'
+    });
+    res.status(201).json({ success: true, message: 'Absence notice recorded successfully.', leaveId: leave._id });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
 module.exports = router;

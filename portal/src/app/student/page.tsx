@@ -14,19 +14,26 @@ import {
   CalendarDays, MapPin, ArrowRight, ScanFace, QrCode,
 } from 'lucide-react';
 import { DEMO_PROFILES, MOCK_STUDENT_ATTENDANCE, MOCK_SUBJECT_STATS, MOCK_TIMETABLE } from '@/lib/demo-data';
+import { useAuth } from '@/contexts/AuthContext';
+import { api } from '@/lib/api';
 
 export default function StudentDashboardPage() {
-  const profile = DEMO_PROFILES.student;
+  const { user } = useAuth();
+  const profile = user || DEMO_PROFILES.student;
   const [loading, setLoading] = useState(true);
   const [liveCheckins, setLiveCheckins] = useState(3);
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 600);
-    const iv = setInterval(() => setLiveCheckins((n) => n + Math.floor(Math.random() * 3)), 5000);
-    return () => {
-      clearTimeout(t);
-      clearInterval(iv);
-    };
+    api.attendance.dashboard()
+      .then((data) => {
+        if (data) setDashboardStats(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+
+    const iv = setInterval(() => setLiveCheckins((n) => n + Math.floor(Math.random() * 2)), 8000);
+    return () => clearInterval(iv);
   }, []);
 
   const todaySlots = MOCK_TIMETABLE.filter((s) => s.day === 'Mon');
@@ -57,10 +64,10 @@ export default function StudentDashboardPage() {
                 <span>{profile.department}</span>
               </div>
                 <h1 className="font-display text-2xl font-extrabold text-hi sm:text-3xl">
-                  {profile.streakDays}-day attendance streak
+                  {dashboardStats?.streak ?? profile.streakDays ?? 18}-day attendance streak
                 </h1>
                   <p className="mt-1 text-sm text-mid">
-                    {profile.streakTier} tier • 6 more days until <span className="font-semibold text-amber-400">Diamond Inferno</span>
+                    {profile.streakTier || 'Golden Blaze'} tier • 6 more days until <span className="font-semibold text-amber-400">Diamond Inferno</span>
                   </p>
                 </div>
                   <div className="flex items-center gap-4 rounded-[20px] border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent p-4 sm:p-5">
@@ -69,8 +76,8 @@ export default function StudentDashboardPage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-display text-2xl font-black text-hi">{profile.streakDays} Days</span>
-                        <Badge tone="warning">{profile.streakTier}</Badge>
+                        <span className="font-display text-2xl font-black text-hi">{dashboardStats?.streak ?? profile.streakDays ?? 18} Days</span>
+                        <Badge tone="warning">{profile.streakTier || 'Golden Blaze'}</Badge>
                       </div>
                       <p className="mt-0.5 text-xs text-faint">Gamified consistency reward</p>
                     </div>
@@ -85,8 +92,8 @@ export default function StudentDashboardPage() {
               </div>
             ) : (
               <div className="page-enter mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard label="Overall Attendance" value="88.6%" delta="+2.1% this week" icon={<TrendingUp className="h-4 w-4" />} accent="text-spotify" footnote="Above mandatory 75% limit" />
-                <StatCard label="Classes Attended" value="95" delta="/ 107 total" icon={<UserCheck className="h-4 w-4" />} accent="text-accent" footnote="12 authorized absences" />
+                <StatCard label="Overall Attendance" value={dashboardStats?.overall_attendance ? `${dashboardStats.overall_attendance}%` : '88.6%'} delta="+2.1% this week" icon={<TrendingUp className="h-4 w-4" />} accent="text-spotify" footnote="Above mandatory 75% limit" />
+                <StatCard label="Classes Attended" value={String(dashboardStats?.total_present ?? 95)} delta={`/ ${dashboardStats?.total_classes ?? 107} total`} icon={<UserCheck className="h-4 w-4" />} accent="text-accent" footnote="12 authorized absences" />
                 <StatCard label="Biometric Accuracy" value="99.4%" delta="ArcFace ONNX" icon={<Sparkles className="h-4 w-4" />} accent="text-accent2" footnote="Sub-300ms verification" />
                 <StatCard label="Live Check-ins Today" value={String(liveCheckins)} delta="real-time" icon={<Bot className="h-4 w-4" />} accent="text-amber" footnote="Campus gate + classroom" />
               </div>

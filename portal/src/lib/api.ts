@@ -82,13 +82,76 @@ export const api = {
         body: JSON.stringify(data),
       }),
     profile: () => apiFetch('/auth/profile'),
+    verifyOtp: (email: string, otp: string) =>
+      apiFetch<{
+        access_token: string;
+        role: string;
+        full_name?: string;
+        user_id?: string;
+        email?: string;
+        profilePhotoUrl?: string;
+      }>('/auth/login-otp/verify', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp }),
+      }),
+    forgotPassword: (email: string) =>
+      apiFetch<{ success: boolean; message: string }>('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      }),
+    resetPassword: (data: { email: string; otp: string; new_password: string }) =>
+      apiFetch<{ success: boolean; message: string }>('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
   },
   attendance: {
     dashboard: () => apiFetch('/attendance/dashboard'),
     heatmap: () => apiFetch('/attendance/heatmap'),
+    student: (email: string) => apiFetch(`/attendance/student/${encodeURIComponent(email)}`),
+    markQr: (sessionId: string, qrCode: string, lat?: number, lng?: number) =>
+      apiFetch('/attendance/mark', {
+        method: 'POST',
+        body: JSON.stringify({
+          session_id: sessionId,
+          qr_code: qrCode,
+          latitude: lat,
+          longitude: lng,
+        }),
+      }),
+    markFace: (formData: FormData) =>
+      apiFetch('/attendance/mark/face', {
+        method: 'POST',
+        body: formData,
+      }),
+    auditLogs: () => apiFetch('/attendance/audit-logs'),
+  },
+  ai: {
+    chat: (message: string, language = 'en') =>
+      apiFetch<{ success: boolean; reply: string }>('/ai/chat', {
+        method: 'POST',
+        body: JSON.stringify({ message, language }),
+      }),
+  },
+  academic: {
+    timetable: () => apiFetch('/academic/timetable'),
+    holidays: () => apiFetch('/academic/holidays'),
+    calendar: () => apiFetch('/academic/calendar'),
   },
   sessions: {
-    active: () => apiFetch('/sessions/active'),
+    active: () => apiFetch<{ is_active: boolean; session_id?: string; teacher_id?: string; subject?: string; start_time?: string; duration?: string }>('/sessions/active'),
+  },
+  student: {
+    updateProfile: (data: { full_name?: string; phone?: string; avatar_url?: string }) =>
+      apiFetch('/auth/update-profile', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    uploadAvatar: (formData: FormData) =>
+      apiFetch<{ success: boolean; profilePhotoUrl?: string; avatar_url?: string }>('/auth/upload-avatar', {
+        method: 'POST',
+        body: formData,
+      }),
   },
   teacher: {
     dashboard: () => apiFetch('/teacher/dashboard'),
@@ -141,10 +204,36 @@ export const api = {
   },
   leave: {
     pending: () => apiFetch('/leave/admin/pending'),
+    student: (email: string) => apiFetch(`/leave/student/${encodeURIComponent(email)}`),
+    apply: (data: { user_id: string; reason: string; start_date: string; end_date: string; category?: string }) =>
+      apiFetch('/leave/apply', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
     action: (leaveId: string, status: string, remarks: string) =>
       apiFetch('/leave/action', {
         method: 'PATCH',
         body: JSON.stringify({ leave_id: leaveId, status, remarks }),
+      }),
+  },
+  admin: {
+    stats: () => apiFetch('/management/stats'),
+    threats: () => apiFetch('/management/threats'),
+    users: (search = '') =>
+      apiFetch(`/management/users${search ? `?search=${encodeURIComponent(search)}` : ''}`),
+    auditLogs: () => apiFetch('/attendance/audit-logs'),
+  },
+  parent: {
+    children: () => apiFetch<any[]>('/parent/children'),
+    childStats: (email: string) => apiFetch<any>(`/parent/child/stats/${encodeURIComponent(email)}`),
+    childAttendanceLogs: (email: string) =>
+      apiFetch<any[]>(`/parent/child/attendance-logs/${encodeURIComponent(email)}`),
+    childLeaves: (email: string) =>
+      apiFetch<any[]>(`/parent/child/leaves/${encodeURIComponent(email)}`),
+    submitAbsenceNotice: (data: { childEmail: string; reason: string; date?: string }) =>
+      apiFetch<{ success: boolean; message: string }>('/parent/child/absence-notice', {
+        method: 'POST',
+        body: JSON.stringify(data),
       }),
   },
 };

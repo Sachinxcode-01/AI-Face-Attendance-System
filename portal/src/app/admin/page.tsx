@@ -19,6 +19,7 @@ import {
   BellRing
 } from 'lucide-react';
 import { DEMO_PROFILES, MOCK_INTRUDERS, MOCK_AUDIT_LOGS } from '@/lib/demo-data';
+import { api } from '@/lib/api';
 
 export default function AdminPortalPage() {
   const profile = DEMO_PROFILES.admin;
@@ -55,13 +56,51 @@ export default function AdminPortalPage() {
     },
   });
 
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadAdminData() {
+      try {
+        const stats = (await api.admin.stats()) as any;
+        if (isMounted && stats && typeof stats.totalAttendance === 'number') {
+          setAttendanceCount(stats.totalAttendance);
+        }
+      } catch {}
+      try {
+        const threats = await api.admin.threats();
+        if (isMounted && Array.isArray(threats) && threats.length > 0) {
+          setIntruders(
+            threats.map((t: any, idx: number) => ({
+              id: t.id || `threat-${idx}`,
+              imageUrl: t.imageUrl || 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=800&auto=format&fit=crop&q=80',
+              cameraLocation: t.location || t.cameraLocation || 'Campus North Gate',
+              timestamp: t.timestamp ? new Date(t.timestamp).toLocaleTimeString() : 'Just now',
+              confidence: typeof t.confidence === 'number' ? t.confidence : 0.12,
+              status: t.status || 'Flagged',
+            }))
+          );
+        }
+      } catch {}
+    }
+    loadAdminData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleDispatchSecurity = () => {
     setAlertDispatched(true);
     setTimeout(() => setAlertDispatched(false), 4000);
   };
 
-  const handleExportAuditLogs = () => {
-    const blob = new Blob([JSON.stringify(MOCK_AUDIT_LOGS, null, 2)], { type: 'application/json' });
+  const handleExportAuditLogs = async () => {
+    let logs = MOCK_AUDIT_LOGS;
+    try {
+      const realLogs = await api.attendance.auditLogs();
+      if (Array.isArray(realLogs) && realLogs.length > 0) {
+        logs = realLogs as unknown as typeof MOCK_AUDIT_LOGS;
+      }
+    } catch {}
+    const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

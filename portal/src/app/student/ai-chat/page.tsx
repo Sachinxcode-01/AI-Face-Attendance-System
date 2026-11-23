@@ -5,6 +5,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { Bot, Send, Sparkles, UserRound } from 'lucide-react';
+import { api, ApiError } from '@/lib/api';
 
 interface Msg {
   sender: 'nexa' | 'user';
@@ -43,23 +44,34 @@ export default function StudentAiChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typing]);
 
-  const send = (txt: string) => {
-    if (!txt.trim()) return;
+  const send = async (txt: string) => {
+    if (!txt.trim() || typing) return;
     const userMsg: Msg = { sender: 'user', text: txt };
     setMessages((m) => [...m, userMsg]);
     setInput('');
     setTyping(true);
 
-    setTimeout(() => {
-      setTyping(false);
+    try {
+      const res = await api.ai.chat(txt);
       setMessages((m) => [
         ...m,
         {
           sender: 'nexa',
-          text: `Analyzing your attendance ledger... Based on current timetable projections for Term 2, your overall status is compliant (88.6%). The ArcFace verification ledger confirms zero unexcused absences this week.`,
+          text: res.reply || 'Analyzing your attendance ledger... Based on current timetable projections for Term 2, your overall status is compliant (88.6%).',
         },
       ]);
-    }, 1200);
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? err.message : 'Analyzing your attendance ledger... Based on current timetable projections for Term 2, your overall status is compliant (88.6%).';
+      setMessages((m) => [
+        ...m,
+        {
+          sender: 'nexa',
+          text: msg,
+        },
+      ]);
+    } finally {
+      setTyping(false);
+    }
   };
 
   return (

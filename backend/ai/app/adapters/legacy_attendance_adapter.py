@@ -40,8 +40,21 @@ class LegacyAttendanceAdapter:
 
     def __init__(self):
         print("[INFO] Initializing LegacyAttendanceAdapter...")
-        # Instantiating SmartAttendanceSystem loads InsightFace model and pickle encodings
-        self.system = legacy_module.SmartAttendanceSystem()
+        # If CUDA runtime DLLs are missing (e.g. error 126 on Windows),
+        # prevent ONNX Runtime from crashing by falling back gracefully.
+        cuda_path_backup = os.environ.get("CUDA_PATH")
+        try:
+            self.system = legacy_module.SmartAttendanceSystem()
+        except Exception as e:
+            if "CUDA" in str(e) and cuda_path_backup:
+                print("[WARN] CUDA provider failed to load DLLs. Retrying with CPU execution provider...")
+                os.environ.pop("CUDA_PATH", None)
+                try:
+                    self.system = legacy_module.SmartAttendanceSystem()
+                finally:
+                    os.environ["CUDA_PATH"] = cuda_path_backup
+            else:
+                raise
         print("[INFO] LegacyAttendanceAdapter ready.")
 
     @classmethod

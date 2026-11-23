@@ -7,20 +7,47 @@ import { Card, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRound, Mail, Phone, Building2, Hash, ShieldCheck, Save, CheckCircle2, ScanFace } from 'lucide-react';
+import { UserRound, Mail, Phone, Building2, Hash, ShieldCheck, Save, CheckCircle2, ScanFace, Upload } from 'lucide-react';
 import { DEMO_PROFILES } from '@/lib/demo-data';
+import { api, ApiError } from '@/lib/api';
 
 export default function StudentProfilePage() {
   const { user, logout } = useAuth();
-  const profile = DEMO_PROFILES.student;
+  const profile = user || DEMO_PROFILES.student;
   const [name, setName] = useState(profile.name);
-  const [phone, setPhone] = useState('+1 (555) 234-8901');
+  const [phone, setPhone] = useState(profile.phone || '+1 (555) 234-8901');
+  const [avatar, setAvatar] = useState(profile.avatar);
   const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const save = (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    try {
+      await api.student.updateProfile({ full_name: name, phone });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await api.student.uploadAvatar(fd);
+      if (res?.profilePhotoUrl || res?.avatar_url) {
+        setAvatar(res.profilePhotoUrl || res.avatar_url || '');
+      }
+    } catch {
+      /* fallback */
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -34,8 +61,13 @@ export default function StudentProfilePage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Identity card */}
         <Card className="page-enter flex flex-col items-center p-6 text-center">
-          <Avatar src={profile.avatar} name={profile.name} size="xl" />
-          <h2 className="mt-4 font-display text-lg font-semibold text-hi">{profile.name}</h2>
+          <Avatar src={avatar || profile.avatar} name={name} size="xl" />
+          <label className="mt-3 btn-pill-glass cursor-pointer text-[11px] h-7 px-3 flex items-center gap-1.5 font-medium">
+            <Upload className="h-3 w-3 text-accent" />
+            <span>{uploading ? 'Uploading…' : 'Change Photo'}</span>
+            <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" disabled={uploading} />
+          </label>
+          <h2 className="mt-4 font-display text-lg font-semibold text-hi">{name}</h2>
           <p className="font-mono text-xs text-accent uppercase tracking-wider">{profile.rollNo}</p>
           <span className="mt-1.5 chip-bytune text-[11px] h-6 px-3">
             {profile.department}

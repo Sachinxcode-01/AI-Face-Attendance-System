@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
@@ -9,21 +9,101 @@ import { Badge } from '@/components/ui/Badge';
 import { ScanFace, QrCode, Clock, Download, Filter } from 'lucide-react';
 import { MOCK_STUDENT_ATTENDANCE } from '@/lib/demo-data';
 import type { AttendanceRecord } from '@/lib/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { api } from '@/lib/api';
 
 const FILTERS = ['all', 'verified_face', 'verified_qr', 'late', 'absent'] as const;
 
 export default function StudentAttendancePage() {
+  const { user } = useAuth();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('all');
   const [search, setSearch] = useState('');
+  const [records, setRecords] = useState<AttendanceRecord[]>(MOCK_STUDENT_ATTENDANCE);
 
-  const rows = MOCK_STUDENT_ATTENDANCE.filter((r) => {
+  const loadAttendance = useCallback(async () => {
+    try {
+      const email = user?.email || 'alice@smartface.pro';
+      const data = (await api.attendance.student(email)) as Array<{
+        _id?: string;
+        id?: string;
+        timestamp?: string;
+        date?: string;
+        time?: string;
+        subject?: string;
+        status?: string;
+        verification_method?: string;
+        confidence?: number;
+        room?: string;
+      }>;
+
+      if (Array.isArray(data) && data.length > 0) {
+        setRecords(
+          data.map((r, i) => {
+            const rawStatus = (r.status || 'present').toLowerCase();
+            const method = (r.verification_method || '').toLowerCase();
+            let finalStatus: AttendanceRecord['status'] = 'present';
+            if (rawStatus === 'absent') finalStatus = 'absent';
+            else if (rawStatus === 'late') finalStatus = 'late';
+            else if (method === 'face') finalStatus = 'verified_face';
+            else if (method === 'qr') finalStatus = 'verified_qr';
+
+            const d = r.timestamp ? new Date(r.timestamp) : new Date();
+            return {
+              id: r.id || r._id || `att_${i}`,
+              date: r.date || d.toISOString().split('T')[0],
+              time: r.time || d.toTimeString().slice(0, 5),
+              subject: r.subject || 'Computer Science Core',
+              status: finalStatus,
+              confidence: r.confidence || 0.985,
+              room: r.room || 'Room 401',
+            };
+          })
+        );
+      }
+    } catch {
+      /* fallback to MOCK_STUDENT_ATTENDANCE */
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadAttendance();
+  }, [loadAttendance]);
+
+  const rows = records.filter((r) => {
     const okFilter = filter === 'all' || r.status === filter;
     const q = search.toLowerCase();
     const okSearch = !q || r.subject.toLowerCase().includes(q) || r.room.toLowerCase().includes(q);
     return okFilter && okSearch;
   });
 
-  const present = MOCK_STUDENT_ATTENDANCE.filter((r) => r.status !== 'absent').length;
+  const present = records.filter((r) => r.status !== 'absent').length;
+
+  const exportCsv = () => {
+    const headers = ['ID', 'Date', 'Time', 'Subject', 'Location', 'Status', 'Confidence'];
+    const csvRows = [headers.join(',')];
+    rows.forEach((r) => {
+      csvRows.push(
+        [
+          `"${r.id}"`,
+          `"${r.date}"`,
+          `"${r.time}"`,
+          `"${r.subject}"`,
+          `"${r.room}"`,
+          `"${r.status}"`,
+          `"${r.confidence || 1}"`,
+        ].join(',')
+      );
+    });
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `attendance_ledger_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <DashboardLayout>
@@ -32,7 +112,7 @@ export default function StudentAttendancePage() {
         title="Attendance History"
         subtitle="Every biometric and QR verification, searchable and exportable with cryptographic timestamps."
         actions={
-          <button className="btn-pill-glass h-9 px-4 text-xs font-medium flex items-center gap-2">
+          <button onClick={exportCsv} className="btn-pill-glass h-9 px-4 text-xs font-medium flex items-center gap-2 cursor-pointer">
             <Download className="h-3.5 w-3.5 text-accent" /> Export CSV
           </button>
         }
@@ -40,10 +120,10 @@ export default function StudentAttendancePage() {
 
       <div className="page-enter mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
-          { label: 'Total Records', value: String(MOCK_STUDENT_ATTENDANCE.length), cls: 'text-hi' },
+          { label: 'Total Records', value: String(records.length), cls: 'text-hi' },
           { label: 'Verified Present', value: String(present), cls: 'text-emerald-400' },
-          { label: 'Late Arrivals', value: String(MOCK_STUDENT_ATTENDANCE.filter((r) => r.status === 'late').length), cls: 'text-amber-400' },
-          { label: 'Absences', value: String(MOCK_STUDENT_ATTENDANCE.filter((r) => r.status === 'absent').length), cls: 'text-red-400' },
+          { label: 'Late Arrivals', value: String(records.filter((r) => r.status === 'late').length), cls: 'text-amber-400' },
+          { label: 'Absences', value: String(records.filter((r) => r.status === 'absent').length), cls: 'text-red-400' },
         ].map((s) => (
           <Card key={s.label} className="p-5">
             <p className="font-mono text-[11px] uppercase tracking-wider text-faint">{s.label}</p>

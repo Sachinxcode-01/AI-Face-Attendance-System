@@ -8,11 +8,14 @@ import { Card, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { FileCheck2, Send } from 'lucide-react';
+import { api, ApiError } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const CATEGORIES = ['Medical', 'Academic', 'Personal'] as const;
 
 export default function ApplyLeavePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('Medical');
   const [reason, setReason] = useState('');
   const [start, setStart] = useState('');
@@ -20,14 +23,29 @@ export default function ApplyLeavePage() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (!reason.trim()) return setError('Please describe the reason for leave.');
     if (!start || !end) return setError('Select both start and end dates.');
     if (new Date(end) < new Date(start)) return setError('End date must be after the start date.');
+
     setBusy(true);
-    setTimeout(() => router.push('/student/leave'), 900);
+    try {
+      const email = user?.email || 'alice@smartface.pro';
+      await api.leave.apply({
+        user_id: email,
+        reason: `[${category}] ${reason.trim()}`,
+        start_date: start,
+        end_date: end,
+        category,
+      });
+      router.push('/student/leave');
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? err.message : 'Failed to submit leave application. Please try again.';
+      setError(msg);
+      setBusy(false);
+    }
   };
 
   return (
