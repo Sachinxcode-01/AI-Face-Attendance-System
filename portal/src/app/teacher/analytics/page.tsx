@@ -34,7 +34,7 @@ export default function TeacherAnalyticsPage() {
     load();
   }, [load]);
 
-  const maxWeekly = Math.max(1, ...(analytics?.weekly_trends || []).map((w) => w.total));
+  const maxWeekly = Math.max(1, ...(analytics?.weekly_trends || []).map((w) => w.present));
 
   return (
     <DashboardLayout>
@@ -107,7 +107,7 @@ export default function TeacherAnalyticsPage() {
                 <div className="flex h-40 w-full items-end">
                   <div
                     className="w-full rounded-t-lg bg-gradient-to-t from-accent/40 to-accent transition-all duration-500"
-                    style={{ height: `${Math.max(4, (week.total / maxWeekly) * 100)}%` }}
+                    style={{ height: `${Math.max(4, (week.present / maxWeekly) * 100)}%` }}
                     title={`Week ${week.week}: ${week.present}/${week.total} present`}
                   />
                 </div>

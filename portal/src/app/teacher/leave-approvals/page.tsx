@@ -18,18 +18,27 @@ export default function TeacherLeaveApprovalsPage() {
   const [loading, setLoading] = useState(true);
   const [leaves, setLeaves] = useState<TeacherLeaveRequest[]>([]);
   const [filter, setFilter] = useState<'pending' | 'all'>('pending');
-  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [processingIds, setProcessingIds] = useState<Record<string, boolean>>({});
   const [remarks, setRemarks] = useState<Record<string, string>>({});
+  const reqGenRef = React.useRef(0);
 
   const loadLeaves = useCallback(async () => {
+    reqGenRef.current += 1;
+    const currentGen = reqGenRef.current;
     setLoading(true);
     try {
       const data = await api.leave.pending();
-      setLeaves((data as TeacherLeaveRequest[]) || []);
+      if (currentGen === reqGenRef.current) {
+        setLeaves((data as TeacherLeaveRequest[]) || []);
+      }
     } catch {
-      push('Failed to load leave requests', 'error');
+      if (currentGen === reqGenRef.current) {
+        push('Failed to load leave requests', 'error');
+      }
     } finally {
-      setLoading(false);
+      if (currentGen === reqGenRef.current) {
+        setLoading(false);
+      }
     }
   }, [push]);
 
@@ -38,7 +47,7 @@ export default function TeacherLeaveApprovalsPage() {
   }, [loadLeaves]);
 
   const act = async (leave: TeacherLeaveRequest, action: 'Approved' | 'Rejected') => {
-    setProcessingId(leave.id);
+    setProcessingIds((prev) => ({ ...prev, [leave.id]: true }));
     try {
       await api.leave.action(leave.id, action, remarks[leave.id] || '');
       push(`Leave ${action.toLowerCase()}`, 'success');
@@ -46,7 +55,11 @@ export default function TeacherLeaveApprovalsPage() {
     } catch {
       push(`Failed to ${action.toLowerCase()} leave`, 'error');
     } finally {
-      setProcessingId(null);
+      setProcessingIds((prev) => {
+        const next = { ...prev };
+        delete next[leave.id];
+        return next;
+      });
     }
   };
 
@@ -156,14 +169,14 @@ export default function TeacherLeaveApprovalsPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => act(leave, 'Approved')}
-                        disabled={processingId === leave.id}
+                        disabled={Boolean(processingIds[leave.id])}
                         className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-emerald-500/20 px-3 py-1.5 text-[11px] font-bold text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors disabled:opacity-50"
                       >
                         <CheckCircle className="h-3.5 w-3.5" /> Approve
                       </button>
                       <button
                         onClick={() => act(leave, 'Rejected')}
-                        disabled={processingId === leave.id}
+                        disabled={Boolean(processingIds[leave.id])}
                         className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/20 px-3 py-1.5 text-[11px] font-bold text-red-300 hover:bg-red-500/30 transition-colors disabled:opacity-50"
                       >
                         <XCircle className="h-3.5 w-3.5" /> Reject

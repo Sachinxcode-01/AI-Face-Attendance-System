@@ -26,20 +26,24 @@ export default function TeacherNotificationsPage() {
       push('Message is required', 'error');
       return;
     }
+    const submittedTitle = title;
+    const submittedMessage = message;
+    const submittedPriority = priority;
+
     setSending(true);
     try {
       await apiFetch('/teacher/notifications/broadcast', {
         method: 'POST',
         body: JSON.stringify({
-          title: title.trim() || 'Classroom Announcement',
-          message: message.trim(),
-          priority,
+          title: submittedTitle.trim() || 'Classroom Announcement',
+          message: submittedMessage.trim(),
+          priority: submittedPriority,
         }),
       });
       push('Broadcast sent to students', 'success');
-      setTitle('');
-      setMessage('');
-      setPriority('Normal');
+      setTitle((cur) => (cur === submittedTitle ? '' : cur));
+      setMessage((cur) => (cur === submittedMessage ? '' : cur));
+      setPriority((cur) => (cur === submittedPriority ? 'Normal' : cur));
     } catch (err) {
       push(err instanceof Error ? err.message : 'Broadcast failed', 'error');
     } finally {
@@ -69,7 +73,8 @@ export default function TeacherNotificationsPage() {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Guest lecture this Friday"
                 maxLength={120}
-                className="w-full rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-2 text-sm text-hi placeholder:text-faint focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+                disabled={sending}
+                className="w-full rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-2 text-sm text-hi placeholder:text-faint focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30 disabled:opacity-50"
               />
             </div>
             <div>
@@ -82,7 +87,8 @@ export default function TeacherNotificationsPage() {
                 required
                 rows={5}
                 maxLength={1000}
-                className="w-full rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-2 text-sm text-hi placeholder:text-faint focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
+                disabled={sending}
+                className="w-full rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-2 text-sm text-hi placeholder:text-faint focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30 disabled:opacity-50"
               />
               <p className="mt-1 text-right font-mono text-[10px] text-faint">{message.length}/1000</p>
             </div>
@@ -94,7 +100,8 @@ export default function TeacherNotificationsPage() {
                     key={p}
                     type="button"
                     onClick={() => setPriority(p)}
-                    className={`chip-bytune h-8 px-4 text-xs font-semibold ${priority === p ? 'chip-bytune-active' : ''}`}
+                    disabled={sending}
+                    className={`chip-bytune h-8 px-4 text-xs font-semibold disabled:opacity-50 ${priority === p ? 'chip-bytune-active' : ''}`}
                   >
                     {p}
                   </button>

@@ -1064,7 +1064,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Widget _buildAttendanceUnavailableCard(bool isDark) {
-    final cardBg = isDark ? const Color(0xFF141D38) : AppColors.bgLight;
+    final cardBg = isDark
+        ? const Color(0xFF141D38)
+        : AppColors.surfaceElevatedLight;
     final cardBorder = isDark
         ? AppColors.borderDark
         : AppColors.borderLight;
@@ -1079,6 +1081,15 @@ class _StudentDashboardState extends State<StudentDashboard> {
           color: cardBg,
           borderRadius: BorderRadius.circular(28),
           border: Border.all(color: cardBorder),
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? Colors.black38
+                  : const Color(0xFF8B98CE).withValues(alpha: 0.15),
+              blurRadius: 30,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1160,7 +1171,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
     final percentage = _overallPercentage!;
     final int pct = (percentage * 100).round();
-    final cardBg = isDark ? const Color(0xFF141D38) : AppColors.bgLight;
+    final cardBg = isDark
+        ? const Color(0xFF141D38)
+        : AppColors.surfaceElevatedLight;
     final cardBorder = isDark
         ? AppColors.borderDark
         : AppColors.borderLight;
@@ -1189,7 +1202,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   ? Colors.black38
                   : const Color(0xFF8B98CE).withValues(alpha: 0.15),
               blurRadius: 30,
-              offset: const Offset(0, -5),
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -1521,7 +1534,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Widget _buildSecurityCard(bool isDark) {
-    final cardBg = isDark ? const Color(0xFF141D38) : AppColors.bgLight;
+    final cardBg = isDark
+        ? const Color(0xFF141D38)
+        : AppColors.surfaceElevatedLight;
     final cardBorder = isDark
         ? AppColors.borderDark
         : AppColors.borderLight;
@@ -1544,7 +1559,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 ? Colors.black38
                 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
             blurRadius: 30,
-            offset: const Offset(0, -5),
+            offset: const Offset(0, 8),
           ),
         ],
       ),

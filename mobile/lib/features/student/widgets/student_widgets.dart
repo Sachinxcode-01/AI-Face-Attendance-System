@@ -234,7 +234,7 @@ class StudentScreenShell extends StatelessWidget {
                   BoxShadow(
                     color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
                     blurRadius: 30,
-                    offset: const Offset(0, -5),
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),

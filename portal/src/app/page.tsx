@@ -11,71 +11,18 @@ import { SmartAttendanceSection } from '@/components/landing/SmartAttendanceSect
 import { InteractiveTokenCraft } from '@/components/landing/InteractiveTokenCraft';
 import { RoleGatewaySection } from '@/components/landing/RoleGatewaySection';
 import { ArchitectureFaqSection } from '@/components/landing/ArchitectureFaqSection';
+import { SiteHeader } from '@/components/layout/SiteHeader';
 
 export default function PortalGatewayPage() {
   return (
     <div className="min-h-screen bg-[#050507] text-[#B6B6C2] flex flex-col justify-between selection:bg-[#8F8BFF]/30 selection:text-white font-sans">
-      {/* Top Header Navigation — ByTune Glass Bar */}
-      <header className="sticky top-0 z-50 w-full border-b border-white/[0.08] bg-[#050507]/85 backdrop-blur-xl py-3 px-4 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-7xl flex items-center justify-between">
-          {/* Logo & Platform Tag */}
-          <Link href="/" className="group flex items-center gap-2.5">
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[#050507] shadow-lg shadow-accent/25 transition-transform duration-200 group-hover:scale-105">
-              <ScanFace className="h-4 w-4" strokeWidth={2.4} />
-            </div>
-            <div>
-              <span className="font-display text-base font-semibold tracking-tight text-white">SmartFace</span>
-              <span className="ml-1.5 font-mono text-[9px] uppercase tracking-[0.2em] text-accent">Portal Suite</span>
-            </div>
-          </Link>
-
-          {/* Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-6 text-xs font-medium text-[#B6B6C2]">
-            <a href="#how-it-works" className="hover:text-white transition-colors">
-              How It Works
-            </a>
-            <a href="#smart-attendance" className="hover:text-white transition-colors">
-              Smart Attendance
-            </a>
-            <a href="#anti-proxy-craft" className="hover:text-white transition-colors">
-              Anti-Proxy Tech
-            </a>
-            <a href="#role-gateway" className="hover:text-white transition-colors">
-              Role Portals
-            </a>
-            <a href="#faq" className="hover:text-white transition-colors">
-              Architecture & FAQ
-            </a>
-          </nav>
-
-          {/* Right Header Action Buttons */}
-          <div className="flex items-center gap-2.5">
-            <div className="hidden sm:inline-flex items-center gap-2 chip-bytune h-7 text-xs text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="font-mono text-[10.5px]">ArcFace: Online</span>
-            </div>
-
-            <Link
-              href="/auth/login"
-              className="btn-pill-glass h-8 px-4 text-xs font-medium"
-            >
-              Sign In
-            </Link>
-
-            <a
-              href="#role-gateway"
-              className="btn-pill-accent h-8 px-4 text-xs font-semibold"
-            >
-              Role Portals
-            </a>
-          </div>
-        </div>
-      </header>
+      {/* Top Floating ByTune Capsule Navbar */}
+      <SiteHeader />
 
       {/* Main Page Content */}
-      <main className="flex-1">
+      <main id="main" className="flex-1">
         {/* Hero Section */}
-        <section className="px-4 sm:px-6 lg:px-8 pt-12 pb-16 sm:pt-20 sm:pb-24">
+        <section className="px-4 sm:px-6 lg:px-8 pt-24 pb-16 sm:pt-28 sm:pb-24 lg:pt-32">
           <div className="mx-auto max-w-7xl">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
               {/* Left Column */}

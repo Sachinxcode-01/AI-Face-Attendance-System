@@ -38,16 +38,26 @@ export default function TeacherTimetablePage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const reqGenRef = React.useRef(0);
+  const saveGenRef = React.useRef(0);
 
   const load = useCallback(async () => {
+    reqGenRef.current += 1;
+    const currentGen = reqGenRef.current;
     setLoading(true);
     try {
       const data = await api.teacher.timetable.list();
-      setSlots((data as TimetableSlot[]) || []);
+      if (currentGen === reqGenRef.current) {
+        setSlots((data as TimetableSlot[]) || []);
+      }
     } catch {
-      push('Failed to load timetable', 'error');
+      if (currentGen === reqGenRef.current) {
+        push('Failed to load timetable', 'error');
+      }
     } finally {
-      setLoading(false);
+      if (currentGen === reqGenRef.current) {
+        setLoading(false);
+      }
     }
   }, [push]);
 
@@ -56,12 +66,14 @@ export default function TeacherTimetablePage() {
   }, [load]);
 
   const openCreate = () => {
+    if (saving) return;
     setEditing(null);
     setForm(EMPTY_FORM);
     setModalOpen(true);
   };
 
   const openEdit = (slot: TimetableSlot) => {
+    if (saving) return;
     setEditing(slot);
     setForm({ subject: slot.subject, day: slot.day, time: slot.time, room: slot.room });
     setModalOpen(true);
@@ -73,6 +85,8 @@ export default function TeacherTimetablePage() {
       push('Subject and time are required', 'error');
       return;
     }
+    saveGenRef.current += 1;
+    const currentSaveGen = saveGenRef.current;
     setSaving(true);
     try {
       if (editing) {
@@ -82,7 +96,9 @@ export default function TeacherTimetablePage() {
         await api.teacher.timetable.create(form as unknown as Record<string, string>);
         push('Timetable slot created', 'success');
       }
-      setModalOpen(false);
+      if (currentSaveGen === saveGenRef.current) {
+        setModalOpen(false);
+      }
       await load();
     } catch {
       push('Failed to save slot', 'error');
@@ -117,7 +133,7 @@ export default function TeacherTimetablePage() {
             <button onClick={load} className="btn-pill-glass h-9 px-4 text-xs font-semibold flex items-center gap-2">
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             </button>
-            <Button onClick={openCreate} className="h-9 px-4 text-xs font-semibold">
+            <Button onClick={openCreate} disabled={saving} className="h-9 px-4 text-xs font-semibold">
               <Plus className="h-3.5 w-3.5" /> Add Slot
             </Button>
           </div>

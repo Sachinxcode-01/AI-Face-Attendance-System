@@ -12,6 +12,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import type { TeacherSession } from '@/lib/types';
 import { ChevronLeft, QrCode, RefreshCw, Radio, Link2, CheckCircle } from 'lucide-react';
+import QRCode from 'qrcode';
 
 export default function TeacherQrProjectorPage() {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ export default function TeacherQrProjectorPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(15);
+  const [refreshTick, setRefreshTick] = useState(0);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -44,23 +46,41 @@ export default function TeacherQrProjectorPage() {
 
   // Fetch a short-lived signed QR token for the selected session
   useEffect(() => {
-    if (!selectedId) {
-      setQrToken(null);
-      return;
-    }
+    setQrToken(null);
+    if (!selectedId) return;
+
+    let active = true;
     api.teacher.qrToken(selectedId)
       .then((data) => {
+        if (!active) return;
         const d = data as { token?: string; qr_code?: string } | null;
         setQrToken(d?.token || d?.qr_code || null);
       })
-      .catch(() => setQrToken(null));
-  }, [selectedId, countdown]);
+      .catch(() => {
+        if (!active) return;
+        setQrToken(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedId, refreshTick]);
 
   // Rotate the QR token every 15 seconds
   useEffect(() => {
-    if (!selectedId) return;
+    if (!selectedId) {
+      setCountdown(15);
+      return;
+    }
+    setCountdown(15);
     const interval = setInterval(() => {
-      setCountdown((prev) => (prev <= 1 ? 15 : prev - 1));
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          setRefreshTick((t) => t + 1);
+          return 15;
+        }
+        return prev - 1;
+      });
     }, 1000);
     return () => clearInterval(interval);
   }, [selectedId]);
@@ -77,27 +97,40 @@ export default function TeacherQrProjectorPage() {
     }
   };
 
-  // Render the token as a deterministic matrix-style visual (projection-friendly)
-  const renderQrGrid = (token: string) => {
-    const size = 21;
-    const cells: boolean[] = [];
-    let hash = 0;
-    for (let i = 0; i < token.length; i++) hash = (hash * 31 + token.charCodeAt(i)) >>> 0;
-    for (let i = 0; i < size * size; i++) {
-      hash = (hash * 1103515245 + 12345) >>> 0;
-      cells.push((hash & 0x40000000) !== 0);
+  // Render the token as a real standard QR code
+  const renderQrGrid = (token: string, sessionId: string) => {
+    try {
+      const payload = JSON.stringify({
+        type: 'attendance_qr',
+        session_id: sessionId,
+        token,
+      });
+      const qr = QRCode.create(payload, { errorCorrectionLevel: 'M' });
+      const size = qr.modules.size;
+      const cells: boolean[] = [];
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          cells.push(Boolean(qr.modules.get(r, c)));
+        }
+      }
+      return (
+        <div
+          className="grid gap-[2px] bg-white p-4 rounded-[16px] shadow-2xl max-w-[340px] mx-auto"
+          style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}
+          aria-label="QR projection visual"
+        >
+          {cells.map((on, i) => (
+            <div key={i} className={`aspect-square ${on ? 'bg-[#050507]' : 'bg-white'}`} />
+          ))}
+        </div>
+      );
+    } catch {
+      return (
+        <div className="p-8 text-center text-xs text-red-400">
+          Failed to generate QR code symbol
+        </div>
+      );
     }
-    return (
-      <div
-        className="grid gap-[2px] bg-white p-4 rounded-[16px] shadow-2xl"
-        style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}
-        aria-label="QR projection visual"
-      >
-        {cells.map((on, i) => (
-          <div key={i} className={`aspect-square ${on ? 'bg-[#050507]' : 'bg-white'}`} />
-        ))}
-      </div>
-    );
   };
 
   return (
@@ -135,7 +168,7 @@ export default function TeacherQrProjectorPage() {
             <>
               <div className="mb-6">
                 {qrToken ? (
-                  renderQrGrid(qrToken)
+                  renderQrGrid(qrToken, selectedId)
                 ) : (
                   <div className="flex h-[280px] w-[280px] items-center justify-center rounded-[16px] border border-white/10 bg-white/[0.03]">
                     <RefreshCw className="h-6 w-6 animate-spin text-faint" />

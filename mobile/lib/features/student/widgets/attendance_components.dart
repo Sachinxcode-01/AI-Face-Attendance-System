@@ -79,7 +79,7 @@ class AttendanceHealthCard extends StatelessWidget {
           BoxShadow(
             color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
             blurRadius: 30,
-            offset: const Offset(0, -5),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -373,7 +373,7 @@ class HeatmapGrid extends StatelessWidget {
           BoxShadow(
             color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
             blurRadius: 30,
-            offset: const Offset(0, -5),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -516,7 +516,7 @@ class ExportCard extends StatelessWidget {
           BoxShadow(
             color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
             blurRadius: 30,
-            offset: const Offset(0, -5),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -642,7 +642,7 @@ class LiveMonitorCard extends StatelessWidget {
           BoxShadow(
             color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
             blurRadius: 30,
-            offset: const Offset(0, -5),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -788,7 +788,7 @@ class RiskAnalysisCard extends StatelessWidget {
           BoxShadow(
             color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
             blurRadius: 30,
-            offset: const Offset(0, -5),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -913,7 +913,7 @@ class AuditLogList extends StatelessWidget {
           BoxShadow(
             color: isDark ? Colors.black38 : const Color(0xFF8B98CE).withValues(alpha: 0.15),
             blurRadius: 30,
-            offset: const Offset(0, -5),
+            offset: const Offset(0, 8),
           ),
         ],
       ),

@@ -25,9 +25,7 @@ export default function TeacherDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [dashboard, setDashboard] = useState<TeacherDashboard | null>(null);
   const [sessions, setSessions] = useState<TeacherSession[]>([]);
-  const [pendingLeaves, setPendingLeaves] = useState<TeacherLeaveRequest[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [qrToken, setQrToken] = useState<string | null>(null);
   const [qrCountdown, setQrCountdown] = useState(15);
   const [stopping, setStopping] = useState(false);
 
@@ -35,17 +33,24 @@ export default function TeacherDashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const [dash, sess, leaves] = await Promise.all([
+      const [dashRes, sessRes] = await Promise.allSettled([
         api.teacher.dashboard(),
         api.teacher.sessions(),
-        api.leave.pending(),
       ]);
-      setDashboard(dash as TeacherDashboard);
-      setSessions((sess as TeacherSession[]) || []);
-      setPendingLeaves(((leaves as TeacherLeaveRequest[]) || []).filter((l) => l.status === 'Pending' || l.status === 'Under Review'));
-      const live = ((sess as TeacherSession[]) || []).find((s) => s.is_active);
-      setActiveSessionId(live?.id ?? null);
-    } catch (err) {
+
+      if (dashRes.status === 'fulfilled') {
+        setDashboard(dashRes.value as TeacherDashboard);
+      }
+      if (sessRes.status === 'fulfilled') {
+        const sess = (sessRes.value as TeacherSession[]) || [];
+        setSessions(sess);
+        const live = sess.find((s) => s.is_active);
+        setActiveSessionId(live?.id ?? null);
+      }
+      if (dashRes.status === 'rejected' && sessRes.status === 'rejected') {
+        setError('Unable to load dashboard data. Please check your connection.');
+      }
+    } catch {
       setError('Unable to load dashboard data. Please check your connection.');
     } finally {
       setLoading(false);
@@ -64,20 +69,6 @@ export default function TeacherDashboardPage() {
     }, 1000);
     return () => clearInterval(interval);
   }, [activeSessionId]);
-
-  // Fetch QR token when active session changes
-  useEffect(() => {
-    if (!activeSessionId) {
-      setQrToken(null);
-      return;
-    }
-    api.teacher.qrToken(activeSessionId)
-      .then((data) => {
-        const d = data as { token?: string; qr_code?: string } | null;
-        setQrToken(d?.token || d?.qr_code || null);
-      })
-      .catch(() => setQrToken(null));
-  }, [activeSessionId, qrCountdown]);
 
   const toggleSession = async () => {
     if (!activeSessionId) return;
@@ -188,18 +179,17 @@ export default function TeacherDashboardPage() {
           <StatCard
             label="Session Check-in Rate"
             value={`${totalEnrolled ? Math.round((presentCount / totalEnrolled) * 100) : 0}%`}
-            delta="+6% vs last week"
             icon={<Activity className="h-4 w-4" />}
             accent="text-accent"
             footnote="ArcFace + QR combined"
           />
           <StatCard
             label="Pending Leaves"
-            value={String(pendingLeaves.length)}
+            value={String(dashboard.pending_leaves)}
             delta="awaiting review"
             icon={<FileCheck2 className="h-4 w-4" />}
             accent="text-amber"
-            footnote="1-click approve / reject"
+            footnote="Review in Leave Hub"
           />
           <StatCard
             label="Total Sessions"
@@ -207,7 +197,7 @@ export default function TeacherDashboardPage() {
             delta={`${dashboard.active_sessions} active`}
             icon={<MonitorPlay className="h-4 w-4" />}
             accent="text-accent2"
-            footnote="This semester"
+            footnote="All sessions taught"
           />
         </div>
       ) : null}
@@ -291,39 +281,23 @@ export default function TeacherDashboardPage() {
             <CardHeader
               icon={<FileCheck2 className="h-5 w-5 text-amber-400" />}
               title="Leave Approvals"
-              right={<Badge tone="warning">{pendingLeaves.length} pending</Badge>}
+              right={<Badge tone="warning">{dashboard?.pending_leaves ?? 0} pending</Badge>}
             />
             <div className="space-y-3">
-              {pendingLeaves.length === 0 && (
+              {(dashboard?.pending_leaves ?? 0) === 0 ? (
                 <p className="py-4 text-center text-xs text-faint">Inbox clear — all leave requests reviewed.</p>
-              )}
-              {pendingLeaves.slice(0, 3).map((req) => (
-                <div key={req.id} className="rounded-[16px] border border-white/5 bg-white/[0.02] p-3.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-hi">{req.user_id}</span>
-                    <Badge tone="warning">{req.status}</Badge>
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-[11px] text-mid">{req.reason}</p>
-                  <div className="mt-2.5 flex gap-2">
-                    <Link
-                      href="/teacher/leave-approvals"
-                      className="flex-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 text-[11px] font-bold hover:bg-emerald-500/30 transition-colors text-center"
-                    >
-                      Approve
-                    </Link>
-                    <Link
-                      href="/teacher/leave-approvals"
-                      className="flex-1 rounded-full border border-red-500/30 bg-red-500/20 px-3 py-1.5 text-[11px] font-bold text-red-300 hover:bg-red-500/30 transition-colors text-center"
-                    >
-                      Reject
-                    </Link>
-                  </div>
+              ) : (
+                <div className="rounded-[16px] border border-white/5 bg-white/[0.02] p-4 text-center">
+                  <p className="text-xs text-mid">
+                    You have <span className="font-bold text-hi">{dashboard?.pending_leaves}</span> pending leave {(dashboard?.pending_leaves ?? 0) === 1 ? 'request' : 'requests'} awaiting review from your classes.
+                  </p>
+                  <Link
+                    href="/teacher/leave-approvals"
+                    className="btn-pill-accent mt-3 inline-flex h-8 items-center gap-2 px-4 text-xs font-semibold"
+                  >
+                    Review in Leave Hub →
+                  </Link>
                 </div>
-              ))}
-              {pendingLeaves.length > 3 && (
-                <Link href="/teacher/leave-approvals" className="block text-center text-[11px] text-accent hover:underline">
-                  View all {pendingLeaves.length} requests →
-                </Link>
               )}
             </div>
           </Card>

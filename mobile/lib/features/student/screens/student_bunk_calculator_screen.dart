@@ -761,7 +761,9 @@ class _StudentBunkCalculatorScreenState
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF131A33) : AppColors.bgLight,
+        color: isDark
+            ? const Color(0xFF131A33)
+            : AppColors.surfaceElevatedLight,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCompliant

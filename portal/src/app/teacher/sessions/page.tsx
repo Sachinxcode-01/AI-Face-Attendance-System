@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { DataTable } from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/Badge';
-import { SkeletonCard } from '@/components/ui/Skeleton';
+import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useToast } from '@/hooks/useToast';
 import { api } from '@/lib/api';
@@ -17,16 +17,19 @@ import { Plus, MonitorPlay, QrCode, Square, RefreshCw, Activity } from 'lucide-r
 export default function TeacherSessionsPage() {
   const { toasts, push, dismiss } = useToast();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [sessions, setSessions] = useState<TeacherSession[]>([]);
   const [search, setSearch] = useState('');
   const [stoppingId, setStoppingId] = useState<string | null>(null);
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await api.teacher.sessions();
       setSessions((data as TeacherSession[]) || []);
     } catch {
+      setError('Failed to load sessions. Please check your connection.');
       push('Failed to load sessions', 'error');
     } finally {
       setLoading(false);
@@ -111,7 +114,24 @@ export default function TeacherSessionsPage() {
 
       <Card className="page-enter p-6">
         <CardHeader icon={<MonitorPlay className="h-5 w-5 text-accent" />} title="All Sessions" />
-        {sessions.length === 0 ? (
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="py-12 text-center space-y-3">
+            <p className="text-xs text-red-400">{error}</p>
+            <button
+              type="button"
+              onClick={loadSessions}
+              className="btn-pill-accent inline-flex h-8 items-center gap-2 px-4 text-xs font-semibold"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Retry
+            </button>
+          </div>
+        ) : sessions.length === 0 ? (
           <EmptyState
             icon={<Activity className="h-6 w-6" />}
             title="No sessions yet"

@@ -22,6 +22,10 @@ export default function CreateSessionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.email) {
+      push('Teacher account email is required to start a session', 'error');
+      return;
+    }
     if (!subject.trim()) {
       push('Subject is required', 'error');
       return;
@@ -29,7 +33,7 @@ export default function CreateSessionPage() {
     setSubmitting(true);
     try {
       await api.teacher.startSession(
-        user?.email || '',
+        user.email,
         subject.trim(),
         room.trim() || 'Main Hall',
         duration
@@ -37,7 +41,8 @@ export default function CreateSessionPage() {
       push('Session started successfully', 'success');
       router.push('/teacher/sessions');
     } catch (err) {
-      push('Failed to start session. Please try again.', 'error');
+      const msg = err instanceof Error ? err.message : 'Failed to start session. Please try again.';
+      push(msg, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -106,7 +111,7 @@ export default function CreateSessionPage() {
           <div className="flex items-center gap-3 pt-2">
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !user?.email || !subject.trim()}
               className="btn-pill-accent h-10 px-6 text-xs font-semibold flex items-center gap-2 disabled:opacity-50"
             >
               {submitting ? (

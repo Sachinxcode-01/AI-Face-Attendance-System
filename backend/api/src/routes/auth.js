@@ -947,6 +947,42 @@ router.post('/reset-password', limitOtpVerify, validate(resetPasswordSchema), as
   }
 });
 
+// ─── POST /auth/change-password ───────────────────────────────────
+router.post('/change-password', authenticate, validate(changePasswordSchema), async (req, res) => {
+  try {
+    const { current_password, new_password } = req.body;
+    const user = await User.findOne({ email: req.userEmail });
+    if (!user || !user.password) {
+      return res.status(404).json({ detail: "User account or password not found." });
+    }
+
+    const isMatch = await AuthService.verifyPassword(current_password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ detail: "Current password is incorrect." });
+    }
+
+    if (!new_password || new_password.length < 8) {
+      return res.status(400).json({ detail: "Password must be at least 8 characters long." });
+    }
+    const hasUpper = /[A-Z]/.test(new_password);
+    const hasLower = /[a-z]/.test(new_password);
+    const hasDigit = /[0-9]/.test(new_password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(new_password);
+    if (!hasUpper || !hasLower || !hasDigit || !hasSpecial) {
+      return res.status(400).json({ detail: "Password must contain uppercase, lowercase, numbers, and special characters." });
+    }
+
+    const hashedPassword = await AuthService.hashPassword(new_password);
+    await User.updateOne({ email: req.userEmail }, { $set: { password: hashedPassword } });
+
+    await logSecurityEvent(req.userEmail, user.role, 'PASSWORD_CHANGED', { status: 'success' }, req);
+
+    res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    reportInternalError(res, error, 'Auth');
+  }
+});
+
 router.get(['/profile', '/me'], authenticate, async (req, res) => {
   try {
     let user = null;
@@ -1044,6 +1080,10 @@ router.post('/update-profile', authenticate, async (req, res) => {
         updateFields[key] = req.body[key];
       }
     });
+
+    if (req.userRole !== 'admin' && req.userRole !== 'super_admin') {
+      delete updateFields.department;
+    }
 
     if (updateFields.profilePhotoUrl && !updateFields.avatar_url) {
       updateFields.avatar_url = updateFields.profilePhotoUrl;

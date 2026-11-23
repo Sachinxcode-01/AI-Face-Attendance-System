@@ -11,7 +11,7 @@ import { Toasts } from '@/components/ui/Toasts';
 import { useToast } from '@/hooks/useToast';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChevronLeft, UserRound, Camera, KeyRound, Loader2, CheckCircle } from 'lucide-react';
+import { ChevronLeft, UserRound, Camera, KeyRound, Loader2, CheckCircle, RefreshCw } from 'lucide-react';
 
 export default function TeacherProfilePage() {
   const { user, role } = useAuth();
@@ -19,6 +19,7 @@ export default function TeacherProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
 
@@ -36,6 +37,7 @@ export default function TeacherProfilePage() {
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const data = (await apiFetch('/auth/profile')) as Record<string, unknown>;
       setProfile(data);
@@ -45,6 +47,7 @@ export default function TeacherProfilePage() {
       setSpecialization(String(data.specialization || ''));
       setDepartment(String(data.department || ''));
     } catch {
+      setLoadError(true);
       push('Failed to load profile', 'error');
     } finally {
       setLoading(false);
@@ -89,6 +92,10 @@ export default function TeacherProfilePage() {
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!profile || loadError) {
+      push('Cannot save profile before it loads successfully', 'error');
+      return;
+    }
     setSavingProfile(true);
     try {
       await apiFetch('/auth/update-profile', {
@@ -98,7 +105,6 @@ export default function TeacherProfilePage() {
           phone: phone.trim(),
           designation: designation.trim(),
           specialization: specialization.trim(),
-          department: department.trim(),
         }),
       });
       push('Profile updated', 'success');
@@ -213,6 +219,17 @@ export default function TeacherProfilePage() {
                 <div key={i} className="h-10 w-full animate-pulse rounded-xl bg-white/[0.06]" />
               ))}
             </div>
+          ) : loadError || !profile ? (
+            <div className="py-8 text-center space-y-3">
+              <p className="text-xs text-red-400">Failed to load profile details.</p>
+              <button
+                type="button"
+                onClick={loadProfile}
+                className="btn-pill-accent inline-flex h-8 items-center gap-2 px-4 text-xs font-semibold"
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Retry
+              </button>
+            </div>
           ) : (
             <form onSubmit={saveProfile} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -228,8 +245,9 @@ export default function TeacherProfilePage() {
                 </div>
                 <div>
                   <label htmlFor="pf-dept" className="mb-1.5 block text-xs font-semibold text-mid">Department</label>
-                  <input id="pf-dept" type="text" value={department} onChange={(e) => setDepartment(e.target.value)}
-                    className="w-full rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-2 text-sm text-hi placeholder:text-faint focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30" />
+                  <input id="pf-dept" type="text" value={department} readOnly disabled
+                    className="w-full rounded-xl border border-[var(--hairline)] bg-surface/50 px-3.5 py-2 text-sm text-mid opacity-70 cursor-not-allowed" />
+                  <p className="mt-1 text-[10px] text-faint">Department assignment is staff-managed by administration.</p>
                 </div>
                 <div>
                   <label htmlFor="pf-desig" className="mb-1.5 block text-xs font-semibold text-mid">Designation</label>
@@ -242,7 +260,7 @@ export default function TeacherProfilePage() {
                 <input id="pf-spec" type="text" value={specialization} onChange={(e) => setSpecialization(e.target.value)}
                   className="w-full rounded-xl border border-[var(--hairline)] bg-surface px-3.5 py-2 text-sm text-hi placeholder:text-faint focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30" />
               </div>
-              <Button type="submit" loading={savingProfile} className="h-9 px-5 text-xs font-semibold">
+              <Button type="submit" loading={savingProfile} disabled={savingProfile || !profile || loadError} className="h-9 px-5 text-xs font-semibold">
                 Save Changes
               </Button>
             </form>

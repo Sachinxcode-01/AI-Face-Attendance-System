@@ -57,23 +57,37 @@ export default function TeacherKioskPage() {
         <Card className="page-enter lg:col-span-2 flex min-h-[420px] flex-col items-center justify-center bg-gradient-to-b from-[#0B0B12] to-[#050507] p-10 text-center">
           {selected ? (
             <>
-              <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
-                <ScanFace className="h-10 w-10 text-emerald-400" />
-                <span className="absolute inset-0 animate-ping rounded-full border border-emerald-400/30" />
-              </div>
+              {selected.is_active ? (
+                <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
+                  <ScanFace className="h-10 w-10 text-emerald-400" />
+                  <span className="absolute inset-0 animate-ping rounded-full border border-emerald-400/30" />
+                </div>
+              ) : (
+                <div className="flex h-24 w-24 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]">
+                  <ScanFace className="h-10 w-10 text-faint" />
+                </div>
+              )}
               <h2 className="mt-6 font-display text-2xl font-bold text-hi">{selected.subject}</h2>
               <p className="mt-1 font-mono text-xs text-mid">
                 {selected.room || 'Main Hall'} • {new Date(selected.start_time).toLocaleString()}
               </p>
-              <div className="mt-6 flex items-center gap-3">
-                <Badge tone="success" pulse>Accepting check-ins</Badge>
-                <Badge tone="info">
-                  <QrCode className="h-3 w-3" /> QR enabled
-                </Badge>
-              </div>
-              <p className="mt-6 max-w-sm text-xs leading-relaxed text-faint">
-                Students look at the camera or scan the projected QR code. Verification completes in under 2 seconds.
-              </p>
+              {selected.is_active ? (
+                <>
+                  <div className="mt-6 flex items-center gap-3">
+                    <Badge tone="success" pulse>Accepting check-ins</Badge>
+                    <Badge tone="info">
+                      <QrCode className="h-3 w-3" /> QR enabled
+                    </Badge>
+                  </div>
+                  <p className="mt-6 max-w-sm text-xs leading-relaxed text-faint">
+                    Students verify identity at the door station or scan the projected QR code. Verification completes in under 2 seconds.
+                  </p>
+                </>
+              ) : (
+                <div className="mt-6 flex items-center justify-center">
+                  <Badge tone="neutral">Session ended</Badge>
+                </div>
+              )}
               <p className="mt-4 font-display text-4xl font-semibold text-emerald-400">
                 {selected.students_checked_in}
                 <span className="ml-2 text-sm font-normal text-mid">/ {selected.total_enrolled_seen} checked in</span>

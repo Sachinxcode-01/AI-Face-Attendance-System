@@ -25,7 +25,7 @@ router.get('/dashboard', authenticate, requireRole('teacher'), async (req, res) 
     if (!teacher) return res.status(404).json({ detail: 'Teacher profile not found.' });
 
     const teacherSessions = await Session.find({ teacher_id: teacherEmail }).select('_id').lean();
-    const sessionIds = teacherSessions.map((session) => session._id);
+    const sessionIds = teacherSessions.map((session) => session._id.toString());
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -41,10 +41,11 @@ router.get('/dashboard', authenticate, requireRole('teacher'), async (req, res) 
     ]);
 
     // Pending leave reviews from students who attend this teacher's classes.
-    const pendingLeaves = monitoredStudents.length
+    const studentEmails = [...new Set(monitoredStudents.flatMap((email) => [email, String(email).toLowerCase()]))];
+    const pendingLeaves = studentEmails.length
       ? await Leave.countDocuments({
           status: { $in: ['Pending', 'Under Review'] },
-          user_id: { $in: monitoredStudents }
+          user_id: { $in: studentEmails }
         })
       : 0;
 
@@ -106,11 +107,12 @@ router.get('/sessions', authenticate, requireRole('teacher'), async (req, res) =
 router.get('/students', authenticate, requireRole('teacher'), async (req, res) => {
   try {
     const teacherEmail = req.userEmail;
-    const search = typeof req.query.search === 'string' ? req.query.search.trim().toLowerCase() : '';
+    const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+    const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const sort = typeof req.query.sort === 'string' ? req.query.sort : 'name';
 
     const teacherSessions = await Session.find({ teacher_id: teacherEmail }).select('_id').lean();
-    const sessionIds = teacherSessions.map((session) => session._id);
+    const sessionIds = teacherSessions.map((session) => session._id.toString());
 
     if (sessionIds.length === 0) {
       return res.json([]);
@@ -137,11 +139,11 @@ router.get('/students', authenticate, requireRole('teacher'), async (req, res) =
       {
         role: 'student',
         email: { $in: aggregated.map((row) => row._id) },
-        ...(search
+        ...(escapedSearch
           ? { $or: [
-              { full_name: { $regex: search, $options: 'i' } },
-              { email: { $regex: search, $options: 'i' } },
-              { student_id: { $regex: search, $options: 'i' } }
+              { full_name: { $regex: escapedSearch, $options: 'i' } },
+              { email: { $regex: escapedSearch, $options: 'i' } },
+              { student_id: { $regex: escapedSearch, $options: 'i' } }
             ] }
           : {})
       },
@@ -186,7 +188,7 @@ router.get('/analytics', authenticate, requireRole('teacher'), async (req, res) 
   try {
     const teacherEmail = req.userEmail;
     const teacherSessions = await Session.find({ teacher_id: teacherEmail }).select('_id').lean();
-    const sessionIds = teacherSessions.map((session) => session._id);
+    const sessionIds = teacherSessions.map((session) => session._id.toString());
 
     if (sessionIds.length === 0) {
       return res.json({
@@ -194,6 +196,7 @@ router.get('/analytics', authenticate, requireRole('teacher'), async (req, res) 
         present_marks: 0,
         face_scans: 0,
         qr_scans: 0,
+        manual_scans: 0,
         avg_confidence: null,
         attendance_rate: 0,
         weekly_trends: []
@@ -274,7 +277,7 @@ router.get('/reports/summary', authenticate, requireRole('teacher'), async (req,
     }
 
     const teacherSessions = await Session.find({ teacher_id: teacherEmail }).select('_id').lean();
-    const sessionIds = teacherSessions.map((session) => session._id);
+    const sessionIds = teacherSessions.map((session) => session._id.toString());
 
     if (sessionIds.length === 0) {
       return res.json({
@@ -291,8 +294,13 @@ router.get('/reports/summary', authenticate, requireRole('teacher'), async (req,
       });
     }
 
+    const matchQuery = { session_id: { $in: sessionIds } };
+    if (Object.keys(dateFilter).length > 0) {
+      matchQuery.timestamp = dateFilter;
+    }
+
     const [summary] = await Attendance.aggregate([
-      { $match: { session_id: { $in: sessionIds }, timestamp: dateFilter } },
+      { $match: matchQuery },
       {
         $group: {
           _id: null,
@@ -340,10 +348,10 @@ router.get('/reports/export', authenticate, requireRole('teacher'), async (req, 
     const format = (req.query.format || 'csv').toLowerCase();
 
     const teacherSessions = await Session.find({ teacher_id: teacherEmail }).select('_id subject').lean();
-    let sessionIds = teacherSessions.map((session) => session._id);
+    let sessionIds = teacherSessions.map((session) => session._id.toString());
     if (typeof session_ids === 'string' && session_ids.trim()) {
       const requested = session_ids.split(',').filter((id) => mongoose.Types.ObjectId.isValid(id));
-      sessionIds = sessionIds.filter((id) => requested.includes(id.toString()));
+      sessionIds = sessionIds.filter((id) => requested.includes(id));
     }
     const subjectById = new Map(teacherSessions.map((session) => [session._id.toString(), session.subject]));
 
@@ -359,10 +367,12 @@ router.get('/reports/export', authenticate, requireRole('teacher'), async (req, 
       if (to && !isNaN(to.getTime())) dateFilter.$lte = to;
     }
 
-    const records = await Attendance.find({
-      session_id: { $in: sessionIds },
-      timestamp: dateFilter
-    })
+    const findQuery = { session_id: { $in: sessionIds } };
+    if (Object.keys(dateFilter).length > 0) {
+      findQuery.timestamp = dateFilter;
+    }
+
+    const records = await Attendance.find(findQuery)
       .sort({ timestamp: -1 })
       .lean();
 
@@ -402,9 +412,27 @@ router.get('/reports/export', authenticate, requireRole('teacher'), async (req, 
     const contentType = format === 'xlsx'
       ? 'application/vnd.ms-excel'
       : 'text/csv';
-    const content = format === 'xlsx'
-      ? lines.join('\n').replace(/,/g, '\t').replace(/"/g, '')
-      : lines.join('\n');
+
+    let content;
+    if (format === 'xlsx') {
+      const sanitizeCell = (value) => String(value == null ? '' : value).replace(/[\t\r\n]+/g, ' ').trim();
+      const xlsxLines = [header.map(sanitizeCell).join('\t')];
+      for (const record of records) {
+        const subject = subjectById.get(String(record.session_id)) || 'Class';
+        xlsxLines.push([
+          sanitizeCell(record.timestamp.toISOString().split('T')[0]),
+          sanitizeCell(record.timestamp.toISOString().split('T')[1].slice(0, 5)),
+          sanitizeCell(record.student_email),
+          sanitizeCell(subject),
+          sanitizeCell(record.status),
+          sanitizeCell(record.verified_by),
+          sanitizeCell(record.confidence != null ? Math.round(record.confidence * 100) + '%' : '')
+        ].join('\t'));
+      }
+      content = xlsxLines.join('\n');
+    } else {
+      content = lines.join('\n');
+    }
 
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
@@ -440,10 +468,14 @@ router.post('/notifications/broadcast', authenticate, requireRole('teacher'), as
     }
 
     const finalTitle = (title || 'Classroom Announcement').trim();
-    await Promise.all(
-      audience.map((student) =>
-        notificationService
-          .createNotification(
+    const batchSize = 25;
+    let deliveredCount = 0;
+
+    for (let i = 0; i < audience.length; i += batchSize) {
+      const batch = audience.slice(i, i + batchSize);
+      const outcomes = await Promise.allSettled(
+        batch.map((student) =>
+          notificationService.createNotification(
             student.email,
             finalTitle,
             message.trim(),
@@ -451,23 +483,24 @@ router.post('/notifications/broadcast', authenticate, requireRole('teacher'), as
             resolvedPriority,
             { sender: teacherEmail }
           )
-          .catch(() => {})
-      )
-    );
+        )
+      );
+      deliveredCount += outcomes.filter((outcome) => outcome.status === 'fulfilled').length;
+    }
 
     try {
       await AttendanceAuditLog.create({
         actor_email: teacherEmail,
         role: req.userRole,
         action: 'BROADCAST_SENT',
-        details: { recipients: audience.length, priority: resolvedPriority },
+        details: { recipients: deliveredCount, priority: resolvedPriority },
         ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
       });
     } catch (_) {}
 
     res.json({
       success: true,
-      delivered: audience.length,
+      delivered: deliveredCount,
       title: finalTitle,
       priority: resolvedPriority
     });

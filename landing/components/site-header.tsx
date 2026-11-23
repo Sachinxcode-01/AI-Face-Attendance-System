@@ -26,6 +26,9 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
   const portalTriggerRef = useRef<HTMLButtonElement>(null);
   const splitBtnRef = useRef<HTMLDivElement>(null);
   const mobileCardRef = useRef<HTMLDivElement>(null);
+  const toggleButtonRef = useRef<HTMLButtonElement>(null);
+  const brandLinkRef = useRef<HTMLAnchorElement>(null);
+  const prevMobileOpen = useRef(mobileOpen);
 
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -81,6 +84,99 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
     };
   }, []);
 
+  // Restore focus to menu toggle when modal drawer is dismissed
+  useEffect(() => {
+    if (prevMobileOpen.current && !mobileOpen) {
+      toggleButtonRef.current?.focus();
+    }
+    prevMobileOpen.current = mobileOpen;
+  }, [mobileOpen]);
+
+  // Move focus into the drawer modal on open
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const focusTimer = window.setTimeout(() => {
+      if (!mobileCardRef.current) return;
+      const focusable = mobileCardRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length > 0) {
+        focusable[0].focus();
+      } else {
+        mobileCardRef.current.focus();
+      }
+    }, 50);
+    return () => window.clearTimeout(focusTimer);
+  }, [mobileOpen]);
+
+  // Make background controls inert while mobile drawer is open
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const inertTargets: HTMLElement[] = [];
+    const mainEl = document.getElementById("main");
+    if (mainEl) inertTargets.push(mainEl);
+
+    const footerEl = document.querySelector("footer");
+    if (footerEl) inertTargets.push(footerEl as HTMLElement);
+
+    const stickyCta = document.querySelector('[role="region"][aria-label="Quick mobile actions"]');
+    if (stickyCta) inertTargets.push(stickyCta as HTMLElement);
+
+    if (brandLinkRef.current) inertTargets.push(brandLinkRef.current);
+    if (dropdownRef.current) inertTargets.push(dropdownRef.current);
+
+    inertTargets.forEach((el) => {
+      el.setAttribute("inert", "");
+      (el as unknown as { inert: boolean }).inert = true;
+    });
+
+    return () => {
+      inertTargets.forEach((el) => {
+        el.removeAttribute("inert");
+        (el as unknown as { inert: boolean }).inert = false;
+      });
+    };
+  }, [mobileOpen]);
+
+  // Contain Tab and Shift+Tab navigation within the mobile drawer dialog
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+
+      if (!mobileCardRef.current) return;
+      const focusable = mobileCardRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first || !mobileCardRef.current.contains(document.activeElement)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last || !mobileCardRef.current.contains(document.activeElement)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileOpen]);
+
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50 flex justify-center py-2.5 sm:py-3.5 px-3 pointer-events-none">
@@ -98,6 +194,7 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
 
           {/* Brand */}
           <a
+            ref={brandLinkRef}
             href="/"
             className="flex items-center gap-2 sm:gap-2.5 text-hi shrink-0 cursor-pointer text-decoration-none group"
             aria-label="SmartFace home"
@@ -228,9 +325,12 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
 
             {/* Mobile Menu Toggle Button */}
             <button
+              ref={toggleButtonRef}
               type="button"
               onClick={() => setMobileOpen((open) => !open)}
               aria-expanded={mobileOpen}
+              aria-haspopup="dialog"
+              aria-controls="mobile-nav-dialog"
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-hi transition active:scale-95 hover:bg-white/[0.08] lg:hidden"
             >
@@ -258,11 +358,16 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
             {/* Floating Dropdown Card */}
             <motion.div
               ref={mobileCardRef}
+              id="mobile-nav-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mobile Navigation"
+              tabIndex={-1}
               initial={{ opacity: 0, y: -8, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.98 }}
               transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed inset-x-3.5 top-[64px] sm:top-[70px] z-50 mx-auto max-w-[400px] rounded-[22px] border border-[var(--hairline-strong)] bg-[#0e0e14]/95 p-4 sm:p-5 shadow-[0_24px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl lg:hidden pointer-events-auto"
+              className="fixed inset-x-3.5 top-[64px] sm:top-[70px] z-50 mx-auto max-w-[400px] rounded-[22px] border border-[var(--hairline-strong)] bg-[#0e0e14]/95 p-4 sm:p-5 shadow-[0_24px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl lg:hidden pointer-events-auto outline-none"
             >
               {/* Navigation Links */}
               <nav aria-label="Mobile Navigation" className="flex flex-col gap-0.5">

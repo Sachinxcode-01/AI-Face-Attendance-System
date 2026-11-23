@@ -20,16 +20,25 @@ export default function TeacherRosterPage() {
   const [students, setStudents] = useState<TeacherStudent[]>([]);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'name' | 'rate'>('name');
+  const reqIdRef = React.useRef(0);
 
   const loadStudents = useCallback(async () => {
+    reqIdRef.current += 1;
+    const currentId = reqIdRef.current;
     setLoading(true);
     try {
       const data = await api.teacher.students(search);
-      setStudents((data as TeacherStudent[]) || []);
+      if (currentId === reqIdRef.current) {
+        setStudents((data as TeacherStudent[]) || []);
+      }
     } catch {
-      push('Failed to load students', 'error');
+      if (currentId === reqIdRef.current) {
+        push('Failed to load students', 'error');
+      }
     } finally {
-      setLoading(false);
+      if (currentId === reqIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [push, search]);
 
@@ -37,6 +46,11 @@ export default function TeacherRosterPage() {
     const t = setTimeout(loadStudents, 250);
     return () => clearTimeout(t);
   }, [loadStudents]);
+
+  const sortedStudents = [...students].sort((a, b) => {
+    if (sort === 'rate') return b.attendance_rate - a.attendance_rate;
+    return a.full_name.localeCompare(b.full_name);
+  });
 
   return (
     <DashboardLayout>
@@ -56,7 +70,7 @@ export default function TeacherRosterPage() {
                 className="h-9 w-56 rounded-full border border-[var(--hairline)] bg-surface pl-9 pr-3.5 text-xs text-hi placeholder:text-faint transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
               />
             </div>
-            <button onClick={loadStudents} className="btn-pill-glass h-9 px-4 text-xs font-semibold flex items-center gap-2">
+            <button onClick={loadStudents} aria-label="Refresh students" className="btn-pill-glass h-9 px-4 text-xs font-semibold flex items-center gap-2">
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
@@ -178,7 +192,7 @@ export default function TeacherRosterPage() {
                 ),
               },
             ]}
-            rows={students}
+            rows={sortedStudents}
             search={search}
             onSearch={setSearch}
             searchPlaceholder="Search students…"

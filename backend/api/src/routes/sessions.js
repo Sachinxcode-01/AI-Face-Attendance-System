@@ -13,13 +13,14 @@ const reportInternalError = require('../utils/httpError');
 
 router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admin']), async (req, res) => {
   try {
-    const teacherEmail = typeof req.body.teacher_email === 'string' ? req.body.teacher_email.trim().toLowerCase() : '';
+    const providedTeacherEmail = typeof req.body.teacher_email === 'string' ? req.body.teacher_email.trim().toLowerCase() : '';
+    const teacherEmail = providedTeacherEmail || (req.userEmail ? req.userEmail.toLowerCase() : '');
     const subject = typeof req.body.subject === 'string' ? req.body.subject.trim() : '';
     if (!teacherEmail || teacherEmail.length > 254 || !subject || subject.length > 120) {
       return res.status(400).json({ detail: 'A valid teacher email and subject are required.' });
     }
 
-    if (req.userEmail.toLowerCase() !== teacherEmail && !['admin', 'super_admin'].includes(req.userRole.toLowerCase())) {
+    if (providedTeacherEmail && req.userEmail.toLowerCase() !== providedTeacherEmail && !['admin', 'super_admin'].includes(req.userRole.toLowerCase())) {
       return res.status(403).json({ detail: "Forbidden: Cannot start session on behalf of another teacher." });
     }
     if (!await User.exists({ email: teacherEmail, role: 'teacher' })) {
