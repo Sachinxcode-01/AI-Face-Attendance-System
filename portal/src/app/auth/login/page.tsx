@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, Mail, Lock, Chrome, Github, GraduationCap, Users, ShieldCheck, HeartHandshake } from 'lucide-react';
@@ -17,7 +17,7 @@ const ROLE_BUTTONS: { role: UserRole; label: string; icon: React.ElementType; hi
   { role: 'parent', label: 'Parent', icon: HeartHandshake, hint: 'sarah.smith@parent.net' },
 ];
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { role: currentRole, login, loginWithCredentials } = useAuth();
@@ -138,5 +138,13 @@ export default function LoginPage() {
         </Link>
       </div>
     </AuthScreenLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#050507]" />}>
+      <LoginForm />
+    </Suspense>
   );
 }
