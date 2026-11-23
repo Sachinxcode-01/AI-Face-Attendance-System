@@ -32,7 +32,7 @@ async function runTests() {
 
   if (mongoose.connection.readyState === 0) {
     const mongoUrl = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/smartface';
-    await mongoose.connect(mongoUrl);
+    await mongoose.connect(mongoUrl, { dbName: 'smartface' });
     selfConnected = true;
   } else if (mongoose.connection.readyState === 2) {
     await new Promise((resolve, reject) => {

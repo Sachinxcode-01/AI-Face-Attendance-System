@@ -1490,15 +1490,13 @@ router.post('/sessions/logout-all', authenticate, async (req, res) => {
     const currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
 
     // Delete all sessions for this user EXCEPT the current one
-    if (process.env.NODE_ENV === 'test') {
-      const otherSessions = await UserSession.find({
-        userId: req.userEmail,
-        tokenHash: { $ne: currentTokenHash }
-      }).select('tokenHash').lean();
-      if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
-      for (const s of otherSessions) {
-        if (s.tokenHash) global._revokedTestTokens.add(s.tokenHash);
-      }
+    const otherSessions = await UserSession.find({
+      userId: req.userEmail,
+      tokenHash: { $ne: currentTokenHash }
+    }).select('tokenHash').lean();
+    if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
+    for (const s of otherSessions) {
+      if (s.tokenHash) global._revokedTestTokens.add(s.tokenHash);
     }
     await UserSession.deleteMany({
       userId: req.userEmail,
@@ -1519,10 +1517,8 @@ router.post('/logout', authenticate, async (req, res) => {
   try {
     const currentToken = req.headers['authorization'].split(' ')[1];
     const currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
-    if (process.env.NODE_ENV === 'test') {
-      if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
-      global._revokedTestTokens.add(currentTokenHash);
-    }
+    if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
+    global._revokedTestTokens.add(currentTokenHash);
     await UserSession.deleteOne({ userId: req.userEmail, tokenHash: currentTokenHash });
 
     await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: 'current_device' }, req);
@@ -1543,7 +1539,7 @@ router.delete('/sessions/:id', authenticate, async (req, res) => {
     if (!sessionToDelete) {
       return res.status(404).json({ detail: "Session not found" });
     }
-    if (process.env.NODE_ENV === 'test' && sessionToDelete.tokenHash) {
+    if (sessionToDelete.tokenHash) {
       if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
       global._revokedTestTokens.add(sessionToDelete.tokenHash);
     }
