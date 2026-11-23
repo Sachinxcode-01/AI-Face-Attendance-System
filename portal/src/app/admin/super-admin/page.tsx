@@ -231,10 +231,10 @@ export default function SuperAdminPage() {
           </button>
         ))}
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={loadData} disabled={loading}>
+          <Button variant="ghost" className="px-3 py-1.5 text-xs" onClick={loadData} disabled={loading}>
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Sync
           </Button>
-          <Button size="sm" onClick={() => setShowCreateModal(true)}>
+          <Button className="px-3 py-1.5 text-xs" onClick={() => setShowCreateModal(true)}>
             <Plus className="h-3.5 w-3.5" /> Onboard College
           </Button>
         </div>
@@ -279,7 +279,7 @@ export default function SuperAdminPage() {
                     <td className="py-3.5 px-4 font-mono text-hi">{col.activeStudents.toLocaleString()}</td>
                     <td className="py-3.5 px-4 font-mono text-mid">{col.campuses}</td>
                     <td className="py-3.5 px-4">
-                      <Badge variant="success">Operational</Badge>
+                      <Badge tone="success">Operational</Badge>
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <button className="text-xs font-mono text-accent hover:underline">Manage Partition</button>
@@ -437,7 +437,7 @@ export default function SuperAdminPage() {
               <div key={i} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-semibold text-hi text-xs">{srv.name}</span>
-                  <Badge variant="success">{srv.status}</Badge>
+                  <Badge tone="success">{srv.status}</Badge>
                 </div>
                 <div className="text-[11px] font-mono text-faint mb-1">Latency: <span className="text-accent">{srv.latency}</span></div>
                 <div className="text-[10px] font-mono text-mid bg-black/40 p-1.5 rounded">{srv.probe}</div>
@@ -549,10 +549,10 @@ export default function SuperAdminPage() {
                 </select>
               </div>
               <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
-                <Button variant="ghost" size="sm" type="button" onClick={() => setShowCreateModal(false)}>
+                <Button variant="ghost" className="px-3 py-1.5 text-xs" type="button" onClick={() => setShowCreateModal(false)}>
                   Cancel
                 </Button>
-                <Button size="sm" type="submit">
+                <Button className="px-3 py-1.5 text-xs" type="submit">
                   Provision Tenant
                 </Button>
               </div>

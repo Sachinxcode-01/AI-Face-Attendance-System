@@ -200,7 +200,7 @@ export default function StudentProfilePage() {
                 </h3>
                 <p className="text-[11px] text-faint">Manage hardware sessions authorized to mark attendance</p>
               </div>
-              <Button size="sm" variant="ghost" onClick={handleLogoutAllDevices} className="text-xs text-red-400 hover:text-red-300">
+              <Button variant="ghost" onClick={handleLogoutAllDevices} className="px-3 py-1.5 text-xs text-red-400 hover:text-red-300">
                 <LogOut className="h-3.5 w-3.5 mr-1" /> Revoke Others
               </Button>
             </div>
