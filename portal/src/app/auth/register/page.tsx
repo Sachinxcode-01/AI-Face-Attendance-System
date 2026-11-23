@@ -18,7 +18,7 @@ const ROLES: { value: UserRole; label: string; icon: React.ElementType }[] = [
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<UserRole>('student');
@@ -26,18 +26,49 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!name.trim()) {
+      setError('Full name is required.');
+      return;
+    }
+    if (!email.trim()) {
+      setError('Email address is required.');
+      return;
+    }
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
       return;
     }
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+    if (!hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+      setError('Password must contain uppercase, lowercase, number, and special character.');
+      return;
+    }
+
     setBusy(true);
-    // Demo: simulate registration then auto-login as the chosen role.
-    setTimeout(() => {
-      login(role);
-    }, 800);
+    try {
+      const res = await register({
+        full_name: name.trim(),
+        email: email.trim(),
+        role,
+        password,
+      });
+      setBusy(false);
+      if (res.success) {
+        router.push(`/${role}`);
+      } else {
+        setError(res.error || 'Registration failed. Please try again.');
+      }
+    } catch {
+      setBusy(false);
+      setError('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (
@@ -65,11 +96,10 @@ export default function RegisterPage() {
                 key={value}
                 type="button"
                 onClick={() => setRole(value)}
-                className={`flex flex-col items-center gap-1.5 rounded-[14px] border p-2.5 text-[10.5px] font-semibold transition-all cursor-pointer ${
-                  role === value
+                className={`flex flex-col items-center gap-1.5 rounded-[14px] border p-2.5 text-[10.5px] font-semibold transition-all cursor-pointer ${role === value
                     ? 'border-accent bg-accent/15 text-white shadow-[0_0_12px_rgba(143,139,255,0.2)]'
                     : 'border-white/[0.08] bg-surface text-mid hover:border-white/20'
-                }`}
+                  }`}
               >
                 <Icon className={`h-4 w-4 ${role === value ? 'text-accent' : 'text-faint'}`} />
                 {label}

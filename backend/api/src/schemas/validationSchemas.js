@@ -43,6 +43,15 @@ const changePasswordSchema = z.object({
   new_password: z.string().min(8, 'New password must be at least 8 characters')
 }).passthrough();
 
+const demoRequestSchema = z.object({
+  fullName: z.string().min(2, 'Name must be at least 2 characters').max(120).trim(),
+  email: z.string().email('Invalid email address').max(254).toLowerCase().trim(),
+  institution: z.string().min(1, 'Institution / Organization name is required').max(200).trim(),
+  campusSize: z.string().min(1, 'Campus size is required').max(100).trim(),
+  phone: z.string().max(30).optional().or(z.literal('')),
+  notes: z.string().max(1000).optional().or(z.literal(''))
+}).passthrough();
+
 // ── Attendance Schemas ────────────────────────────────────────────────────────
 const attendanceMarkSchema = z.object({
   session_id: z.string().optional(),
@@ -84,5 +93,6 @@ module.exports = {
   attendanceMarkSchema,
   sessionCreateSchema,
   leaveApplySchema,
-  leaveActionSchema
+  leaveActionSchema,
+  demoRequestSchema
 };

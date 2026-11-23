@@ -112,10 +112,19 @@ const httpSecurityHeaders = (req, res, next) => {
 app.use(httpSecurityHeaders);
 
 // ─── Middleware Stack ───────────────────────────────────────────────
+const defaultOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3001',
+  'https://ai-face-attendance-beta.vercel.app',
+  'https://ai-face-attendance-system-portal.vercel.app',
+];
 const originsSource = process.env.CORS_ORIGINS || process.env.CORS_ORIGIN;
-const allowedOrigins = originsSource 
-  ? originsSource.split(',').map(o => o.trim()) 
-  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+const parsedOrigins = originsSource
+  ? originsSource.split(',').map(o => o.trim()).filter(Boolean)
+  : [];
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...parsedOrigins]));
 
 app.use(cors({
   origin: (reqOrigin, callback) => {
@@ -173,7 +182,7 @@ app.get(['/health', '/api/health'], async (req, res) => {
   }
   const emailProvider = process.env.EMAIL_PROVIDER || 'resend';
   const emailConfigured = Boolean(process.env.RESEND_API_KEY || process.env.BREVO_API_KEY);
-  
+
   const isHealthy = dbStatus === "connected";
   res.status(isHealthy ? 200 : 503).json({
     success: isHealthy,
@@ -207,9 +216,12 @@ const reportRoutes = require('./routes/reports');
 const apiCompatRoutes = require('./routes/apiCompat');
 const analyticsRoutes = require('./routes/analytics');
 const collegeRoutes = require('./routes/colleges');
+const demoRoutes = require('./routes/demo');
 
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/demo', demoRoutes);
+app.use('/api/demo', demoRoutes);
 app.use('/colleges', collegeRoutes);
 app.use('/api/colleges', collegeRoutes);
 app.use('/sessions', sessionRoutes);

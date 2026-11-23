@@ -53,9 +53,33 @@ export async function apiFetch<T = unknown>(
 export const api = {
   auth: {
     login: (email: string, password: string) =>
-      apiFetch('/auth/login-password', {
+      apiFetch<{
+        access_token: string;
+        role: string;
+        full_name?: string;
+        user_id?: string;
+        email?: string;
+        profilePhotoUrl?: string;
+      }>('/auth/login-password', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
+      }),
+    register: (data: {
+      email: string;
+      password: string;
+      full_name: string;
+      role: string;
+    }) =>
+      apiFetch<{
+        access_token: string;
+        role: string;
+        full_name?: string;
+        user_id?: string;
+        email?: string;
+        profilePhotoUrl?: string;
+      }>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(data),
       }),
     profile: () => apiFetch('/auth/profile'),
   },

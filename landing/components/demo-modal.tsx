@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2, ScanFace, X } from "lucide-react";
+import { API_BASE_URL } from "@/lib/constants";
 
 interface DemoModalProps {
   isOpen: boolean;
@@ -40,6 +41,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [honeypot, setHoneypot] = useState("");
   const mountTime = useRef(Date.now());
   const firstFieldRef = useRef<HTMLInputElement>(null);
@@ -152,13 +154,44 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
     }
 
     setIsSubmitting(true);
+    setSubmitError(null);
 
-    // Simulate network dispatch
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/demo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: formData.fullName.trim(),
+          email: formData.email.trim(),
+          institution: formData.institution.trim(),
+          campusSize: formData.campusSize,
+          phone: formData.phone.trim() || undefined,
+          notes: formData.notes.trim() || undefined,
+        }),
+      });
 
-    setIsSubmitting(false);
-    onClose();
-    router.push("/thank-you");
+      if (!res.ok) {
+        let msg = "Could not schedule walkthrough. Please try again shortly.";
+        try {
+          const body = await res.json();
+          if (body?.detail) msg = body.detail;
+        } catch {
+          /* fallback to generic */
+        }
+        throw new Error(msg);
+      }
+
+      setIsSubmitting(false);
+      onClose();
+      router.push("/thank-you");
+    } catch (err: unknown) {
+      setIsSubmitting(false);
+      setSubmitError(
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred. Please try again."
+      );
+    }
   };
 
   return (
@@ -233,11 +266,10 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               placeholder="Dr. Eleanor Vance"
               aria-invalid={!!errors.fullName}
               aria-describedby={errors.fullName ? "fullName-error" : undefined}
-              className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${
-                errors.fullName && touched.fullName
+              className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${errors.fullName && touched.fullName
                   ? "border-red-500/70 focus:border-red-500 focus:ring-red-500/30"
                   : "border-[var(--hairline)] focus:border-accent focus:ring-accent/30"
-              }`}
+                }`}
             />
             {errors.fullName && touched.fullName && (
               <p id="fullName-error" className="mt-1 flex items-center gap-1.5 text-[12px] text-red-400">
@@ -264,11 +296,10 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 placeholder="vance@cambridge.edu"
                 aria-invalid={!!errors.email}
                 aria-describedby={errors.email ? "email-error" : undefined}
-                className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${
-                  errors.email && touched.email
+                className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${errors.email && touched.email
                     ? "border-red-500/70 focus:border-red-500 focus:ring-red-500/30"
                     : "border-[var(--hairline)] focus:border-accent focus:ring-accent/30"
-                }`}
+                  }`}
               />
               {errors.email && touched.email && (
                 <p id="email-error" className="mt-1 flex items-center gap-1.5 text-[12px] text-red-400">
@@ -292,11 +323,10 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 placeholder="+1 (555) 019-2834"
                 aria-invalid={!!errors.phone}
                 aria-describedby={errors.phone ? "phone-error" : undefined}
-                className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${
-                  errors.phone && touched.phone
+                className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${errors.phone && touched.phone
                     ? "border-red-500/70 focus:border-red-500 focus:ring-red-500/30"
                     : "border-[var(--hairline)] focus:border-accent focus:ring-accent/30"
-                }`}
+                  }`}
               />
               {errors.phone && touched.phone && (
                 <p id="phone-error" className="mt-1 flex items-center gap-1.5 text-[12px] text-red-400">
@@ -324,11 +354,10 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 placeholder="Massachusetts Institute of Tech"
                 aria-invalid={!!errors.institution}
                 aria-describedby={errors.institution ? "institution-error" : undefined}
-                className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${
-                  errors.institution && touched.institution
+                className={`mt-1.5 w-full rounded-xl border bg-white/[0.03] px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${errors.institution && touched.institution
                     ? "border-red-500/70 focus:border-red-500 focus:ring-red-500/30"
                     : "border-[var(--hairline)] focus:border-accent focus:ring-accent/30"
-                }`}
+                  }`}
               />
               {errors.institution && touched.institution && (
                 <p id="institution-error" className="mt-1 flex items-center gap-1.5 text-[12px] text-red-400">
@@ -351,11 +380,10 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 onBlur={handleBlur}
                 aria-invalid={!!errors.campusSize}
                 aria-describedby={errors.campusSize ? "campusSize-error" : undefined}
-                className={`mt-1.5 w-full rounded-xl border bg-bg1 px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${
-                  errors.campusSize && touched.campusSize
+                className={`mt-1.5 w-full rounded-xl border bg-bg1 px-3.5 py-2.5 text-[14px] text-hi placeholder:text-faint transition focus:outline-none focus:ring-1 ${errors.campusSize && touched.campusSize
                     ? "border-red-500/70 focus:border-red-500 focus:ring-red-500/30"
                     : "border-[var(--hairline)] focus:border-accent focus:ring-accent/30"
-                }`}
+                  }`}
               >
                 <option value="">Select campus size...</option>
                 <option value="under-1k">&lt; 1,000 students</option>
@@ -387,6 +415,13 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               className="mt-1.5 w-full rounded-xl border border-[var(--hairline)] bg-white/[0.03] px-3.5 py-2 text-[14px] text-hi placeholder:text-faint transition focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30"
             />
           </div>
+
+          {submitError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-[12.5px] text-red-300 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{submitError}</span>
+            </div>
+          )}
 
           <div className="pt-2">
             <button

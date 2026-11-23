@@ -8,6 +8,8 @@ const configuredPortalUrl = process.env.NEXT_PUBLIC_PORTAL_URL?.trim();
 
 export const PORTAL_URL = (configuredPortalUrl || DEFAULT_PORTAL_URL).replace(/\/+$/, "");
 
+export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/+$/, "");
+
 /** Every route below lives on Website 2, never on this marketing site. */
 export const PORTAL_LINKS = {
   student: `${PORTAL_URL}/student`,
