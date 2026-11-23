@@ -61,9 +61,17 @@ export function useAttendanceLive(options: UseAttendanceLiveOptions = {}) {
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
+        let pingInterval: NodeJS.Timeout | null = null;
+
         ws.onopen = () => {
           if (!unmounted) {
             setIsConnected(true);
+            // 30s heartbeat ping to keep connection alive across proxies
+            pingInterval = setInterval(() => {
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+              }
+            }, 30000);
           }
         };
 
@@ -80,6 +88,7 @@ export function useAttendanceLive(options: UseAttendanceLiveOptions = {}) {
         };
 
         ws.onclose = () => {
+          if (pingInterval) clearInterval(pingInterval);
           if (!unmounted) {
             setIsConnected(false);
             // Reconnect after backoff
@@ -88,6 +97,7 @@ export function useAttendanceLive(options: UseAttendanceLiveOptions = {}) {
         };
 
         ws.onerror = () => {
+          if (pingInterval) clearInterval(pingInterval);
           if (!unmounted) {
             setIsConnected(false);
             ws.close();
