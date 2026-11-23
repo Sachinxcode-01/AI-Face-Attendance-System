@@ -250,11 +250,11 @@ export function SiteHeader() {
     <>
       {/* Top Floating ByTune Capsule Navbar */}
       <header className="fixed inset-x-0 top-0 z-50 flex justify-center py-2.5 sm:py-3.5 px-3 pointer-events-none">
-        <div className="pointer-events-auto relative flex items-center justify-between w-full max-w-[1020px] h-[52px] sm:h-[56px] px-3 sm:px-4 md:px-5 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(14,14,18,0.85)] backdrop-blur-[16px] shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_16px_36px_-12px_rgba(0,0,0,0.6)] overflow-hidden transition-all duration-300">
+        <div className="pointer-events-auto relative flex items-center justify-between w-full max-w-[1020px] h-[52px] sm:h-[56px] px-3 sm:px-4 md:px-5 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(14,14,18,0.85)] backdrop-blur-[16px] shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_16px_36px_-12px_rgba(0,0,0,0.6)] transition-all duration-300">
           {/* Scroll Progress Bar along bottom rim of capsule */}
           <div
             style={{ transform: `scaleX(${scrollProgress})` }}
-            className="absolute bottom-0 inset-x-0 h-[2px] origin-left bg-gradient-to-r from-accent via-accent2 to-spotify pointer-events-none z-30 transition-transform duration-75 ease-out"
+            className="absolute bottom-0 inset-x-0 h-[2px] rounded-b-full origin-left bg-gradient-to-r from-accent via-accent2 to-spotify pointer-events-none z-30 transition-transform duration-75 ease-out"
           />
 
           {/* Brand Logo & Title */}
@@ -379,6 +379,7 @@ export function SiteHeader() {
 
               {/* Portal Roles Dropdown Card */}
               <div
+                hidden={!portalOpen}
                 className={`absolute right-0 mt-2 w-72 rounded-[22px] border border-white/10 bg-[#16161d] p-2 shadow-2xl backdrop-blur-xl transition-all duration-200 origin-top-right ${
                   portalOpen
                     ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
@@ -458,10 +459,11 @@ export function SiteHeader() {
         ref={mobileCardRef}
         id="mobile-nav-dialog"
         role="dialog"
-        aria-modal="true"
+        aria-modal={mobileOpen ? "true" : undefined}
         aria-label="Mobile Navigation"
         tabIndex={-1}
-        className={`fixed inset-x-3.5 top-[64px] sm:top-[70px] z-50 mx-auto max-w-[400px] rounded-[22px] border border-[var(--hairline-strong)] bg-[#0e0e14]/95 p-4 sm:p-5 shadow-[0_24px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl lg:hidden outline-none transition-all duration-200 origin-top ${
+        hidden={!mobileOpen}
+        className={`fixed inset-x-3.5 top-[64px] sm:top-[70px] z-50 mx-auto max-w-[400px] max-h-[calc(100vh-80px)] overflow-y-auto rounded-[22px] border border-[var(--hairline-strong)] bg-[#0e0e14]/95 p-4 sm:p-5 shadow-[0_24px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl lg:hidden outline-none transition-all duration-200 origin-top ${
           mobileOpen
             ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
             : "opacity-0 -translate-y-2 scale-98 pointer-events-none"

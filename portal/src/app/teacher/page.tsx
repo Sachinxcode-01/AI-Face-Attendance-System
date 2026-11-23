@@ -24,6 +24,8 @@ export default function TeacherDashboardPage() {
   const { toasts, push, dismiss } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dashError, setDashError] = useState<string | null>(null);
+  const [sessError, setSessError] = useState<string | null>(null);
   const [dashboard, setDashboard] = useState<TeacherDashboard | null>(null);
   const [sessions, setSessions] = useState<TeacherSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -48,6 +50,8 @@ export default function TeacherDashboardPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setDashError(null);
+    setSessError(null);
     try {
       const [dashRes, sessRes] = await Promise.allSettled([
         api.teacher.dashboard(),
@@ -56,13 +60,19 @@ export default function TeacherDashboardPage() {
 
       if (dashRes.status === 'fulfilled') {
         setDashboard(dashRes.value as TeacherDashboard);
+      } else {
+        setDashError('Unable to load teacher metrics.');
       }
+
       if (sessRes.status === 'fulfilled') {
         const sess = (sessRes.value as TeacherSession[]) || [];
         setSessions(sess);
         const live = sess.find((s) => s.is_active);
         setActiveSessionId(live?.id ?? null);
+      } else {
+        setSessError('Unable to load classroom sessions.');
       }
+
       if (dashRes.status === 'rejected' && sessRes.status === 'rejected') {
         setError('Unable to load dashboard data. Please check your connection.');
       }
@@ -182,6 +192,11 @@ export default function TeacherDashboardPage() {
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[0, 1, 2, 3].map((i) => <SkeletonCard key={i} />)}
         </div>
+      ) : dashError ? (
+        <div className="mb-6 rounded-[22px] border border-amber-500/20 bg-amber-500/5 p-5 text-center">
+          <p className="text-xs text-amber-300 font-mono">{dashError}</p>
+          <button onClick={loadData} className="mt-2 text-xs font-semibold text-accent underline">Retry metrics</button>
+        </div>
       ) : dashboard ? (
         <div className="page-enter mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
@@ -232,7 +247,12 @@ export default function TeacherDashboardPage() {
               )
             }
           />
-          {!activeSessionId ? (
+          {sessError ? (
+            <div className="p-8 text-center">
+              <p className="text-xs text-amber-300 font-mono mb-2">{sessError}</p>
+              <button onClick={loadData} className="btn-pill-glass h-8 px-3 text-xs font-semibold">Retry Sessions</button>
+            </div>
+          ) : !activeSessionId ? (
             <EmptyState
               icon={<Radio className="h-6 w-6" />}
               title="No active session"
@@ -352,10 +372,10 @@ export default function TeacherDashboardPage() {
             <div
               key={t.id}
               className={`rounded-[16px] border px-4 py-3 text-xs font-semibold shadow-2xl backdrop-blur-xl ${t.variant === 'success'
-                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                  : t.variant === 'error'
-                    ? 'border-red-500/30 bg-red-500/10 text-red-300'
-                    : 'border-white/10 bg-white/[0.06] text-hi'
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                : t.variant === 'error'
+                  ? 'border-red-500/30 bg-red-500/10 text-red-300'
+                  : 'border-white/10 bg-white/[0.06] text-hi'
                 }`}
             >
               <div className="flex items-center gap-2">

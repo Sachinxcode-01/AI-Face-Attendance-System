@@ -43,9 +43,11 @@ export default function TeacherRosterPage() {
   }, [push, search]);
 
   useEffect(() => {
+    // Invalidate prior in-flight query immediately when search changes
+    reqIdRef.current += 1;
     const t = setTimeout(loadStudents, 250);
     return () => clearTimeout(t);
-  }, [loadStudents]);
+  }, [loadStudents, search]);
 
   const sortedStudents = [...students].sort((a, b) => {
     if (sort === 'rate') return b.attendance_rate - a.attendance_rate;

@@ -115,6 +115,7 @@ const otpSendLimiter = new MemoryRateLimiter(5, 15 * 60, 'otp_send');
 const otpVerifyLimiter = new MemoryRateLimiter(5, 15 * 60, 'otp_verify');
 const registerLimiter = new MemoryRateLimiter(5, 15 * 60, 'register');
 const loginPasswordLimiter = new MemoryRateLimiter(5, 15 * 60, 'login_pw');
+const changePasswordLimiter = new MemoryRateLimiter(5, 15 * 60, 'change_pw');
 const demoLimiter = new MemoryRateLimiter(5, 15 * 60, 'demo_req');
 const generalApiLimiter = new MemoryRateLimiter(60, 60, 'api_general');
 
@@ -168,6 +169,12 @@ const limitLoginPassword = createRateLimitMiddleware(
   (req) => req.ip || 'unknown_client'
 );
 
+const limitChangePassword = createRateLimitMiddleware(
+  changePasswordLimiter,
+  (sec) => `Too many password change attempts. Please wait ${sec}s before trying again.`,
+  (req) => (req.userEmail ? `${req.userEmail}:${req.ip || ''}` : req.ip || 'unknown_client')
+);
+
 const limitDemoRequest = createRateLimitMiddleware(
   demoLimiter,
   (sec) => `Too many demo requests. Please wait ${sec}s before trying again.`,
@@ -185,6 +192,7 @@ module.exports = {
   limitOtpVerify,
   limitRegister,
   limitLoginPassword,
+  limitChangePassword,
   limitDemoRequest,
   limitGeneralApi,
   MemoryRateLimiter

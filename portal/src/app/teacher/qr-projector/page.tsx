@@ -115,7 +115,7 @@ export default function TeacherQrProjectorPage() {
       }
       return (
         <div
-          className="grid gap-[2px] bg-white p-4 rounded-[16px] shadow-2xl max-w-[340px] mx-auto"
+          className="grid gap-[2px] bg-white p-4 rounded-[16px] shadow-2xl w-full max-w-[340px] mx-auto aspect-square"
           style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}
           aria-label="QR projection visual"
         >
@@ -199,11 +199,10 @@ export default function TeacherQrProjectorPage() {
               <button
                 key={s.id}
                 onClick={() => setSelectedId(s.id)}
-                className={`w-full rounded-[16px] border p-3.5 text-left transition-all ${
-                  selectedId === s.id
+                className={`w-full rounded-[16px] border p-3.5 text-left transition-all ${selectedId === s.id
                     ? 'border-accent/40 bg-accent/10'
                     : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.06]'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-hi">{s.subject}</span>

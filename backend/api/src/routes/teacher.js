@@ -44,9 +44,9 @@ router.get('/dashboard', authenticate, requireRole('teacher'), async (req, res) 
     const studentEmails = [...new Set(monitoredStudents.flatMap((email) => [email, String(email).toLowerCase()]))];
     const pendingLeaves = studentEmails.length
       ? await Leave.countDocuments({
-          status: { $in: ['Pending', 'Under Review'] },
-          user_id: { $in: studentEmails }
-        })
+        status: { $in: ['Pending', 'Under Review'] },
+        user_id: { $in: studentEmails }
+      })
       : 0;
 
     res.json({
@@ -140,11 +140,13 @@ router.get('/students', authenticate, requireRole('teacher'), async (req, res) =
         role: 'student',
         email: { $in: aggregated.map((row) => row._id) },
         ...(escapedSearch
-          ? { $or: [
+          ? {
+            $or: [
               { full_name: { $regex: escapedSearch, $options: 'i' } },
               { email: { $regex: escapedSearch, $options: 'i' } },
               { student_id: { $regex: escapedSearch, $options: 'i' } }
-            ] }
+            ]
+          }
           : {})
       },
       'email full_name student_id roll_number department semester avatar_url profilePhotoUrl'
@@ -385,7 +387,7 @@ router.get('/reports/export', authenticate, requireRole('teacher'), async (req, 
         details: { records: records.length, format },
         ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
       });
-    } catch (_) {}
+    } catch (_) { }
 
     const csvEscape = (value) => {
       const str = value == null ? '' : String(value);
@@ -471,21 +473,31 @@ router.post('/notifications/broadcast', authenticate, requireRole('teacher'), as
     const batchSize = 25;
     let deliveredCount = 0;
 
+    const withTimeout = (promise, ms = 5000) =>
+      Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Notification timed out')), ms)),
+      ]);
+
     for (let i = 0; i < audience.length; i += batchSize) {
       const batch = audience.slice(i, i + batchSize);
       const outcomes = await Promise.allSettled(
         batch.map((student) =>
-          notificationService.createNotification(
-            student.email,
-            finalTitle,
-            message.trim(),
-            'announcement',
-            resolvedPriority,
-            { sender: teacherEmail }
+          withTimeout(
+            notificationService.createNotification(
+              student.email,
+              finalTitle,
+              message.trim(),
+              'announcement',
+              resolvedPriority,
+              { sender: teacherEmail }
+            )
           )
         )
       );
-      deliveredCount += outcomes.filter((outcome) => outcome.status === 'fulfilled').length;
+      deliveredCount += outcomes.filter(
+        (outcome) => outcome.status === 'fulfilled' && outcome.value && outcome.value.id
+      ).length;
     }
 
     try {
@@ -496,7 +508,7 @@ router.post('/notifications/broadcast', authenticate, requireRole('teacher'), as
         details: { recipients: deliveredCount, priority: resolvedPriority },
         ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
       });
-    } catch (_) {}
+    } catch (_) { }
 
     res.json({
       success: true,
@@ -564,7 +576,7 @@ router.post('/timetable', authenticate, requireRole('teacher'), async (req, res)
         details: { subject: entry.subject, day: entry.day, time: entry.time },
         ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
       });
-    } catch (_) {}
+    } catch (_) { }
 
     const obj = entry.toObject();
     obj.id = obj._id.toString();
@@ -638,7 +650,7 @@ router.delete('/timetable/:id', authenticate, requireRole('teacher'), async (req
         details: { slot_id: id, subject: deleted.subject },
         ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
       });
-    } catch (_) {}
+    } catch (_) { }
 
     res.json({ success: true, message: 'Timetable slot deleted successfully.', deleted_id: id });
   } catch (error) {

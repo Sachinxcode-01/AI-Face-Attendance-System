@@ -21,18 +21,28 @@ export default function TeacherSessionsPage() {
   const [sessions, setSessions] = useState<TeacherSession[]>([]);
   const [search, setSearch] = useState('');
   const [stoppingId, setStoppingId] = useState<string | null>(null);
+  const reqIdRef = React.useRef(0);
 
   const loadSessions = useCallback(async () => {
+    reqIdRef.current += 1;
+    const currentId = reqIdRef.current;
     setLoading(true);
     setError(null);
     try {
       const data = await api.teacher.sessions();
-      setSessions((data as TeacherSession[]) || []);
+      if (currentId === reqIdRef.current) {
+        setSessions((data as TeacherSession[]) || []);
+        setError(null);
+      }
     } catch {
-      setError('Failed to load sessions. Please check your connection.');
-      push('Failed to load sessions', 'error');
+      if (currentId === reqIdRef.current) {
+        setError('Failed to load sessions. Please check your connection.');
+        push('Failed to load sessions', 'error');
+      }
     } finally {
-      setLoading(false);
+      if (currentId === reqIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [push]);
 

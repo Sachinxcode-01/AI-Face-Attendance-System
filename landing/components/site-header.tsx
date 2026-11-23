@@ -369,6 +369,19 @@ export function SiteHeader({ onOpenDemo }: SiteHeaderProps) {
               transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
               className="fixed inset-x-3.5 top-[64px] sm:top-[70px] z-50 mx-auto max-w-[400px] rounded-[22px] border border-[var(--hairline-strong)] bg-[#0e0e14]/95 p-4 sm:p-5 shadow-[0_24px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl lg:hidden pointer-events-auto outline-none"
             >
+              {/* Header with Title and Visible Dismiss Button */}
+              <div className="flex items-center justify-between pb-2 mb-1 border-b border-[var(--hairline)]">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-faint">Menu</span>
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  aria-label="Close menu"
+                  className="grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-mid transition hover:bg-white/[0.08] hover:text-hi"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
               {/* Navigation Links */}
               <nav aria-label="Mobile Navigation" className="flex flex-col gap-0.5">
                 {NAV_LINKS.map((link) => (

@@ -23,7 +23,11 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admi
     if (providedTeacherEmail && req.userEmail.toLowerCase() !== providedTeacherEmail && !['admin', 'super_admin'].includes(req.userRole.toLowerCase())) {
       return res.status(403).json({ detail: "Forbidden: Cannot start session on behalf of another teacher." });
     }
-    if (!await User.exists({ email: teacherEmail, role: 'teacher' })) {
+    const teacherExists = await User.exists({
+      email: { $regex: new RegExp(`^${teacherEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+      role: 'teacher'
+    });
+    if (!teacherExists) {
       return res.status(404).json({ detail: 'Teacher account not found.' });
     }
     const sessionId = new mongoose.Types.ObjectId();

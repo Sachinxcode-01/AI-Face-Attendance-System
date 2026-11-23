@@ -15,7 +15,7 @@ const EmailService = require('../services/emailService');
 const { authenticate } = require('../middleware/auth');
 const { trackJob } = require('../utils/jobTracker');
 const reportInternalError = require('../utils/httpError');
-const { limitRegister, limitOtpSend, limitOtpVerify, limitLoginPassword } = require('../middleware/rateLimiter');
+const { limitRegister, limitOtpSend, limitOtpVerify, limitLoginPassword, limitChangePassword } = require('../middleware/rateLimiter');
 const validate = require('../middleware/validate');
 const {
   registerSchema,
@@ -453,7 +453,8 @@ router.post(['/login-password', '/login'], limitLoginPassword, validate(loginPas
     if (user.password) {
       isPasswordValid = await AuthService.verifyPassword(password, user.password);
     }
-    if (!isPasswordValid) {
+    // Only fall back to dataset password if user does not have a real set password yet
+    if (!isPasswordValid && !user.password) {
       const student = datasetService.findStudent(email);
       if (student && datasetService.validatePassword(student, password)) {
         isPasswordValid = true;
@@ -948,7 +949,7 @@ router.post('/reset-password', limitOtpVerify, validate(resetPasswordSchema), as
 });
 
 // ─── POST /auth/change-password ───────────────────────────────────
-router.post('/change-password', authenticate, validate(changePasswordSchema), async (req, res) => {
+router.post('/change-password', authenticate, limitChangePassword, validate(changePasswordSchema), async (req, res) => {
   try {
     const { current_password, new_password } = req.body;
     const user = await User.findOne({ email: req.userEmail });
@@ -990,7 +991,7 @@ router.get(['/profile', '/me'], authenticate, async (req, res) => {
       if (require('mongoose').connection.readyState === 1) {
         user = await User.findOne({ email: req.userEmail }).lean();
       }
-    } catch (_) {}
+    } catch (_) { }
 
     if (!user) {
       const student = datasetService.findStudent(req.userEmail);
