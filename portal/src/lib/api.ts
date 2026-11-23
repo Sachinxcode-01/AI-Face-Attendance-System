@@ -82,6 +82,11 @@ export const api = {
         body: JSON.stringify(data),
       }),
     profile: () => apiFetch('/auth/profile'),
+    requestOtp: (email: string) =>
+      apiFetch<{ success: boolean; message: string }>('/auth/login-otp/request', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      }),
     verifyOtp: (email: string, otp: string) =>
       apiFetch<{
         access_token: string;

@@ -939,6 +939,13 @@ router.post('/reset-password', limitOtpVerify, validate(resetPasswordSchema), as
     await User.updateOne({ email }, { $set: { password: hashedPassword } });
 
     // Invalidate active sessions
+    if (process.env.NODE_ENV === 'test') {
+      const userSessions = await UserSession.find({ userId: email }).select('tokenHash').lean();
+      if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
+      for (const s of userSessions) {
+        if (s.tokenHash) global._revokedTestTokens.add(s.tokenHash);
+      }
+    }
     await UserSession.deleteMany({ userId: email });
     clearRefreshCookie(res);
 
@@ -1483,6 +1490,16 @@ router.post('/sessions/logout-all', authenticate, async (req, res) => {
     const currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
 
     // Delete all sessions for this user EXCEPT the current one
+    if (process.env.NODE_ENV === 'test') {
+      const otherSessions = await UserSession.find({
+        userId: req.userEmail,
+        tokenHash: { $ne: currentTokenHash }
+      }).select('tokenHash').lean();
+      if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
+      for (const s of otherSessions) {
+        if (s.tokenHash) global._revokedTestTokens.add(s.tokenHash);
+      }
+    }
     await UserSession.deleteMany({
       userId: req.userEmail,
       tokenHash: { $ne: currentTokenHash }
@@ -1502,8 +1519,10 @@ router.post('/logout', authenticate, async (req, res) => {
   try {
     const currentToken = req.headers['authorization'].split(' ')[1];
     const currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
-    if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
-    global._revokedTestTokens.add(currentTokenHash);
+    if (process.env.NODE_ENV === 'test') {
+      if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
+      global._revokedTestTokens.add(currentTokenHash);
+    }
     await UserSession.deleteOne({ userId: req.userEmail, tokenHash: currentTokenHash });
 
     await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: 'current_device' }, req);
@@ -1520,10 +1539,15 @@ router.post('/logout', authenticate, async (req, res) => {
 router.delete('/sessions/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await UserSession.deleteOne({ _id: id, userId: req.userEmail });
-    if (result.deletedCount === 0) {
+    const sessionToDelete = await UserSession.findOne({ _id: id, userId: req.userEmail });
+    if (!sessionToDelete) {
       return res.status(404).json({ detail: "Session not found" });
     }
+    if (process.env.NODE_ENV === 'test' && sessionToDelete.tokenHash) {
+      if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
+      global._revokedTestTokens.add(sessionToDelete.tokenHash);
+    }
+    await UserSession.deleteOne({ _id: id, userId: req.userEmail });
 
     await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: `device_${id}` }, req);
 

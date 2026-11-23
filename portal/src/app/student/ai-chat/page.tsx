@@ -53,15 +53,16 @@ export default function StudentAiChatPage() {
 
     try {
       const res = await api.ai.chat(txt);
+      const replyText = res?.reply && res.reply.trim() ? res.reply : 'The AI assistant service is currently unavailable. Please try again later.';
       setMessages((m) => [
         ...m,
         {
           sender: 'nexa',
-          text: res.reply || 'Analyzing your attendance ledger... Based on current timetable projections for Term 2, your overall status is compliant (88.6%).',
+          text: replyText,
         },
       ]);
     } catch (err: unknown) {
-      const msg = err instanceof ApiError ? err.message : 'Analyzing your attendance ledger... Based on current timetable projections for Term 2, your overall status is compliant (88.6%).';
+      const msg = err instanceof ApiError ? err.message : 'The AI assistant service could not be reached. Please check your connection and retry.';
       setMessages((m) => [
         ...m,
         {

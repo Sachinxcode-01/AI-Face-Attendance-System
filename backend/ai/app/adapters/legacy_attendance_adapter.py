@@ -46,13 +46,24 @@ class LegacyAttendanceAdapter:
         try:
             self.system = legacy_module.SmartAttendanceSystem()
         except Exception as e:
-            if "CUDA" in str(e) and cuda_path_backup:
-                print("[WARN] CUDA provider failed to load DLLs. Retrying with CPU execution provider...")
+            if ("CUDA" in str(e) or "onnxruntime_providers_cuda" in str(e)) and (cuda_path_backup or hasattr(legacy_module, "FaceAnalysis")):
+                print("[WARN] CUDA provider failed to load DLLs. Retrying with explicit CPU execution provider...")
                 os.environ.pop("CUDA_PATH", None)
+                original_face_analysis = getattr(legacy_module, "FaceAnalysis", None)
+
+                def cpu_face_analysis(*args, **kwargs):
+                    kwargs["providers"] = ["CPUExecutionProvider"]
+                    return original_face_analysis(*args, **kwargs)
+
                 try:
+                    if original_face_analysis is not None:
+                        legacy_module.FaceAnalysis = cpu_face_analysis
                     self.system = legacy_module.SmartAttendanceSystem()
                 finally:
-                    os.environ["CUDA_PATH"] = cuda_path_backup
+                    if original_face_analysis is not None:
+                        legacy_module.FaceAnalysis = original_face_analysis
+                    if cuda_path_backup is not None:
+                        os.environ["CUDA_PATH"] = cuda_path_backup
             else:
                 raise
         print("[INFO] LegacyAttendanceAdapter ready.")

@@ -7,6 +7,7 @@ import { ShieldCheck } from 'lucide-react';
 import { AuthScreenLayout } from '@/components/auth/AuthScreenLayout';
 import { Button } from '@/components/ui/Button';
 import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 function VerifyContent() {
   const searchParams = useSearchParams();
@@ -15,7 +16,9 @@ function VerifyContent() {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(''));
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
+  const [resendMsg, setResendMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const { loginWithToken } = useAuth();
 
   const verifyCode = async (otpCode: string) => {
     if (!email) {
@@ -25,12 +28,38 @@ function VerifyContent() {
     setError('');
     setLoading(true);
     try {
-      await api.auth.verifyOtp(email, otpCode);
-      setDone(true);
+      const res = await api.auth.verifyOtp(email, otpCode);
+      if (res && res.access_token) {
+        loginWithToken({
+          access_token: res.access_token,
+          role: res.role,
+          full_name: res.full_name,
+          email: res.email || email,
+          user_id: res.user_id,
+          profilePhotoUrl: res.profilePhotoUrl,
+        });
+      } else {
+        setDone(true);
+      }
     } catch (err: any) {
       setError(err?.message || 'Verification failed. Please check the passcode.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email.trim()) {
+      setError('Enter your account email first to resend code.');
+      return;
+    }
+    setError('');
+    setResendMsg('');
+    try {
+      await api.auth.requestOtp(email.trim());
+      setResendMsg('A new verification code has been dispatched to your email.');
+    } catch (err: any) {
+      setError(err?.message || 'Failed to resend code. Please try again.');
     }
   };
 
@@ -94,14 +123,20 @@ function VerifyContent() {
           </div>
 
           {error && <p className="text-center rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
+          {resendMsg && <p className="text-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">{resendMsg}</p>}
         </div>
       )}
       {!done && (
         <p className="mt-5 text-center font-mono text-[11px] text-faint">
           Didn&apos;t receive it?{' '}
-          <Link href="/auth/forgot-password" className="font-semibold text-accent hover:text-accent2 transition-colors">
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={loading}
+            className="font-semibold text-accent hover:text-accent2 transition-colors cursor-pointer disabled:opacity-50"
+          >
             Resend code
-          </Link>
+          </button>
         </p>
       )}
     </AuthScreenLayout>

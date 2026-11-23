@@ -14,6 +14,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (role: UserRole) => void;
   loginWithCredentials: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithToken: (data: { access_token: string; role?: string; full_name?: string; email?: string; user_id?: string; profilePhotoUrl?: string }) => void;
   register: (data: { email: string; password: string; full_name: string; role: UserRole }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
@@ -147,6 +148,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const loginWithToken = useCallback(
+    (tokenData: { access_token: string; role?: string; full_name?: string; email?: string; user_id?: string; profilePhotoUrl?: string }) => {
+      const userRole = (tokenData.role?.toLowerCase() as UserRole) || 'student';
+      const profile: UserProfile = {
+        id: tokenData.user_id || 'usr_' + Math.random().toString(36).slice(2, 9),
+        name: tokenData.full_name || (tokenData.email ? tokenData.email.split('@')[0] : 'User'),
+        email: tokenData.email || '',
+        role: userRole,
+        avatar: tokenData.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      };
+      setAuthCookies(tokenData.access_token, userRole, profile);
+      setUser(profile);
+      setRole(userRole);
+      setAuthed(true);
+      router.push(`/${userRole}`);
+    },
+    [router]
+  );
+
   const logout = useCallback(() => {
     clearAuth();
     setUser(null);
@@ -156,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ user, role, authed, loading, login, loginWithCredentials, register, logout }}>
+    <AuthContext.Provider value={{ user, role, authed, loading, login, loginWithCredentials, loginWithToken, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -172,6 +192,7 @@ export function useAuth(): AuthContextValue {
       loading: true,
       login: () => { },
       loginWithCredentials: async () => ({ success: false }),
+      loginWithToken: () => { },
       register: async () => ({ success: false }),
       logout: () => { },
     };

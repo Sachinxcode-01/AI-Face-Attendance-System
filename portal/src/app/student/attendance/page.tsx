@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { DataTable } from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/Badge';
-import { ScanFace, QrCode, Clock, Download, Filter } from 'lucide-react';
+import { ScanFace, QrCode, Clock, Download, Filter, CheckCircle2 } from 'lucide-react';
 import { MOCK_STUDENT_ATTENDANCE } from '@/lib/demo-data';
 import type { AttendanceRecord } from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,54 +20,60 @@ export default function StudentAttendancePage() {
   const [search, setSearch] = useState('');
   const [records, setRecords] = useState<AttendanceRecord[]>(MOCK_STUDENT_ATTENDANCE);
 
-  const loadAttendance = useCallback(async () => {
-    try {
-      const email = user?.email || 'alice@smartface.pro';
-      const data = (await api.attendance.student(email)) as Array<{
-        _id?: string;
-        id?: string;
-        timestamp?: string;
-        date?: string;
-        time?: string;
-        subject?: string;
-        status?: string;
-        verification_method?: string;
-        confidence?: number;
-        room?: string;
-      }>;
-
-      if (Array.isArray(data) && data.length > 0) {
-        setRecords(
-          data.map((r, i) => {
-            const rawStatus = (r.status || 'present').toLowerCase();
-            const method = (r.verification_method || '').toLowerCase();
-            let finalStatus: AttendanceRecord['status'] = 'present';
-            if (rawStatus === 'absent') finalStatus = 'absent';
-            else if (rawStatus === 'late') finalStatus = 'late';
-            else if (method === 'face') finalStatus = 'verified_face';
-            else if (method === 'qr') finalStatus = 'verified_qr';
-
-            const d = r.timestamp ? new Date(r.timestamp) : new Date();
-            return {
-              id: r.id || r._id || `att_${i}`,
-              date: r.date || d.toISOString().split('T')[0],
-              time: r.time || d.toTimeString().slice(0, 5),
-              subject: r.subject || 'Computer Science Core',
-              status: finalStatus,
-              confidence: r.confidence || 0.985,
-              room: r.room || 'Room 401',
-            };
-          })
-        );
-      }
-    } catch {
-      /* fallback to MOCK_STUDENT_ATTENDANCE */
-    }
-  }, [user]);
-
   useEffect(() => {
-    loadAttendance();
-  }, [loadAttendance]);
+    let active = true;
+    const email = user?.email || 'alice@smartface.pro';
+
+    async function fetchAttendance() {
+      try {
+        const data = (await api.attendance.student(email)) as Array<{
+          _id?: string;
+          id?: string;
+          timestamp?: string;
+          date?: string;
+          time?: string;
+          subject?: string;
+          status?: string;
+          verification_method?: string;
+          confidence?: number;
+          room?: string;
+        }>;
+
+        if (!active) return;
+        if (Array.isArray(data) && data.length > 0) {
+          setRecords(
+            data.map((r, i) => {
+              const rawStatus = (r.status || 'present').toLowerCase();
+              const method = (r.verification_method || '').toLowerCase();
+              let finalStatus: AttendanceRecord['status'] = 'present';
+              if (rawStatus === 'absent') finalStatus = 'absent';
+              else if (rawStatus === 'late') finalStatus = 'late';
+              else if (method === 'face') finalStatus = 'verified_face';
+              else if (method === 'qr') finalStatus = 'verified_qr';
+
+              const d = r.timestamp ? new Date(r.timestamp) : new Date();
+              return {
+                id: r.id || r._id || `att_${i}`,
+                date: r.date || d.toISOString().split('T')[0],
+                time: r.time || d.toTimeString().slice(0, 5),
+                subject: r.subject || 'Computer Science Core',
+                status: finalStatus,
+                confidence: r.confidence || 0.985,
+                room: r.room || 'Room 401',
+              };
+            })
+          );
+        }
+      } catch {
+        /* fallback to MOCK_STUDENT_ATTENDANCE */
+      }
+    }
+
+    fetchAttendance();
+    return () => {
+      active = false;
+    };
+  }, [user?.email]);
 
   const rows = records.filter((r) => {
     const okFilter = filter === 'all' || r.status === filter;
@@ -79,18 +85,23 @@ export default function StudentAttendancePage() {
   const present = records.filter((r) => r.status !== 'absent').length;
 
   const exportCsv = () => {
+    const escapeCsv = (val: unknown) => {
+      const s = val === null || val === undefined ? '' : String(val);
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+
     const headers = ['ID', 'Date', 'Time', 'Subject', 'Location', 'Status', 'Confidence'];
     const csvRows = [headers.join(',')];
     rows.forEach((r) => {
       csvRows.push(
         [
-          `"${r.id}"`,
-          `"${r.date}"`,
-          `"${r.time}"`,
-          `"${r.subject}"`,
-          `"${r.room}"`,
-          `"${r.status}"`,
-          `"${r.confidence || 1}"`,
+          escapeCsv(r.id),
+          escapeCsv(r.date),
+          escapeCsv(r.time),
+          escapeCsv(r.subject),
+          escapeCsv(r.room),
+          escapeCsv(r.status),
+          escapeCsv(r.confidence || 1),
         ].join(',')
       );
     });
@@ -187,6 +198,13 @@ export default function StudentAttendancePage() {
                   return (
                     <Badge tone="info">
                       <QrCode className="h-3 w-3" /> QR Verified
+                    </Badge>
+                  );
+                }
+                if (r.status === 'present') {
+                  return (
+                    <Badge tone="success">
+                      <CheckCircle2 className="h-3 w-3" /> Present
                     </Badge>
                   );
                 }

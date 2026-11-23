@@ -22,6 +22,7 @@ export default function ParentPortalPage() {
   const profile = DEMO_PROFILES.parent;
   const [absenceNotice, setAbsenceNotice] = useState('');
   const [absenceSubmitted, setAbsenceSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [liveWards, setLiveWards] = useState<any[]>([]);
 
   // Multi-ward linked students default
@@ -66,6 +67,9 @@ export default function ParentPortalPage() {
           const mapped = await Promise.all(
             children.map(async (c: any, idx: number) => {
               let stats = MOCK_SUBJECT_STATS;
+              let onCampus = false;
+              let status = 'Not on campus';
+              let location = 'Awaiting check-in';
               try {
                 const liveStats = await api.parent.childStats(c.email);
                 if (liveStats && liveStats.subjects) {
@@ -78,15 +82,28 @@ export default function ParentPortalPage() {
                   }));
                 }
               } catch {}
+              try {
+                const logs = await api.parent.childAttendanceLogs(c.email);
+                const todayStr = new Date().toISOString().split('T')[0];
+                const todayLog = Array.isArray(logs) ? logs.find((l: any) => l.date === todayStr && l.status === 'Present') : null;
+                if (todayLog) {
+                  onCampus = true;
+                  status = `Checked-in: ${todayLog.subject || 'Class'}`;
+                  location = `Verified via ${todayLog.verifiedBy || 'Biometrics'}`;
+                } else if (Array.isArray(logs) && logs.length > 0 && logs[0].status === 'Present') {
+                  status = `Last check-in: ${logs[0].date}`;
+                  location = `Verified via ${logs[0].verifiedBy || 'Biometrics'}`;
+                }
+              } catch {}
               return {
                 id: `ward-${idx}`,
                 name: c.full_name || c.email,
                 email: c.email,
                 rollNo: c.student_id || 'STU-001',
                 department: c.department || 'General',
-                status: 'Checked-in',
-                location: 'Campus Biometric Gate',
-                onCampus: true,
+                status,
+                location,
+                onCampus,
                 stats,
               };
             })
@@ -142,21 +159,23 @@ export default function ParentPortalPage() {
     if (submitTimerRef.current) {
       clearTimeout(submitTimerRef.current);
     }
-    const reasonToSend = absenceNotice;
-    setAbsenceNotice('');
-    setAbsenceSubmitted(true);
+    setSubmitError('');
     try {
       if (activeWard.email) {
         await api.parent.submitAbsenceNotice({
           childEmail: activeWard.email,
-          reason: reasonToSend,
+          reason: absenceNotice.trim(),
         });
       }
-    } catch {}
-    submitTimerRef.current = setTimeout(() => {
-      setAbsenceSubmitted(false);
-      submitTimerRef.current = null;
-    }, 4000);
+      setAbsenceNotice('');
+      setAbsenceSubmitted(true);
+      submitTimerRef.current = setTimeout(() => {
+        setAbsenceSubmitted(false);
+        submitTimerRef.current = null;
+      }, 4000);
+    } catch (err: any) {
+      setSubmitError(err?.message || 'Failed to dispatch absence notice. Please try again.');
+    }
   };
 
   return (
@@ -304,7 +323,11 @@ export default function ParentPortalPage() {
                                       className="w-full rounded-[16px] bg-white/[0.04] border border-white/10 p-3 text-xs text-hi placeholder-faint focus:outline-none focus:border-accent"
                                     />
                                 </div>
-
+                                {submitError && (
+                                  <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                                    {submitError}
+                                  </p>
+                                )}
                                 <button
                                   type="submit"
                                   className="w-full h-10 rounded-full btn-pill-accent text-xs font-semibold flex items-center justify-center gap-2"

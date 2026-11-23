@@ -32,18 +32,20 @@ async function seedEnterpriseDb() {
   }
   console.log(`✅ Seeded ${Object.keys(permMap).length} granular permissions.`);
 
-  // 2. Seed Roles and RolePermission mappings
+  // 2. Seed Roles and RolePermission mappings (reconcile system roles authoritatively)
   console.log('[RBAC] Seeding Roles and RolePermissions...');
   for (const [roleName, permissions] of Object.entries(ROLE_PERMISSIONS_MATRIX)) {
     const role = await Role.findOneAndUpdate(
       { name: roleName },
       { name: roleName, description: `System ${roleName} role`, is_system: true },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
 
+    const targetPermIds = [];
     for (const permCode of permissions) {
       const permId = permMap[permCode];
       if (permId) {
+        targetPermIds.push(permId);
         await RolePermission.findOneAndUpdate(
           { role_id: role._id, permission_id: permId },
           { role_id: role._id, permission_id: permId },
@@ -51,6 +53,12 @@ async function seedEnterpriseDb() {
         );
       }
     }
+
+    // Reconcile system roles authoritatively: remove permissions no longer assigned in ROLE_PERMISSIONS_MATRIX
+    await RolePermission.deleteMany({
+      role_id: role._id,
+      permission_id: { $nin: targetPermIds }
+    });
   }
   console.log('✅ Roles and RolePermission matrices initialized.');
 

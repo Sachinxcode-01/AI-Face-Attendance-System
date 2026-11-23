@@ -13,7 +13,7 @@ export default function StudentCheckinPage() {
   const [mode, setMode] = useState<'face' | 'qr'>('face');
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<null | { ok: boolean; text: string }>(null);
-  const [token, setToken] = useState('SMARTFACE_SEC_' + Math.random().toString(36).slice(2, 9).toUpperCase());
+  const [token, setToken] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -55,6 +55,15 @@ export default function StudentCheckinPage() {
         setResult({
           ok: false,
           text: 'No active classroom session found. Please wait for the lecturer to launch the session.',
+        });
+        setScanning(false);
+        return;
+      }
+
+      if (mode === 'qr' && !token.trim()) {
+        setResult({
+          ok: false,
+          text: 'Please enter the classroom QR token displayed on the projector screen.',
         });
         setScanning(false);
         return;
@@ -173,18 +182,17 @@ export default function StudentCheckinPage() {
 
         <div className="space-y-6">
           <Card>
-            <CardHeader title="Live Token" subtitle="Refreshes every 15 seconds (anti-proxy window)" />
-            <div className="rounded-[18px] border border-white/[0.06] bg-surface p-5 text-center">
-              <p className="font-mono text-xl font-bold tracking-widest text-accent">{token}</p>
-              <p className="mt-2 font-mono text-[10.5px] text-faint">Signed with campus HSM · TOTP epoch 30s</p>
+            <CardHeader title="Classroom Token" subtitle="Enter or paste the rotating code shown on the classroom screen" />
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={token}
+                onChange={(e) => setToken(e.target.value.toUpperCase())}
+                placeholder="Enter token (e.g. SF-9X2A)"
+                className="w-full rounded-[14px] border border-white/10 bg-white/[0.03] px-4 py-3 font-mono text-center text-lg font-bold tracking-widest text-accent placeholder-faint focus:border-accent focus:outline-none"
+              />
+              <p className="font-mono text-[10.5px] text-faint text-center">Classroom tokens refresh every 15–30 seconds</p>
             </div>
-            <Button
-              variant="secondary"
-              className="mt-3.5 w-full"
-              onClick={() => setToken('SMARTFACE_SEC_' + Math.random().toString(36).slice(2, 9).toUpperCase())}
-            >
-              <KeyRound className="h-4 w-4" /> Refresh Token
-            </Button>
           </Card>
 
           {result && (

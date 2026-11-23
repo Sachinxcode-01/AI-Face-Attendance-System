@@ -24,10 +24,14 @@ async function runTests() {
   console.log("🧪 --- Running Nexa Assistant Phase 2 Unit Tests ---");
 
   let selfConnected = false;
-  if (mongoose.connection.readyState !== 1) {
+  if (mongoose.connection.readyState === 0) {
     const mongoUrl = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/smartface';
-    await mongoose.connect(mongoUrl, { dbName: 'smartface' });
+    await mongoose.connect(mongoUrl);
     selfConnected = true;
+  } else if (mongoose.connection.readyState === 2) {
+    await new Promise((resolve) => {
+      mongoose.connection.once('connected', resolve);
+    });
   }
 
   const server = http.createServer(app);
@@ -173,7 +177,7 @@ async function runTests() {
     console.log("🏁 All Nexa Phase 2 unit tests passed successfully!\n");
   } finally {
     server.close();
-    if (selfConnected && mongoose.connection.readyState === 1) {
+    if (selfConnected) {
       await mongoose.disconnect();
     }
   }

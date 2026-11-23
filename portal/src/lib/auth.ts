@@ -14,6 +14,7 @@ export const DEMO_ACCOUNTS: Record<
   teacher: { email: 'marcus.vance@smartface.pro', password: 'demo1234', name: 'Prof. Marcus Vance' },
   admin: { email: 'evelyn.cross@smartface.pro', password: 'demo1234', name: 'Dr. Evelyn Cross' },
   parent: { email: 'sarah.smith@parent.net', password: 'demo1234', name: 'Sarah & David Smith' },
+  super_admin: { email: 'superadmin@smartface.pro', password: 'demo1234', name: 'Global Overseer' },
 };
 
 /** Simulated JWT: base64 payload (demo only — never roll your own crypto in production). */

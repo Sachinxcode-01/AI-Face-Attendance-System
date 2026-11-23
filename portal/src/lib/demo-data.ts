@@ -61,6 +61,16 @@ export const DEMO_PROFILES: Record<UserRole, UserProfile> = {
     phone: '+1 (555) 016-4490',
     joinedAt: 'Sep 2024',
   },
+  super_admin: {
+    id: 'usr_sup_01',
+    name: 'Global Overseer',
+    email: 'superadmin@smartface.pro',
+    role: 'super_admin',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    department: 'Multi-Tenant Platform Governance',
+    phone: '+1 (555) 999-0000',
+    joinedAt: 'Jan 2018',
+  },
 };
 
 export const MOCK_STUDENT_ATTENDANCE: AttendanceRecord[] = [

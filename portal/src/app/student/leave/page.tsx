@@ -17,55 +17,62 @@ export default function StudentLeavePage() {
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadLeaves = useCallback(async () => {
-    setLoading(true);
-    try {
-      const email = user?.email || 'alice@smartface.pro';
-      const data = (await api.leave.student(email)) as Array<{
-        id: string;
-        user_id: string;
-        reason: string;
-        start_date: string;
-        end_date: string;
-        status: string;
-      }>;
-
-      if (Array.isArray(data) && data.length > 0) {
-        setRequests(
-          data.map((l) => {
-            const rawStatus = (l.status || 'pending').toLowerCase();
-            const validStatus: 'pending' | 'approved' | 'rejected' =
-              rawStatus === 'approved' ? 'approved' : rawStatus === 'rejected' ? 'rejected' : 'pending';
-
-            const reasonMatch = l.reason.match(/^\[(Medical|Academic|Personal)\]\s*(.*)$/);
-            const category = (reasonMatch ? reasonMatch[1] : 'Academic') as 'Medical' | 'Academic' | 'Personal';
-            const cleanReason = reasonMatch ? reasonMatch[2] : l.reason;
-
-            return {
-              id: l.id,
-              studentName: user?.name || 'Alice Smith',
-              rollNo: user?.rollNo || 'CS-2024-042',
-              reason: cleanReason,
-              category,
-              startDate: l.start_date ? l.start_date.split('T')[0] : '2026-11-20',
-              endDate: l.end_date ? l.end_date.split('T')[0] : '2026-11-22',
-              status: validStatus,
-            };
-          })
-        );
-      } else {
-        setRequests(MOCK_LEAVE_REQUESTS.filter((r) => r.rollNo === 'CS-2024-042'));
-      }
-    } catch {
-      setRequests(MOCK_LEAVE_REQUESTS.filter((r) => r.rollNo === 'CS-2024-042'));
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
   useEffect(() => {
-    loadLeaves();
-  }, [loadLeaves]);
+    let active = true;
+    const email = user?.email || 'alice@smartface.pro';
+
+    async function fetchLeaves() {
+      setLoading(true);
+      try {
+        const data = (await api.leave.student(email)) as Array<{
+          id: string;
+          user_id: string;
+          reason: string;
+          start_date: string;
+          end_date: string;
+          status: string;
+        }>;
+
+        if (!active) return;
+        if (Array.isArray(data) && data.length > 0) {
+          setRequests(
+            data.map((l) => {
+              const rawStatus = (l.status || 'pending').toLowerCase();
+              const validStatus: 'pending' | 'approved' | 'rejected' =
+                rawStatus === 'approved' ? 'approved' : rawStatus === 'rejected' ? 'rejected' : 'pending';
+
+              const reasonMatch = l.reason.match(/^\[(Medical|Academic|Personal)\]\s*([\s\S]*)$/);
+              const category = (reasonMatch ? reasonMatch[1] : 'Academic') as 'Medical' | 'Academic' | 'Personal';
+              const cleanReason = reasonMatch ? reasonMatch[2] : l.reason;
+
+              return {
+                id: l.id,
+                studentName: user?.name || 'Alice Smith',
+                rollNo: user?.rollNo || 'CS-2024-042',
+                reason: cleanReason,
+                category,
+                startDate: l.start_date ? l.start_date.split('T')[0] : '2026-11-20',
+                endDate: l.end_date ? l.end_date.split('T')[0] : '2026-11-22',
+                status: validStatus,
+              };
+            })
+          );
+        } else {
+          setRequests(MOCK_LEAVE_REQUESTS.filter((r) => r.rollNo === 'CS-2024-042'));
+        }
+      } catch {
+        if (!active) return;
+        setRequests(MOCK_LEAVE_REQUESTS.filter((r) => r.rollNo === 'CS-2024-042'));
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    fetchLeaves();
+    return () => {
+      active = false;
+    };
+  }, [user?.email, user?.name, user?.rollNo]);
 
   return (
     <DashboardLayout>

@@ -92,7 +92,14 @@ export default function StudentDashboardPage() {
               </div>
             ) : (
               <div className="page-enter mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard label="Overall Attendance" value={dashboardStats?.overall_attendance ? `${dashboardStats.overall_attendance}%` : '88.6%'} delta="+2.1% this week" icon={<TrendingUp className="h-4 w-4" />} accent="text-spotify" footnote="Above mandatory 75% limit" />
+                <StatCard
+                  label="Overall Attendance"
+                  value={`${dashboardStats?.overall_attendance ?? 88.6}%`}
+                  delta={(dashboardStats?.overall_attendance ?? 88.6) >= 75 ? '+2.1% this week' : 'Attendance Warning'}
+                  icon={<TrendingUp className="h-4 w-4" />}
+                  accent={(dashboardStats?.overall_attendance ?? 88.6) >= 75 ? 'text-spotify' : 'text-red-400'}
+                  footnote={(dashboardStats?.overall_attendance ?? 88.6) >= 75 ? 'Above mandatory 75% limit' : 'Below mandatory 75% limit'}
+                />
                 <StatCard label="Classes Attended" value={String(dashboardStats?.total_present ?? 95)} delta={`/ ${dashboardStats?.total_classes ?? 107} total`} icon={<UserCheck className="h-4 w-4" />} accent="text-accent" footnote="12 authorized absences" />
                 <StatCard label="Biometric Accuracy" value="99.4%" delta="ArcFace ONNX" icon={<Sparkles className="h-4 w-4" />} accent="text-accent2" footnote="Sub-300ms verification" />
                 <StatCard label="Live Check-ins Today" value={String(liveCheckins)} delta="real-time" icon={<Bot className="h-4 w-4" />} accent="text-amber" footnote="Campus gate + classroom" />

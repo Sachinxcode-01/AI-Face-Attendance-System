@@ -40,7 +40,7 @@ const deviceSchema = new mongoose.Schema({
   },
   is_trusted: {
     type: Boolean,
-    default: true
+    default: false
   },
   is_active: {
     type: Boolean,

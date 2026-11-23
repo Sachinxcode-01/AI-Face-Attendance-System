@@ -18,7 +18,19 @@ export default function StudentProfilePage() {
   const [phone, setPhone] = useState(profile.phone || '+1 (555) 234-8901');
   const [avatar, setAvatar] = useState(profile.avatar);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const lastLoadedUserIdRef = useRef<string | null>(user ? user.id : null);
+
+  useEffect(() => {
+    if (user && user.id !== lastLoadedUserIdRef.current) {
+      lastLoadedUserIdRef.current = user.id;
+      setName(user.name || '');
+      setPhone(user.phone || '+1 (555) 234-8901');
+      setAvatar(user.avatar || '');
+    }
+  }, [user]);
   const [devices, setDevices] = useState<any[]>([
     { id: 'dev-1', deviceType: 'desktop', userAgent: 'Chrome on macOS (Current)', ipAddress: '192.168.1.42', lastActive: 'Now', current: true },
     { id: 'dev-2', deviceType: 'mobile', userAgent: 'SmartFace Flutter App (iOS 17)', ipAddress: '10.0.4.19', lastActive: '2 hours ago', current: false },
@@ -61,13 +73,13 @@ export default function StudentProfilePage() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveError('');
     try {
       await api.student.updateProfile({ full_name: name, phone });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
-    } catch {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
+    } catch (err: any) {
+      setSaveError(err?.message || 'Failed to update profile. Please try again.');
     }
   };
 
@@ -75,6 +87,7 @@ export default function StudentProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setUploadError('');
     try {
       const fd = new FormData();
       fd.append('file', file);
@@ -82,10 +95,11 @@ export default function StudentProfilePage() {
       if (res?.profilePhotoUrl || res?.avatar_url) {
         setAvatar(res.profilePhotoUrl || res.avatar_url || '');
       }
-    } catch {
-      /* fallback */
+    } catch (err: any) {
+      setUploadError(err?.message || 'Failed to upload photo. Please try again.');
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
   };
 

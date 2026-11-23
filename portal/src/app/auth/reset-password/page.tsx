@@ -26,12 +26,16 @@ export default function ResetPasswordPage() {
     if (password !== confirm) return setError('Passwords do not match.');
     setBusy(true);
     try {
-      await api.auth.resetPassword({
+      const res = await api.auth.resetPassword({
         email: email.trim(),
         otp: otp.trim(),
         new_password: password,
       });
-      router.push('/auth/login?reset=success');
+      if (res && (res as any).success === false) {
+        setError((res as any).message || 'Password reset failed. Invalid or expired OTP.');
+      } else {
+        router.push('/auth/login?reset=success');
+      }
     } catch (err: any) {
       setError(err?.message || 'Password reset failed. Invalid or expired OTP.');
     } finally {

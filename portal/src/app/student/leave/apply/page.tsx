@@ -26,15 +26,15 @@ export default function ApplyLeavePage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!user?.email) return setError('You must be authenticated to submit a leave application.');
     if (!reason.trim()) return setError('Please describe the reason for leave.');
     if (!start || !end) return setError('Select both start and end dates.');
     if (new Date(end) < new Date(start)) return setError('End date must be after the start date.');
 
     setBusy(true);
     try {
-      const email = user?.email || 'alice@smartface.pro';
       await api.leave.apply({
-        user_id: email,
+        user_id: user.email,
         reason: `[${category}] ${reason.trim()}`,
         start_date: start,
         end_date: end,
