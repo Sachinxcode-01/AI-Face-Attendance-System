@@ -18,9 +18,11 @@ function VerifyContent() {
   const [error, setError] = useState('');
   const [resendMsg, setResendMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const { loginWithToken } = useAuth();
 
   const verifyCode = async (otpCode: string) => {
+    if (resending || loading) return;
     if (!email) {
       setError('Please provide the account email address.');
       return;
@@ -49,17 +51,25 @@ function VerifyContent() {
   };
 
   const handleResend = async () => {
+    if (resending) return;
     if (!email.trim()) {
       setError('Enter your account email first to resend code.');
       return;
     }
     setError('');
     setResendMsg('');
+    setResending(true);
     try {
-      await api.auth.requestOtp(email.trim());
-      setResendMsg('A new verification code has been dispatched to your email.');
+      const res = await api.auth.requestOtp(email.trim());
+      if (res && res.success === false) {
+        setError(res.message || 'Failed to resend code. Please try again.');
+      } else {
+        setResendMsg(res?.message || 'A new verification code has been dispatched to your email.');
+      }
     } catch (err: any) {
       setError(err?.message || 'Failed to resend code. Please try again.');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -71,7 +81,7 @@ function VerifyContent() {
     if (v && i < 5) {
       document.getElementById(`otp-${i + 1}`)?.focus();
     }
-    if (next.every((d) => d)) {
+    if (next.every((d) => d) && !resending && !loading) {
       verifyCode(next.join(''));
     }
   };
@@ -112,7 +122,7 @@ function VerifyContent() {
                 inputMode="numeric"
                 maxLength={1}
                 value={d}
-                disabled={loading}
+                disabled={loading || resending}
                 onChange={(e) => update(i, e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Backspace' && !d && i > 0) document.getElementById(`otp-${i - 1}`)?.focus();
@@ -132,10 +142,10 @@ function VerifyContent() {
           <button
             type="button"
             onClick={handleResend}
-            disabled={loading}
+            disabled={loading || resending}
             className="font-semibold text-accent hover:text-accent2 transition-colors cursor-pointer disabled:opacity-50"
           >
-            Resend code
+            {resending ? 'Sending code...' : 'Resend code'}
           </button>
         </p>
       )}

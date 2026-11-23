@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useRouter } from 'next/navigation';
 import { UserProfile, UserRole } from '@/lib/types';
 import { DEMO_PROFILES } from '@/lib/demo-data';
-import { setAuthCookies, clearAuth, getStoredUser, getRole, isAuthenticated, DEMO_ACCOUNTS } from '@/lib/auth';
+import { setAuthCookies, clearAuth, getStoredUser, getRole, isAuthenticated, DEMO_ACCOUNTS, getRoleRedirectPath } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
 
 interface AuthContextValue {
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(profile);
       setRole(selectedRole);
       setAuthed(true);
-      router.push(`/${selectedRole}`);
+      router.push(getRoleRedirectPath(selectedRole));
     },
     [router]
   );
@@ -162,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(profile);
       setRole(userRole);
       setAuthed(true);
-      router.push(`/${userRole}`);
+      router.push(getRoleRedirectPath(userRole));
     },
     [router]
   );

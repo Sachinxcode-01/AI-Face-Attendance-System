@@ -8,7 +8,7 @@ import { AuthScreenLayout, AuthInput } from '@/components/auth/AuthScreenLayout'
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { UserRole } from '@/lib/types';
-import { DEMO_ACCOUNTS } from '@/lib/auth';
+import { DEMO_ACCOUNTS, getRoleRedirectPath } from '@/lib/auth';
 
 const ROLE_BUTTONS: { role: UserRole; label: string; icon: React.ElementType; hint: string }[] = [
   { role: 'student', label: 'Student', icon: GraduationCap, hint: 'alice@smartface.pro' },
@@ -32,7 +32,7 @@ function LoginForm() {
     if (from && from.startsWith('/')) {
       router.push(from);
     } else {
-      router.push(`/${userRole || currentRole || 'student'}`);
+      router.push(getRoleRedirectPath(userRole || currentRole));
     }
   };
 

@@ -84,3 +84,8 @@ export function decodeTokenRole(): UserRole | null {
     return null;
   }
 }
+
+export function getRoleRedirectPath(role: UserRole | string | null | undefined): string {
+  if (role === 'super_admin') return '/admin/super-admin';
+  return role ? `/${role}` : '/student';
+}
