@@ -23,9 +23,45 @@ export default function StudentTimetablePage() {
     api.academic.timetable()
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
+          const now = new Date();
+          const currentDayName = now.toLocaleDateString('en-US', { weekday: 'short' });
+
           const mapped = data.map((item, idx) => {
             const rawDay = (item.day || 'Monday').slice(0, 3) as (typeof DAYS)[number];
             const validDay = DAYS.includes(rawDay) ? rawDay : 'Mon';
+
+            let computedStatus: 'live' | 'upcoming' | 'completed' = 'upcoming';
+            if (item.status === 'live' || item.is_active === true) {
+              computedStatus = 'live';
+            } else if (item.status === 'completed') {
+              computedStatus = 'completed';
+            } else if (validDay === currentDayName && item.time) {
+              try {
+                const [startStr, endStr] = item.time.split('-').map((s: string) => s.trim());
+                const parseTime = (tStr: string) => {
+                  const m = tStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                  if (!m) return null;
+                  let hrs = parseInt(m[1], 10);
+                  const mins = parseInt(m[2], 10);
+                  const mer = m[3].toUpperCase();
+                  if (mer === 'PM' && hrs < 12) hrs += 12;
+                  if (mer === 'AM' && hrs === 12) hrs = 0;
+                  const d = new Date(now);
+                  d.setHours(hrs, mins, 0, 0);
+                  return d;
+                };
+                const start = parseTime(startStr);
+                const end = parseTime(endStr);
+                if (start && end) {
+                  if (now >= start && now <= end) {
+                    computedStatus = 'live';
+                  } else if (now > end) {
+                    computedStatus = 'completed';
+                  }
+                }
+              } catch {}
+            }
+
             return {
               id: item.id || `slot_${idx}`,
               day: validDay,
@@ -33,7 +69,7 @@ export default function StudentTimetablePage() {
               subject: item.subject || 'Core Subject',
               professor: item.teacher || item.professor || 'Faculty Member',
               room: item.room || 'Room 401',
-              status: idx === 0 ? ('live' as const) : ('upcoming' as const),
+              status: computedStatus,
             };
           });
           setSlots(mapped);
