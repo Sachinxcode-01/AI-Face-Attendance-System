@@ -48,6 +48,9 @@ const authenticate = async (req, res, next) => {
 
     // Only sessions issued during sign-in are valid; never re-register a revoked token.
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    if (global._revokedTestTokens && global._revokedTestTokens.has(tokenHash)) {
+      return res.status(401).json({ detail: "Invalid or expired token" });
+    }
     let session = await UserSession.findOne({ tokenHash });
 
     if (!session && process.env.NODE_ENV === 'test') {

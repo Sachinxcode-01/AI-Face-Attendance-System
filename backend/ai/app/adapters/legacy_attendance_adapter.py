@@ -53,15 +53,30 @@ class LegacyAttendanceAdapter:
 
                 def cpu_face_analysis(*args, **kwargs):
                     kwargs["providers"] = ["CPUExecutionProvider"]
-                    return original_face_analysis(*args, **kwargs)
+                    app = original_face_analysis(*args, **kwargs)
+                    orig_prepare = getattr(app, "prepare", None)
+                    if callable(orig_prepare):
+                        def cpu_prepare(*p_args, **p_kwargs):
+                            p_kwargs["ctx_id"] = -1
+                            if p_args:
+                                p_args = (-1,) + p_args[1:]
+                            return orig_prepare(*p_args, **p_kwargs)
+                        app.prepare = cpu_prepare
+                    return app
 
+                att_module = sys.modules.get("attendance_system")
+                orig_att_fa = getattr(att_module, "FaceAnalysis", None) if att_module else None
                 try:
                     if original_face_analysis is not None:
                         legacy_module.FaceAnalysis = cpu_face_analysis
+                    if att_module is not None and orig_att_fa is not None:
+                        att_module.FaceAnalysis = cpu_face_analysis
                     self.system = legacy_module.SmartAttendanceSystem()
                 finally:
                     if original_face_analysis is not None:
                         legacy_module.FaceAnalysis = original_face_analysis
+                    if att_module is not None and orig_att_fa is not None:
+                        att_module.FaceAnalysis = orig_att_fa
                     if cuda_path_backup is not None:
                         os.environ["CUDA_PATH"] = cuda_path_backup
             else:

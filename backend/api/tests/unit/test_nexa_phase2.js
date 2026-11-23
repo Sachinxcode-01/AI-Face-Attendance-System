@@ -24,13 +24,32 @@ async function runTests() {
   console.log("🧪 --- Running Nexa Assistant Phase 2 Unit Tests ---");
 
   let selfConnected = false;
+  if (mongoose.connection.readyState === 3) {
+    await new Promise((resolve) => {
+      mongoose.connection.once('disconnected', resolve);
+    });
+  }
+
   if (mongoose.connection.readyState === 0) {
     const mongoUrl = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/smartface';
     await mongoose.connect(mongoUrl);
     selfConnected = true;
   } else if (mongoose.connection.readyState === 2) {
-    await new Promise((resolve) => {
-      mongoose.connection.once('connected', resolve);
+    await new Promise((resolve, reject) => {
+      const onConnected = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = (err) => {
+        cleanup();
+        reject(err);
+      };
+      const cleanup = () => {
+        mongoose.connection.removeListener('connected', onConnected);
+        mongoose.connection.removeListener('error', onError);
+      };
+      mongoose.connection.once('connected', onConnected);
+      mongoose.connection.once('error', onError);
     });
   }
 
