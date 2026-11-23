@@ -8,6 +8,7 @@ import { AuthScreenLayout, AuthInput } from '@/components/auth/AuthScreenLayout'
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { UserRole } from '@/lib/types';
+import { getRoleRedirectPath } from '@/lib/auth';
 
 const ROLES: { value: UserRole; label: string; icon: React.ElementType }[] = [
   { value: 'student', label: 'Student', icon: GraduationCap },
@@ -61,7 +62,7 @@ export default function RegisterPage() {
       });
       setBusy(false);
       if (res.success) {
-        router.push(`/${role}`);
+        router.push(getRoleRedirectPath(role));
       } else {
         setError(res.error || 'Registration failed. Please try again.');
       }

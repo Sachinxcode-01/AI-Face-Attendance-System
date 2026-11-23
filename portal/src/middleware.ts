@@ -18,15 +18,18 @@ export function middleware(request: NextRequest) {
     }
     // Role guard: /teacher/... must have sf_role=teacher, etc.
     const expected = PROTECTED.find((p) => pathname === p || pathname.startsWith(p + '/'));
-    if (expected && role && expected !== `/${role}`) {
-      return NextResponse.redirect(new URL(`/${role}`, request.url));
+    if (expected && role) {
+      const isAllowed = expected === `/${role}` || (role === 'super_admin' && expected === '/admin');
+      if (!isAllowed) {
+        return NextResponse.redirect(new URL(role === 'super_admin' ? '/admin/super-admin' : `/${role}`, request.url));
+      }
     }
   }
 
   // Signed-in users don't need the auth screens
   if (PUBLIC_AUTH.some((p) => pathname.startsWith(p)) && token) {
     const url = request.nextUrl.clone();
-    url.pathname = role ? `/${role}` : '/student';
+    url.pathname = role === 'super_admin' ? '/admin/super-admin' : (role ? `/${role}` : '/student');
     return NextResponse.redirect(url);
   }
 
