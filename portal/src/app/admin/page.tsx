@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
+import { useAttendanceLive } from '@/hooks/useAttendanceLive';
 import {
   ShieldAlert,
   Activity,
@@ -25,6 +26,34 @@ export default function AdminPortalPage() {
   const [intruders, setIntruders] = useState(MOCK_INTRUDERS);
   const [alertDispatched, setAlertDispatched] = useState(false);
   const [calibrated, setCalibrated] = useState(false);
+  const [attendanceCount, setAttendanceCount] = useState(1842);
+  const [liveStreamLogs, setLiveStreamLogs] = useState<
+    { id: string; time: string; text: string; type: 'success' | 'info' | 'warning' }[]
+  >([
+    { id: '1', time: '09:02:14', text: 'Alice Smith matched ArcFace (0.994) Lab 402', type: 'success' },
+    { id: '2', time: '09:04:32', text: 'Bob Martinez dynamic QR validated', type: 'info' },
+    { id: '3', time: '09:15:00', text: 'Expired QR token rejected (IP: 192.168.1.104)', type: 'warning' },
+    { id: '4', time: '09:18:22', text: 'Google Sheets batch sync completed (14 rows)', type: 'info' },
+  ]);
+
+  // Connect to live telemetry WebSocket stream
+  const { isConnected } = useAttendanceLive({
+    channel: 'live-logs',
+    mockIntervalMs: 12000,
+    onEvent: (evt) => {
+      setAttendanceCount((prev) => prev + 1);
+      const timeStr = evt.timestamp
+        ? new Date(evt.timestamp).toTimeString().split(' ')[0]
+        : new Date().toTimeString().split(' ')[0];
+      const desc = evt.verified_by === 'face'
+        ? `${evt.student_name || evt.student_email?.split('@')[0] || 'Student'} matched ArcFace (${evt.confidence || 0.98})`
+        : `${evt.student_name || evt.student_email?.split('@')[0] || 'Student'} dynamic QR validated`;
+      setLiveStreamLogs((prev) => [
+        { id: Math.random().toString(36).slice(2, 9), time: timeStr, text: desc, type: 'success' },
+        ...prev.slice(0, 9),
+      ]);
+    },
+  });
 
   const handleDispatchSecurity = () => {
     setAlertDispatched(true);
@@ -95,7 +124,7 @@ export default function AdminPortalPage() {
                       <Users className="h-4 w-4 text-indigo-400" />
                     </div>
                     <div className="flex items-baseline gap-2">
-                      <span className="font-display text-3xl font-bold text-white">1,842</span>
+                      <span className="font-display text-3xl font-bold text-white">{attendanceCount.toLocaleString()}</span>
                       <span className="text-xs text-emerald-400 font-medium">+18% peak</span>
                     </div>
                     <p className="mt-2 text-xs text-gray-500">Across 24 lecture halls & labs</p>
@@ -294,23 +323,26 @@ export default function AdminPortalPage() {
                                     <span>Live Audit Stream</span>
                                   </h3>
 
-                                  <div className="space-y-2 font-mono text-[11px] text-gray-400">
-                                    <div className="flex items-center gap-2 text-emerald-400">
-                                      <CheckCircle2 className="h-3 w-3 shrink-0" />
-                                      <span>[09:02:14] Alice Smith matched ArcFace (0.994) Lab 402</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-blue-400">
-                                      <CheckCircle2 className="h-3 w-3 shrink-0" />
-                                      <span>[09:04:32] Bob Martinez dynamic QR validated</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-red-400">
-                                      <AlertTriangle className="h-3 w-3 shrink-0" />
-                                      <span>[09:15:00] Expired QR token rejected (IP: 192.168.1.104)</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-400">
-                                      <Activity className="h-3 w-3 shrink-0" />
-                                      <span>[09:18:22] Google Sheets batch sync completed (14 rows)</span>
-                                    </div>
+                                  <div className="space-y-2 font-mono text-[11px] text-gray-400 max-h-56 overflow-y-auto">
+                                    {liveStreamLogs.map((log) => (
+                                      <div
+                                        key={log.id}
+                                        className={`flex items-center gap-2 ${
+                                          log.type === 'success'
+                                            ? 'text-emerald-400'
+                                            : log.type === 'warning'
+                                            ? 'text-red-400'
+                                            : 'text-blue-400'
+                                        }`}
+                                      >
+                                        {log.type === 'warning' ? (
+                                          <AlertTriangle className="h-3 w-3 shrink-0" />
+                                        ) : (
+                                          <CheckCircle2 className="h-3 w-3 shrink-0" />
+                                        )}
+                                        <span>[{log.time}] {log.text}</span>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
 
