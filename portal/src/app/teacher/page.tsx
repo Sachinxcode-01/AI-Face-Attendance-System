@@ -351,13 +351,12 @@ export default function TeacherDashboardPage() {
           {toasts.map((t) => (
             <div
               key={t.id}
-              className={`rounded-[16px] border px-4 py-3 text-xs font-semibold shadow-2xl backdrop-blur-xl ${
-                t.variant === 'success'
+              className={`rounded-[16px] border px-4 py-3 text-xs font-semibold shadow-2xl backdrop-blur-xl ${t.variant === 'success'
                   ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
                   : t.variant === 'error'
-                  ? 'border-red-500/30 bg-red-500/10 text-red-300'
-                  : 'border-white/10 bg-white/[0.06] text-hi'
-              }`}
+                    ? 'border-red-500/30 bg-red-500/10 text-red-300'
+                    : 'border-white/10 bg-white/[0.06] text-hi'
+                }`}
             >
               <div className="flex items-center gap-2">
                 {t.variant === 'success' ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
