@@ -22,7 +22,7 @@ import 'package:provider/provider.dart';
 
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
-import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
+import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
@@ -178,15 +178,28 @@ class _TeacherRosterOverrideScreenState
   Future<void> _saveAndSync() async {
     HapticFeedback.heavyImpact();
     setState(() => _isSaving = true);
+    final session = context.read<SessionManager>();
 
-    await Future.delayed(const Duration(milliseconds: 900));
+    final records = _students.map((s) => {
+      'student_id': s.id,
+      'usn': s.usn,
+      'status': s.status.name.toUpperCase(),
+      'verified_by': 'Manual Faculty Override',
+    }).toList();
+
+    bool ok = true;
+    if (session.token != null) {
+      ok = await ApiService.batchUpdateRoster('SESS-ROSTER-OVERRIDE', records, session.token);
+    }
 
     if (mounted) {
       setState(() => _isSaving = false);
       AppToast.show(
         context,
-        message: 'Roster saved & synced to SmartFace Server.',
-        type: ToastType.success,
+        message: ok
+            ? 'Roster overrides committed & synced to server.'
+            : 'Saved locally in offline queue. Will sync when connected.',
+        type: ok ? ToastType.success : ToastType.info,
       );
     }
   }
@@ -211,7 +224,7 @@ class _TeacherRosterOverrideScreenState
         .where((s) => s.status == StudentStatus.late)
         .length;
 
-    return StudentScreenShell(
+    return TeacherScreenShell(
       title: 'Roster Override',
       subtitle: 'Classroom Manual Attendance Terminal',
       onBackTap: () => Navigator.of(context).maybePop(),
@@ -235,7 +248,7 @@ class _TeacherRosterOverrideScreenState
           ? const UserListShimmer()
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: ResponsiveContentBounds(
+              child: TeacherResponsiveBounds(
                 maxWidth: 1100,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

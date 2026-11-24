@@ -42,6 +42,8 @@ import 'package:smartface_attendance/features/notifications/controllers/notifica
 import 'package:smartface_attendance/features/leave/controllers/leave_controller.dart';
 import 'package:smartface_attendance/features/analytics/controllers/analytics_controller.dart';
 import 'package:smartface_attendance/features/chatbot/controllers/chatbot_controller.dart';
+import 'package:smartface_attendance/features/teacher/repositories/teacher_repository.dart';
+import 'package:smartface_attendance/features/teacher/controllers/teacher_controller.dart';
 
 // Sync Feature
 import 'package:smartface_attendance/features/sync/models/sync_state.dart';
@@ -102,6 +104,10 @@ Future<void> initServiceLocator() async {
   );
   sl.registerFactory<LeaveController>(() => LeaveController());
   sl.registerFactory<AnalyticsController>(() => AnalyticsController());
+  sl.registerLazySingleton<TeacherRepository>(() => TeacherRepository());
+  sl.registerFactory<TeacherController>(
+    () => TeacherController(repository: sl<TeacherRepository>()),
+  );
 
   // ─── Sync Feature ────────────────────────────────────────────────
   final syncState = SyncState();

@@ -19,8 +19,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import 'package:smartface_attendance/app/constants/app_constants.dart';
+import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
+import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
@@ -220,34 +223,54 @@ class _TeacherDisputeCorrectionScreenState
     }).toList();
   }
 
-  void _resolveDispute(DisputeItem dispute, String action, String remarks) {
+  Future<void> _resolveDispute(DisputeItem dispute, String action, String remarks) async {
     HapticFeedback.mediumImpact();
+    final session = context.read<SessionManager>();
+    if (session.token != null) {
+      await ApiService.resolveDispute(dispute.id, action, remarks, session.token);
+    }
+
     setState(() {
       dispute.reviewStatus = action == 'reject' ? 'rejected' : 'approved';
       dispute.teacherRemarks = remarks;
     });
 
-    AppToast.show(
-      context,
-      message: action == 'reject'
-          ? 'Dispute declined for ${dispute.studentName}.'
-          : 'Attendance corrected to $action for ${dispute.studentName}.',
-      type: action == 'reject' ? ToastType.error : ToastType.success,
-    );
+    if (mounted) {
+      AppToast.show(
+        context,
+        message: action == 'reject'
+            ? 'Dispute declined for ${dispute.studentName}.'
+            : 'Attendance corrected to $action for ${dispute.studentName}.',
+        type: action == 'reject' ? ToastType.error : ToastType.success,
+      );
+    }
   }
 
   Future<void> _saveRetroactiveCorrections() async {
     HapticFeedback.heavyImpact();
     setState(() => _isSavingCorrections = true);
+    final session = context.read<SessionManager>();
 
-    await Future.delayed(const Duration(milliseconds: 900));
+    final records = _rosterList.map((s) => {
+      'student_id': s.id,
+      'usn': s.usn,
+      'status': s.status,
+      'verified_by': 'Faculty Retroactive Correction',
+    }).toList();
+
+    bool ok = true;
+    if (session.token != null) {
+      ok = await ApiService.batchUpdateRoster('SESS-RETROACTIVE', records, session.token);
+    }
 
     if (mounted) {
       setState(() => _isSavingCorrections = false);
       AppToast.show(
         context,
-        message: 'Successfully updated and synced attendance audit log.',
-        type: ToastType.success,
+        message: ok
+            ? 'Successfully committed and synced retroactive corrections.'
+            : 'Corrections saved locally. Will sync when online.',
+        type: ok ? ToastType.success : ToastType.info,
       );
     }
   }

@@ -380,6 +380,162 @@ class TeacherStatusBadge extends StatelessWidget {
   }
 }
 
+/// Executive Faculty Shell providing a high-density, authoritative SaaS layout
+/// for all Teacher / Instructor sub-screens (At-Risk Radar, Roster Override, Disputes, etc.).
+class TeacherScreenShell extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final String? badge;
+  final Color badgeColor;
+  final List<Widget>? actions;
+  final VoidCallback? onBackTap;
+  final Widget child;
+  final double maxWidth;
+  final Widget? floatingActionButton;
+
+  const TeacherScreenShell({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.badge,
+    this.badgeColor = AppColors.primary,
+    this.actions,
+    this.onBackTap,
+    required this.child,
+    this.maxWidth = 1200,
+    this.floatingActionButton,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF070A14) : const Color(0xFFF8FAFC),
+      floatingActionButton: floatingActionButton,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Executive Header Strip
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                border: Border(
+                  bottom: BorderSide(
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  if (onBackTap != null || Navigator.of(context).canPop())
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_back_rounded,
+                        color: isDark ? Colors.white : AppColors.textHeading,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        if (onBackTap != null) {
+                          onBackTap!();
+                        } else {
+                          Navigator.of(context).maybePop();
+                        }
+                      },
+                      tooltip: 'Back',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: isDark ? Colors.white : AppColors.textHeading,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                            ),
+                            if (badge != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: badgeColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: badgeColor.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Text(
+                                  badge!,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: badgeColor,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (subtitle != null) ...[
+                          const SizedBox(height: 1),
+                          Text(
+                            subtitle!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: isDark ? Colors.white60 : AppColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (actions != null) ...actions!,
+                ],
+              ),
+            ),
+
+            // Content Area constrained to maxWidth for ultra-wide displays
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: child,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Pulsating dot used for active sessions, live cameras, or telemetry streams.
 class TeacherLivePulse extends StatefulWidget {
   final Color color;
@@ -804,6 +960,162 @@ class TeacherAuditTimelineCard extends StatelessWidget {
   }
 }
 
+/// Executive Faculty Shell providing a high-density, authoritative SaaS layout
+/// for all Teacher / Instructor sub-screens (At-Risk Radar, Roster Override, Disputes, etc.).
+class TeacherScreenShell extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final String? badge;
+  final Color badgeColor;
+  final List<Widget>? actions;
+  final VoidCallback? onBackTap;
+  final Widget child;
+  final double maxWidth;
+  final Widget? floatingActionButton;
+
+  const TeacherScreenShell({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.badge,
+    this.badgeColor = AppColors.primary,
+    this.actions,
+    this.onBackTap,
+    required this.child,
+    this.maxWidth = 1200,
+    this.floatingActionButton,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF070A14) : const Color(0xFFF8FAFC),
+      floatingActionButton: floatingActionButton,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Executive Header Strip
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                border: Border(
+                  bottom: BorderSide(
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  if (onBackTap != null || Navigator.of(context).canPop())
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_back_rounded,
+                        color: isDark ? Colors.white : AppColors.textHeading,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        if (onBackTap != null) {
+                          onBackTap!();
+                        } else {
+                          Navigator.of(context).maybePop();
+                        }
+                      },
+                      tooltip: 'Back',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: isDark ? Colors.white : AppColors.textHeading,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                            ),
+                            if (badge != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: badgeColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: badgeColor.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Text(
+                                  badge!,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: badgeColor,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (subtitle != null) ...[
+                          const SizedBox(height: 1),
+                          Text(
+                            subtitle!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: isDark ? Colors.white60 : AppColors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (actions != null) ...actions!,
+                ],
+              ),
+            ),
+
+            // Content Area constrained to maxWidth for ultra-wide displays
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: child,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// AI Early-Warning Advisory Card for Faculty.
 class TeacherAiAdvisoryCard extends StatelessWidget {
   final String title;
@@ -920,4 +1232,5 @@ class TeacherAiAdvisoryCard extends StatelessWidget {
     );
   }
 }
+
 

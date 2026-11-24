@@ -68,7 +68,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   List<dynamic> _todayClasses = [];
   int _pendingLeaves = 0;
   int _activeSessions = 0;
-  final int _pendingDisputes = 2;
+  int _pendingDisputes = 0;
 
   @override
   void initState() {
@@ -122,12 +122,14 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         ApiService.getPendingLeaves(),
         ApiService.getTimetable(token),
         ApiService.getActiveSessions(token),
+        ApiService.getTeacherDisputes(token),
       ]);
 
       final analytics = results[0] as Map<String, dynamic>;
       final pending = results[1] as List<dynamic>;
       final timetable = results[2] as List<dynamic>;
       final activeSessions = results[3] as List<dynamic>;
+      final disputes = results[4] as List<dynamic>;
 
       final today = _weekdayLabel(DateTime.now().weekday);
       final todayClasses = timetable
@@ -143,6 +145,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           _analytics = analytics;
           _pendingLeaves = pending.length;
           _todayClasses = todayClasses;
+          _pendingDisputes = disputes.length;
           _activeSessions = activeSessions.where((activeSession) {
             return activeSession is Map &&
                 activeSession['teacher_id']?.toString().toLowerCase() ==
@@ -154,15 +157,23 @@ class _TeacherDashboardState extends State<TeacherDashboard>
 
         // Persist to local cache for resilient offline recovery
         CacheService.set('teacher_analytics_$email', analytics, persist: true);
-        CacheService.set('teacher_today_classes_$email', todayClasses, persist: true);
+        CacheService.set(
+          'teacher_today_classes_$email',
+          todayClasses,
+          persist: true,
+        );
       }
     } catch (e) {
       debugPrint('TeacherDashboard load error: $e');
       if (mounted) {
         final session = context.read<SessionManager>();
         final email = session.email ?? '';
-        final cachedAnalytics = await CacheService.get<Map<String, dynamic>>('teacher_analytics_$email');
-        final cachedClasses = await CacheService.get<List<dynamic>>('teacher_today_classes_$email');
+        final cachedAnalytics = await CacheService.get<Map<String, dynamic>>(
+          'teacher_analytics_$email',
+        );
+        final cachedClasses = await CacheService.get<List<dynamic>>(
+          'teacher_today_classes_$email',
+        );
 
         setState(() {
           if (cachedAnalytics != null) _analytics = cachedAnalytics;
@@ -249,9 +260,15 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(flex: 7, child: _buildOperationsGrid(context, isDark)),
+                      Expanded(
+                        flex: 7,
+                        child: _buildOperationsGrid(context, isDark),
+                      ),
                       const SizedBox(width: 24),
-                      Expanded(flex: 5, child: _buildTodayClassesColumn(isDark)),
+                      Expanded(
+                        flex: 5,
+                        child: _buildTodayClassesColumn(isDark),
+                      ),
                     ],
                   )
                 else ...[
@@ -321,7 +338,10 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         ),
         IconButton(
           onPressed: () => context.push(AppRoutes.teacherQrProjectorPath),
-          icon: const Icon(Icons.cast_for_education_rounded, color: AppColors.gold),
+          icon: const Icon(
+            Icons.cast_for_education_rounded,
+            color: AppColors.gold,
+          ),
           tooltip: 'Classroom Projector Mode',
         ),
         IconButton(
@@ -369,7 +389,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             decoration: BoxDecoration(
               color: AppColors.success.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppColors.success.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               children: [
@@ -402,7 +424,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       ),
       child: Row(
         children: [
-          const Icon(Icons.cloud_off_rounded, color: AppColors.warning, size: 18),
+          const Icon(
+            Icons.cloud_off_rounded,
+            color: AppColors.warning,
+            size: 18,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -412,7 +438,14 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           ),
           TextButton(
             onPressed: () => _loadData(),
-            child: Text('RETRY', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.warning)),
+            child: Text(
+              'RETRY',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: AppColors.warning,
+              ),
+            ),
           ),
         ],
       ),
@@ -422,7 +455,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   // ── Classroom Projector Hero ───────────────────────────────────────────────
   Widget _buildProjectorHeroCard(BuildContext context, bool isDark) {
     final isActive = _activeSessions > 0;
-    final rate = (_analytics['class_attendance_rate'] as num?)?.toDouble() ?? 82.5;
+    final rate =
+        (_analytics['class_attendance_rate'] as num?)?.toDouble() ?? 82.5;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -434,7 +468,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isActive ? AppColors.gold.withValues(alpha: 0.4) : Colors.white12,
+          color: isActive
+              ? AppColors.gold.withValues(alpha: 0.4)
+              : Colors.white12,
           width: 1.5,
         ),
         boxShadow: [
@@ -459,7 +495,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    isActive ? 'ATTENDANCE IN PROGRESS' : 'SMARTBOARD PROJECTOR READY',
+                    isActive
+                        ? 'ATTENDANCE IN PROGRESS'
+                        : 'SMARTBOARD PROJECTOR READY',
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -470,14 +508,21 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   'Avg: ${rate.toStringAsFixed(1)}%',
-                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
@@ -494,7 +539,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           const SizedBox(height: 6),
           Text(
             'Launch full-screen 15-second rotating cryptographic QR on your smartboard or projector. Students scan to log biometric proof.',
-            style: GoogleFonts.inter(fontSize: 13, color: Colors.white70, height: 1.4),
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: Colors.white70,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 20),
 
@@ -507,41 +556,82 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   HapticFeedback.lightImpact();
                   context.push(AppRoutes.teacherQrProjectorPath);
                 },
-                icon: const Icon(Icons.cast_for_education_rounded, color: Colors.black, size: 18),
+                icon: const Icon(
+                  Icons.cast_for_education_rounded,
+                  color: Colors.black,
+                  size: 18,
+                ),
                 label: Text(
                   'LAUNCH QR PROJECTOR',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.black,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.gold,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               OutlinedButton.icon(
                 onPressed: () => context.push(AppRoutes.teacherFeedPath),
-                icon: const Icon(Icons.videocam_outlined, color: Colors.white, size: 18),
+                icon: const Icon(
+                  Icons.videocam_outlined,
+                  color: Colors.white,
+                  size: 18,
+                ),
                 label: Text(
                   'LIVE CCTV HUD',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.white),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
                 ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Colors.white24),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               OutlinedButton.icon(
                 onPressed: () => context.push(AppRoutes.teacherDisputesPath),
-                icon: const Icon(Icons.gavel_rounded, color: AppColors.cyan, size: 18),
+                icon: const Icon(
+                  Icons.gavel_rounded,
+                  color: AppColors.cyan,
+                  size: 18,
+                ),
                 label: Text(
                   'DISPUTES ($_pendingDisputes)',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.cyan),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: AppColors.cyan,
+                  ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: AppColors.cyan.withValues(alpha: 0.4)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  side: BorderSide(
+                    color: AppColors.cyan.withValues(alpha: 0.4),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],
@@ -553,9 +643,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
 
   // ── Executive Metrics Row ──────────────────────────────────────────────────
   Widget _buildExecutiveMetricsRow(bool isDesktop, bool isTablet, bool isDark) {
-    final classRate = (_analytics['class_attendance_rate'] as num?)?.toDouble() ?? 82.5;
+    final classRate =
+        (_analytics['class_attendance_rate'] as num?)?.toDouble() ?? 82.5;
     final totalSessions = _analytics['total_sessions']?.toString() ?? '18';
-    final atRiskCount = (_analytics['low_attendance_students'] as List?)?.length ?? 3;
+    final atRiskCount =
+        (_analytics['low_attendance_students'] as List?)?.length ?? 3;
 
     final cards = [
       TeacherMetricCard(
@@ -596,22 +688,55 @@ class _TeacherDashboardState extends State<TeacherDashboard>
 
     if (isDesktop) {
       return Row(
-        children: cards.map((c) => Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: c))).toList(),
+        children: cards
+            .map(
+              (c) => Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: c,
+                ),
+              ),
+            )
+            .toList(),
       );
     } else if (isTablet) {
       return Column(
         children: [
-          Row(children: [Expanded(child: cards[0]), const SizedBox(width: 12), Expanded(child: cards[1])]),
+          Row(
+            children: [
+              Expanded(child: cards[0]),
+              const SizedBox(width: 12),
+              Expanded(child: cards[1]),
+            ],
+          ),
           const SizedBox(height: 12),
-          Row(children: [Expanded(child: cards[2]), const SizedBox(width: 12), Expanded(child: cards[3])]),
+          Row(
+            children: [
+              Expanded(child: cards[2]),
+              const SizedBox(width: 12),
+              Expanded(child: cards[3]),
+            ],
+          ),
         ],
       );
     } else {
       return Column(
         children: [
-          Row(children: [Expanded(child: cards[0]), const SizedBox(width: 12), Expanded(child: cards[1])]),
+          Row(
+            children: [
+              Expanded(child: cards[0]),
+              const SizedBox(width: 12),
+              Expanded(child: cards[1]),
+            ],
+          ),
           const SizedBox(height: 12),
-          Row(children: [Expanded(child: cards[2]), const SizedBox(width: 12), Expanded(child: cards[3])]),
+          Row(
+            children: [
+              Expanded(child: cards[2]),
+              const SizedBox(width: 12),
+              Expanded(child: cards[3]),
+            ],
+          ),
         ],
       );
     }
@@ -625,7 +750,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         color: isDark ? const Color(0xFF161E38) : const Color(0xFFEEF2FF),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? AppColors.purple.withValues(alpha: 0.3) : const Color(0xFFC7D2FE),
+          color: isDark
+              ? AppColors.purple.withValues(alpha: 0.3)
+              : const Color(0xFFC7D2FE),
         ),
       ),
       child: Row(
@@ -636,7 +763,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               color: AppColors.purple.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.auto_awesome_rounded, color: AppColors.purple, size: 20),
+            child: const Icon(
+              Icons.auto_awesome_rounded,
+              color: AppColors.purple,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -647,20 +778,41 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   children: [
                     Text(
                       'AI ATTENDANCE FORECAST',
-                      style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.purple, letterSpacing: 1.1),
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.purple,
+                        letterSpacing: 1.1,
+                      ),
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                      decoration: BoxDecoration(color: AppColors.purple.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-                      child: const Text('Gemini 3.8 Flash', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.purple)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.purple.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Gemini 3.8 Flash',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.purple,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Expected 18% attendance drop next Friday in CS-402 (pre-symposium decay). 3 students risk debarment.',
-                  style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white70 : Colors.black87),
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
                 ),
               ],
             ),
@@ -669,7 +821,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             onPressed: () => context.push(AppRoutes.teacherAiCopilotPath),
             child: Text(
               'VIEW FORECAST',
-              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.purple),
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: AppColors.purple,
+              ),
             ),
           ),
         ],
@@ -762,11 +918,17 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF111827) : Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE5E7EB)),
+              border: Border.all(
+                color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+              ),
             ),
             child: Row(
               children: [
-                const Icon(Icons.check_circle_outline_rounded, color: AppColors.success, size: 24),
+                const Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: AppColors.success,
+                  size: 24,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -789,7 +951,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF111827) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE5E7EB)),
+                border: Border.all(
+                  color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+                ),
               ),
               child: Row(
                 children: [
@@ -799,7 +963,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                       color: AppColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.school_rounded, color: AppColors.primary, size: 20),
+                    child: const Icon(
+                      Icons.school_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -808,11 +976,17 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                       children: [
                         Text(
                           name,
-                          style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13),
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                         ),
                         Text(
                           '$time · $room',
-                          style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
@@ -824,8 +998,13 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.gold,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: Text(
                       'START QR',
@@ -851,7 +1030,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF111827) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE5E7EB)),
+        border: Border.all(
+          color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -868,29 +1049,53 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   color: isDark ? Colors.white70 : AppColors.textMuted,
                 ),
               ),
-              const TeacherStatusBadge(label: 'ENCRYPTED AUDIT', color: AppColors.success),
+              const TeacherStatusBadge(
+                label: 'ENCRYPTED AUDIT',
+                color: AppColors.success,
+              ),
             ],
           ),
           const SizedBox(height: 14),
-          _buildActivityItem('Attendance session opened for CS-402 in Auditorium B', '09:00 AM', Icons.lock_clock_rounded, AppColors.gold),
-          _buildActivityItem('Dispute DSP-8821 submitted by Rohan Sharma (Timeout)', '09:04 AM', Icons.gavel_rounded, AppColors.cyan),
-          _buildActivityItem('ArcFace ONNX verified 14 faces with >98% match', '09:12 AM', Icons.face_rounded, AppColors.primary),
+          _buildActivityItem(
+            'Attendance session opened for CS-402 in Auditorium B',
+            '09:00 AM',
+            Icons.lock_clock_rounded,
+            AppColors.gold,
+          ),
+          _buildActivityItem(
+            'Dispute DSP-8821 submitted by Rohan Sharma (Timeout)',
+            '09:04 AM',
+            Icons.gavel_rounded,
+            AppColors.cyan,
+          ),
+          _buildActivityItem(
+            'ArcFace ONNX verified 14 faces with >98% match',
+            '09:12 AM',
+            Icons.face_rounded,
+            AppColors.primary,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildActivityItem(String text, String time, IconData icon, Color color) {
+  Widget _buildActivityItem(
+    String text,
+    String time,
+    IconData icon,
+    Color color,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 10),
-          Expanded(
-            child: Text(text, style: GoogleFonts.inter(fontSize: 12)),
+          Expanded(child: Text(text, style: GoogleFonts.inter(fontSize: 12))),
+          Text(
+            time,
+            style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
           ),
-          Text(time, style: GoogleFonts.inter(fontSize: 11, color: Colors.grey)),
         ],
       ),
     );

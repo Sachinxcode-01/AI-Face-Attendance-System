@@ -34,6 +34,7 @@ import 'package:smartface_attendance/features/notifications/controllers/notifica
 import 'package:smartface_attendance/features/leave/controllers/leave_controller.dart';
 import 'package:smartface_attendance/features/analytics/controllers/analytics_controller.dart';
 import 'package:smartface_attendance/features/chatbot/controllers/chatbot_controller.dart';
+import 'package:smartface_attendance/features/teacher/controllers/teacher_controller.dart';
 
 // Offline Sync Feature
 import 'package:hive_flutter/hive_flutter.dart';
@@ -123,6 +124,9 @@ void main() async {
         ),
         ChangeNotifierProvider<AnalyticsController>(
           create: (_) => sl<AnalyticsController>(),
+        ),
+        ChangeNotifierProvider<TeacherController>(
+          create: (_) => sl<TeacherController>(),
         ),
       ],
       child: const SmartAttendanceApp(),

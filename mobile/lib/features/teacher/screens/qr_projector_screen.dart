@@ -32,6 +32,8 @@ import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/core/services/notification_service.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
+import 'package:smartface_attendance/features/teacher/controllers/teacher_controller.dart';
+import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 
 class QRProjectorScreen extends StatefulWidget {
   final String? initialSubject;
@@ -237,6 +239,9 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
   }
 
   void _confirmCloseSession() {
+    final session = context.read<SessionManager>();
+    final teacherCtrl = context.read<TeacherController>();
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -271,9 +276,25 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              context.pop();
+              HapticFeedback.heavyImpact();
+
+              if (_sessionId != null && session.token != null) {
+                await ApiService.stopSession(_sessionId!, session.token);
+                if (session.email != null) {
+                  teacherCtrl.loadDashboard(session.email!, session.token!, silent: true);
+                }
+              }
+
+              if (mounted) {
+                AppToast.show(
+                  context,
+                  message: 'Session closed. $_presentCount students successfully verified.',
+                  type: ToastType.success,
+                );
+                context.pop();
+              }
             },
             child: Text(
               'FINISH & SAVE',

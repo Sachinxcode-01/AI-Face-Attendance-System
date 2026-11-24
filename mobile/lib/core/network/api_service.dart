@@ -854,6 +854,120 @@ class ApiService {
     }
   }
 
+  static Future<bool> stopSession(String sessionId, [String? token]) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$baseUrl/sessions/stop'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'session_id': sessionId}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('[ApiService] stopSession error: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> batchUpdateRoster(
+    String sessionId,
+    List<Map<String, dynamic>> records, [
+    String? token,
+  ]) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$baseUrl/attendance/mark/batch'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'session_id': sessionId,
+          'records': records,
+        }),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint('[ApiService] batchUpdateRoster error: $e');
+      return false;
+    }
+  }
+
+  static Future<List<dynamic>> getTeacherDisputes([String? token]) async {
+    try {
+      final response = await client.get(
+        Uri.parse('$baseUrl/attendance/disputes'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is List) return data;
+        if (data is Map && data['disputes'] is List) return data['disputes'];
+      }
+    } catch (e) {
+      debugPrint('[ApiService] getTeacherDisputes error: $e');
+    }
+    return [];
+  }
+
+  static Future<bool> resolveDispute(
+    String disputeId,
+    String action,
+    String remarks, [
+    String? token,
+  ]) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$baseUrl/attendance/disputes/$disputeId/resolve'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'action': action,
+          'remarks': remarks,
+        }),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('[ApiService] resolveDispute error: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> sendAtRiskAlert(
+    String studentId,
+    String parentEmail,
+    String message, [
+    String? token,
+  ]) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$baseUrl/notifications/send'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'recipient_id': studentId,
+          'parent_email': parentEmail,
+          'title': 'Official Debarment Risk Warning',
+          'message': message,
+          'channel': 'all',
+        }),
+      );
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint('[ApiService] sendAtRiskAlert error: $e');
+      return false;
+    }
+  }
+
   static Future<LeaveBalance> getLeaveBalance(String email) =>
       _getDashboardJson(
         '/leave/balance/${Uri.encodeComponent(email)}',

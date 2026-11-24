@@ -22,7 +22,8 @@ import 'package:provider/provider.dart';
 
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
-import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
+import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
+import 'package:smartface_attendance/features/teacher/controllers/teacher_controller.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
@@ -189,19 +190,35 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
 
   Future<void> _sendWarning(AtRiskStudentItem student) async {
     HapticFeedback.lightImpact();
+    final session = context.read<SessionManager>();
+    final msg =
+        'Mandatory Compliance Alert: Your current attendance in ${student.department} is ${student.attendance.toStringAsFixed(1)}%. Minimum 75% required. Attend next ${student.classesNeededFor75} lectures immediately to avoid university debarment.';
+
+    if (session.token != null) {
+      await ApiService.sendAtRiskAlert(
+        student.id,
+        student.parentEmail,
+        msg,
+        session.token,
+      );
+    }
+
     setState(() => student.warningSent = true);
 
-    AppToast.show(
-      context,
-      message: 'Notice dispatched to ${student.name} & Guardian',
-      type: ToastType.success,
-    );
+    if (mounted) {
+      AppToast.show(
+        context,
+        message: 'Official warning dispatched to ${student.name} & Guardian',
+        type: ToastType.success,
+      );
+    }
   }
 
   Future<void> _dispatchAllWarnings() async {
     HapticFeedback.heavyImpact();
-    final count = _filteredStudents.where((s) => !s.warningSent).length;
-    if (count == 0) {
+    final session = context.read<SessionManager>();
+    final targets = _filteredStudents.where((s) => !s.warningSent).toList();
+    if (targets.isEmpty) {
       AppToast.show(
         context,
         message: 'All at-risk warnings have already been dispatched.',
@@ -210,17 +227,29 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
       return;
     }
 
-    setState(() {
-      for (final s in _filteredStudents) {
-        s.warningSent = true;
+    for (final s in targets) {
+      final msg =
+          'Debarment Risk Warning: Attendance is ${s.attendance.toStringAsFixed(1)}%. Requires 75% minimum threshold.';
+      if (session.token != null) {
+        await ApiService.sendAtRiskAlert(
+          s.id,
+          s.parentEmail,
+          msg,
+          session.token,
+        );
       }
-    });
+      s.warningSent = true;
+    }
 
-    AppToast.show(
-      context,
-      message: 'Batch dispatched $count official debarment risk alerts!',
-      type: ToastType.success,
-    );
+    setState(() {});
+
+    if (mounted) {
+      AppToast.show(
+        context,
+        message: 'Batch dispatched ${targets.length} official debarment risk alerts!',
+        type: ToastType.success,
+      );
+    }
   }
 
   @override
@@ -228,7 +257,7 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final filtered = _filteredStudents;
 
-    return StudentScreenShell(
+    return TeacherScreenShell(
       title: 'At-Risk Radar (<75%)',
       subtitle: 'Early Debarment Detection & Alert Center',
       onBackTap: () => Navigator.of(context).maybePop(),
@@ -243,7 +272,7 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
           ? const AtRiskRosterShimmer()
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: ResponsiveContentBounds(
+              child: TeacherResponsiveBounds(
                 maxWidth: 1100,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
