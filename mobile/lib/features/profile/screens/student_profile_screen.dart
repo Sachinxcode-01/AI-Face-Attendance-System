@@ -41,6 +41,7 @@ import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/app/router/app_router.dart';
 import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/shared/widgets/avatar_picker_sheet.dart';
+import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
 
 // ======================================================
 // State & Core Imports
@@ -726,9 +727,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 110),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
+                  child: Center(
+                    child: ResponsiveContentBounds(
+                      maxWidth: 960,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
                       const SizedBox(height: 8),
                       _buildAvatarSection()
                           .animate()
@@ -1140,6 +1144,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                     ],
                   ),
                 ),
+              ),
+            ),
               ),
     );
   }

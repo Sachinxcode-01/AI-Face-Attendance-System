@@ -23,6 +23,7 @@ import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
+import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
 
 class StudentLeaveDashboardScreen extends StatefulWidget {
   const StudentLeaveDashboardScreen({super.key});
@@ -119,24 +120,29 @@ class _StudentLeaveDashboardScreenState
                     horizontal: 20,
                     vertical: 16,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildWelcomeHeader(isDark),
-                      const SizedBox(height: 24),
-                      _buildBalancesGrid(balance, isDark),
-                      const SizedBox(height: 24),
-                      _buildOverviewSection(
-                        pendingCount,
-                        approvedCount,
-                        rejectedCount,
-                        isDark,
+                  child: Center(
+                    child: ResponsiveContentBounds(
+                      maxWidth: 1100,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildWelcomeHeader(isDark),
+                          const SizedBox(height: 24),
+                          _buildBalancesGrid(balance, isDark),
+                          const SizedBox(height: 24),
+                          _buildOverviewSection(
+                            pendingCount,
+                            approvedCount,
+                            rejectedCount,
+                            isDark,
+                          ),
+                          const SizedBox(height: 32),
+                          _buildActionButtons(context),
+                          const SizedBox(height: 32),
+                          _buildRecentRequestsSection(leaves, isDark),
+                        ],
                       ),
-                      const SizedBox(height: 32),
-                      _buildActionButtons(context),
-                      const SizedBox(height: 32),
-                      _buildRecentRequestsSection(leaves, isDark),
-                    ],
+                    ),
                   ),
                 ),
         ),
