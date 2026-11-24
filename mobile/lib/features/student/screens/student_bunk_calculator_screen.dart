@@ -210,70 +210,158 @@ class _StudentBunkCalculatorScreenState
       onBackTap: () => Navigator.of(context).maybePop(),
       child: _isLoading
           ? const BunkCalculatorShimmer()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── 1. Target Goal Selector ──────────────────────────────
-                  _buildGoalSelector(isDark),
-                  const SizedBox(height: 20),
+          : ResponsiveContentBounds(
+              maxWidth: 1100,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── 1. Target Goal Selector ──────────────────────────────
+                    _buildGoalSelector(isDark),
+                    const SizedBox(height: 20),
 
-                  // ── 2. Master Status & Simulator Card ────────────────────
-                  _buildSimulatorHud(isDark),
-                  const SizedBox(height: 20),
+                    // ── 2. Master Status & Simulator Card ────────────────────
+                    _buildSimulatorHud(isDark),
+                    const SizedBox(height: 20),
 
-                  // ── 3. Interactive Simulation Sliders ────────────────────
-                  _buildSimulationSliders(isDark),
-                  const SizedBox(height: 24),
+                    // ── 3. Attendance Recovery Roadmap ───────────────────────
+                    _buildRecoveryRoadmap(isDark),
+                    const SizedBox(height: 20),
 
-                  // ── 4. Subject Breakdown Section ─────────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'SUBJECT-WISE SAFE BUNKS',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.2,
-                          color: isDark
-                              ? const Color(0xFFA5B4FC)
-                              : const Color(0xFF3D4AB8),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color(0xFF1E293B)
-                              : const Color(0xFFEEF2FF),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${_subjects.length} Subjects',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                    // ── 4. Interactive Simulation Sliders ────────────────────
+                    _buildSimulationSliders(isDark),
+                    const SizedBox(height: 24),
+
+                    // ── 5. Subject Breakdown Section ─────────────────────────
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'SUBJECT-WISE SAFE BUNKS',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
                             color: isDark
-                                ? Colors.white70
-                                : const Color(0xFF4F46E5),
+                                ? const Color(0xFFA5B4FC)
+                                : const Color(0xFF3D4AB8),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF1E293B)
+                                : const Color(0xFFEEF2FF),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${_subjects.length} Subjects',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? Colors.white70
+                                  : const Color(0xFF4F46E5),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
 
-                  // Subject cards
-                  ..._subjects.map((sub) => _buildSubjectCard(sub, isDark)),
-                  const SizedBox(height: 36),
-                ],
+                    // Subject cards
+                    ..._subjects.map((sub) => _buildSubjectCard(sub, isDark)),
+                    const SizedBox(height: 36),
+                  ],
+                ),
               ),
             ),
+    );
+  }
+
+  // ── Recovery Roadmap ─────────────────────────────────────────────────────
+  Widget _buildRecoveryRoadmap(bool isDark) {
+    final needed = _overallCatchUpNeeded;
+    final isCompliant = _overallPercentage >= _targetGoal;
+    final bg = isDark ? const Color(0xFF141D38) : Colors.white;
+    final border = isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0);
+    final textHeading =
+        isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: (isCompliant
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFF4F46E5))
+                      .withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  isCompliant ? Icons.task_alt_rounded : Icons.timeline_rounded,
+                  color: isCompliant
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFF4F46E5),
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ATTENDANCE RECOVERY ROADMAP',
+                    style: GoogleFonts.inter(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                      color: const Color(0xFF4F46E5),
+                    ),
+                  ),
+                  Text(
+                    isCompliant
+                        ? 'Goal Target Met'
+                        : 'Actionable Catch-up Strategy',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: textHeading,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isCompliant
+                ? 'Your overall standing is at ${_overallPercentage.toStringAsFixed(1)}%, which exceeds your ${_targetGoal.toInt()}% target. You have $_overallSafeBunks safe absence buffer lectures across all subjects.'
+                : 'To achieve ${_targetGoal.toInt()}% compliance from your current ${_overallPercentage.toStringAsFixed(1)}%, you must attend the next $needed consecutive lectures without absence. At 3 lectures/day, recovery takes ~${(needed / 3).ceil()} academic days.',
+            style: GoogleFonts.inter(
+              fontSize: 12.5,
+              height: 1.4,
+              color: isDark ? const Color(0xFFC8CCDF) : const Color(0xFF3D4260),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

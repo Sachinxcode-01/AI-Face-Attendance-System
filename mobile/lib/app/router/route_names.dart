@@ -89,6 +89,15 @@ class AppRoutes {
   static const String teacherAttendanceCommandPath =
       '/teacher/attendance/command';
 
+  static const String teacherQrProjectorName = 'teacherQrProjector';
+  static const String teacherQrProjectorPath = '/teacher/qr-projector';
+
+  static const String teacherDisputesName = 'teacherDisputes';
+  static const String teacherDisputesPath = '/teacher/disputes';
+
+  static const String teacherAiCopilotName = 'teacherAiCopilot';
+  static const String teacherAiCopilotPath = '/teacher/ai-copilot';
+
   // Teacher Shell Tab routes
   static const String teacherHomeName = 'teacherHome';
   static const String teacherHomePath = '/teacher/dashboard';

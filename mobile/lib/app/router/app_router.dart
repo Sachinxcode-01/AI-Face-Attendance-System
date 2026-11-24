@@ -60,6 +60,9 @@ import 'package:smartface_attendance/features/sync/screens/sync_dashboard_screen
 
 // Teacher Screens
 import 'package:smartface_attendance/features/teacher/screens/teacher_dashboard_screen.dart';
+import 'package:smartface_attendance/features/teacher/screens/qr_projector_screen.dart';
+import 'package:smartface_attendance/features/teacher/screens/teacher_dispute_correction_screen.dart';
+import 'package:smartface_attendance/features/teacher/screens/teacher_ai_copilot_screen.dart';
 import 'package:smartface_attendance/features/attendance/screens/live_monitor_screen.dart';
 import 'package:smartface_attendance/features/attendance/screens/qr_generator_screen.dart';
 import 'package:smartface_attendance/features/analytics/screens/teacher_stats_screen.dart';
@@ -740,6 +743,36 @@ final GoRouter appRouter = GoRouter(
         context: context,
         state: state,
         child: const TeacherRosterOverrideScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.teacherQrProjectorPath,
+      name: AppRoutes.teacherQrProjectorName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const QRProjectorScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.teacherDisputesPath,
+      name: AppRoutes.teacherDisputesName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const TeacherDisputeCorrectionScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.teacherAiCopilotPath,
+      name: AppRoutes.teacherAiCopilotName,
+      parentNavigatorKey: rootNavigatorKey,
+      pageBuilder: (context, state) => buildPageWithTransition(
+        context: context,
+        state: state,
+        child: const TeacherAiCopilotScreen(),
       ),
     ),
     GoRoute(

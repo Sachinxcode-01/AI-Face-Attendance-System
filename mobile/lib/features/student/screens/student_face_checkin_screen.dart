@@ -24,6 +24,7 @@ import 'package:provider/provider.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
+import 'package:smartface_attendance/features/student/widgets/attendance_components.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/shared/widgets/smart_lottie.dart';
@@ -125,10 +126,12 @@ class _StudentFaceCheckinScreenState extends State<StudentFaceCheckinScreen>
       title: 'Biometric Check-in',
       subtitle: 'ArcFace Live Face Scanner',
       onBackTap: () => Navigator.of(context).maybePop(),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: Column(
-          children: [
+      child: ResponsiveContentBounds(
+        maxWidth: 580,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            children: [
             // ── 1. Live Lecture Banner ─────────────────────────────────────
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -424,11 +427,32 @@ class _StudentFaceCheckinScreenState extends State<StudentFaceCheckinScreen>
                 ),
               ),
 
+            const SizedBox(height: 14),
+            TextButton.icon(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                showAttendanceDisputeSheet(
+                  context,
+                  defaultSubject: _activeSubject,
+                );
+              },
+              icon: const Icon(Icons.help_outline_rounded, size: 16, color: Color(0xFF6366F1)),
+              label: Text(
+                'Camera issues? File Attendance Dispute',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF6366F1),
+                ),
+              ),
+            ),
+
             const SizedBox(height: 36),
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildIndicatorBadge(IconData icon, String label, bool isDark) {

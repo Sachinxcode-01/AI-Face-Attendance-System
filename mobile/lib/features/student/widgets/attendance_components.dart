@@ -757,6 +757,319 @@ class LiveMonitorCard extends StatelessWidget {
 }
 
 // ============================================================================
+// 7. AttendanceDisputeSheet & Workflow
+// ============================================================================
+void showAttendanceDisputeSheet(
+  BuildContext context, {
+  Function(Map<String, dynamic>)? onDisputeSubmitted,
+  String? defaultSubject,
+}) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => AttendanceDisputeSheet(
+      onDisputeSubmitted: onDisputeSubmitted,
+      defaultSubject: defaultSubject,
+    ),
+  );
+}
+
+class AttendanceDisputeSheet extends StatefulWidget {
+  final Function(Map<String, dynamic>)? onDisputeSubmitted;
+  final String? defaultSubject;
+
+  const AttendanceDisputeSheet({
+    super.key,
+    this.onDisputeSubmitted,
+    this.defaultSubject,
+  });
+
+  @override
+  State<AttendanceDisputeSheet> createState() => _AttendanceDisputeSheetState();
+}
+
+class _AttendanceDisputeSheetState extends State<AttendanceDisputeSheet> {
+  final _reasonController = TextEditingController();
+  String _selectedReason = 'Biometric Scanner Error';
+  late String _selectedSubject;
+  bool _hasAttachment = false;
+  bool _isSubmitting = false;
+
+  final List<String> _reasons = [
+    'Biometric Scanner Error',
+    'Medical Exemption',
+    'Authorized Duty / Event',
+    'Network Timeout',
+    'Other Special Case',
+  ];
+
+  final List<String> _subjects = [
+    'Machine Learning (CSE-303)',
+    'Cloud Computing (CSE-304)',
+    'Software Engineering (CSE-302)',
+    'Database Systems (CSE-301)',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedSubject = widget.defaultSubject ?? _subjects.first;
+  }
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  void _submit() async {
+    if (_reasonController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please describe your dispute details.')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    final disputeRecord = {
+      'subject': _selectedSubject,
+      'reason': _selectedReason,
+      'details': _reasonController.text.trim(),
+      'status': 'Pending Review',
+      'date': 'Today',
+      'hasAttachment': _hasAttachment,
+    };
+
+    if (mounted) {
+      widget.onDisputeSubmitted?.call(disputeRecord);
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Color(0xFF10B981),
+          content: Text('Attendance dispute submitted successfully for review.'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF141D38) : Colors.white;
+    final cardBorder = isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0);
+    final textHeading = isDark ? const Color(0xFFF1F3F9) : const Color(0xFF1A1A3A);
+    final textBody = isDark ? const Color(0xFFC8CCDF) : const Color(0xFF3D4260);
+
+    return Container(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 28,
+      ),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border.all(color: cardBorder, width: 1.0),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white24 : Colors.black12,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.gavel_rounded, color: Color(0xFF4F46E5), size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'File Attendance Dispute',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: textHeading,
+                        ),
+                      ),
+                      Text(
+                        'Submit an appeal for unverified or erroneous attendance',
+                        style: GoogleFonts.inter(fontSize: 12, color: textBody),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'AFFECTED COURSE',
+              style: GoogleFonts.inter(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                color: const Color(0xFF4F46E5),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: cardBorder),
+                color: isDark ? const Color(0xFF1A2340) : const Color(0xFFF8FAFF),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedSubject,
+                  isExpanded: true,
+                  dropdownColor: cardBg,
+                  items: _subjects.map((s) => DropdownMenuItem(value: s, child: Text(s, style: TextStyle(color: textHeading, fontSize: 13)))).toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedSubject = val);
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'DISPUTE REASON',
+              style: GoogleFonts.inter(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                color: const Color(0xFF4F46E5),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _reasons.map((r) {
+                final isSelected = _selectedReason == r;
+                return ChoiceChip(
+                  label: Text(r),
+                  selected: isSelected,
+                  onSelected: (val) {
+                    if (val) setState(() => _selectedReason = r);
+                  },
+                  selectedColor: const Color(0xFF4F46E5),
+                  labelStyle: TextStyle(
+                    fontSize: 11.5,
+                    color: isSelected ? Colors.white : textBody,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                  backgroundColor: isDark ? const Color(0xFF1A2340) : const Color(0xFFF1F3F9),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: isSelected ? const Color(0xFF4F46E5) : cardBorder),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'JUSTIFICATION & DETAILS',
+              style: GoogleFonts.inter(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                color: const Color(0xFF4F46E5),
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _reasonController,
+              maxLines: 3,
+              style: TextStyle(color: textHeading, fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'Explain the circumstances (e.g. Present in row 3, scanner camera timed out)...',
+                hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12),
+                filled: true,
+                fillColor: isDark ? const Color(0xFF1A2340) : const Color(0xFFF8FAFF),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: cardBorder)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: cardBorder)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4F46E5))),
+              ),
+            ),
+            const SizedBox(height: 14),
+            // Proof attachment option
+            Row(
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    setState(() => _hasAttachment = !_hasAttachment);
+                  },
+                  icon: Icon(
+                    _hasAttachment ? Icons.check_circle_rounded : Icons.attach_file_rounded,
+                    size: 16,
+                    color: _hasAttachment ? const Color(0xFF10B981) : const Color(0xFF4F46E5),
+                  ),
+                  label: Text(
+                    _hasAttachment ? 'Evidence Attached' : 'Attach Proof / Slip',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _hasAttachment ? const Color(0xFF10B981) : const Color(0xFF4F46E5),
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    side: BorderSide(color: _hasAttachment ? const Color(0xFF10B981) : const Color(0xFF4F46E5)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4F46E5),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                child: _isSubmitting
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Text(
+                        'Submit Appeal for Review',
+                        style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
 // 5. RiskAnalysisCard
 // ============================================================================
 class RiskAnalysisCard extends StatelessWidget {
@@ -1023,3 +1336,4 @@ class AuditLogList extends StatelessWidget {
     );
   }
 }
+

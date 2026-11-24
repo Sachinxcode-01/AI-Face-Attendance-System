@@ -297,10 +297,12 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
         ? const Color(0xFF7C82A0)
         : const Color(0xFFA0A0B8);
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 120),
-      itemCount: slots.length,
-      itemBuilder: (context, index) {
+    return ResponsiveContentBounds(
+      maxWidth: 1080,
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 120),
+        itemCount: slots.length,
+        itemBuilder: (context, index) {
         final slot = slots[index];
         final timeStr = (slot['time'] ?? '09:00 AM').toString();
         final subjectTitle = (slot['subject'] ?? 'Lecture Slot').toString();
@@ -485,6 +487,7 @@ class _StudentTimetableScreenState extends State<StudentTimetableScreen>
               curve: Curves.easeOutCubic,
             );
       },
+      ),
     );
   }
 }

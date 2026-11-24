@@ -261,10 +261,12 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
       ],
       child: _isLoading
           ? const StudentIdCardShimmer()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              child: Column(
-                children: [
+          : ResponsiveContentBounds(
+              maxWidth: 640,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: Column(
+                  children: [
                   // ── 1. Interactive 3D Card Shell ─────────────────────────
                   AnimatedBuilder(
                     animation: _flipAnimation,
@@ -437,6 +439,7 @@ class _StudentIdCardScreenState extends State<StudentIdCardScreen>
                 ],
               ),
             ),
+          ),
     );
   }
 

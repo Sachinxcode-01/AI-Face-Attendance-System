@@ -182,11 +182,13 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
       ],
       child: _isLoading
           ? const AttendanceCalendarShimmer()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 20, 18, 120),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+          : ResponsiveContentBounds(
+              maxWidth: 1200,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(18, 20, 18, 120),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                   // ── 1. Interactive Calendar Card ─────────────────────────
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -468,6 +470,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                 ],
               ),
             ),
+          ),
     );
   }
 

@@ -16,7 +16,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -46,6 +45,18 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
   Map<String, dynamic>? _dashboardData;
   Map<String, dynamic> _heatmapData = {};
   List<dynamic> _verificationLogs = [];
+  final List<Map<String, dynamic>> _disputes = [];
+
+  void _openDisputeSheet() {
+    showAttendanceDisputeSheet(
+      context,
+      onDisputeSubmitted: (dispute) {
+        setState(() {
+          _disputes.insert(0, dispute);
+        });
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -353,12 +364,30 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
       child: RefreshIndicator(
         onRefresh: _fetchHubData,
         color: AppColors.primary,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 20, 18, 120),
-          children: [
-            const SectionHeader(title: 'At a glance'),
-            const SizedBox(height: 12),
-            Row(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 768;
+            final double projectedPct = (percentage + 1.2).clamp(0.0, 100.0);
+
+            final insightsCard = AiAttendanceInsightsCard(
+              currentPercentage: percentage,
+              streakDays: 8,
+              criticalSubject: 'Machine Learning',
+              onActionTap: () => context.push(AppRoutes.studentBunkCalculatorPath),
+            );
+
+            final forecastCard = AttendanceForecastCard(
+              currentPercentage: percentage,
+              projectedPercentage: projectedPct,
+              totalClassesRemaining: 34,
+            );
+
+            final disputesCard = AttendanceDisputeTimelineWidget(
+              disputes: _disputes,
+              onNewDispute: _openDisputeSheet,
+            );
+
+            final atAGlance = Row(
               children: [
                 Expanded(
                   child: _HubStatTile(
@@ -391,21 +420,9 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 18),
+            );
 
-            // 1. Health Score Card
-            AttendanceHealthCard(
-              score: healthScore,
-              percentage: percentage,
-              lates: lates,
-              consecutiveAbsences: consecutiveAbsences,
-              standing: standing,
-            ),
-            const SizedBox(height: 18),
-
-            // 1.5. Smart Bunk & Goal Simulator Banner
-            InkWell(
+            final smartBunkBanner = InkWell(
               onTap: () {
                 HapticFeedback.lightImpact();
                 context.push(AppRoutes.studentBunkCalculatorPath);
@@ -476,35 +493,105 @@ class _AttendanceHubScreenState extends State<AttendanceHubScreen> {
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 18),
+            );
 
-            // 2. Risk Alerts Panel
-            if (alerts.isNotEmpty) ...[
-              _buildAlertsPanel(alerts),
-              const SizedBox(height: 18),
-            ],
+            if (isWide) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 120),
+                child: ResponsiveContentBounds(
+                  maxWidth: 1240,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Column 1
+                      Expanded(
+                        flex: 6,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SectionHeader(title: 'At a glance'),
+                            const SizedBox(height: 12),
+                            atAGlance,
+                            const SizedBox(height: 18),
+                            AttendanceHealthCard(
+                              score: healthScore,
+                              percentage: percentage,
+                              lates: lates,
+                              consecutiveAbsences: consecutiveAbsences,
+                              standing: standing,
+                            ),
+                            const SizedBox(height: 18),
+                            forecastCard,
+                            const SizedBox(height: 18),
+                            HeatmapGrid(heatmapData: _heatmapData),
+                            const SizedBox(height: 18),
+                            disputesCard,
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      // Column 2
+                      Expanded(
+                        flex: 5,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            insightsCard,
+                            const SizedBox(height: 18),
+                            smartBunkBanner,
+                            const SizedBox(height: 18),
+                            if (alerts.isNotEmpty) ...[
+                              _buildAlertsPanel(alerts),
+                              const SizedBox(height: 18),
+                            ],
+                            ExportCard(onExportPressed: _exportLedger),
+                            const SizedBox(height: 18),
+                            _buildRecentLogsLedger(isDark),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
 
-            // 3. Heatmap Matrix Card
-            HeatmapGrid(heatmapData: _heatmapData),
-            const SizedBox(height: 18),
-
-            // 4. Export Controls Card
-            ExportCard(onExportPressed: _exportLedger),
-            const SizedBox(height: 18),
-
-            // 5. Recent Logs List
-            _buildRecentLogsLedger(isDark),
-            const SizedBox(height: 40),
-          ]
-              .animate(interval: 70.ms)
-              .fadeIn(duration: 350.ms, curve: Curves.easeOutCubic)
-              .slideY(
-                begin: 0.08,
-                end: 0,
-                duration: 350.ms,
-                curve: Curves.easeOutCubic,
-              ),
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(18, 20, 18, 120),
+              children: [
+                const SectionHeader(title: 'At a glance'),
+                const SizedBox(height: 12),
+                atAGlance,
+                const SizedBox(height: 18),
+                AttendanceHealthCard(
+                  score: healthScore,
+                  percentage: percentage,
+                  lates: lates,
+                  consecutiveAbsences: consecutiveAbsences,
+                  standing: standing,
+                ),
+                const SizedBox(height: 18),
+                insightsCard,
+                const SizedBox(height: 18),
+                forecastCard,
+                const SizedBox(height: 18),
+                smartBunkBanner,
+                const SizedBox(height: 18),
+                if (alerts.isNotEmpty) ...[
+                  _buildAlertsPanel(alerts),
+                  const SizedBox(height: 18),
+                ],
+                HeatmapGrid(heatmapData: _heatmapData),
+                const SizedBox(height: 18),
+                disputesCard,
+                const SizedBox(height: 18),
+                ExportCard(onExportPressed: _exportLedger),
+                const SizedBox(height: 18),
+                _buildRecentLogsLedger(isDark),
+                const SizedBox(height: 40),
+              ],
+            );
+          },
         ),
       ),
     );
