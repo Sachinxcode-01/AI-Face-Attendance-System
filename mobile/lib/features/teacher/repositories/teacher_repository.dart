@@ -91,7 +91,7 @@ class TeacherRepository {
             body: jsonEncode({
               'teacher_email': teacherEmail,
               'subject': subject,
-              if (room != null) 'room': room,
+              'room': ?room,
             }),
           )
           .timeout(const Duration(seconds: 8));
@@ -196,7 +196,7 @@ class TeacherRepository {
 
   /// Fetches at-risk students below threshold
   Future<List<AtRiskStudent>> fetchAtRiskStudents(String token) async {
-    final cacheKey = 'at_risk_students_cache';
+    const cacheKey = 'at_risk_students_cache';
     try {
       final res = await client
           .get(
@@ -262,7 +262,7 @@ class TeacherRepository {
 
   /// Fetches pending and past attendance disputes
   Future<List<AttendanceDispute>> fetchDisputes(String token) async {
-    final cacheKey = 'teacher_disputes_cache';
+    const cacheKey = 'teacher_disputes_cache';
     try {
       final res = await client
           .get(

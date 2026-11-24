@@ -27,12 +27,12 @@ import 'package:go_router/go_router.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/app/router/route_names.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
-import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/core/services/notification_service.dart';
 import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
 import 'package:smartface_attendance/features/teacher/controllers/teacher_controller.dart';
 import 'package:smartface_attendance/features/teacher/models/teacher_models.dart';
+import 'package:smartface_attendance/features/teacher/repositories/teacher_repository.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 
 class AttendanceCommandCenter extends StatefulWidget {
@@ -192,7 +192,7 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                         )
                       : ListView.separated(
                           itemCount: filtered.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          separatorBuilder: (_, _) => const Divider(height: 1),
                           itemBuilder: (context, idx) {
                             final s = filtered[idx];
                             return ListTile(
@@ -242,17 +242,16 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                       if (session.token != null) {
                         final active = teacherCtrl.currentActiveSession;
                         final sid = active?.id ?? 'SESS-MANUAL';
+                        Navigator.pop(ctx);
                         final ok = await teacherCtrl.saveRosterOverrides(sid, session.token!);
-                        if (mounted) {
-                          Navigator.pop(ctx);
-                          AppToast.show(
-                            context,
-                            message: ok
-                                ? 'Attendance overrides synced with server.'
-                                : 'Failed to sync with server. Check network.',
-                            type: ok ? ToastType.success : ToastType.error,
-                          );
-                        }
+                        if (!mounted || !context.mounted) return;
+                        AppToast.show(
+                          context,
+                          message: ok
+                              ? 'Attendance overrides synced with server.'
+                              : 'Failed to sync with server. Check network.',
+                          type: ok ? ToastType.success : ToastType.error,
+                        );
                       }
                     },
                     child: Text(
@@ -351,13 +350,12 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                   message: text,
                   token: session.token!,
                 );
-                if (mounted) {
-                  AppToast.show(
-                    context,
-                    message: ok ? 'Class broadcast dispatched successfully.' : 'Dispatched broadcast to classroom.',
-                    type: ToastType.success,
-                  );
-                }
+                if (!mounted || !context.mounted) return;
+                AppToast.show(
+                  context,
+                  message: ok ? 'Class broadcast dispatched successfully.' : 'Dispatched broadcast to classroom.',
+                  type: ToastType.success,
+                );
               }
             },
             child: const Text('DISPATCH', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -838,7 +836,7 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: list.take(5).length,
-              separatorBuilder: (_, __) => const Divider(height: 14),
+              separatorBuilder: (_, _) => const Divider(height: 14),
               itemBuilder: (context, idx) {
                 final item = list[idx];
                 final isFace = (item['method']?.toString().toLowerCase().contains('face') ?? false);
