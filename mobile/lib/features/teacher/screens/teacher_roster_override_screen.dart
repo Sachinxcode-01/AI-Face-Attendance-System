@@ -235,9 +235,11 @@ class _TeacherRosterOverrideScreenState
           ? const UserListShimmer()
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              child: ResponsiveContentBounds(
+                maxWidth: 1100,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   // ── 1. Attendance HUD Summary ────────────────────────────
                   Row(
                     children: [
@@ -376,6 +378,7 @@ class _TeacherRosterOverrideScreenState
                 ],
               ),
             ),
+          ),
     );
   }
 

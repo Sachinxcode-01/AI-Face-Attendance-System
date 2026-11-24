@@ -301,15 +301,18 @@ class _TeacherDisputeCorrectionScreenState
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Tab 1: Dispute Review
-          isWide ? _buildWideDisputeLayout(isDark) : _buildMobileDisputeLayout(isDark),
+      body: TeacherResponsiveBounds(
+        maxWidth: 1400,
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            // Tab 1: Dispute Review
+            isWide ? _buildWideDisputeLayout(isDark) : _buildMobileDisputeLayout(isDark),
 
-          // Tab 2: Retroactive Correction Terminal
-          _buildRetroactiveCorrectionTerminal(isDark),
-        ],
+            // Tab 2: Retroactive Correction Terminal
+            _buildRetroactiveCorrectionTerminal(isDark),
+          ],
+        ),
       ),
     );
   }

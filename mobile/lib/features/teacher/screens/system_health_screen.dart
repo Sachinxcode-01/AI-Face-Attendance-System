@@ -44,6 +44,7 @@ import 'package:provider/provider.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
+import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
 
 /// Screen displaying comprehensive system status, core hardware metrics, and network health.
 class SystemHealthScreen extends StatefulWidget {
@@ -181,32 +182,35 @@ class _SystemHealthScreenState extends State<SystemHealthScreen>
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildStatusBanner(),
-                      const SizedBox(height: 24),
-                      _buildSectionLabel('CORE HARDWARE'),
-                      const SizedBox(height: 16),
-                      _buildHardwareGauges(),
-                      const SizedBox(height: 24),
-                      _buildSectionLabel('THERMAL & STORAGE'),
-                      const SizedBox(height: 16),
-                      _buildThermalRow(),
-                      const SizedBox(height: 24),
-                      _buildSectionLabel('AI ENGINE STATUS'),
-                      const SizedBox(height: 16),
-                      _buildAIEnginePanel(),
-                      const SizedBox(height: 24),
-                      _buildSectionLabel('DATABASE & NETWORK'),
-                      const SizedBox(height: 16),
-                      _buildNetworkPanel(),
-                      const SizedBox(height: 24),
-                      _buildSectionLabel('SYSTEM METRICS'),
-                      const SizedBox(height: 16),
-                      _buildMetricsRow(),
-                      const SizedBox(height: 30),
-                    ],
+                  child: TeacherResponsiveBounds(
+                    maxWidth: 1200,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildStatusBanner(),
+                        const SizedBox(height: 24),
+                        _buildSectionLabel('CORE HARDWARE'),
+                        const SizedBox(height: 16),
+                        _buildHardwareGauges(),
+                        const SizedBox(height: 24),
+                        _buildSectionLabel('THERMAL & STORAGE'),
+                        const SizedBox(height: 16),
+                        _buildThermalRow(),
+                        const SizedBox(height: 24),
+                        _buildSectionLabel('AI ENGINE STATUS'),
+                        const SizedBox(height: 16),
+                        _buildAIEnginePanel(),
+                        const SizedBox(height: 24),
+                        _buildSectionLabel('DATABASE & NETWORK'),
+                        const SizedBox(height: 16),
+                        _buildNetworkPanel(),
+                        const SizedBox(height: 24),
+                        _buildSectionLabel('SYSTEM METRICS'),
+                        const SizedBox(height: 16),
+                        _buildMetricsRow(),
+                        const SizedBox(height: 30),
+                      ],
+                    ),
                   ),
                 ),
               ),

@@ -19,6 +19,7 @@ import 'package:smartface_attendance/features/leave/models/leave_model.dart';
 import 'package:smartface_attendance/app/theme/theme_controller.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
+import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
 
 class TeacherLeaveDashboardScreen extends StatefulWidget {
   const TeacherLeaveDashboardScreen({super.key});
@@ -428,37 +429,40 @@ class _TeacherLeaveDashboardScreenState
             ),
           ],
         ),
-        body: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return [
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
+        body: TeacherResponsiveBounds(
+          maxWidth: 1200,
+          child: NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      _buildOverviewMetrics(
+                        pending.length,
+                        totalReq,
+                        approvalRate,
+                        isDark,
+                      ),
+                      const SizedBox(height: 24),
+                      _buildTabBar(isDark),
+                      const SizedBox(height: 12),
+                    ]),
+                  ),
                 ),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    _buildOverviewMetrics(
-                      pending.length,
-                      totalReq,
-                      approvalRate,
-                      isDark,
-                    ),
-                    const SizedBox(height: 24),
-                    _buildTabBar(isDark),
-                    const SizedBox(height: 12),
-                  ]),
-                ),
-              ),
-            ];
-          },
-          body: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildRequestsList(pending, true, isDark),
-              _buildRequestsList(approved, false, isDark),
-              _buildRequestsList(rejected, false, isDark),
-            ],
+              ];
+            },
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildRequestsList(pending, true, isDark),
+                _buildRequestsList(approved, false, isDark),
+                _buildRequestsList(rejected, false, isDark),
+              ],
+            ),
           ),
         ),
       ),

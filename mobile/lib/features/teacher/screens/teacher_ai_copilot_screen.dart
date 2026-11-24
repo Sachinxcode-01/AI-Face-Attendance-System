@@ -25,6 +25,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
+import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
 import 'package:smartface_attendance/app/constants/app_constants.dart';
 
 class ChatMessage {
@@ -251,15 +252,18 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Tab 1: Predictive Forecasting Model
-          _buildForecastingTab(isDark),
+      body: TeacherResponsiveBounds(
+        maxWidth: 1200,
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            // Tab 1: Predictive Forecasting Model
+            _buildForecastingTab(isDark),
 
-          // Tab 2: Interactive AI Assistant Chat
-          _buildChatTab(isDark),
-        ],
+            // Tab 2: Interactive AI Assistant Chat
+            _buildChatTab(isDark),
+          ],
+        ),
       ),
     );
   }

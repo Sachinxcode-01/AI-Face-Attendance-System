@@ -35,6 +35,7 @@ import 'package:smartface_attendance/core/di/service_locator.dart';
 import 'package:smartface_attendance/core/services/notification_service.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
+import 'package:smartface_attendance/app/config/cache_service.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/shared/widgets/glow_refresh_indicator.dart';
 
@@ -150,11 +151,22 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           _isOffline = false;
           _isLoading = false;
         });
+
+        // Persist to local cache for resilient offline recovery
+        CacheService.set('teacher_analytics_$email', analytics, persist: true);
+        CacheService.set('teacher_today_classes_$email', todayClasses, persist: true);
       }
     } catch (e) {
       debugPrint('TeacherDashboard load error: $e');
       if (mounted) {
+        final session = context.read<SessionManager>();
+        final email = session.email ?? '';
+        final cachedAnalytics = await CacheService.get<Map<String, dynamic>>('teacher_analytics_$email');
+        final cachedClasses = await CacheService.get<List<dynamic>>('teacher_today_classes_$email');
+
         setState(() {
+          if (cachedAnalytics != null) _analytics = cachedAnalytics;
+          if (cachedClasses != null) _todayClasses = cachedClasses;
           _isOffline = true;
           _isLoading = false;
           _error = 'Operating in offline cache mode. Tap to retry.';
@@ -205,54 +217,57 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             isDesktop ? 36 : (isTablet ? 24 : 16),
             120,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (_isOffline && _error != null) _buildOfflineBanner(_error!),
+          child: TeacherResponsiveBounds(
+            maxWidth: 1280,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_isOffline && _error != null) _buildOfflineBanner(_error!),
 
-              // Greeting & Executive Headline
-              _buildGreetingHeader(session, isDark),
+                // Greeting & Executive Headline
+                _buildGreetingHeader(session, isDark),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // Active Classroom Projector Terminal Card
-              _buildProjectorHeroCard(context, isDark),
+                // Active Classroom Projector Terminal Card
+                _buildProjectorHeroCard(context, isDark),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              // Multi-Metric Telemetry Strip
-              _buildExecutiveMetricsRow(isDesktop, isTablet, isDark),
+                // Multi-Metric Telemetry Strip
+                _buildExecutiveMetricsRow(isDesktop, isTablet, isDark),
 
-              const SizedBox(height: 28),
-
-              // AI Forecasting Alert Callout
-              _buildAiForecastCallout(context, isDark),
-
-              const SizedBox(height: 28),
-
-              // Main Operations Section
-              if (isDesktop)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(flex: 7, child: _buildOperationsGrid(context, isDark)),
-                    const SizedBox(width: 24),
-                    Expanded(flex: 5, child: _buildTodayClassesColumn(isDark)),
-                  ],
-                )
-              else ...[
-                _buildOperationsGrid(context, isDark),
                 const SizedBox(height: 28),
-                _buildTodayClassesColumn(isDark),
+
+                // AI Forecasting Alert Callout
+                _buildAiForecastCallout(context, isDark),
+
+                const SizedBox(height: 28),
+
+                // Main Operations Section
+                if (isDesktop)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 7, child: _buildOperationsGrid(context, isDark)),
+                      const SizedBox(width: 24),
+                      Expanded(flex: 5, child: _buildTodayClassesColumn(isDark)),
+                    ],
+                  )
+                else ...[
+                  _buildOperationsGrid(context, isDark),
+                  const SizedBox(height: 28),
+                  _buildTodayClassesColumn(isDark),
+                ],
+
+                const SizedBox(height: 28),
+
+                // At-Risk & Recent Activity Stream
+                _buildRecentActivityStream(isDark),
+
+                const SizedBox(height: 40),
               ],
-
-              const SizedBox(height: 28),
-
-              // At-Risk & Recent Activity Stream
-              _buildRecentActivityStream(isDark),
-
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
         ),
       ),

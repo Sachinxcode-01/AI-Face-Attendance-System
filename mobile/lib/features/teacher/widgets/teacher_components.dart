@@ -574,3 +574,350 @@ class TeacherActionTile extends StatelessWidget {
     );
   }
 }
+
+// ============================================================================
+// ENTERPRISE RESPONSIVE ARCHITECTURE & DESIGN SYSTEM WIDGETS
+// ============================================================================
+
+/// Enterprise screen breakpoints for faculty tablet and desktop layouts.
+class TeacherBreakpoints {
+  static const double compactPhoneMax = 360;
+  static const double phoneMax = 600;
+  static const double tabletMax = 1024;
+  static const double desktopMax = 1440;
+
+  static bool isCompactPhone(BuildContext context) =>
+      MediaQuery.of(context).size.width < compactPhoneMax;
+
+  static bool isPhone(BuildContext context) =>
+      MediaQuery.of(context).size.width < phoneMax;
+
+  static bool isTablet(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    return width >= phoneMax && width < tabletMax;
+  }
+
+  static bool isDesktop(BuildContext context) =>
+      MediaQuery.of(context).size.width >= tabletMax;
+
+  static bool isWideDesktop(BuildContext context) =>
+      MediaQuery.of(context).size.width >= desktopMax;
+}
+
+/// Enforces maximum width constraints and central alignment on widescreen monitors.
+class TeacherResponsiveBounds extends StatelessWidget {
+  final Widget child;
+  final double maxWidth;
+
+  const TeacherResponsiveBounds({
+    super.key,
+    required this.child,
+    this.maxWidth = 1280.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Offline Banner for Faculty indicating cached session metrics and sync queue status.
+class TeacherOfflineStatusBanner extends StatelessWidget {
+  final int queueCount;
+  final VoidCallback? onSyncNow;
+
+  const TeacherOfflineStatusBanner({
+    super.key,
+    this.queueCount = 0,
+    this.onSyncNow,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF3C7).withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.cloud_off_rounded,
+              color: Color(0xFFF59E0B),
+              size: 16,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Offline Session Mode Active',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: const Color(0xFFF59E0B),
+                  ),
+                ),
+                Text(
+                  queueCount > 0
+                      ? '$queueCount pending attendance update(s) queued for sync.'
+                      : 'Serving roster and attendance metrics from encrypted local cache.',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onSyncNow != null)
+            TextButton(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                onSyncNow!();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFF59E0B),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              child: const Text('SYNC NOW'),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Immutable Audit Trail item for instructor attendance overrides.
+class TeacherAuditTimelineCard extends StatelessWidget {
+  final String actorName;
+  final String action;
+  final String targetStudent;
+  final String usn;
+  final DateTime timestamp;
+  final String reason;
+
+  const TeacherAuditTimelineCard({
+    super.key,
+    required this.actorName,
+    required this.action,
+    required this.targetStudent,
+    required this.usn,
+    required this.timestamp,
+    required this.reason,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF131A33) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.security_rounded,
+                    size: 14,
+                    color: AppColors.cyan,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    actorName,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : AppColors.textHeading,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  action.toUpperCase(),
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '$targetStudent ($usn)',
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Reason: $reason',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// AI Early-Warning Advisory Card for Faculty.
+class TeacherAiAdvisoryCard extends StatelessWidget {
+  final String title;
+  final String body;
+  final String actionLabel;
+  final VoidCallback onAction;
+  final IconData icon;
+
+  const TeacherAiAdvisoryCard({
+    super.key,
+    required this.title,
+    required this.body,
+    required this.actionLabel,
+    required this.onAction,
+    this.icon = Icons.auto_awesome_rounded,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF6366F1).withValues(alpha: 0.18),
+            const Color(0xFF3B82F6).withValues(alpha: 0.08),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF818CF8).withValues(alpha: 0.35),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.25),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: const Color(0xFF818CF8), size: 16),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'GEMINI AI',
+                  style: GoogleFonts.inter(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF34D399),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            body,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: Colors.white70,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                onAction();
+              },
+              icon: const Icon(Icons.arrow_forward_rounded, size: 14),
+              label: Text(
+                actionLabel,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4F46E5),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

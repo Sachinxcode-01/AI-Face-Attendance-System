@@ -180,51 +180,54 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Top Telemetry Grid
-                    isWide
-                        ? _buildWideMetricsRow(isDark)
-                        : _buildMobileMetricsGrid(isDark),
+                child: TeacherResponsiveBounds(
+                  maxWidth: 1280,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top Telemetry Grid
+                      isWide
+                          ? _buildWideMetricsRow(isDark)
+                          : _buildMobileMetricsGrid(isDark),
 
-                    const SizedBox(height: 24),
-
-                    // Biometric Verification Mix Bar
-                    _buildVerificationMixSection(isDark),
-
-                    const SizedBox(height: 24),
-
-                    // Active Sessions Radar
-                    _buildActiveSessionsRadar(isDark),
-
-                    const SizedBox(height: 24),
-
-                    // Compliance Risk Rosters
-                    isWide
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: _buildRiskCard('CRITICAL ROSTER (<60%)', _criticalStudents, AppColors.error, isDark)),
-                              const SizedBox(width: 16),
-                              Expanded(child: _buildRiskCard('WARNING ROSTER (60%-75%)', _warningStudents, AppColors.warning, isDark)),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              _buildRiskCard('CRITICAL ROSTER (<60%)', _criticalStudents, AppColors.error, isDark),
-                              const SizedBox(height: 16),
-                              _buildRiskCard('WARNING ROSTER (60%-75%)', _warningStudents, AppColors.warning, isDark),
-                            ],
-                          ),
-
-                    if (_auditLogs.isNotEmpty) ...[
                       const SizedBox(height: 24),
-                      _buildAuditLogSection(isDark),
-                    ],
 
-                    const SizedBox(height: 40),
-                  ],
+                      // Biometric Verification Mix Bar
+                      _buildVerificationMixSection(isDark),
+
+                      const SizedBox(height: 24),
+
+                      // Active Sessions Radar
+                      _buildActiveSessionsRadar(isDark),
+
+                      const SizedBox(height: 24),
+
+                      // Compliance Risk Rosters
+                      isWide
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: _buildRiskCard('CRITICAL ROSTER (<60%)', _criticalStudents, AppColors.error, isDark)),
+                                const SizedBox(width: 16),
+                                Expanded(child: _buildRiskCard('WARNING ROSTER (60%-75%)', _warningStudents, AppColors.warning, isDark)),
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                _buildRiskCard('CRITICAL ROSTER (<60%)', _criticalStudents, AppColors.error, isDark),
+                                const SizedBox(height: 16),
+                                _buildRiskCard('WARNING ROSTER (60%-75%)', _warningStudents, AppColors.warning, isDark),
+                              ],
+                            ),
+
+                      if (_auditLogs.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        _buildAuditLogSection(isDark),
+                      ],
+
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
             ),

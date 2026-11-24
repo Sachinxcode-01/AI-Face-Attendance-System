@@ -243,9 +243,11 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
           ? const AtRiskRosterShimmer()
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              child: ResponsiveContentBounds(
+                maxWidth: 1100,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   // ── 1. Severity Threshold Filter Tabs ───────────────────
                   _buildThresholdSelector(isDark),
                   const SizedBox(height: 16),
@@ -309,6 +311,7 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
                 ],
               ),
             ),
+          ),
     );
   }
 

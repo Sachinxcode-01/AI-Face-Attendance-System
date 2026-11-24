@@ -34,6 +34,7 @@ import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/shimmer_loader.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
+import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
 
 class TeacherStatsScreen extends StatefulWidget {
   const TeacherStatsScreen({super.key});
@@ -370,24 +371,27 @@ class _TeacherStatsScreenState extends State<TeacherStatsScreen>
                     horizontal: 20,
                     vertical: 10,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildOverviewMetrics(analytics),
-                      const SizedBox(height: 24),
-                      _buildLabel('7-DAY ATTENDANCE TREND'),
-                      const SizedBox(height: 12),
-                      _buildTrendChart(analytics, isDark),
-                      const SizedBox(height: 28),
-                      _buildLabel('SECTION PERFORMANCE COMPARISONS'),
-                      const SizedBox(height: 12),
-                      _buildSectionPerformanceChart(analytics, isDark),
-                      const SizedBox(height: 28),
-                      _buildLabel('STUDENT ROSTERS'),
-                      const SizedBox(height: 12),
-                      _buildStudentRosters(analytics, isDark),
-                      const SizedBox(height: 40),
-                    ],
+                  child: TeacherResponsiveBounds(
+                    maxWidth: 1280,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildOverviewMetrics(analytics),
+                        const SizedBox(height: 24),
+                        _buildLabel('7-DAY ATTENDANCE TREND'),
+                        const SizedBox(height: 12),
+                        _buildTrendChart(analytics, isDark),
+                        const SizedBox(height: 28),
+                        _buildLabel('SECTION PERFORMANCE COMPARISONS'),
+                        const SizedBox(height: 12),
+                        _buildSectionPerformanceChart(analytics, isDark),
+                        const SizedBox(height: 28),
+                        _buildLabel('STUDENT ROSTERS'),
+                        const SizedBox(height: 12),
+                        _buildStudentRosters(analytics, isDark),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
                   ),
                 ),
               ),

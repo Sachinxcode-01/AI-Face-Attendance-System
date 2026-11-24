@@ -50,6 +50,7 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 // ======================================================
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
+import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
 
 /// Screen interface for faculty members to register student faces and trigger AI embedding retraining.
 class TrainFacesScreen extends StatefulWidget {
@@ -262,9 +263,11 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
               )
             : SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                child: TeacherResponsiveBounds(
+                  maxWidth: 960,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     Text(
                       'ONBOARD STUDENT FACE',
                       style: GoogleFonts.inter(
@@ -547,6 +550,7 @@ class _TrainFacesScreenState extends State<TrainFacesScreen> {
                   ],
                 ),
               ),
+            ),
       ),
     );
   }
