@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { CookieBanner } from "@/components/cookie-banner";
 import { Analytics } from "@/components/analytics";
+import { Preloader } from "@/components/preloader";
 import { SpaceBackground } from "@/components/space-background";
 import "./globals.css";
 
@@ -102,6 +103,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         />
       </head>
       <body className="min-h-screen bg-bg0 font-sans text-hi antialiased selection:bg-accent/30 selection:text-white">
+        <Preloader />
         <SpaceBackground />
         <a href="#main" className="skip-link">
           Skip to content
