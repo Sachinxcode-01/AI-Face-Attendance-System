@@ -609,6 +609,10 @@
   animation: PulseRing 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
 }
 
+.animate-spin-slow {
+  animation: spin 10s linear infinite;
+}
+
 .animate-glow-breathe {
   animation: GlowBreathe 4s ease-in-out infinite;
 }
