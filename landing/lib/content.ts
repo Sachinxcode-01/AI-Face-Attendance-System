@@ -57,7 +57,7 @@ export const ROLES: Role[] = [
     path: "/parent",
     href: PORTAL_LINKS.parent,
     description:
-    "See the moment your child arrives, with timestamp and gate, instead of waiting for end-of-term surprises.",
+      "See the moment your child arrives, with timestamp and gate, instead of waiting for end-of-term surprises.",
     capabilities: ["Real-time check-ins", "Instant arrival alerts", "Leave requests in one place"],
     icon: Users,
     accent: "sky",
@@ -66,8 +66,9 @@ export const ROLES: Role[] = [
 
 export const NAV_LINKS = [
   { label: "How It Works", href: "/#how-it-works" },
-  { label: "Platform", href: "/#features" },
-  { label: "Showcase", href: "/#showcase" },
-  { label: "Live Demo", href: "/#token-demo" },
+  { label: "Product Tour", href: "/#product-tour" },
+  { label: "ROI Calculator", href: "/#roi-calculator" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "Security & Trust", href: "/security" },
   { label: "FAQ", href: "/#faq" },
 ] as const;
