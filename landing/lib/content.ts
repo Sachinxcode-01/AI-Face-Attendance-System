@@ -69,6 +69,6 @@ export const NAV_LINKS = [
   { label: "Product Tour", href: "/#product-tour" },
   { label: "ROI Calculator", href: "/#roi-calculator" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Security & Trust", href: "/security" },
+  { label: "Security", href: "/security" },
   { label: "FAQ", href: "/#faq" },
 ] as const;

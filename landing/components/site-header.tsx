@@ -186,7 +186,7 @@ interface SiteHeaderProps {
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="pointer-events-auto relative flex items-center justify-between w-full max-w-[1020px] h-[52px] sm:h-[56px] px-3 sm:px-4 md:px-5 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(14,14,18,0.85)] backdrop-blur-[16px] shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_16px_36px_-12px_rgba(0,0,0,0.6)] overflow-hidden"
+            className="pointer-events-auto relative flex items-center justify-between w-full max-w-[1260px] h-[52px] sm:h-[56px] px-3 sm:px-4 md:px-5 rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(14,14,18,0.85)] backdrop-blur-[16px] shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_16px_36px_-12px_rgba(0,0,0,0.6)] overflow-hidden"
           >
             {/* Scroll Progress Bar at the bottom of the capsule */}
             <motion.div
@@ -198,10 +198,10 @@ interface SiteHeaderProps {
             <a
               ref={brandLinkRef}
               href="/"
-              className="flex items-center gap-2 sm:gap-2.5 text-hi shrink-0 cursor-pointer text-decoration-none group"
+              className="flex items-center gap-2 sm:gap-2.5 text-hi shrink-0 cursor-pointer text-decoration-none group whitespace-nowrap"
               aria-label="SmartFace home"
             >
-              <span className="relative grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-surface group-hover:border-accent/40 transition-colors">
+              <span className="relative grid h-7 w-7 place-items-center rounded-full border border-white/10 bg-surface group-hover:border-accent/40 transition-colors shrink-0">
                 <ScanFace className="h-4 w-4 text-accent transition-transform duration-300 group-hover:scale-110" strokeWidth={1.8} />
                 <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-spotify ring-2 ring-bg0" />
               </span>
@@ -210,13 +210,13 @@ interface SiteHeaderProps {
               </span>
             </a>
 
-            {/* Desktop Nav Links */}
-            <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+            {/* Desktop Nav Links - Single Line Straight Layout */}
+            <nav className="hidden items-center gap-0.5 xl:gap-1 lg:flex shrink-0" aria-label="Primary">
               {NAV_LINKS.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
-                  className="rounded-full px-3.5 py-1.5 text-[13.5px] font-medium text-mid transition duration-150 hover:bg-white/[0.06] hover:text-hi"
+                  className="whitespace-nowrap shrink-0 rounded-full px-3 py-1.5 text-[13px] font-medium text-mid transition duration-150 hover:bg-white/[0.06] hover:text-hi"
                 >
                   {link.label}
                 </a>
@@ -224,70 +224,77 @@ interface SiteHeaderProps {
             </nav>
 
             {/* Actions */}
-              <div className="flex items-center gap-2 sm:gap-2.5">
-                {onOpenDemo && (
-                  <button
-                    type="button"
-                    onClick={onOpenDemo}
-                    className="hidden sm:inline-flex btn-pill-accent h-[36px] px-3.5 text-[12.5px] font-semibold items-center gap-1.5 shadow-[0_0_16px_rgba(143,139,255,0.3)] transition cursor-pointer"
-                  >
-                    <Sparkles className="h-3 w-3" />
-                    <span>Book Demo</span>
-                  </button>
-                )}
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+              {/* GitHub Star Button with Star Icon */}
+              <div className="hidden md:block shrink-0">
+                <GitHubButton />
+              </div>
 
-                {/* Launch Portal Split Pill Button (Desktop) */}
+              {/* Book Demo Action Button */}
+              {onOpenDemo && (
+                <button
+                  type="button"
+                  onClick={onOpenDemo}
+                  className="hidden sm:inline-flex btn-pill-accent h-[36px] px-3.5 text-[12.5px] font-semibold items-center gap-1.5 shadow-[0_0_16px_rgba(143,139,255,0.3)] transition cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  <Sparkles className="h-3 w-3 shrink-0" />
+                  <span>Book Demo</span>
+                </button>
+              )}
+
+              {/* Launch Portal Split Pill Button (Desktop) */}
+              <div
+                ref={dropdownRef}
+                className="relative hidden sm:block shrink-0"
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    setPortalOpen(false);
+                    portalTriggerRef.current?.focus();
+                  }
+                }}
+              >
                 <div
-                  ref={dropdownRef}
-                  className="relative hidden sm:block"
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      setPortalOpen(false);
-                      portalTriggerRef.current?.focus();
-                    }
-                  }}
+                  ref={splitBtnRef}
+                  onMouseMove={handleMouseMove}
+                  className="relative inline-flex items-center h-[36px] rounded-full bg-white text-[#0a0a0c] font-semibold text-[13px] shadow-[0_1px_3px_rgba(0,0,0,0.25)] overflow-hidden transition-transform duration-150 active:scale-98 whitespace-nowrap shrink-0"
+                  style={
+                    {
+                      "--glow-d": "450px",
+                      "--mx": "50%",
+                      "--my": "50%",
+                    } as React.CSSProperties
+                  }
                 >
                   <div
-                    ref={splitBtnRef}
-                    onMouseMove={handleMouseMove}
-                    className="relative inline-flex items-center h-[38px] rounded-full bg-white text-[#0a0a0c] font-semibold text-[13.5px] shadow-[0_1px_3px_rgba(0,0,0,0.25)] overflow-hidden transition-transform duration-150 active:scale-98"
-                    style={
-                      {
-                        "--glow-d": "450px",
-                        "--mx": "50%",
-                        "--my": "50%",
-                      } as React.CSSProperties
-                    }
+                    className="absolute inset-0 rounded-full pointer-events-none opacity-0 hover:opacity-100 transition-opacity duration-300"
+                    style={{
+                      background:
+                        "radial-gradient(var(--glow-d, 450px) circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.4), transparent 70%)",
+                    }}
+                  />
+                  <a
+                    href={PORTAL_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 h-full text-[#0a0a0c] hover:opacity-90 transition-opacity text-[13px] font-semibold whitespace-nowrap shrink-0"
                   >
-                    <div
-                      className="absolute inset-0 rounded-full pointer-events-none opacity-0 hover:opacity-100 transition-opacity duration-300"
-                      style={{
-                        background:
-                          "radial-gradient(var(--glow-d, 450px) circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.4), transparent 70%)",
-                      }}
+                    Launch Portal
+                  </a>
+                  <button
+                    ref={portalTriggerRef}
+                    type="button"
+                    onClick={() => setPortalOpen((open) => !open)}
+                    aria-expanded={portalOpen}
+                    aria-label="Portal role options"
+                    className="inline-flex items-center justify-center px-2 h-full border-l border-[rgba(10,10,12,0.12)] hover:bg-black/5 transition-colors cursor-pointer shrink-0"
+                  >
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 text-[#0a0a0c] transition-transform duration-200 ${
+                        portalOpen ? "rotate-180" : ""
+                      }`}
                     />
-                    <a
-                      href={PORTAL_URL}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 h-full text-[#0a0a0c] hover:opacity-90 transition-opacity text-[13.5px] font-semibold"
-                    >
-                      Launch Portal
-                    </a>
-                    <button
-                      ref={portalTriggerRef}
-                      type="button"
-                      onClick={() => setPortalOpen((open) => !open)}
-                      aria-expanded={portalOpen}
-                      aria-label="Portal role options"
-                      className="inline-flex items-center justify-center px-2.5 h-full border-l border-[rgba(10,10,12,0.12)] hover:bg-black/5 transition-colors cursor-pointer"
-                    >
-                      <ChevronDown
-                        className={`h-3.5 w-3.5 text-[#0a0a0c] transition-transform duration-200 ${portalOpen ? "rotate-180" : ""
-                          }`}
-                      />
-                    </button>
-                  </div>
+                  </button>
+                </div>
 
                   {/* Portal Roles Dropdown */}
                   <AnimatePresence>
