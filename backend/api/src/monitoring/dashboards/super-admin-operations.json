@@ -1,0 +1,107 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "title": "SmartFace - Super Admin Global Platform Command Center",
+  "tags": ["smartface", "super-admin", "platform-ops"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Active Onboarded Colleges",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "active_colleges_gauge",
+          "legendFormat": "Colleges"
+        }
+      ],
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 0 }
+    },
+    {
+      "id": 2,
+      "title": "Total Global Active Users",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(active_users_gauge)",
+          "legendFormat": "Active Users"
+        }
+      ],
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 0 }
+    },
+    {
+      "id": 3,
+      "title": "System Throughput (Requests per Second)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(rate(http_request_duration_seconds_count[1m]))",
+          "legendFormat": "Global RPS"
+        }
+      ],
+      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 0 }
+    },
+    {
+      "id": 4,
+      "title": "Core System Component Health",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "system_health_status",
+          "legendFormat": "{{component}}"
+        }
+      ],
+      "fieldConfig": {
+        "mappings": [
+          { "type": "value", "options": { "1": { "text": "HEALTHY", "color": "green" }, "0": { "text": "DEGRADED", "color": "red" } } }
+        ]
+      },
+      "gridPos": { "h": 5, "w": 12, "x": 12, "y": 0 }
+    },
+    {
+      "id": 5,
+      "title": "Global API Latency Profile (p50, p90, p95, p99)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p90" },
+        { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 }
+    },
+    {
+      "id": 6,
+      "title": "AI Face Recognition & Inference Latency",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(face_recognition_duration_seconds_bucket[5m])) by (le))", "legendFormat": "Face Match p95" },
+        { "expr": "histogram_quantile(0.95, sum(rate(ai_inference_duration_seconds_bucket[5m])) by (le))", "legendFormat": "Vector Embed p95" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 }
+    },
+    {
+      "id": 7,
+      "title": "Tenant Attendance Traffic Distribution",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(attendance_submissions_total[5m])) by (college_id)", "legendFormat": "Tenant: {{college_id}}" }
+      ],
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 13 }
+    },
+    {
+      "id": 8,
+      "title": "BullMQ Queue Job Processing Duration",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(queue_job_duration_seconds_bucket[5m])) by (le, queue_name))", "legendFormat": "Queue {{queue_name}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 13 }
+    }
+  ]
+}

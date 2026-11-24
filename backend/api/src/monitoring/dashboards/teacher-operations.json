@@ -1,0 +1,72 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "title": "SmartFace - Teacher Operations Dashboard",
+  "tags": ["smartface", "teacher", "production"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Active Classroom Attendance Sessions",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(active_attendance_sessions_gauge)",
+          "legendFormat": "Live Sessions"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 }
+    },
+    {
+      "id": 2,
+      "title": "Dynamic QR Token Rotations per Minute",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(http_request_duration_seconds_count{route=~'/sessions/.*/qr'}[1m])) * 60",
+          "legendFormat": "Rotations / min"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 9, "x": 6, "y": 0 }
+    },
+    {
+      "id": 3,
+      "title": "Teacher API Request Latency (p95)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{route=~'/teacher/.*'}[5m])) by (le))",
+          "legendFormat": "p95 Latency"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "gridPos": { "h": 6, "w": 9, "x": 15, "y": 0 }
+    },
+    {
+      "id": 4,
+      "title": "Session Attendance Submission Velocity",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(attendance_submissions_total{status='success'}[1m])) by (college_id)",
+          "legendFormat": "College {{college_id}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 }
+    },
+    {
+      "id": 5,
+      "title": "Active Teacher Concurrent Sessions",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(active_users_gauge{role='teacher'})",
+          "legendFormat": "Active Teachers"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 }
+    }
+  ]
+}

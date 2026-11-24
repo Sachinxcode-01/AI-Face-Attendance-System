@@ -1,0 +1,74 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "title": "SmartFace - College Admin Operations Dashboard",
+  "tags": ["smartface", "admin", "college-operations"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "title": "College Attendance Completion Rate Today",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "sum(rate(attendance_submissions_total{status='success'}[1h])) / (sum(rate(attendance_submissions_total[1h])) + 0.001) * 100",
+          "legendFormat": "Attendance %"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 50, "max": 100 } },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 0 }
+    },
+    {
+      "id": 2,
+      "title": "Intruder / Security Event Stream",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(auth_attempts_total{status='failed'}[5m]))",
+          "legendFormat": "Auth Failures / Anomaly"
+        }
+      ],
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 0 }
+    },
+    {
+      "id": 3,
+      "title": "Database Query Latency for Reports (p95)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket{collection='attendances'}[5m])) by (le))",
+          "legendFormat": "DB Latency"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 0 }
+    },
+    {
+      "id": 4,
+      "title": "Daily Attendance Export & Report Velocity",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(http_request_duration_seconds_count{route=~'/reports/.*'}[5m]))",
+          "legendFormat": "Reports Export/min"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 7 }
+    },
+    {
+      "id": 5,
+      "title": "Queue Job Latency (Emails & Sync)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(queue_job_duration_seconds_bucket[5m])) by (le, queue_name))",
+          "legendFormat": "Queue: {{queue_name}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 7 }
+    }
+  ]
+}

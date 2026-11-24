@@ -1,0 +1,61 @@
+[
+  {
+    "test": "Cross-Tenant Session Access Boundary",
+    "vector": "CROSS_TENANT_LEAKAGE",
+    "status": "BLOCKED_SAFE",
+    "timestamp": "2026-11-24T01:36:35.520Z",
+    "evidence": {
+      "attacker_tenant": "inst_rec_01",
+      "target_resource_tenant": "inst_iit_02",
+      "enforced_http_response": 403,
+      "error_code": "ERR_TENANT_MISMATCH"
+    }
+  },
+  {
+    "test": "Student Attempting Admin Role Mutation (/management/roles)",
+    "vector": "PRIVILEGE_ESCALATION",
+    "status": "BLOCKED_SAFE",
+    "timestamp": "2026-11-24T01:36:35.523Z",
+    "evidence": {
+      "caller_role": "student",
+      "demanded_endpoint": "PATCH /management/roles",
+      "rbac_evaluation": "DENIED_BY_POLICY",
+      "enforced_http_response": 403
+    }
+  },
+  {
+    "test": "Horizontal IDOR on Biometric Embeddings",
+    "vector": "IDOR_BIOMETRIC_DATA",
+    "status": "BLOCKED_SAFE",
+    "timestamp": "2026-11-24T01:36:35.524Z",
+    "evidence": {
+      "requester": "user_101",
+      "target": "user_202",
+      "biometric_read_policy": "STRICT_SELF_OR_KIOSK_ONLY",
+      "enforced_http_response": 403
+    }
+  },
+  {
+    "test": "Unauthorized Ward Attendance Inspection",
+    "vector": "DATA_LEAKAGE_PARENT_BOUNDARY",
+    "status": "BLOCKED_SAFE",
+    "timestamp": "2026-11-24T01:36:35.524Z",
+    "evidence": {
+      "parent_id": "parent_01",
+      "attempted_ward_id": "std_99_unrelated",
+      "enforced_http_response": 403
+    }
+  },
+  {
+    "test": "College Admin Scoped Containment (Tenant Sandboxing)",
+    "vector": "TENANT_CONTAINMENT",
+    "status": "BLOCKED_SAFE",
+    "timestamp": "2026-11-24T01:36:35.524Z",
+    "evidence": {
+      "admin_id": "adm_rec",
+      "admin_college": "inst_rec_01",
+      "target_college": "inst_iit_02",
+      "enforced_http_response": 403
+    }
+  }
+]

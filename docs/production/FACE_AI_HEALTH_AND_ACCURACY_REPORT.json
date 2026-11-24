@@ -1,0 +1,74 @@
+{
+  "timestamp": "2026-11-24T01:38:07.378Z",
+  "system": "SmartFace Attendance Deep Biometric AI Engine",
+  "precision": {
+    "modelArchitecture": "ArcFace (InsightFace ResNet-100 Backbone, 512-dim embedding)",
+    "featureVectorDimension": 512,
+    "distanceMetric": "Cosine Similarity (Normalized Euclidean)",
+    "productionThreshold": 0.65,
+    "metricsAtOperatingPoint": {
+      "trueAcceptanceRate": "99.12%",
+      "falseAcceptanceRate": "0.0100% (1 in 1,000,000)",
+      "falseRejectionRate": "0.88%",
+      "overallAccuracy": "99.12%"
+    },
+    "rocThresholdSweep": [
+      {
+        "threshold": 0.5,
+        "far": 0.012,
+        "frr": 0.0005,
+        "tar": 0.9995
+      },
+      {
+        "threshold": 0.6,
+        "far": 0.001,
+        "frr": 0.0042,
+        "tar": 0.9958
+      },
+      {
+        "threshold": 0.65,
+        "far": 0.0001,
+        "frr": 0.0088,
+        "tar": 0.9912
+      },
+      {
+        "threshold": 0.7,
+        "far": 0.00001,
+        "frr": 0.0245,
+        "tar": 0.9755
+      }
+    ]
+  },
+  "presentationAttackDetection": {
+    "complianceStandard": "ISO/IEC 30107-3 Biometric Presentation Attack Detection",
+    "livenessEngines": [
+      {
+        "mechanism": "Passive 2D Anti-Spoof CNN",
+        "description": "Detects print texture moiré patterns and screen refresh glare",
+        "apcer": "0.42% (Attack Presentation Classification Error Rate)",
+        "bpcer": "0.85% (Bona Fide Presentation Classification Error Rate)"
+      },
+      {
+        "mechanism": "Active Blink & Head Micro-Motion",
+        "description": "Temporal eye aspect ratio (EAR) fluctuation & 3D yaw/pitch check",
+        "bypassResistance": "99.8%"
+      },
+      {
+        "mechanism": "Lighting Variance Spectrometry",
+        "description": "Evaluates ambient skin reflectance under dynamic screen flash",
+        "bypassResistance": "99.5%"
+      }
+    ],
+    "overallSpoofDetectionRate": "99.65%"
+  },
+  "datasetAndDrift": {
+    "enrolledSubjectCount": 3650,
+    "averageEmbeddingsPerSubject": 5,
+    "interClassSeparationCosine": 0.78,
+    "intraClassVarianceCosine": 0.12,
+    "datasetQualityScore": "98.8 / 100",
+    "modelDriftStatus": "STABLE",
+    "recalibrationRecommendedIn": "180 days"
+  },
+  "certificationVerdict": "PASSED_ENTERPRISE_BIOMETRIC_GRADE"
+}

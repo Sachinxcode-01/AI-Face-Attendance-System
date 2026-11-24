@@ -1,0 +1,80 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "SmartFace - Student Operations Dashboard",
+  "tags": ["smartface", "student", "production"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Student Attendance Check-in Latency (p95)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{route=~'/attendance/.*'}[5m])) by (le))",
+          "legendFormat": "p95 Latency (s)"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+    },
+    {
+      "id": 2,
+      "title": "Face Recognition vs QR Mark Volume",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(attendance_submissions_total{method='face'}[5m])) by (status)",
+          "legendFormat": "Face - {{status}}"
+        },
+        {
+          "expr": "sum(rate(attendance_submissions_total{method='qr'}[5m])) by (status)",
+          "legendFormat": "QR - {{status}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+    },
+    {
+      "id": 3,
+      "title": "Active Student Sessions",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(active_users_gauge{role='student'})",
+          "legendFormat": "Active Students"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 8 }
+    },
+    {
+      "id": 4,
+      "title": "Biometric Verification Success Rate",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "sum(rate(attendance_submissions_total{status='success',method='face'}[15m])) / sum(rate(attendance_submissions_total{method='face'}[15m])) * 100",
+          "legendFormat": "Success %"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 80, "max": 100 } },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 8 }
+    },
+    {
+      "id": 5,
+      "title": "Student Auth Failures (OTP & Password)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(auth_attempts_total{status='failed'}[5m])) by (type)",
+          "legendFormat": "Failed {{type}}"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 8 }
+    }
+  ]
+}

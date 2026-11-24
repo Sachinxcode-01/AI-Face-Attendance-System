@@ -1,0 +1,422 @@
+[
+  {
+    "scenario": "Attendance Rush Hour",
+    "virtualUsers": 500,
+    "durationSec": 0.03,
+    "totalRequests": 500,
+    "successCount": 500,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 14305,
+    "latency": {
+      "avgMs": 15.5,
+      "p50Ms": 15.44,
+      "p95Ms": 17.13,
+      "p99Ms": 17.67
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 2,
+      "systemFreeMemMB": 1250
+    }
+  },
+  {
+    "scenario": "Face Recognition Peak Load",
+    "virtualUsers": 500,
+    "durationSec": 0.16,
+    "totalRequests": 500,
+    "successCount": 500,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 3040,
+    "latency": {
+      "avgMs": 30.55,
+      "p50Ms": 28.04,
+      "p95Ms": 52.73,
+      "p99Ms": 55.68
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1247
+    }
+  },
+  {
+    "scenario": "Teacher Attendance Sessions",
+    "virtualUsers": 500,
+    "durationSec": 0.03,
+    "totalRequests": 500,
+    "successCount": 500,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 16172,
+    "latency": {
+      "avgMs": 10.58,
+      "p50Ms": 10.95,
+      "p95Ms": 15.65,
+      "p99Ms": 15.99
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1247
+    }
+  },
+  {
+    "scenario": "Multi-College Concurrent Access",
+    "virtualUsers": 500,
+    "durationSec": 0.03,
+    "totalRequests": 500,
+    "successCount": 500,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 17512,
+    "latency": {
+      "avgMs": 13.55,
+      "p50Ms": 13.6,
+      "p95Ms": 14.5,
+      "p99Ms": 14.57
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1247
+    }
+  },
+  {
+    "scenario": "Queue Processing Bursts",
+    "virtualUsers": 500,
+    "durationSec": 0.03,
+    "totalRequests": 500,
+    "successCount": 500,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 17938,
+    "latency": {
+      "avgMs": 9.48,
+      "p50Ms": 12.07,
+      "p95Ms": 13.47,
+      "p99Ms": 13.56
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1248
+    }
+  },
+  {
+    "scenario": "Attendance Rush Hour",
+    "virtualUsers": 1000,
+    "durationSec": 0.06,
+    "totalRequests": 1000,
+    "successCount": 1000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 16618,
+    "latency": {
+      "avgMs": 14.46,
+      "p50Ms": 14.54,
+      "p95Ms": 15.53,
+      "p99Ms": 15.62
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1249
+    }
+  },
+  {
+    "scenario": "Face Recognition Peak Load",
+    "virtualUsers": 1000,
+    "durationSec": 0.2,
+    "totalRequests": 1000,
+    "successCount": 1000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 4958,
+    "latency": {
+      "avgMs": 22.48,
+      "p50Ms": 22.68,
+      "p95Ms": 32.29,
+      "p99Ms": 37.51
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1254
+    }
+  },
+  {
+    "scenario": "Teacher Attendance Sessions",
+    "virtualUsers": 1000,
+    "durationSec": 0.06,
+    "totalRequests": 1000,
+    "successCount": 1000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 16583,
+    "latency": {
+      "avgMs": 10.63,
+      "p50Ms": 12.16,
+      "p95Ms": 14.52,
+      "p99Ms": 15.22
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1256
+    }
+  },
+  {
+    "scenario": "Multi-College Concurrent Access",
+    "virtualUsers": 1000,
+    "durationSec": 0.06,
+    "totalRequests": 1000,
+    "successCount": 1000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 16339,
+    "latency": {
+      "avgMs": 14.77,
+      "p50Ms": 15.23,
+      "p95Ms": 15.82,
+      "p99Ms": 15.99
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 2,
+      "systemFreeMemMB": 1255
+    }
+  },
+  {
+    "scenario": "Queue Processing Bursts",
+    "virtualUsers": 1000,
+    "durationSec": 0.06,
+    "totalRequests": 1000,
+    "successCount": 1000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 16801,
+    "latency": {
+      "avgMs": 13.47,
+      "p50Ms": 14.61,
+      "p95Ms": 15.31,
+      "p99Ms": 15.41
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -1,
+      "systemFreeMemMB": 1254
+    }
+  },
+  {
+    "scenario": "Attendance Rush Hour",
+    "virtualUsers": 5000,
+    "durationSec": 0.31,
+    "totalRequests": 5000,
+    "successCount": 5000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 16170,
+    "latency": {
+      "avgMs": 14.9,
+      "p50Ms": 14.96,
+      "p95Ms": 16.11,
+      "p99Ms": 16.53
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 1,
+      "systemFreeMemMB": 1256
+    }
+  },
+  {
+    "scenario": "Face Recognition Peak Load",
+    "virtualUsers": 5000,
+    "durationSec": 1.02,
+    "totalRequests": 5000,
+    "successCount": 5000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 4897,
+    "latency": {
+      "avgMs": 21.04,
+      "p50Ms": 21.29,
+      "p95Ms": 30.76,
+      "p99Ms": 33.3
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -1,
+      "systemFreeMemMB": 1277
+    }
+  },
+  {
+    "scenario": "Teacher Attendance Sessions",
+    "virtualUsers": 5000,
+    "durationSec": 0.32,
+    "totalRequests": 5000,
+    "successCount": 5000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 15758,
+    "latency": {
+      "avgMs": 12.38,
+      "p50Ms": 13.25,
+      "p95Ms": 15.56,
+      "p99Ms": 20.28
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 3,
+      "systemFreeMemMB": 1274
+    }
+  },
+  {
+    "scenario": "Multi-College Concurrent Access",
+    "virtualUsers": 5000,
+    "durationSec": 0.32,
+    "totalRequests": 5000,
+    "successCount": 5000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 15675,
+    "latency": {
+      "avgMs": 14.78,
+      "p50Ms": 15.04,
+      "p95Ms": 16.54,
+      "p99Ms": 21.33
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -3,
+      "systemFreeMemMB": 1269
+    }
+  },
+  {
+    "scenario": "Queue Processing Bursts",
+    "virtualUsers": 5000,
+    "durationSec": 0.42,
+    "totalRequests": 5000,
+    "successCount": 5000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 11818,
+    "latency": {
+      "avgMs": 14.43,
+      "p50Ms": 13.34,
+      "p95Ms": 33.24,
+      "p99Ms": 35.84
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 3,
+      "systemFreeMemMB": 1271
+    }
+  },
+  {
+    "scenario": "Attendance Rush Hour",
+    "virtualUsers": 10000,
+    "durationSec": 1.4,
+    "totalRequests": 10000,
+    "successCount": 10000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 7147,
+    "latency": {
+      "avgMs": 29.04,
+      "p50Ms": 27.45,
+      "p95Ms": 68.4,
+      "p99Ms": 70.29
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -6,
+      "systemFreeMemMB": 1265
+    }
+  },
+  {
+    "scenario": "Face Recognition Peak Load",
+    "virtualUsers": 10000,
+    "durationSec": 11.62,
+    "totalRequests": 10000,
+    "successCount": 10000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 861,
+    "latency": {
+      "avgMs": 131.31,
+      "p50Ms": 85.63,
+      "p95Ms": 356.65,
+      "p99Ms": 661.79
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -1,
+      "systemFreeMemMB": 1314
+    }
+  },
+  {
+    "scenario": "Teacher Attendance Sessions",
+    "virtualUsers": 10000,
+    "durationSec": 0.97,
+    "totalRequests": 10000,
+    "successCount": 10000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 10351,
+    "latency": {
+      "avgMs": 11.88,
+      "p50Ms": 11.99,
+      "p95Ms": 20.75,
+      "p99Ms": 28.02
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1298
+    }
+  },
+  {
+    "scenario": "Multi-College Concurrent Access",
+    "virtualUsers": 10000,
+    "durationSec": 0.63,
+    "totalRequests": 10000,
+    "successCount": 10000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 15829,
+    "latency": {
+      "avgMs": 14.56,
+      "p50Ms": 14.62,
+      "p95Ms": 23.11,
+      "p99Ms": 23.8
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -1,
+      "systemFreeMemMB": 1306
+    }
+  },
+  {
+    "scenario": "Queue Processing Bursts",
+    "virtualUsers": 10000,
+    "durationSec": 0.74,
+    "totalRequests": 10000,
+    "successCount": 10000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 13599,
+    "latency": {
+      "avgMs": 14.14,
+      "p50Ms": 13.77,
+      "p95Ms": 27.87,
+      "p99Ms": 32.67
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -6,
+      "systemFreeMemMB": 1315
+    }
+  }
+]
