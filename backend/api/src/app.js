@@ -259,6 +259,13 @@ const collegeRoutes = require('./routes/colleges');
 const demoRoutes = require('./routes/demo');
 const superAdminRoutes = require('./routes/superAdmin');
 const accuracyRoutes = require('./routes/accuracy');
+const sisRoutes = require('./routes/sis');
+const whiteLabelRoutes = require('./routes/whiteLabel');
+const billingRoutes = require('./routes/billing');
+const customerSuccessRoutes = require('./routes/customerSuccess');
+const demoEnvironmentRoutes = require('./routes/demoEnvironment');
+const commercialAnalyticsRoutes = require('./routes/commercialAnalytics');
+const tenderComplianceRoutes = require('./routes/tenderCompliance');
 
 // ─── Standard, /api, and /api/v1 API Mounts ──────────────────────────
 app.use('/auth', authRoutes);
@@ -336,6 +343,35 @@ app.use('/api/v1/analytics', cacheJson(30 * 1000), analyticsRoutes);
 app.use('/', aiRoutes);
 app.use('/api', aiRoutes);
 app.use('/api/v1', aiRoutes);
+
+// ─── Enterprise SaaS Commercial & Platform Routes ────────────────────
+app.use('/sis', sisRoutes);
+app.use('/api/sis', sisRoutes);
+app.use('/api/v1/sis', sisRoutes);
+
+app.use('/white-label', whiteLabelRoutes);
+app.use('/api/white-label', whiteLabelRoutes);
+app.use('/api/v1/white-label', whiteLabelRoutes);
+
+app.use('/billing', billingRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/api/v1/billing', billingRoutes);
+
+app.use('/customer-success', customerSuccessRoutes);
+app.use('/api/customer-success', customerSuccessRoutes);
+app.use('/api/v1/customer-success', customerSuccessRoutes);
+
+app.use('/demo-env', demoEnvironmentRoutes);
+app.use('/api/demo-env', demoEnvironmentRoutes);
+app.use('/api/v1/demo-env', demoEnvironmentRoutes);
+
+app.use('/commercial', commercialAnalyticsRoutes);
+app.use('/api/commercial', commercialAnalyticsRoutes);
+app.use('/api/v1/commercial', commercialAnalyticsRoutes);
+
+app.use('/tender-compliance', tenderComplianceRoutes);
+app.use('/api/tender-compliance', tenderComplianceRoutes);
+app.use('/api/v1/tender-compliance', tenderComplianceRoutes);
 
 // 404 JSON fallback handler (replaces default Express HTML 404)
 app.use((req, res, next) => {

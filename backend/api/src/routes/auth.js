@@ -12,6 +12,7 @@ const Otp = require('../models/Otp');
 const UserSession = require('../models/UserSession');
 const AuthService = require('../services/authService');
 const EmailService = require('../services/emailService');
+const SmsService = require('../services/smsService');
 const { authenticate } = require('../middleware/auth');
 const { trackJob } = require('../utils/jobTracker');
 const reportInternalError = require('../utils/httpError');
@@ -331,9 +332,21 @@ router.post('/login-otp/send', limitOtpSend, validate(otpSendSchema), async (req
 
     console.log(JSON.stringify({ event: "otp_generated", recipient: email ? `${email[0]}***@${email.split('@')[1] || ''}` : 'masked', purpose: "login" }));
 
-    // Send OTP email
+    // Send OTP email with automatic SMS failover
     const emailSent = await EmailService.sendOtp(email, otpVal, 'login');
     if (!emailSent) {
+      if (user.phone) {
+        console.warn(`[Auth] Email delivery failed for ${email}; triggering SMS OTP failover to ${user.phone}`);
+        const smsResult = await SmsService.sendOtp(user.phone, otpVal, 'login');
+        if (smsResult && smsResult.success) {
+          await Otp.updateOne({ email }, { $set: { deliveryStatus: 'sent' } });
+          return res.json({
+            success: true,
+            channel: 'sms_fallback',
+            message: "Email delivery unavailable; verification code dispatched via SMS fallback to registered phone."
+          });
+        }
+      }
       await Otp.updateOne({ email }, { $set: { deliveryStatus: 'failed' } });
       return res.status(400).json({
         success: false,

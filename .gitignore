@@ -117,3 +117,6 @@ portal/.next/
 .warp/
 run_trace.sh
 *.tsbuildinfo
+graphify-out/
+.graphifyrc
+.graphifyignore
