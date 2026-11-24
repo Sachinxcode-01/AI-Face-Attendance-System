@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserProfile, UserRole } from '@/lib/types';
-import { DEMO_PROFILES } from '@/lib/demo-data';
 import { setAuthCookies, clearAuth, getStoredUser, getRole, isAuthenticated, DEMO_ACCOUNTS, getRoleRedirectPath } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
 
@@ -36,14 +35,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(
-    (selectedRole: UserRole) => {
-      const profile = DEMO_PROFILES[selectedRole];
-      const token = `demo_${selectedRole}_${Math.random().toString(36).slice(2, 18)}`;
-      setAuthCookies(token, selectedRole, profile);
-      setUser(profile);
-      setRole(selectedRole);
-      setAuthed(true);
-      router.push(getRoleRedirectPath(selectedRole));
+    async (selectedRole: UserRole) => {
+      const acc = DEMO_ACCOUNTS[selectedRole];
+      if (!acc) return;
+      try {
+        const data = await api.auth.login(acc.email, acc.password);
+        if (data && data.access_token) {
+          const userRole = (data.role?.toLowerCase() as UserRole) || selectedRole;
+          const profile: UserProfile = {
+            id: data.user_id || 'usr_' + Math.random().toString(36).slice(2, 9),
+            name: data.full_name || acc.name,
+            email: data.email || acc.email,
+            role: userRole,
+            avatar: data.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+          };
+          setAuthCookies(data.access_token, userRole, profile);
+          setUser(profile);
+          setRole(userRole);
+          setAuthed(true);
+          router.push(getRoleRedirectPath(userRole));
+        }
+      } catch (err) {
+        console.error('Login error:', err);
+      }
     },
     [router]
   );
@@ -52,7 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
       const normalized = email.trim().toLowerCase();
 
-      // 1. Try real backend authentication
       try {
         const data = await api.auth.login(normalized, password);
         if (data && data.access_token) {
@@ -70,42 +83,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setAuthed(true);
           return { success: true };
         }
+        return { success: false, error: 'Authentication failed: No access token issued.' };
       } catch (err: unknown) {
-        // Fallback to local demo accounts if API failed or offline
-        const match = (Object.entries(DEMO_ACCOUNTS) as [UserRole, { email: string; password: string; name: string }][]).find(
-          ([, acc]) => acc.email === normalized && acc.password === password
-        );
-        if (match) {
-          const [selectedRole] = match;
-          const fullProfile = DEMO_PROFILES[selectedRole];
-          const token = `demo_${selectedRole}_${Math.random().toString(36).slice(2, 18)}`;
-          setAuthCookies(token, selectedRole, fullProfile);
-          setUser(fullProfile);
-          setRole(selectedRole);
-          setAuthed(true);
-          return { success: true };
-        }
-
         const msg = err instanceof ApiError ? err.message : 'Invalid credentials. Please check your email and password.';
         return { success: false, error: msg };
       }
-
-      // Check demo accounts if login returned unexpected shape
-      const match = (Object.entries(DEMO_ACCOUNTS) as [UserRole, { email: string; password: string; name: string }][]).find(
-        ([, acc]) => acc.email === normalized && acc.password === password
-      );
-      if (match) {
-        const [selectedRole] = match;
-        const fullProfile = DEMO_PROFILES[selectedRole];
-        const token = `demo_${selectedRole}_${Math.random().toString(36).slice(2, 18)}`;
-        setAuthCookies(token, selectedRole, fullProfile);
-        setUser(fullProfile);
-        setRole(selectedRole);
-        setAuthed(true);
-        return { success: true };
-      }
-
-      return { success: false, error: 'Invalid credentials. Please check your email and password.' };
     },
     []
   );
@@ -131,16 +113,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return { success: true };
       } catch (err: unknown) {
-        // Fallback for demo environment if backend unreachable
-        if (err instanceof ApiError && err.status === 0) {
-          const fullProfile = DEMO_PROFILES[regData.role];
-          const token = `demo_${regData.role}_${Math.random().toString(36).slice(2, 18)}`;
-          setAuthCookies(token, regData.role, fullProfile);
-          setUser(fullProfile);
-          setRole(regData.role);
-          setAuthed(true);
-          return { success: true };
-        }
         const msg = err instanceof ApiError ? err.message : 'Registration failed. Please try again.';
         return { success: false, error: msg };
       }

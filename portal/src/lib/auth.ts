@@ -10,27 +10,12 @@ export const DEMO_ACCOUNTS: Record<
   UserRole,
   { email: string; password: string; name: string }
 > = {
-  student: { email: 'alice@smartface.pro', password: 'demo1234', name: 'Alice Smith' },
-  teacher: { email: 'marcus.vance@smartface.pro', password: 'demo1234', name: 'Prof. Marcus Vance' },
-  admin: { email: 'evelyn.cross@smartface.pro', password: 'demo1234', name: 'Dr. Evelyn Cross' },
-  parent: { email: 'sarah.smith@parent.net', password: 'demo1234', name: 'Sarah & David Smith' },
-  super_admin: { email: 'superadmin@smartface.pro', password: 'demo1234', name: 'Global Overseer' },
+  student: { email: 'bob@smartface.pro', password: 'Student@2026', name: 'Bob Dylan' },
+  teacher: { email: 'teacher@smartface.pro', password: 'Teacher@2026', name: 'Prof. Marcus Vance' },
+  admin: { email: 'admin@smartface.pro', password: 'Admin@2026', name: 'System Administrator' },
+  parent: { email: 'parent@smartface.pro', password: 'Parent@2026', name: 'Robert Cooper' },
+  super_admin: { email: 'superadmin@smartface.pro', password: 'SuperAdmin@2026', name: 'Dr. Evelyn Cross' },
 };
-
-/** Simulated JWT: base64 payload (demo only — never roll your own crypto in production). */
-function simulateToken(role: UserRole, email: string): string {
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const payload = btoa(
-    JSON.stringify({
-      sub: email,
-      role,
-      iat: Date.now(),
-      exp: Date.now() + 24 * 60 * 60 * 1000,
-    })
-  );
-  const sig = Math.random().toString(36).slice(2, 18) + Math.random().toString(36).slice(2, 18);
-  return `${header}.${payload}.${sig}`;
-}
 
 export function setAuthCookies(token: string, role: UserRole, user: UserProfile) {
   document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=86400; SameSite=Lax`;

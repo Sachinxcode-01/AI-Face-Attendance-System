@@ -2,368 +2,409 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------------------
+ * Design tokens — measured verbatim from ByTune (https://bytune.space/#new)
+ * ------------------------------------------------------------------------- */
 :root {
-  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-poppins: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Dimensions & Spacing */
+  --container: 73.75rem;
+  --wide: 85rem;
+  --dur: 0.55s;
 
-  /* ByTune Measured Design Tokens */
+  /* Surfaces & Backgrounds */
   --bg-0: #050507;
-  --bg-1: #0A0A0E;
+  --bg-1: #0a0a0e;
   --surface: #101016;
-  --panel: #16161D;
-  --elev: #1E1E27;
-  --text-hi: #F5F5F8;
-  --text-mid: #B6B6C2;
-  --text-low: #8A8A97;
-  --text-faint: #60606C;
-  --accent: #8F8BFF;
-  --accent-2: #6FD8FF;
-  --glow: rgb(143, 139, 255);
-  --hairline: rgba(255, 255, 255, 0.08);
-  --hairline-strong: rgba(255, 255, 255, 0.16);
+  --panel: #16161d;
+  --elev: #1e1e27;
+
+  /* Glass & Hairlines */
   --glass: rgba(255, 255, 255, 0.04);
   --glass-strong: rgba(255, 255, 255, 0.07);
-  --radius-l: 1.375rem;
-  --radius-m: 1rem;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.16);
+
+  /* Text Hierarchy */
+  --text-hi: #f5f5f8;
+  --text-mid: #b6b6c2;
+  --text-low: #8a8a97;
+  --text-faint: #8e8e98;
+
+  /* Accents & Glows */
+  --accent: #8f8bff;
+  --accent-2: #6fd8ff;
+  --accent-soft: rgba(143, 139, 255, 0.16);
+  --accent-2-soft: rgba(111, 216, 255, 0.14);
+  --glow: rgb(143, 139, 255);
+  --brand-spotify: #1ed760;
+  --brand-amber: #f3c64f;
+
+  /* shadcn UI tokens aligned with ByTune Design System */
+  --background: var(--bg-0);
+  --foreground: var(--text-hi);
+  --card: var(--surface);
+  --card-foreground: var(--text-hi);
+  --popover: var(--panel);
+  --popover-foreground: var(--text-hi);
+  --primary: var(--accent);
+  --primary-foreground: #0a0a0e;
+  --secondary: var(--panel);
+  --secondary-foreground: var(--text-hi);
+  --muted: var(--panel);
+  --muted-foreground: var(--text-low);
+  --destructive: #b91c1c;
+  --destructive-foreground: #f5f5f8;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: var(--accent);
+
+  /* Radii */
   --radius-s: 0.625rem;
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --radius-m: 1rem;
+  --radius-l: 1.375rem; /* 22px ByTune card radius */
+  --radius-pill: 999px;
+
+  /* Shadows */
   --shadow-card: 0 1.5rem 3.75rem -1.5rem rgba(0, 0, 0, 0.7);
+  --shadow-card-elevated: rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.9) 0px 44px 90px -34px;
+  --shadow-inset-highlight: rgba(255, 255, 255, 0.06) 0px 1px 0px 0px inset;
+
+  /* Timing & Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+
+  /* Font Aliases */
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   color-scheme: dark;
 }
 
-body {
-  background-color: var(--bg-0);
-  color: var(--text-mid);
-  font-family: var(--font-inter);
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ---------------------------------------------------------------------------
- * ByTune Component Recipes — Single Source of Truth
- * ------------------------------------------------------------------------- */
-
-/* Floating Glass Card (ByTune Recipe Card 2) */
-.card-bytune {
-  backdrop-filter: blur(18px) saturate(1.5);
-  -webkit-backdrop-filter: blur(18px) saturate(1.5);
-  background-color: rgba(12, 12, 17, 0.55);
-  background-image: linear-gradient(165deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
-  border: 0.8px solid rgba(255, 255, 255, 0.1);
-  border-radius: 22px;
-  box-shadow: rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.9) 0px 44px 90px -34px;
-  color: var(--text-hi);
-}
-
-/* Standard Surface Container (ByTune Surface Container) */
-.card-surface {
-  background-color: rgb(16, 16, 22);
-  background-image: linear-gradient(rgba(255, 255, 255, 0.027), rgba(255, 255, 255, 0.008));
-  border: 0.8px solid rgba(255, 255, 255, 0.08);
-  border-radius: 22px;
-  box-shadow: rgba(255, 255, 255, 0.06) 0px 1px 0px 0px inset;
-}
-
-/* Subtle background grid */
-.bg-grid {
-  background-image:
-    linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
-  background-size: 44px 44px;
-}
-
-/* Radial Accent Glow */
-.card-glow-bg {
-  background-image: radial-gradient(58% 58% at 50% 62%, rgba(143, 139, 255, 0.2), rgba(0, 0, 0, 0) 72%);
-}
-
-/* Primary Action Button (ByTune Gradient Pill) */
-.btn-pill-accent {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-image: linear-gradient(90deg, rgb(143, 139, 255), rgb(111, 216, 255));
-  border: 0.8px solid rgba(255, 255, 255, 0.16);
-  border-radius: 999px;
-  box-shadow: 0 4px 18px rgba(143, 139, 255, 0.25);
-  color: rgb(10, 10, 12);
-  font-family: var(--font-inter);
-  font-size: 13.5px;
-  font-weight: 600;
-  line-height: 20px;
-  padding: 0 20px;
-  height: 40px;
-  white-space: nowrap;
-  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out), opacity 0.2s ease;
-  cursor: pointer;
-}
-
-.btn-pill-accent:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(143, 139, 255, 0.35);
-  opacity: 0.96;
-}
-
-.btn-pill-accent:active {
-  transform: scale(0.98);
-}
-
-/* Glass Pill Button */
-.btn-pill-glass {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(255, 255, 255, 0.04);
-  border: 0.8px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  color: var(--text-hi);
-  font-family: var(--font-inter);
-  font-size: 13.5px;
-  font-weight: 500;
-  line-height: 20px;
-  padding: 0 18px;
-  height: 40px;
-  white-space: nowrap;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
-  cursor: pointer;
-}
-
-.btn-pill-glass:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-}
-
-.btn-pill-glass:active {
-  transform: scale(0.98);
-}
-
-/* White Pill Button */
-.btn-pill-white {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgb(255, 255, 255);
-  border: 0.8px solid rgb(255, 255, 255);
-  border-radius: 999px;
-  color: rgb(10, 10, 12);
-  font-family: var(--font-inter);
-  font-size: 13.5px;
-  font-weight: 600;
-  line-height: 20px;
-  padding: 0 20px;
-  height: 40px;
-  white-space: nowrap;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  cursor: pointer;
-}
-
-.btn-pill-white:hover {
-  opacity: 0.92;
-}
-
-.btn-pill-white:active {
-  transform: scale(0.98);
-}
-
-/* Pill Chip / Badge */
-.chip-bytune {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 0.8px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  color: rgb(182, 182, 194);
-  font-family: var(--font-inter);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 20px;
-  padding: 0 14px;
-  height: 30px;
-  white-space: nowrap;
-  transition: all 0.15s ease;
-}
-
-.chip-bytune:hover {
-  background-color: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.16);
-  color: var(--text-hi);
-}
-
-.chip-bytune-active {
-  background-color: rgb(255, 255, 255) !important;
-  border-color: rgb(255, 255, 255) !important;
-  color: rgb(10, 10, 12) !important;
-  font-weight: 600;
-}
-
-/* Legacy Portal class mappings to ByTune styles */
-.portal-card {
-  backdrop-filter: blur(18px) saturate(1.5);
-  -webkit-backdrop-filter: blur(18px) saturate(1.5);
-  background-color: rgba(12, 12, 17, 0.55);
-  background-image: linear-gradient(165deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
-  border: 0.8px solid rgba(255, 255, 255, 0.1);
-  border-radius: 22px;
-  box-shadow: rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.9) 0px 44px 90px -34px;
-}
-
-.portal-card-subtle {
-  background-color: rgb(10, 10, 14);
-  border: 0.8px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
-}
-
-.portal-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 999px;
-  background-color: rgba(255, 255, 255, 0.04);
-  border: 0.8px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-hi);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 20px;
-  padding: 7px 16px;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.portal-btn:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-.portal-btn-primary {
-  background-image: linear-gradient(90deg, rgb(143, 139, 255), rgb(111, 216, 255));
-  border-color: rgba(255, 255, 255, 0.16);
-  color: #050507;
-  font-weight: 600;
-  box-shadow: 0 4px 18px rgba(143, 139, 255, 0.25);
-}
-
-.portal-btn-primary:hover {
-  opacity: 0.95;
-  box-shadow: 0 6px 24px rgba(143, 139, 255, 0.35);
-  color: #050507;
-}
-
-.portal-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border-radius: 999px;
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 0.8px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-mid);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 18px;
-  padding: 4px 12px;
-  transition: all 0.15s ease;
-}
-
-.portal-chip:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.18);
-  color: var(--text-hi);
-}
-
-.portal-chip-active {
-  background-color: #F5F5F8 !important;
-  border-color: #F5F5F8 !important;
-  color: #050507 !important;
-  font-weight: 600;
-}
-
-/* Equalizer bar animation for telemetry pulse */
-@keyframes eqBar {
-
-  0%,
-  100% {
-    height: 18%;
+@layer base {
+  :root {
+    color-scheme: dark;
   }
 
-  50% {
-    height: 95%;
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--bg-0);
+  }
+
+  body {
+    background-color: var(--bg-0);
+    color: var(--text-hi);
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    line-height: 23.925px;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: rgba(143, 139, 255, 0.35);
+    color: var(--text-hi);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
   }
 }
 
-.animate-eq-1 {
-  animation: eqBar 0.9s ease-in-out infinite alternate;
-}
+@layer components {
+  /* ByTune Floating Glass Card (Recipe Card 2) */
+  .card-bytune {
+    backdrop-filter: blur(18px) saturate(1.5);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    background-color: rgba(12, 12, 17, 0.55);
+    background-image: linear-gradient(165deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+    border: 0.8px solid rgba(255, 255, 255, 0.1);
+    border-radius: 22px;
+    box-shadow: rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.9) 0px 44px 90px -34px;
+    color: var(--text-hi);
+  }
 
-.animate-eq-2 {
-  animation: eqBar 1.2s ease-in-out infinite 0.2s alternate;
-}
+  /* ByTune Standard Surface Container (Recipe Button/Card Layer 2) */
+  .card-surface {
+    background-color: rgb(16, 16, 22);
+    background-image: linear-gradient(rgba(255, 255, 255, 0.027), rgba(255, 255, 255, 0.008));
+    border: 0.8px solid rgba(255, 255, 255, 0.08);
+    border-radius: 22px;
+    box-shadow: rgba(255, 255, 255, 0.06) 0px 1px 0px 0px inset;
+  }
 
-.animate-eq-3 {
-  animation: eqBar 0.8s ease-in-out infinite 0.4s alternate;
-}
+  /* ByTune Radial Accent Glow (Recipe Card 3) */
+  .card-glow-bg {
+    background-image: radial-gradient(58% 58% at 50% 62%, rgba(143, 139, 255, 0.2), rgba(0, 0, 0, 0) 72%);
+  }
 
-.animate-eq-4 {
-  animation: eqBar 1.1s ease-in-out infinite 0.1s alternate;
-}
+  /* ByTune Chip Button (Recipe Button 1 - default) */
+  .chip-bytune {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 0.8px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    color: rgb(182, 182, 194);
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 20px;
+    padding: 0 14px;
+    height: 32px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+  }
 
-.animate-eq-5 {
-  animation: eqBar 0.7s ease-in-out infinite 0.3s alternate;
-}
+  .chip-bytune:hover {
+    color: var(--text-hi);
+    border-color: rgba(255, 255, 255, 0.16);
+    background-color: rgba(255, 255, 255, 0.06);
+  }
 
-/* Custom scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+  .chip-bytune-active {
+    background-color: rgb(255, 255, 255) !important;
+    border-color: rgb(255, 255, 255) !important;
+    color: rgb(10, 10, 12) !important;
+  }
 
-::-webkit-scrollbar-track {
-  background: #050507;
-}
+  /* ByTune Primary White Pill Button */
+  .btn-pill-white {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: rgb(255, 255, 255);
+    color: rgb(10, 10, 12);
+    border: 0.8px solid rgb(255, 255, 255);
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 22.4px;
+    height: 40px;
+    padding: 0 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
-}
+  .btn-pill-white:hover {
+    opacity: 0.92;
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(143, 139, 255, 0.4);
-}
+  .btn-pill-white:active {
+    transform: scale(0.98);
+  }
 
-/* Scanning radar animation */
-@keyframes scanline {
-  0% {
-    transform: translateY(-100%);
+  /* ByTune Accent Gradient Pill Button */
+  .btn-pill-accent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-image: linear-gradient(90deg, rgb(143, 139, 255), rgb(111, 216, 255));
+    color: rgb(10, 10, 12);
+    border: none;
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 22.4px;
+    height: 40px;
+    padding: 0 20px;
+    box-shadow: 0 4px 18px rgba(143, 139, 255, 0.25);
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: opacity 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  }
+
+  .btn-pill-accent:hover {
+    opacity: 0.95;
+    box-shadow: 0 6px 24px rgba(143, 139, 255, 0.38);
+  }
+
+  .btn-pill-accent:active {
+    transform: scale(0.98);
+  }
+
+  /* ByTune Glass Secondary Pill Button */
+  .btn-pill-glass {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--text-mid);
+    border: 0.8px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 22.4px;
+    height: 40px;
+    padding: 0 18px;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+  }
+
+  .btn-pill-glass:hover {
+    color: var(--text-hi);
+    border-color: rgba(255, 255, 255, 0.16);
+    background-color: rgba(255, 255, 255, 0.07);
+  }
+
+  .btn-pill-glass:active {
+    transform: scale(0.98);
+  }
+
+  /* ByTune Outlined Pill Button */
+  .btn-pill-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: transparent;
+    color: var(--text-hi);
+    border: 0.8px solid rgba(255, 255, 255, 0.24);
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 22.4px;
+    height: 40px;
+    padding: 0 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+  }
+
+  .btn-pill-outline:hover {
+    color: var(--text-hi);
+    border-color: rgba(255, 255, 255, 0.45);
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .btn-pill-outline:active {
+    transform: scale(0.98);
+  }
+
+  /* ByTune Range Slider */
+  .slider-bytune {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: rgba(255, 255, 255, 0.12);
+    background-image: linear-gradient(90deg, rgb(143, 139, 255), rgb(111, 216, 255));
+    border-radius: 999px;
+    height: 5px;
+    outline: none;
+  }
+
+  .slider-bytune::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Backward compatibility for portal components */
+  .portal-card {
+    backdrop-filter: blur(18px) saturate(1.5);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    background-color: rgba(12, 12, 17, 0.55);
+    background-image: linear-gradient(165deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+    border: 0.8px solid rgba(255, 255, 255, 0.1);
+    border-radius: 22px;
+    box-shadow: rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.9) 0px 44px 90px -34px;
+  }
+
+  .portal-card-subtle {
+    background-color: rgb(10, 10, 14);
+    border: 0.8px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+  }
+
+  .portal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 0.8px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-hi);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 20px;
+    padding: 7px 16px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .portal-btn:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  .portal-btn-primary {
+    background-image: linear-gradient(90deg, rgb(143, 139, 255), rgb(111, 216, 255));
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #050507;
+    font-weight: 600;
+    box-shadow: 0 4px 18px rgba(143, 139, 255, 0.25);
+  }
+
+  .portal-btn-primary:hover {
+    opacity: 0.95;
+    box-shadow: 0 6px 24px rgba(143, 139, 255, 0.35);
+  }
+
+  /* Progressive scroll reveal */
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.65s var(--ease-out),
+      transform 0.65s var(--ease-out);
+    will-change: opacity, transform;
+  }
+
+  .js .reveal {
     opacity: 0;
+    transform: translateY(24px);
   }
 
-  25% {
-    opacity: 0.8;
-  }
-
-  75% {
-    opacity: 0.8;
-  }
-
-  100% {
-    transform: translateY(1000%);
-    opacity: 0;
+  .js .reveal.reveal-in {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.animate-scan {
-  animation: scanline 2.8s linear infinite;
-}
-
-/* ---------------------------------------------------------------------------
- * ByTune Utilities & Verbatim Keyframe Animations
- * ------------------------------------------------------------------------- */
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg, #f5f5f8 40%, #b6b6c2 100%);
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+    background-size: 44px 44px;
   }
 
   .mask-radial {
@@ -372,12 +413,14 @@ body {
   }
 }
 
+/* ---------------------------------------------------------------------------
+ * Keyframe animations verbatim from ByTune reference
+ * ------------------------------------------------------------------------- */
 @keyframes Hero_cueIn {
   from {
     transform: translateY(110%);
     opacity: 0;
   }
-
   to {
     transform: translateY(0);
     opacity: 1;
@@ -388,7 +431,6 @@ body {
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
@@ -399,11 +441,9 @@ body {
     transform: translateX(-120%) skewX(-12deg);
     opacity: 0;
   }
-
   25% {
     opacity: 1;
   }
-
   100% {
     transform: translateX(220%) skewX(-12deg);
     opacity: 0;
@@ -411,48 +451,43 @@ body {
 }
 
 @keyframes Hero_cueDip {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0);
   }
-
   50% {
     transform: translateY(8px);
   }
 }
 
-@keyframes Hero_float {
+@keyframes Hero_cueOut {
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
 
-  0%,
-  100% {
+@keyframes Hero_float {
+  0%, 100% {
     transform: translateY(0);
   }
-
   50% {
     transform: translateY(-14px);
   }
 }
 
 @keyframes DesktopSection_pipFloat {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0) rotate(0deg);
   }
-
   50% {
     transform: translateY(-8px) rotate(1.2deg);
   }
 }
 
 @keyframes LiveCount_eq {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: scaleY(0.35);
   }
-
   50% {
     transform: scaleY(1);
   }
@@ -462,8 +497,163 @@ body {
   from {
     transform: translateY(100%);
   }
-
   to {
     transform: translateY(0);
+  }
+}
+
+@keyframes LaserScan {
+  0% {
+    top: 0%;
+    opacity: 0.9;
+  }
+  50% {
+    top: 98%;
+    opacity: 1;
+  }
+  100% {
+    top: 0%;
+    opacity: 0.9;
+  }
+}
+
+@keyframes RadarSweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes TextShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes PulseRing {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes GlowBreathe {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes SubtleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes LoadingSlide {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+.animate-loading-slide {
+  animation: LoadingSlide 1.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-laser-scan {
+  animation: LaserScan 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-radar-sweep {
+  animation: RadarSweep 4s linear infinite;
+}
+
+.animate-pulse-ring {
+  animation: PulseRing 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 10s linear infinite;
+}
+
+.animate-glow-breathe {
+  animation: GlowBreathe 4s ease-in-out infinite;
+}
+
+.animate-subtle-float {
+  animation: SubtleFloat 5s ease-in-out infinite;
+}
+
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    #b6b6c2 0%,
+    #ffffff 25%,
+    #8f8bff 50%,
+    #ffffff 75%,
+    #b6b6c2 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: TextShimmer 4s linear infinite;
+}
+
+.text-shimmer-accent {
+  background: linear-gradient(
+    90deg,
+    #8f8bff 0%,
+    #ffffff 25%,
+    #6fd8ff 50%,
+    #ffffff 75%,
+    #8f8bff 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: TextShimmer 3.5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-hero-line],
+  [data-cue],
+  .animate-laser-scan,
+  .animate-radar-sweep,
+  .animate-pulse-ring,
+  .animate-glow-breathe,
+  .animate-subtle-float,
+  .text-shimmer,
+  .text-shimmer-accent {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
   }
 }

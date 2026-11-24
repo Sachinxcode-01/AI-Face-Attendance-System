@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 const config: Config = {
   darkMode: "class",
@@ -11,35 +12,65 @@ const config: Config = {
     extend: {
       colors: {
         /* ByTune Measured Surface Tokens */
-        bg0: "#050507",
-        bg1: "#0A0A0E",
-        canvas: "#050507",
-        surface: "#101016",
-        panel: "#16161D",
-        card: "#101016",
-        elev: "#1E1E27",
+        bg0: "var(--bg-0)",
+        bg1: "var(--bg-1)",
+        canvas: "var(--bg-0)",
+        surface: "var(--surface)",
+        panel: "var(--panel)",
+        card: {
+          DEFAULT: "var(--surface)",
+          foreground: "var(--text-hi)",
+        },
+        elev: "var(--elev)",
 
         /* Text Hierarchy */
-        hi: "#F5F5F8",
-        mid: "#B6B6C2",
-        low: "#8A8A97",
-        faint: "#60606C",
+        hi: "var(--text-hi)",
+        mid: "var(--text-mid)",
+        low: "var(--text-low)",
+        faint: "var(--text-faint)",
         ink: {
-          DEFAULT: "#F5F5F8",
-          muted: "#B6B6C2",
-          faint: "#8A8A97",
-          dim: "#60606C",
+          DEFAULT: "var(--text-hi)",
+          muted: "var(--text-mid)",
+          faint: "var(--text-low)",
+          dim: "var(--text-faint)",
         },
 
         /* Accents & Brand */
         accent: {
-          DEFAULT: "#8F8BFF",
+          DEFAULT: "var(--accent)",
           glow: "rgb(143, 139, 255)",
-          cyan: "#6FD8FF",
+          cyan: "var(--accent-2)",
         },
-        accent2: "#6FD8FF",
+        accent2: "var(--accent-2)",
         spotify: "#1ED760",
         amber: "#F3C64F",
+
+        /* shadcn semantic tokens */
+        background: "var(--bg-0)",
+        foreground: "var(--text-hi)",
+        popover: {
+          DEFAULT: "var(--panel)",
+          foreground: "var(--text-hi)",
+        },
+        primary: {
+          DEFAULT: "var(--accent)",
+          foreground: "#0a0a0e",
+        },
+        secondary: {
+          DEFAULT: "var(--panel)",
+          foreground: "var(--text-hi)",
+        },
+        muted: {
+          DEFAULT: "var(--panel)",
+          foreground: "var(--text-low)",
+        },
+        destructive: {
+          DEFAULT: "#b91c1c",
+          foreground: "#f5f5f8",
+        },
+        border: "var(--hairline)",
+        input: "rgba(255, 255, 255, 0.12)",
+        ring: "var(--accent)",
 
         /* Indigo Aliases (Mapped directly to ByTune violet scale) */
         indigo: {
@@ -103,8 +134,8 @@ const config: Config = {
         bytune: "cubic-bezier(0.22, 1, 0.36, 1)",
       },
     },
-},
-  plugins: [],
+  },
+  plugins: [tailwindcssAnimate],
 };
 
 export default config;
