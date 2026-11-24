@@ -9,11 +9,11 @@
   "panels": [
     {
       "id": 1,
-      "title": "College Attendance Completion Rate Today",
+      "title": "Attendance Submission Success Rate — Last Hour",
       "type": "gauge",
       "targets": [
         {
-          "expr": "sum(rate(attendance_submissions_total{status='success'}[1h])) / (sum(rate(attendance_submissions_total[1h])) + 0.001) * 100",
+          "expr": "(sum(rate(attendance_submissions_total{status='success'}[1h])) / sum(rate(attendance_submissions_total[1h])) * 100) or vector(0)",
           "legendFormat": "Attendance %"
         }
       ],
@@ -51,7 +51,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(rate(http_request_duration_seconds_count{route=~'/reports/.*'}[5m]))",
+          "expr": "sum(rate(http_request_duration_seconds_count{route=~'/reports/.*'}[5m])) * 60",
           "legendFormat": "Reports Export/min"
         }
       ],

@@ -27,6 +27,7 @@ class MultiTenantSecurityAuditor {
       test: testName,
       vector,
       status: blocked ? 'BLOCKED_SAFE' : 'VULNERABLE',
+      auditType: 'SIMULATED_TENANT_SECURITY_SPECIFICATION_AUDIT',
       timestamp: new Date().toISOString(),
       evidence
     };
@@ -143,19 +144,31 @@ class MultiTenantSecurityAuditor {
     await this.testParentWardAccess();
     await this.testSuperAdminIsolation();
 
-    console.log('\n🛡️ Multi-Tenant Pen-Test Finished: Zero Vulnerabilities / 100% Isolation Confirmed.');
-    return this.auditResults;
+    const hasVulnerabilities = this.auditResults.some(r => r.status === 'VULNERABLE');
+    const outcome = hasVulnerabilities ? 'FAILED' : 'PASSED';
+    if (hasVulnerabilities) {
+      console.error('\n🚨 Multi-Tenant Pen-Test Failed: Isolation Breaches Detected!');
+    } else {
+      console.log('\n🛡️ Multi-Tenant Pen-Test Finished: Zero Vulnerabilities / 100% Isolation Confirmed.');
+    }
+    return { outcome, findings: this.auditResults };
   }
 }
 
 if (require.main === module) {
   const auditor = new MultiTenantSecurityAuditor();
-  auditor.runFullPenTest().then((results) => {
+  auditor.runFullPenTest().then((report) => {
     const fs = require('fs');
     const path = require('path');
     const outPath = path.resolve(__dirname, '../../docs/production/MULTI_TENANT_PENETRATION_TEST_REPORT.json');
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    fs.writeFileSync(outPath, JSON.stringify(results, null, 2));
+    fs.writeFileSync(outPath, JSON.stringify(report, null, 2));
+
+    if (report.outcome === 'FAILED') {
+      process.exit(1);
+    } else {
+      process.exit(0);
+    }
   });
 }
 

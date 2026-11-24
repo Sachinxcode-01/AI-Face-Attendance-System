@@ -779,6 +779,42 @@ router.delete('/users/:id', authenticate, requireRole(['admin', 'super_admin', '
   }
 });
 
+// ─── DELETE /management/users/:id/biometrics (Right to Erasure / GDPR Art. 17) ──
+router.delete('/users/:id/biometrics', authenticate, requireRole(['admin', 'super_admin', 'principal', 'student']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ detail: "Invalid user ID." });
+    }
+
+    const targetUser = await User.findById(id);
+    if (!targetUser) {
+      return res.status(404).json({ detail: "User not found." });
+    }
+
+    if (req.userRole === 'student' && targetUser.email.toLowerCase() !== (req.userEmail || '').toLowerCase()) {
+      return res.status(403).json({ detail: "Forbidden: Students can only erase their own biometric data." });
+    }
+
+    const BiometricProfile = require('../models/BiometricProfile');
+    await BiometricProfile.deleteMany({ user_email: targetUser.email.toLowerCase().trim() });
+
+    targetUser.biometric_registered = false;
+    await targetUser.save();
+
+    await UserSession.deleteMany({ userId: targetUser.email.toLowerCase().trim() });
+
+    res.json({
+      success: true,
+      message: `Biometric embeddings and active sessions for ${targetUser.email} permanently erased.`,
+      user_id: id,
+      erasure_timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    reportInternalError(res, error, 'Management:BiometricsPurge');
+  }
+});
+
 // ─── POST /management/users/bulk (Bulk Roster Import for College) ──
 router.post('/users/bulk', authenticate, requireRole(['admin', 'super_admin', 'principal']), async (req, res) => {
   try {

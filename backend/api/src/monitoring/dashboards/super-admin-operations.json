@@ -54,9 +54,11 @@
         }
       ],
       "fieldConfig": {
-        "mappings": [
-          { "type": "value", "options": { "1": { "text": "HEALTHY", "color": "green" }, "0": { "text": "DEGRADED", "color": "red" } } }
-        ]
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "HEALTHY", "color": "green" }, "0": { "text": "DEGRADED", "color": "red" } } }
+          ]
+        }
       },
       "gridPos": { "h": 5, "w": 12, "x": 12, "y": 0 }
     },

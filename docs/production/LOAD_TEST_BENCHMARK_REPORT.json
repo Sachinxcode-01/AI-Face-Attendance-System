@@ -1,422 +1,462 @@
 [
   {
     "scenario": "Attendance Rush Hour",
-    "virtualUsers": 500,
-    "durationSec": 0.03,
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
     "totalRequests": 500,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.04,
     "successCount": 500,
     "failureCount": 0,
     "successRate": "100.00%",
-    "tps": 14305,
+    "tps": 11973,
     "latency": {
-      "avgMs": 15.5,
-      "p50Ms": 15.44,
-      "p95Ms": 17.13,
-      "p99Ms": 17.67
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": 2,
-      "systemFreeMemMB": 1250
-    }
-  },
-  {
-    "scenario": "Face Recognition Peak Load",
-    "virtualUsers": 500,
-    "durationSec": 0.16,
-    "totalRequests": 500,
-    "successCount": 500,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 3040,
-    "latency": {
-      "avgMs": 30.55,
-      "p50Ms": 28.04,
-      "p95Ms": 52.73,
-      "p99Ms": 55.68
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": 0,
-      "systemFreeMemMB": 1247
-    }
-  },
-  {
-    "scenario": "Teacher Attendance Sessions",
-    "virtualUsers": 500,
-    "durationSec": 0.03,
-    "totalRequests": 500,
-    "successCount": 500,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 16172,
-    "latency": {
-      "avgMs": 10.58,
-      "p50Ms": 10.95,
-      "p95Ms": 15.65,
-      "p99Ms": 15.99
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": 0,
-      "systemFreeMemMB": 1247
-    }
-  },
-  {
-    "scenario": "Multi-College Concurrent Access",
-    "virtualUsers": 500,
-    "durationSec": 0.03,
-    "totalRequests": 500,
-    "successCount": 500,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 17512,
-    "latency": {
-      "avgMs": 13.55,
-      "p50Ms": 13.6,
-      "p95Ms": 14.5,
-      "p99Ms": 14.57
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": 0,
-      "systemFreeMemMB": 1247
-    }
-  },
-  {
-    "scenario": "Queue Processing Bursts",
-    "virtualUsers": 500,
-    "durationSec": 0.03,
-    "totalRequests": 500,
-    "successCount": 500,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 17938,
-    "latency": {
-      "avgMs": 9.48,
-      "p50Ms": 12.07,
-      "p95Ms": 13.47,
-      "p99Ms": 13.56
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": 0,
-      "systemFreeMemMB": 1248
-    }
-  },
-  {
-    "scenario": "Attendance Rush Hour",
-    "virtualUsers": 1000,
-    "durationSec": 0.06,
-    "totalRequests": 1000,
-    "successCount": 1000,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 16618,
-    "latency": {
-      "avgMs": 14.46,
-      "p50Ms": 14.54,
-      "p95Ms": 15.53,
-      "p99Ms": 15.62
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": 0,
-      "systemFreeMemMB": 1249
-    }
-  },
-  {
-    "scenario": "Face Recognition Peak Load",
-    "virtualUsers": 1000,
-    "durationSec": 0.2,
-    "totalRequests": 1000,
-    "successCount": 1000,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 4958,
-    "latency": {
-      "avgMs": 22.48,
-      "p50Ms": 22.68,
-      "p95Ms": 32.29,
-      "p99Ms": 37.51
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": 0,
-      "systemFreeMemMB": 1254
-    }
-  },
-  {
-    "scenario": "Teacher Attendance Sessions",
-    "virtualUsers": 1000,
-    "durationSec": 0.06,
-    "totalRequests": 1000,
-    "successCount": 1000,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 16583,
-    "latency": {
-      "avgMs": 10.63,
-      "p50Ms": 12.16,
-      "p95Ms": 14.52,
-      "p99Ms": 15.22
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": 0,
-      "systemFreeMemMB": 1256
-    }
-  },
-  {
-    "scenario": "Multi-College Concurrent Access",
-    "virtualUsers": 1000,
-    "durationSec": 0.06,
-    "totalRequests": 1000,
-    "successCount": 1000,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 16339,
-    "latency": {
-      "avgMs": 14.77,
-      "p50Ms": 15.23,
-      "p95Ms": 15.82,
-      "p99Ms": 15.99
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": 2,
-      "systemFreeMemMB": 1255
-    }
-  },
-  {
-    "scenario": "Queue Processing Bursts",
-    "virtualUsers": 1000,
-    "durationSec": 0.06,
-    "totalRequests": 1000,
-    "successCount": 1000,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 16801,
-    "latency": {
-      "avgMs": 13.47,
-      "p50Ms": 14.61,
-      "p95Ms": 15.31,
-      "p99Ms": 15.41
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": -1,
-      "systemFreeMemMB": 1254
-    }
-  },
-  {
-    "scenario": "Attendance Rush Hour",
-    "virtualUsers": 5000,
-    "durationSec": 0.31,
-    "totalRequests": 5000,
-    "successCount": 5000,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 16170,
-    "latency": {
-      "avgMs": 14.9,
-      "p50Ms": 14.96,
-      "p95Ms": 16.11,
-      "p99Ms": 16.53
+      "avgMs": 15.4,
+      "p50Ms": 16.97,
+      "p95Ms": 22.04,
+      "p99Ms": 22.38
     },
     "resourceImpact": {
       "cpuCores": 12,
       "heapAllocatedMB": 1,
-      "systemFreeMemMB": 1256
-    }
+      "systemFreeMemMB": 1530
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
   },
   {
     "scenario": "Face Recognition Peak Load",
-    "virtualUsers": 5000,
-    "durationSec": 1.02,
-    "totalRequests": 5000,
-    "successCount": 5000,
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 500,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.27,
+    "successCount": 500,
     "failureCount": 0,
     "successRate": "100.00%",
-    "tps": 4897,
+    "tps": 1840,
     "latency": {
-      "avgMs": 21.04,
-      "p50Ms": 21.29,
-      "p95Ms": 30.76,
-      "p99Ms": 33.3
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": -1,
-      "systemFreeMemMB": 1277
-    }
-  },
-  {
-    "scenario": "Teacher Attendance Sessions",
-    "virtualUsers": 5000,
-    "durationSec": 0.32,
-    "totalRequests": 5000,
-    "successCount": 5000,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 15758,
-    "latency": {
-      "avgMs": 12.38,
-      "p50Ms": 13.25,
-      "p95Ms": 15.56,
-      "p99Ms": 20.28
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": 3,
-      "systemFreeMemMB": 1274
-    }
-  },
-  {
-    "scenario": "Multi-College Concurrent Access",
-    "virtualUsers": 5000,
-    "durationSec": 0.32,
-    "totalRequests": 5000,
-    "successCount": 5000,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 15675,
-    "latency": {
-      "avgMs": 14.78,
-      "p50Ms": 15.04,
-      "p95Ms": 16.54,
-      "p99Ms": 21.33
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": -3,
-      "systemFreeMemMB": 1269
-    }
-  },
-  {
-    "scenario": "Queue Processing Bursts",
-    "virtualUsers": 5000,
-    "durationSec": 0.42,
-    "totalRequests": 5000,
-    "successCount": 5000,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 11818,
-    "latency": {
-      "avgMs": 14.43,
-      "p50Ms": 13.34,
-      "p95Ms": 33.24,
-      "p99Ms": 35.84
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": 3,
-      "systemFreeMemMB": 1271
-    }
-  },
-  {
-    "scenario": "Attendance Rush Hour",
-    "virtualUsers": 10000,
-    "durationSec": 1.4,
-    "totalRequests": 10000,
-    "successCount": 10000,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 7147,
-    "latency": {
-      "avgMs": 29.04,
-      "p50Ms": 27.45,
-      "p95Ms": 68.4,
-      "p99Ms": 70.29
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": -6,
-      "systemFreeMemMB": 1265
-    }
-  },
-  {
-    "scenario": "Face Recognition Peak Load",
-    "virtualUsers": 10000,
-    "durationSec": 11.62,
-    "totalRequests": 10000,
-    "successCount": 10000,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 861,
-    "latency": {
-      "avgMs": 131.31,
-      "p50Ms": 85.63,
-      "p95Ms": 356.65,
-      "p99Ms": 661.79
-    },
-    "resourceImpact": {
-      "cpuCores": 12,
-      "heapAllocatedMB": -1,
-      "systemFreeMemMB": 1314
-    }
-  },
-  {
-    "scenario": "Teacher Attendance Sessions",
-    "virtualUsers": 10000,
-    "durationSec": 0.97,
-    "totalRequests": 10000,
-    "successCount": 10000,
-    "failureCount": 0,
-    "successRate": "100.00%",
-    "tps": 10351,
-    "latency": {
-      "avgMs": 11.88,
-      "p50Ms": 11.99,
-      "p95Ms": 20.75,
-      "p99Ms": 28.02
+      "avgMs": 58.84,
+      "p50Ms": 57.44,
+      "p95Ms": 106.66,
+      "p99Ms": 118.1
     },
     "resourceImpact": {
       "cpuCores": 12,
       "heapAllocatedMB": 0,
-      "systemFreeMemMB": 1298
-    }
+      "systemFreeMemMB": 1502
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Teacher Attendance Sessions",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 500,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.04,
+    "successCount": 500,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 12395,
+    "latency": {
+      "avgMs": 9.09,
+      "p50Ms": 9.84,
+      "p95Ms": 13.55,
+      "p99Ms": 14.22
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1502
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
   },
   {
     "scenario": "Multi-College Concurrent Access",
-    "virtualUsers": 10000,
-    "durationSec": 0.63,
-    "totalRequests": 10000,
-    "successCount": 10000,
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 500,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.03,
+    "successCount": 500,
     "failureCount": 0,
     "successRate": "100.00%",
-    "tps": 15829,
+    "tps": 17283,
     "latency": {
-      "avgMs": 14.56,
-      "p50Ms": 14.62,
-      "p95Ms": 23.11,
-      "p99Ms": 23.8
+      "avgMs": 13.22,
+      "p50Ms": 13.16,
+      "p95Ms": 14.67,
+      "p99Ms": 14.81
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1502
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Queue Processing Bursts",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 500,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.03,
+    "successCount": 500,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 17352,
+    "latency": {
+      "avgMs": 9.02,
+      "p50Ms": 10.47,
+      "p95Ms": 14.51,
+      "p99Ms": 14.88
     },
     "resourceImpact": {
       "cpuCores": 12,
       "heapAllocatedMB": -1,
-      "systemFreeMemMB": 1306
-    }
+      "systemFreeMemMB": 1490
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Attendance Rush Hour",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 1000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.07,
+    "successCount": 1000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 13972,
+    "latency": {
+      "avgMs": 14.18,
+      "p50Ms": 14.33,
+      "p95Ms": 24.04,
+      "p99Ms": 24.7
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1490
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Face Recognition Peak Load",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 1000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.28,
+    "successCount": 1000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 3588,
+    "latency": {
+      "avgMs": 27.03,
+      "p50Ms": 24.91,
+      "p95Ms": 47.83,
+      "p99Ms": 55.21
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1516
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Teacher Attendance Sessions",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 1000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.06,
+    "successCount": 1000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 16822,
+    "latency": {
+      "avgMs": 11.79,
+      "p50Ms": 12.56,
+      "p95Ms": 14.99,
+      "p99Ms": 15.63
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -1,
+      "systemFreeMemMB": 1500
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Multi-College Concurrent Access",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 1000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.07,
+    "successCount": 1000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 14211,
+    "latency": {
+      "avgMs": 16.16,
+      "p50Ms": 13.51,
+      "p95Ms": 21.36,
+      "p99Ms": 21.47
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 1,
+      "systemFreeMemMB": 1497
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
   },
   {
     "scenario": "Queue Processing Bursts",
-    "virtualUsers": 10000,
-    "durationSec": 0.74,
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 1000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.07,
+    "successCount": 1000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 15186,
+    "latency": {
+      "avgMs": 12.99,
+      "p50Ms": 14.97,
+      "p95Ms": 16.41,
+      "p99Ms": 16.58
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -1,
+      "systemFreeMemMB": 1487
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Attendance Rush Hour",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 5000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.41,
+    "successCount": 5000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 12221,
+    "latency": {
+      "avgMs": 16.22,
+      "p50Ms": 14.57,
+      "p95Ms": 29.24,
+      "p99Ms": 38.25
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 1,
+      "systemFreeMemMB": 1421
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Face Recognition Peak Load",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 5000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 1.51,
+    "successCount": 5000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 3305,
+    "latency": {
+      "avgMs": 30.26,
+      "p50Ms": 27.3,
+      "p95Ms": 57.25,
+      "p99Ms": 76.15
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1450
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Teacher Attendance Sessions",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 5000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.36,
+    "successCount": 5000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 13963,
+    "latency": {
+      "avgMs": 9.8,
+      "p50Ms": 10.12,
+      "p95Ms": 15.37,
+      "p99Ms": 22.46
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 3,
+      "systemFreeMemMB": 1437
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Multi-College Concurrent Access",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 5000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.3,
+    "successCount": 5000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 16511,
+    "latency": {
+      "avgMs": 11.79,
+      "p50Ms": 10.67,
+      "p95Ms": 18.75,
+      "p99Ms": 24.86
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -4,
+      "systemFreeMemMB": 1434
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Queue Processing Bursts",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 5000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.2,
+    "successCount": 5000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 24465,
+    "latency": {
+      "avgMs": 9.57,
+      "p50Ms": 9.63,
+      "p95Ms": 15.45,
+      "p99Ms": 15.98
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 4,
+      "systemFreeMemMB": 1434
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Attendance Rush Hour",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
     "totalRequests": 10000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.71,
     "successCount": 10000,
     "failureCount": 0,
     "successRate": "100.00%",
-    "tps": 13599,
+    "tps": 14112,
     "latency": {
-      "avgMs": 14.14,
-      "p50Ms": 13.77,
-      "p95Ms": 27.87,
-      "p99Ms": 32.67
+      "avgMs": 12.68,
+      "p50Ms": 10.68,
+      "p95Ms": 20.56,
+      "p99Ms": 23.59
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -5,
+      "systemFreeMemMB": 1434
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Face Recognition Peak Load",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 10000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 2.27,
+    "successCount": 10000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 4404,
+    "latency": {
+      "avgMs": 22.45,
+      "p50Ms": 21.96,
+      "p95Ms": 34.27,
+      "p99Ms": 38.12
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -1,
+      "systemFreeMemMB": 1421
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Teacher Attendance Sessions",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 10000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.82,
+    "successCount": 10000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 12217,
+    "latency": {
+      "avgMs": 12.7,
+      "p50Ms": 12.3,
+      "p95Ms": 26.7,
+      "p99Ms": 40.46
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": 0,
+      "systemFreeMemMB": 1374
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Multi-College Concurrent Access",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 10000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.83,
+    "successCount": 10000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 11979,
+    "latency": {
+      "avgMs": 19.38,
+      "p50Ms": 16.16,
+      "p95Ms": 35.8,
+      "p99Ms": 42
+    },
+    "resourceImpact": {
+      "cpuCores": 12,
+      "heapAllocatedMB": -1,
+      "systemFreeMemMB": 1370
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
+  },
+  {
+    "scenario": "Queue Processing Bursts",
+    "benchmarkType": "SYNTHETIC_LOCAL_WORK_BENCHMARK",
+    "totalRequests": 10000,
+    "activeConcurrencyLimit": 250,
+    "durationSec": 0.63,
+    "successCount": 10000,
+    "failureCount": 0,
+    "successRate": "100.00%",
+    "tps": 15779,
+    "latency": {
+      "avgMs": 13.67,
+      "p50Ms": 14.28,
+      "p95Ms": 21.36,
+      "p99Ms": 22.8
     },
     "resourceImpact": {
       "cpuCores": 12,
       "heapAllocatedMB": -6,
-      "systemFreeMemMB": 1315
-    }
+      "systemFreeMemMB": 1363
+    },
+    "notice": "Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off."
   }
 ]

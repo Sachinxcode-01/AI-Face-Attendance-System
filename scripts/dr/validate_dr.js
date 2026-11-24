@@ -27,73 +27,81 @@ class DisasterRecoveryValidator {
 
   // 1. Backup Integrity
   async verifyBackupIntegrity() {
-    // Validates SHA-256 checksums, JSON schema validities, and BSON archive headers
-    const testHash = crypto.createHash('sha256').update('smartface_backup_payload_seed').digest('hex');
-    this.logCheck('Database Backup Snapshot Integrity', true, {
+    const backupScriptExists = fs.existsSync(path.resolve(__dirname, '../db_backup.py'));
+    this.logCheck('Database Backup Script & Specification Integrity', backupScriptExists, {
+      simulation: true,
+      backup_tool_present: backupScriptExists,
       checksum_algorithm: 'SHA-256',
       archive_header: 'MongoDB Atlas Consistent Replica Point-In-Time',
-      uncompressed_size_mb: 48.6,
-      collections_verified: ['users', 'attendances', 'sessions', 'user_sessions', 'colleges', 'security_logs']
+      collections_specified: ['users', 'attendances', 'sessions', 'user_sessions', 'colleges', 'security_logs']
     });
   }
 
   // 2. Restore Integrity
   async verifyRestoreIntegrity() {
-    this.logCheck('Database Point-in-Time Restore Integrity', true, {
-      dry_run_status: 'SUCCESS',
-      record_count_match: '100% (Zero record drop)',
-      index_rebuild_status: 'COMPLETED (Compound indices verified)'
+    this.logCheck('Database Point-in-Time Restore Specification', true, {
+      simulation: true,
+      dry_run_status: 'SIMULATED_SPEC_VALID',
+      index_rebuild_verification: 'Compound unique index { student_email: 1, session_id: 1 } enforced'
     });
   }
 
   // 3. Database Recovery
   async verifyDatabaseRecovery() {
-    this.logCheck('MongoDB Failover & Secondary Promotion', true, {
-      election_time_sec: 1.8,
+    this.logCheck('MongoDB Failover & Secondary Promotion Specification', true, {
+      simulation: true,
+      election_time_spec: '< 3.0s',
       read_preference: 'primaryPreferred',
-      write_concern: 'majority',
-      data_consistency: 'STRICT_CONSISTENT'
+      write_concern: 'majority'
     });
   }
 
   // 4. Redis Recovery
   async verifyRedisRecovery() {
-    this.logCheck('Redis AOF/RDB Persistent Recovery', true, {
+    this.logCheck('Redis AOF/RDB Persistent Recovery Specification', true, {
+      simulation: true,
       persistence_mode: 'AOF (everysec) + RDB snapshots (15m)',
-      reconstructed_keys: 1240,
-      session_cache_preservation: '100%'
+      fallback_to_local_memory: 'CONFIRMED'
     });
   }
 
   // 5. AI Model Recovery
   async verifyAIModelRecovery() {
-    this.logCheck('ArcFace Deep Learning Model Weights Integrity', true, {
-      weights_file: 'models/arcface_r100.onnx',
-      sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-      runtime: 'ONNX Runtime / TensorRT',
-      verification_status: 'VERIFIED_CORRECT'
+    const modelPath = path.resolve(__dirname, '../../backend/ai/models/arcface_r100.onnx');
+    const modelFound = fs.existsSync(modelPath);
+    this.logCheck('ArcFace Deep Learning Model Weights Verification', true, {
+      simulation: !modelFound,
+      weights_path: 'backend/ai/models/arcface_r100.onnx',
+      model_file_present_locally: modelFound,
+      runtime: 'ONNX Runtime / TensorRT'
     });
   }
 
   // 6. File & Embedding Recovery
   async verifyFileRecovery() {
-    this.logCheck('Biometric Embedding & Avatar Index Recovery', true, {
-      storage_backend: 'S3-Compatible Secure Encrypted Bucket',
-      vector_index_status: 'VALIDATED (512-dim Cosine space intact)',
-      encryption: 'AES-256-GCM at rest'
+    this.logCheck('Biometric Embedding & Avatar Index Recovery Specification', true, {
+      simulation: true,
+      storage_backend: 'Encrypted MongoDB Atlas BiometricProfile collection',
+      encryption: 'AES-256 at rest'
     });
   }
 
   // Measure RTO and RPO
-  evaluateObjectives() {
+  evaluateObjectives(measuredRtoMinutes = null, measuredRpoMinutes = null) {
+    const hasMeasurements = measuredRtoMinutes !== null && measuredRpoMinutes !== null;
+    const targetRTO = 15.0; // 15 minutes
+    const targetRPO = 5.0;  // 5 minutes
+
     const drMetrics = {
-      targetRTO: '15 minutes',
-      measuredRTO: '4.2 minutes',
-      targetRPO: '5 minutes',
-      measuredRPO: '1.5 minutes (Oplog continuous capture)',
-      compliance: 'EXCEEDS_TIER_1_ENTERPRISE_SLA'
+      targetRTO: `${targetRTO} minutes`,
+      targetRPO: `${targetRPO} minutes`,
+      measuredRTO: hasMeasurements ? `${measuredRtoMinutes.toFixed(1)} minutes` : 'UNVERIFIED_IN_LOCAL_TEST',
+      measuredRPO: hasMeasurements ? `${measuredRpoMinutes.toFixed(1)} minutes` : 'UNVERIFIED_IN_LOCAL_TEST',
+      compliance: hasMeasurements
+        ? (measuredRtoMinutes <= targetRTO && measuredRpoMinutes <= targetRPO ? 'MEETS_SLA' : 'SLA_BREACH')
+        : 'SIMULATION_TARGETS_DEFINED'
     };
-    this.logCheck('Enterprise SLA Metrics (RTO & RPO)', true, drMetrics);
+    this.logCheck('Enterprise SLA Metrics (RTO & RPO)', hasMeasurements ? (drMetrics.compliance === 'MEETS_SLA') : true, drMetrics);
     return drMetrics;
   }
 

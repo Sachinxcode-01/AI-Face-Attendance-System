@@ -96,12 +96,31 @@ register.registerMetric(activeSessionsGauge);
 register.registerMetric(activeCollegesGauge);
 register.registerMetric(systemHealthStatusGauge);
 
-// Initialize baseline health metrics
-systemHealthStatusGauge.set({ component: 'database' }, 1);
-systemHealthStatusGauge.set({ component: 'queue' }, 1);
-systemHealthStatusGauge.set({ component: 'ai_engine' }, 1);
+// Initialize baseline health metrics based on actual readiness state
+const mongoose = require('mongoose');
+const isDbConnected = (mongoose.connection && mongoose.connection.readyState === 1) ? 1 : 0;
+systemHealthStatusGauge.set({ component: 'database' }, isDbConnected);
+systemHealthStatusGauge.set({ component: 'queue' }, 0);
+systemHealthStatusGauge.set({ component: 'ai_engine' }, 0);
 systemHealthStatusGauge.set({ component: 'api_gateway' }, 1);
 activeCollegesGauge.set(2);
+
+// Dynamic lifecycle hooks for database connection state
+if (mongoose.connection) {
+  mongoose.connection.on('connected', () => {
+    systemHealthStatusGauge.set({ component: 'database' }, 1);
+  });
+  mongoose.connection.on('disconnected', () => {
+    systemHealthStatusGauge.set({ component: 'database' }, 0);
+  });
+  mongoose.connection.on('error', () => {
+    systemHealthStatusGauge.set({ component: 'database' }, 0);
+  });
+}
+
+const updateComponentHealth = (component, isHealthy) => {
+  systemHealthStatusGauge.set({ component }, isHealthy ? 1 : 0);
+};
 
 module.exports = {
   register,
@@ -116,5 +135,6 @@ module.exports = {
   activeUsersGauge,
   activeSessionsGauge,
   activeCollegesGauge,
-  systemHealthStatusGauge
+  systemHealthStatusGauge,
+  updateComponentHealth
 };

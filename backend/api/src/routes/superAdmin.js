@@ -231,48 +231,173 @@ router.get('/security-dashboard', async (req, res) => {
 
 // ─── 8. Unified Super Admin Command Center ─────────────────────────
 router.get('/command-center', async (req, res) => {
+  const collectionErrors = {};
   try {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    const [
-      totalUsers,
-      activeStudents,
-      activeTeachers,
-      todayAttendances,
-      todayPresent,
-      faceAttendancesToday,
-      qrAttendancesToday,
-      activeSessionsCount,
-      recentAlerts,
-      accuracyStats
-    ] = await Promise.all([
-      User.countDocuments().catch(() => 3650),
-      User.countDocuments({ role: 'student' }).catch(() => 3200),
-      User.countDocuments({ role: { $in: ['teacher', 'faculty'] } }).catch(() => 140),
-      Attendance.countDocuments({ timestamp: { $gte: todayStart } }).catch(() => 2840),
-      Attendance.countDocuments({ timestamp: { $gte: todayStart }, status: 'Present' }).catch(() => 2710),
-      Attendance.countDocuments({ timestamp: { $gte: todayStart }, verified_by: 'face' }).catch(() => 2420),
-      Attendance.countDocuments({ timestamp: { $gte: todayStart }, verified_by: 'qr' }).catch(() => 420),
-      UserSession.countDocuments({ expiry: { $gt: new Date() } }).catch(() => 540),
-      SecurityLog.find().sort({ timestamp: -1 }).limit(10).lean().catch(() => []),
-      accuracyMonitoringService.getMetrics({ hours: 24 }).catch(() => ({
-        summary: { overallAccuracy: 99.12, far: 0.0001, frr: 0.0088 }
-      }))
-    ]);
+    // Tenant-scoping: super_admin gets platform-wide view; admin gets tenant-scoped view
+    const isSuperAdmin = req.userRole === 'super_admin';
+    const tenantFilter = isSuperAdmin ? null : (req.userCollege || (req.user && (req.user.institution_id || req.user.college_id)));
+
+    const userQueryFilter = tenantFilter ? { college_id: tenantFilter } : {};
+    const securityQueryFilter = tenantFilter ? { college_id: tenantFilter } : {};
+    const attendanceQueryFilter = {
+      timestamp: { $gte: todayStart },
+      ...(tenantFilter ? { college_id: tenantFilter } : {})
+    };
+
+    // 1. Grouped Attendance Aggregation in one query over the exact population
+    let attendanceData = { totalScanned: 0, presentCount: 0, faceCount: 0, qrCount: 0 };
+    try {
+      const aggResult = await Attendance.aggregate([
+        { $match: attendanceQueryFilter },
+        {
+          $group: {
+            _id: null,
+            totalScanned: { $sum: 1 },
+            presentCount: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
+            faceCount: { $sum: { $cond: [{ $eq: ['$verified_by', 'face'] }, 1, 0] } },
+            qrCount: { $sum: { $cond: [{ $eq: ['$verified_by', 'qr'] }, 1, 0] } }
+          }
+        }
+      ]);
+      if (aggResult && aggResult.length > 0) {
+        attendanceData = aggResult[0];
+      }
+    } catch (attErr) {
+      collectionErrors.attendance = attErr.message;
+    }
+
+    // 2. User counts (preserve successful result or return unavailable/error)
+    let totalUsers = 'unavailable';
+    let activeStudents = 'unavailable';
+    let activeTeachers = 'unavailable';
+    try {
+      totalUsers = await User.countDocuments(userQueryFilter);
+      activeStudents = await User.countDocuments({ ...userQueryFilter, role: 'student' });
+      activeTeachers = await User.countDocuments({ ...userQueryFilter, role: { $in: ['teacher', 'faculty'] } });
+    } catch (uErr) {
+      collectionErrors.users = uErr.message;
+    }
+
+    // 3. User session count
+    let activeSessionsCount = 'unavailable';
+    try {
+      activeSessionsCount = await UserSession.countDocuments({ expiry: { $gt: new Date() } });
+    } catch (sErr) {
+      collectionErrors.sessions = sErr.message;
+    }
+
+    // 4. Accuracy metrics (preserve result or return unavailable)
+    let accuracyStats = null;
+    try {
+      accuracyStats = await accuracyMonitoringService.getMetrics({ hours: 24 });
+    } catch (accErr) {
+      collectionErrors.accuracy = accErr.message;
+    }
+
+    // 5. Independent 24-hour failed login count matching supported predicates
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const failedLoginFilter = {
+      timestamp: { $gte: oneDayAgo },
+      $or: [
+        { type: { $in: ['failed_login', 'auth_failure', 'unauthorized_login'] } },
+        { action: { $in: ['failed_login', 'LOGIN_FAILED', 'login_failure'] } }
+      ],
+      ...(tenantFilter ? { college_id: tenantFilter } : {})
+    };
+    let failedLoginsLast24h = 'unavailable';
+    try {
+      failedLoginsLast24h = await SecurityLog.countDocuments(failedLoginFilter);
+    } catch (flErr) {
+      collectionErrors.failedLogins = flErr.message;
+    }
+
+    // 6. Recent security alerts (filtered by tenant)
+    let recentAlerts = [];
+    try {
+      recentAlerts = await SecurityLog.find(securityQueryFilter).sort({ timestamp: -1 }).limit(10).lean();
+    } catch (alErr) {
+      collectionErrors.recentAlerts = alErr.message;
+    }
+
+    // 7. Measure AI Engine health and latency dynamically
+    let aiStatus = 'unavailable';
+    let aiLatencyMs = 'unavailable';
+    try {
+      const faceAiService = require('../services/faceAiService');
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 2000);
+      const aiStart = process.hrtime();
+      const aiRes = await fetch(`${faceAiService.aiUrl}/health`, { signal: controller.signal });
+      clearTimeout(timer);
+      const aiDiff = process.hrtime(aiStart);
+      if (aiRes.ok) {
+        aiStatus = 'healthy';
+        aiLatencyMs = Math.round((aiDiff[0] * 1e9 + aiDiff[1]) / 1e6);
+      }
+    } catch (_) {
+      aiStatus = 'unavailable';
+      aiLatencyMs = 'unavailable';
+    }
+
+    // 8. Measure active students and attendance rates per college
+    const collegeList = isSuperAdmin
+      ? globalPlatformConfig.allowedInstitutions
+      : globalPlatformConfig.allowedInstitutions.filter(c => c.id === tenantFilter);
+
+    const liveColleges = await Promise.all(
+      collegeList.map(async (c) => {
+        let measuredStudents = 'unavailable';
+        let rateToday = 'unavailable';
+        try {
+          measuredStudents = await User.countDocuments({ college_id: c.id, role: 'student' });
+          const collegeAtt = await Attendance.aggregate([
+            { $match: { college_id: c.id, timestamp: { $gte: todayStart } } },
+            {
+              $group: {
+                _id: null,
+                total: { $sum: 1 },
+                present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } }
+              }
+            }
+          ]);
+          if (collegeAtt && collegeAtt[0] && collegeAtt[0].total > 0) {
+            rateToday = `${((collegeAtt[0].present / collegeAtt[0].total) * 100).toFixed(1)}%`;
+          } else {
+            rateToday = '0.0%';
+          }
+        } catch (_) {}
+
+        return {
+          id: c.id,
+          name: c.name,
+          code: c.code,
+          status: c.status,
+          plan: c.plan,
+          activeStudents: measuredStudents,
+          attendanceRateToday: rateToday
+        };
+      })
+    );
 
     const queueStats = queueManager.getStats();
-    let dbStatus = mongoose.connection.readyState === 1 ? 'healthy' : 'degraded';
+    const dbStatus = mongoose.connection.readyState === 1 ? 'healthy' : 'degraded';
 
-    const liveColleges = globalPlatformConfig.allowedInstitutions.map((c) => ({
-      id: c.id,
-      name: c.name,
-      code: c.code,
-      status: c.status,
-      plan: c.plan,
-      activeStudents: Math.floor(c.studentCount * 0.88),
-      attendanceRateToday: '95.4%'
-    }));
+    const totalScanned = attendanceData.totalScanned;
+    const presentCount = attendanceData.presentCount;
+    const attendanceRate = totalScanned > 0 ? `${((presentCount / totalScanned) * 100).toFixed(1)}%` : '0.0%';
+
+    const precisionScore = accuracyStats && accuracyStats.summary && typeof accuracyStats.summary.overallAccuracy === 'number'
+      ? accuracyStats.summary.overallAccuracy
+      : 'unavailable';
+    const falseAcceptanceRate = accuracyStats && accuracyStats.summary && typeof accuracyStats.summary.far === 'number'
+      ? `${(accuracyStats.summary.far * 100).toFixed(4)}%`
+      : 'unavailable';
+    const falseRejectionRate = accuracyStats && accuracyStats.summary && typeof accuracyStats.summary.frr === 'number'
+      ? `${(accuracyStats.summary.frr * 100).toFixed(2)}%`
+      : 'unavailable';
 
     res.json({
       success: true,
@@ -293,25 +418,25 @@ router.get('/command-center', async (req, res) => {
         activeConcurrentSessions: activeSessionsCount
       },
       attendanceToday: {
-        totalScanned: todayAttendances,
-        presentCount: todayPresent,
-        attendanceRate: todayAttendances > 0 ? `${((todayPresent / todayAttendances) * 100).toFixed(1)}%` : '95.4%',
+        totalScanned,
+        presentCount,
+        attendanceRate,
         modalityBreakdown: {
-          faceRecognition: faceAttendancesToday,
-          dynamicQR: qrAttendancesToday
+          faceRecognition: attendanceData.faceCount,
+          dynamicQR: attendanceData.qrCount
         }
       },
       biometricAccuracy: {
-        precisionScore: accuracyStats.summary ? accuracyStats.summary.overallAccuracy : 99.12,
-        falseAcceptanceRate: '0.0001%',
-        falseRejectionRate: '0.88%',
-        presentationAttackDefense: '99.65% (ISO/IEC 30107-3 Verified)'
+        precisionScore,
+        falseAcceptanceRate,
+        falseRejectionRate,
+        measurementInterval: 'Last 24 Hours'
       },
       systemHealth: {
         apiGateway: { status: 'healthy', uptimeSec: process.uptime(), memoryMB: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) },
         database: { status: dbStatus, host: mongoose.connection.host || 'MongoDB Atlas Replica Cluster' },
         redis: { status: queueStats.isRedisConnected ? 'connected' : 'resilient-in-memory-fallback' },
-        aiEngine: { status: 'healthy', model: 'ArcFace-ResNet100', p95LatencyMs: 145 },
+        aiEngine: { status: aiStatus, model: 'ArcFace-ResNet100', p95LatencyMs: aiLatencyMs },
         queue: {
           status: 'healthy',
           depths: queueStats.queueDepths,
@@ -324,9 +449,10 @@ router.get('/command-center', async (req, res) => {
         }
       },
       securityEvents: {
-        failedLoginsLast24h: recentAlerts.filter(a => a.type === 'failed_login' || a.action === 'failed_login').length,
+        failedLoginsLast24h,
         recentIncidents: recentAlerts.slice(0, 5)
-      }
+      },
+      collectionErrors: Object.keys(collectionErrors).length > 0 ? collectionErrors : undefined
     });
   } catch (err) {
     reportInternalError(res, err, 'SuperAdmin:UnifiedCommandCenter');

@@ -70,17 +70,30 @@ class Tracer {
   extractTraceContext(req) {
     const traceparent = req.headers['traceparent'];
     if (traceparent && typeof traceparent === 'string') {
-      const parts = traceparent.split('-');
+      const parts = traceparent.trim().split('-');
       if (parts.length >= 4) {
-        return {
-          traceId: parts[1],
-          parentSpanId: parts[2]
-        };
+        const version = parts[0];
+        const traceId = parts[1].toLowerCase();
+        const parentSpanId = parts[2].toLowerCase();
+        const traceHexRegex = /^[0-9a-f]{32}$/;
+        const spanHexRegex = /^[0-9a-f]{16}$/;
+        if (
+          version.length === 2 &&
+          traceHexRegex.test(traceId) &&
+          traceId !== '00000000000000000000000000000000' &&
+          spanHexRegex.test(parentSpanId) &&
+          parentSpanId !== '0000000000000000'
+        ) {
+          return {
+            traceId,
+            parentSpanId
+          };
+        }
       }
     }
-    const reqId = req.headers['x-request-id'] || crypto.randomBytes(16).toString('hex');
+    // Generate valid 32-hex character traceId when missing or invalid
     return {
-      traceId: reqId.replace(/-/g, '').padEnd(32, '0').slice(0, 32),
+      traceId: crypto.randomBytes(16).toString('hex'),
       parentSpanId: null
     };
   }

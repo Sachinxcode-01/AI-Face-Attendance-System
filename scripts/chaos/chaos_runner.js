@@ -148,7 +148,12 @@ class ChaosEngineeringRunner extends EventEmitter {
     await this.testContainerRestart();
     await this.testServerRestart();
 
-    console.log('\n🎯 Chaos Gauntlet Complete. All Resilience Invariants Upheld.');
+    const allPassed = this.chaosLog.every(r => r.status === 'PASSED');
+    if (allPassed) {
+      console.log('\n🎯 Chaos Gauntlet Complete. All Executed Resilience Invariants Upheld.');
+    } else {
+      console.warn('\n⚠️ Chaos Gauntlet Completed with Failures or Unexecuted Scenarios.');
+    }
     return this.chaosLog;
   }
 }
@@ -161,6 +166,13 @@ if (require.main === module) {
     const outPath = path.resolve(__dirname, '../../docs/production/CHAOS_ENGINEERING_REPORT.json');
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, JSON.stringify(log, null, 2));
+
+    const hasFailure = log.some(r => r.status === 'FAILED');
+    if (hasFailure) {
+      process.exit(1);
+    } else {
+      process.exit(0);
+    }
   });
 }
 

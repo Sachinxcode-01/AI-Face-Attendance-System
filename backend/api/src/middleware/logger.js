@@ -31,7 +31,10 @@ const securityAndLogger = (req, res, next) => {
     span.setTag('http.status_code', res.statusCode);
     span.end();
 
-    const normalizedRoute = req.route && req.route.path ? req.baseUrl + req.route.path : (req.baseUrl || req.path || '/');
+    const normalizedRoute = req.route && typeof req.route.path === 'string'
+      ? (req.baseUrl || '') + req.route.path
+      : 'unmatched';
+
     httpRequestDuration.observe(
       {
         method: req.method,

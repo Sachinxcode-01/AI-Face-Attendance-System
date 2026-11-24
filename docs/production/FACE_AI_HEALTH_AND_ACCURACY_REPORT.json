@@ -1,6 +1,7 @@
 {
-  "timestamp": "2026-11-24T01:38:07.378Z",
+  "timestamp": "2026-11-24T02:12:16.474Z",
   "system": "SmartFace Attendance Deep Biometric AI Engine",
+  "evaluationType": "SYNTHETIC_MODEL_FIXTURE_EVALUATION",
   "precision": {
     "modelArchitecture": "ArcFace (InsightFace ResNet-100 Backbone, 512-dim embedding)",
     "featureVectorDimension": 512,
@@ -8,7 +9,7 @@
     "productionThreshold": 0.65,
     "metricsAtOperatingPoint": {
       "trueAcceptanceRate": "99.12%",
-      "falseAcceptanceRate": "0.0100% (1 in 1,000,000)",
+      "falseAcceptanceRate": "0.0100% (1 in 10,000)",
       "falseRejectionRate": "0.88%",
       "overallAccuracy": "99.12%"
     },
@@ -70,5 +71,5 @@
     "modelDriftStatus": "STABLE",
     "recalibrationRecommendedIn": "180 days"
   },
-  "certificationVerdict": "PASSED_ENTERPRISE_BIOMETRIC_GRADE"
+  "certificationVerdict": "SPECIFICATION_MODEL_TARGETS_DEFINED (LAB VALIDATION PENDING)"
 }

@@ -20,6 +20,11 @@ const GSheetsManager = require('../services/gsheetsManager');
 const gsheets = new GSheetsManager();
 const faceAiService = require('../services/faceAiService');
 const datasetService = require('../services/datasetService');
+const {
+  attendanceSubmissionsTotal,
+  faceRecognitionDuration,
+  aiInferenceDuration
+} = require('../monitoring/metrics');
 
 const multer = require('multer');
 const upload = multer({
@@ -208,6 +213,15 @@ router.post('/mark', authenticate, async (req, res) => {
 
     await newRecord.save();
 
+    // Instrument successful QR attendance submission
+    try {
+      attendanceSubmissionsTotal.inc({
+        status: 'success',
+        method: 'qr',
+        college_id: (session && (session.college_id || session.institution_id)) || req.userCollege || 'default'
+      });
+    } catch (_) {}
+
     // Audit Log
     await auditLog(student_email, 'student', 'ATTENDANCE_MARKED', { method: 'qr', session_id, subject: session.subject }, req);
 
@@ -302,6 +316,7 @@ router.post('/mark/face', authenticate, requireRole('student'), upload.single('i
       }
 
       // Forward to Python FastAPI AI microservice
+      const faceStart = process.hrtime();
       const aiResult = await faceAiService.verifyFace(req.file.buffer, student_email);
 
       if (aiResult.status === 400) {
@@ -349,6 +364,25 @@ router.post('/mark/face', authenticate, requireRole('student'), upload.single('i
       });
 
       await newRecord.save();
+
+      // Instrument successful face verification and attendance submission
+      try {
+        const faceDiff = process.hrtime(faceStart);
+        const faceLatencySec = (faceDiff[0] * 1e9 + faceDiff[1]) / 1e9;
+        faceRecognitionDuration.observe(
+          { status: 'success', model_version: 'arcface-r100', lighting: req.body.lighting || 'normal' },
+          faceLatencySec
+        );
+        aiInferenceDuration.observe(
+          { pipeline_stage: 'feature_extraction', accelerator: 'cpu' },
+          faceLatencySec
+        );
+        attendanceSubmissionsTotal.inc({
+          status: 'success',
+          method: 'face',
+          college_id: (session && (session.college_id || session.institution_id)) || req.userCollege || 'default'
+        });
+      } catch (_) {}
 
       // Audit Log
       await auditLog(student_email, 'student', 'ATTENDANCE_MARKED', { method: 'face', session_id: activeSessionId, confidence: aiResult.confidence }, req);

@@ -65,8 +65,9 @@ class LoadTestHarness {
   }
 
   async runScenario(name, userCount, taskFn) {
+    const batchSize = Math.min(userCount, 250); // Pipeline concurrency
     console.log(`\n======================================================================`);
-    console.log(`🚀 Executing Scenario: [${name}] | Concurrency: ${userCount} Virtual Users`);
+    console.log(`🚀 Executing Scenario: [${name}] | Requests: ${userCount} | Concurrency Limit: ${batchSize}`);
     console.log(`======================================================================`);
 
     const latencies = [];
@@ -74,8 +75,6 @@ class LoadTestHarness {
     let failureCount = 0;
     const startMemory = process.memoryUsage().heapUsed;
     const startTime = process.hrtime();
-
-    const batchSize = Math.min(userCount, 250); // Pipeline concurrency
     const batches = Math.ceil(userCount / batchSize);
 
     for (let b = 0; b < batches; b++) {
@@ -116,9 +115,10 @@ class LoadTestHarness {
 
     const metrics = {
       scenario: name,
-      virtualUsers: userCount,
-      durationSec: parseFloat(totalDurationSec.toFixed(2)),
+      benchmarkType: 'SYNTHETIC_LOCAL_WORK_BENCHMARK',
       totalRequests: userCount,
+      activeConcurrencyLimit: batchSize,
+      durationSec: parseFloat(totalDurationSec.toFixed(2)),
       successCount,
       failureCount,
       successRate: `${((successCount / userCount) * 100).toFixed(2)}%`,
@@ -133,7 +133,8 @@ class LoadTestHarness {
         cpuCores: os.cpus().length,
         heapAllocatedMB: memoryDiffMB,
         systemFreeMemMB: Math.round(os.freemem() / 1024 / 1024)
-      }
+      },
+      notice: 'Synthetic local benchmark; separate staging cluster load tests are required for deployed capacity sign-off.'
     };
 
     console.log(`📊 Completed: ${successCount} OK / ${failureCount} Fail | TPS: ${tps} | p50: ${metrics.latency.p50Ms}ms | p95: ${metrics.latency.p95Ms}ms | p99: ${metrics.latency.p99Ms}ms`);

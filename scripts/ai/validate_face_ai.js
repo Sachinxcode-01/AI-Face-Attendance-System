@@ -35,7 +35,7 @@ class FaceAIValidator {
       productionThreshold: operatingPoint.threshold,
       metricsAtOperatingPoint: {
         trueAcceptanceRate: `${(operatingPoint.tar * 100).toFixed(2)}%`,
-        falseAcceptanceRate: `${(operatingPoint.far * 100).toFixed(4)}% (1 in 1,000,000)`,
+        falseAcceptanceRate: `${(operatingPoint.far * 100).toFixed(4)}% (1 in ${Math.round(1 / operatingPoint.far).toLocaleString()})`,
         falseRejectionRate: `${(operatingPoint.frr * 100).toFixed(2)}%`,
         overallAccuracy: '99.12%'
       },
@@ -90,10 +90,11 @@ class FaceAIValidator {
     const fullReport = {
       timestamp: new Date().toISOString(),
       system: 'SmartFace Attendance Deep Biometric AI Engine',
+      evaluationType: 'SYNTHETIC_MODEL_FIXTURE_EVALUATION',
       precision,
       presentationAttackDetection: liveness,
       datasetAndDrift: dataset,
-      certificationVerdict: 'PASSED_ENTERPRISE_BIOMETRIC_GRADE'
+      certificationVerdict: 'SPECIFICATION_MODEL_TARGETS_DEFINED (LAB VALIDATION PENDING)'
     };
 
     return fullReport;
