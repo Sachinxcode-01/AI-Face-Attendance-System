@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, Copy, QrCode, ShieldCheck, Sparkles } from "lucide-react";
 import { Reveal } from "./ui/reveal";
@@ -10,38 +10,56 @@ const TOKEN_WINDOW = 30; // seconds
 
 function useTokenClock() {
   const [seconds, setSeconds] = useState(TOKEN_WINDOW);
+  const [cycle, setCycle] = useState(0);
 
   useEffect(() => {
     const id = window.setInterval(() => {
-      setSeconds((s) => (s <= 1 ? TOKEN_WINDOW : s - 1));
+      setSeconds((prev) => {
+        if (prev <= 1) {
+          setCycle((c) => c + 1);
+          return TOKEN_WINDOW;
+        }
+        return prev - 1;
+      });
     }, 1000);
     return () => window.clearInterval(id);
   }, []);
 
-  return seconds;
+  return { seconds, cycle };
 }
 
-function tokenFor(seconds: number) {
-  const seed = Math.floor(seconds / 5);
+function tokenFor(cycle: number) {
   const chars = "0123456789ABCDEF";
   let out = "";
   for (let i = 0; i < 4; i += 1) {
-    out += chars[(seed * 7 + i * 13) % 16];
+    out += chars[(cycle * 7 + i * 13 + 5) % 16];
   }
   return `${out.slice(0, 2)}·${out.slice(2)}`;
 }
 
 export function TokenDemo() {
   const reduceMotion = useReducedMotion();
-  const seconds = useTokenClock();
+  const { seconds, cycle } = useTokenClock();
   const fraction = seconds / TOKEN_WINDOW;
-  const token = tokenFor(seconds);
+  const token = useMemo(() => tokenFor(cycle), [cycle]);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard?.writeText(token.replace("·", ""));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 2000);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(token.replace("·", ""));
+      setCopyError(false);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 2000);
+    }
   };
 
   return (
@@ -137,7 +155,9 @@ export function TokenDemo() {
                     className="chip-bytune h-6 text-[10.5px] px-2.5 gap-1 hover:text-hi active:scale-95"
                     title="Copy token code"
                   >
-                    {copied ? (
+                    {copyError ? (
+                      <span className="text-red-400 font-medium">Failed</span>
+                    ) : copied ? (
                       <>
                         <Check className="h-3 w-3 text-spotify" />
                         <span className="text-spotify font-medium">Copied</span>

@@ -31,6 +31,21 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admi
     if (!teacherExists) {
       return res.status(404).json({ detail: 'Teacher account not found.' });
     }
+
+    const existingSession = await Session.findOne({
+      teacher_id: teacherEmail,
+      subject,
+      is_active: true
+    }).sort({ start_time: -1 });
+
+    if (existingSession) {
+      return res.json({
+        session_id: existingSession._id.toString(),
+        message: "Attendance session started successfully",
+        already_active: true
+      });
+    }
+
     const sessionId = new mongoose.Types.ObjectId();
     const qrCode = crypto.randomBytes(32).toString('hex');
 

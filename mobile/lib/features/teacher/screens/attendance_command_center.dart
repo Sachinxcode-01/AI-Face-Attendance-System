@@ -54,8 +54,12 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_isInit) {
-      _initMissionControl();
       _isInit = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _initMissionControl();
+        }
+      });
     }
   }
 
@@ -72,6 +76,14 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
       _notificationService.connect(token: token);
       _notifSubscription = _notificationService.stream.listen((data) {
         if (data['type'] == 'attendance_update' || data['type'] == 'checkin') {
+          final activeSession = teacherCtrl.currentActiveSession;
+          final eventSessionId = data['session_id']?.toString();
+          if (activeSession != null &&
+              eventSessionId != null &&
+              eventSessionId != activeSession.id) {
+            // Ignore events scoped to a different active session
+            return;
+          }
           HapticFeedback.lightImpact();
           teacherCtrl.onWebSocketCheckin(data);
         }
@@ -100,8 +112,25 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
     final teacherCtrl = context.read<TeacherController>();
     final session = context.read<SessionManager>();
 
+    final activeSession = teacherCtrl.currentActiveSession;
+    if (activeSession == null || !activeSession.isActive) {
+      AppToast.show(
+        context,
+        message: 'No active session found for manual roll-call.',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
+    final capturedSessionId = activeSession.id;
+
     if (teacherCtrl.rosterStudents.isEmpty && session.token != null) {
-      teacherCtrl.fetchRoster(session.token!);
+      teacherCtrl.fetchRoster(session.token!, sessionId: capturedSessionId);
+    }
+
+    final Map<String, RosterStatus> localDraft = {};
+    for (final s in teacherCtrl.rosterStudents) {
+      localDraft[s.id] = s.status;
     }
 
     showModalBottomSheet(
@@ -127,8 +156,12 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
             ),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF0F172A) : Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+              border: Border.all(
+                color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,7 +195,7 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                   ],
                 ),
                 Text(
-                  'Mark student attendance for in-person physical roll calls.',
+                  'Make draft adjustments. Click commit to sync overrides to server.',
                   style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
                 ),
                 const SizedBox(height: 14),
@@ -173,21 +206,33 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                     hintText: 'Search by student name or USN...',
                     prefixIcon: const Icon(Icons.search_rounded, size: 18),
                     filled: true,
-                    fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                    fillColor: isDark
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFF1F5F9),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 14),
                 Expanded(
-                  child: filtered.isEmpty
+                  child: teacherCtrl.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : filtered.isEmpty
                       ? Center(
                           child: Text(
-                            'No matching students found.',
-                            style: GoogleFonts.inter(fontSize: 13, color: Colors.grey),
+                            teacherCtrl.rosterStudents.isEmpty
+                                ? 'No enrolled students found for session.'
+                                : 'No matching students found.',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: Colors.grey,
+                            ),
                           ),
                         )
                       : ListView.separated(
@@ -195,6 +240,8 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                           separatorBuilder: (_, _) => const Divider(height: 1),
                           itemBuilder: (context, idx) {
                             final s = filtered[idx];
+                            final effectiveStatus =
+                                localDraft[s.id] ?? s.status;
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
                               title: Text(
@@ -205,24 +252,45 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                                 ),
                               ),
                               subtitle: Text(
-                                '${s.usn} · Current: ${s.status.label}',
-                                style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
+                                '${s.usn} · Draft: ${effectiveStatus.label}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
                               ),
                               trailing: Wrap(
                                 spacing: 6,
                                 children: [
-                                  _statusActionChip('Present', AppColors.success, s.status == RosterStatus.present, () {
-                                    teacherCtrl.updateStudentStatus(s.id, RosterStatus.present);
-                                    setModalState(() {});
-                                  }),
-                                  _statusActionChip('Late', AppColors.warning, s.status == RosterStatus.late, () {
-                                    teacherCtrl.updateStudentStatus(s.id, RosterStatus.late);
-                                    setModalState(() {});
-                                  }),
-                                  _statusActionChip('Absent', AppColors.error, s.status == RosterStatus.absent, () {
-                                    teacherCtrl.updateStudentStatus(s.id, RosterStatus.absent);
-                                    setModalState(() {});
-                                  }),
+                                  _statusActionChip(
+                                    'Present',
+                                    AppColors.success,
+                                    effectiveStatus == RosterStatus.present,
+                                    () {
+                                      setModalState(() {
+                                        localDraft[s.id] = RosterStatus.present;
+                                      });
+                                    },
+                                  ),
+                                  _statusActionChip(
+                                    'Late',
+                                    AppColors.warning,
+                                    effectiveStatus == RosterStatus.late,
+                                    () {
+                                      setModalState(() {
+                                        localDraft[s.id] = RosterStatus.late;
+                                      });
+                                    },
+                                  ),
+                                  _statusActionChip(
+                                    'Absent',
+                                    AppColors.error,
+                                    effectiveStatus == RosterStatus.absent,
+                                    () {
+                                      setModalState(() {
+                                        localDraft[s.id] = RosterStatus.absent;
+                                      });
+                                    },
+                                  ),
                                 ],
                               ),
                             );
@@ -236,14 +304,40 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     onPressed: () async {
                       if (session.token != null) {
-                        final active = teacherCtrl.currentActiveSession;
-                        final sid = active?.id ?? 'SESS-MANUAL';
-                        Navigator.pop(ctx);
-                        final ok = await teacherCtrl.saveRosterOverrides(sid, session.token!);
+                        if (teacherCtrl.currentActiveSession?.id !=
+                            capturedSessionId) {
+                          AppToast.show(
+                            context,
+                            message:
+                                'Session is no longer active. Commit rejected.',
+                            type: ToastType.error,
+                          );
+                          return;
+                        }
+
+                        // Apply draft edits to controller
+                        for (final entry in localDraft.entries) {
+                          teacherCtrl.updateStudentStatus(
+                            entry.key,
+                            entry.value,
+                          );
+                        }
+
+                        if (ctx.mounted &&
+                            ModalRoute.of(ctx)?.isCurrent == true) {
+                          Navigator.pop(ctx);
+                        }
+
+                        final ok = await teacherCtrl.saveRosterOverrides(
+                          capturedSessionId,
+                          session.token!,
+                        );
                         if (!mounted || !context.mounted) return;
                         AppToast.show(
                           context,
@@ -256,7 +350,11 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                     },
                     child: Text(
                       'COMMIT OVERRIDES TO SERVER',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -268,7 +366,12 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
     );
   }
 
-  Widget _statusActionChip(String label, Color color, bool isSelected, VoidCallback onTap) {
+  Widget _statusActionChip(
+    String label,
+    Color color,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(6),
@@ -295,6 +398,18 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
     final msgCtrl = TextEditingController();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final session = context.read<SessionManager>();
+    final teacherCtrl = context.read<TeacherController>();
+
+    final activeSession = teacherCtrl.currentActiveSession;
+    if (activeSession == null || !activeSession.isActive) {
+      AppToast.show(
+        context,
+        message: 'Broadcast requires an active classroom session.',
+        type: ToastType.warning,
+      );
+      return;
+    }
+    final capturedSessionId = activeSession.id;
 
     showDialog(
       context: context,
@@ -305,7 +420,13 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
           children: [
             const Icon(Icons.campaign_rounded, color: AppColors.gold, size: 22),
             const SizedBox(width: 8),
-            Text('Broadcast Class Notice', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 17)),
+            Text(
+              'Broadcast Class Notice',
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+              ),
+            ),
           ],
         ),
         content: Column(
@@ -321,10 +442,16 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
               controller: msgCtrl,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'e.g., Pop quiz starts in 10 minutes. Please take your seats.',
+                hintText:
+                    'e.g., Pop quiz starts in 10 minutes. Please take your seats.',
                 filled: true,
-                fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                fillColor: isDark
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFF1F5F9),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ],
@@ -338,27 +465,39 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.gold,
               foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () async {
               final text = msgCtrl.text.trim();
               if (text.isNotEmpty && session.token != null) {
-                Navigator.pop(ctx);
                 final repo = sl<TeacherRepository>();
                 final ok = await repo.broadcastClassAnnouncement(
+                  sessionId: capturedSessionId,
                   subject: 'Classroom Notice',
                   message: text,
                   token: session.token!,
                 );
+                if (ctx.mounted && ModalRoute.of(ctx)?.isCurrent == true) {
+                  if (ok) {
+                    Navigator.pop(ctx);
+                  }
+                }
                 if (!mounted || !context.mounted) return;
                 AppToast.show(
                   context,
-                  message: ok ? 'Class broadcast dispatched successfully.' : 'Dispatched broadcast to classroom.',
-                  type: ToastType.success,
+                  message: ok
+                      ? 'Class broadcast dispatched successfully.'
+                      : 'Failed to dispatch broadcast. Please retry.',
+                  type: ok ? ToastType.success : ToastType.error,
                 );
               }
             },
-            child: const Text('DISPATCH', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'DISPATCH',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -374,7 +513,9 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
     final session = context.read<SessionManager>();
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF070A14) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark
+          ? const Color(0xFF070A14)
+          : const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         elevation: 0,
@@ -423,7 +564,9 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
         ],
       ),
       body: teacherCtrl.isLoading && teacherCtrl.dashboardData.isEmpty
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
           : RefreshIndicator(
               onRefresh: _refreshData,
               child: SingleChildScrollView(
@@ -435,7 +578,11 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Active Session Operations Bar
-                      _buildActiveSessionController(teacherCtrl, session, isDark),
+                      _buildActiveSessionController(
+                        teacherCtrl,
+                        session,
+                        isDark,
+                      ),
 
                       const SizedBox(height: 20),
 
@@ -461,16 +608,56 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                           ? Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(child: _buildRiskCard('CRITICAL ROSTER (<60%)', teacherCtrl.atRiskStudents.where((s) => s.attendance < 60).toList(), AppColors.error, isDark)),
+                                Expanded(
+                                  child: _buildRiskCard(
+                                    'CRITICAL ROSTER (<60%)',
+                                    teacherCtrl.atRiskStudents
+                                        .where((s) => s.attendance < 60)
+                                        .toList(),
+                                    AppColors.error,
+                                    isDark,
+                                  ),
+                                ),
                                 const SizedBox(width: 16),
-                                Expanded(child: _buildRiskCard('WARNING ROSTER (60%-75%)', teacherCtrl.atRiskStudents.where((s) => s.attendance >= 60 && s.attendance < 75).toList(), AppColors.warning, isDark)),
+                                Expanded(
+                                  child: _buildRiskCard(
+                                    'WARNING ROSTER (60%-75%)',
+                                    teacherCtrl.atRiskStudents
+                                        .where(
+                                          (s) =>
+                                              s.attendance >= 60 &&
+                                              s.attendance < 75,
+                                        )
+                                        .toList(),
+                                    AppColors.warning,
+                                    isDark,
+                                  ),
+                                ),
                               ],
                             )
                           : Column(
                               children: [
-                                _buildRiskCard('CRITICAL ROSTER (<60%)', teacherCtrl.atRiskStudents.where((s) => s.attendance < 60).toList(), AppColors.error, isDark),
+                                _buildRiskCard(
+                                  'CRITICAL ROSTER (<60%)',
+                                  teacherCtrl.atRiskStudents
+                                      .where((s) => s.attendance < 60)
+                                      .toList(),
+                                  AppColors.error,
+                                  isDark,
+                                ),
                                 const SizedBox(height: 16),
-                                _buildRiskCard('WARNING ROSTER (60%-75%)', teacherCtrl.atRiskStudents.where((s) => s.attendance >= 60 && s.attendance < 75).toList(), AppColors.warning, isDark),
+                                _buildRiskCard(
+                                  'WARNING ROSTER (60%-75%)',
+                                  teacherCtrl.atRiskStudents
+                                      .where(
+                                        (s) =>
+                                            s.attendance >= 60 &&
+                                            s.attendance < 75,
+                                      )
+                                      .toList(),
+                                  AppColors.warning,
+                                  isDark,
+                                ),
                               ],
                             ),
 
@@ -484,7 +671,11 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
   }
 
   // ── Active Session Operations Banner ───────────────────────────────────────
-  Widget _buildActiveSessionController(TeacherController ctrl, SessionManager session, bool isDark) {
+  Widget _buildActiveSessionController(
+    TeacherController ctrl,
+    SessionManager session,
+    bool isDark,
+  ) {
     final active = ctrl.currentActiveSession;
     final hasActive = active != null;
 
@@ -494,7 +685,9 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
         color: isDark ? const Color(0xFF0F172A) : Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: hasActive ? AppColors.success.withValues(alpha: 0.4) : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+          color: hasActive
+              ? AppColors.success.withValues(alpha: 0.4)
+              : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
           width: hasActive ? 1.5 : 1.0,
         ),
         boxShadow: [
@@ -520,7 +713,9 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      hasActive ? 'ACTIVE CLASSROOM SESSION' : 'CLASSROOM SESSION IDLE',
+                      hasActive
+                          ? 'ACTIVE CLASSROOM SESSION'
+                          : 'CLASSROOM SESSION IDLE',
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -532,7 +727,9 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  hasActive ? active.subject : 'No active lecture currently running',
+                  hasActive
+                      ? active.subject
+                      : 'No active lecture currently running',
                   style: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -543,7 +740,10 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                   hasActive
                       ? 'Room: ${active.room} · Session ID: ${active.id}'
                       : 'Launch Smartboard Projector or start session from timetable.',
-                  style: GoogleFonts.inter(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textMuted),
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: isDark ? Colors.white60 : AppColors.textMuted,
+                  ),
                 ),
               ],
             ),
@@ -559,19 +759,29 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                       if (mounted) {
                         AppToast.show(
                           context,
-                          message: ok ? 'Session concluded and locked on server.' : 'Session stopped.',
-                          type: ToastType.info,
+                          message: ok
+                              ? 'Session concluded and locked on server.'
+                              : 'Failed to end session on server. Please retry.',
+                          type: ok ? ToastType.info : ToastType.error,
                         );
                       }
                     }
                   },
                   icon: const Icon(Icons.stop_rounded, size: 16),
-                  label: const Text('END SESSION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'END SESSION',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.error,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ElevatedButton.icon(
@@ -579,13 +789,21 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                 icon: const Icon(Icons.cast_for_education_rounded, size: 16),
                 label: Text(
                   hasActive ? 'VIEW PROJECTOR' : 'START PROJECTOR',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.gold,
                   foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ],
@@ -605,9 +823,15 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
         Expanded(
           child: TeacherMetricCard(
             title: 'Attendance Rate',
-            value: '${t.averageAttendance.toStringAsFixed(1)}%',
-            trendText: t.averageAttendance >= 75 ? 'COMPLIANT' : 'SUB-OPTIMAL',
-            isTrendPositive: t.averageAttendance >= 75,
+            value: t.averageAttendance != null
+                ? '${t.averageAttendance!.toStringAsFixed(1)}%'
+                : 'N/A',
+            trendText: t.averageAttendance != null
+                ? (t.averageAttendance! >= 75 ? 'COMPLIANT' : 'SUB-OPTIMAL')
+                : null,
+            isTrendPositive:
+                t.averageAttendance != null && t.averageAttendance! >= 75,
+            subtitle: t.averageAttendance == null ? 'Awaiting telemetry' : null,
             icon: Icons.pie_chart_outline_rounded,
             accentColor: AppColors.success,
           ),
@@ -626,7 +850,7 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
         Expanded(
           child: TeacherMetricCard(
             title: 'Monitored Cohort',
-            value: '${t.totalStudents}',
+            value: t.totalStudents != null ? '${t.totalStudents}' : 'N/A',
             subtitle: 'Across courses',
             icon: Icons.people_outline_rounded,
             accentColor: AppColors.cyan,
@@ -658,9 +882,17 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
             Expanded(
               child: TeacherMetricCard(
                 title: 'Attendance Rate',
-                value: '${t.averageAttendance.toStringAsFixed(1)}%',
-                trendText: t.averageAttendance >= 75 ? '+2.4%' : '-4.1%',
-                isTrendPositive: t.averageAttendance >= 75,
+                value: t.averageAttendance != null
+                    ? '${t.averageAttendance!.toStringAsFixed(1)}%'
+                    : 'N/A',
+                trendText: t.averageAttendance != null
+                    ? (t.averageAttendance! >= 75 ? 'COMPLIANT' : 'SUB-OPTIMAL')
+                    : null,
+                isTrendPositive:
+                    t.averageAttendance != null && t.averageAttendance! >= 75,
+                subtitle: t.averageAttendance == null
+                    ? 'Awaiting telemetry'
+                    : null,
                 icon: Icons.pie_chart_outline_rounded,
                 accentColor: AppColors.success,
               ),
@@ -683,7 +915,7 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
             Expanded(
               child: TeacherMetricCard(
                 title: 'Monitored Cohort',
-                value: '${t.totalStudents}',
+                value: t.totalStudents != null ? '${t.totalStudents}' : 'N/A',
                 subtitle: 'Active students',
                 icon: Icons.people_outline_rounded,
                 accentColor: AppColors.cyan,
@@ -709,16 +941,23 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
   // ── Biometric Mix Section ──────────────────────────────────────────────────
   Widget _buildVerificationMixSection(TeacherController ctrl, bool isDark) {
     final t = ctrl.telemetry;
-    final facePct = t.faceScansPct.toInt();
-    final qrPct = t.qrScansPct.toInt();
-    final manualPct = t.manualScansPct.toInt();
+    final facePct = t.faceScansPct?.round();
+    final qrPct = t.qrScansPct?.round();
+    final manualPct = t.manualScansPct?.round();
+
+    final hasData =
+        (facePct != null && facePct > 0) ||
+        (qrPct != null && qrPct > 0) ||
+        (manualPct != null && manualPct > 0);
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F172A) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+        border: Border.all(
+          color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -735,23 +974,42 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                   color: isDark ? Colors.white70 : AppColors.textMuted,
                 ),
               ),
-              const TeacherStatusBadge(label: 'ArcFace ONNX Active', color: AppColors.success),
+              const TeacherStatusBadge(
+                label: 'ArcFace ONNX Active',
+                color: AppColors.success,
+              ),
             ],
           ),
           const SizedBox(height: 14),
 
-          // Stacked Progress Bar
+          // Stacked Progress Bar or Empty State
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: SizedBox(
               height: 12,
-              child: Row(
-                children: [
-                  Expanded(flex: facePct > 0 ? facePct : 70, child: Container(color: AppColors.primary)),
-                  Expanded(flex: qrPct > 0 ? qrPct : 25, child: Container(color: AppColors.gold)),
-                  Expanded(flex: manualPct > 0 ? manualPct : 5, child: Container(color: AppColors.cyan)),
-                ],
-              ),
+              child: hasData
+                  ? Row(
+                      children: [
+                        if (facePct != null && facePct > 0)
+                          Expanded(
+                            flex: facePct,
+                            child: Container(color: AppColors.primary),
+                          ),
+                        if (qrPct != null && qrPct > 0)
+                          Expanded(
+                            flex: qrPct,
+                            child: Container(color: AppColors.gold),
+                          ),
+                        if (manualPct != null && manualPct > 0)
+                          Expanded(
+                            flex: manualPct,
+                            child: Container(color: AppColors.cyan),
+                          ),
+                      ],
+                    )
+                  : Container(
+                      color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+                    ),
             ),
           ),
           const SizedBox(height: 14),
@@ -760,9 +1018,21 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMixLegend('ArcFace AI', '$facePct%', AppColors.primary),
-              _buildMixLegend('Dynamic QR', '$qrPct%', AppColors.gold),
-              _buildMixLegend('Manual Override', '$manualPct%', AppColors.cyan),
+              _buildMixLegend(
+                'ArcFace AI',
+                facePct != null ? '$facePct%' : 'N/A',
+                AppColors.primary,
+              ),
+              _buildMixLegend(
+                'Dynamic QR',
+                qrPct != null ? '$qrPct%' : 'N/A',
+                AppColors.gold,
+              ),
+              _buildMixLegend(
+                'Manual Override',
+                manualPct != null ? '$manualPct%' : 'N/A',
+                AppColors.cyan,
+              ),
             ],
           ),
         ],
@@ -773,10 +1043,20 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
   Widget _buildMixLegend(String label, String pct, Color color) {
     return Row(
       children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 6),
-        Text('$label: ', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
-        Text(pct, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold)),
+        Text(
+          '$label: ',
+          style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+        ),
+        Text(
+          pct,
+          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }
@@ -790,7 +1070,9 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F172A) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+        border: Border.all(
+          color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -814,8 +1096,12 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                 ],
               ),
               Text(
-                '${list.length} Verified Today',
-                style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.success),
+                '${list.length} Recent Check-ins',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.success,
+                ),
               ),
             ],
           ),
@@ -839,7 +1125,11 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
               separatorBuilder: (_, _) => const Divider(height: 14),
               itemBuilder: (context, idx) {
                 final item = list[idx];
-                final isFace = (item['method']?.toString().toLowerCase().contains('face') ?? false);
+                final isFace =
+                    (item['method']?.toString().toLowerCase().contains(
+                      'face',
+                    ) ??
+                    false);
 
                 return Row(
                   children: [
@@ -861,11 +1151,17 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                         children: [
                           Text(
                             item['name'] ?? 'Student',
-                            style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13),
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
                           ),
                           Text(
                             '${item['usn']} · ${item['method']}',
-                            style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: Colors.grey,
+                            ),
                           ),
                         ],
                       ),
@@ -883,7 +1179,10 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                         ),
                         Text(
                           item['time'] ?? 'Just now',
-                          style: GoogleFonts.inter(fontSize: 10, color: Colors.grey),
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
@@ -961,8 +1260,20 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(st.name, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12)),
-                        Text('${st.usn} · Needs ${st.classesNeededFor75} classes', style: GoogleFonts.inter(fontSize: 10, color: Colors.grey)),
+                        Text(
+                          st.name,
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          '${st.usn} · Needs ${st.classesNeededFor75} classes',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
+                        ),
                       ],
                     ),
                     Text(

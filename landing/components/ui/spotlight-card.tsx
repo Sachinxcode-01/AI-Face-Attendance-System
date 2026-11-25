@@ -9,6 +9,7 @@ interface SpotlightCardProps {
   spotlightColor?: string;
   borderColor?: string;
   onClick?: () => void;
+  actionLabel?: string;
   enableTilt?: boolean;
 }
 
@@ -23,6 +24,7 @@ export function SpotlightCard({
   spotlightColor = "rgba(143, 139, 255, 0.15)",
   borderColor = "rgba(143, 139, 255, 0.35)",
   onClick,
+  actionLabel = "Select card",
   enableTilt = false,
 }: SpotlightCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -59,14 +61,13 @@ export function SpotlightCard({
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      onClick={onClick}
       animate={
         enableTilt && !reduceMotion
           ? {
-              rotateX: tilt.x,
-              rotateY: tilt.y,
-              transformPerspective: 1000,
-            }
+            rotateX: tilt.x,
+            rotateY: tilt.y,
+            transformPerspective: 1000,
+          }
           : undefined
       }
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
@@ -91,13 +92,25 @@ export function SpotlightCard({
         style={{
           opacity: mousePos.opacity,
           background: `radial-gradient(350px circle at ${mousePos.x}px ${mousePos.y}px, ${borderColor}, transparent 60%)`,
-          maskImage: "linear-gradient(black, black) content-box, linear-gradient(black, black)",
+          maskImage: "linear-gradient(black, black), linear-gradient(black, black)",
+          WebkitMaskImage: "linear-gradient(black, black), linear-gradient(black, black)",
+          maskClip: "content-box, border-box",
+          WebkitMaskClip: "content-box, border-box",
           maskComposite: "exclude",
           WebkitMaskComposite: "xor",
           padding: "1px",
         }}
         aria-hidden="true"
       />
+
+      {onClick && (
+        <button
+          type="button"
+          onClick={onClick}
+          aria-label={actionLabel}
+          className="absolute inset-0 z-0 rounded-[22px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        />
+      )}
 
       {/* Card Content */}
       <div className="relative z-10 h-full">{children}</div>

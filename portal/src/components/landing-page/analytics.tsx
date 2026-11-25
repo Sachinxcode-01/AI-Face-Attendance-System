@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Script from "next/script";
 
 declare global {
@@ -10,9 +11,27 @@ declare global {
 }
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID;
+const STORAGE_KEY = "smartface-cookie-consent";
+
+function hasAllConsent(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    return parsed?.level === "all";
+  } catch {
+    return false;
+  }
+}
 
 export function trackEvent(action: string, category: string, label?: string, value?: number) {
-  if (typeof window !== "undefined" && typeof window.gtag === "function" && GA_MEASUREMENT_ID) {
+  if (
+    typeof window !== "undefined" &&
+    typeof window.gtag === "function" &&
+    GA_MEASUREMENT_ID &&
+    hasAllConsent()
+  ) {
     window.gtag("event", action, {
       event_category: category,
       event_label: label,
@@ -22,7 +41,22 @@ export function trackEvent(action: string, category: string, label?: string, val
 }
 
 export function Analytics() {
-  if (!GA_MEASUREMENT_ID) {
+  const [consentGranted, setConsentGranted] = useState(false);
+
+  useEffect(() => {
+    setConsentGranted(hasAllConsent());
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        setConsentGranted(hasAllConsent());
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
+  if (!GA_MEASUREMENT_ID || !consentGranted) {
     return null;
   }
 

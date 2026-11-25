@@ -197,7 +197,7 @@ class ApiService {
       return {
         'error_type': 'backend_down',
         'detail':
-        'Server not reachable ($baseUrl). Check connection or server settings.',
+            'Server not reachable ($baseUrl). Check connection or server settings.',
       };
     }
     if (msg.contains('handshakeexception') ||
@@ -569,12 +569,14 @@ class ApiService {
 
       final request = http.MultipartRequest('POST', uri)
         ..headers['Authorization'] = 'Bearer $token'
-        ..files.add(await http.MultipartFile.fromPath(
-          'file',
-          imageFile.path,
-          filename: filename,
-          contentType: MediaType('image', mimeSubtype),
-        ));
+        ..files.add(
+          await http.MultipartFile.fromPath(
+            'file',
+            imageFile.path,
+            filename: filename,
+            contentType: MediaType('image', mimeSubtype),
+          ),
+        );
 
       final streamedResponse = await client.send(request);
       final response = await http.Response.fromStream(streamedResponse);
@@ -593,7 +595,8 @@ class ApiService {
         try {
           final errJson = jsonDecode(response.body) as Map<String, dynamic>;
           return {
-            'detail': errJson['detail'] ??
+            'detail':
+                errJson['detail'] ??
                 errJson['message'] ??
                 'Upload failed (${response.statusCode})',
           };
@@ -860,7 +863,8 @@ class ApiService {
         Uri.parse('$baseUrl/sessions/stop'),
         headers: {
           'Content-Type': 'application/json',
-          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
         },
         body: jsonEncode({'session_id': sessionId}),
       );
@@ -877,18 +881,64 @@ class ApiService {
     String? token,
   ]) async {
     try {
+      final normalizedRecords = records.map((r) {
+        final copy = Map<String, dynamic>.from(r);
+        final raw = copy['status']?.toString().toLowerCase().trim();
+        String canonicalStatus;
+        switch (raw) {
+          case 'present':
+            canonicalStatus = 'Present';
+            break;
+          case 'late':
+            canonicalStatus = 'Late';
+            break;
+          case 'excused':
+            canonicalStatus = 'Excused';
+            break;
+          case 'absent':
+          default:
+            canonicalStatus = 'Absent';
+            break;
+        }
+        copy['status'] = canonicalStatus;
+        return copy;
+      }).toList();
+
       final response = await client.post(
         Uri.parse('$baseUrl/attendance/mark/batch'),
         headers: {
           'Content-Type': 'application/json',
-          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
           'session_id': sessionId,
-          'records': records,
+          'records': normalizedRecords,
         }),
       );
-      return response.statusCode == 200 || response.statusCode == 201;
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        try {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map<String, dynamic>) {
+            if (decoded['success'] == false) return false;
+            if (decoded['rejected'] is List &&
+                (decoded['rejected'] as List).isNotEmpty) {
+              return false;
+            }
+            if (decoded['errors'] is List &&
+                (decoded['errors'] as List).isNotEmpty) {
+              return false;
+            }
+            if (decoded['failed_count'] is num &&
+                (decoded['failed_count'] as num) > 0) {
+              return false;
+            }
+          }
+        } catch (_) {}
+        return true;
+      }
+      return false;
     } catch (e) {
       debugPrint('[ApiService] batchUpdateRoster error: $e');
       return false;
@@ -901,7 +951,8 @@ class ApiService {
         Uri.parse('$baseUrl/attendance/disputes'),
         headers: {
           'Content-Type': 'application/json',
-          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
         },
       );
       if (response.statusCode == 200) {
@@ -926,12 +977,10 @@ class ApiService {
         Uri.parse('$baseUrl/attendance/disputes/$disputeId/resolve'),
         headers: {
           'Content-Type': 'application/json',
-          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'action': action,
-          'remarks': remarks,
-        }),
+        body: jsonEncode({'action': action, 'remarks': remarks}),
       );
       return response.statusCode == 200;
     } catch (e) {
@@ -951,7 +1000,8 @@ class ApiService {
         Uri.parse('$baseUrl/notifications/send'),
         headers: {
           'Content-Type': 'application/json',
-          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
           'recipient_id': studentId,

@@ -129,6 +129,9 @@ export function VerificationCard() {
             >
               {/* Reticle Tag Badge */}
               <div
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
                 className={`absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[8.5px] uppercase tracking-[0.14em] backdrop-blur-md shadow-lg transition-all duration-300 ${
                   matched
                     ? "border-spotify/40 bg-[#101016]/95 text-[#9fe0b6]"
@@ -136,7 +139,7 @@ export function VerificationCard() {
                 }`}
               >
                 <ScanFace className="h-2.5 w-2.5 animate-pulse" />
-                {matched ? "MATCH CONFIRMED" : "EXTRACTING EMBEDDING"}
+                <span>{matched ? "MATCH CONFIRMED" : "EXTRACTING EMBEDDING"}</span>
               </div>
 
               {/* 4 Corner brackets */}

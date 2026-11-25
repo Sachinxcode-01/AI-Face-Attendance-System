@@ -125,8 +125,13 @@ void main() async {
         ChangeNotifierProvider<AnalyticsController>(
           create: (_) => sl<AnalyticsController>(),
         ),
-        ChangeNotifierProvider<TeacherController>(
+        ChangeNotifierProxyProvider<SessionManager, TeacherController>(
           create: (_) => sl<TeacherController>(),
+          update: (_, session, teacherCtrl) {
+            final ctrl = teacherCtrl ?? sl<TeacherController>();
+            ctrl.onAccountChanged(session.email);
+            return ctrl;
+          },
         ),
       ],
       child: const SmartAttendanceApp(),

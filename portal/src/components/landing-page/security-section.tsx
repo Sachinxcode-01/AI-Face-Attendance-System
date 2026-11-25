@@ -43,7 +43,7 @@ export function SecuritySection({ onOpenDemo, onOpenPilot }: SecuritySectionProp
         <SectionHeading
           eyebrow="Biometric Data Governance"
           title="Zero Raw Photos Stored. Mathematical Vectors Only."
-          description="Face recognition without the privacy liability. SmartFace translates landmarks into irreversible 512-dimension mathematical embeddings—purging camera frames from memory within 180ms."
+          description="Face recognition without the privacy liability. SmartFace translates landmarks into protected 512-dimension mathematical embeddings—purging routine camera frames from memory within 180ms."
         />
 
         {/* ByTune Interactive Visual Matrix & Features */}
@@ -61,7 +61,7 @@ export function SecuritySection({ onOpenDemo, onOpenPilot }: SecuritySectionProp
                     ArcFace v2.4 ResNet100 INT8
                   </span>
                   <span className="font-mono text-[10px] uppercase text-spotify bg-spotify/10 border border-spotify/20 px-2.5 py-0.5 rounded-full">
-                    Irreversible Projection
+                    Protected Vector Storage
                   </span>
                 </div>
 
@@ -70,7 +70,7 @@ export function SecuritySection({ onOpenDemo, onOpenPilot }: SecuritySectionProp
                 </h3>
 
                 <p className="mt-2 text-[14px] leading-relaxed text-mid">
-                  During enrollment, the camera frame exists in volatile RAM for only ~180 milliseconds. Once landmark vectors are extracted, the photo is permanently purged. Reconstructing a human face from a 512-dim cosine vector is mathematically impossible.
+                  During enrollment and routine verification, camera frames exist in volatile RAM for only ~180 milliseconds before being purged. Only 512-dim numerical embeddings are stored for attendance matching under strict encryption and access controls; incident security snapshots are partitioned separately with audited retention windows.
                 </p>
 
                 {/* Animated 64-vector matrix visual */}

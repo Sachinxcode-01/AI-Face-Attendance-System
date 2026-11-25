@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { Mail, Github } from "lucide-react";
 import { AuthForm } from "@/components/ui/sign-in-1";
@@ -60,9 +62,14 @@ const AuthFormDemo = () => {
         footerContent={
           <>
             By logging in, you agree to our{" "}
-            <u className="cursor-pointer transition-colors hover:text-primary">Terms of Service</u>{" "}
+            <a href="/terms" className="underline underline-offset-2 transition-colors hover:text-primary">
+              Terms of Service
+            </a>{" "}
             and{" "}
-            <u className="cursor-pointer transition-colors hover:text-primary">Privacy Policy</u>.
+            <a href="/privacy" className="underline underline-offset-2 transition-colors hover:text-primary">
+              Privacy Policy
+            </a>
+            .
           </>
         }
       />

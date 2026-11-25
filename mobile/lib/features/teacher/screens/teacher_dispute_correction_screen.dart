@@ -25,6 +25,7 @@ import 'package:smartface_attendance/app/constants/app_constants.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
+import 'package:smartface_attendance/features/teacher/controllers/teacher_controller.dart';
 import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 
@@ -97,7 +98,10 @@ class _TeacherDisputeCorrectionScreenState
   final String _selectedSubject = 'CS-402: Advanced Neural Networks';
   bool _isSavingCorrections = false;
 
-  final List<DisputeItem> _mockDisputes = [
+  final Set<String> _inFlightResolutions = {};
+  List<DisputeItem> _disputes = [];
+
+  final List<DisputeItem> _fallbackDisputes = [
     DisputeItem(
       id: 'DSP-8821',
       studentName: 'Rohan Sharma',
@@ -144,7 +148,9 @@ class _TeacherDisputeCorrectionScreenState
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _selectedDispute = _mockDisputes.first;
+    _disputes = _fallbackDisputes;
+    _selectedDispute = _disputes.first;
+    _fetchLiveDisputes();
 
     _rosterList = [
       CorrectionStudent(
@@ -212,10 +218,58 @@ class _TeacherDisputeCorrectionScreenState
     super.dispose();
   }
 
+  Future<void> _fetchLiveDisputes() async {
+    final session = context.read<SessionManager>();
+    if (session.token != null) {
+      try {
+        final raw = await ApiService.getTeacherDisputes(session.token);
+        if (mounted && raw.isNotEmpty) {
+          final list = raw.map((d) {
+            final map = Map<String, dynamic>.from(d as Map);
+            return DisputeItem(
+              id: map['id']?.toString() ?? map['_id']?.toString() ?? 'DSP-0000',
+              studentName:
+                  map['student_name']?.toString() ??
+                  map['name']?.toString() ??
+                  'Student',
+              usn:
+                  map['usn']?.toString() ??
+                  map['roll_number']?.toString() ??
+                  '1SF23CS---',
+              subject: map['subject']?.toString() ?? 'Lecture',
+              sessionDate: map['session_date'] != null
+                  ? DateTime.tryParse(map['session_date'].toString()) ??
+                        DateTime.now()
+                  : DateTime.now(),
+              claimedStatus: map['claimed_status']?.toString() ?? 'Present',
+              currentStatus: map['current_status']?.toString() ?? 'Absent',
+              reasonCategory:
+                  map['reason_category']?.toString() ?? 'General Dispute',
+              explanation: map['explanation']?.toString() ?? '',
+              evidenceAttachment:
+                  map['evidence_attachment']?.toString() ??
+                  map['evidence']?.toString(),
+              reviewStatus:
+                  map['status']?.toString().toLowerCase() ?? 'pending',
+              teacherRemarks: map['teacher_remarks']?.toString(),
+            );
+          }).toList();
+          setState(() {
+            _disputes = list;
+            _selectedDispute = list.first;
+          });
+        }
+      } catch (e) {
+        debugPrint('[DisputeCorrection] Error fetching live disputes: $e');
+      }
+    }
+  }
+
   List<DisputeItem> get _filteredDisputes {
-    return _mockDisputes.where((d) {
+    return _disputes.where((d) {
       final matchesFilter = d.reviewStatus == _disputeFilter;
-      final matchesSearch = _searchQuery.isEmpty ||
+      final matchesSearch =
+          _searchQuery.isEmpty ||
           d.studentName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           d.usn.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           d.reasonCategory.toLowerCase().contains(_searchQuery.toLowerCase());
@@ -223,25 +277,56 @@ class _TeacherDisputeCorrectionScreenState
     }).toList();
   }
 
-  Future<void> _resolveDispute(DisputeItem dispute, String action, String remarks) async {
-    HapticFeedback.mediumImpact();
-    final session = context.read<SessionManager>();
-    if (session.token != null) {
-      await ApiService.resolveDispute(dispute.id, action, remarks, session.token);
+  Future<void> _resolveDispute(
+    DisputeItem dispute,
+    String action,
+    String remarks,
+  ) async {
+    if (_inFlightResolutions.contains(dispute.id) ||
+        dispute.reviewStatus != 'pending') {
+      return;
     }
 
-    setState(() {
-      dispute.reviewStatus = action == 'reject' ? 'rejected' : 'approved';
-      dispute.teacherRemarks = remarks;
-    });
+    _inFlightResolutions.add(dispute.id);
+    HapticFeedback.mediumImpact();
+    final session = context.read<SessionManager>();
+    bool ok = false;
 
-    if (mounted) {
+    try {
+      if (session.token != null) {
+        ok = await ApiService.resolveDispute(
+          dispute.id,
+          action,
+          remarks,
+          session.token,
+        );
+      }
+    } finally {
+      _inFlightResolutions.remove(dispute.id);
+    }
+
+    if (!mounted) return;
+
+    if (ok) {
+      final norm = action.toLowerCase().trim();
+      final isReject = norm == 'reject' || norm == 'rejected';
+      setState(() {
+        dispute.reviewStatus = isReject ? 'rejected' : 'approved';
+        dispute.teacherRemarks = remarks;
+      });
+
       AppToast.show(
         context,
-        message: action == 'reject'
+        message: isReject
             ? 'Dispute declined for ${dispute.studentName}.'
             : 'Attendance corrected to $action for ${dispute.studentName}.',
-        type: action == 'reject' ? ToastType.error : ToastType.success,
+        type: isReject ? ToastType.error : ToastType.success,
+      );
+    } else {
+      AppToast.show(
+        context,
+        message: 'Failed to resolve dispute on server. Please retry.',
+        type: ToastType.error,
       );
     }
   }
@@ -250,29 +335,51 @@ class _TeacherDisputeCorrectionScreenState
     HapticFeedback.heavyImpact();
     setState(() => _isSavingCorrections = true);
     final session = context.read<SessionManager>();
+    final teacherCtrl = context.read<TeacherController>();
 
-    final records = _rosterList.map((s) => {
-      'student_id': s.id,
-      'usn': s.usn,
-      'status': s.status,
-      'verified_by': 'Faculty Retroactive Correction',
-    }).toList();
+    final records = _rosterList
+        .map(
+          (s) => {
+            'student_id': s.id,
+            'usn': s.usn,
+            'status': s.status,
+            'verified_by': 'Faculty Retroactive Correction',
+          },
+        )
+        .toList();
 
-    bool ok = true;
-    if (session.token != null) {
-      ok = await ApiService.batchUpdateRoster('SESS-RETROACTIVE', records, session.token);
+    bool ok = false;
+    try {
+      if (session.token != null) {
+        final active = teacherCtrl.currentActiveSession;
+        final sessionId =
+            active?.id ??
+            (teacherCtrl.activeSessions.isNotEmpty
+                ? teacherCtrl.activeSessions.first.id
+                : 'SESS-${_selectedSubject.replaceAll(' ', '-').toLowerCase()}');
+        ok = await ApiService.batchUpdateRoster(
+          sessionId,
+          records,
+          session.token,
+        );
+      }
+    } catch (e) {
+      debugPrint('[DisputeCorrection] save error: $e');
+      ok = false;
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingCorrections = false);
+      }
     }
 
-    if (mounted) {
-      setState(() => _isSavingCorrections = false);
-      AppToast.show(
-        context,
-        message: ok
-            ? 'Successfully committed and synced retroactive corrections.'
-            : 'Corrections saved locally. Will sync when online.',
-        type: ok ? ToastType.success : ToastType.info,
-      );
-    }
+    if (!mounted) return;
+    AppToast.show(
+      context,
+      message: ok
+          ? 'Successfully committed and synced retroactive corrections.'
+          : 'Failed to save retroactive corrections. Please check connection and retry.',
+      type: ok ? ToastType.success : ToastType.error,
+    );
   }
 
   @override
@@ -299,7 +406,10 @@ class _TeacherDisputeCorrectionScreenState
           indicatorColor: AppColors.primary,
           labelColor: AppColors.primary,
           unselectedLabelColor: isDark ? Colors.white60 : AppColors.textMuted,
-          labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13),
+          labelStyle: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
           tabs: [
             Tab(
               child: Row(
@@ -307,7 +417,9 @@ class _TeacherDisputeCorrectionScreenState
                 children: [
                   const Icon(Icons.gavel_rounded, size: 16),
                   const SizedBox(width: 8),
-                  Text('Dispute Inbox (${_mockDisputes.where((d) => d.reviewStatus == 'pending').length})'),
+                  Text(
+                    'Dispute Inbox (${_disputes.where((d) => d.reviewStatus == 'pending').length})',
+                  ),
                 ],
               ),
             ),
@@ -330,7 +442,9 @@ class _TeacherDisputeCorrectionScreenState
           controller: _tabController,
           children: [
             // Tab 1: Dispute Review
-            isWide ? _buildWideDisputeLayout(isDark) : _buildMobileDisputeLayout(isDark),
+            isWide
+                ? _buildWideDisputeLayout(isDark)
+                : _buildMobileDisputeLayout(isDark),
 
             // Tab 2: Retroactive Correction Terminal
             _buildRetroactiveCorrectionTerminal(isDark),
@@ -367,12 +481,18 @@ class _TeacherDisputeCorrectionScreenState
                           itemCount: disputes.length,
                           separatorBuilder: (context, index) => Divider(
                             height: 1,
-                            color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+                            color: isDark
+                                ? Colors.white10
+                                : const Color(0xFFE5E7EB),
                           ),
                           itemBuilder: (context, index) {
                             final item = disputes[index];
                             final isSelected = _selectedDispute?.id == item.id;
-                            return _buildDisputeListTile(item, isSelected, isDark);
+                            return _buildDisputeListTile(
+                              item,
+                              isSelected,
+                              isDark,
+                            );
                           },
                         ),
                 ),
@@ -409,7 +529,8 @@ class _TeacherDisputeCorrectionScreenState
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: disputes.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final item = disputes[index];
                     return _buildMobileDisputeCard(item, isDark);
@@ -435,14 +556,19 @@ class _TeacherDisputeCorrectionScreenState
         children: [
           TextField(
             onChanged: (val) => setState(() => _searchQuery = val),
-            style: GoogleFonts.inter(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: isDark ? Colors.white : Colors.black,
+            ),
             decoration: InputDecoration(
               hintText: 'Search student, USN, reason...',
               hintStyle: GoogleFonts.inter(fontSize: 13, color: Colors.grey),
               prefixIcon: const Icon(Icons.search_rounded, size: 18),
               isDense: true,
               filled: true,
-              fillColor: isDark ? const Color(0xFF161E38) : const Color(0xFFF3F4F6),
+              fillColor: isDark
+                  ? const Color(0xFF161E38)
+                  : const Color(0xFFF3F4F6),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
@@ -478,8 +604,8 @@ class _TeacherDisputeCorrectionScreenState
           color: isSelected
               ? AppColors.primary
               : isDark
-                  ? const Color(0xFF1E2848)
-                  : const Color(0xFFE5E7EB),
+              ? const Color(0xFF1E2848)
+              : const Color(0xFFE5E7EB),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
@@ -490,8 +616,8 @@ class _TeacherDisputeCorrectionScreenState
             color: isSelected
                 ? Colors.white
                 : isDark
-                    ? Colors.white70
-                    : Colors.black87,
+                ? Colors.white70
+                : Colors.black87,
           ),
         ),
       ),
@@ -538,7 +664,10 @@ class _TeacherDisputeCorrectionScreenState
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.error.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(4),
@@ -553,10 +682,17 @@ class _TeacherDisputeCorrectionScreenState
                   ),
                 ),
                 const SizedBox(width: 6),
-                const Icon(Icons.arrow_forward_rounded, size: 12, color: Colors.grey),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 12,
+                  color: Colors.grey,
+                ),
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.success.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(4),
@@ -611,8 +747,8 @@ class _TeacherDisputeCorrectionScreenState
                 color: item.reviewStatus == 'approved'
                     ? AppColors.success
                     : item.reviewStatus == 'rejected'
-                        ? AppColors.error
-                        : AppColors.gold,
+                    ? AppColors.error
+                    : AppColors.gold,
               ),
             ],
           ),
@@ -678,11 +814,17 @@ class _TeacherDisputeCorrectionScreenState
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.attach_file_rounded, color: AppColors.primary, size: 18),
+                  const Icon(
+                    Icons.attach_file_rounded,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -694,7 +836,10 @@ class _TeacherDisputeCorrectionScreenState
                       ),
                     ),
                   ),
-                  const Text('Verified Proof', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                  const Text(
+                    'Verified Proof',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
                 ],
               ),
             ),
@@ -708,38 +853,62 @@ class _TeacherDisputeCorrectionScreenState
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _resolveDispute(item, 'Present', remarkCtrl.text),
-                    icon: const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
+                    onPressed: () =>
+                        _resolveDispute(item, 'Present', remarkCtrl.text),
+                    icon: const Icon(
+                      Icons.check_circle_outline_rounded,
+                      color: Colors.white,
+                    ),
                     label: const Text('APPROVE AS PRESENT'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.success,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _resolveDispute(item, 'Excused', remarkCtrl.text),
-                    icon: const Icon(Icons.verified_outlined, color: Colors.white),
+                    onPressed: () =>
+                        _resolveDispute(item, 'Excused', remarkCtrl.text),
+                    icon: const Icon(
+                      Icons.verified_outlined,
+                      color: Colors.white,
+                    ),
                     label: const Text('MARK EXCUSED'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.cyan,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 OutlinedButton.icon(
-                  onPressed: () => _resolveDispute(item, 'reject', remarkCtrl.text),
-                  icon: const Icon(Icons.cancel_outlined, color: AppColors.error),
-                  label: const Text('DECLINE', style: TextStyle(color: AppColors.error)),
+                  onPressed: () =>
+                      _resolveDispute(item, 'reject', remarkCtrl.text),
+                  icon: const Icon(
+                    Icons.cancel_outlined,
+                    color: AppColors.error,
+                  ),
+                  label: const Text(
+                    'DECLINE',
+                    style: TextStyle(color: AppColors.error),
+                  ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.error),
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ],
@@ -814,8 +983,8 @@ class _TeacherDisputeCorrectionScreenState
                 color: item.reviewStatus == 'approved'
                     ? AppColors.success
                     : item.reviewStatus == 'rejected'
-                        ? AppColors.error
-                        : AppColors.gold,
+                    ? AppColors.error
+                    : AppColors.gold,
               ),
             ],
           ),
@@ -835,7 +1004,10 @@ class _TeacherDisputeCorrectionScreenState
           const SizedBox(height: 4),
           Text(
             item.explanation,
-            style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white70 : Colors.black87),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
           ),
           if (item.reviewStatus == 'pending') ...[
             const SizedBox(height: 14),
@@ -848,7 +1020,10 @@ class _TeacherDisputeCorrectionScreenState
                       backgroundColor: AppColors.success,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    child: const Text('ACCEPT', style: TextStyle(color: Colors.white, fontSize: 11)),
+                    child: const Text(
+                      'ACCEPT',
+                      style: TextStyle(color: Colors.white, fontSize: 11),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -859,7 +1034,10 @@ class _TeacherDisputeCorrectionScreenState
                       backgroundColor: AppColors.cyan,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                    child: const Text('EXCUSE', style: TextStyle(color: Colors.white, fontSize: 11)),
+                    child: const Text(
+                      'EXCUSE',
+                      style: TextStyle(color: Colors.white, fontSize: 11),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -869,7 +1047,10 @@ class _TeacherDisputeCorrectionScreenState
                     side: const BorderSide(color: AppColors.error),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
-                  child: const Text('DECLINE', style: TextStyle(color: AppColors.error, fontSize: 11)),
+                  child: const Text(
+                    'DECLINE',
+                    style: TextStyle(color: AppColors.error, fontSize: 11),
+                  ),
                 ),
               ],
             ),
@@ -884,7 +1065,11 @@ class _TeacherDisputeCorrectionScreenState
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.check_circle_outline_rounded, size: 48, color: AppColors.success),
+          const Icon(
+            Icons.check_circle_outline_rounded,
+            size: 48,
+            color: AppColors.success,
+          ),
           const SizedBox(height: 12),
           Text(
             'Inbox Zero',
@@ -905,7 +1090,9 @@ class _TeacherDisputeCorrectionScreenState
 
   // ── Tab 2: Retroactive Correction Terminal ──────────────────────────────────
   Widget _buildRetroactiveCorrectionTerminal(bool isDark) {
-    final changedCount = _rosterList.where((s) => s.status != s.originalStatus).length;
+    final changedCount = _rosterList
+        .where((s) => s.status != s.originalStatus)
+        .length;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -922,17 +1109,37 @@ class _TeacherDisputeCorrectionScreenState
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF131A33) : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE5E7EB)),
+                    border: Border.all(
+                      color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_month_rounded, color: AppColors.primary, size: 20),
+                      const Icon(
+                        Icons.calendar_month_rounded,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
                       const SizedBox(width: 10),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('SESSION DATE', style: GoogleFonts.inter(fontSize: 9, color: Colors.grey, fontWeight: FontWeight.bold)),
-                          Text(DateFormat('dd MMMM yyyy').format(_selectedDate), style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? Colors.white : Colors.black87)),
+                          Text(
+                            'SESSION DATE',
+                            style: GoogleFonts.inter(
+                              fontSize: 9,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('dd MMMM yyyy').format(_selectedDate),
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -947,18 +1154,40 @@ class _TeacherDisputeCorrectionScreenState
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF131A33) : Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE5E7EB)),
+                    border: Border.all(
+                      color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.menu_book_rounded, color: AppColors.gold, size: 20),
+                      const Icon(
+                        Icons.menu_book_rounded,
+                        color: AppColors.gold,
+                        size: 20,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('COURSE & SECTION', style: GoogleFonts.inter(fontSize: 9, color: Colors.grey, fontWeight: FontWeight.bold)),
-                            Text(_selectedSubject, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? Colors.white : Colors.black87)),
+                            Text(
+                              'COURSE & SECTION',
+                              style: GoogleFonts.inter(
+                                fontSize: 9,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              _selectedSubject,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -977,19 +1206,33 @@ class _TeacherDisputeCorrectionScreenState
             children: [
               Text(
                 'STUDENT ROSTER (${_rosterList.length})',
-                style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.grey),
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: Colors.grey,
+                ),
               ),
               if (changedCount > 0)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.warning.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: AppColors.warning.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     '$changedCount pending change${changedCount > 1 ? 's' : ''}',
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.warning),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.warning,
+                    ),
                   ),
                 ),
             ],
@@ -1002,25 +1245,38 @@ class _TeacherDisputeCorrectionScreenState
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF111827) : Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE5E7EB)),
+              border: Border.all(
+                color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+              ),
             ),
             child: ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _rosterList.length,
-              separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white10 : const Color(0xFFE5E7EB)),
+              separatorBuilder: (context, index) => Divider(
+                height: 1,
+                color: isDark ? Colors.white10 : const Color(0xFFE5E7EB),
+              ),
               itemBuilder: (context, index) {
                 final student = _rosterList[index];
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 18,
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                        backgroundColor: AppColors.primary.withValues(
+                          alpha: 0.2,
+                        ),
                         child: Text(
                           student.name.substring(0, 1),
-                          style: GoogleFonts.outfit(color: AppColors.primary, fontWeight: FontWeight.bold),
+                          style: GoogleFonts.outfit(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1030,11 +1286,18 @@ class _TeacherDisputeCorrectionScreenState
                           children: [
                             Text(
                               student.name,
-                              style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? Colors.white : Colors.black87),
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
                             ),
                             Text(
                               '${student.usn} · ${student.verificationSource}',
-                              style: GoogleFonts.inter(fontSize: 11, color: Colors.grey),
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
@@ -1043,13 +1306,33 @@ class _TeacherDisputeCorrectionScreenState
                       // 1-Click Status Selector Pills
                       Row(
                         children: [
-                          _buildStatusToggle('Present', student, AppColors.success, isDark),
+                          _buildStatusToggle(
+                            'Present',
+                            student,
+                            AppColors.success,
+                            isDark,
+                          ),
                           const SizedBox(width: 6),
-                          _buildStatusToggle('Late', student, AppColors.warning, isDark),
+                          _buildStatusToggle(
+                            'Late',
+                            student,
+                            AppColors.warning,
+                            isDark,
+                          ),
                           const SizedBox(width: 6),
-                          _buildStatusToggle('Absent', student, AppColors.error, isDark),
+                          _buildStatusToggle(
+                            'Absent',
+                            student,
+                            AppColors.error,
+                            isDark,
+                          ),
                           const SizedBox(width: 6),
-                          _buildStatusToggle('Excused', student, AppColors.cyan, isDark),
+                          _buildStatusToggle(
+                            'Excused',
+                            student,
+                            AppColors.cyan,
+                            isDark,
+                          ),
                         ],
                       ),
                     ],
@@ -1073,18 +1356,26 @@ class _TeacherDisputeCorrectionScreenState
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.cloud_sync_rounded, color: Colors.white),
               label: Text(
                 _isSavingCorrections
                     ? 'APPLYING & AUDITING...'
                     : 'APPLY RETROACTIVE CORRECTIONS ($changedCount)',
-                style: GoogleFonts.inter(fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),

@@ -21,13 +21,15 @@ export function RoiCalculator({ onOpenDemo, onOpenPilot }: RoiCalculatorProps) {
   const [classesPerDay, setClassesPerDay] = useState<number>(5);
 
   // Constants based on empirical higher education studies
-  // 12 minutes lost per lecture to manual roll call / paper logs
-  const minsPerClassManual = 12;
+  // 12 minutes lost per lecture to manual roll call / paper logs, replaced by 10s touchless verification
+  const manualMinsPerClass = 12;
+  const replacementSecsPerClass = 10;
+  const netMinsSavedPerClass = manualMinsPerClass - replacementSecsPerClass / 60;
   const academicDaysPerYear = 190;
 
-  // Total hours lost annually per campus
+  // Total net reclaimed hours annually per campus
   const totalLecturesPerYear = teachers * classesPerDay * academicDaysPerYear;
-  const hoursSavedPerYear = Math.round((totalLecturesPerYear * minsPerClassManual) / 60);
+  const hoursSavedPerYear = Math.round((totalLecturesPerYear * netMinsSavedPerClass) / 60);
 
   // Average time reduction: from 12 mins down to 10 seconds touchless verification = 98.6%
   const timeReductionPercent = 98.6;

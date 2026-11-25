@@ -10,8 +10,18 @@ const { authenticate, requireRole } = require('../middleware/auth');
 // Resolve the authenticated parent's linked children emails.
 async function getLinkedChildren(parentEmail) {
   const parent = await User.findOne({ email: parentEmail }).lean();
-  if (!parent) return [];
-  return Array.isArray(parent.children) ? parent.children : [];
+  const directChildren = parent && Array.isArray(parent.children) ? parent.children : [];
+  const linkedChildren = parent && Array.isArray(parent.linked_children) ? parent.linked_children.map((c) => c.email) : [];
+  
+  // Also discover students who list this parent's email as their parent_details
+  const reverseStudents = await User.find({
+    role: 'student',
+    parent_details: { $regex: new RegExp(`^${parentEmail}$`, 'i') }
+  }).select('email').lean();
+  const reverseEmails = reverseStudents.map(s => s.email);
+
+  const combined = Array.from(new Set([...directChildren, ...linkedChildren, ...reverseEmails].filter(Boolean)));
+  return combined;
 }
 
 // Guard: ensure the requested child belongs to the parent (admins bypass).
@@ -124,6 +134,58 @@ router.post('/child/absence-notice', authenticate, requireRole(['parent', 'admin
       remarks: 'Submitted by parent'
     });
     res.status(201).json({ success: true, message: 'Absence notice recorded successfully.', leaveId: leave._id });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
+
+// POST /parent/link-student - Link a student ward to parent account
+router.post('/link-student', authenticate, requireRole(['parent', 'admin']), async (req, res) => {
+  try {
+    const { student_email, student_id } = req.body;
+    if (!student_email && !student_id) {
+      return res.status(400).json({ detail: 'Student email or student ID is required.' });
+    }
+
+    const query = student_email
+      ? { email: student_email.trim().toLowerCase(), role: 'student' }
+      : { $or: [{ student_id: student_id.trim() }, { roll_number: student_id.trim() }], role: 'student' };
+
+    const student = await User.findOne(query);
+    if (!student) {
+      return res.status(404).json({ detail: 'Student not found in institutional directory.' });
+    }
+
+    await User.findOneAndUpdate(
+      { email: req.userEmail },
+      {
+        $addToSet: {
+          children: student.email,
+          linked_children: {
+            email: student.email,
+            full_name: student.full_name,
+            student_id: student.student_id || student.roll_number || ''
+          }
+        }
+      }
+    );
+
+    // Also update student's parent_details
+    await User.findOneAndUpdate(
+      { email: student.email },
+      { $set: { parent_details: req.userEmail } }
+    );
+
+    res.json({
+      success: true,
+      message: `Ward ${student.full_name} (${student.email}) linked successfully.`,
+      student: {
+        email: student.email,
+        full_name: student.full_name,
+        student_id: student.student_id || student.roll_number,
+        department: student.department
+      }
+    });
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }

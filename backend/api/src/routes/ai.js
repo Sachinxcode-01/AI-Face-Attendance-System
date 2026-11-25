@@ -13,7 +13,7 @@ const reportInternalError = require('../utils/httpError');
 const datasetService = require('../services/datasetService');
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
-const MODEL_NAME = "llama-3.3-70b-versatile";
+const MODEL_NAME = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
 
 let groqClient = null;
 if (GROQ_API_KEY) {

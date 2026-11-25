@@ -58,19 +58,52 @@ export async function POST(req: NextRequest) {
 
     console.log("[CRM Pilot Capture] New Campus Pilot Application:", JSON.stringify(pilotPayload, null, 2));
 
+    // Remote schema adaptation for backend demo/pilot handling
+    const remotePayload = {
+      ...pilotPayload,
+      fullName: validatedData.contactPerson,
+      email: validatedData.email,
+      institution: validatedData.institutionName,
+      campusSize: validatedData.studentCount,
+      phone: validatedData.phone,
+      notes: validatedData.notes || "",
+    };
+
     const remoteApiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
     if (remoteApiUrl) {
       try {
-        await fetch(`${remoteApiUrl.replace(/\/+$/, "")}/api/pilot`, {
+        const response = await fetch(`${remoteApiUrl.replace(/\/+$/, "")}/api/pilot`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(pilotPayload),
-          signal: AbortSignal.timeout(3000),
-        }).catch((err) => {
-          console.warn("[CRM] Remote pilot forward timed out or failed; captured locally:", err.message);
+          headers: {
+            "Content-Type": "application/json",
+            "X-Request-ID": pilotPayload.applicationId,
+          },
+          body: JSON.stringify(remotePayload),
+          signal: AbortSignal.timeout(5000),
         });
-      } catch {
-        // graceful fallback to local capture
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => null);
+          return NextResponse.json(
+            {
+              success: false,
+              message:
+                errData?.detail ||
+                errData?.message ||
+                `Remote pilot service returned status ${response.status}`,
+            },
+            { status: response.status >= 400 && response.status < 500 ? response.status : 502 }
+          );
+        }
+      } catch (err: unknown) {
+        console.error("[CRM] Remote pilot forward error:", err);
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Unable to reach campus onboarding service. Please try again.",
+          },
+          { status: 504 }
+        );
       }
     }
 

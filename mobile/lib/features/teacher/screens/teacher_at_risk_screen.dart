@@ -72,59 +72,6 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
   String _searchQuery = '';
   List<AtRiskStudentItem> _students = [];
 
-  final List<AtRiskStudentItem> _mockRiskStudents = [
-    AtRiskStudentItem(
-      id: '1',
-      name: 'Rohan Sharma',
-      usn: '1SF23CS045',
-      department: 'Computer Science (Sec B)',
-      attendance: 58.2,
-      classesAttended: 18,
-      totalClasses: 31,
-      parentEmail: 'sharma.parent@gmail.com',
-    ),
-    AtRiskStudentItem(
-      id: '2',
-      name: 'Priya Nair',
-      usn: '1SF23CS082',
-      department: 'Computer Science (Sec A)',
-      attendance: 64.0,
-      classesAttended: 16,
-      totalClasses: 25,
-      parentEmail: 'nair.family@gmail.com',
-    ),
-    AtRiskStudentItem(
-      id: '3',
-      name: 'Karan Mehra',
-      usn: '1SF23CS021',
-      department: 'Computer Science (Sec B)',
-      attendance: 46.5,
-      classesAttended: 14,
-      totalClasses: 30,
-      parentEmail: 'karan.parent@gmail.com',
-    ),
-    AtRiskStudentItem(
-      id: '4',
-      name: 'Ananya Verma',
-      usn: '1SF23CS112',
-      department: 'Computer Science (Sec A)',
-      attendance: 71.4,
-      classesAttended: 20,
-      totalClasses: 28,
-      parentEmail: 'verma.guardian@gmail.com',
-    ),
-    AtRiskStudentItem(
-      id: '5',
-      name: 'Vikramaditya Rao',
-      usn: '1SF23CS098',
-      department: 'Computer Science (Sec B)',
-      attendance: 52.0,
-      classesAttended: 13,
-      totalClasses: 25,
-      parentEmail: 'rao.parent@gmail.com',
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -140,20 +87,36 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
         final data = await ApiService.getRiskStudents(token);
         if (mounted && data.isNotEmpty && data['students'] != null) {
           final list = (data['students'] as List).map((s) {
-            final attended = s['attended'] ?? 15;
-            final total = s['total'] ?? 25;
-            final percent = (s['attendance'] as num?)?.toDouble() ??
-                (total > 0 ? (attended / total) * 100 : 60.0);
+            final attended = (s['attended'] as num?)?.toInt() ?? 15;
+            final total = (s['total'] as num?)?.toInt() ?? 25;
+            final rawAtt =
+                (s['attendance'] as num?)?.toDouble() ??
+                (s['health_score'] as num?)?.toDouble();
+            final double percent;
+            if (rawAtt != null) {
+              percent = (rawAtt > 0 && rawAtt <= 1.0)
+                  ? (rawAtt * 100.0)
+                  : rawAtt;
+            } else {
+              percent = total > 0 ? (attended / total) * 100 : 60.0;
+            }
 
             return AtRiskStudentItem(
-              id: s['id'] ?? s['_id'] ?? s['usn'] ?? '',
-              name: s['name'] ?? 'Student',
-              usn: s['usn'] ?? s['roll_number'] ?? '1SF23CS000',
-              department: s['department'] ?? 'Computer Science',
+              id:
+                  s['id']?.toString() ??
+                  s['_id']?.toString() ??
+                  s['usn']?.toString() ??
+                  '',
+              name: s['name']?.toString() ?? 'Student',
+              usn:
+                  s['usn']?.toString() ??
+                  s['roll_number']?.toString() ??
+                  '1SF23CS000',
+              department: s['department']?.toString() ?? 'Computer Science',
               attendance: percent,
               classesAttended: attended,
               totalClasses: total,
-              parentEmail: s['parent_email'] ?? 'guardian@example.com',
+              parentEmail: s['parent_email']?.toString() ?? '',
             );
           }).toList();
 
@@ -170,9 +133,14 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
 
     if (mounted) {
       setState(() {
-        _students = _mockRiskStudents;
+        _students = [];
         _isLoading = false;
       });
+      AppToast.show(
+        context,
+        message: 'Failed to load live at-risk data from server. Check network.',
+        type: ToastType.error,
+      );
     }
   }
 
@@ -180,7 +148,8 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
     final threshold = double.parse(_filterLevel);
     return _students.where((s) {
       final matchesFilter = s.attendance <= threshold;
-      final matchesSearch = _searchQuery.isEmpty ||
+      final matchesSearch =
+          _searchQuery.isEmpty ||
           s.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           s.usn.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesFilter && matchesSearch;
@@ -193,8 +162,9 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
     final msg =
         'Mandatory Compliance Alert: Your current attendance in ${student.department} is ${student.attendance.toStringAsFixed(1)}%. Minimum 75% required. Attend next ${student.classesNeededFor75} lectures immediately to avoid university debarment.';
 
+    bool ok = false;
     if (session.token != null) {
-      await ApiService.sendAtRiskAlert(
+      ok = await ApiService.sendAtRiskAlert(
         student.id,
         student.parentEmail,
         msg,
@@ -202,13 +172,19 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
       );
     }
 
-    setState(() => student.warningSent = true);
-
-    if (mounted) {
+    if (!mounted) return;
+    if (ok) {
+      setState(() => student.warningSent = true);
       AppToast.show(
         context,
         message: 'Official warning dispatched to ${student.name} & Guardian',
         type: ToastType.success,
+      );
+    } else {
+      AppToast.show(
+        context,
+        message: 'Failed to dispatch warning to ${student.name}. Please retry.',
+        type: ToastType.error,
       );
     }
   }
@@ -226,27 +202,31 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
       return;
     }
 
+    int sentCount = 0;
     for (final s in targets) {
       final msg =
           'Debarment Risk Warning: Attendance is ${s.attendance.toStringAsFixed(1)}%. Requires 75% minimum threshold.';
       if (session.token != null) {
-        await ApiService.sendAtRiskAlert(
+        final ok = await ApiService.sendAtRiskAlert(
           s.id,
           s.parentEmail,
           msg,
           session.token,
         );
+        if (!mounted) return;
+        if (ok) {
+          setState(() => s.warningSent = true);
+          sentCount++;
+        }
       }
-      s.warningSent = true;
     }
-
-    setState(() {});
 
     if (mounted) {
       AppToast.show(
         context,
-        message: 'Batch dispatched ${targets.length} official debarment risk alerts!',
-        type: ToastType.success,
+        message:
+            'Batch dispatched $sentCount of ${targets.length} official debarment risk alerts!',
+        type: sentCount > 0 ? ToastType.success : ToastType.error,
       );
     }
   }
@@ -276,70 +256,78 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  // ── 1. Severity Threshold Filter Tabs ───────────────────
-                  _buildThresholdSelector(isDark),
-                  const SizedBox(height: 16),
+                    // ── 1. Severity Threshold Filter Tabs ───────────────────
+                    _buildThresholdSelector(isDark),
+                    const SizedBox(height: 16),
 
-                  // ── 2. Search Field ─────────────────────────────────────
-                  _buildSearchBar(isDark),
-                  const SizedBox(height: 18),
+                    // ── 2. Search Field ─────────────────────────────────────
+                    _buildSearchBar(isDark),
+                    const SizedBox(height: 18),
 
-                  // ── 3. Radar Summary HUD ────────────────────────────────
-                  _buildRadarStatsHud(isDark),
-                  const SizedBox(height: 20),
+                    // ── 3. Radar Summary HUD ────────────────────────────────
+                    _buildRadarStatsHud(isDark),
+                    const SizedBox(height: 20),
 
-                  // ── 4. Roster List ──────────────────────────────────────
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'AT-RISK STUDENT ROSTER',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.1,
-                          color: isDark ? const Color(0xFFA5B4FC) : const Color(0xFF3D4AB8),
-                        ),
-                      ),
-                      Text(
-                        '${filtered.length} Flagged',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFFEF4444),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  if (filtered.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF131A33) : const Color(0xFFF8FAFF),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'No students flagged under $_filterLevel% threshold.',
-                          style: GoogleFonts.inter(
-                            color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                    // ── 4. Roster List ──────────────────────────────────────
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'AT-RISK STUDENT ROSTER',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.1,
+                            color: isDark
+                                ? const Color(0xFFA5B4FC)
+                                : const Color(0xFF3D4AB8),
                           ),
                         ),
-                      ),
-                    )
-                  else
-                    ...filtered.map((s) => _buildStudentRiskCard(s, isDark)),
+                        Text(
+                          '${filtered.length} Flagged',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFFEF4444),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
 
-                  const SizedBox(height: 36),
-                ],
+                    if (filtered.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF131A33)
+                              : const Color(0xFFF8FAFF),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF252E4A)
+                                : const Color(0xFFE5E7F0),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'No students flagged under $_filterLevel% threshold.',
+                            style: GoogleFonts.inter(
+                              color: isDark
+                                  ? Colors.white60
+                                  : const Color(0xFF6B7280),
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      ...filtered.map((s) => _buildStudentRiskCard(s, isDark)),
+
+                    const SizedBox(height: 36),
+                  ],
+                ),
               ),
             ),
-          ),
     );
   }
 
@@ -371,12 +359,16 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
                       : null,
                   color: isSelected
                       ? null
-                      : (isDark ? const Color(0xFF131A33) : const Color(0xFFF8FAFF)),
+                      : (isDark
+                            ? const Color(0xFF131A33)
+                            : const Color(0xFFF8FAFF)),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected
                         ? const Color(0xFFEF4444)
-                        : (isDark ? const Color(0xFF252E4A) : const Color(0xFFE5E7F0)),
+                        : (isDark
+                              ? const Color(0xFF252E4A)
+                              : const Color(0xFFE5E7F0)),
                   ),
                 ),
                 child: Center(
@@ -385,7 +377,9 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 10,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: isSelected
                           ? Colors.white
                           : (isDark ? Colors.white70 : const Color(0xFF374151)),
@@ -418,7 +412,11 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
         ),
         decoration: InputDecoration(
           border: InputBorder.none,
-          icon: const Icon(Icons.search_rounded, color: Color(0xFF6366F1), size: 18),
+          icon: const Icon(
+            Icons.search_rounded,
+            color: Color(0xFF6366F1),
+            size: 18,
+          ),
           hintText: 'Search by student name or USN...',
           hintStyle: GoogleFonts.inter(
             color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
@@ -431,21 +429,40 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
 
   Widget _buildRadarStatsHud(bool isDark) {
     final critical = _students.where((s) => s.attendance < 50).length;
-    final danger = _students.where((s) => s.attendance >= 50 && s.attendance < 65).length;
-    final warning = _students.where((s) => s.attendance >= 65 && s.attendance < 75).length;
+    final danger = _students
+        .where((s) => s.attendance >= 50 && s.attendance < 65)
+        .length;
+    final warning = _students
+        .where((s) => s.attendance >= 65 && s.attendance < 75)
+        .length;
 
     return Row(
       children: [
         Expanded(
-          child: _buildHudTile('Critical (<50%)', '$critical', const Color(0xFFEF4444), isDark),
+          child: _buildHudTile(
+            'Critical (<50%)',
+            '$critical',
+            const Color(0xFFEF4444),
+            isDark,
+          ),
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: _buildHudTile('Danger (<65%)', '$danger', const Color(0xFFF97316), isDark),
+          child: _buildHudTile(
+            'Danger (<65%)',
+            '$danger',
+            const Color(0xFFF97316),
+            isDark,
+          ),
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: _buildHudTile('Warning (<75%)', '$warning', const Color(0xFFF59E0B), isDark),
+          child: _buildHudTile(
+            'Warning (<75%)',
+            '$warning',
+            const Color(0xFFF59E0B),
+            isDark,
+          ),
         ),
       ],
     );
@@ -515,7 +532,9 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: isCritical ? const Color(0xFFEF4444) : const Color(0xFFF59E0B),
+                    color: isCritical
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFFF59E0B),
                   ),
                 ),
               ),
@@ -536,14 +555,19 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
                       '${student.usn} • ${student.department}',
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: isDark ? Colors.white60 : const Color(0xFF6B7280),
+                        color: isDark
+                            ? Colors.white60
+                            : const Color(0xFF6B7280),
                       ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: isCritical
                       ? const Color(0xFFEF4444).withValues(alpha: 0.15)
@@ -555,7 +579,9 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
-                    color: isCritical ? const Color(0xFFEF4444) : const Color(0xFFF59E0B),
+                    color: isCritical
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFFF59E0B),
                   ),
                 ),
               ),
@@ -577,7 +603,10 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
               PressableScale(
                 onTap: student.warningSent ? null : () => _sendWarning(student),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: student.warningSent
                         ? Colors.grey.shade700
@@ -588,13 +617,17 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        student.warningSent ? Icons.check_circle_rounded : Icons.notifications_active_rounded,
+                        student.warningSent
+                            ? Icons.check_circle_rounded
+                            : Icons.notifications_active_rounded,
                         color: Colors.white,
                         size: 14,
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        student.warningSent ? 'Notice Dispatched' : 'Dispatch Warning Notice',
+                        student.warningSent
+                            ? 'Notice Dispatched'
+                            : 'Dispatch Warning Notice',
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,

@@ -112,45 +112,15 @@ export function useAttendanceLive(options: UseAttendanceLiveOptions = {}) {
 
     connect();
 
-    // Demo / mock simulation if enabled and not connected to live backend WS
-    let mockTimer: NodeJS.Timeout | null = null;
-    if (mockIntervalMs > 0) {
-      const demoNames = [
-        { name: 'Alice Smith', email: 'alice@smartface.pro', roll: 'CS2026-042' },
-        { name: 'Marcus Vance', email: 'marcus@smartface.pro', roll: 'CS2026-018' },
-        { name: 'Devon Patel', email: 'devon.p@smartface.pro', roll: 'CS2026-089' },
-        { name: 'Elena Rostova', email: 'elena.r@smartface.pro', roll: 'CS2026-031' },
-        { name: 'Chen Wei', email: 'chen.wei@smartface.pro', roll: 'CS2026-112' },
-      ];
-
-      mockTimer = setInterval(() => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) return; // live stream active
-        const student = demoNames[Math.floor(Math.random() * demoNames.length)];
-        const method: 'face' | 'qr' = Math.random() > 0.35 ? 'face' : 'qr';
-        const simulated: AttendanceEvent = {
-          type: 'attendance_update',
-          student_email: student.email,
-          student_name: student.name,
-          roll_number: student.roll,
-          status: 'Present',
-          timestamp: new Date().toISOString(),
-          verified_by: method,
-          confidence: method === 'face' ? Math.round((0.92 + Math.random() * 0.07) * 100) / 100 : undefined,
-        };
-        handleIncoming(simulated);
-      }, mockIntervalMs);
-    }
-
     return () => {
       unmounted = true;
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-      if (mockTimer) clearInterval(mockTimer);
       if (wsRef.current) {
         wsRef.current.close();
         wsRef.current = null;
       }
     };
-  }, [channel, handleIncoming, mockIntervalMs]);
+  }, [channel, handleIncoming]);
 
   return {
     isConnected,

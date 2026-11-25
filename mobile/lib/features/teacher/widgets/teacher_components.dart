@@ -280,7 +280,10 @@ class TeacherSectionHeader extends StatelessWidget {
                 ),
               ),
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -307,40 +310,40 @@ class TeacherStatusBadge extends StatelessWidget {
   });
 
   factory TeacherStatusBadge.present() => const TeacherStatusBadge(
-        label: 'PRESENT',
-        color: AppColors.success,
-        icon: Icons.check_circle_outline_rounded,
-      );
+    label: 'PRESENT',
+    color: AppColors.success,
+    icon: Icons.check_circle_outline_rounded,
+  );
 
   factory TeacherStatusBadge.late() => const TeacherStatusBadge(
-        label: 'LATE',
-        color: AppColors.warning,
-        icon: Icons.schedule_rounded,
-      );
+    label: 'LATE',
+    color: AppColors.warning,
+    icon: Icons.schedule_rounded,
+  );
 
   factory TeacherStatusBadge.absent() => const TeacherStatusBadge(
-        label: 'ABSENT',
-        color: AppColors.error,
-        icon: Icons.cancel_outlined,
-      );
+    label: 'ABSENT',
+    color: AppColors.error,
+    icon: Icons.cancel_outlined,
+  );
 
   factory TeacherStatusBadge.excused() => const TeacherStatusBadge(
-        label: 'EXCUSED',
-        color: AppColors.cyan,
-        icon: Icons.verified_user_outlined,
-      );
+    label: 'EXCUSED',
+    color: AppColors.cyan,
+    icon: Icons.verified_user_outlined,
+  );
 
   factory TeacherStatusBadge.pending() => const TeacherStatusBadge(
-        label: 'PENDING REVIEW',
-        color: AppColors.gold,
-        icon: Icons.hourglass_top_rounded,
-      );
+    label: 'PENDING REVIEW',
+    color: AppColors.gold,
+    icon: Icons.hourglass_top_rounded,
+  );
 
   factory TeacherStatusBadge.atRisk() => const TeacherStatusBadge(
-        label: 'AT RISK (<75%)',
-        color: AppColors.error,
-        icon: Icons.warning_amber_rounded,
-      );
+    label: 'AT RISK (<75%)',
+    color: AppColors.error,
+    icon: Icons.warning_amber_rounded,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -358,11 +361,7 @@ class TeacherStatusBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(
-              icon,
-              size: 12,
-              color: isFilled ? Colors.white : color,
-            ),
+            Icon(icon, size: 12, color: isFilled ? Colors.white : color),
             const SizedBox(width: 4),
           ],
           Text(
@@ -681,10 +680,7 @@ class TeacherOfflineStatusBanner extends StatelessWidget {
                   queueCount > 0
                       ? '$queueCount pending attendance update(s) queued for sync.'
                       : 'Serving roster and attendance metrics from encrypted local cache.',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: Colors.white70,
-                  ),
+                  style: GoogleFonts.inter(fontSize: 11, color: Colors.white70),
                 ),
               ],
             ),
@@ -835,7 +831,9 @@ class TeacherScreenShell extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF070A14) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark
+          ? const Color(0xFF070A14)
+          : const Color(0xFFF8FAFC),
       floatingActionButton: floatingActionButton,
       body: SafeArea(
         child: Column(
@@ -847,7 +845,9 @@ class TeacherScreenShell extends StatelessWidget {
                 color: isDark ? const Color(0xFF0F172A) : Colors.white,
                 border: Border(
                   bottom: BorderSide(
-                    color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : const Color(0xFFE2E8F0),
                   ),
                 ),
                 boxShadow: [
@@ -877,7 +877,10 @@ class TeacherScreenShell extends StatelessWidget {
                       },
                       tooltip: 'Back',
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
                     ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -895,7 +898,9 @@ class TeacherScreenShell extends StatelessWidget {
                                 style: GoogleFonts.outfit(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
-                                  color: isDark ? Colors.white : AppColors.textHeading,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.textHeading,
                                   letterSpacing: -0.3,
                                 ),
                               ),
@@ -903,7 +908,10 @@ class TeacherScreenShell extends StatelessWidget {
                             if (badge != null) ...[
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: badgeColor.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(6),
@@ -932,7 +940,9 @@ class TeacherScreenShell extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
                               fontSize: 11,
-                              color: isDark ? Colors.white60 : AppColors.textMuted,
+                              color: isDark
+                                  ? Colors.white60
+                                  : AppColors.textMuted,
                             ),
                           ),
                         ],
@@ -1064,7 +1074,10 @@ class TeacherAiAdvisoryCard extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4F46E5),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -1076,5 +1089,3 @@ class TeacherAiAdvisoryCard extends StatelessWidget {
     );
   }
 }
-
-

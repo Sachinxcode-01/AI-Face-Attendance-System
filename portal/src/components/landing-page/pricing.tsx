@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Check, HelpCircle, Server, Shield, Sparkles, Zap } from "lucide-react";
+import { Check } from "lucide-react";
 import { Reveal } from "./ui/reveal";
 import { SectionHeading } from "./ui/section-heading";
 import { SpotlightCard } from "./ui/spotlight-card";
@@ -102,8 +100,6 @@ export const PRICING_PLANS = [
 ];
 
 export function Pricing({ onOpenDemo, onOpenPilot }: PricingProps) {
-  const [billingCycle, setBillingCycle] = useState<"annual" | "semester">("annual");
-
   return (
     <section
       id="pricing"
@@ -126,11 +122,10 @@ export function Pricing({ onOpenDemo, onOpenPilot }: PricingProps) {
                     ? "rgba(143, 139, 255, 0.35)"
                     : "rgba(255, 255, 255, 0.08)"
                 }
-                className={`h-full flex flex-col justify-between p-6 sm:p-7 rounded-[22px] border ${
-                  plan.highlight
-                    ? "border-accent/60 bg-[rgba(16,16,24,0.95)] shadow-[0_0_32px_rgba(143,139,255,0.2)]"
-                    : "border-white/10 bg-surface/85"
-                }`}
+                className={`h-full flex flex-col justify-between p-6 sm:p-7 rounded-[22px] border ${plan.highlight
+                  ? "border-accent/60 bg-[rgba(16,16,24,0.95)] shadow-[0_0_32px_rgba(143,139,255,0.2)]"
+                  : "border-white/10 bg-surface/85"
+                  }`}
               >
                 <div>
                   {/* Plan Badge & Header */}
@@ -191,11 +186,10 @@ export function Pricing({ onOpenDemo, onOpenPilot }: PricingProps) {
                         onOpenDemo();
                       }
                     }}
-                    className={`w-full h-11 rounded-full text-[13px] font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                      plan.highlight
-                        ? "btn-pill-accent shadow-[0_0_20px_rgba(143,139,255,0.35)]"
-                        : "border border-white/15 bg-white/[0.04] text-hi hover:bg-white/[0.08]"
-                    }`}
+                    className={`w-full h-11 rounded-full text-[13px] font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${plan.highlight
+                      ? "btn-pill-accent shadow-[0_0_20px_rgba(143,139,255,0.35)]"
+                      : "border border-white/15 bg-white/[0.04] text-hi hover:bg-white/[0.08]"
+                      }`}
                   >
                     {plan.ctaText}
                   </button>

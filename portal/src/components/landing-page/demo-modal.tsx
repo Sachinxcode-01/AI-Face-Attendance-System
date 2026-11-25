@@ -51,13 +51,38 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
   const [honeypot, setHoneypot] = useState("");
   const mountTime = useRef(Date.now());
   const firstFieldRef = useRef<HTMLInputElement>(null);
+  const modalCardRef = useRef<HTMLDivElement>(null);
+  const invokingElementRef = useRef<HTMLElement | null>(null);
+  const redirectTimerRef = useRef<number | null>(null);
+  const openInstanceId = useRef(0);
 
-  // Escape to close + body scroll lock + focus management
+  // Escape to close + body scroll lock + focus trap & restoration
   useEffect(() => {
     if (!isOpen) return;
 
+    openInstanceId.current += 1;
+    invokingElementRef.current = (document.activeElement as HTMLElement) || null;
+
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key === "Tab" && modalCardRef.current) {
+        const focusable = modalCardRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
 
     document.addEventListener("keydown", onKeyDown);
@@ -69,6 +94,11 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
       window.clearTimeout(focusTimer);
+      if (redirectTimerRef.current) {
+        window.clearTimeout(redirectTimerRef.current);
+        redirectTimerRef.current = null;
+      }
+      invokingElementRef.current?.focus();
     };
   }, [isOpen, onClose]);
 
@@ -166,6 +196,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               setSubmitError(null);
 
               try {
+                  const instanceId = openInstanceId.current;
                   const res = await fetch("/api/demo", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -184,18 +215,24 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
 
                   const data = await res.json();
 
-                  if(!res.ok) {
-                throw new Error(data?.message || "Could not schedule demo. Please try again shortly.");
-              }
+                  if (!res.ok) {
+                    throw new Error(data?.message || "Could not schedule demo. Please try again shortly.");
+                  }
 
-      setSubmittedLeadId(data.leadId || "DEMO-CONFIRMED");
-              setIsSubmitting(false);
+                  if (!isOpen || openInstanceId.current !== instanceId) {
+                    return;
+                  }
 
-              // Brief delay to show confirmation checkmark, then redirect to thank you
-              setTimeout(() => {
-                onClose();
-                router.push("/thank-you");
-              }, 1800);
+                  setSubmittedLeadId(data.leadId || "DEMO-CONFIRMED");
+                  setIsSubmitting(false);
+
+                  // Brief delay to show confirmation checkmark, then redirect to thank you
+                  redirectTimerRef.current = window.setTimeout(() => {
+                    if (openInstanceId.current === instanceId) {
+                      onClose();
+                      router.push("/thank-you");
+                    }
+                  }, 1800);
             } catch (err: unknown) {
               setIsSubmitting(false);
               setSubmitError(
@@ -220,7 +257,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               />
 
                 {/* Modal Card with ByTune Card Recipe */}
-                <div className="relative z-10 w-full max-w-xl max-h-[92vh] overflow-y-auto card-bytune rounded-[22px] p-6 sm:p-8 shadow-2xl border border-white/10 bg-[rgba(16,16,22,0.92)] backdrop-blur-xl">
+                <div ref={modalCardRef} className="relative z-10 w-full max-w-xl max-h-[92vh] overflow-y-auto card-bytune rounded-[22px] p-6 sm:p-8 shadow-2xl border border-white/10 bg-[rgba(16,16,22,0.92)] backdrop-blur-xl">
                   <div className="flex items-center justify-between border-b border-[var(--hairline)] pb-4">
                     <div className="flex items-center gap-3">
                       <span className="grid h-10 w-10 place-items-center rounded-full border border-accent/30 bg-accent/10">

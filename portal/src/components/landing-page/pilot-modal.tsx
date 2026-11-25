@@ -29,7 +29,7 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
   const router = useRouter();
   const [formData, setFormData] = useState<PilotFormData>({
     institutionName: "",
-    accreditation: "NAAC / Autonomous",
+    accreditation: "",
     cityState: "",
     contactPerson: "",
     roleTitle: "",
@@ -49,12 +49,39 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [honeypot, setHoneypot] = useState("");
   const firstFieldRef = useRef<HTMLInputElement>(null);
+  const modalCardRef = useRef<HTMLDivElement>(null);
+  const invokingElementRef = useRef<HTMLElement | null>(null);
+  const redirectTimerRef = useRef<number | null>(null);
+  const openInstanceId = useRef(0);
 
   useEffect(() => {
     if (!isOpen) return;
+
+    openInstanceId.current += 1;
+    invokingElementRef.current = (document.activeElement as HTMLElement) || null;
+
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key === "Tab" && modalCardRef.current) {
+        const focusable = modalCardRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
+
     document.addEventListener("keydown", onKeyDown);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -64,6 +91,11 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
       clearTimeout(timer);
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+        redirectTimerRef.current = null;
+      }
+      invokingElementRef.current?.focus();
     };
   }, [isOpen, onClose]);
 
@@ -98,6 +130,8 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
     setIsSubmitting(true);
     setSubmitError(null);
 
+    const instanceId = openInstanceId.current;
+
     try {
       const res = await fetch("/api/pilot", {
         method: "POST",
@@ -113,12 +147,18 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
         throw new Error(data?.message || "Could not submit pilot request.");
       }
 
+      if (!isOpen || openInstanceId.current !== instanceId) {
+        return;
+      }
+
       setApplicationId(data.applicationId || "PILOT-APPROVED");
       setIsSubmitting(false);
 
-      setTimeout(() => {
-        onClose();
-        router.push("/thank-you");
+      redirectTimerRef.current = window.setTimeout(() => {
+        if (openInstanceId.current === instanceId) {
+          onClose();
+          router.push("/thank-you");
+        }
       }, 2000);
     } catch (err: unknown) {
       setIsSubmitting(false);
@@ -135,7 +175,7 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
     >
       <div onClick={onClose} className="fixed inset-0 bg-black/85 backdrop-blur-sm transition-opacity" />
 
-      <div className="relative z-10 w-full max-w-2xl max-h-[92vh] overflow-y-auto card-bytune rounded-[22px] p-6 sm:p-8 shadow-2xl border border-white/10 bg-[rgba(16,16,22,0.95)] backdrop-blur-xl">
+      <div ref={modalCardRef} className="relative z-10 w-full max-w-2xl max-h-[92vh] overflow-y-auto card-bytune rounded-[22px] p-6 sm:p-8 shadow-2xl border border-white/10 bg-[rgba(16,16,22,0.95)] backdrop-blur-xl">
         <div className="flex items-center justify-between border-b border-[var(--hairline)] pb-4">
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-full border border-spotify/30 bg-spotify/10">
@@ -210,11 +250,12 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
             {/* Institution Details */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
+                <label htmlFor="pilot-institutionName" className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
                   Institution Name <span className="text-red-400">*</span>
                 </label>
                 <input
                   ref={firstFieldRef}
+                  id="pilot-institutionName"
                   type="text"
                   required
                   value={formData.institutionName}
@@ -226,10 +267,11 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
               </div>
 
               <div>
-                <label className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
+                <label htmlFor="pilot-cityState" className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
                   Location (City, State) <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="pilot-cityState"
                   type="text"
                   required
                   value={formData.cityState}
@@ -244,10 +286,11 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
             {/* Contact Person & Role */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
+                <label htmlFor="pilot-contactPerson" className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
                   Applicant Name <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="pilot-contactPerson"
                   type="text"
                   required
                   value={formData.contactPerson}
@@ -259,10 +302,11 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
               </div>
 
               <div>
-                <label className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
+                <label htmlFor="pilot-roleTitle" className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
                   Role / Designation <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="pilot-roleTitle"
                   type="text"
                   required
                   value={formData.roleTitle}
@@ -277,10 +321,11 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
             {/* Email & Phone */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
+                <label htmlFor="pilot-email" className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
                   Work / Campus Email <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="pilot-email"
                   type="email"
                   required
                   value={formData.email}
@@ -292,10 +337,11 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
               </div>
 
               <div>
-                <label className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
+                <label htmlFor="pilot-phone" className="block font-mono text-[11px] uppercase tracking-[0.1em] text-mid">
                   Direct Phone / WhatsApp <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="pilot-phone"
                   type="tel"
                   required
                   value={formData.phone}
@@ -310,10 +356,11 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
             {/* Pilot Sizing: Students, Faculty, Gates, Timeline */}
             <div className="grid gap-3 sm:grid-cols-4">
               <div>
-                <label className="block font-mono text-[10px] uppercase tracking-[0.08em] text-mid">
+                <label htmlFor="pilot-studentCount" className="block font-mono text-[10px] uppercase tracking-[0.08em] text-mid">
                   Students In Scope
                 </label>
                 <select
+                  id="pilot-studentCount"
                   value={formData.studentCount}
                   onChange={(e) => setFormData({ ...formData, studentCount: e.target.value })}
                   className="mt-1 w-full rounded-lg border border-white/10 bg-bg1 px-2.5 py-2 text-[13px] text-hi"
@@ -326,10 +373,11 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
               </div>
 
               <div>
-                <label className="block font-mono text-[10px] uppercase tracking-[0.08em] text-mid">
+                <label htmlFor="pilot-teacherCount" className="block font-mono text-[10px] uppercase tracking-[0.08em] text-mid">
                   Faculty Size
                 </label>
                 <select
+                  id="pilot-teacherCount"
                   value={formData.teacherCount}
                   onChange={(e) => setFormData({ ...formData, teacherCount: e.target.value })}
                   className="mt-1 w-full rounded-lg border border-white/10 bg-bg1 px-2.5 py-2 text-[13px] text-hi"
@@ -342,10 +390,11 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
               </div>
 
               <div>
-                <label className="block font-mono text-[10px] uppercase tracking-[0.08em] text-mid">
+                <label htmlFor="pilot-kioskCount" className="block font-mono text-[10px] uppercase tracking-[0.08em] text-mid">
                   Gates / Kiosks
                 </label>
                 <select
+                  id="pilot-kioskCount"
                   value={formData.kioskCount}
                   onChange={(e) => setFormData({ ...formData, kioskCount: e.target.value })}
                   className="mt-1 w-full rounded-lg border border-white/10 bg-bg1 px-2.5 py-2 text-[13px] text-hi"
@@ -358,10 +407,11 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
               </div>
 
               <div>
-                <label className="block font-mono text-[10px] uppercase tracking-[0.08em] text-mid">
+                <label htmlFor="pilot-deploymentTimeline" className="block font-mono text-[10px] uppercase tracking-[0.08em] text-mid">
                   Launch Timeline
                 </label>
                 <select
+                  id="pilot-deploymentTimeline"
                   value={formData.deploymentTimeline}
                   onChange={(e) => setFormData({ ...formData, deploymentTimeline: e.target.value as any })}
                   className="mt-1 w-full rounded-lg border border-white/10 bg-bg1 px-2.5 py-2 text-[13px] text-hi"

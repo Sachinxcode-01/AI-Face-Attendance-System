@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 
 type RevealProps = {
@@ -30,7 +30,8 @@ export function Reveal({
   blur = true,
 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-60px 0px" });
+  const isInView = useInView(ref, { once: true });
+  const [isFocused, setIsFocused] = useState(false);
   const shouldReduceMotion = useReducedMotion();
 
   if (shouldReduceMotion) {
@@ -58,6 +59,7 @@ export function Reveal({
   return (
     <motion.div
       ref={ref}
+      onFocusCapture={() => setIsFocused(true)}
       initial={{
         opacity: 0,
         ...initialPos,
@@ -65,25 +67,25 @@ export function Reveal({
         filter: blur ? "blur(4px)" : "blur(0px)",
       }}
       animate={
-        isInView
-          ? {
-              opacity: 1,
-              x: 0,
-              y: 0,
-              scale: 1,
-              filter: "blur(0px)",
-            }
-          : {}
+        isInView || isFocused
+      ? {
+        opacity: 1,
+        x: 0,
+        y: 0,
+        scale: 1,
+        filter: "blur(0px)",
       }
-      transition={{
-        duration,
-        delay,
+      : {}
+      }
+transition = {{
+    duration: isFocused && !isInView ? 0 : duration,
+      delay: isFocused && !isInView ? 0 : delay,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className={className}
-    >
-      {children}
-    </motion.div>
+className = { className }
+  >
+  { children }
+    </motion.div >
   );
 }
 
@@ -102,7 +104,8 @@ export function RevealStagger({
   delayChildren?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-60px 0px" });
+  const isInView = useInView(ref, { once: true });
+  const [isFocused, setIsFocused] = useState(false);
   const shouldReduceMotion = useReducedMotion();
 
   if (shouldReduceMotion) {
@@ -123,9 +126,10 @@ export function RevealStagger({
   return (
     <motion.div
       ref={ref}
+      onFocusCapture={() => setIsFocused(true)}
       variants={containerVariants}
       initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      animate={isInView || isFocused ? "visible" : "hidden"}
       className={className}
     >
       {children}

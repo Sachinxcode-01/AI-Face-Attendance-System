@@ -104,23 +104,26 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
       final session = context.read<SessionManager>();
       final token = session.token;
 
-      final res = await http.post(
-        Uri.parse('${ApiService.baseUrl}/ai/chat'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'prompt': text,
-          'message': text,
-          'role': 'teacher',
-        }),
-      ).timeout(const Duration(seconds: 8));
+      final res = await http
+          .post(
+            Uri.parse('${ApiService.baseUrl}/ai/chat'),
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'prompt': text,
+              'message': text,
+              'role': 'teacher',
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
 
       String reply = '';
       if (res.statusCode == 200) {
         final decoded = jsonDecode(res.body);
-        reply = decoded['response'] ?? decoded['reply'] ?? decoded['text'] ?? '';
+        reply =
+            decoded['response'] ?? decoded['reply'] ?? decoded['text'] ?? '';
       }
 
       if (reply.isEmpty) {
@@ -161,14 +164,18 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
 
   String _generateFallbackFacultyResponse(String query) {
     final q = query.toLowerCase();
-    if (q.contains('at-risk') || q.contains('low attendance') || q.contains('below 75')) {
+    if (q.contains('at-risk') ||
+        q.contains('low attendance') ||
+        q.contains('below 75')) {
       return '📊 **At-Risk Analysis (CS-402):**\n'
           'Currently, 3 students are below the 75% eligibility threshold:\n'
           '• **Rohan Sharma** (USN: 1SF23CS045) — 64.2% (Needs 4 consecutive classes)\n'
           '• **Isha Kulkarni** (USN: 1SF23CS038) — 68.0% (Needs 3 consecutive classes)\n'
           '• **Karan Mehra** (USN: 1SF23CS052) — 71.4% (Needs 2 consecutive classes)\n\n'
           'Recommendation: Dispatch an automated academic advisory notice before next Monday\'s session.';
-    } else if (q.contains('draft') || q.contains('reminder') || q.contains('email')) {
+    } else if (q.contains('draft') ||
+        q.contains('reminder') ||
+        q.contains('email')) {
       return '✉️ **Draft Announcement for CS-402:**\n\n'
           '**Subject:** Mandatory Attendance Notice & Midterm Pacing for CS-402\n\n'
           'Dear Students,\n\n'
@@ -227,7 +234,11 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 16),
+              child: const Icon(
+                Icons.auto_awesome_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
             ),
             const SizedBox(width: 10),
             Text(
@@ -245,7 +256,10 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
           indicatorColor: AppColors.purple,
           labelColor: AppColors.purple,
           unselectedLabelColor: isDark ? Colors.white60 : AppColors.textMuted,
-          labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13),
+          labelStyle: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
           tabs: const [
             Tab(text: 'Attendance Forecasting'),
             Tab(text: 'Faculty Copilot Chat'),
@@ -288,7 +302,9 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isDark ? AppColors.purple.withValues(alpha: 0.3) : const Color(0xFFE0E7FF),
+                color: isDark
+                    ? AppColors.purple.withValues(alpha: 0.3)
+                    : const Color(0xFFE0E7FF),
               ),
             ),
             child: Column(
@@ -299,7 +315,11 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.insights_rounded, color: AppColors.purple, size: 20),
+                        const Icon(
+                          Icons.insights_rounded,
+                          color: AppColors.purple,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'PREDICTIVE ATTENDANCE RADAR',
@@ -313,7 +333,10 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.success.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
@@ -393,7 +416,10 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
                       reservedSize: 36,
                       getTitlesWidget: (val, meta) => Text(
                         '${val.toInt()}%',
-                        style: GoogleFonts.inter(fontSize: 10, color: Colors.grey),
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: Colors.grey,
+                        ),
                       ),
                     ),
                   ),
@@ -402,13 +428,24 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
                       showTitles: true,
                       getTitlesWidget: (val, meta) {
                         final idx = val.toInt();
-                        const labels = ['W6', 'W7', 'W8', 'W9', 'W10 (F)', 'W11 (F)', 'W12 (F)'];
+                        const labels = [
+                          'W6',
+                          'W7',
+                          'W8',
+                          'W9',
+                          'W10 (F)',
+                          'W11 (F)',
+                          'W12 (F)',
+                        ];
                         if (idx >= 0 && idx < labels.length) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
                               labels[idx],
-                              style: GoogleFonts.inter(fontSize: 10, color: Colors.grey),
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
                             ),
                           );
                         }
@@ -416,8 +453,12 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
                       },
                     ),
                   ),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
                 minX: 0,
@@ -586,7 +627,10 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
                 const SizedBox(
                   width: 14,
                   height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.purple),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.purple,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Text(
@@ -618,16 +662,25 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
                     color: isDark ? Colors.white : Colors.black87,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Ask faculty copilot about attendance, students...',
-                    hintStyle: GoogleFonts.inter(fontSize: 13, color: Colors.grey),
+                    hintText:
+                        'Ask faculty copilot about attendance, students...',
+                    hintStyle: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: Colors.grey,
+                    ),
                     isDense: true,
                     filled: true,
-                    fillColor: isDark ? const Color(0xFF161E38) : const Color(0xFFF3F4F6),
+                    fillColor: isDark
+                        ? const Color(0xFF161E38)
+                        : const Color(0xFFF3F4F6),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                   onSubmitted: _sendMessage,
                 ),
@@ -677,8 +730,8 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
           color: msg.isUser
               ? AppColors.primary
               : isDark
-                  ? const Color(0xFF161E38)
-                  : const Color(0xFFF3F4F6),
+              ? const Color(0xFF161E38)
+              : const Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -692,18 +745,25 @@ class _TeacherAiCopilotScreenState extends State<TeacherAiCopilotScreen>
                 color: msg.isUser
                     ? Colors.white
                     : isDark
-                        ? Colors.white
-                        : Colors.black87,
+                    ? Colors.white
+                    : Colors.black87,
               ),
             ),
-            if (msg.actionSuggestions != null && msg.actionSuggestions!.isNotEmpty) ...[
+            if (msg.actionSuggestions != null &&
+                msg.actionSuggestions!.isNotEmpty) ...[
               const SizedBox(height: 10),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
                 children: msg.actionSuggestions!.map((s) {
                   return ActionChip(
-                    label: Text(s, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold)),
+                    label: Text(
+                      s,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     backgroundColor: AppColors.purple.withValues(alpha: 0.15),
                     side: BorderSide.none,
                     onPressed: () => _sendMessage(s),

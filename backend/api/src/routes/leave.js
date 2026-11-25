@@ -135,6 +135,26 @@ router.patch('/action', authenticate, requireRole(leaveReviewRoles), async (req,
       { leave_id, status }
     ).catch(console.error));
 
+    // Also notify linked parent of student
+    trackJob((async () => {
+      try {
+        const studentUser = await User.findOne({ email: leave.user_id }).lean();
+        const parentEmail = studentUser?.parent_details;
+        if (parentEmail && parentEmail.includes('@')) {
+          await notificationService.createNotification(
+            parentEmail,
+            'Ward Leave Status Update',
+            `Leave request for ${studentUser.full_name || leave.user_id} (${leave.start_date} to ${leave.end_date}) has been ${status.toLowerCase()}.`,
+            'leave_status',
+            'High',
+            { leave_id, status, student_email: leave.user_id }
+          );
+        }
+      } catch (err) {
+        console.error('Parent leave notification error:', err);
+      }
+    })());
+
     res.json({ message: `Leave ${status.toLowerCase()} successfully` });
   } catch (error) {
     console.error('[Leave] Review action error:', error);

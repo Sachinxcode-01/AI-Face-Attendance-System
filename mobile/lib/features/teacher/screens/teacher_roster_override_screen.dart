@@ -22,6 +22,8 @@ import 'package:provider/provider.dart';
 
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
+import 'package:smartface_attendance/features/teacher/controllers/teacher_controller.dart';
+import 'package:smartface_attendance/features/teacher/models/teacher_models.dart';
 import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
@@ -125,18 +127,37 @@ class _TeacherRosterOverrideScreenState
 
   Future<void> _fetchRoster() async {
     final session = context.read<SessionManager>();
+    final teacherCtrl = context.read<TeacherController>();
     final token = session.token;
 
     if (token != null) {
       try {
-        final list = await ApiService.getStudents(token);
-        if (mounted && list.isNotEmpty) {
-          final mapped = list.map((s) {
+        final active = teacherCtrl.currentActiveSession;
+        await teacherCtrl.fetchRoster(token, sessionId: active?.id);
+
+        if (mounted && teacherCtrl.rosterStudents.isNotEmpty) {
+          final mapped = teacherCtrl.rosterStudents.map((s) {
+            StudentStatus st;
+            switch (s.status) {
+              case RosterStatus.present:
+                st = StudentStatus.present;
+                break;
+              case RosterStatus.late:
+                st = StudentStatus.late;
+                break;
+              case RosterStatus.excused:
+                st = StudentStatus.excused;
+                break;
+              case RosterStatus.absent:
+                st = StudentStatus.absent;
+                break;
+            }
             return RosterStudentItem(
-              id: s['id'] ?? s['_id'] ?? s['usn'] ?? '',
-              name: s['name'] ?? 'Student',
-              usn: s['usn'] ?? s['roll_number'] ?? '1SF23CS000',
-              status: StudentStatus.present,
+              id: s.id,
+              name: s.name,
+              usn: s.usn,
+              status: st,
+              time: s.verificationTime,
             );
           }).toList();
 
@@ -176,32 +197,61 @@ class _TeacherRosterOverrideScreenState
   }
 
   Future<void> _saveAndSync() async {
-    HapticFeedback.heavyImpact();
-    setState(() => _isSaving = true);
     final session = context.read<SessionManager>();
-
-    final records = _students.map((s) => {
-      'student_id': s.id,
-      'usn': s.usn,
-      'status': s.status.name.toUpperCase(),
-      'verified_by': 'Manual Faculty Override',
-    }).toList();
-
-    bool ok = true;
-    if (session.token != null) {
-      ok = await ApiService.batchUpdateRoster('SESS-ROSTER-OVERRIDE', records, session.token);
-    }
-
-    if (mounted) {
-      setState(() => _isSaving = false);
+    if (session.token == null) {
       AppToast.show(
         context,
-        message: ok
-            ? 'Roster overrides committed & synced to server.'
-            : 'Saved locally in offline queue. Will sync when connected.',
-        type: ok ? ToastType.success : ToastType.info,
+        message: 'Authentication required. Please sign in.',
+        type: ToastType.error,
       );
+      return;
     }
+
+    HapticFeedback.heavyImpact();
+    setState(() => _isSaving = true);
+
+    final records = _students
+        .map(
+          (s) => {
+            'student_id': s.id,
+            'usn': s.usn,
+            'status': s.status.name.toUpperCase(),
+            'verified_by': 'Manual Faculty Override',
+          },
+        )
+        .toList();
+
+    bool ok = false;
+    try {
+      final teacherCtrl = context.read<TeacherController>();
+      final active = teacherCtrl.currentActiveSession;
+      final sessionId =
+          active?.id ??
+          (teacherCtrl.activeSessions.isNotEmpty
+              ? teacherCtrl.activeSessions.first.id
+              : 'SESS-MANUAL-OVERRIDE');
+      ok = await ApiService.batchUpdateRoster(
+        sessionId,
+        records,
+        session.token,
+      );
+    } catch (e) {
+      debugPrint('[RosterOverride] save error: $e');
+      ok = false;
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+
+    if (!mounted) return;
+    AppToast.show(
+      context,
+      message: ok
+          ? 'Roster overrides committed & synced to server.'
+          : 'Failed to sync overrides with server. Please retry.',
+      type: ok ? ToastType.success : ToastType.error,
+    );
   }
 
   @override
@@ -253,145 +303,147 @@ class _TeacherRosterOverrideScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  // ── 1. Attendance HUD Summary ────────────────────────────
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildHudCounter(
-                          'Present',
-                          '$presentCount',
-                          const Color(0xFF10B981),
-                          isDark,
+                    // ── 1. Attendance HUD Summary ────────────────────────────
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildHudCounter(
+                            'Present',
+                            '$presentCount',
+                            const Color(0xFF10B981),
+                            isDark,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _buildHudCounter(
-                          'Late',
-                          '$lateCount',
-                          const Color(0xFFF59E0B),
-                          isDark,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildHudCounter(
+                            'Late',
+                            '$lateCount',
+                            const Color(0xFFF59E0B),
+                            isDark,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _buildHudCounter(
-                          'Absent',
-                          '$absentCount',
-                          const Color(0xFFEF4444),
-                          isDark,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildHudCounter(
+                            'Absent',
+                            '$absentCount',
+                            const Color(0xFFEF4444),
+                            isDark,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // ── 2. Search & Batch Actions Toolbar ────────────────────
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF131A33) : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isDark
-                            ? const Color(0xFF252E4A)
-                            : const Color(0xFFE5E7F0),
-                      ),
+                      ],
                     ),
-                    child: TextField(
-                      onChanged: (v) => setState(() => _search = v),
-                      style: GoogleFonts.inter(
-                        color: isDark ? Colors.white : const Color(0xFF1A1A3A),
-                        fontSize: 13,
-                      ),
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        icon: const Icon(
-                          Icons.search_rounded,
-                          color: Color(0xFF6366F1),
-                          size: 18,
-                        ),
-                        hintText: 'Filter roster by name or USN...',
-                        hintStyle: GoogleFonts.inter(
+                    const SizedBox(height: 16),
+
+                    // ── 2. Search & Batch Actions Toolbar ────────────────────
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF131A33) : Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
                           color: isDark
-                              ? Colors.white38
-                              : const Color(0xFF9CA3AF),
+                              ? const Color(0xFF252E4A)
+                              : const Color(0xFFE5E7F0),
+                        ),
+                      ),
+                      child: TextField(
+                        onChanged: (v) => setState(() => _search = v),
+                        style: GoogleFonts.inter(
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1A1A3A),
                           fontSize: 13,
                         ),
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          icon: const Icon(
+                            Icons.search_rounded,
+                            color: Color(0xFF6366F1),
+                            size: 18,
+                          ),
+                          hintText: 'Filter roster by name or USN...',
+                          hintStyle: GoogleFonts.inter(
+                            color: isDark
+                                ? Colors.white38
+                                : const Color(0xFF9CA3AF),
+                            fontSize: 13,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  // Batch toggle row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: PressableScale(
-                          onTap: () => _markAll(StudentStatus.present),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFF10B981,
-                              ).withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: const Color(0xFF10B981),
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Mark All Present',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
+                    // Batch toggle row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: PressableScale(
+                            onTap: () => _markAll(StudentStatus.present),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFF10B981,
+                                ).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
                                   color: const Color(0xFF10B981),
                                 ),
                               ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: PressableScale(
-                          onTap: () => _markAll(StudentStatus.absent),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFFEF4444,
-                              ).withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: const Color(0xFFEF4444),
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Reset to Absent',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFEF4444),
+                              child: Center(
+                                child: Text(
+                                  'Mark All Present',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF10B981),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: PressableScale(
+                            onTap: () => _markAll(StudentStatus.absent),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFFEF4444,
+                                ).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: const Color(0xFFEF4444),
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Reset to Absent',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFFEF4444),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
 
-                  // ── 3. Student List ──────────────────────────────────────
-                  ...filtered.map((s) => _buildRosterCard(s, isDark)),
-                  const SizedBox(height: 36),
-                ],
+                    // ── 3. Student List ──────────────────────────────────────
+                    ...filtered.map((s) => _buildRosterCard(s, isDark)),
+                    const SizedBox(height: 36),
+                  ],
+                ),
               ),
             ),
-          ),
     );
   }
 

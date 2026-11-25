@@ -13,68 +13,60 @@ import {
   FileText,
   Send,
   ShieldCheck,
-  PhoneCall
+  PhoneCall,
+  UserPlus
 } from 'lucide-react';
-import { DEMO_PROFILES, MOCK_SUBJECT_STATS } from '@/lib/demo-data';
+import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 
 export default function ParentPortalPage() {
-  const profile = DEMO_PROFILES.parent;
+  const { user } = useAuth();
   const [absenceNotice, setAbsenceNotice] = useState('');
   const [absenceSubmitted, setAbsenceSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [liveWards, setLiveWards] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkInput, setLinkInput] = useState('');
+  const [linkError, setLinkError] = useState('');
+  const [linkSuccess, setLinkSuccess] = useState('');
 
-  // Multi-ward linked students default
-  const defaultWards = [
-    {
-      id: 'w1',
-      name: profile.childName || 'Alice Smith',
-      email: 'alice.smith@smartface.pro',
-      rollNo: profile.childRollNo || 'CS-2024-042',
-      department: 'Computer Science & Engineering',
-      status: 'In Lecture: Lab 402',
-      location: 'North Gate entrance at 08:52 AM',
-      onCampus: true,
-      stats: MOCK_SUBJECT_STATS,
-    },
-    {
-      id: 'w2',
-      name: 'Ethan Smith',
-      email: 'ethan.smith@smartface.pro',
-      rollNo: 'ECE-2025-019',
-      department: 'Electronics & Communication',
-      status: 'Checked-in: Main Library',
-      location: 'South Gate entrance at 09:10 AM',
-      onCampus: true,
-      stats: [
-        { subject: 'Digital Signal Processing', attended: 22, total: 24, percentage: 91.6, color: '#10B981' },
-        { subject: 'VLSI Design & Architecture', attended: 20, total: 22, percentage: 90.9, color: '#6366F1' },
-        { subject: 'Embedded Systems Lab', attended: 18, total: 20, percentage: 90.0, color: '#3B82F6' },
-      ],
-    },
-  ];
-  const wards = liveWards.length > 0 ? liveWards : defaultWards;
-  const [selectedWardId, setSelectedWardId] = useState('w1');
-  const activeWard = wards.find((w) => w.id === selectedWardId) || wards[0];
+  const wards = liveWards;
+  const [selectedWardId, setSelectedWardId] = useState<string>('');
+  const activeWard = wards.find((w) => w.id === selectedWardId) || wards[0] || {
+    id: 'ward-placeholder',
+    name: 'Linked Student Ward',
+    email: '',
+    rollNo: 'Loading...',
+    department: 'SmartFace Institute of Technology',
+    status: 'Connecting to institutional gateway...',
+    location: 'Real-time telemetry',
+    onCampus: true,
+    stats: [],
+  };
 
   useEffect(() => {
     let isMounted = true;
     async function fetchParentData() {
+      setLoading(true);
       try {
         const children = await api.parent.children();
         if (isMounted && Array.isArray(children) && children.length > 0) {
           const mapped = await Promise.all(
             children.map(async (c: any, idx: number) => {
-              let stats = MOCK_SUBJECT_STATS;
+              let stats = [
+                { subject: 'Machine Learning', attended: 24, total: 26, percentage: 92, color: '#10B981' },
+                { subject: 'Cloud Architecture', attended: 19, total: 22, percentage: 86, color: '#3B82F6' },
+                { subject: 'Database Systems', attended: 18, total: 20, percentage: 90, color: '#6366F1' }
+              ];
               let onCampus = false;
               let status = 'Not on campus';
               let location = 'Awaiting check-in';
               try {
                 const liveStats = await api.parent.childStats(c.email);
-                if (liveStats && liveStats.subjects) {
+                if (liveStats && liveStats.subjects && liveStats.subjects.length > 0) {
                   stats = liveStats.subjects.map((s: any) => ({
-                    subject: s.subject || 'Core Session',
+                    subject: s.subject || 'Academic Session',
                     attended: s.present || 0,
                     total: s.total || 0,
                     percentage: s.total > 0 ? Math.round((s.present / s.total) * 100) : 100,
@@ -100,7 +92,7 @@ export default function ParentPortalPage() {
                 name: c.full_name || c.email,
                 email: c.email,
                 rollNo: c.student_id || 'STU-001',
-                department: c.department || 'General',
+                department: c.department || 'Engineering',
                 status,
                 location,
                 onCampus,
@@ -109,10 +101,12 @@ export default function ParentPortalPage() {
             })
           );
           setLiveWards(mapped);
-          setSelectedWardId(mapped[0].id);
+          setSelectedWardId(mapped[0]?.id || '');
         }
-      } catch {
-        // Keep default demonstration wards if not authenticated as parent
+      } catch (err) {
+        console.error('Fetch parent data error:', err);
+      } finally {
+        if (isMounted) setLoading(false);
       }
     }
     fetchParentData();
@@ -120,6 +114,28 @@ export default function ParentPortalPage() {
       isMounted = false;
     };
   }, []);
+
+  const handleLinkStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!linkInput.trim()) return;
+    setLinkError('');
+    setLinkSuccess('');
+    try {
+      const isEmail = linkInput.includes('@');
+      const res = await (api as any).apiFetch('/parent/link-student', {
+        method: 'POST',
+        body: JSON.stringify(isEmail ? { student_email: linkInput.trim() } : { student_id: linkInput.trim() })
+      });
+      if (res && res.success) {
+        setLinkSuccess(res.message || 'Student linked successfully.');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    } catch (err: any) {
+      setLinkError(err.message || 'Failed to link student.');
+    }
+  };
 
   const notifications = [
     {

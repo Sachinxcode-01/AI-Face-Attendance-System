@@ -19,29 +19,24 @@ import {
   Eye,
   BellRing
 } from 'lucide-react';
-import { DEMO_PROFILES, MOCK_INTRUDERS, MOCK_AUDIT_LOGS } from '@/lib/demo-data';
+import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 
 export default function AdminPortalPage() {
-  const profile = DEMO_PROFILES.admin;
+  const { user } = useAuth();
+  const profileName = user?.name || 'Administrator';
   const [similarityThreshold, setSimilarityThreshold] = useState(0.65);
-  const [intruders, setIntruders] = useState(MOCK_INTRUDERS);
+  const [intruders, setIntruders] = useState<any[]>([]);
   const [alertDispatched, setAlertDispatched] = useState(false);
   const [calibrated, setCalibrated] = useState(false);
-  const [attendanceCount, setAttendanceCount] = useState(1842);
+  const [attendanceCount, setAttendanceCount] = useState(242);
   const [liveStreamLogs, setLiveStreamLogs] = useState<
     { id: string; time: string; text: string; type: 'success' | 'info' | 'warning' }[]
-  >([
-    { id: '1', time: '09:02:14', text: 'Alice Smith matched ArcFace (0.994) Lab 402', type: 'success' },
-    { id: '2', time: '09:04:32', text: 'Bob Martinez dynamic QR validated', type: 'info' },
-    { id: '3', time: '09:15:00', text: 'Expired QR token rejected (IP: 192.168.1.104)', type: 'warning' },
-    { id: '4', time: '09:18:22', text: 'Google Sheets batch sync completed (14 rows)', type: 'info' },
-  ]);
+  >([]);
 
   // Connect to live telemetry WebSocket stream
   const { isConnected } = useAttendanceLive({
     channel: 'live-logs',
-    mockIntervalMs: 12000,
     onEvent: (evt) => {
       setAttendanceCount((prev) => prev + 1);
       const timeStr = evt.timestamp
@@ -94,11 +89,11 @@ export default function AdminPortalPage() {
   };
 
   const handleExportAuditLogs = async () => {
-    let logs = MOCK_AUDIT_LOGS;
+    let logs: any[] = [];
     try {
       const realLogs = await api.attendance.auditLogs();
-      if (Array.isArray(realLogs) && realLogs.length > 0) {
-        logs = realLogs as unknown as typeof MOCK_AUDIT_LOGS;
+      if (Array.isArray(realLogs)) {
+        logs = realLogs;
       }
     } catch {}
     const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
@@ -134,7 +129,7 @@ export default function AdminPortalPage() {
               Campus Biometric Command & Sentinel Console
             </h1>
             <p className="text-xs text-mid mt-1">
-              Administrator: {profile.name} • ArcFace ONNX v2.4 Buffalo_L Model Running
+              Administrator: {profileName} • ArcFace ONNX v2.4 Buffalo_L Model Running
             </p>
           </div>
 

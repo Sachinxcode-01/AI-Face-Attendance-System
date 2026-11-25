@@ -20,7 +20,11 @@ class TeacherController extends ChangeNotifier {
   final TeacherRepository _repository;
 
   TeacherController({TeacherRepository? repository})
-      : _repository = repository ?? TeacherRepository();
+    : _repository = repository ?? TeacherRepository();
+
+  int _accountGeneration = 0;
+  String? _currentAccountEmail;
+  int _mutationEpoch = 0;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -43,8 +47,15 @@ class TeacherController extends ChangeNotifier {
   List<RosterStudent> _rosterStudents = [];
   List<RosterStudent> get rosterStudents => _rosterStudents;
 
+  // Track explicit manual edits to roster rows that have not yet been committed
+  final Map<String, RosterStatus> _pendingRosterEdits = {};
+  bool get hasPendingRosterEdits => _pendingRosterEdits.isNotEmpty;
+
   List<AtRiskStudent> _atRiskStudents = [];
   List<AtRiskStudent> get atRiskStudents => _atRiskStudents;
+
+  // In-flight guard to prevent duplicate alerts for at-risk students
+  final Set<String> _inFlightWarnings = {};
 
   List<AttendanceDispute> _disputes = [];
   List<AttendanceDispute> get disputes => _disputes;
@@ -53,7 +64,8 @@ class TeacherController extends ChangeNotifier {
   TeacherTelemetry get telemetry => _telemetry;
 
   final List<Map<String, dynamic>> _liveAttendees = [];
-  List<Map<String, dynamic>> get liveAttendees => List.unmodifiable(_liveAttendees);
+  List<Map<String, dynamic>> get liveAttendees =>
+      List.unmodifiable(_liveAttendees);
 
   int get pendingDisputesCount =>
       _disputes.where((d) => d.reviewStatus == 'pending').length;
@@ -61,8 +73,44 @@ class TeacherController extends ChangeNotifier {
   int _pendingLeavesCount = 0;
   int get pendingLeavesCount => _pendingLeavesCount;
 
+  /// Handles account switching / logout: resets all controller state
+  /// and invalidates in-flight asynchronous operations
+  void onAccountChanged(String? email) {
+    if (_currentAccountEmail != email) {
+      _currentAccountEmail = email;
+      _accountGeneration++;
+      _mutationEpoch++;
+      _clearAllState();
+      notifyListeners();
+    }
+  }
+
+  void _clearAllState() {
+    _isLoading = false;
+    _isOffline = false;
+    _errorMessage = null;
+    _dashboardData = {};
+    _activeSessions = [];
+    _currentActiveSession = null;
+    _rosterStudents = [];
+    _pendingRosterEdits.clear();
+    _atRiskStudents = [];
+    _inFlightWarnings.clear();
+    _disputes = [];
+    _telemetry = const TeacherTelemetry();
+    _liveAttendees.clear();
+    _pendingLeavesCount = 0;
+  }
+
   /// Loads core faculty operations dashboard data in parallel
-  Future<void> loadDashboard(String email, String token, {bool silent = false}) async {
+  Future<void> loadDashboard(
+    String email,
+    String token, {
+    bool silent = false,
+  }) async {
+    final gen = _accountGeneration;
+    final epochAtStart = _mutationEpoch;
+
     if (!silent) {
       _isLoading = true;
       _errorMessage = null;
@@ -71,37 +119,82 @@ class TeacherController extends ChangeNotifier {
 
     try {
       final results = await Future.wait([
-        _repository.fetchDashboard(email, token),
-        _repository.fetchActiveSessions(token),
-        _repository.fetchAtRiskStudents(token),
-        _repository.fetchDisputes(token),
-        _repository.fetchTelemetry(token),
+        _repository.fetchDashboardResult(email, token),
+        _repository.fetchActiveSessionsResult(token),
+        _repository.fetchAtRiskStudentsResult(token),
+        _repository.fetchDisputesResult(token),
+        _repository.fetchTelemetryResult(token),
       ]);
 
-      _dashboardData = results[0] as Map<String, dynamic>;
-      _activeSessions = results[1] as List<TeacherSessionModel>;
-      _atRiskStudents = results[2] as List<AtRiskStudent>;
-      _disputes = results[3] as List<AttendanceDispute>;
-      _telemetry = results[4] as TeacherTelemetry;
+      if (gen != _accountGeneration) return;
 
-      // Extract pending leaves if present in dashboard payload
-      if (_dashboardData.containsKey('pending_leaves')) {
-        _pendingLeavesCount = (_dashboardData['pending_leaves'] as num?)?.toInt() ?? 0;
+      final dashRes = results[0] as RepoFetchResult<Map<String, dynamic>>;
+      final activeRes =
+          results[1] as RepoFetchResult<List<TeacherSessionModel>>;
+      final atRiskRes = results[2] as RepoFetchResult<List<AtRiskStudent>>;
+      final disputesRes =
+          results[3] as RepoFetchResult<List<AttendanceDispute>>;
+      final telemetryRes = results[4] as RepoFetchResult<TeacherTelemetry>;
+
+      bool hasFailureOrCache =
+          !dashRes.isSuccess ||
+          !activeRes.isSuccess ||
+          !atRiskRes.isSuccess ||
+          !disputesRes.isSuccess ||
+          !telemetryRes.isSuccess;
+
+      // Update dashboard payload: preserve verified data as stale if failed
+      if (dashRes.isSuccess || _dashboardData.isEmpty) {
+        _dashboardData = dashRes.data;
+        if (_dashboardData.containsKey('pending_leaves')) {
+          _pendingLeavesCount =
+              (_dashboardData['pending_leaves'] as num?)?.toInt() ?? 0;
+        }
       }
 
-      // Check if user has an active session
-      final matching = _activeSessions.where((s) => s.teacherEmail.toLowerCase() == email.toLowerCase());
-      _currentActiveSession = matching.isNotEmpty ? matching.first : null;
+      // Update active sessions if no session mutation occurred while in flight
+      if (epochAtStart == _mutationEpoch) {
+        if (activeRes.isSuccess || _activeSessions.isEmpty) {
+          _activeSessions = activeRes.data;
+          final matching = _activeSessions.where(
+            (s) => s.teacherEmail.toLowerCase() == email.toLowerCase(),
+          );
+          _currentActiveSession = matching.isNotEmpty ? matching.first : null;
+        }
+      }
 
-      _isOffline = false;
-      _errorMessage = null;
+      // Update at-risk roster: preserve verified data if failed
+      if (atRiskRes.isSuccess || _atRiskStudents.isEmpty) {
+        _atRiskStudents = atRiskRes.data;
+      }
+
+      // Update disputes list
+      if (disputesRes.isSuccess || _disputes.isEmpty) {
+        _disputes = disputesRes.data;
+      }
+
+      // Update telemetry
+      if (telemetryRes.isSuccess || _telemetry.averageAttendance == null) {
+        _telemetry = telemetryRes.data;
+      }
+
+      if (hasFailureOrCache) {
+        _isOffline = true;
+        _errorMessage = 'Operating in cached offline mode. Tap to retry.';
+      } else {
+        _isOffline = false;
+        _errorMessage = null;
+      }
     } catch (e) {
       debugPrint('[TeacherController] loadDashboard error: $e');
+      if (gen != _accountGeneration) return;
       _isOffline = true;
       _errorMessage = 'Operating in cached offline mode. Tap to retry.';
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (gen == _accountGeneration) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -113,6 +206,7 @@ class TeacherController extends ChangeNotifier {
     required String token,
   }) async {
     _isLoading = true;
+    _mutationEpoch++;
     notifyListeners();
 
     final res = await _repository.startSession(
@@ -122,15 +216,25 @@ class TeacherController extends ChangeNotifier {
       token: token,
     );
 
-    final sessionId = res['session_id']?.toString() ?? 'SESS-${DateTime.now().millisecondsSinceEpoch}';
-    _currentActiveSession = TeacherSessionModel(
-      id: sessionId,
-      subject: subject,
-      room: room ?? 'Lecture Hall',
-      teacherEmail: teacherEmail,
-      startTime: DateTime.now(),
-      isActive: true,
-    );
+    final rawSessionId = res['session_id']?.toString();
+    if (rawSessionId != null &&
+        rawSessionId.isNotEmpty &&
+        res['error'] == null) {
+      _currentActiveSession = TeacherSessionModel(
+        id: rawSessionId,
+        subject: subject,
+        room: room ?? 'Lecture Hall',
+        teacherEmail: teacherEmail,
+        startTime: DateTime.now(),
+        isActive: true,
+      );
+      // Ensure it appears in active sessions list
+      _activeSessions.removeWhere((s) => s.id == rawSessionId);
+      _activeSessions.insert(0, _currentActiveSession!);
+    } else {
+      _errorMessage =
+          res['error']?.toString() ?? 'Failed to start session on server.';
+    }
 
     _isLoading = false;
     notifyListeners();
@@ -141,10 +245,15 @@ class TeacherController extends ChangeNotifier {
   Future<bool> stopCurrentSession(String token) async {
     if (_currentActiveSession == null) return false;
     final sessionId = _currentActiveSession!.id;
+    _mutationEpoch++;
 
     final success = await _repository.stopSession(sessionId, token);
     if (success) {
-      _currentActiveSession = null;
+      // Clear current session only if its ID still matches the stopped sessionId
+      if (_currentActiveSession?.id == sessionId) {
+        _currentActiveSession = null;
+      }
+      // Always remove the stopped session from active list
       _activeSessions.removeWhere((s) => s.id == sessionId);
       notifyListeners();
     }
@@ -168,12 +277,15 @@ class TeacherController extends ChangeNotifier {
       _liveAttendees.removeLast();
     }
 
-    // Update roster entry if matching USN is loaded
+    // Update roster entry if matching USN is loaded and NOT locally edited
     final usn = entry['usn']?.toString().toUpperCase();
     if (usn != null) {
       for (final s in _rosterStudents) {
         if (s.usn.toUpperCase() == usn) {
-          s.status = RosterStatus.present;
+          // Keep live check-in separate from uncommitted manual draft edits
+          if (!_pendingRosterEdits.containsKey(s.id)) {
+            s.status = RosterStatus.present;
+          }
           break;
         }
       }
@@ -184,24 +296,37 @@ class TeacherController extends ChangeNotifier {
 
   /// Fetches roster students for current session or class
   Future<void> fetchRoster(String token, {String? sessionId}) async {
+    final gen = _accountGeneration;
     _isLoading = true;
     notifyListeners();
 
     try {
-      _rosterStudents = await _repository.fetchClassRoster(token, sessionId: sessionId);
+      final res = await _repository.fetchClassRosterResult(
+        token,
+        sessionId: sessionId,
+      );
+      if (gen != _accountGeneration) return;
+
+      if (res.isSuccess || _rosterStudents.isEmpty) {
+        _rosterStudents = res.data;
+        _pendingRosterEdits.clear();
+      }
     } catch (e) {
       debugPrint('[TeacherController] fetchRoster error: $e');
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (gen == _accountGeneration) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
-  /// Toggles individual student status on roster
+  /// Toggles individual student status on roster (registers manual draft edit)
   void updateStudentStatus(String studentId, RosterStatus status) {
     final index = _rosterStudents.indexWhere((s) => s.id == studentId);
     if (index != -1) {
       _rosterStudents[index].status = status;
+      _pendingRosterEdits[studentId] = status;
       notifyListeners();
     }
   }
@@ -210,16 +335,38 @@ class TeacherController extends ChangeNotifier {
   void markAllRoster(RosterStatus status) {
     for (final s in _rosterStudents) {
       s.status = status;
+      _pendingRosterEdits[s.id] = status;
     }
     notifyListeners();
   }
 
-  /// Saves manual overrides to the central backend ledger
+  /// Saves manual overrides to the central backend ledger (only submits explicit edits)
   Future<bool> saveRosterOverrides(String sessionId, String token) async {
+    if (_pendingRosterEdits.isEmpty) {
+      return true;
+    }
+
     _isLoading = true;
     notifyListeners();
 
-    final success = await _repository.batchUpdateRoster(sessionId, _rosterStudents, token);
+    // Submit only students with explicit teacher edits
+    final editedStudents = _rosterStudents
+        .where((s) => _pendingRosterEdits.containsKey(s.id))
+        .toList();
+
+    final success = await _repository.batchUpdateRoster(
+      sessionId,
+      editedStudents,
+      token,
+    );
+
+    if (success) {
+      // Advance baseline for saved edits
+      for (final s in editedStudents) {
+        _pendingRosterEdits.remove(s.id);
+      }
+    }
+
     _isLoading = false;
     notifyListeners();
     return success;
@@ -227,43 +374,60 @@ class TeacherController extends ChangeNotifier {
 
   /// Fetches at-risk student radar
   Future<void> fetchAtRisk(String token) async {
+    final gen = _accountGeneration;
     _isLoading = true;
     notifyListeners();
 
     try {
-      _atRiskStudents = await _repository.fetchAtRiskStudents(token);
+      final res = await _repository.fetchAtRiskStudentsResult(token);
+      if (gen != _accountGeneration) return;
+      if (res.isSuccess || _atRiskStudents.isEmpty) {
+        _atRiskStudents = res.data;
+      }
     } catch (e) {
       debugPrint('[TeacherController] fetchAtRisk error: $e');
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (gen == _accountGeneration) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
-  /// Dispatches warning to student and guardian
+  /// Dispatches warning to student and guardian with per-student in-flight deduplication
   Future<bool> sendWarning(AtRiskStudent student, String token) async {
+    if (student.warningSent || _inFlightWarnings.contains(student.id)) {
+      return false;
+    }
+
+    _inFlightWarnings.add(student.id);
+
     final message =
         'Your current attendance is ${student.attendance.toStringAsFixed(1)}%, which is below the mandatory 75% university requirement. You require ${student.classesNeededFor75} consecutive attended lectures to restore compliant standing.';
 
-    final success = await _repository.sendAtRiskAlert(
-      studentId: student.id,
-      parentEmail: student.parentEmail,
-      message: message,
-      token: token,
-    );
+    try {
+      final success = await _repository.sendAtRiskAlert(
+        studentId: student.id,
+        parentEmail: student.parentEmail,
+        message: message,
+        token: token,
+      );
 
-    if (success) {
-      student.warningSent = true;
-      notifyListeners();
+      if (success) {
+        student.warningSent = true;
+        notifyListeners();
+      }
+      return success;
+    } finally {
+      _inFlightWarnings.remove(student.id);
     }
-    return success;
   }
 
   /// Dispatches warnings to all unalerted at-risk students
   Future<int> dispatchAllWarnings(String token) async {
     int dispatched = 0;
     for (final student in _atRiskStudents) {
-      if (!student.warningSent) {
+      if (!student.warningSent && !_inFlightWarnings.contains(student.id)) {
         final success = await sendWarning(student, token);
         if (success) dispatched++;
       }
@@ -271,16 +435,36 @@ class TeacherController extends ChangeNotifier {
     return dispatched;
   }
 
-  /// Resolves an attendance dispute
+  /// Resolves an attendance dispute with explicit decision mapping
   Future<bool> resolveDispute({
     required String disputeId,
     required String action,
     required String remarks,
     required String token,
   }) async {
+    final norm = action.toLowerCase().trim();
+    String apiAction;
+    String finalReviewStatus;
+
+    if (norm == 'reject' || norm == 'rejected') {
+      apiAction = 'rejected';
+      finalReviewStatus = 'rejected';
+    } else if (norm == 'excused' || norm == 'excuse') {
+      apiAction = 'excused';
+      finalReviewStatus = 'excused';
+    } else if (norm == 'approve' || norm == 'approved' || norm == 'present') {
+      apiAction = 'approved';
+      finalReviewStatus = 'approved';
+    } else {
+      debugPrint(
+        '[TeacherController] Unsupported dispute resolution action: $action',
+      );
+      return false;
+    }
+
     final success = await _repository.resolveDispute(
       disputeId: disputeId,
-      action: action,
+      action: apiAction,
       remarks: remarks,
       token: token,
     );
@@ -288,7 +472,7 @@ class TeacherController extends ChangeNotifier {
     if (success) {
       final index = _disputes.indexWhere((d) => d.id == disputeId);
       if (index != -1) {
-        _disputes[index].reviewStatus = action == 'reject' ? 'rejected' : 'approved';
+        _disputes[index].reviewStatus = finalReviewStatus;
         _disputes[index].teacherRemarks = remarks;
         notifyListeners();
       }

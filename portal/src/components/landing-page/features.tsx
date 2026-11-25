@@ -34,11 +34,12 @@ export function Features() {
   const [qrCountdown, setQrCountdown] = useState(18);
 
   useEffect(() => {
+    if (reduceMotion) return;
     const timer = setInterval(() => {
       setActiveCell((prev) => (prev + 1) % 64);
     }, 120);
     return () => clearInterval(timer);
-  }, []);
+  }, [reduceMotion]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -91,7 +92,7 @@ export function Features() {
                         style={{
                           backgroundColor: isLit ? "#6fd8ff" : "#8f8bff",
                           opacity: isLit ? 1 : baseOpacity,
-                          transform: isLit ? "scale(1.2)" : "scale(1)",
+                          transform: (!reduceMotion && isLit) ? "scale(1.2)" : "scale(1)",
                           boxShadow: isLit ? "0 0 8px #6fd8ff" : "none",
                         }}
                       />

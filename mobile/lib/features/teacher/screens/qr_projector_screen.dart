@@ -39,11 +39,7 @@ class QRProjectorScreen extends StatefulWidget {
   final String? initialSubject;
   final String? initialRoom;
 
-  const QRProjectorScreen({
-    super.key,
-    this.initialSubject,
-    this.initialRoom,
-  });
+  const QRProjectorScreen({super.key, this.initialSubject, this.initialRoom});
 
   @override
   State<QRProjectorScreen> createState() => _QRProjectorScreenState();
@@ -153,7 +149,8 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
       if (res['session_id'] != null) {
         _sessionId = res['session_id'].toString();
       } else {
-        _sessionId = 'SESS-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}';
+        _sessionId =
+            'SESS-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}';
       }
 
       // Listen to live WebSocket attendance updates
@@ -166,7 +163,8 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
 
       _rotateToken();
     } catch (_) {
-      _sessionId = 'SESS-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}';
+      _sessionId =
+          'SESS-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}';
       _rotateToken();
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -280,20 +278,37 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
               Navigator.pop(ctx);
               HapticFeedback.heavyImpact();
 
+              bool stopped = false;
               if (_sessionId != null && session.token != null) {
-                await ApiService.stopSession(_sessionId!, session.token);
-                if (session.email != null) {
-                  teacherCtrl.loadDashboard(session.email!, session.token!, silent: true);
+                stopped = await ApiService.stopSession(
+                  _sessionId!,
+                  session.token,
+                );
+                if (stopped && session.email != null) {
+                  teacherCtrl.loadDashboard(
+                    session.email!,
+                    session.token!,
+                    silent: true,
+                  );
                 }
               }
 
-              if (mounted) {
+              if (!mounted) return;
+              if (stopped) {
                 AppToast.show(
                   context,
-                  message: 'Session closed. $_presentCount students successfully verified.',
+                  message:
+                      'Session closed. $_presentCount students successfully verified.',
                   type: ToastType.success,
                 );
                 context.pop();
+              } else {
+                AppToast.show(
+                  context,
+                  message:
+                      'Failed to close session on server. Check network and retry.',
+                  type: ToastType.error,
+                );
               }
             },
             child: Text(
@@ -315,7 +330,9 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
     final bool isWide = screenWidth >= 850;
 
     return Scaffold(
-      backgroundColor: _isHighContrast ? const Color(0xFF070A14) : const Color(0xFF0F172A),
+      backgroundColor: _isHighContrast
+          ? const Color(0xFF070A14)
+          : const Color(0xFF0F172A),
       body: SafeArea(
         child: Column(
           children: [
@@ -329,8 +346,8 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
                       child: CircularProgressIndicator(color: AppColors.gold),
                     )
                   : isWide
-                      ? _buildWideProjectorLayout()
-                      : _buildMobileProjectorLayout(),
+                  ? _buildWideProjectorLayout()
+                  : _buildMobileProjectorLayout(),
             ),
 
             // Bottom Presentation Toolbar
@@ -345,9 +362,7 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.white10),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.white10)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -361,11 +376,16 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.gold.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
+                  border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.4),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -411,7 +431,10 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
             children: [
               // Attendance Counter Pill
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E293B),
                   borderRadius: BorderRadius.circular(12),
@@ -452,7 +475,9 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
               const SizedBox(width: 12),
               IconButton(
                 icon: Icon(
-                  _isFullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
+                  _isFullscreen
+                      ? Icons.fullscreen_exit_rounded
+                      : Icons.fullscreen_rounded,
                   color: Colors.white,
                 ),
                 onPressed: _toggleFullscreen,
@@ -474,18 +499,13 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
           // Left: Mega QR Card & Countdown
           Expanded(
             flex: 6,
-            child: Center(
-              child: _buildQRDisplayCard(size: 340),
-            ),
+            child: Center(child: _buildQRDisplayCard(size: 340)),
           ),
 
           const SizedBox(width: 28),
 
           // Right: Live Roster & Anomaly Sentinel
-          Expanded(
-            flex: 4,
-            child: _buildLiveAttendeesPane(),
-          ),
+          Expanded(flex: 4, child: _buildLiveAttendeesPane()),
         ],
       ),
     );
@@ -511,12 +531,16 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
         color: const Color(0xFF111827),
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: _isPaused ? AppColors.warning : AppColors.gold.withValues(alpha: 0.35),
+          color: _isPaused
+              ? AppColors.warning
+              : AppColors.gold.withValues(alpha: 0.35),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: (_isPaused ? AppColors.warning : AppColors.gold).withValues(alpha: 0.15),
+            color: (_isPaused ? AppColors.warning : AppColors.gold).withValues(
+              alpha: 0.15,
+            ),
             blurRadius: 40,
             spreadRadius: 2,
           ),
@@ -544,8 +568,8 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
                         _isPaused
                             ? AppColors.warning
                             : _secondsNotifier.value <= 3
-                                ? AppColors.error
-                                : AppColors.gold,
+                            ? AppColors.error
+                            : AppColors.gold,
                       ),
                     ),
                   );
@@ -638,7 +662,9 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
                         style: GoogleFonts.outfit(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
-                          color: seconds <= 3 ? AppColors.error : AppColors.gold,
+                          color: seconds <= 3
+                              ? AppColors.error
+                              : AppColors.gold,
                         ),
                       ),
                     ],
@@ -646,11 +672,7 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
                 },
               ),
 
-              Container(
-                height: 36,
-                width: 1,
-                color: Colors.white12,
-              ),
+              Container(height: 36, width: 1, color: Colors.white12),
 
               // Emergency PIN Fallback
               Column(
@@ -741,17 +763,17 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
                   )
                 : ListView.separated(
                     itemCount: _liveAttendees.length,
-                    separatorBuilder: (context, index) => const Divider(
-                      color: Colors.white10,
-                      height: 12,
-                    ),
+                    separatorBuilder: (context, index) =>
+                        const Divider(color: Colors.white10, height: 12),
                     itemBuilder: (context, index) {
                       final item = _liveAttendees[index];
                       return Row(
                         children: [
                           CircleAvatar(
                             radius: 16,
-                            backgroundColor: AppColors.primary.withValues(alpha: 0.3),
+                            backgroundColor: AppColors.primary.withValues(
+                              alpha: 0.3,
+                            ),
                             child: Text(
                               (item['name'] as String).substring(0, 1),
                               style: GoogleFonts.outfit(
@@ -842,7 +864,10 @@ class _QRProjectorScreenState extends State<QRProjectorScreen>
                 ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Colors.white24),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),

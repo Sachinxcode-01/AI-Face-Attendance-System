@@ -52,25 +52,15 @@ interface AdminUser {
 export default function SuperAdminPage() {
   const [activeTab, setActiveTab] = useState<'colleges' | 'admins' | 'analytics' | 'health' | 'security' | 'accuracy'>('colleges');
   const [loading, setLoading] = useState(false);
-  const [colleges, setColleges] = useState<College[]>([
-    { id: 'col-1', name: 'Stanford Engineering Hub', code: 'STANFORD', plan: 'Enterprise Pro', status: 'active', activeStudents: 14200, campuses: 4, lastSync: '1 min ago' },
-    { id: 'col-2', name: 'MIT Artificial Intelligence Campus', code: 'MIT-AI', plan: 'Enterprise Ultra', status: 'active', activeStudents: 18500, campuses: 6, lastSync: 'Just now' },
-    { id: 'col-3', name: 'Oxford Biometrics Institute', code: 'OXFORD-BIO', plan: 'Enterprise Pro', status: 'active', activeStudents: 9800, campuses: 3, lastSync: '4 mins ago' },
-    { id: 'col-4', name: 'UC Berkeley Computational Sciences', code: 'UCB-CS', plan: 'Standard Tier', status: 'active', activeStudents: 11300, campuses: 2, lastSync: '12 mins ago' },
-  ]);
-
-  const [admins, setAdmins] = useState<AdminUser[]>([
-    { id: 'adm-1', name: 'Dr. Helen Vance', email: 'helen.vance@stanford.edu', collegeCode: 'STANFORD', role: 'Campus Admin', status: 'active', lastActive: '2 mins ago' },
-    { id: 'adm-2', name: 'Marcus Brody', email: 'm.brody@mit.edu', collegeCode: 'MIT-AI', role: 'Campus Admin', status: 'active', lastActive: '5 mins ago' },
-    { id: 'adm-3', name: 'Alastair Finch', email: 'finch@oxford.ac.uk', collegeCode: 'OXFORD-BIO', role: 'Campus Admin', status: 'active', lastActive: '18 mins ago' },
-  ]);
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [admins, setAdmins] = useState<AdminUser[]>([]);
 
   const [globalStats, setGlobalStats] = useState({
-    totalColleges: 14,
-    totalStudents: 84620,
-    dailyScans: 142890,
-    avgComplianceRate: 97.4,
-    activeSensors: 142,
+    totalColleges: 2,
+    totalStudents: 25,
+    dailyScans: 242,
+    avgComplianceRate: 98.4,
+    activeSensors: 8,
   });
 
   const [healthData, setHealthData] = useState<any>({
@@ -98,25 +88,32 @@ export default function SuperAdminPage() {
   const [newCollegePlan, setNewCollegePlan] = useState('Enterprise Pro');
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const loadData = async () => {
     setLoading(true);
     try {
       const res = await api.superAdmin.colleges();
-      if (res?.colleges && res.colleges.length > 0) {
+      if (res?.colleges) {
         setColleges(res.colleges);
       }
     } catch {}
     try {
       const admRes = await api.superAdmin.admins();
-      if (admRes?.admins && admRes.admins.length > 0) {
+      if (admRes?.admins) {
         setAdmins(admRes.admins);
       }
     } catch {}
     try {
       const statRes = await api.superAdmin.globalAnalytics();
       if (statRes?.platform) {
-        setGlobalStats((prev) => ({ ...prev, ...statRes.platform }));
+        setGlobalStats((prev) => ({
+          ...prev,
+          totalColleges: statRes.platform.totalInstitutions ?? prev.totalColleges,
+          totalStudents: statRes.platform.totalStudents ?? prev.totalStudents,
+          dailyScans: statRes.platform.totalAttendanceScans ?? prev.dailyScans,
+          avgComplianceRate: statRes.platform.overallAttendanceRate ?? prev.avgComplianceRate
+        }));
       }
     } catch {}
     try {
@@ -141,6 +138,7 @@ export default function SuperAdminPage() {
   const handleCreateCollege = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCollegeName || !newCollegeCode) return;
+    setErrorMsg('');
     try {
       await api.superAdmin.createCollege({
         name: newCollegeName,
@@ -148,28 +146,16 @@ export default function SuperAdminPage() {
         plan: newCollegePlan,
         adminEmail: newAdminEmail,
       });
-      setColleges((prev) => [
-        {
-          name: newCollegeName,
-          code: newCollegeCode.toUpperCase(),
-          plan: newCollegePlan,
-          status: 'active',
-          activeStudents: 0,
-          campuses: 1,
-          lastSync: 'Just now',
-        },
-        ...prev,
-      ]);
-      setSuccessMsg(`College "${newCollegeName}" provisioned successfully with isolated partition.`);
+      setSuccessMsg(`College "${newCollegeName}" provisioned successfully in MongoDB.`);
       setShowCreateModal(false);
       setNewCollegeName('');
       setNewCollegeCode('');
       setNewAdminEmail('');
+      loadData();
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err: any) {
-      setSuccessMsg(`Provisioned locally: ${newCollegeName}`);
-      setShowCreateModal(false);
-      setTimeout(() => setSuccessMsg(''), 4000);
+      setErrorMsg(err.message || `Failed to provision college: ${newCollegeName}`);
+      setTimeout(() => setErrorMsg(''), 4000);
     }
   };
 

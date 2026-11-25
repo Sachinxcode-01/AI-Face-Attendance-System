@@ -54,7 +54,7 @@ export function Release() {
                 href="#faq"
                 className="mt-8 btn-pill-glass group"
               >
-                <span>Read the full changelog</span>
+                <span>Explore Release FAQ</span>
                 <ArrowUpRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </motion.a>
             </Reveal>

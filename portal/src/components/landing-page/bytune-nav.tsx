@@ -262,7 +262,6 @@ export function ByTuneNav() {
           position: relative;
           background: none;
           border: none;
-          outline: none;
           color: rgb(10, 10, 12);
           text-align: center;
           height: 100%;
@@ -274,6 +273,11 @@ export function ByTuneNav() {
           justify-content: center;
           cursor: pointer;
           transition: background-color 0.15s ease;
+        }
+
+        .sp-e16:focus-visible {
+          outline: 2px solid #8f8bff;
+          outline-offset: -2px;
         }
 
         .sp-e16:hover {
@@ -419,12 +423,12 @@ export function ByTuneNav() {
                 </svg>
                 Download
               </a>
-              <button
-                type="button"
+              <a
+                href="https://github.com/rishiteja21/ByTune/releases"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="DownloadSplit_chev__sAQuz sp-e16"
-                aria-label="More download options"
-                aria-haspopup="menu"
-                aria-expanded="false"
+                aria-label="Official ByTune releases and download options"
               >
                 <svg
                   width="14"
@@ -442,7 +446,7 @@ export function ByTuneNav() {
                 >
                   <path d="M6.5 9.5 12 15l5.5-5.5" />
                 </svg>
-              </button>
+              </a>
             </div>
           </div>
         </div>

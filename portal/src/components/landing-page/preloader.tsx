@@ -26,7 +26,12 @@ export function Preloader() {
     setMounted(true);
 
     // Check if user already saw the full preloader in this browser session
-    const hasLoadedBefore = typeof window !== "undefined" && sessionStorage.getItem("smartface_booted");
+    let hasLoadedBefore = false;
+    try {
+      hasLoadedBefore = typeof window !== "undefined" && Boolean(sessionStorage.getItem("smartface_booted"));
+    } catch {
+      hasLoadedBefore = false;
+    }
     const duration = hasLoadedBefore ? 450 : 850; // Snappy 450ms for repeat visits, 850ms for first-time boot
 
     let startTime: number | null = null;
