@@ -23,6 +23,14 @@ const collegeSchema = new mongoose.Schema({
     type: String,
     index: true
   },
+  departments: {
+    type: [String],
+    default: undefined
+  },
+  admin_email: {
+    type: String,
+    default: null
+  },
   is_active: {
     type: Boolean,
     default: true,

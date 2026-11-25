@@ -58,6 +58,8 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
     if (!isOpen) return;
 
     openInstanceId.current += 1;
+    setIsSubmitting(false);
+    setSubmitError(null);
     invokingElementRef.current = (document.activeElement as HTMLElement) || null;
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -88,6 +90,7 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
     const timer = setTimeout(() => firstFieldRef.current?.focus(), 60);
 
     return () => {
+      openInstanceId.current += 1;
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
       clearTimeout(timer);
@@ -161,6 +164,9 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
         }
       }, 2000);
     } catch (err: unknown) {
+      if (openInstanceId.current !== instanceId) {
+        return;
+      }
       setIsSubmitting(false);
       setSubmitError(err instanceof Error ? err.message : "Error submitting pilot application");
     }

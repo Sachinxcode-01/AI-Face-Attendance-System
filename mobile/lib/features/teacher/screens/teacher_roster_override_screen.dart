@@ -59,65 +59,10 @@ class _TeacherRosterOverrideScreenState
     extends State<TeacherRosterOverrideScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _hasLoadedRealRoster = false;
+  String? _loadedSessionId;
   String _search = '';
   List<RosterStudentItem> _students = [];
-
-  final List<RosterStudentItem> _mockRoster = [
-    RosterStudentItem(
-      id: '1',
-      name: 'Aarav Patel',
-      usn: '1SF23CS001',
-      status: StudentStatus.present,
-      time: '09:02 AM (Face AI)',
-    ),
-    RosterStudentItem(
-      id: '2',
-      name: 'Ananya Verma',
-      usn: '1SF23CS012',
-      status: StudentStatus.present,
-      time: '09:05 AM (QR)',
-    ),
-    RosterStudentItem(
-      id: '3',
-      name: 'Devansh Roy',
-      usn: '1SF23CS024',
-      status: StudentStatus.late,
-      time: '09:21 AM (Late)',
-    ),
-    RosterStudentItem(
-      id: '4',
-      name: 'Isha Kulkarni',
-      usn: '1SF23CS038',
-      status: StudentStatus.absent,
-    ),
-    RosterStudentItem(
-      id: '5',
-      name: 'Karan Mehra',
-      usn: '1SF23CS052',
-      status: StudentStatus.excused,
-      time: 'Official Leave',
-    ),
-    RosterStudentItem(
-      id: '6',
-      name: 'Priya Nair',
-      usn: '1SF23CS067',
-      status: StudentStatus.present,
-      time: '09:04 AM (Face AI)',
-    ),
-    RosterStudentItem(
-      id: '7',
-      name: 'Rohan Sharma',
-      usn: '1SF23CS089',
-      status: StudentStatus.absent,
-    ),
-    RosterStudentItem(
-      id: '8',
-      name: 'Zoya Khan',
-      usn: '1SF23CS104',
-      status: StudentStatus.present,
-      time: '09:08 AM (QR)',
-    ),
-  ];
 
   @override
   void initState() {
@@ -129,13 +74,16 @@ class _TeacherRosterOverrideScreenState
     final session = context.read<SessionManager>();
     final teacherCtrl = context.read<TeacherController>();
     final token = session.token;
+    final active = teacherCtrl.currentActiveSession;
 
-    if (token != null) {
+    if (token != null && active != null) {
       try {
-        final active = teacherCtrl.currentActiveSession;
-        await teacherCtrl.fetchRoster(token, sessionId: active?.id);
+        final targetSessionId = active.id;
+        await teacherCtrl.fetchRoster(token, sessionId: targetSessionId);
 
-        if (mounted && teacherCtrl.rosterStudents.isNotEmpty) {
+        if (mounted &&
+            !teacherCtrl.rosterFetchFailed &&
+            teacherCtrl.rosterSessionId == targetSessionId) {
           final mapped = teacherCtrl.rosterStudents.map((s) {
             StudentStatus st;
             switch (s.status) {
@@ -163,6 +111,8 @@ class _TeacherRosterOverrideScreenState
 
           setState(() {
             _students = mapped;
+            _hasLoadedRealRoster = mapped.isNotEmpty;
+            _loadedSessionId = mapped.isNotEmpty ? targetSessionId : null;
             _isLoading = false;
           });
           return;
@@ -174,7 +124,9 @@ class _TeacherRosterOverrideScreenState
 
     if (mounted) {
       setState(() {
-        _students = _mockRoster;
+        _students = [];
+        _hasLoadedRealRoster = false;
+        _loadedSessionId = null;
         _isLoading = false;
       });
     }
@@ -207,6 +159,15 @@ class _TeacherRosterOverrideScreenState
       return;
     }
 
+    if (!_hasLoadedRealRoster || _loadedSessionId == null || _students.isEmpty) {
+      AppToast.show(
+        context,
+        message: 'No verified session roster loaded. Cannot sync overrides.',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
     HapticFeedback.heavyImpact();
     setState(() => _isSaving = true);
 
@@ -223,15 +184,8 @@ class _TeacherRosterOverrideScreenState
 
     bool ok = false;
     try {
-      final teacherCtrl = context.read<TeacherController>();
-      final active = teacherCtrl.currentActiveSession;
-      final sessionId =
-          active?.id ??
-          (teacherCtrl.activeSessions.isNotEmpty
-              ? teacherCtrl.activeSessions.first.id
-              : 'SESS-MANUAL-OVERRIDE');
       ok = await ApiService.batchUpdateRoster(
-        sessionId,
+        _loadedSessionId!,
         records,
         session.token,
       );
@@ -291,7 +245,7 @@ class _TeacherRosterOverrideScreenState
                   ),
                 )
               : const Icon(Icons.cloud_upload_rounded, color: Colors.white),
-          onPressed: _isSaving ? null : _saveAndSync,
+          onPressed: (_isSaving || !_hasLoadedRealRoster || _loadedSessionId == null || _students.isEmpty) ? null : _saveAndSync,
         ),
       ],
       child: _isLoading

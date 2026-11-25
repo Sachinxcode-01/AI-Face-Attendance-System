@@ -88,6 +88,8 @@ dependencies:
   speech_to_text: ^7.0.0
   flutter_tts: ^4.2.0
   geolocator: ^13.0.2
+  flutter_displaymode: ^0.7.0
+  lucide_icons_flutter: ^4.0.3
 
 dev_dependencies:
   flutter_test:

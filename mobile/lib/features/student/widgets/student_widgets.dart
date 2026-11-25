@@ -13,9 +13,11 @@
 */
 
 import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 
 // ============================================================================
@@ -132,62 +134,67 @@ class StudentScreenShell extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  if (showOrbs) ...[
-                    // Ethereal Orb 1: Top-Right
-                    Positioned(
-                      top: -30,
-                      right: -30,
-                      child: Container(
-                        width: 160,
-                        height: 160,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              const Color(0xFF9AA4EC).withValues(alpha: 0.55),
-                              const Color(0xFF4D58C0).withValues(alpha: 0.0),
-                            ],
+                  if (showOrbs)
+                    RepaintBoundary(
+                      child: Stack(
+                        children: [
+                          // Ethereal Orb 1: Top-Right
+                          Positioned(
+                            top: -30,
+                            right: -30,
+                            child: Container(
+                              width: 160,
+                              height: 160,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    const Color(0xFF9AA4EC).withValues(alpha: 0.55),
+                                    const Color(0xFF4D58C0).withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                          // Ethereal Orb 2: Mid-Right
+                          Positioned(
+                            top: 40,
+                            right: 70,
+                            child: Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    const Color(0xFF6670D0).withValues(alpha: 0.40),
+                                    const Color(0xFF3D4AB8).withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Ethereal Orb 3: Left subtle highlight
+                          Positioned(
+                            top: 10,
+                            left: -20,
+                            child: Container(
+                              width: 70,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    const Color(0xFF9AA4EC).withValues(alpha: 0.35),
+                                    const Color(0xFF4D58C0).withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    // Ethereal Orb 2: Mid-Right
-                    Positioned(
-                      top: 40,
-                      right: 70,
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              const Color(0xFF6670D0).withValues(alpha: 0.40),
-                              const Color(0xFF3D4AB8).withValues(alpha: 0.0),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Ethereal Orb 3: Left subtle highlight
-                    Positioned(
-                      top: 10,
-                      left: -20,
-                      child: Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              const Color(0xFF9AA4EC).withValues(alpha: 0.35),
-                              const Color(0xFF4D58C0).withValues(alpha: 0.0),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
                   // Header content with responsive centering
                   SafeArea(
                     bottom: false,
@@ -210,41 +217,50 @@ class StudentScreenShell extends StatelessWidget {
                                       HapticFeedback.lightImpact();
                                       onBackTap!();
                                     },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.15,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: BackdropFilter(
+                                        filter: ImageFilter.blur(
+                                          sigmaX: 10,
+                                          sigmaY: 10,
                                         ),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.25,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
                                           ),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            Icons.arrow_back_ios_new_rounded,
-                                            color: Colors.white,
-                                            size: 14,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            'Back',
-                                            style: GoogleFonts.poppins(
-                                              color: Colors.white,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.16,
+                                            ),
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.25,
+                                              ),
+                                              width: 1,
                                             ),
                                           ),
-                                        ],
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                LucideIcons.chevronLeft,
+                                                color: Colors.white,
+                                                size: 16,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Back',
+                                                style: GoogleFonts.poppins(
+                                                  color: Colors.white,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),

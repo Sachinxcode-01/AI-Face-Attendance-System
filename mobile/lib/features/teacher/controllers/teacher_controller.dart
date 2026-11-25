@@ -47,6 +47,12 @@ class TeacherController extends ChangeNotifier {
   List<RosterStudent> _rosterStudents = [];
   List<RosterStudent> get rosterStudents => _rosterStudents;
 
+  String? _rosterSessionId;
+  String? get rosterSessionId => _rosterSessionId;
+
+  bool _rosterFetchFailed = false;
+  bool get rosterFetchFailed => _rosterFetchFailed;
+
   // Track explicit manual edits to roster rows that have not yet been committed
   final Map<String, RosterStatus> _pendingRosterEdits = {};
   bool get hasPendingRosterEdits => _pendingRosterEdits.isNotEmpty;
@@ -62,6 +68,7 @@ class TeacherController extends ChangeNotifier {
 
   TeacherTelemetry _telemetry = const TeacherTelemetry();
   TeacherTelemetry get telemetry => _telemetry;
+  bool _hasTelemetryLoaded = false;
 
   final List<Map<String, dynamic>> _liveAttendees = [];
   List<Map<String, dynamic>> get liveAttendees =>
@@ -93,11 +100,14 @@ class TeacherController extends ChangeNotifier {
     _activeSessions = [];
     _currentActiveSession = null;
     _rosterStudents = [];
+    _rosterSessionId = null;
+    _rosterFetchFailed = false;
     _pendingRosterEdits.clear();
     _atRiskStudents = [];
     _inFlightWarnings.clear();
     _disputes = [];
     _telemetry = const TeacherTelemetry();
+    _hasTelemetryLoaded = false;
     _liveAttendees.clear();
     _pendingLeavesCount = 0;
   }
@@ -174,8 +184,11 @@ class TeacherController extends ChangeNotifier {
       }
 
       // Update telemetry
-      if (telemetryRes.isSuccess || _telemetry.averageAttendance == null) {
+      if (telemetryRes.isSuccess || !_hasTelemetryLoaded) {
         _telemetry = telemetryRes.data;
+        if (telemetryRes.isSuccess) {
+          _hasTelemetryLoaded = true;
+        }
       }
 
       if (hasFailureOrCache) {
@@ -205,6 +218,7 @@ class TeacherController extends ChangeNotifier {
     String? room,
     required String token,
   }) async {
+    final gen = _accountGeneration;
     _isLoading = true;
     _mutationEpoch++;
     notifyListeners();
@@ -215,6 +229,10 @@ class TeacherController extends ChangeNotifier {
       room: room,
       token: token,
     );
+
+    if (gen != _accountGeneration) {
+      return {'error': 'Account changed during request', 'success': false};
+    }
 
     final rawSessionId = res['session_id']?.toString();
     if (rawSessionId != null &&
@@ -244,11 +262,15 @@ class TeacherController extends ChangeNotifier {
   /// Terminates the current active attendance session cleanly
   Future<bool> stopCurrentSession(String token) async {
     if (_currentActiveSession == null) return false;
+    final gen = _accountGeneration;
     final sessionId = _currentActiveSession!.id;
     _mutationEpoch++;
 
     final success = await _repository.stopSession(sessionId, token);
+    if (gen != _accountGeneration) return false;
+
     if (success) {
+      _mutationEpoch++;
       // Clear current session only if its ID still matches the stopped sessionId
       if (_currentActiveSession?.id == sessionId) {
         _currentActiveSession = null;
@@ -297,6 +319,12 @@ class TeacherController extends ChangeNotifier {
   /// Fetches roster students for current session or class
   Future<void> fetchRoster(String token, {String? sessionId}) async {
     final gen = _accountGeneration;
+    if (sessionId != _rosterSessionId) {
+      _rosterStudents = [];
+      _rosterSessionId = null;
+      _pendingRosterEdits.clear();
+    }
+    _rosterFetchFailed = false;
     _isLoading = true;
     notifyListeners();
 
@@ -307,12 +335,27 @@ class TeacherController extends ChangeNotifier {
       );
       if (gen != _accountGeneration) return;
 
-      if (res.isSuccess || _rosterStudents.isEmpty) {
+      if (res.isSuccess) {
         _rosterStudents = res.data;
+        _rosterSessionId = sessionId;
+        _rosterFetchFailed = false;
         _pendingRosterEdits.clear();
+      } else {
+        _rosterFetchFailed = true;
+        if (sessionId != null && _rosterSessionId != sessionId) {
+          _rosterStudents = [];
+          _rosterSessionId = null;
+        }
       }
     } catch (e) {
       debugPrint('[TeacherController] fetchRoster error: $e');
+      if (gen == _accountGeneration) {
+        _rosterFetchFailed = true;
+        if (sessionId != null && _rosterSessionId != sessionId) {
+          _rosterStudents = [];
+          _rosterSessionId = null;
+        }
+      }
     } finally {
       if (gen == _accountGeneration) {
         _isLoading = false;
@@ -346,12 +389,14 @@ class TeacherController extends ChangeNotifier {
       return true;
     }
 
+    final gen = _accountGeneration;
     _isLoading = true;
     notifyListeners();
 
-    // Submit only students with explicit teacher edits
+    // Snapshot the submitted edits so newer edits made while in flight are preserved
+    final submittedEdits = Map<String, RosterStatus>.from(_pendingRosterEdits);
     final editedStudents = _rosterStudents
-        .where((s) => _pendingRosterEdits.containsKey(s.id))
+        .where((s) => submittedEdits.containsKey(s.id))
         .toList();
 
     final success = await _repository.batchUpdateRoster(
@@ -360,10 +405,13 @@ class TeacherController extends ChangeNotifier {
       token,
     );
 
+    if (gen != _accountGeneration) return false;
+
     if (success) {
-      // Advance baseline for saved edits
-      for (final s in editedStudents) {
-        _pendingRosterEdits.remove(s.id);
+      for (final entry in submittedEdits.entries) {
+        if (_pendingRosterEdits[entry.key] == entry.value) {
+          _pendingRosterEdits.remove(entry.key);
+        }
       }
     }
 
@@ -400,6 +448,7 @@ class TeacherController extends ChangeNotifier {
       return false;
     }
 
+    final gen = _accountGeneration;
     _inFlightWarnings.add(student.id);
 
     final message =
@@ -412,6 +461,8 @@ class TeacherController extends ChangeNotifier {
         message: message,
         token: token,
       );
+
+      if (gen != _accountGeneration) return false;
 
       if (success) {
         student.warningSent = true;
@@ -462,12 +513,15 @@ class TeacherController extends ChangeNotifier {
       return false;
     }
 
+    final gen = _accountGeneration;
     final success = await _repository.resolveDispute(
       disputeId: disputeId,
       action: apiAction,
       remarks: remarks,
       token: token,
     );
+
+    if (gen != _accountGeneration) return false;
 
     if (success) {
       final index = _disputes.indexWhere((d) => d.id == disputeId);

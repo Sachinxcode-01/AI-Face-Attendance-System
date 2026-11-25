@@ -124,27 +124,33 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
 
     final capturedSessionId = activeSession.id;
 
-    if (teacherCtrl.rosterStudents.isEmpty && session.token != null) {
+    if ((teacherCtrl.rosterSessionId != capturedSessionId ||
+            teacherCtrl.rosterStudents.isEmpty) &&
+        session.token != null) {
       teacherCtrl.fetchRoster(session.token!, sessionId: capturedSessionId);
     }
 
     final Map<String, RosterStatus> localDraft = {};
-    for (final s in teacherCtrl.rosterStudents) {
-      localDraft[s.id] = s.status;
-    }
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setModalState) {
-          final query = _manualSearchCtrl.text.toLowerCase();
-          final filtered = teacherCtrl.rosterStudents.where((s) {
-            return query.isEmpty ||
-                s.name.toLowerCase().contains(query) ||
-                s.usn.toLowerCase().contains(query);
-          }).toList();
+      builder: (ctx) => Consumer<TeacherController>(
+        builder: (consumerContext, ctrl, _) => StatefulBuilder(
+          builder: (modalContext, setModalState) {
+            final rosterReady =
+                !ctrl.isLoading &&
+                !ctrl.rosterFetchFailed &&
+                ctrl.rosterSessionId == capturedSessionId;
+            final query = _manualSearchCtrl.text.toLowerCase();
+            final filtered = rosterReady
+                ? ctrl.rosterStudents.where((s) {
+                    return query.isEmpty ||
+                        s.name.toLowerCase().contains(query) ||
+                        s.usn.toLowerCase().contains(query);
+                  }).toList()
+                : <RosterStudent>[];
 
           return Container(
             height: MediaQuery.of(context).size.height * 0.75,
@@ -221,12 +227,22 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                 ),
                 const SizedBox(height: 14),
                 Expanded(
-                  child: teacherCtrl.isLoading
+                  child: ctrl.isLoading
                       ? const Center(child: CircularProgressIndicator())
+                      : ctrl.rosterFetchFailed
+                      ? Center(
+                          child: Text(
+                            'Failed to load roster for this session.',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: AppColors.error,
+                            ),
+                          ),
+                        )
                       : filtered.isEmpty
                       ? Center(
                           child: Text(
-                            teacherCtrl.rosterStudents.isEmpty
+                            ctrl.rosterStudents.isEmpty
                                 ? 'No enrolled students found for session.'
                                 : 'No matching students found.',
                             style: GoogleFonts.inter(
@@ -308,22 +324,26 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: () async {
+                    onPressed: !rosterReady
+                        ? null
+                        : () async {
                       if (session.token != null) {
-                        if (teacherCtrl.currentActiveSession?.id !=
+                        if (ctrl.currentActiveSession?.id !=
                             capturedSessionId) {
-                          AppToast.show(
-                            context,
-                            message:
-                                'Session is no longer active. Commit rejected.',
-                            type: ToastType.error,
-                          );
+                          if (mounted) {
+                            AppToast.show(
+                              context,
+                              message:
+                                  'Session is no longer active. Commit rejected.',
+                              type: ToastType.error,
+                            );
+                          }
                           return;
                         }
 
-                        // Apply draft edits to controller
+                        // Apply explicit draft edits to controller
                         for (final entry in localDraft.entries) {
-                          teacherCtrl.updateStudentStatus(
+                          ctrl.updateStudentStatus(
                             entry.key,
                             entry.value,
                           );
@@ -334,11 +354,11 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
                           Navigator.pop(ctx);
                         }
 
-                        final ok = await teacherCtrl.saveRosterOverrides(
+                        final ok = await ctrl.saveRosterOverrides(
                           capturedSessionId,
                           session.token!,
                         );
-                        if (!mounted || !context.mounted) return;
+                        if (!mounted) return;
                         AppToast.show(
                           context,
                           message: ok
@@ -361,7 +381,8 @@ class _AttendanceCommandCenterState extends State<AttendanceCommandCenter> {
               ],
             ),
           );
-        },
+          },
+        ),
       ),
     );
   }

@@ -42,8 +42,8 @@ export function SecuritySection({ onOpenDemo, onOpenPilot }: SecuritySectionProp
       <div className="relative mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
           eyebrow="Biometric Data Governance"
-          title="Zero Raw Photos Stored. Mathematical Vectors Only."
-          description="Face recognition without the privacy liability. SmartFace translates landmarks into protected 512-dimension mathematical embeddings—purging routine camera frames from memory within 180ms."
+          title="Zero Raw Photos Stored for Routine Attendance. Mathematical Vectors Only."
+          description="Face recognition without routine photo storage. SmartFace translates landmarks into 512-dimension mathematical embeddings—processing routine camera frames in memory without persisting raw attendance photos."
         />
 
         {/* ByTune Interactive Visual Matrix & Features */}
@@ -70,7 +70,7 @@ export function SecuritySection({ onOpenDemo, onOpenPilot }: SecuritySectionProp
                 </h3>
 
                 <p className="mt-2 text-[14px] leading-relaxed text-mid">
-                  During enrollment and routine verification, camera frames exist in volatile RAM for only ~180 milliseconds before being purged. Only 512-dim numerical embeddings are stored for attendance matching under strict encryption and access controls; incident security snapshots are partitioned separately with audited retention windows.
+                  During enrollment and routine verification, camera frames are processed in volatile memory and are not persisted as raw attendance photos. Only 512-dim numerical embeddings and consent records are stored for attendance matching under role-gated access controls; incident security alerts are logged separately in security logs.
                 </p>
 
                 {/* Animated 64-vector matrix visual */}
@@ -99,7 +99,7 @@ export function SecuritySection({ onOpenDemo, onOpenPilot }: SecuritySectionProp
 
               <div className="mt-6 pt-4 border-t border-white/[0.08] flex items-center justify-between text-xs font-mono text-faint">
                 <span>Vector Dimension: 512 float32</span>
-                <span className="text-spotify">RAM Lifetime: 180ms</span>
+                <span className="text-spotify">In-Memory Frame Processing</span>
               </div>
             </SpotlightCard>
           </Reveal>
@@ -107,57 +107,57 @@ export function SecuritySection({ onOpenDemo, onOpenPilot }: SecuritySectionProp
           {/* Card 2: Statutory Compliance & Anti-Spoofing */}
           <Reveal className="lg:col-span-5" direction="up" delay={0.12}>
             <div className="space-y-4 h-full flex flex-col justify-between">
-                <div className="p-6 rounded-[22px] border border-white/10 bg-surface/85 backdrop-blur-md space-y-3 transition-all duration-300 hover:border-white/20 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(30,215,96,0.08)]">
-                  <div className="flex items-center gap-2 text-spotify">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-spotify opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-spotify" />
-                    </span>
-                    <ShieldCheck className="h-4 w-4" />
-                    <span className="font-mono text-[11px] uppercase tracking-wider font-semibold">
-                      DPDP Act 2023 & FERPA Ready
-                    </span>
-                  </div>
-                  <h4 className="font-display text-lg font-medium text-hi">
-                    Institutional Sovereign Data Governance
-                  </h4>
-                  <p className="text-[13px] text-mid leading-relaxed">
-                    Meets statutory requirements for student biometric privacy. Admins retain full autonomy to purge profiles with instant one-click deletion and verifiable audit timestamps.
-                  </p>
+              <div className="p-6 rounded-[22px] border border-white/10 bg-surface/85 backdrop-blur-md space-y-3 transition-all duration-300 hover:border-white/20 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(30,215,96,0.08)]">
+                <div className="flex items-center gap-2 text-spotify">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-spotify opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-spotify" />
+                  </span>
+                  <ShieldCheck className="h-4 w-4" />
+                  <span className="font-mono text-[11px] uppercase tracking-wider font-semibold">
+                    DPDP Act 2023 & FERPA Ready
+                  </span>
                 </div>
+                <h4 className="font-display text-lg font-medium text-hi">
+                  Institutional Sovereign Data Governance
+                </h4>
+                <p className="text-[13px] text-mid leading-relaxed">
+                  Meets statutory requirements for student biometric privacy. Admins retain full autonomy to purge profiles with instant one-click deletion and verifiable audit timestamps.
+                </p>
+              </div>
 
-                  <div className="p-6 rounded-[22px] border border-white/10 bg-surface/85 backdrop-blur-md space-y-3 transition-all duration-300 hover:border-white/20 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(111,216,255,0.08)]">
-                    <div className="flex items-center gap-2 text-accent2">
-                      <Radar className="h-4 w-4 animate-spin-slow" />
-                      <span className="font-mono text-[11px] uppercase tracking-wider font-semibold">
-                        Passive 3D Liveness Detection
-                      </span>
-                    </div>
-                    <h4 className="font-display text-lg font-medium text-hi">
-                      Presentation Attack Resistant
-                    </h4>
-                    <p className="text-[13px] text-mid leading-relaxed">
-                      Evaluates depth konturs and screen pixel moiré patterns. Printed paper photographs, smartphone replays, and silicone masks are instantly rejected at the gate.
-                    </p>
-                    <div className="pt-1 flex items-center justify-between font-mono text-[11px] text-faint">
-                      <span>FAR: &lt;0.001%</span>
-                      <span className="text-emerald-400 font-medium">FRR: &lt;0.2%</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <Link
-                      href="/security"
-                      className="w-full h-11 rounded-full border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 text-hi text-[13.5px] font-semibold flex items-center justify-center gap-2 transition cursor-pointer shadow-sm group"
-                    >
-                      <span>Explore Full Security Architecture & DPIA Docs</span>
-                      <ArrowRight className="h-4 w-4 text-accent group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </div>
+              <div className="p-6 rounded-[22px] border border-white/10 bg-surface/85 backdrop-blur-md space-y-3 transition-all duration-300 hover:border-white/20 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(111,216,255,0.08)]">
+                <div className="flex items-center gap-2 text-accent2">
+                  <Radar className="h-4 w-4 animate-spin-slow" />
+                  <span className="font-mono text-[11px] uppercase tracking-wider font-semibold">
+                    Passive 3D Liveness Detection
+                  </span>
                 </div>
-              </Reveal>
+                <h4 className="font-display text-lg font-medium text-hi">
+                  Presentation Attack Resistant
+                </h4>
+                <p className="text-[13px] text-mid leading-relaxed">
+                  Evaluates depth konturs and screen pixel moiré patterns. Printed paper photographs, smartphone replays, and silicone masks are instantly rejected at the gate.
+                </p>
+                <div className="pt-1 flex items-center justify-between font-mono text-[11px] text-faint">
+                  <span>FAR: &lt;0.001%</span>
+                  <span className="text-emerald-400 font-medium">FRR: &lt;0.2%</span>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <Link
+                  href="/security"
+                  className="w-full h-11 rounded-full border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 text-hi text-[13.5px] font-semibold flex items-center justify-center gap-2 transition cursor-pointer shadow-sm group"
+                >
+                  <span>Explore Full Security Architecture & DPIA Docs</span>
+                  <ArrowRight className="h-4 w-4 text-accent group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
             </div>
+          </Reveal>
         </div>
+      </div>
     </section>
   );
 }

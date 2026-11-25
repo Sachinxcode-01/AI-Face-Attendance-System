@@ -113,7 +113,15 @@ export function SpotlightCard({
       )}
 
       {/* Card Content */}
-      <div className="relative z-10 h-full">{children}</div>
+      <div
+        className={`relative z-10 h-full ${
+          onClick
+            ? "pointer-events-none [&_a]:pointer-events-auto [&_button]:pointer-events-auto [&_input]:pointer-events-auto [&_select]:pointer-events-auto [&_textarea]:pointer-events-auto [&_[role=button]]:pointer-events-auto"
+            : ""
+        }`}
+      >
+        {children}
+      </div>
     </motion.div>
   );
 }

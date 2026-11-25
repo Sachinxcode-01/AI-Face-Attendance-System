@@ -12,5 +12,9 @@ const SessionSchema = new mongoose.Schema({
 // Serves the live-monitor / active-session lookups and per-subject analytics.
 SessionSchema.index({ is_active: 1, start_time: -1 });
 SessionSchema.index({ subject: 1 });
+SessionSchema.index(
+  { teacher_id: 1, subject: 1 },
+  { unique: true, partialFilterExpression: { is_active: true } }
+);
 
 module.exports = mongoose.model('Session', SessionSchema, 'sessions');

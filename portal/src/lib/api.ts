@@ -240,6 +240,11 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+    linkStudent: (data: { student_email?: string; student_id?: string }) =>
+      apiFetch<{ success: boolean; message: string; student?: any }>('/parent/link-student', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
   },
   devices: {
     list: () => apiFetch<{ success: boolean; count: number; devices: any[] }>('/sessions/devices'),
@@ -270,7 +275,20 @@ export const api = {
       }>(`/api/v1/accuracy/metrics?hours=${hours}`),
   },
   superAdmin: {
-    colleges: () => apiFetch<{ success: boolean; count: number; colleges: any[] }>('/api/v1/super-admin/colleges'),
+    colleges: async () => {
+      const res = await apiFetch<{ success: boolean; count: number; colleges: any[] }>('/api/v1/super-admin/colleges');
+      return {
+        ...res,
+        colleges: Array.isArray(res?.colleges)
+          ? res.colleges.map((c) => ({
+            ...c,
+            activeStudents: typeof c.activeStudents === 'number'
+              ? c.activeStudents
+              : (typeof c.studentCount === 'number' ? c.studentCount : 0),
+          }))
+          : [],
+      };
+    },
     createCollege: (data: { name: string; code: string; plan?: string; adminEmail?: string }) =>
       apiFetch('/api/v1/super-admin/colleges', {
         method: 'POST',

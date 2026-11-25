@@ -26,6 +26,7 @@ import 'package:smartface_attendance/features/auth/controllers/session_manager.d
 import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/design_system/design_system.dart';
 import 'package:smartface_attendance/features/teacher/controllers/teacher_controller.dart';
+import 'package:smartface_attendance/features/teacher/models/teacher_models.dart';
 import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
 
@@ -94,122 +95,55 @@ class _TeacherDisputeCorrectionScreenState
   DisputeItem? _selectedDispute;
 
   // Retroactive terminal states
-  final DateTime _selectedDate = DateTime.now();
-  final String _selectedSubject = 'CS-402: Advanced Neural Networks';
+  TeacherSessionModel? _selectedSession;
+  String? _loadedSessionId;
+  bool _rosterLoaded = false;
   bool _isSavingCorrections = false;
 
   final Set<String> _inFlightResolutions = {};
   List<DisputeItem> _disputes = [];
 
-  final List<DisputeItem> _fallbackDisputes = [
-    DisputeItem(
-      id: 'DSP-8821',
-      studentName: 'Rohan Sharma',
-      usn: '1SF23CS045',
-      subject: 'CS-402: Neural Networks',
-      sessionDate: DateTime.now().subtract(const Duration(days: 1)),
-      claimedStatus: 'Present',
-      currentStatus: 'Absent',
-      reasonCategory: 'Face Scanner Door Timeout',
-      explanation:
-          'I entered the classroom at 09:03 AM behind Aarav Patel, but the kiosk screen went to idle before capturing my embedding.',
-      evidenceAttachment: 'CCTV Check Requested at 09:03 AM',
-    ),
-    DisputeItem(
-      id: 'DSP-8822',
-      studentName: 'Isha Kulkarni',
-      usn: '1SF23CS038',
-      subject: 'CS-402: Neural Networks',
-      sessionDate: DateTime.now().subtract(const Duration(days: 2)),
-      claimedStatus: 'Excused',
-      currentStatus: 'Absent',
-      reasonCategory: 'Medical Clinic Visit',
-      explanation:
-          'Attended campus infirmary for acute migraine between 09:00 AM - 10:30 AM. Doctor slip attached.',
-      evidenceAttachment: 'Infirmary_Slip_Dr_Rao_Nov24.pdf',
-    ),
-    DisputeItem(
-      id: 'DSP-8823',
-      studentName: 'Devansh Roy',
-      usn: '1SF23CS024',
-      subject: 'CS-402: Neural Networks',
-      sessionDate: DateTime.now().subtract(const Duration(days: 3)),
-      claimedStatus: 'Present',
-      currentStatus: 'Late',
-      reasonCategory: 'QR Scan Device Lag',
-      explanation:
-          'My phone camera took 45 seconds to focus on the dynamic QR projector due to glare, crossing the 15-minute grace threshold.',
-    ),
-  ];
-
-  late List<CorrectionStudent> _rosterList;
+  List<CorrectionStudent> _rosterList = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _disputes = _fallbackDisputes;
-    _selectedDispute = _disputes.first;
+    _disputes = [];
+    _selectedDispute = null;
     _fetchLiveDisputes();
+  }
 
-    _rosterList = [
-      CorrectionStudent(
-        id: '1',
-        name: 'Aarav Patel',
-        usn: '1SF23CS001',
-        status: 'Present',
-        originalStatus: 'Present',
-        verificationSource: 'Face AI (99.2%)',
-      ),
-      CorrectionStudent(
-        id: '2',
-        name: 'Ananya Verma',
-        usn: '1SF23CS012',
-        status: 'Present',
-        originalStatus: 'Present',
-        verificationSource: 'QR Scan',
-      ),
-      CorrectionStudent(
-        id: '3',
-        name: 'Devansh Roy',
-        usn: '1SF23CS024',
-        status: 'Late',
-        originalStatus: 'Late',
-        verificationSource: 'Manual (09:22 AM)',
-      ),
-      CorrectionStudent(
-        id: '4',
-        name: 'Isha Kulkarni',
-        usn: '1SF23CS038',
-        status: 'Absent',
-        originalStatus: 'Absent',
-        verificationSource: 'No Record',
-      ),
-      CorrectionStudent(
-        id: '5',
-        name: 'Karan Mehra',
-        usn: '1SF23CS052',
-        status: 'Excused',
-        originalStatus: 'Excused',
-        verificationSource: 'Approved Leave',
-      ),
-      CorrectionStudent(
-        id: '6',
-        name: 'Priya Nair',
-        usn: '1SF23CS060',
-        status: 'Absent',
-        originalStatus: 'Absent',
-        verificationSource: 'No Record',
-      ),
-      CorrectionStudent(
-        id: '7',
-        name: 'Rohan Sharma',
-        usn: '1SF23CS045',
-        status: 'Absent',
-        originalStatus: 'Absent',
-        verificationSource: 'No Record',
-      ),
-    ];
+  Future<void> _loadSessionRoster(TeacherSessionModel targetSession) async {
+    final session = context.read<SessionManager>();
+    final teacherCtrl = context.read<TeacherController>();
+    setState(() {
+      _selectedSession = targetSession;
+      _rosterLoaded = false;
+      _loadedSessionId = null;
+      _rosterList = [];
+    });
+    if (session.token == null) return;
+    await teacherCtrl.fetchRoster(session.token!, sessionId: targetSession.id);
+    if (!mounted) return;
+    if (!teacherCtrl.rosterFetchFailed &&
+        teacherCtrl.rosterSessionId == targetSession.id) {
+      setState(() {
+        _loadedSessionId = targetSession.id;
+        _rosterLoaded = true;
+        _rosterList = teacherCtrl.rosterStudents.map((s) {
+          final status = s.status.label;
+          return CorrectionStudent(
+            id: s.id,
+            name: s.name,
+            usn: s.usn,
+            status: status,
+            originalStatus: s.originalStatus.label,
+            verificationSource: s.verificationMethod.name,
+          );
+        }).toList();
+      });
+    }
   }
 
   @override
@@ -223,7 +157,7 @@ class _TeacherDisputeCorrectionScreenState
     if (session.token != null) {
       try {
         final raw = await ApiService.getTeacherDisputes(session.token);
-        if (mounted && raw.isNotEmpty) {
+        if (mounted) {
           final list = raw.map((d) {
             final map = Map<String, dynamic>.from(d as Map);
             return DisputeItem(
@@ -256,7 +190,7 @@ class _TeacherDisputeCorrectionScreenState
           }).toList();
           setState(() {
             _disputes = list;
-            _selectedDispute = list.first;
+            _selectedDispute = list.isNotEmpty ? list.first : null;
           });
         }
       } catch (e) {
@@ -332,10 +266,21 @@ class _TeacherDisputeCorrectionScreenState
   }
 
   Future<void> _saveRetroactiveCorrections() async {
+    if (_selectedSession == null ||
+        _loadedSessionId == null ||
+        !_rosterLoaded ||
+        _rosterList.isEmpty) {
+      AppToast.show(
+        context,
+        message: 'Select a target session and load its roster before saving.',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
     HapticFeedback.heavyImpact();
     setState(() => _isSavingCorrections = true);
     final session = context.read<SessionManager>();
-    final teacherCtrl = context.read<TeacherController>();
 
     final records = _rosterList
         .map(
@@ -351,14 +296,8 @@ class _TeacherDisputeCorrectionScreenState
     bool ok = false;
     try {
       if (session.token != null) {
-        final active = teacherCtrl.currentActiveSession;
-        final sessionId =
-            active?.id ??
-            (teacherCtrl.activeSessions.isNotEmpty
-                ? teacherCtrl.activeSessions.first.id
-                : 'SESS-${_selectedSubject.replaceAll(' ', '-').toLowerCase()}');
         ok = await ApiService.batchUpdateRoster(
-          sessionId,
+          _loadedSessionId!,
           records,
           session.token,
         );
@@ -1133,7 +1072,11 @@ class _TeacherDisputeCorrectionScreenState
                             ),
                           ),
                           Text(
-                            DateFormat('dd MMMM yyyy').format(_selectedDate),
+                            _selectedSession != null
+                                ? DateFormat('dd MMMM yyyy').format(
+                                    _selectedSession!.startTime,
+                                  )
+                                : 'No session selected',
                             style: GoogleFonts.inter(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
@@ -1178,14 +1121,50 @@ class _TeacherDisputeCorrectionScreenState
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            Text(
-                              _selectedSubject,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.inter(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: isDark ? Colors.white : Colors.black87,
+                            DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                isDense: true,
+                                value: _selectedSession?.id,
+                                hint: Text(
+                                  'Select target session...',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                items: context
+                                    .watch<TeacherController>()
+                                    .activeSessions
+                                    .map(
+                                      (s) => DropdownMenuItem<String>(
+                                        value: s.id,
+                                        child: Text(
+                                          '${s.subject} (${s.room})',
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.inter(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black87,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (id) {
+                                  if (id == null) return;
+                                  final sessions = context
+                                      .read<TeacherController>()
+                                      .activeSessions;
+                                  final match = sessions
+                                      .where((s) => s.id == id)
+                                      .toList();
+                                  if (match.isNotEmpty) {
+                                    _loadSessionRoster(match.first);
+                                  }
+                                },
                               ),
                             ),
                           ],

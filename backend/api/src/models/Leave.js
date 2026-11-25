@@ -8,6 +8,7 @@ const LeaveSchema = new mongoose.Schema({
   status: { type: String, default: "Pending", index: true }, // Pending, Under Review, Approved, Rejected
   document_url: { type: String },
   remarks: { type: String },
+  seed_id: { type: String, sparse: true, index: true },
   created_at: { type: Date, default: Date.now }
 });
 

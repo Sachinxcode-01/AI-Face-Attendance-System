@@ -489,6 +489,11 @@ export default function SuperAdminPage() {
             <p className="text-xs text-mid mb-4">
               Allocates an isolated database partition code, encryption key pair, and campus admin account.
             </p>
+            {errorMsg && (
+              <div role="alert" className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-xs text-red-300">
+                {errorMsg}
+              </div>
+            )}
             <form onSubmit={handleCreateCollege} className="space-y-4">
               <div>
                 <label className="block text-[11px] font-mono uppercase text-faint mb-1">University / College Name</label>

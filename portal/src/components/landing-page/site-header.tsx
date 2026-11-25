@@ -97,31 +97,34 @@ export function SiteHeader({ onOpenDemo, onOpenPilot }: SiteHeaderProps) {
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1024px)");
     const handleBreakpoint = (e: MediaQueryListEvent) => {
-      if (e.matches) {
-        closedByBreakpoint.current = true;
-        setMobileOpen(false);
-      }
-    };
-    mediaQuery.addEventListener("change", handleBreakpoint);
-    return () => {
-      mediaQuery.removeEventListener("change", handleBreakpoint);
-    };
-  }, []);
+        if (e.matches && prevMobileOpen.current) {
+          closedByBreakpoint.current = true;
+          setMobileOpen(false);
+        }
+      };
+      mediaQuery.addEventListener("change", handleBreakpoint);
+      return () => {
+        mediaQuery.removeEventListener("change", handleBreakpoint);
+      };
+    }, []);
 
   // Restore focus when modal drawer is dismissed
   useEffect(() => {
-    if (prevMobileOpen.current && !mobileOpen) {
-      if (closedByAction.current) {
-        closedByAction.current = false;
-      } else if (closedByBreakpoint.current) {
+      if (mobileOpen) {
         closedByBreakpoint.current = false;
-        brandLinkRef.current?.focus();
-      } else {
-        toggleButtonRef.current?.focus();
+        closedByAction.current = false;
+      } else if (prevMobileOpen.current) {
+        if (closedByAction.current) {
+          closedByAction.current = false;
+        } else if (closedByBreakpoint.current) {
+          closedByBreakpoint.current = false;
+          brandLinkRef.current?.focus();
+        } else {
+          toggleButtonRef.current?.focus();
+        }
       }
-    }
-    prevMobileOpen.current = mobileOpen;
-  }, [mobileOpen]);
+      prevMobileOpen.current = mobileOpen;
+    }, [mobileOpen]);
 
   // Move focus into the drawer modal on open
   useEffect(() => {
@@ -255,9 +258,8 @@ export function SiteHeader({ onOpenDemo, onOpenPilot }: SiteHeaderProps) {
                     className="inline-flex items-center justify-center px-2 h-full border-l border-[rgba(10,10,12,0.12)] hover:bg-black/5 transition-colors cursor-pointer shrink-0"
                   >
                     <ChevronDown
-                      className={`h-3.5 w-3.5 text-[#0a0a0c] transition-transform duration-200 ${
-                        portalOpen ? "rotate-180" : ""
-                      }`}
+                      className={`h-3.5 w-3.5 text-[#0a0a0c] transition-transform duration-200 ${portalOpen ? "rotate-180" : ""
+                        }`}
                     />
                   </button>
                 </div>

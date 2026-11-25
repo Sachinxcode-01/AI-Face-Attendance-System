@@ -870,53 +870,59 @@ class _StudentDashboardState extends State<StudentDashboard> {
     ).animate().fadeIn(delay: 250.ms, duration: 400.ms).slideY(begin: 0.08, end: 0);
 
     final weeklyMonthlyAnalytics =
-        TrendChart(weeklyTrends: weekly, monthlyTrends: monthly)
+        RepaintBoundary(
+          child: TrendChart(weeklyTrends: weekly, monthlyTrends: monthly),
+        )
             .animate()
-            .fadeIn(delay: 180.ms, duration: 400.ms, curve: Curves.easeOutCubic)
+            .fadeIn(delay: 80.ms, duration: 220.ms, curve: Curves.easeOutCubic)
             .slideY(
-              begin: 0.1,
+              begin: 0.05,
               end: 0,
-              duration: 400.ms,
+              duration: 220.ms,
               curve: Curves.easeOutCubic,
             );
 
-    final calendarHistory = HeatmapCard(heatmapData: heatmap, streak: _streak)
+    final calendarHistory = RepaintBoundary(
+      child: HeatmapCard(heatmapData: heatmap, streak: _streak),
+    )
         .animate()
-        .fadeIn(delay: 240.ms, duration: 400.ms, curve: Curves.easeOutCubic)
+        .fadeIn(delay: 110.ms, duration: 220.ms, curve: Curves.easeOutCubic)
         .slideY(
-          begin: 0.1,
+          begin: 0.05,
           end: 0,
-          duration: 400.ms,
+          duration: 220.ms,
           curve: Curves.easeOutCubic,
         );
 
-    final leaderboardCard = LeaderboardCard(entries: leaderboardEntries)
+    final leaderboardCard = RepaintBoundary(
+      child: LeaderboardCard(entries: leaderboardEntries),
+    )
         .animate()
-        .fadeIn(delay: 300.ms, duration: 400.ms, curve: Curves.easeOutCubic)
+        .fadeIn(delay: 140.ms, duration: 220.ms, curve: Curves.easeOutCubic)
         .slideY(
-          begin: 0.1,
+          begin: 0.05,
           end: 0,
-          duration: 400.ms,
+          duration: 220.ms,
           curve: Curves.easeOutCubic,
         );
 
     final activityTimeline = _buildRecentActivity(isDark)
         .animate()
-        .fadeIn(delay: 360.ms, duration: 400.ms, curve: Curves.easeOutCubic)
+        .fadeIn(delay: 160.ms, duration: 220.ms, curve: Curves.easeOutCubic)
         .slideY(
-          begin: 0.1,
+          begin: 0.05,
           end: 0,
-          duration: 400.ms,
+          duration: 220.ms,
           curve: Curves.easeOutCubic,
         );
 
     final quickActions = _buildQuickActions(context)
         .animate()
-        .fadeIn(delay: 420.ms, duration: 400.ms, curve: Curves.easeOutCubic)
+        .fadeIn(delay: 180.ms, duration: 220.ms, curve: Curves.easeOutCubic)
         .slideY(
-          begin: 0.1,
+          begin: 0.05,
           end: 0,
-          duration: 400.ms,
+          duration: 220.ms,
           curve: Curves.easeOutCubic,
         );
 

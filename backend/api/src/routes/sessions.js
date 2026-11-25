@@ -59,7 +59,25 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admi
       qr_code: qrCode
     });
 
-    await newSession.save();
+    try {
+      await newSession.save();
+    } catch (saveErr) {
+      if (saveErr && saveErr.code === 11000) {
+        const concurrentSession = await Session.findOne({
+          teacher_id: teacherEmail,
+          subject,
+          is_active: true
+        }).sort({ start_time: -1 });
+        if (concurrentSession) {
+          return res.json({
+            session_id: concurrentSession._id.toString(),
+            message: "Attendance session started successfully",
+            already_active: true
+          });
+        }
+      }
+      throw saveErr;
+    }
 
     // Notify all students about the active session in the background
     trackJob(User.find({ role: 'student' }).then(students => {

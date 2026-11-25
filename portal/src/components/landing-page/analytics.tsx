@@ -52,9 +52,27 @@ export function Analytics() {
       }
     };
 
+    const handleConsentChange = () => {
+      setConsentGranted(hasAllConsent());
+    };
+
     window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+    window.addEventListener("smartface-consent-change", handleConsentChange);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("smartface-consent-change", handleConsentChange);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!GA_MEASUREMENT_ID || typeof window === "undefined") return;
+    (window as unknown as Record<string, unknown>)[`ga-disable-${GA_MEASUREMENT_ID}`] = !consentGranted;
+    if (typeof window.gtag === "function") {
+      window.gtag("consent", "update", {
+        analytics_storage: consentGranted ? "granted" : "denied",
+      });
+    }
+  }, [consentGranted]);
 
   if (!GA_MEASUREMENT_ID || !consentGranted) {
     return null;

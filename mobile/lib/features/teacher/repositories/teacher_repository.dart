@@ -360,7 +360,8 @@ class TeacherRepository {
           final s = AtRiskStudent.fromJson(
             Map<String, dynamic>.from(item as Map),
           );
-          if (_warnedStudentIds.contains(s.id)) {
+          final scopedWarningKey = _scopeCacheKey(token, 'warned_${s.id}');
+          if (_warnedStudentIds.contains(scopedWarningKey)) {
             s.warningSent = true;
           }
           return s;
@@ -379,7 +380,8 @@ class TeacherRepository {
         final s = AtRiskStudent.fromJson(
           Map<String, dynamic>.from(item as Map),
         );
-        if (_warnedStudentIds.contains(s.id)) {
+        final scopedWarningKey = _scopeCacheKey(token, 'warned_${s.id}');
+        if (_warnedStudentIds.contains(scopedWarningKey)) {
           s.warningSent = true;
         }
         return s;
@@ -427,7 +429,7 @@ class TeacherRepository {
           .timeout(const Duration(seconds: 6));
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        _warnedStudentIds.add(studentId);
+        _warnedStudentIds.add(_scopeCacheKey(token, 'warned_$studentId'));
         return true;
       }
       return false;

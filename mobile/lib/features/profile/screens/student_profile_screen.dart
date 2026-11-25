@@ -32,6 +32,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -47,6 +48,8 @@ import 'package:smartface_attendance/features/student/widgets/student_widgets.da
 // State & Core Imports
 // ======================================================
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
+import 'package:smartface_attendance/app/theme/theme_controller.dart';
+import 'package:smartface_attendance/features/analytics/controllers/analytics_controller.dart';
 import 'package:smartface_attendance/shared/widgets/premium_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/glow_button.dart';
 import 'package:smartface_attendance/shared/widgets/college_search_picker.dart';
@@ -714,91 +717,283 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final themeCtrl = context.watch<ThemeController>();
+    final analytics = context.watch<AnalyticsController>().studentAnalytics;
 
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.bgDeep : AppColors.bgLight,
-      appBar: _buildAppBar(),
-        body: _isLoading
-            ? const StudentProfileShimmer()
-            : RefreshIndicator(
-                onRefresh: _fetchProfile,
-                color: const Color(0xFF4F46E5),
-                backgroundColor: const Color(0xFF070B1A),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 110),
-                  child: Center(
-                    child: ResponsiveContentBounds(
-                      maxWidth: 960,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                      const SizedBox(height: 8),
-                      _buildAvatarSection()
-                          .animate()
-                          .fadeIn(duration: 400.ms)
-                          .scale(delay: 100.ms),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Tap photo to update',
-                        style: GoogleFonts.inter(
-                          color: isDark ? Colors.white30 : Colors.black38,
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Name + role badge
-                      Text(
-                        _nameCtrl.text.isNotEmpty
-                            ? _nameCtrl.text
-                            : (_profileData['full_name'] ?? 'Student'),
-                        style: GoogleFonts.inter(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                        textAlign: TextAlign.center,
-                      ).animate().fadeIn(delay: 150.ms),
-                      const SizedBox(height: 6),
-                      _buildRoleBadge(),
-                      const SizedBox(height: 20),
+    final rawRate = (analytics['overall_percentage'] as num?)?.toDouble();
+    final String rateText = rawRate != null
+        ? '${(rawRate <= 1.0 ? rawRate * 100 : rawRate).toStringAsFixed(1)}%'
+        : (_profileData['attendance_rate']?.toString() ?? '--');
+    final attended = analytics['attended_classes'] ?? _profileData['attended_classes'];
+    final total = analytics['total_classes'] ?? _profileData['total_classes'];
+    final String attendedText = (attended != null && total != null)
+        ? '$attended/$total'
+        : '--';
+    final leaveDays = _profileData['leave_days'] ?? analytics['leave_days'];
+    final String leaveText = leaveDays != null ? '$leaveDays Days' : '0 Days';
 
-                      // ── Quick Stats Row ──────────────────────────────────────
-                      const IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              child: MetricCard(
-                                label: 'Attendance Rate',
-                                value: '92.4%',
-                                icon: Icons.done_all_rounded,
-                                accentColor: AppColors.primary,
-                              ),
+    return StudentScreenShell(
+      title: 'Student Profile',
+      subtitle: 'Academic Identity & Preferences',
+      actions: [
+        if (!_isLoading) ...[
+          IconButton(
+            tooltip: _isEditing ? 'Cancel Editing' : 'Edit Profile',
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              setState(() {
+                _isEditing = !_isEditing;
+                if (!_isEditing && _hasUnsavedChanges) {
+                  _applyProfileData(_profileData);
+                }
+              });
+            },
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _isEditing
+                    ? const Color(0xFFEF4444).withValues(alpha: 0.25)
+                    : Colors.white.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.25),
+                ),
+              ),
+              child: Icon(
+                _isEditing ? LucideIcons.x : LucideIcons.pencil,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Sync Profile',
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _fetchProfile();
+            },
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.25),
+                ),
+              ),
+              child: const Icon(
+                LucideIcons.refreshCw,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+        ],
+      ],
+      child: _isLoading
+          ? const StudentProfileShimmer()
+          : RefreshIndicator(
+              onRefresh: _fetchProfile,
+              color: AppColors.primary,
+              backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 110),
+                child: Center(
+                  child: ResponsiveContentBounds(
+                    maxWidth: 960,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _buildAvatarSection()
+                            .animate()
+                            .fadeIn(duration: 220.ms, curve: Curves.easeOutCubic)
+                            .scale(
+                              begin: const Offset(0.95, 0.95),
+                              duration: 220.ms,
+                              curve: Curves.easeOutCubic,
                             ),
-                            SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: MetricCard(
-                                label: 'Attended',
-                                value: '120/130',
-                                icon: Icons.assignment_turned_in_rounded,
-                                accentColor: AppColors.success,
-                              ),
-                            ),
-                            SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: MetricCard(
-                                label: 'Leave Days',
-                                value: '2 Days',
-                                icon: Icons.time_to_leave_rounded,
-                                accentColor: AppColors.purple,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(height: 10),
+                        Text(
+                          'Tap photo to update avatar',
+                          style: GoogleFonts.inter(
+                            color: isDark ? Colors.white38 : Colors.black45,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+                        const SizedBox(height: 16),
+                        // Name + role badge
+                        Text(
+                          _nameCtrl.text.isNotEmpty
+                              ? _nameCtrl.text
+                              : (_profileData['full_name'] ?? 'Student'),
+                          style: GoogleFonts.poppins(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                          textAlign: TextAlign.center,
+                        ).animate().fadeIn(delay: 60.ms, duration: 200.ms),
+                        const SizedBox(height: 6),
+                        _buildRoleBadge(),
+                        const SizedBox(height: 20),
 
-                      const SizedBox(height: 28),
+                        // ── Live Quick Stats Row ─────────────────────────────
+                        RepaintBoundary(
+                          child: IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: MetricCard(
+                                    label: 'Attendance Rate',
+                                    value: rateText,
+                                    icon: LucideIcons.activity,
+                                    accentColor: AppColors.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: MetricCard(
+                                    label: 'Attended',
+                                    value: attendedText,
+                                    icon: LucideIcons.checkCheck,
+                                    accentColor: AppColors.success,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: MetricCard(
+                                    label: 'Leave Days',
+                                    value: leaveText,
+                                    icon: LucideIcons.calendarOff,
+                                    accentColor: AppColors.purple,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ).animate().fadeIn(delay: 90.ms, duration: 220.ms).slideY(
+                              begin: 0.06,
+                              end: 0,
+                              duration: 220.ms,
+                              curve: Curves.easeOutCubic,
+                            ),
+
+                        const SizedBox(height: 20),
+
+                        // ── Quick Preferences & Shortcuts ────────────────────
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF0F172A).withValues(alpha: 0.7)
+                                : const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.08)
+                                  : const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: PressableScale(
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    themeCtrl.toggle();
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                      horizontal: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? Colors.white.withValues(alpha: 0.06)
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          isDark
+                                              ? LucideIcons.sun
+                                              : LucideIcons.moon,
+                                          size: 16,
+                                          color: AppColors.primary,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          isDark ? 'Light Mode' : 'Dark Mode',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black87,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: PressableScale(
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    context.push(
+                                      AppRoutes.studentBunkCalculatorPath,
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                      horizontal: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? Colors.white.withValues(alpha: 0.06)
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          LucideIcons.calculator,
+                                          size: 16,
+                                          color: AppColors.cyan,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Bunk Planner',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.black87,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ).animate().fadeIn(delay: 110.ms, duration: 220.ms),
+
+                        const SizedBox(height: 16),
 
                       // ── Digital ID Card Launch Tile ──────────────────────────
                       GestureDetector(
@@ -1146,37 +1341,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 ),
               ),
             ),
-              ),
-    );
-  }
-
-  // ── App Bar ───────────────────────────────────────────────────────────────
-  PreferredSizeWidget _buildAppBar() {
-    return PremiumAppBar(
-      title: 'My Profile',
-      actions: [
-        if (!_isLoading)
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _isEditing = !_isEditing;
-                if (!_isEditing && _hasUnsavedChanges) {
-                  // Cancelled — restore
-                  _applyProfileData(_profileData);
-                }
-              });
-            },
-            icon: Icon(
-              _isEditing ? Icons.close_rounded : Icons.edit_outlined,
-              color: _isEditing ? const Color(0xFFEF4444) : const Color(0xFF6366F1),
-            ),
           ),
-        if (!_isLoading)
-          IconButton(
-            onPressed: _fetchProfile,
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF6366F1)),
-          ),
-      ],
     );
   }
 
@@ -1222,13 +1387,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.gold.withValues(
+                    color: AppColors.primary.withValues(
                       alpha: _isUploadingPhoto
-                          ? 0.1 + 0.3 * _pulseCtrl.value
-                          : 0.2,
+                          ? 0.15 + 0.3 * _pulseCtrl.value
+                          : 0.25,
                     ),
-                    blurRadius: _isUploadingPhoto ? 40 : 18,
-                    spreadRadius: _isUploadingPhoto ? 8 : 3,
+                    blurRadius: _isUploadingPhoto ? 36 : 20,
+                    spreadRadius: _isUploadingPhoto ? 6 : 2,
                   ),
                 ],
               ),
@@ -1239,7 +1404,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
               height: 146,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.gold, width: 2),
+                border: Border.all(
+                  color: AppColors.primaryLight.withValues(alpha: 0.85),
+                  width: 2.5,
+                ),
               ),
             ),
             // Avatar circle
@@ -1315,21 +1483,24 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 bottom: 2,
                 right: 2,
                 child: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: AppColors.gold,
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, AppColors.primaryDark],
+                    ),
                     shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.gold.withValues(alpha: 0.4),
+                        color: AppColors.primary.withValues(alpha: 0.4),
                         blurRadius: 10,
                       ),
                     ],
                   ),
                   child: const Icon(
-                    Icons.camera_alt_rounded,
-                    color: Colors.black,
-                    size: 18,
+                    LucideIcons.camera,
+                    color: Colors.white,
+                    size: 16,
                   ),
                 ),
               ),

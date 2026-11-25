@@ -1,5 +1,6 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 
 const User = require('../models/User');
 const Attendance = require('../models/Attendance');
@@ -7,20 +8,18 @@ const Session = require('../models/Session');
 const Leave = require('../models/Leave');
 const { authenticate, requireRole } = require('../middleware/auth');
 
-// Resolve the authenticated parent's linked children emails.
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Resolve the authenticated parent's linked children emails (approved links only).
 async function getLinkedChildren(parentEmail) {
-  const parent = await User.findOne({ email: parentEmail }).lean();
+  const emailRegex = new RegExp(`^${escapeRegex(parentEmail)}$`, 'i');
+  const parent = await User.findOne({ email: emailRegex }).lean();
   const directChildren = parent && Array.isArray(parent.children) ? parent.children : [];
   const linkedChildren = parent && Array.isArray(parent.linked_children) ? parent.linked_children.map((c) => c.email) : [];
-  
-  // Also discover students who list this parent's email as their parent_details
-  const reverseStudents = await User.find({
-    role: 'student',
-    parent_details: { $regex: new RegExp(`^${parentEmail}$`, 'i') }
-  }).select('email').lean();
-  const reverseEmails = reverseStudents.map(s => s.email);
 
-  const combined = Array.from(new Set([...directChildren, ...linkedChildren, ...reverseEmails].filter(Boolean)));
+  const combined = Array.from(new Set([...directChildren, ...linkedChildren].filter(Boolean)));
   return combined;
 }
 
@@ -156,39 +155,75 @@ router.post('/link-student', authenticate, requireRole(['parent', 'admin']), asy
       return res.status(404).json({ detail: 'Student not found in institutional directory.' });
     }
 
-    await User.findOneAndUpdate(
-      { email: req.userEmail },
-      {
-        $addToSet: {
-          children: student.email,
-          linked_children: {
-            email: student.email,
-            full_name: student.full_name,
-            student_id: student.student_id || student.roll_number || ''
-          }
+    const isAdmin = req.userRole && req.userRole.toLowerCase() === 'admin';
+            const studentConfirmsParent = Boolean(
+              student.parent_details &&
+              student.parent_details.trim().toLowerCase() === req.userEmail.toLowerCase()
+            );
+            if(!isAdmin && !studentConfirmsParent) {
+      return res.status(403).json({
+        detail: 'Forbidden: Parent-student relationship must be confirmed by the student or an administrator.'
+      });
+    }
+
+    const parentFilter = { email: new RegExp(`^${escapeRegex(req.userEmail)}$`, 'i') };
+    const parentUpdate = {
+      $addToSet: {
+        children: student.email,
+        linked_children: {
+          email: student.email,
+          full_name: student.full_name,
+          student_id: student.student_id || student.roll_number || ''
         }
       }
-    );
+    };
+    const studentFilter = { email: student.email };
+    const studentUpdate = { $set: { parent_details: req.userEmail } };
 
-    // Also update student's parent_details
-    await User.findOneAndUpdate(
-      { email: student.email },
-      { $set: { parent_details: req.userEmail } }
-    );
-
-    res.json({
-      success: true,
-      message: `Ward ${student.full_name} (${student.email}) linked successfully.`,
-      student: {
-        email: student.email,
-        full_name: student.full_name,
-        student_id: student.student_id || student.roll_number,
-        department: student.department
+    const dbSession = await mongoose.startSession();
+    try {
+      await dbSession.withTransaction(async () => {
+        await User.findOneAndUpdate(parentFilter, parentUpdate, { session: dbSession });
+        await User.findOneAndUpdate(studentFilter, studentUpdate, { session: dbSession });
+      });
+    } catch (txErr) {
+      // Fallback for standalone MongoDB instances without replica-set transactions: manual rollback
+      if (txErr && (txErr.code === 20 || /Transaction numbers are only allowed/i.test(txErr.message))) {
+        const previousParent = await User.findOne(parentFilter).select('children linked_children').lean();
+        await User.findOneAndUpdate(parentFilter, parentUpdate);
+        try {
+          await User.findOneAndUpdate(studentFilter, studentUpdate);
+        } catch (studentErr) {
+          if (previousParent) {
+            await User.updateOne(parentFilter, {
+              $set: {
+                children: previousParent.children || [],
+                linked_children: previousParent.linked_children || []
+              }
+            });
+          }
+          throw studentErr;
+        }
+      } else {
+        throw txErr;
       }
-    });
-  } catch (error) {
-    res.status(500).json({ detail: error.message });
+    } finally {
+  await dbSession.endSession();
+}
+
+res.json({
+  success: true,
+  message: `Ward ${student.full_name} (${student.email}) linked successfully.`,
+  student: {
+    email: student.email,
+    full_name: student.full_name,
+    student_id: student.student_id || student.roll_number,
+    department: student.department
   }
+});
+  } catch (error) {
+  res.status(500).json({ detail: error.message });
+}
 });
 
 module.exports = router;

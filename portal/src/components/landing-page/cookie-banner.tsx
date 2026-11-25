@@ -25,6 +25,7 @@ export function CookieBanner() {
   const handleConsent = (level: "all" | "essential") => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ level, timestamp: Date.now() }));
+      window.dispatchEvent(new Event("smartface-consent-change"));
     } catch {
       // noop
     }

@@ -1,0 +1,30 @@
+[
+  {
+    "user_id": "bob@smartface.pro",
+    "title": "Biometric Attendance Verification Successful",
+    "message": "Your morning attendance for Machine Learning (CSE-601) has been confirmed with 99.4% confidence.",
+    "type": "attendance",
+    "priority": "Low"
+  },
+  {
+    "user_id": "parent@smartface.pro",
+    "title": "Daily Attendance Digest",
+    "message": "Bob Dylan has completed all morning lectures with 100% attendance today.",
+    "type": "attendance",
+    "priority": "Normal"
+  },
+  {
+    "user_id": "teacher@smartface.pro",
+    "title": "Pending Leave Application: Bob Dylan",
+    "message": "Bob Dylan (AI2405) has requested 3 days leave for Smart India Hackathon finals.",
+    "type": "leave",
+    "priority": "High"
+  },
+  {
+    "user_id": "admin@smartface.pro",
+    "title": "Biometric System Health: Optimal",
+    "message": "All 8 camera kiosks online. 242 attendance records synchronized with 0 false rejections.",
+    "type": "security",
+    "priority": "Normal"
+  }
+]

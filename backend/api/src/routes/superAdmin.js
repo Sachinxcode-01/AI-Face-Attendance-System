@@ -48,6 +48,20 @@ let globalPlatformConfig = {
   ]
 };
 
+const DEFAULT_DEPARTMENTS = ['Computer Science', 'AI & Data Science', 'Electronics'];
+
+function normalizePlan(plan) {
+  const normalized = String(plan || '').toLowerCase();
+  if (normalized.includes('enterprise') || normalized.includes('ultra')) return 'enterprise';
+  if (normalized.includes('pilot')) return 'pilot';
+  return 'standard';
+}
+
+function formatPlanLabel(plan) {
+  if (!plan) return 'Enterprise';
+  return plan.charAt(0).toUpperCase() + plan.slice(1);
+}
+
 // ─── 1. Multi College Management ──────────────────────────────────
 router.get('/colleges', async (req, res) => {
   try {
@@ -62,10 +76,10 @@ router.get('/colleges', async (req, res) => {
         name: c.name,
         code: c.code,
         status: c.is_active ? 'active' : 'inactive',
-        plan: c.subscription?.plan ? (c.subscription.plan.charAt(0).toUpperCase() + c.subscription.plan.slice(1)) : 'Enterprise Pro',
-        departments: ['Computer Science', 'AI & Data Science', 'Electronics'],
-        studentCount: studentCount || 25,
-        adminEmail: `admin@${c.domain || 'smartface.pro'}`,
+        plan: formatPlanLabel(c.subscription?.plan),
+        departments: Array.isArray(c.departments) && c.departments.length > 0 ? c.departments : DEFAULT_DEPARTMENTS,
+        studentCount,
+        adminEmail: c.admin_email || `admin@${c.domain || 'smartface.pro'}`,
         createdAt: c.created_at || new Date().toISOString(),
         activeKiosks: 4,
         attendanceRateToday: '96.4%'
@@ -77,7 +91,7 @@ router.get('/colleges', async (req, res) => {
   }
 });
 
-router.post('/colleges', async (req, res) => {
+router.post('/colleges', requireRole(['super_admin']), async (req, res) => {
   try {
     const { name, code, plan, adminEmail, departments } = req.body;
     if (!name || !code) {
@@ -85,20 +99,30 @@ router.post('/colleges', async (req, res) => {
     }
 
     const domain = (adminEmail && adminEmail.includes('@') ? adminEmail.split('@')[1] : null) || `${code.toLowerCase()}.edu`;
+    const normalizedPlan = normalizePlan(plan || 'enterprise');
+    const cleanDepartments = Array.isArray(departments)
+      ? departments.map((d) => String(d).trim()).filter(Boolean)
+      : undefined;
+    const cleanAdminEmail = typeof adminEmail === 'string' && adminEmail.trim() ? adminEmail.trim() : `admin@${domain}`;
+
+    const setFields = {
+      name,
+      code: code.toUpperCase(),
+      domain,
+      admin_email: cleanAdminEmail,
+      is_active: true,
+      subscription: {
+        plan: normalizedPlan,
+        status: 'active'
+      }
+    };
+    if (cleanDepartments && cleanDepartments.length > 0) {
+      setFields.departments = cleanDepartments;
+    }
+
     const newInst = await College.findOneAndUpdate(
       { code: code.toUpperCase() },
-      {
-        $set: {
-          name,
-          code: code.toUpperCase(),
-          domain,
-          is_active: true,
-          subscription: {
-            plan: (plan || 'enterprise').toLowerCase().includes('ultra') ? 'enterprise' : 'standard',
-            status: 'active'
-          }
-        }
-      },
+      { $set: setFields },
       { upsert: true, returnDocument: 'after' }
     );
 
@@ -106,12 +130,12 @@ router.post('/colleges', async (req, res) => {
       id: newInst._id.toString(),
       name: newInst.name,
       code: newInst.code,
-      status: 'active',
-      plan: plan || 'Enterprise Pro',
-      departments: departments || ['Computer Science'],
+      status: newInst.is_active ? 'active' : 'inactive',
+      plan: formatPlanLabel(newInst.subscription?.plan),
+      departments: Array.isArray(newInst.departments) && newInst.departments.length > 0 ? newInst.departments : ['Computer Science'],
       studentCount: 0,
-      adminEmail: adminEmail || `admin@${domain}`,
-      createdAt: new Date().toISOString()
+      adminEmail: newInst.admin_email || `admin@${domain}`,
+      createdAt: (newInst.created_at || new Date()).toISOString()
     };
 
     res.status(201).json({ success: true, message: 'Institutional tenant onboarded in database.', college: formatted });
@@ -120,13 +144,19 @@ router.post('/colleges', async (req, res) => {
   }
 });
 
-router.patch('/colleges/:id', async (req, res) => {
+router.patch('/colleges/:id', requireRole(['super_admin']), async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, plan } = req.body;
+    const { status, plan, departments, adminEmail } = req.body;
     const updateFields = {};
     if (status) updateFields.is_active = status === 'active';
-    if (plan) updateFields['subscription.plan'] = plan.toLowerCase().includes('enterprise') ? 'enterprise' : 'standard';
+    if (plan) updateFields['subscription.plan'] = normalizePlan(plan);
+    if (Array.isArray(departments)) {
+      updateFields.departments = departments.map((d) => String(d).trim()).filter(Boolean);
+    }
+    if (typeof adminEmail === 'string' && adminEmail.trim()) {
+      updateFields.admin_email = adminEmail.trim();
+    }
 
     let collegeDoc = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
@@ -147,7 +177,9 @@ router.patch('/colleges/:id', async (req, res) => {
         name: collegeDoc.name,
         code: collegeDoc.code,
         status: collegeDoc.is_active ? 'active' : 'inactive',
-        plan: collegeDoc.subscription?.plan || 'Enterprise'
+        plan: formatPlanLabel(collegeDoc.subscription?.plan),
+        departments: Array.isArray(collegeDoc.departments) && collegeDoc.departments.length > 0 ? collegeDoc.departments : DEFAULT_DEPARTMENTS,
+        adminEmail: collegeDoc.admin_email || `admin@${collegeDoc.domain || 'smartface.pro'}`
       }
     });
   } catch (err) {
@@ -183,7 +215,7 @@ router.get('/global-analytics', async (req, res) => {
     res.json({
       success: true,
       platform: {
-        totalInstitutions: totalInstitutions || 2,
+        totalInstitutions,
         totalUsers,
         totalStudents,
         totalTeachers,

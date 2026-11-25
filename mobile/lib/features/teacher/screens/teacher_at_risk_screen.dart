@@ -22,6 +22,7 @@ import 'package:provider/provider.dart';
 
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/core/network/api_service.dart';
+import 'package:smartface_attendance/features/teacher/models/teacher_models.dart';
 import 'package:smartface_attendance/features/teacher/widgets/teacher_components.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
 import 'package:smartface_attendance/shared/widgets/toast_system.dart';
@@ -85,38 +86,22 @@ class _TeacherAtRiskRadarScreenState extends State<TeacherAtRiskRadarScreen> {
     if (token != null) {
       try {
         final data = await ApiService.getRiskStudents(token);
-        if (mounted && data.isNotEmpty && data['students'] != null) {
-          final list = (data['students'] as List).map((s) {
-            final attended = (s['attended'] as num?)?.toInt() ?? 15;
-            final total = (s['total'] as num?)?.toInt() ?? 25;
-            final rawAtt =
-                (s['attendance'] as num?)?.toDouble() ??
-                (s['health_score'] as num?)?.toDouble();
-            final double percent;
-            if (rawAtt != null) {
-              percent = (rawAtt > 0 && rawAtt <= 1.0)
-                  ? (rawAtt * 100.0)
-                  : rawAtt;
-            } else {
-              percent = total > 0 ? (attended / total) * 100 : 60.0;
-            }
-
+        final rawList = (data['students'] ?? data['riskStudents']) as List?;
+        if (mounted && data.isNotEmpty && rawList != null) {
+          final list = rawList.map((s) {
+            final parsed = AtRiskStudent.fromJson(
+              Map<String, dynamic>.from(s as Map),
+            );
             return AtRiskStudentItem(
-              id:
-                  s['id']?.toString() ??
-                  s['_id']?.toString() ??
-                  s['usn']?.toString() ??
-                  '',
-              name: s['name']?.toString() ?? 'Student',
-              usn:
-                  s['usn']?.toString() ??
-                  s['roll_number']?.toString() ??
-                  '1SF23CS000',
-              department: s['department']?.toString() ?? 'Computer Science',
-              attendance: percent,
-              classesAttended: attended,
-              totalClasses: total,
-              parentEmail: s['parent_email']?.toString() ?? '',
+              id: parsed.id,
+              name: parsed.name,
+              usn: parsed.usn,
+              department: parsed.department,
+              attendance: parsed.attendance,
+              classesAttended: parsed.classesAttended,
+              totalClasses: parsed.totalClasses,
+              parentEmail: parsed.parentEmail ?? '',
+              warningSent: parsed.warningSent,
             );
           }).toList();
 
