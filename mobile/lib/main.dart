@@ -61,10 +61,12 @@ void main() async {
   );
   await EnvConfig.load(environment: envName);
 
-  // Lock to portrait
+  // Support portrait and landscape orientations (enables tablet/desktop NavigationRail)
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
   ]);
 
   // Unlock native 90Hz/120Hz+ display refresh rate on Android

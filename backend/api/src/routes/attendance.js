@@ -87,7 +87,7 @@ const calculateHealthScore = async (email) => {
           })
         ]);
       }
-    } catch (_) {}
+    } catch (_) { }
 
     if (totalRecords === 0) {
       const fallbackStats = datasetService.getStudentStats(email);
@@ -111,11 +111,11 @@ const calculateHealthScore = async (email) => {
     }
 
     const percentage = (presentCount / totalSessions) * 100;
-    
+
     // Heuristics formula: Health = Percentage * (1.0 - 0.05*Lates - 0.1*ConsecutiveAbsences)
     // For demo purposes, we will bound it between 0 and 100
     let latePenalty = lates * 2; // e.g. 2% penalty per late
-    let consecutivePenalty = consecutiveAbsences * 5; 
+    let consecutivePenalty = consecutiveAbsences * 5;
     let healthScore = Math.max(0, Math.min(100, Math.round(percentage - latePenalty - consecutivePenalty)));
 
     let standing = 'Good';
@@ -189,8 +189,8 @@ router.post('/mark', authenticate, async (req, res) => {
       const deltaLambda = ((longitude - session.longitude) * Math.PI) / 180;
 
       const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
-                Math.cos(phi1) * Math.cos(phi2) *
-                Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+        Math.cos(phi1) * Math.cos(phi2) *
+        Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       const distance = R * c;
 
@@ -220,19 +220,19 @@ router.post('/mark', authenticate, async (req, res) => {
         method: 'qr',
         college_id: (session && (session.college_id || session.institution_id)) || req.userCollege || 'default'
       });
-    } catch (_) {}
+    } catch (_) { }
 
     // Audit Log
     await auditLog(student_email, 'student', 'ATTENDANCE_MARKED', { method: 'qr', session_id, subject: session.subject }, req);
 
-    // Broadcast update to live-logs WebSockets
-    trackJob(notificationService.broadcast({
-      type: "attendance_update",
-      student_email,
-      session_id,
-      status: "Present",
-      timestamp: timestamp.toISOString()
-    }).catch(console.error));
+      // Broadcast update to admin live-logs WebSockets (never leak student PII to all students)
+      trackJob(notificationService.broadcastLiveLogs({
+        type: "attendance_update",
+        student_email,
+        session_id,
+        status: "Present",
+        timestamp: timestamp.toISOString()
+      }).catch(console.error));
 
     // Recalculate health score cache in background
     trackJob(calculateHealthScore(student_email).catch(console.error));
@@ -382,21 +382,21 @@ router.post('/mark/face', authenticate, requireRole('student'), upload.single('i
           method: 'face',
           college_id: (session && (session.college_id || session.institution_id)) || req.userCollege || 'default'
         });
-      } catch (_) {}
+      } catch (_) { }
 
       // Audit Log
       await auditLog(student_email, 'student', 'ATTENDANCE_MARKED', { method: 'face', session_id: activeSessionId, confidence: aiResult.confidence }, req);
 
-      // Broadcast update via WebSockets
-      trackJob(notificationService.broadcast({
-        type: "attendance_update",
-        student_email,
-        session_id: activeSessionId,
-        status: "Present",
-        timestamp: timestamp.toISOString(),
-        verified_by: "face",
-        confidence: aiResult.confidence
-      }).catch(console.error));
+        // Broadcast update to admin live-logs WebSockets (never leak student PII globally)
+        trackJob(notificationService.broadcastLiveLogs({
+          type: "attendance_update",
+          student_email,
+          session_id: activeSessionId,
+          status: "Present",
+          timestamp: timestamp.toISOString(),
+          verified_by: "face",
+          confidence: aiResult.confidence
+        }).catch(console.error));
 
       // Recalculate health score
       trackJob(calculateHealthScore(student_email).catch(console.error));
@@ -513,7 +513,7 @@ router.get('/command-center', authenticate, requireRole(['admin', 'teacher']), a
 router.get('/live-monitor', authenticate, requireRole(['admin', 'teacher']), async (req, res) => {
   try {
     const activeSessions = await Session.find({ is_active: true }).lean();
-    
+
     const sessionIds = activeSessions.map((session) => session._id.toString());
 
     // One grouped tally + one user lookup replace three queries per session.
@@ -542,9 +542,9 @@ router.get('/live-monitor', authenticate, requireRole(['admin', 'teacher']), asy
       const counts = countsBySession.get(session._id.toString());
       const presentCount = (counts && counts.presentCount) || 0;
       const faceCount = (counts && counts.faceCount) || 0;
-      
+
       const teacher = teacherByEmail.get(session.teacher_id);
-      
+
       sessionsTelemetry.push({
         session_id: session._id.toString(),
         subject: session.subject,
@@ -567,7 +567,7 @@ router.get('/risk-analysis', authenticate, requireRole(['admin', 'teacher']), as
   try {
     const riskType = req.query.type || 'below_75'; // below_75, below_60, frequent_late
     let filter = {};
-    
+
     if (riskType === 'below_60') {
       filter = { health_score: { $lt: 60 } };
     } else if (riskType === 'frequent_late') {
@@ -613,12 +613,12 @@ router.get('/risk-analysis', authenticate, requireRole(['admin', 'teacher']), as
 router.get('/heatmap', authenticate, async (req, res) => {
   try {
     const email = req.userEmail;
-    
+
     // Construct simple monthly heatmap metrics
     // We group checkins by day of the year
     const checkins = await Attendance.find({ student_email: email }).lean();
     const heatmap = {};
-    
+
     checkins.forEach(c => {
       const dateStr = c.timestamp.toISOString().split('T')[0];
       heatmap[dateStr] = (heatmap[dateStr] || 0) + 1; // Number of classes attended on date
@@ -647,11 +647,11 @@ router.get('/report/generate', authenticate, async (req, res) => {
     const reportSubjectBySessionId = new Map(
       reportSessions.map((session) => [session._id.toString(), session.subject])
     );
-    
+
     if (format === 'csv') {
       res.setHeader('Content-disposition', 'attachment; filename=attendance_ledger.csv');
       res.set('Content-Type', 'text/csv');
-      
+
       let csv = 'Date,Time,Subject,Verified By,Status\n';
       for (const rec of records) {
         const dateStr = rec.timestamp.toISOString().split('T')[0];
@@ -663,7 +663,7 @@ router.get('/report/generate', authenticate, async (req, res) => {
       // Stream tab-separated spreadsheet which opens in Excel directly
       res.setHeader('Content-disposition', 'attachment; filename=attendance_ledger.xls');
       res.set('Content-Type', 'application/vnd.ms-excel');
-      
+
       let xls = 'Date\tTime\tSubject\tVerified By\tStatus\n';
       for (const rec of records) {
         const dateStr = rec.timestamp.toISOString().split('T')[0];
@@ -705,13 +705,13 @@ router.get(['/student/:email', '/history/:email'], authenticate, async (req, res
     const page = parseInt(req.query.page || "1", 10);
     const limit = parseInt(req.query.limit || "20", 10);
     const skip = (page - 1) * limit;
-    
+
     const filter = { student_email: email };
-    
+
     if (req.query.status) {
       filter.status = req.query.status;
     }
-    
+
     if (req.query.month) {
       const startOfMonth = new Date(`${req.query.month}-01T00:00:00.000Z`);
       const endOfMonth = new Date(startOfMonth);
@@ -730,7 +730,7 @@ router.get(['/student/:email', '/history/:email'], authenticate, async (req, res
           .limit(limit)
           .lean();
       }
-    } catch (_) {}
+    } catch (_) { }
 
     if (logs.length === 0) {
       const fallback = datasetService.getStudentLogs(email, { page, limit, status: req.query.status, month: req.query.month });
@@ -778,7 +778,7 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
       return res.status(403).json({ detail: 'Forbidden: cannot access this student analytics.' });
     }
     const records = await Attendance.find({ student_email: email }).lean();
-    
+
     const sessions = await Session.find(
       { _id: { $in: records.map((record) => record.session_id) } },
       'subject'
@@ -816,13 +816,13 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
         total: tCount,
         percentage: tCount ? pCount / tCount : 0
       });
-      
+
       totalPresent += pCount;
       totalPossible += tCount;
     }
 
     let overallPercentage = totalPossible > 0 ? totalPresent / totalPossible : 0;
-    
+
     let dataSource = 'records';
     if (records.length === 0) {
       const dsStats = datasetService.getStudentStats(email);
@@ -851,9 +851,9 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
     const trendSessions = dataSource === 'none'
       ? []
       : await Session.find(
-          { start_time: { $gte: new Date(now.getFullYear(), now.getMonth() - 7, 1) } },
-          'start_time'
-        ).lean();
+        { start_time: { $gte: new Date(now.getFullYear(), now.getMonth() - 7, 1) } },
+        'start_time'
+      ).lean();
 
     const weeklyTrends = [];
     if (dataSource !== 'none') {
@@ -1076,6 +1076,110 @@ router.get('/student/analytics/:email', authenticate, async (req, res) => {
         face_visibility: faceRecords[0]?.face_visibility || (faceRecords.length > 0 ? 'Excellent' : null)
       }
     });
+  } catch (error) {
+    reportInternalError(res, error, 'Attendance');
+  }
+});
+
+const AttendanceDispute = require('../models/AttendanceDispute');
+
+// ─── POST /attendance/disputes ────────────────────────────────────
+router.post('/disputes', authenticate, requireRole(['student', 'parent']), async (req, res) => {
+  try {
+    const { session_id, reason, requested_status, subject, attendance_id } = req.body;
+    if (!session_id || !reason || String(reason).trim().length < 5) {
+      return res.status(400).json({ detail: 'session_id and a detailed reason (min 5 chars) are required.' });
+    }
+    const studentEmail = (req.userRole === 'parent' && req.body.student_email)
+      ? String(req.body.student_email).trim().toLowerCase()
+      : req.userEmail.toLowerCase();
+
+    const existing = await AttendanceDispute.findOne({ student_email: studentEmail, session_id, status: 'Pending' });
+    if (existing) {
+      return res.status(409).json({ detail: 'A pending dispute already exists for this session.' });
+    }
+
+    const dispute = await AttendanceDispute.create({
+      student_email: studentEmail,
+      session_id,
+      attendance_id: attendance_id || undefined,
+      college_id: req.userCollege || undefined,
+      subject: subject || undefined,
+      reason: String(reason).trim(),
+      requested_status: ['Present', 'Excused', 'Late'].includes(requested_status) ? requested_status : 'Present',
+      status: 'Pending'
+    });
+
+    await auditLog(req.userEmail, req.userRole, 'DISPUTE_SUBMITTED', { dispute_id: dispute._id.toString(), session_id }, req);
+    res.status(201).json({ success: true, id: dispute._id.toString(), dispute });
+  } catch (error) {
+    reportInternalError(res, error, 'Attendance');
+  }
+});
+
+// ─── GET /attendance/disputes ─────────────────────────────────────
+router.get('/disputes', authenticate, async (req, res) => {
+  try {
+    const role = (req.userRole || '').toLowerCase();
+    const filter = role === 'student'
+      ? { student_email: req.userEmail.toLowerCase() }
+      : (req.userCollege && role !== 'super_admin' ? { college_id: req.userCollege } : {});
+
+    const disputes = await AttendanceDispute.find(filter).sort({ created_at: -1 }).limit(100).lean();
+    const formatted = disputes.map(d => ({ ...d, id: d._id.toString() }));
+    res.json({ disputes: formatted });
+  } catch (error) {
+    reportInternalError(res, error, 'Attendance');
+  }
+});
+
+// ─── POST /attendance/disputes/:id/resolve ────────────────────────
+router.post('/disputes/:id/resolve', authenticate, requireRole(['teacher', 'hod', 'principal', 'admin', 'super_admin']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, remarks } = req.body;
+    const normalizedAction = String(action || '').toLowerCase();
+    if (!['approve', 'approved', 'reject', 'rejected'].includes(normalizedAction)) {
+      return res.status(400).json({ detail: 'Action must be approve or reject.' });
+    }
+    const isApproved = normalizedAction.startsWith('approve');
+    const dispute = await AttendanceDispute.findById(id);
+    if (!dispute) {
+      return res.status(404).json({ detail: 'Dispute not found.' });
+    }
+
+    dispute.status = isApproved ? 'Approved' : 'Rejected';
+    dispute.resolved_by = req.userEmail;
+    dispute.remarks = remarks ? String(remarks).trim() : '';
+    dispute.resolved_at = new Date();
+    await dispute.save();
+
+    if (isApproved) {
+      await Attendance.updateOne(
+        { student_email: dispute.student_email, session_id: dispute.session_id },
+        {
+          $set: {
+            status: dispute.requested_status || 'Present',
+            verified_by: 'manual',
+            college_id: dispute.college_id || req.userCollege || undefined,
+            timestamp: new Date()
+          }
+        },
+        { upsert: true }
+      );
+    }
+
+    trackJob(notificationService.createNotification(
+      dispute.student_email,
+      `Attendance Dispute ${dispute.status}`,
+      `Your attendance dispute for session ${dispute.session_id} was ${dispute.status.toLowerCase()}.`,
+      'attendance',
+      isApproved ? 'Info' : 'High',
+      { dispute_id: dispute._id.toString(), session_id: dispute.session_id }
+    ).catch(console.error));
+
+    await auditLog(req.userEmail, req.userRole, 'DISPUTE_RESOLVED', { dispute_id: id, status: dispute.status }, req);
+    res.json({ success: true, status: dispute.status, dispute });
   } catch (error) {
     reportInternalError(res, error, 'Attendance');
   }

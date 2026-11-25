@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const NotificationSchema = new mongoose.Schema({
   user_id: { type: String, required: true, index: true },
+  college_id: { type: String, index: true },
   title: { type: String, required: true },
   message: { type: String, required: true },
   type: { type: String, required: true }, // attendance, leave, security, announcement

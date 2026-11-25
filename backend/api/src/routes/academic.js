@@ -13,20 +13,23 @@ const { authenticate, requireRole } = require('../middleware/auth');
 // GET /academic/dashboard
 router.get('/dashboard', authenticate, async (req, res) => {
   try {
-    const userEmail = req.userEmail || "alice@smartface.pro";
-    const user = await User.findOne({ email: userEmail });
+    const userEmail = req.userEmail;
+    const user = await User.findOne({ email: userEmail }).lean();
+    if (!user) return res.status(404).json({ detail: 'User not found' });
+    const totalAtt = await Attendance.countDocuments({ student_email: userEmail });
+    const presentAtt = await Attendance.countDocuments({ student_email: userEmail, status: 'Present' });
+    const pct = totalAtt > 0 ? Math.round((presentAtt / totalAtt) * 100) : null;
     res.json({
       student: {
-        name: user ? user.full_name : "Alice Cooper",
-        email: userEmail
+        name: user.full_name,
+        email: user.email
       },
-      ai_insights: [
-        "Your academic standing is strong, with outstanding marks in Software Engineering.",
-        "Your biometric verification rate is optimal (100% check-in confidence)."
-      ]
+      ai_insights: pct !== null
+        ? [`Current verified attendance rate is ${pct}% (${presentAtt}/${totalAtt} sessions).`]
+        : ['No attendance records found yet for insight generation.']
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    res.status(500).json({ detail: 'Unable to load academic dashboard.' });
   }
 });
 
@@ -39,25 +42,10 @@ router.get('/timetable', authenticate, async (req, res) => {
       const user = await User.findOne({ email: req.userEmail });
       if (user && user.department && user.semester) {
         queryId = `${user.department.toUpperCase()}_${user.semester}_${user.section || 'A'}`;
-      } else {
-        queryId = "CSE_6_A"; // Fallback class
       }
     }
 
     const timetable = await Timetable.find({ user_id: queryId.toUpperCase() }).lean();
-
-    if (timetable.length === 0) {
-      // Fallback mocks with Monday to Saturday schedule
-      return res.json([
-        { id: "slot-1", subject: "Software Engineering (CSE-302)", day: "Monday", time: "09:00 AM - 10:30 AM", room: "Room 401", teacher: "Dr. Sarah Jenkins" },
-        { id: "slot-2", subject: "Machine Learning (CSE-303)", day: "Monday", time: "11:00 AM - 12:30 PM", room: "Lab 3", teacher: "Prof. Alan Turing" },
-        { id: "slot-3", subject: "Cloud Computing (CSE-304)", day: "Tuesday", time: "10:00 AM - 11:30 AM", room: "Room 402", teacher: "Dr. Lisa Su" },
-        { id: "slot-4", subject: "Computer Networks (CSE-305)", day: "Wednesday", time: "09:00 AM - 10:30 AM", room: "Room 301", teacher: "Prof. Andrew Tanenbaum" },
-        { id: "slot-5", subject: "Database Systems Lab (CSE-306)", day: "Thursday", time: "02:00 PM - 04:00 PM", room: "Lab 2", teacher: "Dr. Edgar Codd" },
-        { id: "slot-6", subject: "Cybersecurity & Cryptography (CSE-307)", day: "Friday", time: "11:00 AM - 12:30 PM", room: "Auditorium B", teacher: "Prof. Whitfield Diffie" },
-        { id: "slot-7", subject: "Capstone Project & Industry Mentorship (CSE-308)", day: "Saturday", time: "09:30 AM - 12:30 PM", room: "Innovation Hub", teacher: "Dr. Sarah Jenkins" }
-      ]);
-    }
 
     const formatted = timetable.map(item => {
       item.id = item._id.toString();
@@ -308,81 +296,49 @@ router.get('/timetable/conflicts', authenticate, requireRole(['admin', 'teacher'
 // GET /academic/assignments
 router.get('/assignments', authenticate, async (req, res) => {
   try {
-    res.json([
-      {
-        id: "asgn-302",
-        course_code: "CSE-302",
-        title: "Software Requirement Specification (SRS)",
-        max_points: 50,
-        submission: {
-          grade: 46,
-          submitted_at: "2026-06-10T14:30:00Z"
-        }
-      },
-      {
-        id: "asgn-303",
-        course_code: "CSE-303",
-        title: "K-Means Clustering Implementation",
-        max_points: 100,
-        submission: {
-          grade: 90,
-          submitted_at: "2026-06-12T10:00:00Z"
-        }
-      }
-    ]);
+    res.json([]);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    res.status(500).json({ detail: 'Unable to fetch assignments.' });
   }
 });
 
 // GET /academic/exams
 router.get('/exams', authenticate, async (req, res) => {
   try {
-    res.json([
-      { id: "exam-1", subject: "Software Engineering (CSE-302)", date: "2026-06-25", time: "02:00 PM" },
-      { id: "exam-2", subject: "Machine Learning (CSE-303)", date: "2026-06-28", time: "09:30 AM" }
-    ]);
+    res.json([]);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    res.status(500).json({ detail: 'Unable to fetch exams.' });
   }
 });
 
 // GET /academic/results
 router.get('/results', authenticate, async (req, res) => {
   try {
-    res.json({
-      cgpa: 9.2,
-      sgpa: 9.4,
-      results: [
-        { course: "Software Engineering", grade: "S", marks: 92 },
-        { course: "Machine Learning", grade: "A", marks: 88 }
-      ]
-    });
+    res.json({ cgpa: null, sgpa: null, results: [] });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    res.status(500).json({ detail: 'Unable to fetch results.' });
   }
 });
 
 // GET /academic/success-score
 router.get('/success-score', authenticate, async (req, res) => {
   try {
-    res.json({
-      success_score: 88
-    });
+    const email = req.userEmail;
+    const totalAtt = await Attendance.countDocuments({ student_email: email });
+    const presentAtt = await Attendance.countDocuments({ student_email: email, status: 'Present' });
+    const score = totalAtt > 0 ? Math.round((presentAtt / totalAtt) * 100) : null;
+    res.json({ success_score: score });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    res.status(500).json({ detail: 'Unable to compute success score.' });
   }
 });
 
 // GET /academic/documents
 router.get('/documents', authenticate, async (req, res) => {
   try {
-    res.json([
-      { id: "doc-1", type: "ID Card", status: "Approved" },
-      { id: "doc-2", type: "Hall Ticket", status: "Approved" }
-    ]);
+    res.json([]);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    res.status(500).json({ detail: 'Unable to fetch documents.' });
   }
 });
 
@@ -390,13 +346,6 @@ router.get('/documents', authenticate, async (req, res) => {
 router.get('/holidays', authenticate, async (req, res) => {
   try {
     const holidays = await Holiday.find().sort({ date: 1 }).lean();
-    if (holidays.length === 0) {
-      // Default fallback mocks
-      return res.json([
-        { id: "h-1", title: "Independence Day", date: "2026-08-15T00:00:00.000Z", description: "National Holiday" },
-        { id: "h-2", title: "Labor Day", date: "2026-09-07T00:00:00.000Z", description: "Institutional Holiday" }
-      ]);
-    }
     const formatted = holidays.map(h => {
       h.id = h._id.toString();
       delete h._id;
@@ -496,7 +445,7 @@ router.delete('/holidays/:id', authenticate, requireRole(['admin', 'super_admin'
 router.get('/calendar', authenticate, async (req, res) => {
   try {
     const email = req.userEmail;
-    
+
     // Fetch user leaves
     const leaves = await Leave.find({ user_id: email }).lean();
     const leaveEvents = leaves.map(l => ({
@@ -538,10 +487,10 @@ router.get('/calendar', authenticate, async (req, res) => {
                   status: rec.status || "Present"
                 });
               }
-            } catch (err) {}
+            } catch (err) { }
           }
         }
-      } catch (_) {}
+      } catch (_) { }
 
       if (attendanceEvents.length === 0) {
         const dsLogs = datasetService.getStudentLogs(email, { limit: 500 }).logs;

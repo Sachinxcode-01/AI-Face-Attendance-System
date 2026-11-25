@@ -43,6 +43,10 @@ class NotificationService {
     deadConnections.forEach(ws => this.removeConnection(email, ws));
   }
 
+  async broadcastLiveLogs(message) {
+    return this.sendPersonalMessage('__live_logs__', message);
+  }
+
   async broadcast(message) {
     this.activeConnections.forEach((connections, email) => {
       const deadConnections = [];

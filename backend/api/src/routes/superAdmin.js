@@ -12,7 +12,7 @@ const { authenticate, requireRole } = require('../middleware/auth');
 const reportInternalError = require('../utils/httpError');
 
 // Enforce Super Admin authorization on all sub-routes
-router.use(authenticate, requireRole(['super_admin', 'admin']));
+router.use(authenticate, requireRole(['super_admin']));
 
 // In-memory tenant/config storage with persistence fallback
 let globalPlatformConfig = {
@@ -425,19 +425,24 @@ router.get('/command-center', async (req, res) => {
       aiLatencyMs = 'unavailable';
     }
 
-    // 8. Measure active students and attendance rates per college
+    // 8. Measure active students and attendance rates per college from MongoDB
+    const collegeDocs = await College.find({}).lean();
     const collegeList = isSuperAdmin
-      ? globalPlatformConfig.allowedInstitutions
-      : globalPlatformConfig.allowedInstitutions.filter(c => c.id === tenantFilter);
+      ? collegeDocs
+      : collegeDocs.filter(c => c._id.toString() === tenantFilter || c.code === tenantFilter);
 
     const liveColleges = await Promise.all(
       collegeList.map(async (c) => {
+        const cid = c._id.toString();
         let measuredStudents = 'unavailable';
         let rateToday = 'unavailable';
         try {
-          measuredStudents = await User.countDocuments({ college_id: c.id, role: 'student' });
+          measuredStudents = await User.countDocuments({
+            $or: [{ college_id: cid }, { college: c.name }],
+            role: 'student'
+          });
           const collegeAtt = await Attendance.aggregate([
-            { $match: { college_id: c.id, timestamp: { $gte: todayStart } } },
+            { $match: { college_id: cid, timestamp: { $gte: todayStart } } },
             {
               $group: {
                 _id: null,
@@ -451,14 +456,14 @@ router.get('/command-center', async (req, res) => {
           } else {
             rateToday = '0.0%';
           }
-        } catch (_) {}
+        } catch (_) { }
 
         return {
-          id: c.id,
+          id: cid,
           name: c.name,
           code: c.code,
-          status: c.status,
-          plan: c.plan,
+          status: c.status || 'active',
+          plan: formatPlanLabel(c.plan),
           activeStudents: measuredStudents,
           attendanceRateToday: rateToday
         };
@@ -528,7 +533,7 @@ router.get('/command-center', async (req, res) => {
         notifications: {
           emailProvider: process.env.EMAIL_PROVIDER || 'resend',
           status: 'operational',
-          activeWebSocketPipes: 142
+          activeWebSocketPipes: require('../services/notificationService').activeConnections.size
         }
       },
       securityEvents: {

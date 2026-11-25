@@ -14,11 +14,13 @@
 |--------------------------------------------------------------------------
 */
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'package:smartface_attendance/core/network/api_service.dart';
 import 'package:smartface_attendance/features/auth/controllers/session_manager.dart';
 import 'package:smartface_attendance/features/student/widgets/student_widgets.dart';
 import 'package:smartface_attendance/design_system/components/motion_widgets.dart';
@@ -54,30 +56,65 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
     setState(() => _isLoading = true);
 
     final session = context.read<SessionManager>();
-    await Future.delayed(const Duration(milliseconds: 1200));
-    if (!mounted) return;
+    final token = session.token;
+    final usn = _usnController.text.trim();
+    final studentEmail = usn.contains('@')
+        ? usn.toLowerCase()
+        : '${usn.toLowerCase()}@smartface.edu';
 
-    final newWard = {
-      'id': 'WARD-${DateTime.now().millisecondsSinceEpoch}',
-      'full_name': _nameController.text.trim(),
-      'name': _nameController.text.trim(),
-      'email': '${_usnController.text.trim().toLowerCase()}@smartface.edu',
-      'usn': _usnController.text.trim().toUpperCase(),
-      'department': 'Computer Science & Engineering',
-      'relationship': _relationship,
-    };
+    try {
+      final res = await ApiService.client.post(
+        Uri.parse('${ApiService.baseUrl}/parent/link-student'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'student_email': studentEmail,
+          'usn': usn.toUpperCase(),
+          'full_name': _nameController.text.trim(),
+          'relationship': _relationship,
+          'verification_code': _codeController.text.trim(),
+        }),
+      );
 
-    session.setSelectedWard(newWard);
-
-    if (mounted) {
+      if (!mounted) return;
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        final body = jsonDecode(res.body);
+        final linkedWard = (body is Map && body['student'] is Map)
+            ? Map<String, dynamic>.from(body['student'] as Map)
+            : {
+                'full_name': _nameController.text.trim(),
+                'name': _nameController.text.trim(),
+                'email': studentEmail,
+                'usn': usn.toUpperCase(),
+                'relationship': _relationship,
+              };
+        session.setSelectedWard(linkedWard);
+        setState(() => _isLoading = false);
+        AppToast.show(
+          context,
+          message: 'Successfully linked ${_nameController.text.trim()} to your account!',
+          type: ToastType.success,
+        );
+        Navigator.of(context).maybePop(true);
+      } else {
+        setState(() => _isLoading = false);
+        final body = jsonDecode(res.body);
+        AppToast.show(
+          context,
+          message: (body is Map ? body['detail']?.toString() : null) ?? 'Failed to link student ward.',
+          type: ToastType.error,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       AppToast.show(
         context,
-        message:
-            'Successfully linked ${_nameController.text.trim()} to your account!',
-        type: ToastType.success,
+        message: 'Unable to link ward. Please verify student email/USN and try again.',
+        type: ToastType.error,
       );
-      Navigator.of(context).maybePop(true);
     }
   }
 

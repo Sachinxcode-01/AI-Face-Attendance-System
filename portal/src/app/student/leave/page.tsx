@@ -7,7 +7,6 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { Badge, statusTone } from '@/components/ui/Badge';
 import { Plus, CalendarRange, RefreshCw } from 'lucide-react';
-import { MOCK_LEAVE_REQUESTS } from '@/lib/demo-data';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import type { LeaveRequest } from '@/lib/types';
@@ -19,12 +18,16 @@ export default function StudentLeavePage() {
 
   useEffect(() => {
     let active = true;
-    const email = user?.email || 'alice@smartface.pro';
+    const email = user?.email;
+    if (!email) {
+      setLoading(false);
+      return;
+    }
 
     async function fetchLeaves() {
       setLoading(true);
       try {
-        const data = (await api.leave.student(email)) as Array<{
+        const data = (await api.leave.student(email!)) as Array<{
           id: string;
           user_id: string;
           reason: string;
@@ -58,11 +61,11 @@ export default function StudentLeavePage() {
             })
           );
         } else {
-          setRequests(MOCK_LEAVE_REQUESTS.filter((r) => r.rollNo === 'CS-2024-042'));
+          setRequests([]);
         }
       } catch {
         if (!active) return;
-        setRequests(MOCK_LEAVE_REQUESTS.filter((r) => r.rollNo === 'CS-2024-042'));
+        setRequests([]);
       } finally {
         if (active) setLoading(false);
       }

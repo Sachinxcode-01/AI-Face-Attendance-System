@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Clock, MapPin, UserRound, QrCode, ScanFace } from 'lucide-react';
 import Link from 'next/link';
-import { MOCK_TIMETABLE } from '@/lib/demo-data';
 import { api } from '@/lib/api';
 import type { TimetableSlot } from '@/lib/types';
 
@@ -17,7 +16,7 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 export default function StudentTimetablePage() {
   const [day, setDay] = useState<(typeof DAYS)[number]>('Mon');
   const [view, setView] = useState<'day' | 'week'>('day');
-  const [slots, setSlots] = useState<TimetableSlot[]>(MOCK_TIMETABLE);
+  const [slots, setSlots] = useState<TimetableSlot[]>([]);
 
   useEffect(() => {
     api.academic.timetable()
@@ -59,7 +58,7 @@ export default function StudentTimetablePage() {
                     computedStatus = 'completed';
                   }
                 }
-              } catch {}
+              } catch { }
             }
 
             return {
@@ -75,7 +74,7 @@ export default function StudentTimetablePage() {
           setSlots(mapped);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const daySlots = slots.filter((s) => s.day === day);
@@ -123,9 +122,8 @@ export default function StudentTimetablePage() {
               daySlots.map((slot) => (
                 <Card
                   key={slot.id}
-                  className={`page-enter flex flex-col gap-4 p-5 transition-all hover:border-accent/40 sm:flex-row sm:items-center sm:justify-between ${
-                    slot.status === 'live' ? 'border-emerald-500/40 bg-[#16161D]' : ''
-                  }`}
+                  className={`page-enter flex flex-col gap-4 p-5 transition-all hover:border-accent/40 sm:flex-row sm:items-center sm:justify-between ${slot.status === 'live' ? 'border-emerald-500/40 bg-[#16161D]' : ''
+                    }`}
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-[16px] bg-accent/15 text-accent border border-accent/25">

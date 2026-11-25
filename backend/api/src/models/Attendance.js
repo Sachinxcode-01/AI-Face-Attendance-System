@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const AttendanceSchema = new mongoose.Schema({
   student_email: { type: String, required: true },
   session_id: { type: String, required: true, index: true },
+  college_id: { type: String, index: true },
   timestamp: { type: Date, default: Date.now, index: -1 },
   status: { type: String, default: "Present" },
   verified_by: { type: String, default: "qr" }, // qr, face, manual

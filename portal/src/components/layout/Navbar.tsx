@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ScanFace, LogOut } from 'lucide-react';
-import { DEMO_PROFILES } from '@/lib/demo-data';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NavbarProps {
   currentRole?: 'student' | 'teacher' | 'admin' | 'parent' | 'super_admin';
@@ -12,7 +12,12 @@ interface NavbarProps {
 
 export function Navbar({ currentRole = 'student' }: NavbarProps) {
   const pathname = usePathname();
-  const profile = DEMO_PROFILES[currentRole as keyof typeof DEMO_PROFILES] || DEMO_PROFILES.admin || DEMO_PROFILES.student;
+  const { user, role, logout } = useAuth();
+  const profile = {
+    name: user?.name || 'SmartFace User',
+    role: role || currentRole,
+    avatar: user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+  };
 
   const roleNavItems = [
     { label: 'Student', href: '/student', active: pathname.startsWith('/student') },
@@ -25,7 +30,7 @@ export function Navbar({ currentRole = 'student' }: NavbarProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[rgba(255,255,255,0.08)] bg-[#050507]/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        
+
         {/* Brand Logo */}
         <div className="flex items-center gap-6">
           <Link href="/" className="group flex items-center gap-2.5">
@@ -48,11 +53,10 @@ export function Navbar({ currentRole = 'student' }: NavbarProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all ${
-                  item.active
+                className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all ${item.active
                     ? 'bg-white text-[#050507] font-bold shadow-sm'
                     : 'text-mid hover:text-white hover:bg-white/5'
-                }`}
+                  }`}
               >
                 {item.label}
               </Link>
@@ -62,7 +66,7 @@ export function Navbar({ currentRole = 'student' }: NavbarProps) {
 
         {/* Right Status & User Profile */}
         <div className="flex items-center gap-3">
-          
+
           {/* Live Telemetry Pill */}
           <div className="hidden sm:flex items-center gap-2 chip-bytune h-7 text-xs text-emerald-400">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -80,33 +84,33 @@ export function Navbar({ currentRole = 'student' }: NavbarProps) {
               <p className="font-semibold text-white">{profile.name}</p>
               <p className="text-[10px] text-faint capitalize">{profile.role}</p>
             </div>
-            <Link
-              href="/"
-              title="Switch Role or Exit to Landing"
+            <button
+              type="button"
+              onClick={logout}
+              title="Sign Out"
               className="ml-1 text-faint hover:text-red-400 transition-colors"
             >
               <LogOut className="h-4 w-4" />
-            </Link>
-          </div>
-
+          </button>
         </div>
 
       </div>
 
-      {/* Mobile Role Switcher Bar */}
-      <div className="flex md:hidden border-t border-white/5 bg-[#050507] px-4 py-2 overflow-x-auto gap-2">
-        {roleNavItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`whitespace-nowrap px-3 py-1 text-xs font-medium rounded-full ${
-              item.active ? 'bg-white text-[#050507] font-bold' : 'text-mid bg-white/5'
-            }`}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </div>
-    </header>
+    </div>
+
+      {/* Mobile Role Switcher Bar */ }
+  <div className="flex md:hidden border-t border-white/5 bg-[#050507] px-4 py-2 overflow-x-auto gap-2">
+    {roleNavItems.map((item) => (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={`whitespace-nowrap px-3 py-1 text-xs font-medium rounded-full ${item.active ? 'bg-white text-[#050507] font-bold' : 'text-mid bg-white/5'
+          }`}
+      >
+        {item.label}
+      </Link>
+    ))}
+  </div>
+    </header >
   );
 }

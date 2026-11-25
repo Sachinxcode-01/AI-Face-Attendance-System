@@ -7,7 +7,6 @@ import { Card, CardHeader } from '@/components/ui/Card';
 import { DataTable } from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/Badge';
 import { ScanFace, QrCode, Clock, Download, Filter, CheckCircle2 } from 'lucide-react';
-import { MOCK_STUDENT_ATTENDANCE } from '@/lib/demo-data';
 import type { AttendanceRecord } from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
@@ -18,15 +17,16 @@ export default function StudentAttendancePage() {
   const { user } = useAuth();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('all');
   const [search, setSearch] = useState('');
-  const [records, setRecords] = useState<AttendanceRecord[]>(MOCK_STUDENT_ATTENDANCE);
+  const [records, setRecords] = useState<AttendanceRecord[]>([]);
 
   useEffect(() => {
     let active = true;
-    const email = user?.email || 'alice@smartface.pro';
+    const email = user?.email;
+    if (!email) return;
 
     async function fetchAttendance() {
       try {
-        const data = (await api.attendance.student(email)) as Array<{
+        const data = (await api.attendance.student(email!)) as Array<{
           _id?: string;
           id?: string;
           timestamp?: string;

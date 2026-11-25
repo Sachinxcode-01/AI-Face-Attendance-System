@@ -6,6 +6,7 @@ const EmailService = require('../services/emailService');
 const notificationService = require('../services/notificationService');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { trackJob } = require('../utils/jobTracker');
+const reportInternalError = require('../utils/httpError');
 
 // ─── POST /security/intruder-alert ────────────────────────────────
 router.post('/intruder-alert', async (req, res) => {
@@ -58,21 +59,24 @@ router.post('/intruder-alert', async (req, res) => {
       { location: alertLocation }
     ).catch(console.error));
 
-    // Send email to admin in background
-    const adminEmail = process.env.ADMIN_EMAIL || "saxhin0708@gmail.com";
-    const formattedDate = timestamp.toISOString().replace('T', ' ').substring(0, 19);
-    trackJob(EmailService.sendIntruderAlert(adminEmail, formattedDate, alertLocation).catch(console.error));
+    // Send email to admin in background if configured
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (adminEmail) {
+      const formattedDate = timestamp.toISOString().replace('T', ' ').substring(0, 19);
+      trackJob(EmailService.sendIntruderAlert(adminEmail, formattedDate, alertLocation).catch(console.error));
+    }
 
     res.json({ status: "alert_sent" });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Security');
   }
 });
 
 // ─── GET /security/logs ───────────────────────────────────────────
-router.get('/logs', authenticate, async (req, res) => {
+router.get('/logs', authenticate, requireRole(['admin', 'super_admin', 'hod', 'principal']), async (req, res) => {
   try {
-    const logs = await SecurityLog.find().sort({ timestamp: -1 }).limit(50).lean();
+    const filter = req.userRole === 'super_admin' || !req.userCollege ? {} : { college_id: req.userCollege };
+    const logs = await SecurityLog.find(filter).sort({ timestamp: -1 }).limit(50).lean();
     const result = logs.map(l => {
       l.id = l._id.toString();
       delete l._id;
@@ -81,20 +85,20 @@ router.get('/logs', authenticate, async (req, res) => {
     });
     res.json(result);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Security');
   }
 });
 
 // ─── POST /security/acknowledge ──────────────────────────────────
-router.post('/acknowledge', authenticate, requireRole(['teacher', 'admin']), async (req, res) => {
+router.post('/acknowledge', authenticate, requireRole(['teacher', 'admin', 'super_admin', 'hod', 'principal']), async (req, res) => {
   try {
     const { log_id, status } = req.body;
     const updateStatus = status || "Acknowledged";
-    
+
     await SecurityLog.updateOne({ _id: log_id }, { $set: { status: updateStatus } });
     res.json({ status: "success", message: `Alert marked as ${updateStatus.toLowerCase()}` });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Security');
   }
 });
 

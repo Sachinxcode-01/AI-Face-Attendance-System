@@ -62,7 +62,11 @@ export default function RegisterPage() {
       });
       setBusy(false);
       if (res.success) {
-        router.push(getRoleRedirectPath(role));
+        if ((res as { hasToken?: boolean }).hasToken) {
+          router.push(getRoleRedirectPath(role));
+        } else {
+          router.push('/auth/login?registered=1');
+        }
       } else {
         setError(res.error || 'Registration failed. Please try again.');
       }
@@ -98,8 +102,8 @@ export default function RegisterPage() {
                 type="button"
                 onClick={() => setRole(value)}
                 className={`flex flex-col items-center gap-1.5 rounded-[14px] border p-2.5 text-[10.5px] font-semibold transition-all cursor-pointer ${role === value
-                    ? 'border-accent bg-accent/15 text-white shadow-[0_0_12px_rgba(143,139,255,0.2)]'
-                    : 'border-white/[0.08] bg-surface text-mid hover:border-white/20'
+                  ? 'border-accent bg-accent/15 text-white shadow-[0_0_12px_rgba(143,139,255,0.2)]'
+                  : 'border-white/[0.08] bg-surface text-mid hover:border-white/20'
                   }`}
               >
                 <Icon className={`h-4 w-4 ${role === value ? 'text-accent' : 'text-faint'}`} />

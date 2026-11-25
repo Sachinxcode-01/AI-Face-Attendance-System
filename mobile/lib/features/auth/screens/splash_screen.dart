@@ -228,13 +228,15 @@ class _SplashScreenState extends State<SplashScreen>
         return;
       }
 
-      final String targetDashboard = role == 'admin'
+      final String targetDashboard = role == 'admin' || role == 'super_admin'
           ? '/admin/dashboard'
-          : (role == 'teacher' || role == 'faculty' || role == 'lecturer'
-                ? '/teacher/dashboard'
-                : (role == 'parent'
-                      ? '/parent/dashboard'
-                      : '/student/dashboard'));
+          : (role == 'hod' || role == 'principal' || role == 'management'
+                ? '/management/dashboard'
+                : (role == 'teacher' || role == 'faculty' || role == 'lecturer'
+                      ? '/teacher/dashboard'
+                      : (role == 'parent'
+                            ? '/parent/dashboard'
+                            : '/student/dashboard')));
 
       context.go(targetDashboard);
     } catch (e) {

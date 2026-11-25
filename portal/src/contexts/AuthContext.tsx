@@ -63,61 +63,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const loginWithCredentials = useCallback(
-    async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-      const normalized = email.trim().toLowerCase();
+      async (email: string, password: string): Promise<{ success: boolean; role?: UserRole; error?: string }> => {
+        const normalized = email.trim().toLowerCase();
 
-      try {
-        const data = await api.auth.login(normalized, password);
-        if (data && data.access_token) {
-          const userRole = (data.role?.toLowerCase() as UserRole) || 'student';
-          const profile: UserProfile = {
-            id: data.user_id || 'usr_' + Math.random().toString(36).slice(2, 9),
-            name: data.full_name || email.split('@')[0],
-            email: data.email || normalized,
-            role: userRole,
-            avatar: data.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-          };
-          setAuthCookies(data.access_token, userRole, profile);
-          setUser(profile);
-          setRole(userRole);
-          setAuthed(true);
-          return { success: true };
+        try {
+          const data = await api.auth.login(normalized, password);
+          if (data && data.access_token) {
+            const userRole = (data.role?.toLowerCase() as UserRole) || 'student';
+            const profile: UserProfile = {
+              id: data.user_id || 'usr_' + Math.random().toString(36).slice(2, 9),
+              name: data.full_name || email.split('@')[0],
+              email: data.email || normalized,
+              role: userRole,
+              avatar: data.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+            };
+            setAuthCookies(data.access_token, userRole, profile);
+            setUser(profile);
+            setRole(userRole);
+            setAuthed(true);
+            return { success: true, role: userRole };
+          }
+          return { success: false, error: 'Authentication failed: No access token issued.' };
+        } catch (err: unknown) {
+          const msg = err instanceof ApiError ? err.message : 'Invalid credentials. Please check your email and password.';
+          return { success: false, error: msg };
         }
-        return { success: false, error: 'Authentication failed: No access token issued.' };
-      } catch (err: unknown) {
-        const msg = err instanceof ApiError ? err.message : 'Invalid credentials. Please check your email and password.';
-        return { success: false, error: msg };
-      }
-    },
-    []
+      },
+        []
   );
 
   const register = useCallback(
-    async (regData: { email: string; password: string; full_name: string; role: UserRole }): Promise<{ success: boolean; error?: string }> => {
-      try {
-        const data = await api.auth.register(regData);
-        if (data && data.access_token) {
-          const userRole = (data.role?.toLowerCase() as UserRole) || regData.role;
-          const profile: UserProfile = {
-            id: data.user_id || 'usr_' + Math.random().toString(36).slice(2, 9),
-            name: data.full_name || regData.full_name,
-            email: data.email || regData.email,
-            role: userRole,
-            avatar: data.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-          };
-          setAuthCookies(data.access_token, userRole, profile);
-          setUser(profile);
-          setRole(userRole);
-          setAuthed(true);
-          return { success: true };
+      async (regData: { email: string; password: string; full_name: string; role: UserRole }): Promise<{ success: boolean; hasToken?: boolean; error?: string }> => {
+        try {
+          const data = await api.auth.register(regData);
+          if (data && data.access_token) {
+            const userRole = (data.role?.toLowerCase() as UserRole) || regData.role;
+            const profile: UserProfile = {
+              id: data.user_id || 'usr_' + Math.random().toString(36).slice(2, 9),
+              name: data.full_name || regData.full_name,
+              email: data.email || regData.email,
+              role: userRole,
+              avatar: data.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+            };
+            setAuthCookies(data.access_token, userRole, profile);
+            setUser(profile);
+            setRole(userRole);
+            setAuthed(true);
+            return { success: true, hasToken: true };
+          }
+          return { success: true, hasToken: false };
+        } catch (err: unknown) {
+          const msg = err instanceof ApiError ? err.message : 'Registration failed. Please try again.';
+          return { success: false, error: msg };
         }
-        return { success: true };
-      } catch (err: unknown) {
-        const msg = err instanceof ApiError ? err.message : 'Registration failed. Please try again.';
-        return { success: false, error: msg };
-      }
-    },
-    []
+      },
+        []
   );
 
   const loginWithToken = useCallback(
@@ -140,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(() => {
+    api.auth.logout().catch(() => { });
     clearAuth();
     setUser(null);
     setRole(null);

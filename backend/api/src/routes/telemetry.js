@@ -1,46 +1,61 @@
 const express = require('express');
+const os = require('os');
+const mongoose = require('mongoose');
 const router = express.Router();
 const { authenticate, requireRole } = require('../middleware/auth');
 const User = require('../models/User');
 const Attendance = require('../models/Attendance');
 const SecurityLog = require('../models/SecurityLog');
 const Session = require('../models/Session');
+const reportInternalError = require('../utils/httpError');
 
-router.get('/system', authenticate, requireRole(['teacher', 'admin']), async (req, res) => {
+function formatUptime(seconds) {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return `${d}d ${h}h ${m}m`;
+}
+
+router.get('/system', authenticate, requireRole(['teacher', 'admin', 'super_admin', 'hod', 'principal']), async (req, res) => {
   try {
-    // Generate realistic fluctuating metrics
-    const cpuUsage = Math.floor(25 + Math.random() * 15);
-    const gpuUsage = Math.floor(40 + Math.random() * 20);
-    const memoryUsage = Math.floor(55 + Math.random() * 10);
-    const scanFPS = (14.5 + Math.random() * 1.5).toFixed(1);
-    const apiResponseTime = Math.floor(45 + Math.random() * 30);
-    
-    // Count actual values
-    const totalStudents = await User.countDocuments({ role: 'student' });
-    const activeSessions = await Session.countDocuments({ is_active: true });
+    const startMs = Date.now();
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const memoryUsage = totalMem > 0 ? Math.round(((totalMem - freeMem) / totalMem) * 100) : 0;
+    const loadAvg = os.loadavg()[0] || 0;
+    const cpuCount = os.cpus()?.length || 1;
+    const cpuUsage = Math.min(100, Math.round((loadAvg / cpuCount) * 100));
+
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    const presentCount = await Attendance.countDocuments({ timestamp: { $gte: todayStart } });
-    const intruderCount = await SecurityLog.countDocuments({ status: "Active" });
+
+    const [totalStudents, activeSessions, presentCount, intruderCount] = await Promise.all([
+      User.countDocuments({ role: 'student' }),
+      Session.countDocuments({ is_active: true }),
+      Attendance.countDocuments({ timestamp: { $gte: todayStart } }),
+      SecurityLog.countDocuments({ status: 'Active' })
+    ]);
+
+    const apiResponseTime = Date.now() - startMs;
 
     res.json({
       cpu_usage: cpuUsage,
-      gpu_usage: gpuUsage,
+      gpu_usage: null,
       memory_usage: memoryUsage,
-      scan_fps: parseFloat(scanFPS),
+      scan_fps: null,
       api_response_time: apiResponseTime,
-      active_cameras: 4,
-      ai_engine_status: "Healthy",
-      hardware_acceleration: "CUDA (NVIDIA Geforce RTX 4070)",
-      mongodb_connection: "Connected",
-      system_uptime: "8d 14h 22m",
-      total_students: totalStudents || 1247,
+      active_cameras: activeSessions,
+      ai_engine_status: process.env.AI_SERVICE_URL ? 'Configured' : 'Local',
+      hardware_acceleration: os.arch(),
+      mongodb_connection: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+      system_uptime: formatUptime(process.uptime()),
+      total_students: totalStudents,
       present_count: presentCount,
       active_sessions: activeSessions,
       intruder_count: intruderCount
     });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    reportInternalError(res, error, 'Telemetry');
   }
 });
 

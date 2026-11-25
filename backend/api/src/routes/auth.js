@@ -121,7 +121,7 @@ async function logSecurityEvent(email, role, action, details, req) {
   }
 }
 
-async function registerSession(userId, accessToken, req) {
+async function registerSession(userId, accessToken, req, rememberMe = false) {
   try {
     const userAgent = req.headers['user-agent'] || 'Unknown Device';
     const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
@@ -132,6 +132,9 @@ async function registerSession(userId, accessToken, req) {
 
     // Expiry is 7 days
     const expiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    // Expiry: 30 days for Remember Me, 7 days standard
+    const days = rememberMe ? 30 : 7;
+    const expiry = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
     await UserSession.create({
       userId,
@@ -196,6 +199,8 @@ const datasetStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     cb(null, file.originalname);
+    const safeBase = path.basename(file.originalname || 'face.jpg').replace(/[^a-zA-Z0-9._-]/g, '_');
+    cb(null, `${Date.now()}_${safeBase}`);
   }
 });
 
@@ -522,6 +527,7 @@ router.post(['/login-password', '/login'], limitLoginPassword, validate(loginPas
 
     const token = AuthService.createAccessToken({ sub: email, role: user.role });
     const refreshToken = await registerSession(email, token, req);
+    const refreshToken = await registerSession(email, token, req, Boolean(req.body.remember_me));
 
     await logSecurityEvent(email, user.role, 'LOGIN_EVENT', { method: 'password', device: userAgent }, req);
 
@@ -1191,379 +1197,436 @@ router.post('/register-biometric', authenticate, memoryUpload.single('image'), a
   }
 });
 
-// ─── GET /auth/students ───────────────────────────────────────────
-router.get('/students', authenticate, async (req, res) => {
+// ─── GET /auth/session ────────────────────────────────────────────
+router.get('/session', authenticate, async (req, res) => {
   try {
-    const students = await User.find({ role: 'student' }).lean();
-    const result = students.map(s => ({
-      email: s.email,
-      full_name: s.full_name,
-      student_id: s.student_id || '000',
-      profilePhotoUrl: s.profilePhotoUrl || s.avatar_url || null,
-      avatar_url: s.profilePhotoUrl || s.avatar_url || null
-    }));
-    res.json(result);
+    const user = await User.findOne({ email: req.userEmail }, 'email role full_name college_id email_verified biometric_registered setup_completed').lean();
+    if (!user) return res.status(404).json({ valid: false, detail: 'User not found' });
+    res.json({
+      valid: true,
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        role: user.role,
+        full_name: user.full_name,
+        college_id: user.college_id || null,
+        email_verified: Boolean(user.email_verified),
+        biometric_registered: Boolean(user.biometric_registered),
+        setup_completed: Boolean(user.setup_completed)
+      }
+    });
   } catch (error) {
     reportInternalError(res, error, 'Auth');
   }
 });
 
-// ─── POST /auth/upload-student-face ─────────────────────────────────
-router.post('/upload-student-face', authenticate, (req, res) => {
-  datasetUpload.single('file')(req, res, (err) => {
-    if (err) {
-      return res.status(400).json({ detail: 'Invalid upload request.' });
+// ─── POST /auth/verify-email ──────────────────────────────────────
+router.post('/verify-email', limitOtpVerify, validate(otpVerifySchema), async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const record = await Otp.findOne({ email, type: { $in: ['email_verification', 'login'] } });
+    if (!record || new Date() > record.expiry) {
+      return res.status(401).json({ detail: 'Invalid or expired verification code' });
     }
-    if (!req.file) {
-      return res.status(400).json({ detail: "No file uploaded" });
+    if (record.attempts >= 3) {
+      await Otp.deleteOne({ _id: record._id });
+      return res.status(401).json({ detail: 'Too many failed attempts. Code invalidated.' });
     }
-    res.json({ message: `Successfully uploaded ${req.file.filename} for student.` });
-  });
+    if (record.otp !== otp) {
+      record.attempts = (record.attempts || 0) + 1;
+      await record.save();
+      return res.status(401).json({ detail: 'Invalid verification code' });
+    }
+    await Otp.deleteOne({ _id: record._id });
+    const user = await User.findOneAndUpdate(
+      { email },
+      { $set: { email_verified: true } },
+      { new: true }
+    );
+    if (!user) return res.status(404).json({ detail: 'User not found' });
+    await logSecurityEvent(email, user.role, 'EMAIL_VERIFIED', {}, req);
+    res.json({ success: true, email_verified: true, message: 'Email verified successfully.' });
+  } catch (error) {
+    reportInternalError(res, error, 'Auth');
+  }
 });
 
-// Helper handler for profile photo uploads using Multer memoryStorage and Sharp optimization
-const handleProfilePhotoUpload = async (req, res) => {
-  const uploadMiddleware = memoryAvatarUpload.fields([
-    { name: 'file', maxCount: 1 },
-    { name: 'photo', maxCount: 1 },
-    { name: 'avatar', maxCount: 1 }
-  ]);
-
-  uploadMiddleware(req, res, async (err) => {
-    if (err) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ success: false, detail: "File too large. Maximum size is 2MB." });
-      }
-      return res.status(400).json({ success: false, detail: 'Invalid upload request.' });
-    }
-
-    const file = (req.files && (req.files.file?.[0] || req.files.photo?.[0] || req.files.avatar?.[0])) || req.file;
-    if (!file || !file.buffer) {
-      return res.status(400).json({ success: false, detail: "No image file uploaded." });
-    }
-
+// ─── GET /auth/students ───────────────────────────────────────────
+router.get('/students', authenticate, async (req, res) => {
+  router.get('/students', authenticate, requireRole(['teacher', 'hod', 'principal', 'management', 'admin', 'super_admin']), async (req, res) => {
     try {
-      const buffer = file.buffer;
-      // Validate magic bytes to verify true image format
-      const isJpeg = buffer.length > 3 && buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
-      const isPng = buffer.length > 8 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
-      const isWebp = buffer.length > 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+      const students = await User.find({ role: 'student' }).lean();
+      const result = students.map(s => ({
+        email: s.email,
+        full_name: s.full_name,
+        student_id: s.student_id || '000',
+        profilePhotoUrl: s.profilePhotoUrl || s.avatar_url || null,
+        avatar_url: s.profilePhotoUrl || s.avatar_url || null
+      }));
+      res.json(result);
+    } catch (error) {
+      reportInternalError(res, error, 'Auth');
+    }
+  });
 
-      if (!isJpeg && !isPng && !isWebp) {
-        return res.status(400).json({ success: false, detail: "Invalid image content. File signature does not match JPEG, PNG, or WebP." });
-      }
+  // ─── POST /auth/upload-student-face ─────────────────────────────────
+  router.post('/upload-student-face', authenticate, (req, res) => {
+    router.post('/upload-student-face', authenticate, requireRole(['teacher', 'hod', 'principal', 'admin', 'super_admin']), (req, res) => {
+      datasetUpload.single('file')(req, res, (err) => {
+        if (err) {
+          return res.status(400).json({ detail: 'Invalid upload request.' });
+        }
+        if (!req.file) {
+          return res.status(400).json({ detail: "No file uploaded" });
+        }
+        res.json({ message: `Successfully uploaded ${req.file.filename} for student.` });
+      });
+    });
 
-      // Generate UUID-based filename and safe destination path
-      const fileUuid = crypto.randomUUID();
-      const outputFilename = `avatar_${fileUuid}.webp`;
-      const outputPath = path.join(avatarsDir, outputFilename);
+    // Helper handler for profile photo uploads using Multer memoryStorage and Sharp optimization
+    const handleProfilePhotoUpload = async (req, res) => {
+      const uploadMiddleware = memoryAvatarUpload.fields([
+        { name: 'file', maxCount: 1 },
+        { name: 'photo', maxCount: 1 },
+        { name: 'avatar', maxCount: 1 }
+      ]);
 
-      // Re-encode via Sharp: resize to 400x400 cover crop, strip EXIF metadata, convert to WebP
-      await sharp(buffer)
-        .resize(400, 400, {
-          fit: 'cover',
-          position: 'center'
-        })
-        .rotate() // auto-orient based on EXIF before stripping
-        .withMetadata(false) // strip all EXIF metadata for privacy & security
-        .webp({ quality: 85 })
-        .toFile(outputPath);
+      uploadMiddleware(req, res, async (err) => {
+        if (err) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ success: false, detail: "File too large. Maximum size is 2MB." });
+          }
+          return res.status(400).json({ success: false, detail: 'Invalid upload request.' });
+        }
 
-      // Delete prior avatar file if it was a local file in avatarsDir
-      const user = await User.findOne({ email: req.userEmail });
-      if (user && (user.profilePhotoUrl || user.avatar_url)) {
-        const oldUrl = user.profilePhotoUrl || user.avatar_url;
-        const oldFilename = path.basename(oldUrl);
-        if (oldFilename && oldFilename !== outputFilename) {
-          const oldPath = path.join(avatarsDir, oldFilename);
-          if (fs.existsSync(oldPath)) {
-            try {
-              fs.unlinkSync(oldPath);
-            } catch (unlinkErr) {
-              console.warn("Could not delete old avatar:", unlinkErr.message);
+        const file = (req.files && (req.files.file?.[0] || req.files.photo?.[0] || req.files.avatar?.[0])) || req.file;
+        if (!file || !file.buffer) {
+          return res.status(400).json({ success: false, detail: "No image file uploaded." });
+        }
+
+        try {
+          const buffer = file.buffer;
+          // Validate magic bytes to verify true image format
+          const isJpeg = buffer.length > 3 && buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+          const isPng = buffer.length > 8 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+          const isWebp = buffer.length > 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+
+          if (!isJpeg && !isPng && !isWebp) {
+            return res.status(400).json({ success: false, detail: "Invalid image content. File signature does not match JPEG, PNG, or WebP." });
+          }
+
+          // Generate UUID-based filename and safe destination path
+          const fileUuid = crypto.randomUUID();
+          const outputFilename = `avatar_${fileUuid}.webp`;
+          const outputPath = path.join(avatarsDir, outputFilename);
+
+          // Re-encode via Sharp: resize to 400x400 cover crop, strip EXIF metadata, convert to WebP
+          await sharp(buffer)
+            .resize(400, 400, {
+              fit: 'cover',
+              position: 'center'
+            })
+            .rotate() // auto-orient based on EXIF before stripping
+            .withMetadata(false) // strip all EXIF metadata for privacy & security
+            .webp({ quality: 85 })
+            .toFile(outputPath);
+
+          // Delete prior avatar file if it was a local file in avatarsDir
+          const user = await User.findOne({ email: req.userEmail });
+          if (user && (user.profilePhotoUrl || user.avatar_url)) {
+            const oldUrl = user.profilePhotoUrl || user.avatar_url;
+            const oldFilename = path.basename(oldUrl);
+            if (oldFilename && oldFilename !== outputFilename) {
+              const oldPath = path.join(avatarsDir, oldFilename);
+              if (fs.existsSync(oldPath)) {
+                try {
+                  fs.unlinkSync(oldPath);
+                } catch (unlinkErr) {
+                  console.warn("Could not delete old avatar:", unlinkErr.message);
+                }
+              }
+            }
+          }
+
+          const avatarUrl = `/static/avatars/${outputFilename}`;
+          await User.updateOne(
+            { email: req.userEmail },
+            {
+              $set: {
+                avatar_url: avatarUrl,
+                profilePhotoUrl: avatarUrl,
+                profilePhotoPublicId: outputFilename
+              }
+            }
+          );
+
+          const updatedUser = await User.findOne({ email: req.userEmail }).lean();
+
+          return res.json({
+            success: true,
+            message: "Profile photo updated successfully.",
+            profilePhotoUrl: avatarUrl,
+            avatar_url: avatarUrl,
+            profilePhotoPublicId: outputFilename,
+            user: {
+              id: updatedUser._id.toString(),
+              name: updatedUser.full_name,
+              email: updatedUser.email,
+              role: updatedUser.role,
+              profilePhotoUrl: avatarUrl,
+              avatar_url: avatarUrl
+            }
+          });
+        } catch (processErr) {
+          console.error("Avatar image processing error:", processErr);
+          return res.status(500).json({ success: false, detail: "Failed to process and optimize image: " + processErr.message });
+        }
+      });
+    };
+
+    // ─── POST /auth/update-profile-photo & aliases ──────────────────────────
+    router.post('/update-profile-photo', authenticate, handleProfilePhotoUpload);
+    router.post('/upload-avatar', authenticate, handleProfilePhotoUpload);
+    router.patch('/users/me/profile-photo', authenticate, handleProfilePhotoUpload);
+    router.post('/users/me/profile-photo', authenticate, handleProfilePhotoUpload);
+
+    // ─── DELETE /api/users/me/profile-photo & DELETE /auth/delete-avatar ────────
+    const handleProfilePhotoDelete = async (req, res) => {
+      try {
+        const user = await User.findOne({ email: req.userEmail });
+        if (user && (user.profilePhotoUrl || user.avatar_url)) {
+          const oldUrl = user.profilePhotoUrl || user.avatar_url;
+          const oldFilename = oldUrl.split('/').pop();
+          if (oldFilename) {
+            const oldPath = path.join(avatarsDir, oldFilename);
+            if (fs.existsSync(oldPath)) {
+              try {
+                fs.unlinkSync(oldPath);
+              } catch (e) {
+                console.error("Failed to delete old avatar file:", e);
+              }
             }
           }
         }
-      }
 
-      const avatarUrl = `/static/avatars/${outputFilename}`;
-      await User.updateOne(
-        { email: req.userEmail },
-        {
-          $set: {
-            avatar_url: avatarUrl,
-            profilePhotoUrl: avatarUrl,
-            profilePhotoPublicId: outputFilename
+        await User.updateOne(
+          { email: req.userEmail },
+          {
+            $unset: {
+              avatar_url: 1,
+              profilePhotoUrl: 1,
+              profilePhotoPublicId: 1
+            }
           }
-        }
-      );
+        );
 
-      const updatedUser = await User.findOne({ email: req.userEmail }).lean();
+        const updatedUser = await User.findOne({ email: req.userEmail }).lean();
 
-      return res.json({
-        success: true,
-        message: "Profile photo updated successfully.",
-        profilePhotoUrl: avatarUrl,
-        avatar_url: avatarUrl,
-        profilePhotoPublicId: outputFilename,
-        user: {
-          id: updatedUser._id.toString(),
-          name: updatedUser.full_name,
-          email: updatedUser.email,
-          role: updatedUser.role,
-          profilePhotoUrl: avatarUrl,
-          avatar_url: avatarUrl
+        res.json({
+          success: true,
+          message: "Profile photo deleted successfully.",
+          profilePhotoUrl: null,
+          avatar_url: null,
+          user: {
+            id: updatedUser._id.toString(),
+            name: updatedUser.full_name,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            profilePhotoUrl: null,
+            avatar_url: null
+          }
+        });
+      } catch (error) {
+        reportInternalError(res, error, 'Auth');
+      }
+    };
+
+    router.delete('/users/me/profile-photo', authenticate, handleProfilePhotoDelete);
+    router.delete('/delete-avatar', authenticate, handleProfilePhotoDelete);
+
+    // ─── POST /auth/train-faces ───────────────────────────────────────
+    router.post('/train-faces', authenticate, async (req, res) => {
+      router.post('/train-faces', authenticate, requireRole(['teacher', 'hod', 'principal', 'admin', 'super_admin']), async (req, res) => {
+        try {
+          const pythonScript = path.join(__dirname, '../../../core/train_faces.py');
+          const venvPython = path.join(__dirname, '../../../venv/Scripts/python.exe');
+          const pythonExecutable = fs.existsSync(venvPython) ? venvPython : 'python';
+          console.log(`Initiating background model training via: ${pythonExecutable} ${pythonScript}`);
+
+          // Spawn background python training task
+          const py = spawn(pythonExecutable, [pythonScript], {
+            detached: true,
+            stdio: 'ignore'
+          });
+
+          py.unref(); // Allow node to exit independently of this spawned process
+
+          res.json({ message: "AI face recognition model training initiated in the background." });
+        } catch (error) {
+          reportInternalError(res, error, 'Auth');
         }
       });
-    } catch (processErr) {
-      console.error("Avatar image processing error:", processErr);
-      return res.status(500).json({ success: false, detail: "Failed to process and optimize image: " + processErr.message });
-    }
-  });
-};
 
-// ─── POST /auth/update-profile-photo & aliases ──────────────────────────
-router.post('/update-profile-photo', authenticate, handleProfilePhotoUpload);
-router.post('/upload-avatar', authenticate, handleProfilePhotoUpload);
-router.patch('/users/me/profile-photo', authenticate, handleProfilePhotoUpload);
-router.post('/users/me/profile-photo', authenticate, handleProfilePhotoUpload);
-
-// ─── DELETE /api/users/me/profile-photo & DELETE /auth/delete-avatar ────────
-const handleProfilePhotoDelete = async (req, res) => {
-  try {
-    const user = await User.findOne({ email: req.userEmail });
-    if (user && (user.profilePhotoUrl || user.avatar_url)) {
-      const oldUrl = user.profilePhotoUrl || user.avatar_url;
-      const oldFilename = oldUrl.split('/').pop();
-      if (oldFilename) {
-        const oldPath = path.join(avatarsDir, oldFilename);
-        if (fs.existsSync(oldPath)) {
-          try {
-            fs.unlinkSync(oldPath);
-          } catch (e) {
-            console.error("Failed to delete old avatar file:", e);
+      // ─── POST /auth/token/refresh ──────────────────────────────────────
+      router.post('/token/refresh', async (req, res) => {
+        try {
+          const browserClient = Boolean(req.headers.origin);
+          const refresh_token = req.body?.refresh_token || (browserClient ? readRefreshCookie(req) : null);
+          if (!refresh_token) {
+            if (browserClient) clearRefreshCookie(res);
+            return res.status(400).json({ detail: "Refresh token is required" });
           }
+
+          const incomingHash = crypto.createHash('sha256').update(refresh_token).digest('hex');
+
+          // Check active session
+          let session = await UserSession.findOne({ refreshTokenHash: incomingHash });
+
+          if (!session) {
+            // Reused Refresh Token Detection: check if this hash is in revokedRefreshTokenHashes of any session
+            const compromisedSession = await UserSession.findOne({ revokedRefreshTokenHashes: incomingHash });
+            if (compromisedSession) {
+              // Severe security alert: token reuse detected. Revoke entire session family!
+              await UserSession.deleteOne({ _id: compromisedSession._id });
+              await logSecurityEvent(compromisedSession.userId, 'unknown', 'ROLE_VIOLATION', { reason: 'Refresh token reuse/theft attempt', tokenHash: incomingHash }, req);
+              if (browserClient) clearRefreshCookie(res);
+              return res.status(401).json({ detail: "Revoked session family due to token reuse detection." });
+            }
+            if (browserClient) clearRefreshCookie(res);
+            return res.status(401).json({ detail: "Invalid refresh token" });
+          }
+
+          // Check expiry
+          if (new Date() > session.expiry) {
+            await UserSession.deleteOne({ _id: session._id });
+            if (browserClient) clearRefreshCookie(res);
+            return res.status(401).json({ detail: "Refresh token expired" });
+          }
+
+          const user = await User.findOne({ email: session.userId });
+          if (!user) {
+            await UserSession.deleteOne({ _id: session._id });
+            if (browserClient) clearRefreshCookie(res);
+            return res.status(401).json({ detail: "User not found" });
+          }
+
+          const newAccessToken = AuthService.createAccessToken({ sub: user.email, role: user.role });
+          const newRefreshToken = crypto.randomBytes(32).toString('hex');
+
+          const newTokenHash = crypto.createHash('sha256').update(newAccessToken).digest('hex');
+          const newRefreshTokenHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex');
+
+          session.tokenHash = newTokenHash;
+          session.revokedRefreshTokenHashes.push(incomingHash);
+          session.refreshTokenHash = newRefreshTokenHash;
+          session.lastActive = new Date();
+          session.expiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+          await session.save();
+
+          if (browserClient) res.cookie(REFRESH_COOKIE_NAME, newRefreshToken, refreshCookieOptions());
+
+          res.json({
+            access_token: newAccessToken,
+            refresh_token: browserClient ? undefined : newRefreshToken,
+            token_type: "bearer"
+          });
+        } catch (error) {
+          reportInternalError(res, error, 'Auth');
         }
-      }
-    }
+      });
 
-    await User.updateOne(
-      { email: req.userEmail },
-      {
-        $unset: {
-          avatar_url: 1,
-          profilePhotoUrl: 1,
-          profilePhotoPublicId: 1
+      // ─── GET /auth/sessions/active ─────────────────────────────────────
+      router.get('/sessions/active', authenticate, async (req, res) => {
+        try {
+          const rawAuth = req.headers['authorization'] || '';
+          const tokenPart = rawAuth.includes(' ') ? rawAuth.split(' ')[1] : rawAuth;
+          const currentTokenHash = tokenPart ? crypto.createHash('sha256').update(tokenPart).digest('hex') : null;
+
+          const sessions = await UserSession.find({ userId: req.userEmail }).sort({ lastActive: -1 }).lean();
+          const result = sessions.map(s => ({
+            id: s._id.toString(),
+            device: s.device || 'Authorized Device',
+            ip: s.ip || req.ip || '127.0.0.1',
+            location: s.location || 'Current Network',
+            last_active: s.lastActive || new Date(),
+            is_current: currentTokenHash ? currentTokenHash === s.tokenHash : false
+          }));
+
+          res.json(result);
+        } catch (error) {
+          reportInternalError(res, error, 'Auth');
         }
-      }
-    );
+      });
 
-    const updatedUser = await User.findOne({ email: req.userEmail }).lean();
+      // ─── POST /auth/sessions/logout-all ────────────────────────────────
+      router.post('/sessions/logout-all', authenticate, async (req, res) => {
+        try {
+          const currentToken = req.headers['authorization'].split(' ')[1];
+          const currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
 
-    res.json({
-      success: true,
-      message: "Profile photo deleted successfully.",
-      profilePhotoUrl: null,
-      avatar_url: null,
-      user: {
-        id: updatedUser._id.toString(),
-        name: updatedUser.full_name,
-        email: updatedUser.email,
-        role: updatedUser.role,
-        profilePhotoUrl: null,
-        avatar_url: null
-      }
-    });
-  } catch (error) {
-    reportInternalError(res, error, 'Auth');
-  }
-};
+          // Delete all sessions for this user EXCEPT the current one
+          const otherSessions = await UserSession.find({
+            userId: req.userEmail,
+            tokenHash: { $ne: currentTokenHash }
+          }).select('tokenHash').lean();
+          if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
+          for (const s of otherSessions) {
+            if (s.tokenHash) global._revokedTestTokens.add(s.tokenHash);
+          }
+          await UserSession.deleteMany({
+            userId: req.userEmail,
+            tokenHash: { $ne: currentTokenHash }
+          });
 
-router.delete('/users/me/profile-photo', authenticate, handleProfilePhotoDelete);
-router.delete('/delete-avatar', authenticate, handleProfilePhotoDelete);
+          await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: 'all_other_devices' }, req);
 
-// ─── POST /auth/train-faces ───────────────────────────────────────
-router.post('/train-faces', authenticate, async (req, res) => {
-  try {
-    const pythonScript = path.join(__dirname, '../../../core/train_faces.py');
-    const venvPython = path.join(__dirname, '../../../venv/Scripts/python.exe');
-    const pythonExecutable = fs.existsSync(venvPython) ? venvPython : 'python';
-    console.log(`Initiating background model training via: ${pythonExecutable} ${pythonScript}`);
+          res.json({ message: "Successfully logged out of all other devices" });
+        } catch (error) {
+          reportInternalError(res, error, 'Auth');
+        }
+      });
 
-    // Spawn background python training task
-    const py = spawn(pythonExecutable, [pythonScript], {
-      detached: true,
-      stdio: 'ignore'
-    });
+      // ─── POST /auth/logout ─────────────────────────────────────────────
+      // Revoke the current session (server-side) for a clean, secure logout.
+      router.post('/logout', authenticate, async (req, res) => {
+        try {
+          const currentToken = req.headers['authorization'].split(' ')[1];
+          const currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
+          if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
+          global._revokedTestTokens.add(currentTokenHash);
+          await UserSession.deleteOne({ userId: req.userEmail, tokenHash: currentTokenHash });
 
-    py.unref(); // Allow node to exit independently of this spawned process
+          await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: 'current_device' }, req);
+          clearRefreshCookie(res);
 
-    res.json({ message: "AI face recognition model training initiated in the background." });
-  } catch (error) {
-    reportInternalError(res, error, 'Auth');
-  }
-});
+          res.json({ message: "Logged out successfully" });
+        } catch (error) {
+          reportInternalError(res, error, 'Auth');
+        }
+      });
 
-// ─── POST /auth/token/refresh ──────────────────────────────────────
-router.post('/token/refresh', async (req, res) => {
-  try {
-    const browserClient = Boolean(req.headers.origin);
-    const refresh_token = req.body?.refresh_token || (browserClient ? readRefreshCookie(req) : null);
-    if (!refresh_token) {
-      if (browserClient) clearRefreshCookie(res);
-      return res.status(400).json({ detail: "Refresh token is required" });
-    }
+      // ─── DELETE /auth/sessions/:id ─────────────────────────────────────
+      // Revoke a specific device session belonging to the authenticated user.
+      router.delete('/sessions/:id', authenticate, async (req, res) => {
+        try {
+          const { id } = req.params;
+          const sessionToDelete = await UserSession.findOne({ _id: id, userId: req.userEmail });
+          if (!sessionToDelete) {
+            return res.status(404).json({ detail: "Session not found" });
+          }
+          if (sessionToDelete.tokenHash) {
+            if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
+            global._revokedTestTokens.add(sessionToDelete.tokenHash);
+          }
+          await UserSession.deleteOne({ _id: id, userId: req.userEmail });
 
-    const incomingHash = crypto.createHash('sha256').update(refresh_token).digest('hex');
+          await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: `device_${id}` }, req);
 
-    // Check active session
-    let session = await UserSession.findOne({ refreshTokenHash: incomingHash });
+          res.json({ message: "Session revoked successfully" });
+        } catch (error) {
+          reportInternalError(res, error, 'Auth');
+        }
+      });
 
-    if (!session) {
-      // Reused Refresh Token Detection: check if this hash is in revokedRefreshTokenHashes of any session
-      const compromisedSession = await UserSession.findOne({ revokedRefreshTokenHashes: incomingHash });
-      if (compromisedSession) {
-        // Severe security alert: token reuse detected. Revoke entire session family!
-        await UserSession.deleteOne({ _id: compromisedSession._id });
-        await logSecurityEvent(compromisedSession.userId, 'unknown', 'ROLE_VIOLATION', { reason: 'Refresh token reuse/theft attempt', tokenHash: incomingHash }, req);
-        if (browserClient) clearRefreshCookie(res);
-        return res.status(401).json({ detail: "Revoked session family due to token reuse detection." });
-      }
-      if (browserClient) clearRefreshCookie(res);
-      return res.status(401).json({ detail: "Invalid refresh token" });
-    }
-
-    // Check expiry
-    if (new Date() > session.expiry) {
-      await UserSession.deleteOne({ _id: session._id });
-      if (browserClient) clearRefreshCookie(res);
-      return res.status(401).json({ detail: "Refresh token expired" });
-    }
-
-    const user = await User.findOne({ email: session.userId });
-    if (!user) {
-      await UserSession.deleteOne({ _id: session._id });
-      if (browserClient) clearRefreshCookie(res);
-      return res.status(401).json({ detail: "User not found" });
-    }
-
-    const newAccessToken = AuthService.createAccessToken({ sub: user.email, role: user.role });
-    const newRefreshToken = crypto.randomBytes(32).toString('hex');
-
-    const newTokenHash = crypto.createHash('sha256').update(newAccessToken).digest('hex');
-    const newRefreshTokenHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex');
-
-    session.tokenHash = newTokenHash;
-    session.revokedRefreshTokenHashes.push(incomingHash);
-    session.refreshTokenHash = newRefreshTokenHash;
-    session.lastActive = new Date();
-    session.expiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-    await session.save();
-
-    if (browserClient) res.cookie(REFRESH_COOKIE_NAME, newRefreshToken, refreshCookieOptions());
-
-    res.json({
-      access_token: newAccessToken,
-      refresh_token: browserClient ? undefined : newRefreshToken,
-      token_type: "bearer"
-    });
-  } catch (error) {
-    reportInternalError(res, error, 'Auth');
-  }
-});
-
-// ─── GET /auth/sessions/active ─────────────────────────────────────
-router.get('/sessions/active', authenticate, async (req, res) => {
-  try {
-    const rawAuth = req.headers['authorization'] || '';
-    const tokenPart = rawAuth.includes(' ') ? rawAuth.split(' ')[1] : rawAuth;
-    const currentTokenHash = tokenPart ? crypto.createHash('sha256').update(tokenPart).digest('hex') : null;
-
-    const sessions = await UserSession.find({ userId: req.userEmail }).sort({ lastActive: -1 }).lean();
-    const result = sessions.map(s => ({
-      id: s._id.toString(),
-      device: s.device || 'Authorized Device',
-      ip: s.ip || req.ip || '127.0.0.1',
-      location: s.location || 'Current Network',
-      last_active: s.lastActive || new Date(),
-      is_current: currentTokenHash ? currentTokenHash === s.tokenHash : false
-    }));
-
-    res.json(result);
-  } catch (error) {
-    reportInternalError(res, error, 'Auth');
-  }
-});
-
-// ─── POST /auth/sessions/logout-all ────────────────────────────────
-router.post('/sessions/logout-all', authenticate, async (req, res) => {
-  try {
-    const currentToken = req.headers['authorization'].split(' ')[1];
-    const currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
-
-    // Delete all sessions for this user EXCEPT the current one
-    const otherSessions = await UserSession.find({
-      userId: req.userEmail,
-      tokenHash: { $ne: currentTokenHash }
-    }).select('tokenHash').lean();
-    if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
-    for (const s of otherSessions) {
-      if (s.tokenHash) global._revokedTestTokens.add(s.tokenHash);
-    }
-    await UserSession.deleteMany({
-      userId: req.userEmail,
-      tokenHash: { $ne: currentTokenHash }
-    });
-
-    await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: 'all_other_devices' }, req);
-
-    res.json({ message: "Successfully logged out of all other devices" });
-  } catch (error) {
-    reportInternalError(res, error, 'Auth');
-  }
-});
-
-// ─── POST /auth/logout ─────────────────────────────────────────────
-// Revoke the current session (server-side) for a clean, secure logout.
-router.post('/logout', authenticate, async (req, res) => {
-  try {
-    const currentToken = req.headers['authorization'].split(' ')[1];
-    const currentTokenHash = crypto.createHash('sha256').update(currentToken).digest('hex');
-    if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
-    global._revokedTestTokens.add(currentTokenHash);
-    await UserSession.deleteOne({ userId: req.userEmail, tokenHash: currentTokenHash });
-
-    await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: 'current_device' }, req);
-    clearRefreshCookie(res);
-
-    res.json({ message: "Logged out successfully" });
-  } catch (error) {
-    reportInternalError(res, error, 'Auth');
-  }
-});
-
-// ─── DELETE /auth/sessions/:id ─────────────────────────────────────
-// Revoke a specific device session belonging to the authenticated user.
-router.delete('/sessions/:id', authenticate, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const sessionToDelete = await UserSession.findOne({ _id: id, userId: req.userEmail });
-    if (!sessionToDelete) {
-      return res.status(404).json({ detail: "Session not found" });
-    }
-    if (sessionToDelete.tokenHash) {
-      if (!global._revokedTestTokens) global._revokedTestTokens = new Set();
-      global._revokedTestTokens.add(sessionToDelete.tokenHash);
-    }
-    await UserSession.deleteOne({ _id: id, userId: req.userEmail });
-
-    await logSecurityEvent(req.userEmail, req.userRole, 'LOGOUT_EVENT', { scope: `device_${id}` }, req);
-
-    res.json({ message: "Session revoked successfully" });
-  } catch (error) {
-    reportInternalError(res, error, 'Auth');
-  }
-});
-
-module.exports = router;
+      module.exports = router;

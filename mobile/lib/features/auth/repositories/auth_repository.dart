@@ -39,8 +39,10 @@ class AuthRepository {
       final bool bioRegistered = result['biometric_registered'] ?? false;
       final bool introCompleted = result['introCompleted'] ?? false;
       final bool wizardCompleted = result['wizardCompleted'] ?? bioRegistered;
+      final String? refreshToken = result['refresh_token'] as String?;
       await _sessionManager.saveSession(
         token: token,
+        refreshToken: refreshToken,
         email: email,
         name: name,
         role: role,
@@ -69,8 +71,10 @@ class AuthRepository {
       final bool bioRegistered = result['biometric_registered'] ?? false;
       final bool introCompleted = result['introCompleted'] ?? false;
       final bool wizardCompleted = result['wizardCompleted'] ?? bioRegistered;
+      final String? refreshToken = result['refresh_token'] as String?;
       await _sessionManager.saveSession(
         token: token,
+        refreshToken: refreshToken,
         email: email,
         name: name,
         role: role,
@@ -111,8 +115,10 @@ class AuthRepository {
       final bool bioRegistered = result['biometric_registered'] ?? false;
       final bool introCompleted = result['introCompleted'] ?? false;
       final bool wizardCompleted = result['wizardCompleted'] ?? bioRegistered;
+      final String? refreshToken = result['refresh_token'] as String?;
       await _sessionManager.saveSession(
         token: token,
+        refreshToken: refreshToken,
         email: email,
         name: name,
         role: userRole,
@@ -142,8 +148,10 @@ class AuthRepository {
       final bool bioRegistered = result['biometric_registered'] ?? false;
       final bool introCompleted = result['introCompleted'] ?? false;
       final bool wizardCompleted = result['wizardCompleted'] ?? bioRegistered;
+      final String? refreshToken = result['refresh_token'] as String?;
       await _sessionManager.saveSession(
         token: token,
+        refreshToken: refreshToken,
         email: email,
         name: name,
         role: userRole,

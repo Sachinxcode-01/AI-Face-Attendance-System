@@ -62,41 +62,6 @@ class _AdminIntruderSentinelScreenState
   String _activeFilter = 'all'; // all, critical, high, acknowledged
   List<ThreatIncident> _incidents = [];
 
-  final List<ThreatIncident> _mockIncidents = [
-    ThreatIncident(
-      id: 'THREAT-8941',
-      location: 'Central Academic Block - Main Gate',
-      cameraId: 'CAM-01-TERMINAL',
-      timestamp: 'Today, 09:14:22 AM',
-      threatLevel: 'CRITICAL',
-      confidenceScore: 0.28,
-    ),
-    ThreatIncident(
-      id: 'THREAT-8942',
-      location: 'Computer Science Department Lab 3B',
-      cameraId: 'CAM-04-PODIUM',
-      timestamp: 'Today, 09:22:05 AM',
-      threatLevel: 'HIGH',
-      confidenceScore: 0.41,
-    ),
-    ThreatIncident(
-      id: 'THREAT-8943',
-      location: 'Central Library Entrance Turnstile',
-      cameraId: 'CAM-09-GATE',
-      timestamp: 'Today, 10:05:40 AM',
-      threatLevel: 'SUSPICIOUS',
-      confidenceScore: 0.52,
-    ),
-    ThreatIncident(
-      id: 'THREAT-8944',
-      location: 'Staff & Faculty Seminar Hall',
-      cameraId: 'CAM-02-KIOSK',
-      timestamp: 'Today, 10:35:12 AM',
-      threatLevel: 'CRITICAL',
-      confidenceScore: 0.19,
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -110,15 +75,15 @@ class _AdminIntruderSentinelScreenState
     if (token != null) {
       try {
         final logs = await ApiService.getSecurityLogs();
-        if (mounted && logs.isNotEmpty) {
+        if (mounted) {
           final mapped = logs.map((l) {
             return ThreatIncident(
-              id: l['id'] ?? 'THREAT-${DateTime.now().millisecondsSinceEpoch % 10000}',
-              location: l['camera_id'] ?? 'Main Gate Scanner',
+              id: l['id']?.toString() ?? 'LOG',
+              location: l['location'] ?? l['camera_id'] ?? 'Campus Gate',
               cameraId: l['camera_id'] ?? 'CAM-01',
-              timestamp: l['timestamp'] ?? 'Just now',
-              threatLevel: 'CRITICAL',
-              confidenceScore: 0.25,
+              timestamp: l['timestamp']?.toString() ?? '',
+              threatLevel: (l['type'] ?? 'CRITICAL').toString().toUpperCase(),
+              confidenceScore: (l['confidence'] is num) ? (l['confidence'] as num).toDouble() : 0.0,
             );
           }).toList();
 
@@ -135,7 +100,7 @@ class _AdminIntruderSentinelScreenState
 
     if (mounted) {
       setState(() {
-        _incidents = _mockIncidents;
+        _incidents = [];
         _isLoading = false;
       });
     }

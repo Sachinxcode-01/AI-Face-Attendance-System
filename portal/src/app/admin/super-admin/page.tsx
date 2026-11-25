@@ -97,13 +97,13 @@ export default function SuperAdminPage() {
       if (res?.colleges) {
         setColleges(res.colleges);
       }
-    } catch {}
+    } catch { }
     try {
       const admRes = await api.superAdmin.admins();
       if (admRes?.admins) {
         setAdmins(admRes.admins);
       }
-    } catch {}
+    } catch { }
     try {
       const statRes = await api.superAdmin.globalAnalytics();
       if (statRes?.platform) {
@@ -115,19 +115,19 @@ export default function SuperAdminPage() {
           avgComplianceRate: statRes.platform.overallAttendanceRate ?? prev.avgComplianceRate
         }));
       }
-    } catch {}
+    } catch { }
     try {
       const hRes = await api.superAdmin.healthOverview();
       if (hRes?.services) {
         setHealthData(hRes.services);
       }
-    } catch {}
+    } catch { }
     try {
       const accRes = await api.accuracy.metrics(168);
       if (accRes?.summary) {
         setAccuracyData((prev: any) => ({ ...prev, ...accRes.summary }));
       }
-    } catch {}
+    } catch { }
     setLoading(false);
   };
 
@@ -206,11 +206,10 @@ export default function SuperAdminPage() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key as any)}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
-              activeTab === tab.key
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${activeTab === tab.key
                 ? 'bg-accent text-[#050507] shadow-lg shadow-accent/20'
                 : 'bg-white/[0.03] text-mid hover:bg-white/[0.06] hover:text-hi'
-            }`}
+              }`}
           >
             <tab.icon className="h-3.5 w-3.5" />
             {tab.label}
@@ -358,47 +357,46 @@ export default function SuperAdminPage() {
             />
             <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                <h4 className="font-semibold text-hi text-sm mb-3">Verification Failure Breakdown (Past 7 Days)</h4>
+                <h4 className="font-semibold text-hi text-sm mb-3">Verification Failure Breakdown</h4>
                 <div className="space-y-3 font-mono text-xs">
-                  {[
-                    { reason: 'Low Lighting / Poor Contrast', count: 42, pct: '48%' },
-                    { reason: 'Extreme Yaw / Pitch Angle (>35°)', count: 24, pct: '28%' },
-                    { reason: 'Motion Blur / Rapid Transit', count: 14, pct: '16%' },
-                    { reason: 'Partial Occlusion (Mask/Glasses)', count: 7, pct: '8%' },
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between">
-                      <span className="text-mid">{item.reason}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-hi font-bold">{item.count}</span>
-                        <span className="text-faint text-[11px] w-10 text-right">{item.pct}</span>
-                      </div>
+                        {Array.isArray((accuracyData as any).failureBreakdown) && (accuracyData as any).failureBreakdown.length > 0 ? (
+                          (accuracyData as any).failureBreakdown.map((item: any, idx: number) => (
+                            <div key={idx} className="flex items-center justify-between">
+                              <span className="text-mid">{item.reason}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-hi font-bold">{item.count}</span>
+                                <span className="text-faint text-[11px] w-10 text-right">{item.pct}</span>
+                              </div>
+                            </div>
+                      ))
+                      ) : (
+                      <p className="text-faint text-xs">No verification failure events recorded in this interval.</p>
+                  )}
                     </div>
-                  ))}
-                </div>
               </div>
 
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                <h4 className="font-semibold text-hi text-sm mb-3">Core Attendance Engine Integrity</h4>
-                <div className="space-y-2.5 font-mono text-xs text-mid">
-                  <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                    <span>Single Source of Truth:</span>
-                    <span className="text-emerald-400 font-bold">core/attendance_system.py</span>
-                  </div>
-                  <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                    <span>ArcFace Embedding Dimension:</span>
-                    <span className="text-hi">512-D L2 Normalized FP16</span>
-                  </div>
-                  <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                    <span>Cosine Similarity Threshold:</span>
-                    <span className="text-accent font-bold">0.650 (Strict Enterprise)</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Liveness Detection Mode:</span>
-                    <span className="text-emerald-400">Active Texture + Blink Heuristic</span>
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+                  <h4 className="font-semibold text-hi text-sm mb-3">Core Attendance Engine Integrity</h4>
+                  <div className="space-y-2.5 font-mono text-xs text-mid">
+                    <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                      <span>Single Source of Truth:</span>
+                      <span className="text-emerald-400 font-bold">core/attendance_system.py</span>
+                    </div>
+                    <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                      <span>ArcFace Embedding Dimension:</span>
+                      <span className="text-hi">512-D L2 Normalized FP16</span>
+                    </div>
+                    <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                      <span>Cosine Similarity Threshold:</span>
+                      <span className="text-accent font-bold">0.650 (Strict Enterprise)</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Liveness Detection Mode:</span>
+                      <span className="text-emerald-400">Active Texture + Blink Heuristic</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
           </Card>
         </div>
       )}
@@ -412,24 +410,24 @@ export default function SuperAdminPage() {
             subtitle="Endpoints exposed at /health, /readiness, and /liveness for zero-downtime orchestration."
           />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            {[
-              { name: 'API Gateway (Node.js)', status: 'Healthy', latency: '4ms', probe: 'HTTP GET /health -> 200' },
-              { name: 'Attendance Core Engine', status: 'Healthy', latency: '12ms', probe: 'SHA256 Hash Verified' },
-              { name: 'Python AI Service (Uvicorn)', status: 'Healthy', latency: '18ms', probe: 'HTTP GET /health -> 200' },
-              { name: 'Redis + BullMQ Queue Cluster', status: 'Healthy', latency: '1ms', probe: 'In-Memory / Redis Resilient' },
-              { name: 'MongoDB Primary Replica', status: 'Connected', latency: '3ms', probe: 'Mongoose state: connected' },
-              { name: 'WebSocket Realtime Bus', status: 'Listening', latency: '2ms', probe: '14 Active College Rooms' },
-            ].map((srv, i) => (
-              <div key={i} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-hi text-xs">{srv.name}</span>
-                  <Badge tone="success">{srv.status}</Badge>
+                  {healthData ? (
+                    Object.entries(healthData.services || healthData).map(([key, val]: [string, any]) => (
+                <div key={key} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-hi text-xs capitalize">{key.replace(/_/g, ' ')}</span>
+                    <Badge tone={String(val?.status || val).toLowerCase().includes('health') || String(val?.status || val).toLowerCase().includes('connect') || String(val?.status || val).toLowerCase().includes('ok') ? 'success' : 'warning'}>
+                      {String(val?.status || val || 'unknown')}
+                    </Badge>
+                  </div>
+                  {val?.latencyMs != null && (
+                    <div className="text-[11px] font-mono text-faint mb-1">Latency: <span className="text-accent">{val.latencyMs}ms</span></div>
+                  )}
                 </div>
-                <div className="text-[11px] font-mono text-faint mb-1">Latency: <span className="text-accent">{srv.latency}</span></div>
-                <div className="text-[10px] font-mono text-mid bg-black/40 p-1.5 rounded">{srv.probe}</div>
+                ))
+                ) : (
+                <p className="text-xs text-faint col-span-3">Health telemetry unavailable.</p>
+            )}
               </div>
-            ))}
-          </div>
         </Card>
       )}
 

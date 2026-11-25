@@ -26,16 +26,30 @@ async function staffLeaveScope(req) {
 }
 
 // ─── POST /leave/apply ──────────────────────────────────────────
-router.post('/apply', authenticate, requireRole(['student']), validate(leaveApplySchema), async (req, res) => {
+router.post('/apply', authenticate, requireRole(['student', 'parent']), validate(leaveApplySchema), async (req, res) => {
   try {
-    const { user_id, reason, start_date, end_date } = req.body;
+    const { reason, start_date, end_date } = req.body;
+    const actorRole = (req.userRole || '').toLowerCase();
+    let targetUserId = (req.body.user_id || req.body.student_email || req.userEmail || '').trim().toLowerCase();
 
-    if (req.userEmail.toLowerCase() !== user_id.toLowerCase() && req.userRole.toLowerCase() !== 'admin') {
+    if (actorRole === 'student' && req.userEmail.toLowerCase() !== targetUserId) {
       return res.status(403).json({ detail: "Forbidden: Cannot apply for leave on behalf of another user." });
     }
 
+    if (actorRole === 'parent') {
+      const parent = await User.findOne({ email: req.userEmail.toLowerCase() }, 'children linked_children').lean();
+      const wardEmails = new Set([
+        ...(parent?.children || []).map(e => String(e).toLowerCase()),
+        ...(parent?.linked_children || []).map(c => String(c.email || '').toLowerCase())
+      ]);
+      if (!targetUserId || !wardEmails.has(targetUserId)) {
+        return res.status(403).json({ detail: "Forbidden: Student is not linked to your parent account." });
+      }
+    }
+
     const newLeave = new Leave({
-      user_id,
+      user_id: targetUserId,
+      college_id: req.userCollege || undefined,
       reason,
       start_date,
       end_date,
@@ -48,10 +62,10 @@ router.post('/apply', authenticate, requireRole(['student']), validate(leaveAppl
     trackJob(notificationService.createNotification(
       "admin",
       "New Leave Request",
-      `${user_id} has requested leave from ${start_date} to ${end_date}`,
+      `${targetUserId} has requested leave from ${start_date} to ${end_date}`,
       "leave_request",
       "High",
-      { leave_id: newLeave._id.toString(), user_id }
+      { leave_id: newLeave._id.toString(), user_id: targetUserId }
     ).catch(console.error));
 
     res.json({ message: "Leave application submitted", id: newLeave._id.toString() });
@@ -73,15 +87,15 @@ router.get('/student/:email', authenticate, async (req, res) => {
     if (!isSelf && scope.user_id && !scope.user_id.$in.includes(email)) {
       return res.status(403).json({ detail: 'You are not allowed to view leave requests outside your department.' });
     }
-    
+
     const leaves = await Leave.find({ user_id: email }).sort({ created_at: -1 }).lean();
-    
+
     const result = leaves.map(l => {
       l.id = l._id.toString();
       delete l._id;
       return l;
     });
-    
+
     res.json(result);
   } catch (error) {
     reportInternalError(res, error, 'Leave');
@@ -96,13 +110,13 @@ router.get('/admin/pending', authenticate, requireRole(leaveReviewRoles), async 
       ...scope,
       status: { $in: ['Pending', 'Under Review'] },
     }).sort({ created_at: 1 }).lean();
-    
+
     const result = leaves.map(l => {
       l.id = l._id.toString();
       delete l._id;
       return l;
     });
-    
+
     res.json(result);
   } catch (error) {
     reportInternalError(res, error, 'Leave');

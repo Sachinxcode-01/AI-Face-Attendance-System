@@ -5,7 +5,6 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { CalendarDays } from 'lucide-react';
-import { MOCK_HEATMAP } from '@/lib/demo-data';
 import { api } from '@/lib/api';
 import type { HeatmapDay } from '@/lib/types';
 
@@ -18,66 +17,66 @@ const LEVELS = [
 ];
 
 export default function StudentHeatmapPage() {
-  const [heatmap, setHeatmap] = useState<HeatmapDay[]>(MOCK_HEATMAP);
+  const [heatmap, setHeatmap] = useState<HeatmapDay[]>([]);
 
   useEffect(() => {
     api.attendance.heatmap()
       .then((data: any) => {
-        if (data && Array.isArray(data.heatmap) && data.heatmap.length > 0) {
-          setHeatmap(data.heatmap);
-        }
-      })
-      .catch(() => {});
-  }, []);
+          if (data && Array.isArray(data.heatmap)) {
+            setHeatmap(data.heatmap);
+          }
+        })
+      .catch (() => setHeatmap([]));
+}, []);
 
-  const total = heatmap.reduce((a, d) => a + d.count, 0);
-  const activeDays = heatmap.filter((d) => d.count > 0).length;
+const total = heatmap.reduce((a, d) => a + d.count, 0);
+const activeDays = heatmap.filter((d) => d.count > 0).length;
 
-  return (
-    <DashboardLayout>
-      <PageHeader
-        kicker="Attendance Analytics"
-        title="Check-in Heatmap"
-        subtitle="Daily biometric verification intensity across the last 30 calendar days."
-      />
+return (
+  <DashboardLayout>
+    <PageHeader
+      kicker="Attendance Analytics"
+      title="Check-in Heatmap"
+      subtitle="Daily biometric verification intensity across the last 30 calendar days."
+    />
 
-      <div className="page-enter mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <Card className="p-5">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-faint">Total Check-ins</p>
-          <p className="mt-1.5 font-display text-2xl font-semibold text-hi">{total}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-faint">Active Days</p>
-          <p className="mt-1.5 font-display text-2xl font-semibold text-emerald-400">{activeDays}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-faint">Avg / Day</p>
-          <p className="mt-1.5 font-display text-2xl font-semibold text-accent">{(total / Math.max(activeDays, 1)).toFixed(1)}</p>
-        </Card>
-      </div>
-
-      <Card className="page-enter p-6">
-        <CardHeader icon={<CalendarDays className="h-5 w-5 text-accent" />} title="Last 30 Days" subtitle="Cell luminance correlates with daily gate and lecture verification count" />
-        <div className="grid grid-cols-7 gap-2.5 pt-2">
-          {heatmap.map((d) => (
-            <div
-              key={d.date}
-              title={`${d.date}: ${d.count} check-ins`}
-              className={`flex aspect-square flex-col items-center justify-center rounded-[14px] border border-white/[0.06] ${LEVELS[d.intensity]} transition-transform hover:scale-105`}
-            >
-              <span className="font-mono text-[11px] font-bold">{d.count}</span>
-              <span className="font-mono text-[8.5px] uppercase opacity-75">{d.day}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-5 flex items-center justify-end gap-2 font-mono text-[11px] text-faint">
-          <span>Less</span>
-          {LEVELS.map((l, i) => (
-            <span key={i} className={`h-3.5 w-3.5 rounded-md border border-white/5 ${l}`} />
-          ))}
-          <span>More</span>
-        </div>
+    <div className="page-enter mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <Card className="p-5">
+        <p className="font-mono text-[11px] uppercase tracking-wider text-faint">Total Check-ins</p>
+        <p className="mt-1.5 font-display text-2xl font-semibold text-hi">{total}</p>
       </Card>
-    </DashboardLayout>
-  );
+      <Card className="p-5">
+        <p className="font-mono text-[11px] uppercase tracking-wider text-faint">Active Days</p>
+        <p className="mt-1.5 font-display text-2xl font-semibold text-emerald-400">{activeDays}</p>
+      </Card>
+      <Card className="p-5">
+        <p className="font-mono text-[11px] uppercase tracking-wider text-faint">Avg / Day</p>
+        <p className="mt-1.5 font-display text-2xl font-semibold text-accent">{(total / Math.max(activeDays, 1)).toFixed(1)}</p>
+      </Card>
+    </div>
+
+    <Card className="page-enter p-6">
+      <CardHeader icon={<CalendarDays className="h-5 w-5 text-accent" />} title="Last 30 Days" subtitle="Cell luminance correlates with daily gate and lecture verification count" />
+      <div className="grid grid-cols-7 gap-2.5 pt-2">
+        {heatmap.map((d) => (
+          <div
+            key={d.date}
+            title={`${d.date}: ${d.count} check-ins`}
+            className={`flex aspect-square flex-col items-center justify-center rounded-[14px] border border-white/[0.06] ${LEVELS[d.intensity]} transition-transform hover:scale-105`}
+          >
+            <span className="font-mono text-[11px] font-bold">{d.count}</span>
+            <span className="font-mono text-[8.5px] uppercase opacity-75">{d.day}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 flex items-center justify-end gap-2 font-mono text-[11px] text-faint">
+        <span>Less</span>
+        {LEVELS.map((l, i) => (
+          <span key={i} className={`h-3.5 w-3.5 rounded-md border border-white/5 ${l}`} />
+        ))}
+        <span>More</span>
+      </div>
+    </Card>
+  </DashboardLayout>
+);
 }

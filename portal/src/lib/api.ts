@@ -1,4 +1,4 @@
-import { getToken } from './auth';
+import { getToken, setAuthCookies, getRole, getStoredUser } from './auth';
 
 const BASE_URL =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) ||
@@ -12,14 +12,44 @@ export class ApiError extends Error {
   }
 }
 
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/auth/token/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data?.access_token) {
+        const role = getRole() || 'student';
+        const user = getStoredUser() || { id: 'me', name: 'User', email: '', role, avatar: '' };
+        setAuthCookies(data.access_token, role, user);
+        return data.access_token as string;
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+  return refreshPromise;
+}
+
 /**
  * Thin fetch wrapper around the Node/Express gateway API (port 8000).
- * Attaches the Bearer token, parses the backend's `{ detail }` error shape,
- * and surfaces generic messages to clients (per CLAUDE.md security rules).
+ * Attaches the Bearer token, retries once on 401 via refresh-token rotation,
+ * and surfaces generic messages to clients.
  */
 export async function apiFetch<T = unknown>(
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  _retried = false
 ): Promise<T> {
   const token = getToken();
   const headers = new Headers(options.headers);
@@ -30,9 +60,16 @@ export async function apiFetch<T = unknown>(
 
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+    res = await fetch(`${BASE_URL}${path}`, { ...options, headers, credentials: 'include' });
   } catch {
     throw new ApiError('Service unavailable. Please try again shortly.', 0);
+  }
+
+  if (res.status === 401 && !_retried && !path.startsWith('/auth/login') && !path.startsWith('/auth/token/refresh')) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      return apiFetch<T>(path, options, true);
+    }
   }
 
   if (!res.ok) {
@@ -64,6 +101,8 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       }),
+    logout: () => apiFetch<{ message: string }>('/auth/logout', { method: 'POST' }),
+    session: () => apiFetch<{ valid: boolean; user: Record<string, unknown> }>('/auth/session'),
     register: (data: {
       email: string;
       password: string;
@@ -299,5 +338,8 @@ export const api = {
     globalAttendance: () => apiFetch<{ success: boolean; recentScans: any[] }>('/api/v1/super-admin/global-attendance'),
     healthOverview: () => apiFetch<{ success: boolean; services: any }>('/api/v1/super-admin/health-overview'),
     securityDashboard: () => apiFetch<{ success: boolean; recentAlerts: any[]; activeSessionsCount: number }>('/api/v1/super-admin/security-dashboard'),
+  },
+  notifications: {
+    list: () => apiFetch<any>('/notifications'),
   },
 };

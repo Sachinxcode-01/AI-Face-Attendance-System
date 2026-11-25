@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const LeaveSchema = new mongoose.Schema({
   user_id: { type: String, required: true, index: true },
+  college_id: { type: String, index: true },
   reason: { type: String, required: true },
   start_date: { type: String, required: true },
   end_date: { type: String, required: true },
