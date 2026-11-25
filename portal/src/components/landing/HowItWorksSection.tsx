@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CheckCircle2, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Reveal } from '@/components/ui/reveal';
+import { SectionHeading } from '@/components/ui/section-heading';
 
 interface StepDetail {
   number: string;
@@ -76,89 +78,93 @@ export function HowItWorksSection() {
   const activeStep = STEPS[activeStepIndex];
 
   return (
-    <section id="how-it-works" className="relative scroll-mt-24 border-t border-white/[0.08] py-20 bg-[#050507]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Left-Aligned Section Header */}
-        <div className="max-w-2xl mb-12">
-            <div className="inline-flex items-center gap-2 chip-bytune mb-3">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-              <span className="font-mono text-[10.5px] uppercase tracking-wider text-accent">Verification Pipeline</span>
-            </div>
-            <h2 className="font-display text-3xl sm:text-4xl font-medium tracking-[-0.028em] text-hi">
-              How SmartFace Works
-            </h2>
-              <p className="mt-3 text-[14.5px] leading-[23.9px] text-mid">
-                Faculty opens a session, the ArcFace engine verifies each student in under 120ms, and parents receive arrival timestamps directly on their phones.
-              </p>
-            </div>
+    <section id="how-it-works" className="relative scroll-mt-24 border-t border-[var(--hairline)] py-24 sm:py-32">
+      <div className="mx-auto max-w-[var(--wide)] px-6 lg:px-8">
+        <SectionHeading
+          eyebrow="Verification Pipeline"
+          title="How SmartFace Works"
+          description="Faculty opens a session, the ArcFace engine verifies each student in under 120ms, and parents receive arrival timestamps directly on their phones."
+        />
 
-            {/* Structured Editorial 4-Step Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* Left Column: Numbered Step List */}
-              <div className="lg:col-span-5 space-y-3">
-                {STEPS.map((step, idx) => {
-                  const isSelected = activeStepIndex === idx;
-                  return (
-                <div
-                  key={step.number}
-                  onClick={() => setActiveStepIndex(idx)}
-                  className={`cursor-pointer rounded-[18px] p-4 sm:p-5 transition-all border ${
-                    isSelected
+        {/* Structured Editorial 4-Step Layout */}
+        <div className="mt-14 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Numbered Step List */}
+          <div className="lg:col-span-5 space-y-3">
+            {STEPS.map((step, idx) => {
+              const isSelected = activeStepIndex === idx;
+              return (
+                <Reveal key={step.number} delay={idx * 0.05} direction="up" distance={16}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveStepIndex(idx)}
+                    className={`w-full text-left cursor-pointer rounded-[18px] p-4 sm:p-5 transition-all border ${isSelected
                       ? 'card-bytune border-accent/40 shadow-lg shadow-accent/10'
                       : 'card-surface border-white/[0.06] hover:border-white/15'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-mono text-xs text-accent font-semibold">
-                      Step {step.number}
-                    </span>
-                    <span className="chip-bytune font-mono text-[10px] text-faint">
-                      {step.roleBadge}
-                    </span>
-                  </div>
-                  <h3 className="font-display text-[15px] font-medium text-hi">
-                    {step.title}
-                  </h3>
-                </div>
+                      }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-mono text-xs text-accent font-semibold">
+                        Step {step.number}
+                      </span>
+                      <span className="chip-bytune font-mono text-[10px] text-faint">
+                        {step.roleBadge}
+                      </span>
+                    </div>
+                    <h3 className="font-display text-[15px] font-medium text-hi">
+                      {step.title}
+                    </h3>
+                  </button>
+                </Reveal>
               );
             })}
           </div>
 
           {/* Right Column: Active Phase Specs & Telemetry Log */}
-          <div className="lg:col-span-7 card-bytune rounded-[22px] p-6 sm:p-8 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-4 mb-5">
-              <div>
-                <span className="text-xs font-mono text-accent">Phase {activeStep.number}</span>
-                <h3 className="font-display text-lg font-medium text-hi mt-0.5">
-                  {activeStep.title}
-                </h3>
-              </div>
-              <span className="chip-bytune font-mono text-[10.5px] text-mid">
-                {activeStep.roleBadge}
-              </span>
-            </div>
-
-            <p className="text-[14.5px] leading-[23.9px] text-mid mb-6">
-              {activeStep.description}
-            </p>
-
-            {/* Technical Specifications Table */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-              {activeStep.specs.map((item, i) => (
-                <div key={i} className="rounded-[14px] bg-[#050507] border border-white/[0.06] p-3.5">
-                  <span className="text-[11px] text-faint block">{item.label}</span>
-                  <span className="text-xs font-mono font-semibold text-hi mt-0.5 block">
-                    {item.value}
+          <Reveal delay={0.12} direction="up" className="lg:col-span-7">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeStep.number}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="card-bytune rounded-[22px] p-6 sm:p-8 shadow-2xl"
+              >
+                <div className="flex items-center justify-between border-b border-white/[0.08] pb-4 mb-5">
+                  <div>
+                    <span className="text-xs font-mono text-accent">Phase {activeStep.number}</span>
+                    <h3 className="font-display text-lg font-medium text-hi mt-0.5">
+                      {activeStep.title}
+                    </h3>
+                  </div>
+                  <span className="chip-bytune font-mono text-[10.5px] text-mid">
+                    {activeStep.roleBadge}
                   </span>
                 </div>
-              ))}
-            </div>
 
-            {/* Clean Code/Telemetry Log */}
-            <div className="rounded-[16px] bg-[#050507] border border-white/[0.08] p-4 font-mono text-[11.5px] text-accent2 leading-relaxed whitespace-pre overflow-x-auto">
-              {activeStep.codeLog}
-            </div>
-          </div>
+                <p className="text-[14.5px] leading-[23.9px] text-mid mb-6">
+                  {activeStep.description}
+                </p>
+
+                {/* Technical Specifications Table */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                  {activeStep.specs.map((item, i) => (
+                    <div key={i} className="rounded-[14px] bg-[#050507] border border-white/[0.06] p-3.5">
+                      <span className="text-[11px] text-faint block">{item.label}</span>
+                      <span className="text-xs font-mono font-semibold text-hi mt-0.5 block">
+                        {item.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Clean Code/Telemetry Log */}
+                <div className="rounded-[16px] bg-[#050507] border border-white/[0.08] p-4 font-mono text-[11.5px] text-accent2 leading-relaxed whitespace-pre overflow-x-auto">
+                  {activeStep.codeLog}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </Reveal>
         </div>
       </div>
     </section>

@@ -1,89 +1,63 @@
 "use client";
 
-import { useState } from "react";
-import { SiteHeader } from "@/components/landing-page/site-header";
-import { Hero } from "@/components/landing-page/hero";
-import { TrustArchitecture } from "@/components/landing-page/trust-architecture";
-import { ProductTour } from "@/components/landing-page/product-tour";
-import { RoiCalculator } from "@/components/landing-page/roi-calculator";
-import { Statement } from "@/components/landing-page/statement";
-import { ValueProps } from "@/components/landing-page/value-props";
-import { HowItWorks } from "@/components/landing-page/how-it-works";
-import { Features } from "@/components/landing-page/features";
-import { SecuritySection } from "@/components/landing-page/security-section";
-import { SocialProof } from "@/components/landing-page/social-proof";
-import { Showcase } from "@/components/landing-page/showcase";
-import { Release } from "@/components/landing-page/release";
-import { TokenDemo } from "@/components/landing-page/token-demo";
-import { Craft } from "@/components/landing-page/craft";
-import { EdgeSection } from "@/components/landing-page/edge-section";
-import { Pricing } from "@/components/landing-page/pricing";
-import { RoleGateway } from "@/components/landing-page/role-gateway";
-import { Faq } from "@/components/landing-page/faq";
-import { SiteFooter } from "@/components/landing-page/site-footer";
-import { StickyMobileCta } from "@/components/landing-page/sticky-mobile-cta";
-import { DemoModal } from "@/components/landing-page/demo-modal";
-import { PilotModal } from "@/components/landing-page/pilot-modal";
+import React from "react";
+import Link from "next/link";
+import { ScanFace } from "lucide-react";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { PortalHero } from "@/components/landing/PortalHero";
+import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
+import { SmartAttendanceSection } from "@/components/landing/SmartAttendanceSection";
+import { InteractiveTokenCraft } from "@/components/landing/InteractiveTokenCraft";
+import { RoleGatewaySection } from "@/components/landing/RoleGatewaySection";
+import { ArchitectureFaqSection } from "@/components/landing/ArchitectureFaqSection";
 
 export default function PortalHomePage() {
-  const [demoOpen, setDemoOpen] = useState(false);
-  const [pilotOpen, setPilotOpen] = useState(false);
-
-  const openDemo = () => setDemoOpen(true);
-  const closeDemo = () => setDemoOpen(false);
-
-  const openPilot = () => setPilotOpen(true);
-  const closePilot = () => setPilotOpen(false);
-
   return (
-    <div className="min-h-screen bg-[#050507] text-[#B6B6C2] selection:bg-[#8F8BFF]/30 selection:text-white font-sans">
-      <SiteHeader onOpenDemo={openDemo} onOpenPilot={openPilot} />
-      
-      <main id="main">
-        {/* Phase 2: High Conversion ByTune Hero with Live Verification Scanner */}
-        <Hero onOpenDemo={openDemo} onOpenPilot={openPilot} />
+        <div className="min-h-screen bg-[#050507] text-[#B6B6C2] flex flex-col justify-between selection:bg-[#8F8BFF]/30 selection:text-white font-sans">
+          {/* Top Floating ByTune Capsule Navbar */}
+          <SiteHeader />
 
-        {/* Phase 10: Trust & Credibility Stats & Architecture */}
-        <TrustArchitecture />
+          {/* Main Portal Content */}
+          <main id="main" className="flex-1">
+            <PortalHero />
+            <HowItWorksSection />
+            <SmartAttendanceSection />
+            <InteractiveTokenCraft />
+            <RoleGatewaySection />
+            <ArchitectureFaqSection />
+          </main>
 
-        {/* Phase 9: Guided Interactive Product Tour across Roles */}
-        <ProductTour />
+          {/* Portal Footer */}
+          <footer className="border-t border-[var(--hairline)] bg-[#050507] py-12 px-6 sm:px-12 text-xs text-faint">
+            <div className="mx-auto max-w-[var(--wide)] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[#050507]">
+                  <ScanFace className="h-4 w-4" strokeWidth={2.4} />
+                </div>
+                <div>
+                  <p className="font-display text-sm font-semibold text-hi">SmartFace Attendance Portal</p>
+                  <p className="text-[11px] font-mono text-faint">
+                    ArcFace 512-D ONNX · Zero-Knowledge Privacy · FERPA & GDPR
+                  </p>
+                </div>
+              </div>
 
-        {/* Phase 5: Interactive ROI & Efficiency Calculator */}
-        <RoiCalculator onOpenDemo={openDemo} onOpenPilot={openPilot} />
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[11px]">
+                <Link href="/student" className="text-mid hover:text-hi transition-colors">Student</Link>
+                <Link href="/teacher" className="text-mid hover:text-hi transition-colors">Teacher</Link>
+                <Link href="/admin" className="text-mid hover:text-hi transition-colors">Admin</Link>
+                <Link href="/parent" className="text-mid hover:text-hi transition-colors">Parent</Link>
+                <Link href="/admin/super-admin" className="text-mid hover:text-hi transition-colors">Super Admin</Link>
+                <span className="h-3 w-px bg-white/10" aria-hidden />
+                <Link href="/auth/login" className="text-accent hover:text-accent2 transition-colors">Sign In</Link>
+                <Link href="/auth/register" className="text-accent hover:text-accent2 transition-colors">Sign Up</Link>
+              </div>
 
-        <Statement />
-        <ValueProps />
-        <HowItWorks />
-        <Features />
-
-        {/* Phase 7: Biometric Data Governance & Zero-Photo Security */}
-        <SecuritySection onOpenDemo={openDemo} onOpenPilot={openPilot} />
-
-        {/* Phase 6: Social Proof & Multi-Stakeholder Case Studies */}
-        <SocialProof />
-
-        <Showcase />
-        <Release />
-        <TokenDemo />
-        <Craft />
-        <EdgeSection />
-
-        {/* Phase 8: Transparent Institutional Pricing */}
-        <Pricing onOpenDemo={openDemo} onOpenPilot={openPilot} />
-
-        {/* Unified Stakeholder Role Gateway */}
-        <RoleGateway />
-        
-        <Faq />
-      </main>
-
-      <SiteFooter onOpenDemo={openDemo} onOpenPilot={openPilot} />
-      <StickyMobileCta onOpenDemo={openDemo} onOpenPilot={openPilot} />
-
-      {/* Interactive Modals */}
-      <DemoModal isOpen={demoOpen} onClose={closeDemo} />
-      <PilotModal isOpen={pilotOpen} onClose={closePilot} />
+            <p className="font-mono text-[11px] text-faint">
+              © {new Date().getFullYear()} SmartFace Suite.
+            </p>
+        </div>
+      </footer>
     </div>
   );
 }
