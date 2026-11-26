@@ -102,6 +102,39 @@ const collegeSchema = new mongoose.Schema({
     current_semester: { type: String, default: 'Odd Semester' },
     semester_end_date: { type: Date, default: null }
   },
+  biometric_config: {
+    similarity_threshold: { type: Number, default: 0.65, min: 0.5, max: 0.85 },
+    liveness_required: { type: Boolean, default: true },
+    retention_days: { type: Number, default: 365 },
+    updated_at: { type: Date, default: null },
+    updated_by: { type: String, default: null }
+  },
+  policy_history: {
+    type: [{
+      version: Number,
+      changed_by: String,
+      changed_at: { type: Date, default: Date.now },
+      reason: String,
+      snapshot: mongoose.Schema.Types.Mixed
+    }],
+    default: []
+  },
+  academic_terms: {
+    type: [{
+      name: String,
+      academic_year: String,
+      start_date: Date,
+      end_date: Date,
+      status: { type: String, enum: ['draft', 'active', 'closed'], default: 'draft' }
+    }],
+    default: []
+  },
+  governance_config: {
+    working_days: { type: [String], default: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] },
+    attendance_retention_days: { type: Number, default: 1825 },
+    security_snapshot_retention_days: { type: Number, default: 30 },
+    audit_retention_days: { type: Number, default: 2555 }
+  },
   // Customer Success & health telemetry
   health_telemetry: {
     score: { type: Number, default: 95 },

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { validate } = require('../middleware/validators');
+const validate = require('../middleware/validate');
 const { demoRequestSchema } = require('../schemas/validationSchemas');
 const { limitDemoRequest } = require('../middleware/rateLimiter');
 const EmailService = require('../services/emailService');

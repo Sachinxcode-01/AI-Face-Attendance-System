@@ -7,6 +7,7 @@ const User = require('../models/User');
 const Attendance = require('../models/Attendance');
 const SecurityLog = require('../models/SecurityLog');
 const Session = require('../models/Session');
+const { resolveAdminTenant, buildTenantUserFilter } = require('../utils/tenantScope');
 const reportInternalError = require('../utils/httpError');
 
 function formatUptime(seconds) {
@@ -29,11 +30,29 @@ router.get('/system', authenticate, requireRole(['teacher', 'admin', 'super_admi
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
+    const tenant = await resolveAdminTenant(req);
+    const studentFilter = buildTenantUserFilter(tenant, { role: 'student' });
+    const tenantUsers = (!tenant.isSuperAdmin && (tenant.collegeId || tenant.collegeName))
+      ? await User.find(buildTenantUserFilter(tenant), 'email').lean()
+      : null;
+    const tenantEmails = tenantUsers ? tenantUsers.map((u) => u.email) : null;
+
+    const sessionFilter = { is_active: true };
+    const attendanceFilter = { timestamp: { $gte: todayStart } };
+    const securityFilter = { status: 'Active' };
+    if (tenantEmails) {
+      sessionFilter.teacher_id = { $in: tenantEmails };
+      attendanceFilter.student_email = { $in: tenantEmails };
+    }
+    if (!tenant.isSuperAdmin && tenant.collegeId) {
+      securityFilter.college_id = tenant.collegeId;
+    }
+
     const [totalStudents, activeSessions, presentCount, intruderCount] = await Promise.all([
-      User.countDocuments({ role: 'student' }),
-      Session.countDocuments({ is_active: true }),
-      Attendance.countDocuments({ timestamp: { $gte: todayStart } }),
-      SecurityLog.countDocuments({ status: 'Active' })
+      User.countDocuments(studentFilter),
+      Session.countDocuments(sessionFilter),
+      Attendance.countDocuments(attendanceFilter),
+      SecurityLog.countDocuments(securityFilter)
     ]);
 
     const apiResponseTime = Date.now() - startMs;

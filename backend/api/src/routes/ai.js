@@ -15,6 +15,8 @@ const reportInternalError = require('../utils/httpError');
 const { getStudentAttendanceSummary } = require('../services/studentAttendanceService');
 const { calculateTargetMetrics } = require('../services/attendanceCalculator');
 const teacherService = require('../services/teacherService');
+const CampusDevice = require('../models/CampusDevice');
+const { resolveAdminTenant, buildTenantUserFilter } = require('../utils/tenantScope');
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
 const MODEL_NAME = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
@@ -698,169 +700,168 @@ const handleChatRequest = async (req, res) => {
         realDataAddendum = ' [Student attendance profile unavailable right now.]';
       }
     } else if (userRole === 'teacher') {
-            if (mongoose.connection.readyState === 1) {
-              const thresholdMatch = msgLower.match(/(\d{1,3})\s*%/);
-              const parsedThreshold = thresholdMatch ? parseInt(thresholdMatch[1], 10) : NaN;
-              const explicitTarget = (Number.isInteger(parsedThreshold) && parsedThreshold >= 1 && parsedThreshold <= 100)
-                ? parsedThreshold
-                : null;
-              const [dash, analyticsData] = await Promise.all([
-                teacherService.getTeacherDashboard(userEmail).catch(() => null),
-                teacherService.getTeacherAnalyticsAndRisk(
-                  userEmail,
-                  explicitTarget ? { targetPercentage: explicitTarget } : {}
-                ).catch(() => null),
-              ]);
-              if (dash) {
-                const targetThreshold = explicitTarget ?? (dash.academic_info?.min_percentage ?? 75);
+      if (mongoose.connection.readyState === 1) {
+        const thresholdMatch = msgLower.match(/(\d{1,3})\s*%/);
+        const parsedThreshold = thresholdMatch ? parseInt(thresholdMatch[1], 10) : NaN;
+        const explicitTarget = (Number.isInteger(parsedThreshold) && parsedThreshold >= 1 && parsedThreshold <= 100)
+          ? parsedThreshold
+          : null;
+        const [dash, analyticsData] = await Promise.all([
+          teacherService.getTeacherDashboard(userEmail).catch(() => null),
+          teacherService.getTeacherAnalyticsAndRisk(
+            userEmail,
+            explicitTarget ? { targetPercentage: explicitTarget } : {}
+          ).catch(() => null),
+        ]);
+        if (dash) {
+          const targetThreshold = explicitTarget ?? (dash.academic_info?.min_percentage ?? 75);
 
-                const parts = [];
-                parts.push(
-                  `Faculty Overview (${dash.department || 'Department'} | ${dash.academic_info?.semester || 'Current Semester'}): ` +
-                  `${dash.active_sessions} active session(s), ${dash.total_sessions} total sessions, ` +
-                  `${dash.total_assigned_students} assigned students, overall attendance ${dash.overall_attendance_rate}% (policy min ${dash.academic_info?.min_percentage ?? 75}%).`
-                );
-                parts.push(
-                  `Today: ${dash.attendance_today} check-ins recorded, ${dash.completed_lectures_today} completed / ${dash.upcoming_lectures_today} upcoming / ${dash.cancelled_lectures_today} cancelled lecture(s).`
-                );
-                const nextLecture = (dash.today_schedule || []).find((s) => s.status === 'live' || s.status === 'upcoming');
-                if (nextLecture) {
-                  parts.push(`Next/Current lecture: ${nextLecture.subject} at ${nextLecture.time} in ${nextLecture.room} (${nextLecture.status}).`);
-                }
-                parts.push(`Pending inbox: ${dash.pending_leaves} leave request(s), ${dash.pending_disputes} attendance dispute(s), ${dash.unread_notifications} unread notification(s).`);
+          const parts = [];
+          parts.push(
+            `Faculty Overview (${dash.department || 'Department'} | ${dash.academic_info?.semester || 'Current Semester'}): ` +
+            `${dash.active_sessions} active session(s), ${dash.total_sessions} total sessions, ` +
+            `${dash.total_assigned_students} assigned students, overall attendance ${dash.overall_attendance_rate}% (policy min ${dash.academic_info?.min_percentage ?? 75}%).`
+          );
+          parts.push(
+            `Today: ${dash.attendance_today} check-ins recorded, ${dash.completed_lectures_today} completed / ${dash.upcoming_lectures_today} upcoming / ${dash.cancelled_lectures_today} cancelled lecture(s).`
+          );
+          const nextLecture = (dash.today_schedule || []).find((s) => s.status === 'live' || s.status === 'upcoming');
+          if (nextLecture) {
+            parts.push(`Next/Current lecture: ${nextLecture.subject} at ${nextLecture.time} in ${nextLecture.room} (${nextLecture.status}).`);
+          }
+          parts.push(`Pending inbox: ${dash.pending_leaves} leave request(s), ${dash.pending_disputes} attendance dispute(s), ${dash.unread_notifications} unread notification(s).`);
 
-                if (dash.subject_wise_attendance?.length) {
-                  const sortedSubs = [...dash.subject_wise_attendance].sort((a, b) => a.attendance_rate - b.attendance_rate);
-                  const lowest = sortedSubs[0];
-                  parts.push(
-                    `Subjects (${sortedSubs.length}): ${sortedSubs.map((s) => `${s.subject} ${s.attendance_rate}% (${s.present_count}/${s.conducted_marks})`).join('; ')}. Lowest subject: ${lowest.subject} (${lowest.attendance_rate}%).`
-                  );
-                }
+          if (dash.subject_wise_attendance?.length) {
+            const sortedSubs = [...dash.subject_wise_attendance].sort((a, b) => a.attendance_rate - b.attendance_rate);
+            const lowest = sortedSubs[0];
+            parts.push(
+              `Subjects (${sortedSubs.length}): ${sortedSubs.map((s) => `${s.subject} ${s.attendance_rate}% (${s.present_count}/${s.conducted_marks})`).join('; ')}. Lowest subject: ${lowest.subject} (${lowest.attendance_rate}%).`
+            );
+          }
 
-                if (analyticsData) {
-                  const cmp = analyticsData.month_comparison;
-                  parts.push(`Monthly comparison: current month ${cmp.current_month}% vs previous month ${cmp.previous_month}% (delta ${cmp.delta >= 0 ? '+' : ''}${cmp.delta}%).`);
+          if (analyticsData) {
+            const cmp = analyticsData.month_comparison;
+            parts.push(`Monthly comparison: current month ${cmp.current_month}% vs previous month ${cmp.previous_month}% (delta ${cmp.delta >= 0 ? '+' : ''}${cmp.delta}%).`);
 
-                  const belowTarget = (analyticsData.risk_students || []).filter((s) => s.conducted > 0 && s.attendance_rate < targetThreshold);
-                  if (belowTarget.length > 0) {
-                    parts.push(`Aggregate count below ${targetThreshold}%: ${belowTarget.length} student(s) currently below target across your sessions.`);
-                    const sample = belowTarget.slice(0, 8).map((s) => {
-                      const targetCalc = calculateTargetMetrics({
-                        attended: s.attended,
-                        conducted: s.conducted,
-                        target: targetThreshold,
-                      });
-                      const needed = explicitTarget ? targetCalc.classesNeeded : s.classes_needed;
-                      return `${s.full_name} (${s.student_id || 'ID N/A'}): ${s.attendance_rate}% [${s.attended}/${s.conducted}, needs ${needed ?? 'N/A'} classes for ${targetThreshold}%, ${s.risk_level}]`;
-                    });
-                    localTeacherDetails.push(`Students below ${targetThreshold}% (${belowTarget.length}): ${sample.join('; ')}.`);
-                  } else {
-                    parts.push(`0 students currently below ${targetThreshold}% across your sessions.`);
-                  }
-
-                  const consecutive = (analyticsData.risk_students || []).filter((s) => s.consecutive_absences >= 3);
-                  if (consecutive.length > 0) {
-                    parts.push(`Consecutive absences (>=3): ${consecutive.length} student(s).`);
-                    localTeacherDetails.push(
-                      `Consecutive absences (>=3): ${consecutive.slice(0, 6).map((s) => `${s.full_name} (${s.consecutive_absences} consecutive)`).join(', ')}.`
-                    );
-                  }
-                }
-
-                realDataAddendum = ` [${parts.join(' ')}]`;
-              } else {
-                realDataAddendum = ' [Teacher profile or classroom telemetry unavailable right now.]';
-              }
+            const belowTarget = (analyticsData.risk_students || []).filter((s) => s.conducted > 0 && s.attendance_rate < targetThreshold);
+            if (belowTarget.length > 0) {
+              parts.push(`Aggregate count below ${targetThreshold}%: ${belowTarget.length} student(s) currently below target across your sessions.`);
+              const sample = belowTarget.slice(0, 8).map((s) => {
+                const targetCalc = calculateTargetMetrics({
+                  attended: s.attended,
+                  conducted: s.conducted,
+                  target: targetThreshold,
+                });
+                const needed = explicitTarget ? targetCalc.classesNeeded : s.classes_needed;
+                return `${s.full_name} (${s.student_id || 'ID N/A'}): ${s.attendance_rate}% [${s.attended}/${s.conducted}, needs ${needed ?? 'N/A'} classes for ${targetThreshold}%, ${s.risk_level}]`;
+              });
+              localTeacherDetails.push(`Students below ${targetThreshold}% (${belowTarget.length}): ${sample.join('; ')}.`);
             } else {
-              realDataAddendum = ' [Live classroom telemetry is unavailable.]';
+              parts.push(`0 students currently below ${targetThreshold}% across your sessions.`);
             }
-          } else if (userRole === 'parent') {
-            if (msgLower.includes('ward') || msgLower.includes('child attendance')) {
-              realDataAddendum = ' [Linked student attendance data is not available for this account.]';
-            } else if (msgLower.includes('alert') || msgLower.includes('absence alert')) {
-              realDataAddendum = ' [Linked student alert data is not available for this account.]';
-            }
-          } else if (userRole === 'hod') {
-            realDataAddendum = ' [Use the department overview for HOD-scoped analytics. Assistant analytics are not yet department-scoped.]';
-          } else if (['admin', 'super_admin', 'principal', 'management'].includes(userRole)) {
-            if (msgLower.includes('active sessions') || msgLower.includes('sessions active')) {
-              if (mongoose.connection.readyState === 1) {
-                const activeCount = await Session.countDocuments({ is_active: true });
-                realDataAddendum = ` [There are ${activeCount} active attendance sessions.]`;
-              } else {
-                realDataAddendum = ' [Active session data is unavailable.]';
-              }
-            } else if (msgLower.includes('system health') || msgLower.includes('ai service')) {
-              realDataAddendum = ` [MongoDB: ${mongoose.connection.readyState === 1 ? 'connected' : 'unavailable'}; AI provider: ${groqClient ? 'configured' : 'unavailable'}. This API does not report face recognition service health.]`;
-            } else if (msgLower.includes('security') || msgLower.includes('alerts')) {
-              if (mongoose.connection.readyState === 1) {
-                const activeAlerts = await SecurityLog.countDocuments({ status: 'Active' });
-                realDataAddendum = ` [There are ${activeAlerts} active security alerts.]`;
-              } else {
-                realDataAddendum = ' [Security alert data is unavailable.]';
-              }
-            } else if (msgLower.includes("today's attendance") || msgLower.includes('total attendance')) {
-              if (mongoose.connection.readyState === 1) {
-                const todayStart = new Date();
-                todayStart.setHours(0, 0, 0, 0);
-                const count = await Attendance.countDocuments({ timestamp: { $gte: todayStart } });
-                realDataAddendum = ` [There are ${count} attendance records for today.]`;
-              } else {
-                realDataAddendum = ' [Today’s attendance data is unavailable.]';
-              }
-            }
-          }
-          // Match query against knowledge base (prioritizing role-specific & longest keyword matches)
-          let matchedKnowledge = null;
-          let bestScore = -1;
-          for (const item of KNOWLEDGE_BASE) {
-            const matchedKeywords = item.keywords.filter((kw) => msgLower.includes(kw));
-            if (matchedKeywords.length === 0) continue;
-            const roleActions = filterActionsForRole(item.actions, userRole);
-            const hasRoleMatch = roleActions.length > 0 ? 1 : 0;
-            const maxKwLen = Math.max(...matchedKeywords.map((kw) => kw.length));
-            const score = hasRoleMatch * 1000 + maxKwLen;
-            if (score > bestScore) {
-              bestScore = score;
-              matchedKnowledge = item;
+
+            const consecutive = (analyticsData.risk_students || []).filter((s) => s.consecutive_absences >= 3);
+            if (consecutive.length > 0) {
+              parts.push(`Consecutive absences (>=3): ${consecutive.length} student(s).`);
+              localTeacherDetails.push(
+                `Consecutive absences (>=3): ${consecutive.slice(0, 6).map((s) => `${s.full_name} (${s.consecutive_absences} consecutive)`).join(', ')}.`
+              );
             }
           }
 
-          // Detect completely unrelated questions
-          const unrelatedTriggers = ["weather", "president", "recipe", "movie", "football", "joke", "crypto", "stock"];
-          const isUnrelated = unrelatedTriggers.some(t => msgLower.includes(t)) && !matchedKnowledge;
+          realDataAddendum = ` [${parts.join(' ')}]`;
+        } else {
+          realDataAddendum = ' [Teacher profile or classroom telemetry unavailable right now.]';
+        }
+      } else {
+        realDataAddendum = ' [Live classroom telemetry is unavailable.]';
+      }
+    } else if (userRole === 'parent') {
+      if (msgLower.includes('ward') || msgLower.includes('child attendance')) {
+        realDataAddendum = ' [Linked student attendance data is not available for this account.]';
+      } else if (msgLower.includes('alert') || msgLower.includes('absence alert')) {
+        realDataAddendum = ' [Linked student alert data is not available for this account.]';
+      }
+    } else if (userRole === 'hod') {
+      realDataAddendum = ' [Use the department overview for HOD-scoped analytics. Assistant analytics are not yet department-scoped.]';
+    } else if (['admin', 'super_admin', 'principal', 'management'].includes(userRole)) {
+        if (mongoose.connection.readyState === 1) {
+          const tenant = await resolveAdminTenant({ userEmail: req.userEmail, userRole });
+          const studentEmails = await User.find(buildTenantUserFilter(tenant, { role: 'student' })).distinct('email');
+          const facultyEmails = await User.find(buildTenantUserFilter(tenant, { role: { $in: ['teacher', 'faculty'] } })).distinct('email');
+          const sessScope = tenant.isSuperAdmin && !tenant.collegeId ? {} : { teacher_id: { $in: facultyEmails } };
+          const attScope = tenant.isSuperAdmin && !tenant.collegeId ? {} : { student_email: { $in: studentEmails } };
+          const secScope = tenant.isSuperAdmin && !tenant.collegeId ? { status: 'Active' } : { college_id: tenant.collegeId, status: 'Active' };
+          const devScope = tenant.isSuperAdmin && !tenant.collegeId ? {} : { college_id: tenant.collegeId };
 
-          if (isUnrelated) {
-            const unrelatedReply = language === 'kn'
-              ? "ನಾನು ಸ್ಮಾರ್ಟ್ ಅಟೆಂಡೆನ್ಸ್ AI, ಹಾಜರಾತಿ, ವೇಳಾಪಟ್ಟಿ, QR ಮತ್ತು ಮುಖ ಪರಿಶೀಲನೆಯಲ್ಲಿ ಸಹಾಯ ಮಾಡಲು ವಿನ್ಯಾಸಗೊಳಿಸಲಾಗಿದೆ."
-              : language === 'hi'
-                ? "मैं स्मार्ट अटेंडेंस एआई, उपस्थिति, समयसारणी, क्यूआर और फेस सत्यापन में सहायता के लिए डिज़ाइन किया गया हूँ।"
-                : "I am designed to help with Smart Attendance AI, attendance workflows, schedules, reports, leave, QR attendance, face verification, and application support.";
+          const todayStart = new Date();
+          todayStart.setUTCHours(0, 0, 0, 0);
 
-            return res.json({
-              success: true,
-              conversationId,
-              reply: unrelatedReply,
-              message: {
-                id: `msg_${Date.now()}`,
-                role: "assistant",
-                content: unrelatedReply,
-                createdAt: new Date().toISOString()
-              },
-              suggestedActions: []
-            });
-          }
+          const [activeCount, activeAlerts, todayAttCount, pendingLeaves, pendingDisputes, offlineDevices] = await Promise.all([
+            Session.countDocuments({ ...sessScope, is_active: true }),
+            SecurityLog.countDocuments(secScope),
+            Attendance.countDocuments({ ...attScope, timestamp: { $gte: todayStart } }),
+            Leave.countDocuments({ ...(tenant.isSuperAdmin && !tenant.collegeId ? {} : { user_id: { $in: studentEmails } }), status: 'Pending' }),
+            AttendanceDispute.countDocuments({ ...(tenant.isSuperAdmin && !tenant.collegeId ? {} : { student_email: { $in: studentEmails } }), status: { $in: ['pending', 'teacher_reviewed', 'escalated', 'Pending'] } }),
+            CampusDevice.countDocuments({ ...devScope, status: { $ne: 'active' } }),
+          ]);
+          const minPct = tenant.collegeDoc?.attendance_policy?.min_percentage ?? 75;
+          realDataAddendum = ` [Institution (${tenant.collegeName || 'SmartFace'}): ${studentEmails.length} students, ${facultyEmails.length} faculty, ${activeCount} active sessions, ${todayAttCount} attendance records today, ${pendingLeaves} pending leaves, ${pendingDisputes} pending disputes, ${activeAlerts} active security alerts, ${offlineDevices} non-active devices. Min attendance policy: ${minPct}%.]`;
+        } else {
+          realDataAddendum = ' [Institutional telemetry is currently unavailable.]';
+        }
+      }
+      // Match query against knowledge base (prioritizing role-specific & longest keyword matches)
+      let matchedKnowledge = null;
+      let bestScore = -1;
+      for (const item of KNOWLEDGE_BASE) {
+        const matchedKeywords = item.keywords.filter((kw) => msgLower.includes(kw));
+        if (matchedKeywords.length === 0) continue;
+        const roleActions = filterActionsForRole(item.actions, userRole);
+        const hasRoleMatch = roleActions.length > 0 ? 1 : 0;
+        const maxKwLen = Math.max(...matchedKeywords.map((kw) => kw.length));
+        const score = hasRoleMatch * 1000 + maxKwLen;
+        if (score > bestScore) {
+          bestScore = score;
+          matchedKnowledge = item;
+        }
+      }
 
-          // Language directive for prompt
-          let langDirective = "Respond in English.";
-          if (language === 'kn') {
-            langDirective = "Respond in clear Kannada language (ಕನ್ನಡ). Technical labels like route names, IDs, or codes may remain in English.";
-          } else if (language === 'hi') {
-            langDirective = "Respond in clear Hindi language (हिंदी). Technical labels like route names, IDs, or codes may remain in English.";
-          }
+      // Detect completely unrelated questions
+      const unrelatedTriggers = ["weather", "president", "recipe", "movie", "football", "joke", "crypto", "stock"];
+      const isUnrelated = unrelatedTriggers.some(t => msgLower.includes(t)) && !matchedKnowledge;
 
-          // Construct system context prompt (PII-minimized: never send email/phone/IDs to external AI)
-          let systemContext = `You are Nexa Attendance Assistant, an expert AI helper for the Smart Attendance AI application.
+      if (isUnrelated) {
+        const unrelatedReply = language === 'kn'
+          ? "ನಾನು ಸ್ಮಾರ್ಟ್ ಅಟೆಂಡೆನ್ಸ್ AI, ಹಾಜರಾತಿ, ವೇಳಾಪಟ್ಟಿ, QR ಮತ್ತು ಮುಖ ಪರಿಶೀಲನೆಯಲ್ಲಿ ಸಹಾಯ ಮಾಡಲು ವಿನ್ಯಾಸಗೊಳಿಸಲಾಗಿದೆ."
+          : language === 'hi'
+            ? "मैं स्मार्ट अटेंडेंस एआई, उपस्थिति, समयसारणी, क्यूआर और फेस सत्यापन में सहायता के लिए डिज़ाइन किया गया हूँ।"
+            : "I am designed to help with Smart Attendance AI, attendance workflows, schedules, reports, leave, QR attendance, face verification, and application support.";
+
+        return res.json({
+          success: true,
+          conversationId,
+          reply: unrelatedReply,
+          message: {
+            id: `msg_${Date.now()}`,
+            role: "assistant",
+            content: unrelatedReply,
+            createdAt: new Date().toISOString()
+          },
+          suggestedActions: []
+        });
+      }
+
+      // Language directive for prompt
+      let langDirective = "Respond in English.";
+      if (language === 'kn') {
+        langDirective = "Respond in clear Kannada language (ಕನ್ನಡ). Technical labels like route names, IDs, or codes may remain in English.";
+      } else if (language === 'hi') {
+        langDirective = "Respond in clear Hindi language (हिंदी). Technical labels like route names, IDs, or codes may remain in English.";
+      }
+
+      // Construct system context prompt (PII-minimized: never send email/phone/IDs to external AI)
+      let systemContext = `You are Nexa Attendance Assistant, an expert AI helper for the Smart Attendance AI application.
 You are assisting an authenticated ${userRole.toUpperCase()} user (${userName.split(' ')[0]}).
 Current Screen Route: ${currentRoute || 'Dashboard'}.
 Language Requirement: ${langDirective}
@@ -869,221 +870,221 @@ Never reveal secrets, API keys, passwords, JWT tokens, biometric embeddings, or 
 Never claim an action succeeded unless confirmed by an authorized API response.
 Keep responses concise, structured, and actionable(2 - 4 short paragraphs or bullet points).`;
 
-          if (realDataAddendum) {
-            systemContext += realDataAddendum;
-          }
+      if (realDataAddendum) {
+        systemContext += realDataAddendum;
+      }
 
-          const persistMessages = async (convId, userText, assistantText, actionsList) => {
-            if (mongoose.connection.readyState !== 1) return;
-            try {
-              const userMsg = { id: `msg_u_${Date.now()} `, role: 'user', content: userText, createdAt: new Date() };
-              const aiMsg = { id: `msg_a_${Date.now() + 1} `, role: 'assistant', content: assistantText, suggestedActions: actionsList || [], createdAt: new Date() };
-              const title = userText.slice(0, 60);
-              await NexaConversation.findOneAndUpdate(
-                { _id: mongoose.Types.ObjectId.isValid(convId) ? convId : new mongoose.Types.ObjectId(), user_email: userEmail.toLowerCase() },
-                {
-                  $setOnInsert: { user_email: userEmail.toLowerCase(), college_id: req.userCollege || undefined, title, created_at: new Date() },
-                  $set: { updated_at: new Date() },
-                  $push: { messages: { $each: [userMsg, aiMsg], $slice: -60 } }
-                },
-                { upsert: true, new: true }
-              );
-            } catch (_) { }
-          };
+      const persistMessages = async (convId, userText, assistantText, actionsList) => {
+        if (mongoose.connection.readyState !== 1) return;
+        try {
+          const userMsg = { id: `msg_u_${Date.now()} `, role: 'user', content: userText, createdAt: new Date() };
+          const aiMsg = { id: `msg_a_${Date.now() + 1} `, role: 'assistant', content: assistantText, suggestedActions: actionsList || [], createdAt: new Date() };
+          const title = userText.slice(0, 60);
+          await NexaConversation.findOneAndUpdate(
+            { _id: mongoose.Types.ObjectId.isValid(convId) ? convId : new mongoose.Types.ObjectId(), user_email: userEmail.toLowerCase() },
+            {
+              $setOnInsert: { user_email: userEmail.toLowerCase(), college_id: req.userCollege || undefined, title, created_at: new Date() },
+              $set: { updated_at: new Date() },
+              $push: { messages: { $each: [userMsg, aiMsg], $slice: -60 } }
+            },
+            { upsert: true, new: true }
+          );
+        } catch (_) { }
+      };
 
-          // Helper to write SSE payload when /stream endpoint is requested
-          const wantsStream = req.path.endsWith('/stream');
-          const sendChatResult = async (replyText, actionsList) => {
-            const localSuffix = (userRole === 'teacher' && localTeacherDetails.length > 0)
-              ? `\n\n${localTeacherDetails.join('\n')}`
-              : '';
-            const fullReplyText = `${replyText}${localSuffix}`;
-            const msgId = `msg_${Date.now()}`;
-            await persistMessages(conversationId, cleanMessage, fullReplyText, actionsList);
-            const payload = {
-              success: true,
-              conversationId,
-              reply: fullReplyText,
-              message: {
-                id: msgId,
-                role: 'assistant',
-                content: fullReplyText,
-                createdAt: new Date().toISOString(),
-              },
-              suggestedActions: actionsList,
-            };
-            if (!wantsStream) {
-              return res.json(payload);
-            }
-            if (!res.headersSent) {
+      // Helper to write SSE payload when /stream endpoint is requested
+      const wantsStream = req.path.endsWith('/stream');
+      const sendChatResult = async (replyText, actionsList) => {
+        const localSuffix = (userRole === 'teacher' && localTeacherDetails.length > 0)
+          ? `\n\n${localTeacherDetails.join('\n')}`
+          : '';
+        const fullReplyText = `${replyText}${localSuffix}`;
+        const msgId = `msg_${Date.now()}`;
+        await persistMessages(conversationId, cleanMessage, fullReplyText, actionsList);
+        const payload = {
+          success: true,
+          conversationId,
+          reply: fullReplyText,
+          message: {
+            id: msgId,
+            role: 'assistant',
+            content: fullReplyText,
+            createdAt: new Date().toISOString(),
+          },
+          suggestedActions: actionsList,
+        };
+        if (!wantsStream) {
+          return res.json(payload);
+        }
+        if (!res.headersSent) {
+          res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+          res.setHeader('Cache-Control', 'no-cache, no-transform');
+          res.setHeader('Connection', 'keep-alive');
+          res.flushHeaders?.();
+        }
+        res.write(`event: delta\ndata: ${JSON.stringify({ text: fullReplyText })}\n\n`);
+        res.write(`event: done\ndata: ${JSON.stringify(payload)}\n\n`);
+        return res.end();
+      };
+
+      // Try Groq LLM Provider (with SSE streaming when /stream is used)
+      if (groqClient) {
+        try {
+          const messages = [
+            { role: "system", content: systemContext },
+            ...(history || []).slice(-6).map(h => ({
+              role: h.role === 'user' ? 'user' : 'assistant',
+              content: h.content
+            })),
+            { role: "user", content: cleanMessage + (realDataAddendum || "") }
+          ];
+          const actions = matchedKnowledge ? filterActionsForRole(matchedKnowledge.actions, userRole) : [];
+
+          if (wantsStream) {
+            const streamResp = await runGroqCompletion(messages, { stream: true, maxTokens: 400 });
+            if (streamResp) {
               res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
               res.setHeader('Cache-Control', 'no-cache, no-transform');
               res.setHeader('Connection', 'keep-alive');
               res.flushHeaders?.();
-            }
-            res.write(`event: delta\ndata: ${JSON.stringify({ text: fullReplyText })}\n\n`);
-            res.write(`event: done\ndata: ${JSON.stringify(payload)}\n\n`);
-            return res.end();
-          };
-
-          // Try Groq LLM Provider (with SSE streaming when /stream is used)
-          if (groqClient) {
-            try {
-              const messages = [
-                { role: "system", content: systemContext },
-                ...(history || []).slice(-6).map(h => ({
-                  role: h.role === 'user' ? 'user' : 'assistant',
-                  content: h.content
-                })),
-                { role: "user", content: cleanMessage + (realDataAddendum || "") }
-              ];
-              const actions = matchedKnowledge ? filterActionsForRole(matchedKnowledge.actions, userRole) : [];
-
-              if (wantsStream) {
-                const streamResp = await runGroqCompletion(messages, { stream: true, maxTokens: 400 });
-                if (streamResp) {
-                  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
-                  res.setHeader('Cache-Control', 'no-cache, no-transform');
-                  res.setHeader('Connection', 'keep-alive');
-                  res.flushHeaders?.();
-                  let fullReply = '';
-                  for await (const chunk of streamResp) {
-                    const delta = chunk?.choices?.[0]?.delta?.content || '';
-                    if (delta) {
-                      fullReply += delta;
-                      res.write(`event: delta\ndata: ${JSON.stringify({ text: delta })}\n\n`);
-                    }
-                  }
-                  const localSuffix = (userRole === 'teacher' && localTeacherDetails.length > 0)
-                    ? `\n\n${localTeacherDetails.join('\n')}`
-                    : '';
-                  if (localSuffix) {
-                    res.write(`event: delta\ndata: ${JSON.stringify({ text: localSuffix })}\n\n`);
-                  }
-                  const finalReply = (fullReply.trim() || 'No response generated.') + localSuffix;
-                  const msgId = `msg_${Date.now()}`;
-                  await persistMessages(conversationId, cleanMessage, finalReply, actions);
-                  res.write(`event: done\ndata: ${JSON.stringify({
-                    success: true,
-                    conversationId,
-                    reply: finalReply,
-                    message: { id: msgId, role: 'assistant', content: finalReply, createdAt: new Date().toISOString() },
-                    suggestedActions: actions,
-                  })}\n\n`);
-                  return res.end();
+              let fullReply = '';
+              for await (const chunk of streamResp) {
+                const delta = chunk?.choices?.[0]?.delta?.content || '';
+                if (delta) {
+                  fullReply += delta;
+                  res.write(`event: delta\ndata: ${JSON.stringify({ text: delta })}\n\n`);
                 }
-              } else {
-                const response = await runGroqCompletion(messages, { stream: false, maxTokens: 400 });
-                const reply = response.choices[0].message.content.trim();
-                return await sendChatResult(reply, actions);
               }
-            } catch (err) {
-              console.error("[Nexa AI] Groq API Error:", err.message);
-            }
-          }
-
-          // Fallback response using Knowledge Base or Deterministic Answer
-          let fallbackReply = "";
-          let actions = [];
-
-          if (matchedKnowledge) {
-            const answerObj = matchedKnowledge.answer;
-            if (typeof answerObj === 'object' && answerObj !== null) {
-              fallbackReply = answerObj[language] || answerObj['en'] || Object.values(answerObj)[0];
-            } else {
-              fallbackReply = answerObj;
-            }
-            if (realDataAddendum) {
-              fallbackReply += ` ${realDataAddendum.replace(/\[|\]/g, '')} `;
-            }
-            actions = filterActionsForRole(matchedKnowledge.actions, userRole);
-          } else if (realDataAddendum) {
-            if (language === 'kn') {
-              fallbackReply = `ಇಲ್ಲಿದೆ ನಿಮ್ಮ ಖಾತೆಯ ನೈಜ ಡೇಟಾ: ${realDataAddendum.replace(/\[|\]/g, '')}.`;
-            } else if (language === 'hi') {
-              fallbackReply = `यहाँ आपका सत्यापित खाता डेटा है: ${realDataAddendum.replace(/\[|\]/g, '')}।`;
-            } else {
-              fallbackReply = `Here is your verified academic attendance summary: ${realDataAddendum.replace(/\[|\]/g, '')} `;
+              const localSuffix = (userRole === 'teacher' && localTeacherDetails.length > 0)
+                ? `\n\n${localTeacherDetails.join('\n')}`
+                : '';
+              if (localSuffix) {
+                res.write(`event: delta\ndata: ${JSON.stringify({ text: localSuffix })}\n\n`);
+              }
+              const finalReply = (fullReply.trim() || 'No response generated.') + localSuffix;
+              const msgId = `msg_${Date.now()}`;
+              await persistMessages(conversationId, cleanMessage, finalReply, actions);
+              res.write(`event: done\ndata: ${JSON.stringify({
+                success: true,
+                conversationId,
+                reply: finalReply,
+                message: { id: msgId, role: 'assistant', content: finalReply, createdAt: new Date().toISOString() },
+                suggestedActions: actions,
+              })}\n\n`);
+              return res.end();
             }
           } else {
-            if (language === 'kn') {
-              fallbackReply = `ನಮಸ್ಕಾರ ${userName} !ನಾನು ನಿಮ್ಮ ${userRole} ಡ್ಯಾಶ್‌ಬೋರ್ಡ್, QR ಸ್ಕ್ಯಾನಿಂಗ್, ಮುಖ ಹಾಜರಾತಿ, ವೇಳಾಪಟ್ಟಿ ಮತ್ತು ವರದಿಗಳಲ್ಲಿ ಸಹಾಯ ಮಾಡಬಲ್ಲೆ.`;
-            } else if (language === 'hi') {
-              fallbackReply = `नमस्ते ${userName} !मैं आपकी ${userRole} डैशबोर्ड, क्यूआर स्कैनिंग, फेस उपस्थिति और रिपोर्ट में मदद कर सकता हूँ।`;
-            } else {
-              fallbackReply = `Hello ${userName} !I can help you with your ${userRole} dashboard, QR scanning, face attendance, timetable, leave applications, and reports.What would you like to do? `;
-            }
-
-            if (userRole === 'student') {
-              actions = [
-                { type: "navigate", label: "Open Face/QR Check-in", route: "/student/checkin" },
-                { type: "navigate", label: "View Timetable", route: "/student/timetable" }
-              ];
-            }
+            const response = await runGroqCompletion(messages, { stream: false, maxTokens: 400 });
+            const reply = response.choices[0].message.content.trim();
+            return await sendChatResult(reply, actions);
           }
-
-          return await sendChatResult(fallbackReply, actions);
-        } catch (error) {
-          console.error("Nexa Chat Error:", error);
-          if (!res.headersSent) {
-            res.status(500).json({ detail: 'Chat service error.' });
-          } else {
-            res.end();
-          }
+        } catch (err) {
+          console.error("[Nexa AI] Groq API Error:", err.message);
         }
-      };
+      }
 
-      router.post(
-        [
-          '/chat',
-          '/assistant/chat',
-          '/api/assistant/chat',
-          '/ai/chat',
-          '/chat/stream',
-          '/assistant/chat/stream',
-          '/api/assistant/chat/stream',
-          '/ai/chat/stream',
-        ],
-        authenticate,
-        handleChatRequest
-      );
+      // Fallback response using Knowledge Base or Deterministic Answer
+      let fallbackReply = "";
+      let actions = [];
 
-      // ─── Persistent Nexa Conversation Management ─────────────────────────────
-      router.get(['/ai/conversations', '/conversations'], authenticate, async (req, res) => {
-        try {
-          const email = req.userEmail.toLowerCase();
-          const convs = await NexaConversation.find({ user_email: email })
-            .sort({ updated_at: -1 })
-            .limit(25)
-            .lean();
-          res.json({
-            conversations: convs.map((c) => ({
-              id: c._id.toString(),
-              title: c.title,
-              message_count: (c.messages || []).length,
-              updated_at: c.updated_at,
-              created_at: c.created_at,
-              messages: c.messages || []
-            }))
-          });
-        } catch (error) {
-          reportInternalError(res, error, 'Nexa:Conversations');
+      if (matchedKnowledge) {
+        const answerObj = matchedKnowledge.answer;
+        if (typeof answerObj === 'object' && answerObj !== null) {
+          fallbackReply = answerObj[language] || answerObj['en'] || Object.values(answerObj)[0];
+        } else {
+          fallbackReply = answerObj;
         }
+        if (realDataAddendum) {
+          fallbackReply += ` ${realDataAddendum.replace(/\[|\]/g, '')} `;
+        }
+        actions = filterActionsForRole(matchedKnowledge.actions, userRole);
+      } else if (realDataAddendum) {
+        if (language === 'kn') {
+          fallbackReply = `ಇಲ್ಲಿದೆ ನಿಮ್ಮ ಖಾತೆಯ ನೈಜ ಡೇಟಾ: ${realDataAddendum.replace(/\[|\]/g, '')}.`;
+        } else if (language === 'hi') {
+          fallbackReply = `यहाँ आपका सत्यापित खाता डेटा है: ${realDataAddendum.replace(/\[|\]/g, '')}।`;
+        } else {
+          fallbackReply = `Here is your verified academic attendance summary: ${realDataAddendum.replace(/\[|\]/g, '')} `;
+        }
+      } else {
+        if (language === 'kn') {
+          fallbackReply = `ನಮಸ್ಕಾರ ${userName} !ನಾನು ನಿಮ್ಮ ${userRole} ಡ್ಯಾಶ್‌ಬೋರ್ಡ್, QR ಸ್ಕ್ಯಾನಿಂಗ್, ಮುಖ ಹಾಜರಾತಿ, ವೇಳಾಪಟ್ಟಿ ಮತ್ತು ವರದಿಗಳಲ್ಲಿ ಸಹಾಯ ಮಾಡಬಲ್ಲೆ.`;
+        } else if (language === 'hi') {
+          fallbackReply = `नमस्ते ${userName} !मैं आपकी ${userRole} डैशबोर्ड, क्यूआर स्कैनिंग, फेस उपस्थिति और रिपोर्ट में मदद कर सकता हूँ।`;
+        } else {
+          fallbackReply = `Hello ${userName} !I can help you with your ${userRole} dashboard, QR scanning, face attendance, timetable, leave applications, and reports.What would you like to do? `;
+        }
+
+        if (userRole === 'student') {
+          actions = [
+            { type: "navigate", label: "Open Face/QR Check-in", route: "/student/checkin" },
+            { type: "navigate", label: "View Timetable", route: "/student/timetable" }
+          ];
+        }
+      }
+
+      return await sendChatResult(fallbackReply, actions);
+    } catch (error) {
+      console.error("Nexa Chat Error:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ detail: 'Chat service error.' });
+      } else {
+        res.end();
+      }
+    }
+  };
+
+  router.post(
+    [
+      '/chat',
+      '/assistant/chat',
+      '/api/assistant/chat',
+      '/ai/chat',
+      '/chat/stream',
+      '/assistant/chat/stream',
+      '/api/assistant/chat/stream',
+      '/ai/chat/stream',
+    ],
+    authenticate,
+    handleChatRequest
+  );
+
+  // ─── Persistent Nexa Conversation Management ─────────────────────────────
+  router.get(['/ai/conversations', '/conversations'], authenticate, async (req, res) => {
+    try {
+      const email = req.userEmail.toLowerCase();
+      const convs = await NexaConversation.find({ user_email: email })
+        .sort({ updated_at: -1 })
+        .limit(25)
+        .lean();
+      res.json({
+        conversations: convs.map((c) => ({
+          id: c._id.toString(),
+          title: c.title,
+          message_count: (c.messages || []).length,
+          updated_at: c.updated_at,
+          created_at: c.created_at,
+          messages: c.messages || []
+        }))
       });
+    } catch (error) {
+      reportInternalError(res, error, 'Nexa:Conversations');
+    }
+  });
 
-      router.delete(['/ai/conversations/:id', '/conversations/:id'], authenticate, async (req, res) => {
-        try {
-          const { id } = req.params;
-          if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ detail: 'Invalid conversation ID.' });
-          }
-          const deleted = await NexaConversation.findOneAndDelete({ _id: id, user_email: req.userEmail.toLowerCase() });
-          if (!deleted) return res.status(404).json({ detail: 'Conversation not found.' });
-          res.json({ success: true, message: 'Conversation deleted.' });
-        } catch (error) {
-          reportInternalError(res, error, 'Nexa:DeleteConversation');
-        }
-      });
+  router.delete(['/ai/conversations/:id', '/conversations/:id'], authenticate, async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ detail: 'Invalid conversation ID.' });
+      }
+      const deleted = await NexaConversation.findOneAndDelete({ _id: id, user_email: req.userEmail.toLowerCase() });
+      if (!deleted) return res.status(404).json({ detail: 'Conversation not found.' });
+      res.json({ success: true, message: 'Conversation deleted.' });
+    } catch (error) {
+      reportInternalError(res, error, 'Nexa:DeleteConversation');
+    }
+  });
 
-      module.exports = router;
+  module.exports = router;
 

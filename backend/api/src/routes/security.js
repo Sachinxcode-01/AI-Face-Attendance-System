@@ -1,12 +1,20 @@
 const express = require('express');
 const router = express.Router();
 
+const mongoose = require('mongoose');
 const SecurityLog = require('../models/SecurityLog');
 const EmailService = require('../services/emailService');
 const notificationService = require('../services/notificationService');
+const auditService = require('../services/auditService');
 const { authenticate, requireRole } = require('../middleware/auth');
+const { resolveAdminTenant } = require('../utils/tenantScope');
 const { trackJob } = require('../utils/jobTracker');
 const reportInternalError = require('../utils/httpError');
+
+const ALLOWED_INCIDENT_STATUSES = new Set([
+  'Active', 'Detected', 'Under review', 'Investigating',
+  'Escalated', 'Resolved', 'False positive', 'Closed', 'Acknowledged', 'Dispatched'
+]);
 
 // ─── POST /security/intruder-alert ────────────────────────────────
 router.post('/intruder-alert', async (req, res) => {
@@ -75,8 +83,15 @@ router.post('/intruder-alert', async (req, res) => {
 // ─── GET /security/logs ───────────────────────────────────────────
 router.get('/logs', authenticate, requireRole(['admin', 'super_admin', 'hod', 'principal']), async (req, res) => {
   try {
-    const filter = req.userRole === 'super_admin' || !req.userCollege ? {} : { college_id: req.userCollege };
-    const logs = await SecurityLog.find(filter).sort({ timestamp: -1 }).limit(50).lean();
+    const tenant = await resolveAdminTenant(req);
+    const filter = {};
+    if (!tenant.isSuperAdmin && tenant.collegeId) {
+      filter.college_id = tenant.collegeId;
+    }
+    if (req.query.status && typeof req.query.status === 'string' && req.query.status !== 'all') {
+      filter.status = req.query.status;
+    }
+    const logs = await SecurityLog.find(filter).sort({ timestamp: -1 }).limit(100).lean();
     const result = logs.map(l => {
       l.id = l._id.toString();
       delete l._id;
@@ -92,14 +107,55 @@ router.get('/logs', authenticate, requireRole(['admin', 'super_admin', 'hod', 'p
 // ─── POST /security/acknowledge ──────────────────────────────────
 router.post('/acknowledge', authenticate, requireRole(['teacher', 'admin', 'super_admin', 'hod', 'principal']), async (req, res) => {
   try {
-    const { log_id, status } = req.body;
+    const { log_id, status, assigned_to, resolution_notes, severity } = req.body;
+    if (!log_id || !mongoose.Types.ObjectId.isValid(log_id)) {
+      return res.status(400).json({ detail: 'Invalid incident log_id.' });
+    }
     const updateStatus = status || "Acknowledged";
+    if (!ALLOWED_INCIDENT_STATUSES.has(updateStatus)) {
+      return res.status(400).json({ detail: 'Invalid incident status.' });
+    }
 
-    await SecurityLog.updateOne({ _id: log_id }, { $set: { status: updateStatus } });
-    res.json({ status: "success", message: `Alert marked as ${updateStatus.toLowerCase()}` });
+    const tenant = await resolveAdminTenant(req);
+    const existing = await SecurityLog.findById(log_id);
+    if (!existing) {
+      return res.status(404).json({ detail: 'Security incident not found.' });
+    }
+    if (!tenant.isSuperAdmin && existing.college_id && tenant.collegeId && existing.college_id !== tenant.collegeId) {
+      return res.status(403).json({ detail: 'Forbidden: Cross-institution security incident access denied.' });
+    }
+
+    const prevStatus = existing.status;
+    existing.status = updateStatus;
+    if (typeof assigned_to === 'string') existing.assigned_to = assigned_to.trim();
+    if (typeof resolution_notes === 'string') existing.resolution_notes = resolution_notes.trim().slice(0, 1000);
+    if (['low', 'medium', 'high', 'critical'].includes(severity)) existing.severity = severity;
+    if (['Resolved', 'False positive', 'Closed'].includes(updateStatus)) {
+      existing.resolved_at = new Date();
+      existing.resolved_by = req.userEmail;
+    }
+    await existing.save();
+
+    await auditService.log('SECURITY_INCIDENT_UPDATED', req.userEmail, req.userRole, {
+      incident_id: log_id,
+      previous_status: prevStatus,
+      new_status: updateStatus,
+      assigned_to: existing.assigned_to,
+      college_id: tenant.collegeId,
+    }, req.ip, { module: 'SECURITY', entityId: log_id, collegeId: tenant.collegeId });
+
+    res.json({ status: "success", message: `Alert marked as ${updateStatus.toLowerCase()}`, incident: { ...existing.toObject(), id: existing._id.toString() } });
   } catch (error) {
     reportInternalError(res, error, 'Security');
   }
+});
+
+// ─── PATCH /security/incidents/:id ───────────────────────────────
+router.patch('/incidents/:id', authenticate, requireRole(['admin', 'super_admin', 'hod', 'principal']), async (req, res) => {
+  req.body.log_id = req.params.id;
+  const handler = router.stack.find(l => l.route?.path === '/acknowledge')?.route?.stack[2]?.handle;
+  if (handler) return handler(req, res);
+  return res.status(404).json({ detail: 'Handler not found' });
 });
 
 module.exports = router;

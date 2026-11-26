@@ -12,6 +12,8 @@ const Leave = require('../models/Leave');
 const { authenticate, requireRole } = require('../middleware/auth');
 const reportInternalError = require('../utils/httpError');
 const authService = require('../services/authService');
+const auditService = require('../services/auditService');
+const { resolveAdminTenant, buildTenantUserFilter, isSameTenant } = require('../utils/tenantScope');
 
 const ROLE_HIERARCHY = {
   super_admin: 100,
@@ -393,38 +395,38 @@ router.get('/risk/critical', authenticate, requireRole(['hod', 'principal', 'man
     const long_absences = [];
     const [attendanceData = { counts: [], recent: [] }] = studentEmails.length
       ? await Attendance.aggregate([
-          { $match: { student_email: { $in: studentEmails } } },
-          {
-            $facet: {
-              counts: [
-                {
-                  $group: {
-                    _id: '$student_email',
-                    total: { $sum: 1 },
-                    present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
-                  },
+        { $match: { student_email: { $in: studentEmails } } },
+        {
+          $facet: {
+            counts: [
+              {
+                $group: {
+                  _id: '$student_email',
+                  total: { $sum: 1 },
+                  present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
                 },
-              ],
-              recent: [
-                {
-                  $setWindowFields: {
-                    partitionBy: '$student_email',
-                    sortBy: { timestamp: -1 },
-                    output: { position: { $documentNumber: {} } },
-                  },
+              },
+            ],
+            recent: [
+              {
+                $setWindowFields: {
+                  partitionBy: '$student_email',
+                  sortBy: { timestamp: -1 },
+                  output: { position: { $documentNumber: {} } },
                 },
-                { $match: { position: { $lte: 5 } } },
-                { $sort: { student_email: 1, timestamp: -1 } },
-                {
-                  $group: {
-                    _id: '$student_email',
-                    logs: { $push: { status: '$status', timestamp: '$timestamp' } },
-                  },
+              },
+              { $match: { position: { $lte: 5 } } },
+              { $sort: { student_email: 1, timestamp: -1 } },
+              {
+                $group: {
+                  _id: '$student_email',
+                  logs: { $push: { status: '$status', timestamp: '$timestamp' } },
                 },
-              ],
-            },
+              },
+            ],
           },
-        ])
+        },
+      ])
       : [];
     const countsByEmail = new Map(attendanceData.counts.map((row) => [row._id, row]));
     const recentByEmail = new Map(attendanceData.recent.map((row) => [row._id, row.logs]));
@@ -491,12 +493,16 @@ router.get('/users', authenticate, requireRole(['admin', 'super_admin', 'hod', '
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
     const skip = (page - 1) * limit;
 
-    const query = {};
+    const tenant = await resolveAdminTenant(req);
+    const query = buildTenantUserFilter(tenant);
     if (req.query.role) {
       if (typeof req.query.role !== 'string') {
         return res.status(400).json({ detail: 'Invalid role filter.' });
       }
       query.role = req.query.role.toLowerCase();
+    }
+    if (req.query.account_status && typeof req.query.account_status === 'string') {
+      query.account_status = req.query.account_status.toLowerCase();
     }
     if (req.userRole?.toLowerCase() === 'hod') {
       const staff = await User.findOne({ email: req.userEmail }, 'department').lean();
@@ -508,65 +514,77 @@ router.get('/users', authenticate, requireRole(['admin', 'super_admin', 'hod', '
       query.department = req.query.department;
     }
 
-    if (req.query.college !== undefined) {
-      if (typeof req.query.college !== 'string') {
-        return res.status(400).json({ detail: 'Invalid college filter.' });
+      if (req.query.college !== undefined && tenant.isSuperAdmin) {
+        if (typeof req.query.college !== 'string') {
+          return res.status(400).json({ detail: 'Invalid college filter.' });
+        }
+        query.college = req.query.college.trim();
       }
-      query.college = req.query.college.trim();
-    }
 
-    if (req.query.q !== undefined) {
-      if (typeof req.query.q !== 'string') {
-        return res.status(400).json({ detail: 'Invalid search query.' });
-      }
-      const trimmedQ = req.query.q.trim();
-      if (trimmedQ) {
-        const escapedQ = trimmedQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const searchRegex = new RegExp(escapedQ, 'i');
-        query.$or = [
-          { full_name: searchRegex },
-          { email: searchRegex },
-          { student_id: searchRegex },
-          { usn: searchRegex },
-          { roll_number: searchRegex }
-        ];
-      }
-    }
+          const searchParam = req.query.q !== undefined ? req.query.q : req.query.search;
+          if (searchParam !== undefined) {
+            if (typeof searchParam !== 'string') {
+              return res.status(400).json({ detail: 'Invalid search query.' });
+            }
+            const trimmedQ = searchParam.trim();
+            if (trimmedQ) {
+              const escapedQ = trimmedQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const searchRegex = new RegExp(escapedQ, 'i');
+              query.$and = query.$and || [];
+              query.$and.push({
+                $or: [
+                  { full_name: searchRegex },
+                  { email: searchRegex },
+                  { student_id: searchRegex },
+                  { usn: searchRegex },
+                  { roll_number: searchRegex }
+                ]
+              });
+            }
+          }
 
-    const total = await User.countDocuments(query);
-    const users = await User.find(query)
-      .select('email full_name role department semester section college student_id usn roll_number designation phone created_at')
-      .skip(skip)
-      .limit(limit)
-      .sort({ created_at: -1 })
-      .lean();
+          const total = await User.countDocuments(query);
+          const users = await User.find(query)
+            .select('email full_name role department semester section course academic_year college college_id student_id usn roll_number employee_id designation phone account_status biometric_registered assigned_subjects assigned_sections created_at')
+            .skip(skip)
+            .limit(limit)
+            .sort({ created_at: -1 })
+            .lean();
 
-    const formattedUsers = users.map((user) => ({
-      id: user._id.toString(),
-      email: user.email,
-      full_name: user.full_name,
-      role: user.role,
-      department: user.department || null,
-      semester: user.semester || null,
-      section: user.section || null,
-      college: user.college || null,
-      student_id: user.student_id || user.usn || user.roll_number || null,
-      designation: user.designation || null,
-      phone: user.phone || null,
-      created_at: user.created_at,
-    }));
+          const formattedUsers = users.map((user) => ({
+            id: user._id.toString(),
+            email: user.email,
+            full_name: user.full_name,
+            role: user.role,
+            department: user.department || null,
+            semester: user.semester || null,
+            section: user.section || null,
+            course: user.course || null,
+            academic_year: user.academic_year || null,
+            college: user.college || null,
+            college_id: user.college_id || null,
+            student_id: user.student_id || user.usn || user.roll_number || null,
+            employee_id: user.employee_id || null,
+            designation: user.designation || null,
+            phone: user.phone || null,
+            account_status: user.account_status || 'active',
+            biometric_registered: Boolean(user.biometric_registered),
+            assigned_subjects: user.assigned_subjects || [],
+            assigned_sections: user.assigned_sections || [],
+            created_at: user.created_at,
+          }));
 
-    res.json({
-      success: true,
-      total,
-      page,
-      limit,
-      users: formattedUsers
-    });
-  } catch (error) {
-    reportInternalError(res, error, 'Management');
-  }
-});
+          res.json({
+            success: true,
+            total,
+            page,
+            limit,
+            users: formattedUsers
+          });
+        } catch (error) {
+          reportInternalError(res, error, 'Management');
+        }
+      });
 
 // ─── POST /management/users (Create Student / Faculty / Admin) ─────
 router.post('/users', authenticate, requireRole(['admin', 'super_admin', 'principal', 'hod']), async (req, res) => {
@@ -588,8 +606,8 @@ router.post('/users', authenticate, requireRole(['admin', 'super_admin', 'princi
     } = req.body;
 
     if (typeof email !== 'string' || !email.trim() ||
-        typeof full_name !== 'string' || !full_name.trim() ||
-        typeof role !== 'string' || !role.trim()) {
+      typeof full_name !== 'string' || !full_name.trim() ||
+      typeof role !== 'string' || !role.trim()) {
       return res.status(400).json({ detail: "Missing or invalid required fields (email, full_name, role must be non-empty strings)." });
     }
 
@@ -620,6 +638,14 @@ router.post('/users', authenticate, requireRole(['admin', 'super_admin', 'princi
     const rawPassword = (typeof password === 'string' && password.trim()) ? password.trim() : `TempPass@${crypto.randomBytes(6).toString('hex')}`;
     const hashedPassword = await authService.hashPassword(rawPassword);
 
+    const tenant = await resolveAdminTenant(req);
+    const resolvedCollege = (!tenant.isSuperAdmin && tenant.collegeName)
+      ? tenant.collegeName
+      : (typeof college === 'string' ? college.trim() : (tenant.collegeName || ""));
+    const resolvedCollegeId = (!tenant.isSuperAdmin && tenant.collegeId)
+      ? tenant.collegeId
+      : (tenant.collegeId || undefined);
+
     const newUser = new User({
       email: normalizedEmail,
       full_name: full_name.trim(),
@@ -628,12 +654,17 @@ router.post('/users', authenticate, requireRole(['admin', 'super_admin', 'princi
       department: typeof department === 'string' ? department.trim() : "",
       semester: semester ? String(semester).trim() : "",
       section: typeof section === 'string' ? section.trim() : "",
-      college: typeof college === 'string' ? college.trim() : "",
+      course: typeof req.body.course === 'string' ? req.body.course.trim() : "",
+      academic_year: typeof req.body.academic_year === 'string' ? req.body.academic_year.trim() : "",
+      college: resolvedCollege,
+      college_id: resolvedCollegeId,
       student_id: typeof student_id === 'string' ? student_id.trim() : (typeof usn === 'string' ? usn.trim() : (typeof roll_number === 'string' ? roll_number.trim() : "")),
       usn: typeof usn === 'string' ? usn.trim() : (typeof student_id === 'string' ? student_id.trim() : ""),
       roll_number: typeof roll_number === 'string' ? roll_number.trim() : "",
+      employee_id: typeof req.body.employee_id === 'string' ? req.body.employee_id.trim() : "",
       designation: typeof designation === 'string' ? designation.trim() : "",
       phone: typeof phone === 'string' ? phone.trim() : "",
+      account_status: 'active',
       setup_completed: Boolean(password)
     });
 
@@ -645,6 +676,12 @@ router.post('/users', authenticate, requireRole(['admin', 'super_admin', 'princi
       }
       throw saveErr;
     }
+
+    await auditService.log('USER_CREATED', req.userEmail, req.userRole, {
+      target_email: normalizedEmail,
+      target_role: targetRole,
+      college_id: resolvedCollegeId || null,
+    }, req.ip, { module: 'ADMIN', entityId: newUser._id.toString(), collegeId: resolvedCollegeId || null });
 
     const userObj = newUser.toObject();
     delete userObj.password;
@@ -669,9 +706,13 @@ router.put('/users/:id', authenticate, requireRole(['admin', 'super_admin', 'pri
       return res.status(400).json({ detail: "Invalid user ID." });
     }
 
+    const tenant = await resolveAdminTenant(req);
     const targetUser = await User.findById(id);
     if (!targetUser) {
       return res.status(404).json({ detail: "User not found." });
+    }
+    if (!isSameTenant(tenant, targetUser)) {
+      return res.status(403).json({ detail: "Forbidden: Cross-institution user modification denied." });
     }
 
     const callerRank = ROLE_HIERARCHY[req.userRole?.toLowerCase()] || 0;
@@ -751,9 +792,13 @@ router.delete('/users/:id', authenticate, requireRole(['admin', 'super_admin', '
       return res.status(400).json({ detail: "Invalid user ID." });
     }
 
+    const tenant = await resolveAdminTenant(req);
     const userToDelete = await User.findById(id).lean();
     if (!userToDelete) {
       return res.status(404).json({ detail: "User not found." });
+    }
+    if (!isSameTenant(tenant, userToDelete)) {
+      return res.status(403).json({ detail: "Forbidden: Cross-institution user deletion denied." });
     }
 
     if (userToDelete.email.toLowerCase() === (req.userEmail || '').toLowerCase()) {
@@ -768,6 +813,11 @@ router.delete('/users/:id', authenticate, requireRole(['admin', 'super_admin', '
 
     await User.findByIdAndDelete(id);
     await UserSession.deleteMany({ userId: userToDelete.email });
+    await auditService.log('USER_DELETED', req.userEmail, req.userRole, {
+      target_email: userToDelete.email,
+      target_role: userToDelete.role,
+      college_id: tenant.collegeId || null,
+    }, req.ip, { module: 'ADMIN', entityId: id, collegeId: tenant.collegeId || null });
 
     res.json({
       success: true,
@@ -787,9 +837,13 @@ router.delete('/users/:id/biometrics', authenticate, requireRole(['admin', 'supe
       return res.status(400).json({ detail: "Invalid user ID." });
     }
 
+    const tenant = await resolveAdminTenant(req);
     const targetUser = await User.findById(id);
     if (!targetUser) {
       return res.status(404).json({ detail: "User not found." });
+    }
+    if (!isSameTenant(tenant, targetUser)) {
+      return res.status(403).json({ detail: "Forbidden: Cross-institution user modification denied." });
     }
 
     if (req.userRole === 'student' && targetUser.email.toLowerCase() !== (req.userEmail || '').toLowerCase()) {
@@ -907,5 +961,9 @@ router.post('/users/bulk', authenticate, requireRole(['admin', 'super_admin', 'p
     reportInternalError(res, error, 'Management');
   }
 });
+
+// Mount extended Admin Operations sub-router
+const adminOperationsRouter = require('./adminOperations');
+router.use('/', adminOperationsRouter);
 
 module.exports = router;

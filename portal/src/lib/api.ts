@@ -276,241 +276,241 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-      disputes: {
-        list: (signal?: AbortSignal) => apiFetch<{ disputes: any[] }>('/attendance/disputes', { signal }),
-        create: (data: {
-          session_id: string;
-          subject?: string;
-          reason_category?: string;
-          reason: string;
-          requested_status?: 'Present' | 'Excused' | 'Late';
-          attendance_id?: string;
-        }) =>
-          apiFetch<{ success: boolean; id: string; dispute: any }>('/attendance/disputes', {
-            method: 'POST',
-            body: JSON.stringify(data),
-          }),
-        resolve: (id: string, data: { action: string; remarks?: string; updated_status?: string }) =>
-          apiFetch<{ success: boolean; status: string; dispute: any }>(`/attendance/disputes/${encodeURIComponent(id)}/resolve`, {
-            method: 'POST',
-            body: JSON.stringify(data),
-          }),
-      },
-      batchMark: (data: {
+    disputes: {
+      list: (signal?: AbortSignal) => apiFetch<{ disputes: any[] }>('/attendance/disputes', { signal }),
+      create: (data: {
         session_id: string;
-        reason?: string;
-        records: Array<{ student_email?: string; student_id?: string; usn?: string; status: string; reason?: string }>;
-      }) =>
-        apiFetch<{ success: boolean; updated_count: number; failed_count: number; updated: any[]; rejected: any[] }>('/attendance/mark/batch', {
-          method: 'POST',
-          body: JSON.stringify(data),
-        }),
-      markFaceKiosk: (formData: FormData) =>
-        apiFetch<any>('/attendance/mark/face/kiosk', {
-          method: 'POST',
-          body: formData,
-        }),
-      downloadReport: (email: string, params: Record<string, string> = {}) => {
-        const qs = new URLSearchParams(params).toString();
-        const fmt = params.format || 'csv';
-        const ext = fmt === 'excel' ? 'xls' : fmt === 'html' ? 'html' : 'csv';
-        return apiDownload(`/reports/student/${encodeURIComponent(email)}${qs ? `?${qs}` : ''}`, `attendance_report.${ext}`);
-      },
-      markQr: (sessionId: string, qrCode: string, lat?: number, lng?: number) =>
-        apiFetch<any>('/attendance/mark', {
-          method: 'POST',
-          body: JSON.stringify({
-            session_id: sessionId,
-            qr_code: qrCode,
-            latitude: lat,
-            longitude: lng,
-          }),
-        }),
-      markFace: (formData: FormData) =>
-        apiFetch<any>('/attendance/mark/face', {
-          method: 'POST',
-          body: formData,
-        }),
-      auditLogs: () => apiFetch('/attendance/audit-logs'),
-    },
-    ai: {
-      chat: (message: string, language = 'en', opts: { conversationId?: string; history?: Array<{ role: string; content: string }>; currentRoute?: string } = {}) =>
-        apiFetch<{ success: boolean; conversationId: string; reply: string; message?: any; suggestedActions?: any[] }>('/ai/chat', {
-          method: 'POST',
-          body: JSON.stringify({ message, language, ...opts }),
-        }),
-      conversations: (signal?: AbortSignal) => apiFetch<{ conversations: any[] }>('/ai/conversations', { signal }),
-      deleteConversation: (id: string) =>
-        apiFetch<{ success: boolean }>(`/ai/conversations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
-      feedback: (data: { responseId: string; rating: 'helpful' | 'not_helpful'; category?: string; feedback?: string; currentRoute?: string }) =>
-        apiFetch<{ success: boolean; feedbackId: string }>('/ai/feedback', {
-          method: 'POST',
-          body: JSON.stringify(data),
-        }),
-    },
-    academic: {
-      timetable: () => apiFetch<any[]>('/academic/timetable'),
-      timetableSummary: (signal?: AbortSignal) => apiFetch<any>('/academic/timetable/summary', { signal }),
-      downloadTimetableIcs: () => apiDownload('/academic/timetable/export.ics', 'smartface_timetable.ics'),
-      announcements: (params: Record<string, string> = {}, signal?: AbortSignal) => {
-        const qs = new URLSearchParams(params).toString();
-        return apiFetch<{ announcements: any[] }>(`/academic/announcements${qs ? `?${qs}` : ''}`, { signal });
-      },
-      holidays: () => apiFetch('/academic/holidays'),
-      calendar: () => apiFetch('/academic/calendar'),
-    },
-    sessions: {
-      active: (signal?: AbortSignal) => apiFetch<{
-        is_active: boolean;
-        session_id?: string;
-        teacher_id?: string;
         subject?: string;
-        room?: string;
-        start_time?: string;
-        duration?: string;
-        geofence_enabled?: boolean;
-        sessions?: any[];
-      }>('/sessions/active', { signal }),
-    },
-    student: {
-      updateProfile: (data: {
-        full_name?: string;
-        phone?: string;
-        dob?: string;
-        gender?: string;
-        address?: string;
-        language_preference?: string;
-        theme_preference?: string;
-        avatar_url?: string;
+        reason_category?: string;
+        reason: string;
+        requested_status?: 'Present' | 'Excused' | 'Late';
+        attendance_id?: string;
       }) =>
-        apiFetch<{ success: boolean; message: string; user?: any }>('/auth/update-profile', {
+        apiFetch<{ success: boolean; id: string; dispute: any }>('/attendance/disputes', {
           method: 'POST',
           body: JSON.stringify(data),
         }),
-      uploadAvatar: (formData: FormData) =>
-        apiFetch<{ success: boolean; profilePhotoUrl?: string; avatar_url?: string; user?: any }>('/auth/upload-avatar', {
+      resolve: (id: string, data: { action: string; remarks?: string; updated_status?: string }) =>
+        apiFetch<{ success: boolean; status: string; dispute: any }>(`/attendance/disputes/${encodeURIComponent(id)}/resolve`, {
           method: 'POST',
-          body: formData,
+          body: JSON.stringify(data),
         }),
     },
-    teacher: {
-      dashboard: (signal?: AbortSignal) => apiFetch<any>('/teacher/dashboard', { signal }),
-      sessions: (signal?: AbortSignal) => apiFetch<any[]>('/teacher/sessions', { signal }),
-      sessionRoster: (sessionId: string, signal?: AbortSignal) =>
-        apiFetch<any>(`/teacher/sessions/${encodeURIComponent(sessionId)}/roster`, { signal }),
-      students: (search = '', signal?: AbortSignal) =>
-        apiFetch<any[]>(`/teacher/students${search ? `?search=${encodeURIComponent(search)}` : ''}`, { signal }),
-      studentsMeta: (params: Record<string, string> = {}, signal?: AbortSignal) => {
-        const qs = new URLSearchParams(
-          Object.entries(params).filter(([, v]) => v !== undefined && v !== '')
-        ).toString();
-        return apiFetch<any>(`/teacher/students/meta${qs ? `?${qs}` : ''}`, { signal });
-      },
-      studentHistory: (email: string, signal?: AbortSignal) =>
-        apiFetch<any>(`/teacher/students/${encodeURIComponent(email)}/history`, { signal }),
-      analytics: (subject?: string, signal?: AbortSignal) =>
-        apiFetch<any>(`/teacher/analytics${subject && subject !== 'all' ? `?subject=${encodeURIComponent(subject)}` : ''}`, { signal }),
-      logIntervention: (data: {
-        student_email: string;
-        subject?: string;
-        risk_level?: string;
-        action_taken?: 'note' | 'reminder_sent' | 'escalated' | 'counseling_scheduled';
-        note: string;
-        escalated_to?: string;
-      }) =>
-        apiFetch<{ success: boolean; intervention: any }>('/teacher/interventions', {
+    batchMark: (data: {
+      session_id: string;
+      reason?: string;
+      records: Array<{ student_email?: string; student_id?: string; usn?: string; status: string; reason?: string }>;
+    }) =>
+      apiFetch<{ success: boolean; updated_count: number; failed_count: number; updated: any[]; rejected: any[] }>('/attendance/mark/batch', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    markFaceKiosk: (formData: FormData) =>
+      apiFetch<any>('/attendance/mark/face/kiosk', {
+        method: 'POST',
+        body: formData,
+      }),
+    downloadReport: (email: string, params: Record<string, string> = {}) => {
+      const qs = new URLSearchParams(params).toString();
+      const fmt = params.format || 'csv';
+      const ext = fmt === 'excel' ? 'xls' : fmt === 'html' ? 'html' : 'csv';
+      return apiDownload(`/reports/student/${encodeURIComponent(email)}${qs ? `?${qs}` : ''}`, `attendance_report.${ext}`);
+    },
+    markQr: (sessionId: string, qrCode: string, lat?: number, lng?: number) =>
+      apiFetch<any>('/attendance/mark', {
+        method: 'POST',
+        body: JSON.stringify({
+          session_id: sessionId,
+          qr_code: qrCode,
+          latitude: lat,
+          longitude: lng,
+        }),
+      }),
+    markFace: (formData: FormData) =>
+      apiFetch<any>('/attendance/mark/face', {
+        method: 'POST',
+        body: formData,
+      }),
+    auditLogs: () => apiFetch('/attendance/audit-logs'),
+  },
+  ai: {
+    chat: (message: string, language = 'en', opts: { conversationId?: string; history?: Array<{ role: string; content: string }>; currentRoute?: string } = {}) =>
+      apiFetch<{ success: boolean; conversationId: string; reply: string; message?: any; suggestedActions?: any[] }>('/ai/chat', {
+        method: 'POST',
+        body: JSON.stringify({ message, language, ...opts }),
+      }),
+    conversations: (signal?: AbortSignal) => apiFetch<{ conversations: any[] }>('/ai/conversations', { signal }),
+    deleteConversation: (id: string) =>
+      apiFetch<{ success: boolean }>(`/ai/conversations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    feedback: (data: { responseId: string; rating: 'helpful' | 'not_helpful'; category?: string; feedback?: string; currentRoute?: string }) =>
+      apiFetch<{ success: boolean; feedbackId: string }>('/ai/feedback', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+  academic: {
+    timetable: () => apiFetch<any[]>('/academic/timetable'),
+    timetableSummary: (signal?: AbortSignal) => apiFetch<any>('/academic/timetable/summary', { signal }),
+    downloadTimetableIcs: () => apiDownload('/academic/timetable/export.ics', 'smartface_timetable.ics'),
+    announcements: (params: Record<string, string> = {}, signal?: AbortSignal) => {
+      const qs = new URLSearchParams(params).toString();
+      return apiFetch<{ announcements: any[] }>(`/academic/announcements${qs ? `?${qs}` : ''}`, { signal });
+    },
+    holidays: () => apiFetch('/academic/holidays'),
+    calendar: () => apiFetch('/academic/calendar'),
+  },
+  sessions: {
+    active: (signal?: AbortSignal) => apiFetch<{
+      is_active: boolean;
+      session_id?: string;
+      teacher_id?: string;
+      subject?: string;
+      room?: string;
+      start_time?: string;
+      duration?: string;
+      geofence_enabled?: boolean;
+      sessions?: any[];
+    }>('/sessions/active', { signal }),
+  },
+  student: {
+    updateProfile: (data: {
+      full_name?: string;
+      phone?: string;
+      dob?: string;
+      gender?: string;
+      address?: string;
+      language_preference?: string;
+      theme_preference?: string;
+      avatar_url?: string;
+    }) =>
+      apiFetch<{ success: boolean; message: string; user?: any }>('/auth/update-profile', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    uploadAvatar: (formData: FormData) =>
+      apiFetch<{ success: boolean; profilePhotoUrl?: string; avatar_url?: string; user?: any }>('/auth/upload-avatar', {
+        method: 'POST',
+        body: formData,
+      }),
+  },
+  teacher: {
+    dashboard: (signal?: AbortSignal) => apiFetch<any>('/teacher/dashboard', { signal }),
+    sessions: (signal?: AbortSignal) => apiFetch<any[]>('/teacher/sessions', { signal }),
+    sessionRoster: (sessionId: string, signal?: AbortSignal) =>
+      apiFetch<any>(`/teacher/sessions/${encodeURIComponent(sessionId)}/roster`, { signal }),
+    students: (search = '', signal?: AbortSignal) =>
+      apiFetch<any[]>(`/teacher/students${search ? `?search=${encodeURIComponent(search)}` : ''}`, { signal }),
+    studentsMeta: (params: Record<string, string> = {}, signal?: AbortSignal) => {
+      const qs = new URLSearchParams(
+        Object.entries(params).filter(([, v]) => v !== undefined && v !== '')
+      ).toString();
+      return apiFetch<any>(`/teacher/students/meta${qs ? `?${qs}` : ''}`, { signal });
+    },
+    studentHistory: (email: string, signal?: AbortSignal) =>
+      apiFetch<any>(`/teacher/students/${encodeURIComponent(email)}/history`, { signal }),
+    analytics: (subject?: string, signal?: AbortSignal) =>
+      apiFetch<any>(`/teacher/analytics${subject && subject !== 'all' ? `?subject=${encodeURIComponent(subject)}` : ''}`, { signal }),
+    logIntervention: (data: {
+      student_email: string;
+      subject?: string;
+      risk_level?: string;
+      action_taken?: 'note' | 'reminder_sent' | 'escalated' | 'counseling_scheduled';
+      note: string;
+      escalated_to?: string;
+    }) =>
+      apiFetch<{ success: boolean; intervention: any }>('/teacher/interventions', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    sendAlert: (data: { student_email: string; title?: string; message: string; priority?: string }) =>
+      apiFetch<{ success: boolean; recipient: string; parent_notified: boolean }>('/notifications/send', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    kioskDiagnostics: (signal?: AbortSignal) =>
+      apiFetch<any>('/teacher/kiosk/diagnostics', { signal }),
+    reportSummary: (params: Record<string, string>) => {
+      const qs = new URLSearchParams(
+        Object.entries(params).filter(([, v]) => v !== undefined && v !== '')
+      ).toString();
+      return apiFetch<any>(`/teacher/reports/summary${qs ? `?${qs}` : ''}`);
+    },
+    exportReportDownload: (params: Record<string, string>) => {
+      const qs = new URLSearchParams(
+        Object.entries(params).filter(([, v]) => v !== undefined && v !== '')
+      ).toString();
+      const fmt = (params.format || 'csv').toLowerCase();
+      const ext = fmt === 'xlsx' || fmt === 'excel' ? 'xls' : (fmt === 'html' || fmt === 'pdf' ? 'html' : 'csv');
+      return apiDownload(`/teacher/reports/export${qs ? `?${qs}` : ''}`, `teacher_attendance_report.${ext}`);
+    },
+    exportReport: (params: Record<string, string>) => {
+      const qs = new URLSearchParams(params).toString();
+      const url = `${BASE_URL}/teacher/reports/export${qs ? `?${qs}` : ''}`;
+      const token = getToken();
+      return fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+    },
+    announcements: {
+      list: (signal?: AbortSignal) => apiFetch<{ announcements: any[] }>('/teacher/announcements', { signal }),
+      create: (data: Record<string, unknown>) =>
+        apiFetch<{ success: boolean; announcement: any }>('/teacher/announcements', {
           method: 'POST',
           body: JSON.stringify(data),
         }),
-      sendAlert: (data: { student_email: string; title?: string; message: string; priority?: string }) =>
-        apiFetch<{ success: boolean; recipient: string; parent_notified: boolean }>('/notifications/send', {
-          method: 'POST',
-          body: JSON.stringify(data),
+      remove: (id: string) =>
+        apiFetch<{ success: boolean }>(`/teacher/announcements/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    },
+    broadcast: (title: string, message: string, priority = 'Normal', extra: Record<string, unknown> = {}) =>
+      apiFetch('/teacher/notifications/broadcast', {
+        method: 'POST',
+        body: JSON.stringify({ title, message, priority, ...extra }),
+      }),
+    startSession: (
+      teacherEmail: string,
+      subject: string,
+      room = 'Main Hall',
+      durationMinutes = 60,
+      options: Record<string, unknown> = {}
+    ) =>
+      apiFetch<{ session_id: string; status?: string; already_active?: boolean; message: string }>('/sessions/start', {
+        method: 'POST',
+        body: JSON.stringify({
+          teacher_email: teacherEmail,
+          subject,
+          room,
+          duration_minutes: durationMinutes,
+          ...options,
         }),
-      kioskDiagnostics: (signal?: AbortSignal) =>
-        apiFetch<any>('/teacher/kiosk/diagnostics', { signal }),
-      reportSummary: (params: Record<string, string>) => {
-        const qs = new URLSearchParams(
-          Object.entries(params).filter(([, v]) => v !== undefined && v !== '')
-        ).toString();
-        return apiFetch<any>(`/teacher/reports/summary${qs ? `?${qs}` : ''}`);
-      },
-      exportReportDownload: (params: Record<string, string>) => {
-        const qs = new URLSearchParams(
-          Object.entries(params).filter(([, v]) => v !== undefined && v !== '')
-        ).toString();
-        const fmt = (params.format || 'csv').toLowerCase();
-        const ext = fmt === 'xlsx' || fmt === 'excel' ? 'xls' : (fmt === 'html' || fmt === 'pdf' ? 'html' : 'csv');
-        return apiDownload(`/teacher/reports/export${qs ? `?${qs}` : ''}`, `teacher_attendance_report.${ext}`);
-      },
-      exportReport: (params: Record<string, string>) => {
-        const qs = new URLSearchParams(params).toString();
-        const url = `${BASE_URL}/teacher/reports/export${qs ? `?${qs}` : ''}`;
-        const token = getToken();
-        return fetch(url, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-      },
-      announcements: {
-        list: (signal?: AbortSignal) => apiFetch<{ announcements: any[] }>('/teacher/announcements', { signal }),
-        create: (data: Record<string, unknown>) =>
-          apiFetch<{ success: boolean; announcement: any }>('/teacher/announcements', {
-            method: 'POST',
-            body: JSON.stringify(data),
-          }),
-        remove: (id: string) =>
-          apiFetch<{ success: boolean }>(`/teacher/announcements/${encodeURIComponent(id)}`, { method: 'DELETE' }),
-      },
-      broadcast: (title: string, message: string, priority = 'Normal', extra: Record<string, unknown> = {}) =>
-        apiFetch('/teacher/notifications/broadcast', {
-          method: 'POST',
-          body: JSON.stringify({ title, message, priority, ...extra }),
-        }),
-      startSession: (
-        teacherEmail: string,
-        subject: string,
-        room = 'Main Hall',
-        durationMinutes = 60,
-        options: Record<string, unknown> = {}
-      ) =>
-        apiFetch<{ session_id: string; status?: string; already_active?: boolean; message: string }>('/sessions/start', {
-          method: 'POST',
-          body: JSON.stringify({
-            teacher_email: teacherEmail,
-            subject,
-            room,
-            duration_minutes: durationMinutes,
-            ...options,
-          }),
-        }),
-      transitionSession: (
-        sessionId: string,
-        action: string,
-        payload: { reason?: string; extend_minutes?: number; auto_mark_absent?: boolean } = {}
-      ) =>
-        apiFetch<any>(`/sessions/${encodeURIComponent(sessionId)}/transition`, {
-          method: 'POST',
-          body: JSON.stringify({ action, ...payload }),
-        }),
-      regenerateQr: (sessionId: string, rotationSeconds?: number) =>
-        apiFetch<any>(`/sessions/${encodeURIComponent(sessionId)}/qr-regenerate`, {
-          method: 'POST',
-          body: JSON.stringify(rotationSeconds ? { rotation_seconds: rotationSeconds } : {}),
-        }),
-      timetable: {
-        list: (signal?: AbortSignal) => apiFetch<any[]>('/teacher/timetable', { signal }),
-        conflicts: (signal?: AbortSignal) => apiFetch<any>('/academic/timetable/conflicts', { signal }),
-        create: (body: Record<string, unknown>) =>
-          apiFetch('/teacher/timetable', { method: 'POST', body: JSON.stringify(body) }),
-        update: (id: string, body: Record<string, unknown>) =>
-          apiFetch(`/teacher/timetable/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
-        remove: (id: string) => apiFetch(`/teacher/timetable/${id}`, { method: 'DELETE' }),
-      },
-      stopSession: (sessionId: string) =>
-        apiFetch('/sessions/stop', {
-          method: 'POST',
-          body: JSON.stringify({ session_id: sessionId }),
-        }),
+      }),
+    transitionSession: (
+      sessionId: string,
+      action: string,
+      payload: { reason?: string; extend_minutes?: number; auto_mark_absent?: boolean } = {}
+    ) =>
+      apiFetch<any>(`/sessions/${encodeURIComponent(sessionId)}/transition`, {
+        method: 'POST',
+        body: JSON.stringify({ action, ...payload }),
+      }),
+    regenerateQr: (sessionId: string, rotationSeconds?: number) =>
+      apiFetch<any>(`/sessions/${encodeURIComponent(sessionId)}/qr-regenerate`, {
+        method: 'POST',
+        body: JSON.stringify(rotationSeconds ? { rotation_seconds: rotationSeconds } : {}),
+      }),
+    timetable: {
+      list: (signal?: AbortSignal) => apiFetch<any[]>('/teacher/timetable', { signal }),
+      conflicts: (signal?: AbortSignal) => apiFetch<any>('/academic/timetable/conflicts', { signal }),
+      create: (body: Record<string, unknown>) =>
+        apiFetch('/teacher/timetable', { method: 'POST', body: JSON.stringify(body) }),
+      update: (id: string, body: Record<string, unknown>) =>
+        apiFetch(`/teacher/timetable/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+      remove: (id: string) => apiFetch(`/teacher/timetable/${id}`, { method: 'DELETE' }),
+    },
+    stopSession: (sessionId: string) =>
+      apiFetch('/sessions/stop', {
+        method: 'POST',
+        body: JSON.stringify({ session_id: sessionId }),
+      }),
     qrToken: (sessionId: string) => apiFetch<any>(`/sessions/${sessionId}/qr-token`),
   },
   leave: {
@@ -551,11 +551,127 @@ export const api = {
       }),
   },
   admin: {
-    stats: () => apiFetch('/management/stats'),
-    threats: () => apiFetch('/management/threats'),
-    users: (search = '') =>
-      apiFetch(`/management/users${search ? `?search=${encodeURIComponent(search)}` : ''}`),
-    auditLogs: () => apiFetch('/attendance/audit-logs'),
+    stats: (params: Record<string, string> = {}) => {
+      const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v)).toString();
+      return apiFetch<any>(`/management/stats${qs ? `?${qs}` : ''}`);
+    },
+    threats: () => apiFetch<any[]>('/management/threats'),
+    calibration: {
+      get: () => apiFetch<any>('/management/calibration'),
+      update: (data: { similarity_threshold: number; liveness_required?: boolean; retention_days?: number }) =>
+        apiFetch<any>('/management/calibration', { method: 'PATCH', body: JSON.stringify(data) }),
+    },
+    users: (params: string | Record<string, string | number> = '') => {
+      if (typeof params === 'string') {
+        return apiFetch<any>(`/management/users${params ? `?q=${encodeURIComponent(params)}` : ''}`);
+      }
+      const qs = new URLSearchParams(
+        Object.entries(params).reduce<Record<string, string>>((acc, [k, v]) => {
+          if (v !== undefined && v !== null && v !== '') acc[k] = String(v);
+          return acc;
+        }, {})
+      ).toString();
+      return apiFetch<any>(`/management/users${qs ? `?${qs}` : ''}`);
+    },
+    createUser: (data: Record<string, unknown>) =>
+      apiFetch<any>('/management/users', { method: 'POST', body: JSON.stringify(data) }),
+    updateUser: (id: string, data: Record<string, unknown>) =>
+      apiFetch<any>(`/management/users/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(data) }),
+    updateUserStatus: (id: string, status: string, reason?: string) =>
+      apiFetch<any>(`/management/users/${encodeURIComponent(id)}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, reason }),
+      }),
+    deleteUser: (id: string) =>
+      apiFetch<any>(`/management/users/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    bulkPreview: (users: any[], default_role = 'student') =>
+      apiFetch<any>('/management/users/bulk/preview', {
+        method: 'POST',
+        body: JSON.stringify({ users, default_role }),
+      }),
+    bulkImport: (users: any[], default_role = 'student') =>
+      apiFetch<any>('/management/users/bulk', {
+        method: 'POST',
+        body: JSON.stringify({ users, default_role }),
+      }),
+    promoteStudents: (data: { student_ids: string[]; target_semester?: string; target_section?: string; target_academic_year?: string; archive_graduated?: boolean }) =>
+      apiFetch<any>('/management/students/promote', { method: 'POST', body: JSON.stringify(data) }),
+    exportStudentsCsv: () => apiDownload('/management/students/export', 'students_export.csv'),
+    parents: {
+      list: () => apiFetch<any>('/management/parents'),
+      link: (parent_email: string, student_email: string) =>
+        apiFetch<any>('/management/parents/link', { method: 'POST', body: JSON.stringify({ parent_email, student_email }) }),
+      unlink: (parent_email: string, student_email: string) =>
+        apiFetch<any>('/management/parents/unlink', { method: 'DELETE', body: JSON.stringify({ parent_email, student_email }) }),
+    },
+    departments: {
+      list: () => apiFetch<any>('/management/departments'),
+      create: (data: { name: string; code: string; hod_email?: string }) =>
+        apiFetch<any>('/management/departments', { method: 'POST', body: JSON.stringify(data) }),
+      remove: (id: string) => apiFetch<any>(`/management/departments/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    },
+    courses: {
+      list: () => apiFetch<any>('/management/courses'),
+      create: (data: { department_id: string; name: string; code: string; credits?: number }) =>
+        apiFetch<any>('/management/courses', { method: 'POST', body: JSON.stringify(data) }),
+    },
+    sections: {
+      list: () => apiFetch<any>('/management/sections'),
+      create: (data: { course_id: string; name: string; semester: number; academic_year: string }) =>
+        apiFetch<any>('/management/sections', { method: 'POST', body: JSON.stringify(data) }),
+    },
+    semesters: {
+      list: () => apiFetch<any>('/management/semesters'),
+      create: (data: { name: string; academic_year: string; start_date?: string; end_date?: string; status?: string }) =>
+        apiFetch<any>('/management/semesters', { method: 'POST', body: JSON.stringify(data) }),
+    },
+    holidays: {
+      list: () => apiFetch<any>('/management/holidays'),
+      create: (data: { name: string; date: string; type?: string; description?: string }) =>
+        apiFetch<any>('/management/holidays', { method: 'POST', body: JSON.stringify(data) }),
+    },
+    policy: {
+      get: () => apiFetch<any>('/management/policy'),
+      update: (data: Record<string, unknown>) =>
+        apiFetch<any>('/management/policy', { method: 'PUT', body: JSON.stringify(data) }),
+    },
+    devices: {
+      list: () => apiFetch<any>('/management/devices'),
+      register: (data: { device_id: string; name: string; device_type?: string; campus?: string; classroom?: string }) =>
+        apiFetch<any>('/management/devices', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: Record<string, unknown>) =>
+        apiFetch<any>(`/management/devices/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+      rotateCredential: (id: string) =>
+        apiFetch<any>(`/management/devices/${encodeURIComponent(id)}/rotate-credential`, { method: 'POST' }),
+    },
+    biometrics: {
+      list: () => apiFetch<any>('/management/biometrics'),
+      eraseUser: (id: string) => apiFetch<any>(`/management/users/${encodeURIComponent(id)}/biometrics`, { method: 'DELETE' }),
+    },
+    disputes: (status = 'all') => apiFetch<any>(`/management/disputes?status=${encodeURIComponent(status)}`),
+    leaves: (status = 'all') => apiFetch<any>(`/management/leaves?status=${encodeURIComponent(status)}`),
+    announcements: {
+      list: () => apiFetch<any>('/management/announcements'),
+      create: (data: Record<string, unknown>) =>
+        apiFetch<any>('/management/announcements', { method: 'POST', body: JSON.stringify(data) }),
+    },
+    broadcast: (data: { title: string; message: string; target_role?: string; department?: string; priority?: string }) =>
+      apiFetch<any>('/management/notifications/broadcast', { method: 'POST', body: JSON.stringify(data) }),
+    security: {
+      logs: (status = 'all') => apiFetch<any[]>(`/security/logs?status=${encodeURIComponent(status)}`),
+      updateIncident: (data: { log_id: string; status: string; assigned_to?: string; resolution_notes?: string; severity?: string }) =>
+        apiFetch<any>('/security/acknowledge', { method: 'POST', body: JSON.stringify(data) }),
+    },
+    auditLogs: (module = 'all') => apiFetch<any>(`/management/audit-logs?module=${encodeURIComponent(module)}`),
+    backups: () => apiFetch<any>('/management/backups'),
+    settings: {
+      get: () => apiFetch<any>('/management/settings'),
+      update: (data: Record<string, unknown>) =>
+        apiFetch<any>('/management/settings', { method: 'PUT', body: JSON.stringify(data) }),
+    },
+    riskCritical: () => apiFetch<any>('/management/risk/critical'),
+    healthScore: () => apiFetch<any>('/management/health-score'),
+    principalSummary: () => apiFetch<any>('/management/principal/summary'),
   },
   parent: {
     children: () => apiFetch<any[]>('/parent/children'),

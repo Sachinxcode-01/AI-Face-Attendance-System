@@ -62,9 +62,20 @@ const UserSchema = new mongoose.Schema({
   experience: { type: String },
   gender: { type: String },
   address: { type: String },
+  account_status: {
+    type: String,
+    enum: ['active', 'suspended', 'archived', 'pending'],
+    default: 'active',
+    index: true
+  },
+  assigned_subjects: { type: [String], default: [] },
+  assigned_sections: { type: [String], default: [] },
+  permissions_override: { type: [String], default: [] },
   created_at: { type: Date, default: Date.now }
 });
 
 UserSchema.index({ email: 1, role: 1 });
+UserSchema.index({ college_id: 1, role: 1, account_status: 1 });
+UserSchema.index({ college: 1, role: 1 });
 
 module.exports = mongoose.model('User', UserSchema, 'users');
