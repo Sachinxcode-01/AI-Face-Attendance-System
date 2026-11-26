@@ -65,48 +65,48 @@ export function useAttendanceLive(options: UseAttendanceLiveOptions = {}) {
     if (onEventRef.current) {
       onEventRef.current(evt);
     }
-  }, [invalidateStudentCache]);
+}, [invalidateStudentCache]);
 
-  useEffect(() => {
-    let unmounted = false;
-    let attempt = 0;
-    const token = getToken();
+useEffect(() => {
+  let unmounted = false;
+  let attempt = 0;
+  const token = getToken();
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const wsProto = apiUrl.startsWith('https') ? 'wss:' : 'ws:';
-    const wsHost = apiUrl.replace(/^https?:\/\//, '');
-    const wsPath = channel === 'live-logs' ? '/ws/live-logs' : '/ws/notifications';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const wsProto = apiUrl.startsWith('https') ? 'wss:' : 'ws:';
+  const wsHost = apiUrl.replace(/^https?:\/\//, '');
+  const wsPath = channel === 'live-logs' ? '/ws/live-logs' : '/ws/notifications';
 
-    function connect() {
-      if (unmounted) return;
-      if (!token) {
-        setIsConnected(false);
-        return;
-      }
+  function connect() {
+    if (unmounted) return;
+    if (!token) {
+      setIsConnected(false);
+      return;
+    }
 
-      try {
-        const wsUrl = `${wsProto}//${wsHost}${wsPath}?token=${encodeURIComponent(token)}`;
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
+    try {
+      const wsUrl = `${wsProto}//${wsHost}${wsPath}?token=${encodeURIComponent(token)}`;
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
 
-        let pingInterval: NodeJS.Timeout | null = null;
+      let pingInterval: NodeJS.Timeout | null = null;
 
-        ws.onopen = () => {
-          if (!unmounted) {
-            attempt = 0;
-            setIsConnected(true);
-            pingInterval = setInterval(() => {
-              if (ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
-              }
-            }, 30000);
-          }
-        };
+      ws.onopen = () => {
+        if (!unmounted) {
+          attempt = 0;
+          setIsConnected(true);
+          pingInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+            }
+          }, 30000);
+        }
+      };
 
-        ws.onmessage = (event) => {
-          if (unmounted) return;
-          try {
-            const data = JSON.parse(event.data);
+      ws.onmessage = (event) => {
+        if (unmounted) return;
+        try {
+          const data = JSON.parse(event.data);
             if (
               data?.type === 'attendance_update' ||
               data?.type === 'security_alert' ||
@@ -157,9 +157,9 @@ export function useAttendanceLive(options: UseAttendanceLiveOptions = {}) {
     };
   }, [channel, handleIncoming]);
 
-  return {
-    isConnected,
-    lastEvent,
-    events,
-  };
+return {
+  isConnected,
+  lastEvent,
+  events,
+};
 }
