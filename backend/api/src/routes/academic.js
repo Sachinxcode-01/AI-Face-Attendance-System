@@ -153,7 +153,10 @@ router.get('/timetable/export.ics', authenticate, async (req, res) => {
     const policy = await getInstitutionPolicy(user);
     const keys = buildTimetableKeys(user);
     const queryIds = keys.length > 0 ? keys : [email.toUpperCase()];
-    const slots = await Timetable.find({ user_id: { $in: queryIds } }).lean();
+    const slotQuery = (req.userRole || '').toLowerCase() === 'teacher'
+      ? { $or: [{ teacher_email: email }, { user_id: { $in: queryIds } }] }
+      : { user_id: { $in: queryIds } };
+    const slots = await Timetable.find(slotQuery).lean();
 
     const dayToByDay = { sun: 'SU', mon: 'MO', tue: 'TU', wed: 'WE', thu: 'TH', fri: 'FR', sat: 'SA' };
     const dayToDow = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };

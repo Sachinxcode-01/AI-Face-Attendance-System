@@ -24,7 +24,9 @@ const unitTests = [
   'tests/unit/test_predictive_analytics.js',
   'tests/unit/test_prd_upgrades.js',
   'tests/unit/test_colleges.js',
-  'tests/unit/test_cache.js'
+  'tests/unit/test_cache.js',
+  'tests/unit/test_attendance_calculator.js',
+  'tests/unit/test_teacher_lifecycle_qr.js'
 ];
 
 const integrationTests = [
@@ -34,7 +36,9 @@ const integrationTests = [
   'tests/integration/run_ai_validation.js',
   'tests/integration/run_analytics_validation.js',
   'tests/integration/run_calendar_validation.js',
-  'tests/integration/run_notification_validation.js'
+  'tests/integration/run_notification_validation.js',
+  'tests/integration/run_student_portal_validation.js',
+  'tests/integration/run_teacher_portal_validation.js'
 ];
 
 function runScript(scriptPath, env = {}) {

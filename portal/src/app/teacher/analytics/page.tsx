@@ -1,158 +1,382 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { StatCard } from '@/components/ui/StatCard';
-import { Badge } from '@/components/ui/Badge';
+import { Badge, statusTone } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
 import { SkeletonCard } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Toasts } from '@/components/ui/Toasts';
 import { useToast } from '@/hooks/useToast';
-import { api } from '@/lib/api';
-import type { TeacherAnalytics } from '@/lib/types';
-import { BarChart3, RefreshCw, ScanFace, QrCode, MonitorPlay, Activity, TrendingUp } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTeacherAnalyticsQuery } from '@/features/teacher/teacher.queries';
+import { teacherApi } from '@/features/teacher/teacher.api';
+import { queryClient } from '@/core/query/queryClient';
+import { teacherKeys } from '@/core/query/queryKeys';
+import {
+  BarChart3, ScanFace, QrCode, UsersRound, TrendingUp,
+  AlertTriangle, BellRing, ClipboardEdit, BookOpen, ShieldAlert,
+} from 'lucide-react';
+
+type RiskStudentRow = NonNullable<import('@/lib/types').TeacherAnalytics['risk_students']>[number];
 
 export default function TeacherAnalyticsPage() {
+  const { user } = useAuth();
   const { toasts, push, dismiss } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [analytics, setAnalytics] = useState<TeacherAnalytics | null>(null);
+  const [subjectFilter, setSubjectFilter] = useState('all');
+  const [trendMode, setTrendMode] = useState<'weekly' | 'daily' | 'monthly'>('weekly');
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await api.teacher.analytics();
-      setAnalytics(data as TeacherAnalytics);
-    } catch {
-      push('Failed to load analytics', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [push]);
+    const { data: analytics, isLoading, isFetching, error, refetch } = useTeacherAnalyticsQuery(
+      user?.email,
+      subjectFilter
+    );
 
-  useEffect(() => {
-    load();
-  }, [load]);
+    // Intervention / warning modal state
+    const [selectedRisk, setSelectedRisk] = useState<RiskStudentRow | null>(null);
+    const [actionTaken, setActionTaken] = useState<'reminder_sent' | 'counseling_scheduled' | 'note' | 'escalated'>('reminder_sent');
+    const [note, setNote] = useState('');
+    const [sendAlert, setSendAlert] = useState(true);
+    const [saving, setSaving] = useState(false);
 
-  const maxWeekly = Math.max(1, ...(analytics?.weekly_trends || []).map((w) => w.present));
+    const openActionModal = (student: RiskStudentRow) => {
+      setSelectedRisk(student);
+      setActionTaken(student.risk_level === 'critical' ? 'escalated' : 'reminder_sent');
+      setNote(
+        student.classes_needed
+          ? `Current attendance is ${student.attendance_rate}%. Attend ${student.classes_needed} consecutive classes to reach the ${analytics?.policy_min_percentage ?? 75}% minimum.`
+          : `Attendance warning: ${student.attendance_rate}%.`
+      );
+      setSendAlert(true);
+    };
 
-  return (
-    <DashboardLayout>
-      <PageHeader
-        kicker="Insights"
-        title="Course Analytics"
-        subtitle="Attendance performance, verification method mix, and weekly trends across every session you teach."
-        actions={
-          <button onClick={load} className="btn-pill-glass h-9 px-4 text-xs font-semibold flex items-center gap-2">
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
-          </button>
+    const handleSubmitIntervention = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!selectedRisk || !note.trim()) return;
+      setSaving(true);
+      try {
+        await teacherApi.logIntervention({
+          student_email: selectedRisk.email,
+          subject: subjectFilter !== 'all' ? subjectFilter : undefined,
+          risk_level: selectedRisk.risk_level,
+          action_taken: actionTaken,
+          note: note.trim(),
+        });
+        if (sendAlert) {
+          await teacherApi.sendStudentAlert({
+            student_email: selectedRisk.email,
+            title: `Attendance Risk Notice (${selectedRisk.risk_level.toUpperCase()})`,
+            message: note.trim(),
+            priority: selectedRisk.risk_level === 'critical' ? 'Urgent' : 'High',
+          });
         }
-      />
+        push('Risk intervention logged cleanly', 'success');
+        setSelectedRisk(null);
+        setNote('');
+        await queryClient.invalidateQueries({ queryKey: [...teacherKeys.all(user?.email), 'analytics'] });
+      } catch (err) {
+        push(err instanceof Error ? err.message : 'Failed to log intervention', 'error');
+      } finally {
+        setSaving(false);
+      }
+};
 
-      {loading ? (
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[0, 1, 2, 3].map((i) => <SkeletonCard key={i} />)}
-        </div>
-      ) : analytics ? (
-        <div className="page-enter mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Attendance Rate"
-            value={`${analytics.attendance_rate}%`}
-            delta={analytics.attendance_rate >= 75 ? 'Healthy' : 'Below 75%'}
-            deltaUp={analytics.attendance_rate >= 75}
-            icon={<Activity className="h-4 w-4" />}
-            accent="text-emerald-400"
-            footnote="Across all sessions"
-          />
-          <StatCard
-            label="Total Sessions"
-            value={String(analytics.total_sessions)}
-            delta={`${analytics.present_marks} present marks`}
-            icon={<MonitorPlay className="h-4 w-4" />}
-            accent="text-accent"
-            footnote="This semester"
-          />
-          <StatCard
-            label="Face Verification"
-            value={String(analytics.face_scans)}
-            delta={analytics.avg_confidence != null ? `${analytics.avg_confidence}% avg conf` : 'ArcFace 512d'}
-            icon={<ScanFace className="h-4 w-4" />}
-            accent="text-accent2"
-            footnote="Biometric check-ins"
-          />
-          <StatCard
-            label="QR Check-ins"
-            value={String(analytics.qr_scans)}
-            delta={`${analytics.manual_scans} manual`}
-            icon={<QrCode className="h-4 w-4" />}
-            accent="text-amber"
-            footnote="Dynamic token scans"
-          />
-        </div>
-      ) : null}
+const minPolicy = analytics?.policy_min_percentage ?? 75;
+const dist = analytics?.distribution ?? { excellent: 0, safe: 0, warning: 0, critical: 0 };
+const totalDist = Math.max(1, dist.excellent + dist.safe + dist.warning + dist.critical);
+const activeTrends =
+  trendMode === 'daily'
+    ? (analytics?.daily_trends ?? []).map((t) => ({ key: t.date, label: t.date.slice(5), present: t.present, total: t.total, rate: t.rate }))
+    : trendMode === 'monthly'
+      ? (analytics?.monthly_trends ?? []).map((t) => ({ key: t.month, label: t.label, present: t.present, total: t.total, rate: t.rate }))
+      : (analytics?.weekly_trends ?? []).map((t) => ({ key: `${t.year}-W${t.week}`, label: t.label || `W${t.week}`, present: t.present, total: t.total, rate: t.rate }));
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Weekly trend chart */}
-        <Card className="page-enter lg:col-span-2 p-6">
-          <CardHeader
-            icon={<TrendingUp className="h-5 w-5 text-accent" />}
-            title="Weekly Attendance Trend"
-            subtitle="Present marks per week across your sessions"
-            right={<Badge tone="info">Last 8 weeks</Badge>}
-          />
-          <div className="mt-4 flex h-56 items-end gap-3">
-            {(analytics?.weekly_trends || []).map((week) => (
-              <div key={`${week.year}-${week.week}`} className="flex flex-1 flex-col items-center gap-2">
-                <span className="font-mono text-[10px] font-semibold text-hi">{week.rate}%</span>
-                <div className="flex h-40 w-full items-end">
-                  <div
-                    className="w-full rounded-t-lg bg-gradient-to-t from-accent/40 to-accent transition-all duration-500"
-                    style={{ height: `${Math.max(4, (week.present / maxWeekly) * 100)}%` }}
-                    title={`Week ${week.week}: ${week.present}/${week.total} present`}
-                  />
-                </div>
-                <span className="font-mono text-[10px] text-faint">W{week.week}</span>
-              </div>
-            ))}
-            {(analytics?.weekly_trends || []).length === 0 && (
-              <p className="w-full py-10 text-center text-xs text-faint font-mono">
-                No attendance data yet — start a session to build trends.
-              </p>
-            )}
+return (
+  <DashboardLayout>
+    <Toasts toasts={toasts} dismiss={dismiss} />
+    <PageHeader
+      kicker="Academic Intelligence"
+      title="Classroom Analytics & Risk Radar"
+      subtitle="Class-wise performance, verification reliability, comparative trends, and explainable student shortage interventions."
+      actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+              aria-label="Filter analytics by subject"
+              className="rounded-full border border-white/10 bg-[#101016] px-4 py-2 text-xs text-hi focus:border-accent/50 focus:outline-none"
+            >
+              <option value="all">All Assigned Subjects</option>
+              {(analytics?.subjects ?? []).map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+            <Button variant="secondary" onClick={() => refetch()} loading={isFetching}>
+              Refresh
+            </Button>
           </div>
-        </Card>
+      }
+    />
 
-        {/* Verification method mix */}
-        <Card className="page-enter p-6">
-          <CardHeader icon={<BarChart3 className="h-5 w-5 text-accent2" />} title="Verification Mix" />
-          {analytics && analytics.present_marks > 0 ? (
-            <div className="space-y-4">
-              {[
-                { label: 'Face', value: analytics.face_scans, color: 'bg-emerald-400' },
-                { label: 'QR', value: analytics.qr_scans, color: 'bg-accent' },
-                { label: 'Manual', value: analytics.manual_scans, color: 'bg-amber-400' },
-              ].map((m) => {
-                const pct = Math.round((m.value / analytics.present_marks) * 100);
-                return (
-                  <div key={m.label}>
-                    <div className="mb-1.5 flex items-center justify-between text-xs">
-                      <span className="font-semibold text-hi">{m.label}</span>
-                      <span className="font-mono text-mid">{m.value} ({pct}%)</span>
+        {error && (
+          <div className="mb-5 flex items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
+            <span>{error instanceof Error ? error.message : 'Unable to load analytics'}</span>
+            <button onClick={() => refetch()} className="underline hover:text-white">Retry</button>
+          </div>
+      )}
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+          ) : !analytics ? (
+          <EmptyState icon={<BarChart3 className="h-6 w-6" />} title="Analytics unavailable" body="Conduct attendance sessions to generate classroom intelligence." />
+          ) : (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                label="Class Attendance"
+                value={`${analytics.attendance_rate}%`}
+                delta={
+                  analytics.month_comparison
+                    ? `${analytics.month_comparison.delta >= 0 ? '+' : ''}${analytics.month_comparison.delta}% MoM`
+                    : undefined
+                }
+                deltaUp={(analytics.month_comparison?.delta ?? 0) >= 0}
+                icon={<TrendingUp className="h-4 w-4" />}
+                accent="text-accent"
+                footnote={`${analytics.present_marks} / ${analytics.conducted_marks ?? analytics.present_marks} marks`}
+              />
+              <StatCard
+                label="Conducted Sessions"
+                value={String(analytics.total_sessions)}
+                icon={<BarChart3 className="h-4 w-4" />}
+                footnote={`${analytics.absent_marks ?? 0} absent • ${analytics.late_marks ?? 0} late`}
+              />
+              <StatCard
+                label="Verification Channels"
+                value={String(analytics.qr_scans + analytics.face_scans)}
+                icon={<ScanFace className="h-4 w-4" />}
+                footnote={`QR: ${analytics.qr_scans} • Face: ${analytics.face_scans} • Manual: ${analytics.manual_scans}`}
+              />
+              <StatCard
+                label="Exceptions & Failures"
+                value={String((analytics.verification_failures ?? 0) + (analytics.dispute_count ?? 0))}
+                icon={<ShieldAlert className="h-4 w-4" />}
+                footnote={`Failures: ${analytics.verification_failures ?? 0} • Leaves: ${analytics.leave_count ?? 0} • Disputes: ${analytics.dispute_count ?? 0}`}
+              />
+            </div>
+
+                        {/* Trends & Distribution */}
+                        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                          <Card className="lg:col-span-2">
+                            <CardHeader
+                              icon={<BarChart3 className="h-4 w-4" />}
+                              title="Attendance Trend Breakdown"
+                              subtitle="Server-computed rates across conducted lectures"
+                              right={
+                                <div className="flex rounded-full border border-white/10 bg-white/5 p-0.5 text-[11px]">
+                                  {(['daily', 'weekly', 'monthly'] as const).map((m) => (
+                                    <button
+                                      key={m}
+                                      onClick={() => setTrendMode(m)}
+                                      className={`rounded-full px-3 py-1 capitalize transition ${trendMode === m ? 'bg-accent text-black font-semibold' : 'text-mid hover:text-hi'}`}
+                                    >
+                                      {m}
+                                    </button>
+                                  ))}
+                                </div>
+                              }
+                            />
+                            {activeTrends.length === 0 ? (
+                              <EmptyState icon={<BarChart3 className="h-6 w-6" />} title="No trend points yet" body="Trend history builds as sessions accumulate." />
+                            ) : (
+                <div className="space-y-3">
+                  {activeTrends.map((t) => (
+                    <div key={t.key} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-hi">{t.label}</span>
+                        <span className="font-mono text-mid">{t.rate}% ({t.present}/{t.total})</span>
+                      </div>
+                      <div className="h-2.5 overflow-hidden rounded-full bg-white/5">
+                        <div
+                          className={`h-full rounded-full ${t.rate >= minPolicy ? 'bg-accent' : t.rate >= 65 ? 'bg-amber-400' : 'bg-red-500'}`}
+                          style={{ width: `${Math.min(100, Math.max(0, t.rate))}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-2 w-full rounded-full bg-white/[0.06]">
-                      <div className={`h-2 rounded-full ${m.color} transition-all duration-500`} style={{ width: `${pct}%` }} />
+                  ))}
+                </div>
+                            )}
+                          </Card>
+
+                          <Card>
+                            <CardHeader icon={<UsersRound className="h-4 w-4" />} title="Cohort Distribution" subtitle={`Policy threshold: ${minPolicy}%`} />
+                            <div className="space-y-3">
+                              {[
+                                { label: 'Excellent (≥90%)', count: dist.excellent, bar: 'bg-emerald-400', text: 'text-emerald-300' },
+                                { label: `Safe (${minPolicy}–89%)`, count: dist.safe, bar: 'bg-sky-400', text: 'text-sky-300' },
+                                { label: `Warning (65–${minPolicy - 1}%)`, count: dist.warning, bar: 'bg-amber-400', text: 'text-amber-300' },
+                                { label: 'Critical (<65%)', count: dist.critical, bar: 'bg-red-500', text: 'text-red-300' },
+                              ].map((tier) => (
+                                <div key={tier.label} className="space-y-1">
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span className={tier.text}>{tier.label}</span>
+                                    <span className="font-mono text-hi">{tier.count}</span>
+                                  </div>
+                                  <div className="h-2 overflow-hidden rounded-full bg-white/5">
+                                    <div
+                                      className={`h-full rounded-full ${tier.bar}`}
+                                      style={{ width: `${Math.round((tier.count / totalDist) * 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+
+                              {analytics.avg_confidence !== null && (
+                                <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-xs">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-mid">Avg Face Match Confidence</span>
+                                    <span className="font-mono font-bold text-accent">{(analytics.avg_confidence * 100).toFixed(1)}%</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+                        </div>
+
+          {/* Subject Breakdown */}
+          {analytics.subject_breakdown && analytics.subject_breakdown.length > 0 && (
+            <Card>
+              <CardHeader icon={<BookOpen className="h-4 w-4" />} title="Subject-Wise Attendance Comparison" subtitle="Attendance rates per assigned subject" />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {analytics.subject_breakdown.map((s) => (
+                  <div key={s.subject} className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="truncate text-sm font-semibold text-hi">{s.subject}</p>
+                      <Badge tone={s.rate >= minPolicy ? 'success' : s.rate >= 65 ? 'warning' : 'danger'}>{s.rate}%</Badge>
+                    </div>
+                    <p className="mt-1 text-[11px] text-faint">
+                      Present: {s.present} / {s.conducted} • Absent: {s.absent} • Late: {s.late}
+                    </p>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className={`h-full rounded-full ${s.rate >= minPolicy ? 'bg-emerald-400' : s.rate >= 65 ? 'bg-amber-400' : 'bg-red-500'}`}
+                        style={{ width: `${Math.min(100, s.rate)}%` }}
+                      />
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="py-8 text-center text-xs text-faint font-mono">No check-ins recorded yet.</p>
+                ))}
+              </div>
+            </Card>
           )}
-        </Card>
-      </div>
 
-      <Toasts toasts={toasts} dismiss={dismiss} />
-    </DashboardLayout>
-  );
+          {/* Explainable Risk Intelligence */ }
+                              <Card>
+                                <CardHeader
+                                  icon={<AlertTriangle className="h-4 w-4" />}
+                                  title="Explainable Shortage & Risk Intelligence"
+                                  subtitle={`Students below ${minPolicy}% or showing consecutive absences, with recovery projections and audit interventions.`}
+                                />
+                                {!analytics.risk_students?.length ? (
+                                  <EmptyState icon={<AlertTriangle className="h-6 w-6" />} title="No students flagged at risk" body="All authorised students are meeting attendance requirements." />
+                                ) : (
+                                  <div className="space-y-3">
+                                    {analytics.risk_students.map((st) => (
+                                      <div key={st.email} className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                                        <div className="flex flex-wrap items-start justify-between gap-3">
+                                          <div className="min-w-0 flex-1 space-y-1.5">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                              <span className="font-display text-sm font-bold text-hi">{st.full_name}</span>
+                                              {st.student_id && (
+                                                <span className="font-mono text-[11px] text-faint">{st.student_id}</span>
+                                              )}
+                                              <Badge tone={statusTone(st.risk_level)}>{st.risk_level}</Badge>
+                                              <Badge tone="neutral">{st.attendance_rate}% ({st.attended}/{st.conducted})</Badge>
+                                              {st.consecutive_absences > 0 && (
+                                                <Badge tone="danger">{st.consecutive_absences} consecutive absences</Badge>
+                                              )}
+                                            </div>
+
+                                            <p className="text-xs text-mid">
+                                              {st.reasons.join(' • ')}
+                                            </p>
+
+                                            <div className="flex flex-wrap gap-3 text-[11px] text-faint">
+                                              {st.classes_needed !== null && st.classes_needed > 0 && (
+                                                <span className="text-amber-300">
+                                                  Needs <strong>{st.classes_needed}</strong> straight classes for {minPolicy}%
+                                                </span>
+                                              )}
+                                              {st.recommendations.map((rec, i) => (
+                                                <span key={i}>• {rec}</span>
+                                              ))}
+                                            </div>
+
+                                            {st.interventions.length > 0 && (
+                                              <p className="text-[11px] text-sky-300">
+                                                Latest intervention ({new Date(st.interventions[0].created_at).toLocaleDateString()}):{' '}
+                                                {st.interventions[0].action_taken.replace('_', ' ')} — {st.interventions[0].note}
+                                              </p>
+                                            )}
+                                          </div>
+
+                                          <Button variant="secondary" onClick={() => openActionModal(st)}>
+                                            <BellRing className="h-3.5 w-3.5" /> Warn / Intervene
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </Card>
+        </div>
+                        )}
+
+                        <Modal
+                          open={Boolean(selectedRisk)}
+                          onClose={() => setSelectedRisk(null)}
+                          title={selectedRisk ? `Intervention — ${selectedRisk.full_name}` : 'Risk Intervention'}
+                        >
+                          <form onSubmit={handleSubmitIntervention} className="space-y-4">
+                            <div>
+                              <label className="mb-1.5 block text-xs font-semibold text-mid">Action</label>
+                              <select
+                                value={actionTaken}
+                                onChange={(e) => setActionTaken(e.target.value as typeof actionTaken)}
+                                className="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-hi focus:border-accent focus:outline-none"
+                              >
+                                <option value="reminder_sent">Send Attendance Reminder</option>
+                                <option value="counseling_scheduled">Schedule Counseling</option>
+                                <option value="note">Internal Faculty Note</option>
+                                <option value="escalated">Escalate to HOD / Mentor</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="mb-1.5 block text-xs font-semibold text-mid">Details / Warning Message</label>
+                              <textarea
+                                required
+                                rows={3}
+                                value={note}
+                                onChange={(e) => setNote(e.target.value)}
+                                className="w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-hi focus:border-accent focus:outline-none"
+                              />
+                            </div>
+                            <label className="flex items-center gap-2 text-xs text-mid">
+                              <input type="checkbox" checked={sendAlert} onChange={(e) => setSendAlert(e.target.checked)} />
+                              Send direct warning notification to student (&amp; linked guardian)
+                            </label>
+                            <div className="flex justify-end gap-2">
+                              <Button type="button" variant="ghost" onClick={() => setSelectedRisk(null)}>Cancel</Button>
+                              <Button type="submit" loading={saving}>
+                                <ClipboardEdit className="h-3.5 w-3.5" /> Save &amp; Notify
+                              </Button>
+                            </div>
+                          </form>
+                        </Modal>
+                      </DashboardLayout>
+                      );
 }

@@ -6,6 +6,8 @@ const AttendanceDisputeSchema = new mongoose.Schema({
   attendance_id: { type: String },
   college_id: { type: String, index: true },
   subject: { type: String },
+  original_status: { type: String, default: 'Absent' },
+  session_date: { type: Date },
   reason_category: {
     type: String,
     enum: [
@@ -25,9 +27,16 @@ const AttendanceDisputeSchema = new mongoose.Schema({
   requested_status: { type: String, enum: ['Present', 'Excused', 'Late'], default: 'Present' },
   evidence_url: { type: String },
   evidence_name: { type: String },
-  status: { type: String, enum: ['Pending', 'Under Review', 'Approved', 'Rejected'], default: 'Pending', index: true },
+  status: {
+    type: String,
+    enum: ['Pending', 'Under Review', 'Clarification', 'Escalated', 'Approved', 'Rejected'],
+    default: 'Pending',
+    index: true
+  },
   resolved_by: { type: String },
+  escalated_to: { type: String },
   remarks: { type: String },
+  deadline_at: { type: Date },
   resolved_at: { type: Date },
   audit_trail: [{
     status: { type: String },
@@ -43,5 +52,6 @@ const AttendanceDisputeSchema = new mongoose.Schema({
 AttendanceDisputeSchema.index({ student_email: 1, session_id: 1 });
 AttendanceDisputeSchema.index({ student_email: 1, created_at: -1 });
 AttendanceDisputeSchema.index({ status: 1, created_at: -1 });
+AttendanceDisputeSchema.index({ college_id: 1, status: 1, created_at: -1 });
 
 module.exports = mongoose.model('AttendanceDispute', AttendanceDisputeSchema, 'attendance_disputes');

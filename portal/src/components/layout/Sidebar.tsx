@@ -62,10 +62,12 @@ const NAV: Record<string, NavItem[]> = {
     { label: 'Kiosk Mode', href: '/teacher/kiosk', icon: ScanFace },
     { label: 'Roster', href: '/teacher/roster', icon: UsersRound },
     { label: 'Leave Approvals', href: '/teacher/leave-approvals', icon: FileCheck2 },
+    { label: 'Disputes', href: '/teacher/disputes', icon: ShieldAlert },
     { label: 'Analytics', href: '/teacher/analytics', icon: BarChart3 },
     { label: 'Timetable', href: '/teacher/timetable', icon: CalendarDays },
     { label: 'Notifications', href: '/teacher/notifications', icon: BellRing },
     { label: 'Reports', href: '/teacher/reports', icon: FileSpreadsheet },
+    { label: 'Nexa AI Chat', href: '/teacher/ai-chat', icon: Bot },
     { label: 'Profile', href: '/teacher/profile', icon: UserRound },
   ],
   admin: [

@@ -7,6 +7,91 @@ const User = require('../models/User');
 const { authenticate, requireRole } = require('../middleware/auth');
 const reportInternalError = require('../utils/httpError');
 
+// ─── POST /notifications/send (teacher/admin targeted student/parent alert) ──
+router.post('/send', authenticate, requireRole(['teacher', 'hod', 'principal', 'admin', 'super_admin']), async (req, res) => {
+  try {
+    const { recipient_id, student_email, title, message, priority, parent_email, type } = req.body || {};
+    const targetRaw = String(student_email || recipient_id || '').trim();
+    if (!targetRaw || typeof message !== 'string' || !message.trim() || message.length > 1000) {
+      return res.status(400).json({ detail: 'A valid student recipient and message (1-1000 chars) are required.' });
+    }
+
+    let targetStudent = await User.findOne(
+      mongoose.Types.ObjectId.isValid(targetRaw)
+        ? { _id: targetRaw, role: 'student' }
+        : { email: targetRaw.toLowerCase(), role: 'student' },
+      'email full_name college_id department parent_details'
+    ).lean();
+
+    if (!targetStudent) {
+      return res.status(404).json({ detail: 'Target student not found.' });
+    }
+
+    const sender = await User.findOne({ email: req.userEmail }, 'college_id department').lean();
+    if (req.userRole.toLowerCase() !== 'super_admin') {
+      if (sender?.college_id && targetStudent.college_id && sender.college_id !== targetStudent.college_id) {
+        return res.status(403).json({ detail: 'Forbidden: cannot notify students from another institution.' });
+      }
+    }
+
+    const registeredParent = (typeof targetStudent.parent_details === 'string' && targetStudent.parent_details.includes('@'))
+      ? targetStudent.parent_details.trim().toLowerCase()
+      : null;
+    let resolvedParent = registeredParent;
+    if (typeof parent_email === 'string' && parent_email.includes('@')) {
+      const requestedParent = parent_email.trim().toLowerCase();
+      if (requestedParent === registeredParent) {
+        resolvedParent = requestedParent;
+      } else {
+        const linkedParent = await User.exists({
+          email: requestedParent,
+          role: 'parent',
+          $or: [
+            { children: targetStudent.email.toLowerCase() },
+            { 'linked_children.email': targetStudent.email.toLowerCase() },
+          ],
+        });
+        if (linkedParent) {
+          resolvedParent = requestedParent;
+        }
+      }
+    }
+
+    const notifService = require('../services/notificationService');
+    const resolvedTitle = typeof title === 'string' && title.trim() ? title.trim().slice(0, 120) : 'Academic Attendance Alert';
+    const resolvedPriority = ['Info', 'Low', 'Normal', 'High', 'Critical', 'Urgent'].includes(priority) ? priority : 'High';
+
+    const created = await notifService.createNotification(
+      targetStudent.email,
+      resolvedTitle,
+      message.trim(),
+      type || 'attendance_warning',
+      resolvedPriority,
+      { sender: req.userEmail }
+    );
+
+    if (resolvedParent) {
+      notifService.createNotification(
+        resolvedParent,
+        `Ward Notice: ${resolvedTitle}`,
+        `${targetStudent.full_name || targetStudent.email}: ${message.trim()}`,
+        type || 'attendance_warning',
+        resolvedPriority,
+        { sender: req.userEmail, student_email: targetStudent.email }
+      ).catch(() => {});
+    }
+
+    res.status(201).json({
+      success: true,
+      id: created?.id || null,
+      recipient: targetStudent.email,
+      parent_notified: Boolean(resolvedParent),
+    });
+  } catch (error) {
+    reportInternalError(res, error, 'Notifications:Send');
+  }
+});
+
 // ─── POST /notifications/announcement ──────────────────────────────
 router.post('/announcement', authenticate, requireRole(['admin']), async (req, res) => {
   try {

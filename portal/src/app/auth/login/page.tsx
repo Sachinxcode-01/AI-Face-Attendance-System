@@ -3,7 +3,7 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { GraduationCap, HeartHandshake, ShieldCheck, Users } from 'lucide-react';
-import { SplitSignInTemplate, type LoginRoleOption } from '@/components/auth/SplitSignInTemplate';
+import LoginCardSection, { type LoginRoleOption } from '@/components/ui/login-signup';
 import { useAuth } from '@/contexts/AuthContext';
 import { getRoleRedirectPath } from '@/lib/auth';
 import type { UserRole } from '@/lib/types';
@@ -24,7 +24,7 @@ function LoginForm() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberEmail, setRememberEmail] = useState(true);
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -59,76 +59,76 @@ function LoginForm() {
 
     try {
       try {
-        if (rememberMe && email.trim()) {
-          window.localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
+          if (rememberEmail && email.trim()) {
+            window.localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
+          } else {
+            window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
+          }
+        } catch {
+          // Ignore storage errors
+        }
+
+        const res = await loginWithCredentials(email, password);
+        setBusy(false);
+        if (res.success) {
+          redirectAfterAuth((res as { role?: UserRole }).role);
         } else {
-          window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
+          setError(res.error || 'Invalid credentials. Try a demo account below or check your email/password.');
         }
       } catch {
-        // Ignore storage errors
+        setBusy(false);
+        setError('An unexpected error occurred. Please try again.');
       }
+    };
 
-      const res = await loginWithCredentials(email, password);
-      setBusy(false);
-      if (res.success) {
-        redirectAfterAuth((res as { role?: UserRole }).role);
-      } else {
-        setError(res.error || 'Invalid credentials. Try a demo account below or check your email/password.');
-      }
-    } catch {
-      setBusy(false);
-      setError('An unexpected error occurred. Please try again.');
-    }
-  };
-
-    const demoLogin = async (role: UserRole) => {
-      setError('');
-      setNotice('');
-      setSelectedRole(role);
-      setBusy(true);
-      try {
-        await login(role);
-        redirectAfterAuth(role);
-    } catch {
-      setError('Unable to start demo session right now.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleSocialLogin = (provider: 'google' | 'github') => {
+        const demoLogin = async (role: UserRole) => {
           setError('');
-        setNotice(
-        provider === 'google'
-        ? 'Google SSO requires campus OAuth configuration; use your campus email or Demo Access below.'
-        : 'GitHub SSO requires OAuth configuration; use your campus email or Demo Access below.',
-        );
-  };
+          setNotice('');
+          setSelectedRole(role);
+          setBusy(true);
+          try {
+            await login(role);
+            redirectAfterAuth(role);
+          } catch {
+            setError('Unable to start demo session right now.');
+          } finally {
+            setBusy(false);
+          }
+        };
 
-        return (
-        <SplitSignInTemplate
-          email={email}
-          onEmailChange={setEmail}
-          password={password}
-          onPasswordChange={setPassword}
-          rememberMe={rememberMe}
-          onRememberMeChange={setRememberMe}
-          onSubmit={submit}
-          busy={busy}
-          error={error}
-          notice={notice}
-          roleOptions={ROLE_BUTTONS}
-          selectedRole={selectedRole}
-          onRoleSelect={demoLogin}
-          onSocialLogin={handleSocialLogin}
-        />
-        );
+        const handleSocialLogin = (provider: 'google' | 'github') => {
+    setError('');
+          setNotice(
+            provider === 'google'
+              ? 'Google SSO requires campus OAuth configuration; use your campus email or Demo Access below.'
+              : 'GitHub SSO requires OAuth configuration; use your campus email or Demo Access below.',
+    );
+};
+
+return (
+  <LoginCardSection
+    email={email}
+    onEmailChange={setEmail}
+    password={password}
+    onPasswordChange={setPassword}
+    rememberEmail={rememberEmail}
+    onRememberEmailChange={setRememberEmail}
+    onSubmit={submit}
+    busy={busy}
+    error={error}
+    notice={notice}
+    roleOptions={ROLE_BUTTONS}
+    selectedRole={selectedRole}
+    onRoleSelect={demoLogin}
+    onSocialLogin={handleSocialLogin}
+  />
+);
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-svh bg-[#070A14]" />}>
-      <LoginForm />
-    </Suspense>
-  );
+      <Suspense fallback={<div className="min-h-screen bg-[#070A14]" />}>
+        <LoginForm />
+      </Suspense>
+      );
 }

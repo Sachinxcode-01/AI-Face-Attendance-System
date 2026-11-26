@@ -17,17 +17,26 @@ const studentProfileKeys = new Set([
   'setup_completed',
 ]);
 
-const staffProfileKeys = new Set([
+const parentProfileKeys = new Set([
   ...studentProfileKeys,
+  'linked_children',
+]);
+
+const teacherProfileKeys = new Set([
+  ...studentProfileKeys,
+  'designation',
+  'specialization',
+  'qualification',
+  'experience',
+]);
+
+const staffProfileKeys = new Set([
+  ...teacherProfileKeys,
   'department',
   'college',
   'semester',
   'student_id',
   'employee_id',
-  'designation',
-  'specialization',
-  'qualification',
-  'experience',
   'usn',
   'course',
   'section',
@@ -47,20 +56,24 @@ router.get('/health', async (req, res) => {
 router.patch('/profile', authenticate, async (req, res) => {
   try {
     const role = (req.userRole || '').toLowerCase();
-    const allowed = ['admin', 'super_admin'].includes(role) ? staffProfileKeys : (role === 'student' ? studentProfileKeys : staffProfileKeys);
+    const allowed = ['admin', 'super_admin'].includes(role)
+      ? staffProfileKeys
+      : (role === 'teacher'
+        ? teacherProfileKeys
+        : (role === 'parent' ? parentProfileKeys : studentProfileKeys));
     const updateFields = {};
-      allowed.forEach((key) => {
-        if (req.body[key] !== undefined && req.body[key] !== null) {
-          updateFields[key] = typeof req.body[key] === 'string' ? req.body[key].trim().slice(0, 500) : req.body[key];
-        }
-      });
+    allowed.forEach((key) => {
+      if (req.body[key] !== undefined && req.body[key] !== null) {
+        updateFields[key] = typeof req.body[key] === 'string' ? req.body[key].trim().slice(0, 500) : req.body[key];
+      }
+    });
 
-      await User.updateOne({ email: req.userEmail }, { $set: updateFields });
-      res.json({ success: true, message: 'Profile updated successfully' });
-    } catch (error) {
-      res.status(500).json({ detail: 'Unable to update profile.' });
-    }
-  });
+    await User.updateOne({ email: req.userEmail }, { $set: updateFields });
+    res.json({ success: true, message: 'Profile updated successfully' });
+  } catch (error) {
+    res.status(500).json({ detail: 'Unable to update profile.' });
+  }
+});
 
 router.patch('/settings', authenticate, async (req, res) => {
   try {

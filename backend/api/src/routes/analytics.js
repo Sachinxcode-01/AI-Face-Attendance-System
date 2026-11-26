@@ -23,9 +23,9 @@
 const express = require('express');
 const router = express.Router();
 
-const Attendance  = require('../models/Attendance');
-const Session     = require('../models/Session');
-const User        = require('../models/User');
+const Attendance = require('../models/Attendance');
+const Session = require('../models/Session');
+const User = require('../models/User');
 
 const { authenticate, requireRole } = require('../middleware/auth');
 
@@ -58,6 +58,12 @@ const monthsAgo = (from, months) => {
   return d;
 };
 
+/** Return string IDs of sessions owned by the given teacher email. */
+async function getTeacherSessionIds(userEmail) {
+  const rows = await Session.find({ teacher_id: String(userEmail || '').toLowerCase() }).select('_id').lean();
+  return rows.map((s) => s._id.toString());
+}
+
 // ─── GET /analytics/trends ───────────────────────────────────────────────────
 /**
  * Monthly attendance rate for the last 6 months.
@@ -69,8 +75,8 @@ const monthsAgo = (from, months) => {
  */
 router.get('/trends', authenticate, requireRole(analyticsReadRoles), async (req, res) => {
   try {
-    const now      = new Date();
-    const since    = monthsAgo(now, 6);
+    const now = new Date();
+    const since = monthsAgo(now, 6);
     const role = (req.userRole || '').toLowerCase();
     const userEmail = req.userEmail;
 
@@ -81,16 +87,21 @@ router.get('/trends', authenticate, requireRole(analyticsReadRoles), async (req,
         ...(role === 'student' ? { student_email: userEmail } : {}),
       },
     };
+    if (role === 'teacher') {
+      const escapedEmail = String(userEmail || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const teacherSessions = await Session.find({ teacher_id: new RegExp(`^${escapedEmail}$`, 'i') }).select('_id').lean();
+      matchStage.$match.session_id = { $in: teacherSessions.map((s) => s._id.toString()) };
+    }
 
     const pipeline = [
       matchStage,
       {
         $group: {
           _id: {
-            year:  { $year:  '$timestamp' },
+            year: { $year: '$timestamp' },
             month: { $month: '$timestamp' },
           },
-          total:   { $sum: 1 },
+          total: { $sum: 1 },
           present: {
             $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] },
           },
@@ -152,17 +163,24 @@ router.get(
   requireRole(['admin', 'teacher']),
   async (req, res) => {
     try {
-      const threshold  = Math.min(
+      const threshold = Math.min(
         1,
         Math.max(0, parseFloat(req.query.threshold) || 0.75)
       );
       const department = req.query.department;
+      const role = (req.userRole || '').toLowerCase();
+      let sessionMatch = null;
+      if (role === 'teacher') {
+        const teacherSessions = await Session.find({ teacher_id: req.userEmail.toLowerCase() }).select('_id').lean();
+        sessionMatch = { $match: { session_id: { $in: teacherSessions.map((s) => s._id.toString()) } } };
+      }
 
       const pipeline = [
+        ...(sessionMatch ? [sessionMatch] : []),
         {
           $group: {
-            _id:     '$student_email',
-            total:   { $sum: 1 },
+            _id: '$student_email',
+            total: { $sum: 1 },
             present: {
               $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] },
             },
@@ -201,9 +219,9 @@ router.get(
       const riskStudents = rawRisks
         .filter((r) => userMap[r.email]) // drop emails without a matching user doc
         .map((r) => ({
-          email:          r.email,
-          name:           userMap[r.email].full_name,
-          department:     userMap[r.email].department || 'N/A',
+          email: r.email,
+          name: userMap[r.email].full_name,
+          department: userMap[r.email].department || 'N/A',
           attendanceRate: parseFloat(r.attendanceRate.toFixed(4)),
         }));
 
@@ -229,25 +247,30 @@ router.get(
   requireRole(['admin', 'teacher']),
   async (req, res) => {
     try {
+      const role = (req.userRole || '').toLowerCase();
+      const matchStage = role === 'teacher'
+        ? [{ $match: { session_id: { $in: await getTeacherSessionIds(req.userEmail) } } }]
+        : [];
       // Aggregate per student first, then group by department
       const studentRates = await Attendance.aggregate([
+        ...matchStage,
         {
           $group: {
-            _id:     '$student_email',
-            total:   { $sum: 1 },
+            _id: '$student_email',
+            total: { $sum: 1 },
             present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
           },
         },
         {
           $project: {
             email: '$_id',
-            rate:  { $divide: ['$present', { $max: ['$total', 1] }] },
+            rate: { $divide: ['$present', { $max: ['$total', 1] }] },
           },
         },
       ]);
 
-      const emails  = studentRates.map((s) => s.email);
-      const users   = await User.find({ email: { $in: emails }, role: 'student' }, 'email department').lean();
+      const emails = studentRates.map((s) => s.email);
+      const users = await User.find({ email: { $in: emails }, role: 'student' }, 'email department').lean();
       const deptMap = {};
       for (const u of users) deptMap[u.email] = u.department || 'Unknown';
 
@@ -256,14 +279,14 @@ router.get(
       for (const s of studentRates) {
         const dept = deptMap[s.email] || 'Unknown';
         if (!deptAcc[dept]) deptAcc[dept] = { sum: 0, count: 0 };
-        deptAcc[dept].sum   += s.rate;
+        deptAcc[dept].sum += s.rate;
         deptAcc[dept].count += 1;
       }
 
       const departments = Object.entries(deptAcc)
         .map(([department, { sum, count }]) => ({
           department,
-          averageRate:  parseFloat((sum / count).toFixed(4)),
+          averageRate: parseFloat((sum / count).toFixed(4)),
           studentCount: count,
         }))
         .sort((a, b) => b.averageRate - a.averageRate);
@@ -290,8 +313,13 @@ router.get(
   requireRole(['admin', 'teacher']),
   async (req, res) => {
     try {
+      const role = (req.userRole || '').toLowerCase();
+      const teacherMatch = role === 'teacher'
+        ? [{ $match: { session_id: { $in: await getTeacherSessionIds(req.userEmail) } } }]
+        : [];
       // Join Attendance → Session via session_id to get subject
       const pipeline = [
+        ...teacherMatch,
         {
           $addFields: {
             sessionObjId: { $toObjectId: '$session_id' },
@@ -299,26 +327,26 @@ router.get(
         },
         {
           $lookup: {
-            from:         'sessions',
-            localField:   'sessionObjId',
+            from: 'sessions',
+            localField: 'sessionObjId',
             foreignField: '_id',
-            as:           'sessionDoc',
+            as: 'sessionDoc',
           },
         },
         { $unwind: '$sessionDoc' },
         {
           $group: {
-            _id:     '$sessionDoc.subject',
-            total:   { $sum: 1 },
+            _id: '$sessionDoc.subject',
+            total: { $sum: 1 },
             present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
           },
         },
         {
           $project: {
             _id: 0,
-            subject:       '$_id',
+            subject: '$_id',
             totalSessions: '$total',
-            totalPresent:  '$present',
+            totalPresent: '$present',
             averageRate: {
               $cond: [
                 { $eq: ['$total', 0] },
@@ -350,19 +378,24 @@ router.get(
  */
 router.get('/heatmap', authenticate, requireRole(analyticsReadRoles), async (req, res) => {
   try {
-    const now   = new Date();
+    const now = new Date();
     const since = new Date(now);
     since.setUTCDate(since.getUTCDate() - 30);
     startOfDay(since);
 
     const role = (req.userRole || '').toLowerCase();
     const userEmail = req.userEmail;
+    let sessionFilter = {};
+    if (role === 'teacher') {
+      const teacherSessions = await Session.find({ teacher_id: userEmail.toLowerCase() }).select('_id').lean();
+      sessionFilter = { session_id: { $in: teacherSessions.map((s) => s._id.toString()) } };
+    }
 
     const matchStage = {
       $match: {
         timestamp: { $gte: since },
-        status:    'Present',
-        ...(role === 'student' ? { student_email: userEmail } : {}),
+        status: 'Present',
+        ...(role === 'student' ? { student_email: userEmail } : sessionFilter),
       },
     };
 
@@ -371,9 +404,9 @@ router.get('/heatmap', authenticate, requireRole(analyticsReadRoles), async (req
       {
         $group: {
           _id: {
-            year:  { $year:  '$timestamp' },
+            year: { $year: '$timestamp' },
             month: { $month: '$timestamp' },
-            day:   { $dayOfMonth: '$timestamp' },
+            day: { $dayOfMonth: '$timestamp' },
           },
           count: { $sum: 1 },
         },
@@ -387,9 +420,9 @@ router.get('/heatmap', authenticate, requireRole(analyticsReadRoles), async (req
               format: '%Y-%m-%d',
               date: {
                 $dateFromParts: {
-                  year:  '$_id.year',
+                  year: '$_id.year',
                   month: '$_id.month',
-                  day:   '$_id.day',
+                  day: '$_id.day',
                 },
               },
             },
@@ -425,26 +458,26 @@ router.get(
       const rows = await Attendance.aggregate([
         {
           $group: {
-            _id:     '$student_email',
-            total:   { $sum: 1 },
+            _id: '$student_email',
+            total: { $sum: 1 },
             present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
           },
         },
         {
           $project: {
-            _id:    0,
-            email:  '$_id',
-            total:  1,
+            _id: 0,
+            email: '$_id',
+            total: 1,
             present: 1,
             absent: { $subtract: ['$total', '$present'] },
-            rate:   { $divide: ['$present', { $max: ['$total', 1] }] },
+            rate: { $divide: ['$present', { $max: ['$total', 1] }] },
           },
         },
         { $sort: { email: 1 } },
       ]);
 
       const emails = rows.map((r) => r.email);
-      const users  = await User.find(
+      const users = await User.find(
         { email: { $in: emails } },
         'email full_name department'
       ).lean();
@@ -503,7 +536,11 @@ router.get('/predictive-risk', authenticate, requireRole(analyticsReadRoles), as
     const estimatedRemainingSessions = 30; // Standard remaining curriculum sessions baseline
 
     const isStudent = role === 'student';
-    const matchFilter = isStudent ? { student_email: userEmail } : {};
+    const matchFilter = isStudent
+      ? { student_email: userEmail }
+      : role === 'teacher'
+        ? { session_id: { $in: await getTeacherSessionIds(userEmail) } }
+        : {};
 
     // 1. Fetch cumulative attendance per student
     const cumulativeStats = await Attendance.aggregate([
@@ -688,9 +725,11 @@ router.get('/timetable-insights', authenticate, requireRole(analyticsReadRoles),
     const role = (req.userRole || '').toLowerCase();
     const userEmail = req.userEmail;
     const isStudent = role === 'student';
+    const teacherSessionIds = role === 'teacher' ? await getTeacherSessionIds(userEmail) : null;
     const matchClause = {
       status: { $in: ['Present', 'Absent'] },
       ...(isStudent ? { student_email: userEmail } : {}),
+      ...(teacherSessionIds ? { session_id: { $in: teacherSessionIds } } : {}),
     };
 
     const records = await Attendance.aggregate([
@@ -789,8 +828,8 @@ router.get('/timetable-insights', authenticate, requireRole(analyticsReadRoles),
         cause: p.dayName === 'Friday' && p.timeSlot.includes('Afternoon')
           ? 'End-of-week early departures & commuter travel'
           : p.dayName === 'Monday' && p.timeSlot.includes('Morning')
-          ? 'Post-weekend transit delays & early-morning lethargy'
-          : 'Post-lunch cognitive fatigue',
+            ? 'Post-weekend transit delays & early-morning lethargy'
+            : 'Post-lunch cognitive fatigue',
       }));
 
     // AI-generated optimization recommendations
@@ -852,6 +891,15 @@ router.get('/student-velocity/:email', authenticate, async (req, res) => {
       return res.status(404).json({ detail: 'Student not found.' });
     }
 
+    let teacherSessionIds = null;
+    if (role === 'teacher') {
+      const teacherDoc = await User.findOne({ email: String(userEmail || '').toLowerCase() }, 'college_id').lean();
+      if (teacherDoc?.college_id && student.college_id && teacherDoc.college_id !== student.college_id) {
+        return res.status(403).json({ detail: 'Forbidden: cross-institution student access denied.' });
+      }
+      teacherSessionIds = await getTeacherSessionIds(userEmail);
+    }
+
     // Weekly attendance breakdown over the last 4 weeks
     const now = new Date();
     const weeklyData = [];
@@ -864,6 +912,7 @@ router.get('/student-velocity/:email', authenticate, async (req, res) => {
           $match: {
             student_email: email,
             timestamp: { $gte: start, $lt: end },
+            ...(teacherSessionIds ? { session_id: { $in: teacherSessionIds } } : {}),
           },
         },
         {

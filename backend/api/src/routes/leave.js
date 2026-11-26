@@ -18,6 +18,8 @@ const reportInternalError = require('../utils/httpError');
 const cache = require('../utils/cache');
 const { getInstitutionPolicy } = require('../services/studentAttendanceService');
 
+const AttendanceAuditLog = require('../models/AttendanceAuditLog');
+
 const leaveReviewRoles = ['teacher', 'hod', 'principal', 'management', 'admin', 'super_admin'];
 const ALLOWED_CATEGORIES = ['Medical', 'Personal', 'Emergency', 'Academic', 'Sports', 'Institutional Activity', 'Other'];
 
@@ -44,13 +46,21 @@ function isAllowedDocMagicBytes(buf) {
 
 async function staffLeaveScope(req) {
   const role = (req.userRole || '').toLowerCase();
-  if (!['teacher', 'hod'].includes(role)) return {};
+  if (role === 'super_admin') return {};
 
-  const staff = await User.findOne({ email: req.userEmail }, 'department').lean();
+  const staff = await User.findOne({ email: req.userEmail }, 'department college_id').lean();
+  if (!['teacher', 'hod'].includes(role)) {
+    return staff?.college_id ? { college_id: staff.college_id } : {};
+  }
   if (!staff?.department) return { user_id: { $in: [] } };
 
-  const users = await User.find({ department: staff.department }, 'email').lean();
-  return { user_id: { $in: users.map((user) => user.email.toLowerCase()) } };
+  const userFilter = { role: 'student', department: staff.department };
+  if (staff.college_id) userFilter.college_id = staff.college_id;
+
+  const users = await User.find(userFilter, 'email').lean();
+  const scope = { user_id: { $in: users.map((user) => user.email.toLowerCase()) } };
+  if (staff.college_id) scope.college_id = staff.college_id;
+  return scope;
 }
 
 // ─── POST /leave/upload-document ────────────────────────────────
@@ -85,20 +95,32 @@ router.get('/document/:filename', authenticate, async (req, res) => {
     const docUrl = `/leave/document/${safeName}`;
     const leave = await Leave.findOne({ document_url: docUrl }).lean();
     const role = (req.userRole || '').toLowerCase();
-    const isReviewer = leaveReviewRoles.includes(role);
     const isOwner = leave && leave.user_id.toLowerCase() === req.userEmail.toLowerCase();
-    if (!isReviewer && !isOwner) {
-      return res.status(403).json({ detail: 'Forbidden: you do not have access to this attachment.' });
+      let isAuthorizedReviewer = false;
+      if (leaveReviewRoles.includes(role)) {
+        if (role === 'super_admin') {
+          isAuthorizedReviewer = true;
+        } else if (leave) {
+          const scope = await staffLeaveScope(req);
+          const inUserScope = !scope.user_id || scope.user_id.$in.includes(leave.user_id.toLowerCase());
+          const inCollegeScope = !scope.college_id || !leave.college_id || scope.college_id === leave.college_id;
+          isAuthorizedReviewer = inUserScope && inCollegeScope;
+        } else {
+          isAuthorizedReviewer = ['admin', 'principal', 'management'].includes(role);
+        }
+      }
+      if (!isAuthorizedReviewer && !isOwner) {
+        return res.status(403).json({ detail: 'Forbidden: you do not have access to this attachment.' });
+      }
+      const filePath = path.join(leaveDocsDir, safeName);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ detail: 'Document not found.' });
+      }
+      res.sendFile(filePath);
+    } catch (error) {
+      reportInternalError(res, error, 'Leave:Document');
     }
-    const filePath = path.join(leaveDocsDir, safeName);
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ detail: 'Document not found.' });
-    }
-    res.sendFile(filePath);
-  } catch (error) {
-    reportInternalError(res, error, 'Leave:Document');
-  }
-});
+  });
 
 // ─── POST /leave/apply ──────────────────────────────────────────
 router.post('/apply', authenticate, requireRole(['student', 'parent']), validate(leaveApplySchema), async (req, res) => {
@@ -282,7 +304,7 @@ router.get('/admin/pending', authenticate, requireRole(leaveReviewRoles), async 
     const scope = await staffLeaveScope(req);
     const leaves = await Leave.find({
       ...scope,
-      status: { $in: ['Pending', 'Under Review'] },
+      status: { $in: ['Pending', 'Under Review', 'Clarification'] },
     }).sort({ created_at: 1 }).lean();
 
     const result = leaves.map(l => {
@@ -297,6 +319,120 @@ router.get('/admin/pending', authenticate, requireRole(leaveReviewRoles), async 
   }
 });
 
+// ─── GET /leave/teacher ─────────────────────────────────────────
+// Complete leave review dashboard for teachers/staff with status, category, date-range, search, and overlap flags.
+router.get('/teacher', authenticate, requireRole(leaveReviewRoles), async (req, res) => {
+  try {
+    const scope = await staffLeaveScope(req);
+    const filter = { ...scope };
+    if (req.query.status && req.query.status !== 'all') {
+      const s = String(req.query.status);
+      if (s === 'pending') {
+        filter.status = { $in: ['Pending', 'Under Review', 'Clarification'] };
+      } else if (s === 'upcoming_approved') {
+        const todayIso = new Date().toISOString().slice(0, 10);
+        filter.status = 'Approved';
+        filter.end_date = { $gte: todayIso };
+      } else {
+        filter.status = s;
+      }
+    }
+    if (req.query.category && req.query.category !== 'all') {
+      filter.category = String(req.query.category);
+    }
+    if (req.query.start_date) {
+      const requestedStart = String(req.query.start_date).slice(0, 10);
+      const existingGte = filter.end_date?.$gte;
+      const lowerBound = existingGte && existingGte > requestedStart ? existingGte : requestedStart;
+      filter.end_date = { ...(filter.end_date || {}), $gte: lowerBound };
+    }
+    if (req.query.end_date) {
+      filter.start_date = { ...(filter.start_date || {}), $lte: String(req.query.end_date).slice(0, 10) };
+    }
+
+    const searchQ = typeof req.query.search === 'string' ? req.query.search.trim().toLowerCase() : '';
+    if (searchQ) {
+      const escapedSearch = searchQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchRegex = new RegExp(escapedSearch, 'i');
+      const studentSearchFilter = {
+        ...(scope.user_id ? { email: scope.user_id } : { role: 'student', ...(scope.college_id ? { college_id: scope.college_id } : {}) }),
+        $or: [
+          { full_name: searchRegex },
+          { student_id: searchRegex },
+          { roll_number: searchRegex },
+          { email: searchRegex },
+        ],
+      };
+      const matchingStudents = await User.find(studentSearchFilter, 'email').lean();
+      const matchingEmails = matchingStudents.map((s) => s.email.toLowerCase());
+      filter.$or = [
+        { user_id: searchRegex },
+        { reason: searchRegex },
+        ...(matchingEmails.length ? [{ user_id: { $in: matchingEmails } }] : []),
+      ];
+    }
+
+    const leaves = await Leave.find(filter).sort({ created_at: -1 }).limit(200).lean();
+    const emails = [...new Set(leaves.map((l) => String(l.user_id).toLowerCase()))];
+    const rawUserIds = [...new Set(leaves.flatMap((l) => [l.user_id, String(l.user_id).toLowerCase()]))];
+    const students = emails.length
+      ? await User.find({ email: { $in: emails } }, 'email full_name student_id roll_number department semester section').lean()
+      : [];
+    const studentMap = new Map(students.map((s) => [s.email.toLowerCase(), s]));
+
+    // Check overlaps per student among all active/approved leaves (unrestricted by listing filters/cap)
+    const activeOverlapStatuses = ['Pending', 'Under Review', 'Clarification', 'Approved'];
+    let overlapCandidates = [];
+    if (rawUserIds.length > 0) {
+      const minStart = leaves.reduce((min, l) => (l.start_date < min ? l.start_date : min), leaves[0].start_date);
+      const maxEnd = leaves.reduce((max, l) => (l.end_date > max ? l.end_date : max), leaves[0].end_date);
+      const overlapFilter = {
+        user_id: { $in: rawUserIds },
+        status: { $in: activeOverlapStatuses },
+        start_date: { $lte: maxEnd },
+        end_date: { $gte: minStart },
+      };
+      if (scope.college_id) overlapFilter.college_id = scope.college_id;
+      overlapCandidates = await Leave.find(overlapFilter, '_id user_id status start_date end_date').lean();
+    }
+
+    let result = leaves.map((l) => {
+      const st = studentMap.get(String(l.user_id).toLowerCase());
+      const hasOverlap = overlapCandidates.some((other) =>
+        other._id.toString() !== l._id.toString() &&
+        other.user_id.toLowerCase() === l.user_id.toLowerCase() &&
+        activeOverlapStatuses.includes(other.status) &&
+        other.start_date <= l.end_date &&
+        other.end_date >= l.start_date
+      );
+      return {
+        ...l,
+        id: l._id.toString(),
+        _id: undefined,
+        student_name: st?.full_name || l.user_id.split('@')[0],
+        student_id: st?.student_id || st?.roll_number || null,
+        department: st?.department || null,
+        semester: st?.semester || null,
+        section: st?.section || null,
+        has_overlap: hasOverlap,
+      };
+    });
+
+    if (searchQ) {
+      result = result.filter((l) =>
+        l.user_id.toLowerCase().includes(searchQ) ||
+        l.student_name.toLowerCase().includes(searchQ) ||
+        (l.student_id || '').toLowerCase().includes(searchQ) ||
+        (l.reason || '').toLowerCase().includes(searchQ)
+      );
+    }
+
+    res.json({ leaves: result, total: result.length });
+  } catch (error) {
+    reportInternalError(res, error, 'Leave:Teacher');
+  }
+});
+
 // ─── PATCH /leave/action ──────────────────────────────────────────
 router.patch('/action', authenticate, requireRole(leaveReviewRoles), async (req, res) => {
   try {
@@ -306,25 +442,57 @@ router.patch('/action', authenticate, requireRole(leaveReviewRoles), async (req,
     }
 
     const scope = await staffLeaveScope(req);
-    const leave = await Leave.findOne({ _id: leave_id, ...scope });
-    if (!leave) return res.status(404).json({ detail: 'Leave request not found.' });
+    const now = new Date();
+    const cleanRemarks = remarks ? String(remarks).trim() : '';
 
-    leave.status = status;
-    leave.remarks = remarks;
-    leave.reviewed_by = req.userEmail;
-    leave.reviewed_at = new Date();
-    leave.updated_at = new Date();
-    leave.status_history = leave.status_history || [];
-    leave.status_history.push({
-      status,
-      actor: req.userEmail,
-      note: remarks || `Marked ${status}`,
-      timestamp: new Date()
-    });
-    await leave.save();
+    // Atomic conditional update prevents duplicate final decisions on already Approved/Rejected/Withdrawn requests
+    const leave = await Leave.findOneAndUpdate(
+      {
+        _id: leave_id,
+        ...scope,
+        status: { $in: ['Pending', 'Under Review', 'Clarification'] },
+      },
+      {
+        $set: {
+          status,
+          remarks: cleanRemarks,
+          reviewed_by: req.userEmail,
+          reviewed_at: now,
+          updated_at: now,
+        },
+        $push: {
+          status_history: {
+            status,
+            actor: req.userEmail,
+            note: cleanRemarks || `Marked ${status}`,
+            timestamp: now,
+          },
+        },
+      },
+      { new: true }
+    );
+
+    if (!leave) {
+      const existing = await Leave.findOne({ _id: leave_id, ...scope }).lean();
+      if (existing) {
+        return res.status(409).json({ detail: `Leave request has already been finalized (${existing.status}).` });
+      }
+      return res.status(404).json({ detail: 'Leave request not found.' });
+    }
+
     cache.invalidateAnalyticsForUser(leave.user_id);
 
-    trackJob(EmailService.sendLeaveStatusUpdate(leave.user_id, status, remarks).catch(console.error));
+    await AttendanceAuditLog.create({
+      actor_email: req.userEmail,
+      college_id: leave.college_id,
+      role: req.userRole,
+      action: 'LEAVE_DECISION',
+      target_resource: `leave:${leave_id}`,
+      details: { student_email: leave.user_id, status, remarks: cleanRemarks || null },
+      ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1',
+    }).catch(() => { });
+
+    trackJob(EmailService.sendLeaveStatusUpdate(leave.user_id, status, cleanRemarks).catch(console.error));
     trackJob(notificationService.createNotification(
       leave.user_id,
       'Leave Application Status',
@@ -354,7 +522,7 @@ router.patch('/action', authenticate, requireRole(leaveReviewRoles), async (req,
       }
     })());
 
-    res.json({ message: `Leave ${status.toLowerCase()} successfully` });
+    res.json({ success: true, status, message: `Leave ${status.toLowerCase()} successfully` });
   } catch (error) {
     console.error('[Leave] Review action error:', error);
     res.status(500).json({ detail: 'Unable to update leave request.' });

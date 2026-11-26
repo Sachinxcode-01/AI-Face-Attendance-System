@@ -11,7 +11,13 @@ const Leave = require('../models/Leave');
 const AttendanceAnalytics = require('../models/AttendanceAnalytics');
 const DepartmentAnalytics = require('../models/DepartmentAnalytics');
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
-const { verifyAttendanceQrToken } = require('../utils/attendanceQr');
+const { verifyAttendanceQrToken, isSessionAcceptingQr } = require('../utils/attendanceQr');
+const {
+  normalizeManualStatus,
+  resolveTeacherContext,
+  getAuthorisedStudentsForTeacher,
+  getEffectiveSessionStatus,
+} = require('../services/teacherService');
 const cache = require('../utils/cache');
 const reportInternalError = require('../utils/httpError');
 
@@ -124,11 +130,15 @@ router.post('/mark', authenticate, async (req, res) => {
     if (!session) {
       return res.status(400).json({ detail: "Invalid or expired session" });
     }
+    if (!isSessionAcceptingQr(session)) {
+      return res.status(409).json({ detail: `Session is currently ${getEffectiveSessionStatus(session)} and not accepting QR check-ins.` });
+    }
 
     if (!verifyAttendanceQrToken(session, qr_code)) {
+      await Session.updateOne({ _id: session._id }, { $inc: { 'telemetry.failed_verifications': 1 } }).catch(() => { });
       return res.status(400).json({ detail: 'Invalid QR code.' });
     }
-    const studentUser = await User.findOne({ email: student_email, role: 'student' }, 'email college_id college semester').lean();
+    const studentUser = await User.findOne({ email: student_email, role: 'student' }, 'email full_name student_id roll_number usn college_id college semester').lean();
     if (!studentUser) {
       return res.status(404).json({ detail: 'Student not found.' });
     }
@@ -178,7 +188,68 @@ router.post('/mark', authenticate, async (req, res) => {
       verified_by: "qr"
     });
 
-    await newRecord.save();
+    const expectedEpoch = Number(session.qr_epoch || 1);
+    const sessionAdmissionCondition = {
+      _id: session._id,
+      is_active: true,
+      qr_code: session.qr_code,
+      $and: [
+        { $or: [{ qr_epoch: expectedEpoch }, ...(expectedEpoch === 1 ? [{ qr_epoch: { $exists: false } }, { qr_epoch: null }] : [])] },
+        { $or: [{ status: { $in: ['active', 'resumed'] } }, { status: { $exists: false } }, { status: null }] },
+      ],
+    };
+
+    const resolveRejection = (latest) => {
+      if (latest && isSessionAcceptingQr(latest, Date.now())) {
+        return { status: 400, detail: 'Invalid QR code.' };
+      }
+      return {
+        status: 409,
+        detail: `Session is currently ${getEffectiveSessionStatus(latest)} and not accepting QR check-ins.`,
+      };
+    };
+
+    let admissionRejection = null;
+    const dbSession = await mongoose.startSession();
+    try {
+      await dbSession.withTransaction(async () => {
+        const lockedSession = await Session.findOneAndUpdate(
+          sessionAdmissionCondition,
+          { $inc: { 'telemetry.pending_verifications': 0 } },
+          { session: dbSession, new: true }
+        ).lean();
+        if (!lockedSession || !verifyAttendanceQrToken(lockedSession, qr_code)) {
+          const latest = await Session.findById(session._id).session(dbSession).lean();
+          admissionRejection = resolveRejection(latest);
+          return;
+        }
+        await newRecord.save({ session: dbSession });
+      });
+    } catch (txErr) {
+      if (txErr && (txErr.code === 20 || /Transaction numbers are only allowed/i.test(txErr.message))) {
+        const currentSession = await Session.findOne(sessionAdmissionCondition).lean();
+        if (!currentSession || !verifyAttendanceQrToken(currentSession, qr_code)) {
+          const latest = await Session.findById(session._id).lean();
+          admissionRejection = resolveRejection(latest);
+        } else {
+          await newRecord.save();
+          const postSession = await Session.findOne(sessionAdmissionCondition).lean();
+          if (!postSession || !isSessionAcceptingQr(postSession, Date.now())) {
+            await Attendance.deleteOne({ _id: newRecord._id }).catch(() => { });
+            const latest = await Session.findById(session._id).lean();
+            admissionRejection = resolveRejection(latest);
+          }
+        }
+      } else {
+        throw txErr;
+      }
+    } finally {
+      await dbSession.endSession();
+    }
+
+    if (admissionRejection) {
+      return res.status(admissionRejection.status).json({ detail: admissionRejection.detail });
+    }
 
     // Instrument successful QR attendance submission
     try {
@@ -202,34 +273,45 @@ router.post('/mark', authenticate, async (req, res) => {
       { session_id, subject: session.subject, receipt_id: receiptId }
     ).catch(console.error));
 
-    // Broadcast update to admin live-logs WebSockets (never leak student PII to all students)
-    trackJob(notificationService.broadcastLiveLogs({
-      type: "attendance_update",
-      student_email,
-      session_id,
-      status: "Present",
-      timestamp: timestamp.toISOString()
-    }).catch(console.error));
-
-    // Recalculate health score cache in background & invalidate analytics read cache
-    cache.invalidateAnalyticsForUser(student_email);
-    trackJob(calculateHealthScore(student_email).catch(console.error));
-
-    res.json({
-      status: "success",
-      message: "Attendance marked successfully",
-      receipt_id: receiptId,
-      attendance_id: newRecord._id.toString(),
-      subject: session.subject,
-      room: session.room || null,
-      timestamp: timestamp.toISOString(),
-    });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(409).json({ detail: "Attendance already marked for this session", message: "Attendance already marked for this session" });
-    }
-    reportInternalError(res, error, 'Attendance');
+      // Broadcast update to admin live-logs AND the session's teacher WebSocket
+      const livePayload = {
+        type: "attendance_update",
+        student_email,
+        student_name: studentUser.full_name || student_email.split('@')[0],
+        roll_number: studentUser.student_id || studentUser.roll_number || studentUser.usn || null,
+        session_id,
+        subject: session.subject,
+        status: "Present",
+        verified_by: "qr",
+        timestamp: timestamp.toISOString()
+  };
+  trackJob(notificationService.broadcastLiveLogs(livePayload).catch(console.error));
+  if (session.teacher_id) {
+    trackJob(notificationService.sendPersonalMessage(session.teacher_id.toLowerCase(), livePayload).catch(() => { }));
   }
+
+  // Recalculate health score cache in background & invalidate analytics read cache
+  cache.invalidateAnalyticsForUser(student_email);
+  trackJob(calculateHealthScore(student_email).catch(console.error));
+
+  res.json({
+    status: "success",
+    message: "Attendance marked successfully",
+    receipt_id: receiptId,
+    attendance_id: newRecord._id.toString(),
+    subject: session.subject,
+    room: session.room || null,
+    timestamp: timestamp.toISOString(),
+  });
+} catch (error) {
+  if (error.code === 11000) {
+    if (req.body?.session_id && mongoose.Types.ObjectId.isValid(req.body.session_id)) {
+      await Session.updateOne({ _id: req.body.session_id }, { $inc: { 'telemetry.duplicate_attempts': 1 } }).catch(() => { });
+    }
+    return res.status(409).json({ detail: "Attendance already marked for this session", message: "Attendance already marked for this session" });
+  }
+  reportInternalError(res, error, 'Attendance');
+}
 });
 
 // In-memory rate-limiter and cooldown tracker for face verification attempts
@@ -285,8 +367,11 @@ router.post('/mark/face', authenticate, requireRole('student'), upload.single('i
       if (!session) {
         return res.status(400).json({ detail: "No active attendance session found" });
       }
+      if (!isSessionAcceptingQr(session)) {
+        return res.status(409).json({ detail: `Session is currently ${getEffectiveSessionStatus(session)} and not accepting check-ins.` });
+      }
 
-      const studentUser = await User.findOne({ email: student_email.toLowerCase() }, 'college_id semester').lean();
+      const studentUser = await User.findOne({ email: student_email.toLowerCase() }, 'full_name student_id roll_number usn college_id semester').lean();
       if (session.college_id && studentUser?.college_id && session.college_id !== studentUser.college_id) {
         return res.status(403).json({ detail: 'Cross-institution attendance registration is not permitted.' });
       }
@@ -300,6 +385,7 @@ router.post('/mark/face', authenticate, requireRole('student'), upload.single('i
       });
 
       if (existing) {
+        await Session.updateOne({ _id: session._id }, { $inc: { 'telemetry.duplicate_attempts': 1 } }).catch(() => { });
         return res.status(409).json({
           detail: "Attendance already marked for this session",
           message: "Attendance already marked for this session"
@@ -336,6 +422,7 @@ router.post('/mark/face', authenticate, requireRole('student'), upload.single('i
 
       if (aiResult.status === 422 || !aiResult.success || !aiResult.matched) {
         recordFaceFailure(student_email);
+        await Session.updateOne({ _id: session._id }, { $inc: { 'telemetry.failed_verifications': 1 } }).catch(() => { });
         return res.status(422).json({
           detail: "Face verification failed",
           matched: false,
@@ -392,40 +479,348 @@ router.post('/mark/face', authenticate, requireRole('student'), upload.single('i
         { session_id: activeSessionId, subject: session.subject, receipt_id: receiptId }
       ).catch(console.error));
 
-      // Broadcast update to admin live-logs WebSockets (never leak student PII globally)
-      trackJob(notificationService.broadcastLiveLogs({
-        type: "attendance_update",
-        student_email,
-        session_id: activeSessionId,
-        status: "Present",
-        timestamp: timestamp.toISOString(),
-        verified_by: "face",
-        confidence: aiResult.confidence
-      }).catch(console.error));
+        // Broadcast update to admin live-logs AND teacher WebSocket
+        const faceLivePayload = {
+          type: "attendance_update",
+          student_email,
+          student_name: studentUser?.full_name || student_email.split('@')[0],
+          roll_number: studentUser?.student_id || studentUser?.roll_number || studentUser?.usn || null,
+          session_id: activeSessionId,
+          subject: session.subject,
+          status: "Present",
+          timestamp: timestamp.toISOString(),
+          verified_by: "face",
+          confidence: aiResult.confidence
+    };
+    trackJob(notificationService.broadcastLiveLogs(faceLivePayload).catch(console.error));
+    if (session.teacher_id) {
+      trackJob(notificationService.sendPersonalMessage(session.teacher_id.toLowerCase(), faceLivePayload).catch(() => { }));
+    }
 
-      // Recalculate health score & invalidate analytics read cache
-      cache.invalidateAnalyticsForUser(student_email);
-      trackJob(calculateHealthScore(student_email).catch(console.error));
+    // Recalculate health score & invalidate analytics read cache
+    cache.invalidateAnalyticsForUser(student_email);
+    trackJob(calculateHealthScore(student_email).catch(console.error));
 
-      return res.json({
-        status: "success",
-        matched: true,
-        confidence: aiResult.confidence,
-        receipt_id: receiptId,
-        attendance_id: newRecord._id.toString(),
-        subject: session.subject,
-        room: session.room || null,
-        timestamp: timestamp.toISOString(),
-        message: "Face attendance marked successfully"
+    return res.json({
+      status: "success",
+      matched: true,
+      confidence: aiResult.confidence,
+      receipt_id: receiptId,
+      attendance_id: newRecord._id.toString(),
+      subject: session.subject,
+      room: session.room || null,
+      timestamp: timestamp.toISOString(),
+      message: "Face attendance marked successfully"
+    });
+  }
+
+    return res.status(400).json({ detail: 'A verified face image is required.' });
+} catch (error) {
+  if (error.code === 11000) {
+    return res.status(409).json({ detail: "Attendance already marked for this session", message: "Attendance already marked for this session" });
+  }
+  reportInternalError(res, error, 'Attendance');
+}
+});
+
+// ─── POST /attendance/mark/face/kiosk ─────────────────────────────
+// Teacher-authorized podium kiosk 1:1 biometric verification for a student in the teacher's active session.
+router.post('/mark/face/kiosk', authenticate, requireRole(['teacher', 'admin', 'super_admin']), upload.single('image'), async (req, res) => {
+  try {
+    const { session_id, student_email: rawStudentEmail } = req.body || {};
+    const student_email = typeof rawStudentEmail === 'string' ? rawStudentEmail.trim().toLowerCase() : '';
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({ detail: 'A captured camera frame is required.' });
+    }
+    if (typeof session_id !== 'string' || !mongoose.Types.ObjectId.isValid(session_id)) {
+      return res.status(400).json({ detail: 'A valid active session ID is required.' });
+    }
+    if (!student_email) {
+      return res.status(400).json({ detail: 'Please select an enrolled student to verify at the kiosk.' });
+    }
+
+    const session = await Session.findOne({ _id: session_id, is_active: true });
+    if (!session) {
+      return res.status(404).json({ detail: 'Active session not found.' });
+    }
+    if (!isSessionAcceptingQr(session)) {
+      return res.status(409).json({ detail: `Session is ${getEffectiveSessionStatus(session)} and not accepting kiosk check-ins.` });
+    }
+    const isAdmin = ['admin', 'super_admin'].includes(req.userRole.toLowerCase());
+    if (!isAdmin && session.teacher_id.toLowerCase() !== req.userEmail.toLowerCase()) {
+      return res.status(403).json({ detail: 'Forbidden: you can only operate kiosk verification for your own session.' });
+    }
+
+    const studentUser = await User.findOne(
+      { email: student_email, role: 'student' },
+      'email full_name student_id roll_number usn college_id semester biometric_registered'
+    ).lean();
+    if (!studentUser) {
+      return res.status(404).json({ detail: 'Student not found.' });
+    }
+    if (session.college_id && studentUser.college_id && session.college_id !== studentUser.college_id) {
+      return res.status(403).json({ detail: 'Cross-institution verification is prohibited.' });
+    }
+
+    const existing = await Attendance.findOne({ student_email, session_id });
+    if (existing) {
+      await Session.updateOne({ _id: session._id }, { $inc: { 'telemetry.duplicate_attempts': 1 } }).catch(() => { });
+      return res.status(409).json({ detail: 'Attendance already marked for this student in this session.' });
+    }
+
+    const aiResult = await faceAiService.verifyFace(req.file.buffer, student_email);
+    if (aiResult.status === 503 || aiResult.status === 504) {
+      return res.status(aiResult.status).json({
+        detail: `${aiResult.message}. You can record manual attendance instead.`,
+        manual_fallback_recommended: true
+      });
+    }
+    if (!aiResult.success || !aiResult.matched) {
+      await Session.updateOne({ _id: session._id }, { $inc: { 'telemetry.failed_verifications': 1 } }).catch(() => { });
+      return res.status(aiResult.status || 422).json({
+        detail: aiResult.message || 'Face verification failed. Please retry in better lighting or use manual attendance.',
+        matched: false,
+        confidence: aiResult.confidence || 0,
+        manual_fallback_recommended: true
       });
     }
 
-    return res.status(400).json({ detail: 'A verified face image is required.' });
+    const timestamp = new Date();
+    const receiptId = `SF-KS-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+    const newRecord = await Attendance.create({
+      student_email,
+      session_id,
+      college_id: session.college_id || studentUser.college_id || undefined,
+      subject: session.subject,
+      semester: studentUser.semester || undefined,
+      receipt_id: receiptId,
+      timestamp,
+      status: 'Present',
+      verified_by: 'kiosk',
+      confidence: aiResult.confidence,
+      marked_by: req.userEmail,
+    });
+
+    await auditLog(req.userEmail, req.userRole, 'KIOSK_FACE_VERIFY', {
+      session_id,
+      student_email,
+      confidence: aiResult.confidence,
+      receipt_id: receiptId,
+    }, req);
+
+    const kioskPayload = {
+      type: 'attendance_update',
+      student_email,
+      student_name: studentUser.full_name,
+      roll_number: studentUser.student_id || studentUser.roll_number || studentUser.usn || null,
+      session_id,
+      subject: session.subject,
+      status: 'Present',
+      verified_by: 'face',
+      confidence: aiResult.confidence,
+      timestamp: timestamp.toISOString(),
+    };
+    trackJob(notificationService.sendPersonalMessage(session.teacher_id.toLowerCase(), kioskPayload).catch(() => { }));
+    trackJob(notificationService.createNotification(
+      student_email,
+      'Kiosk Face Attendance Registered',
+      `Verified Present for ${session.subject} at classroom podium (${receiptId}).`,
+      'attendance',
+      'Info',
+      { session_id, subject: session.subject, receipt_id: receiptId }
+    ).catch(() => { }));
+
+    cache.invalidateAnalyticsForUser(student_email);
+
+    return res.json({
+      status: 'success',
+      matched: true,
+      confidence: aiResult.confidence,
+      receipt_id: receiptId,
+      attendance_id: newRecord._id.toString(),
+      student_name: studentUser.full_name,
+      student_email,
+      timestamp: timestamp.toISOString(),
+      message: 'Kiosk face verification succeeded.',
+    });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(409).json({ detail: "Attendance already marked for this session", message: "Attendance already marked for this session" });
+      return res.status(409).json({ detail: 'Attendance already marked for this session.' });
     }
-    reportInternalError(res, error, 'Attendance');
+    reportInternalError(res, error, 'Attendance:Kiosk');
+  }
+});
+
+// ─── POST /attendance/mark/batch ──────────────────────────────────
+// Teacher-controlled individual and bulk manual attendance with ownership, college isolation,
+// finalisation lock, reason validation, edit history, and protected audit logging.
+router.post('/mark/batch', authenticate, requireRole(['teacher', 'hod', 'principal', 'admin', 'super_admin']), async (req, res) => {
+  try {
+    const { session_id, records, reason: batchReason } = req.body || {};
+    if (typeof session_id !== 'string' || !mongoose.Types.ObjectId.isValid(session_id)) {
+      return res.status(400).json({ detail: 'A valid session_id is required.' });
+    }
+    if (!Array.isArray(records) || records.length === 0 || records.length > 500) {
+      return res.status(400).json({ detail: 'records must be a non-empty array (max 500 entries).' });
+    }
+
+    const session = await Session.findById(session_id).lean();
+    if (!session) {
+      return res.status(404).json({ detail: 'Session not found.' });
+    }
+
+    const role = (req.userRole || '').toLowerCase();
+    const isAdmin = ['admin', 'super_admin', 'principal'].includes(role);
+    if (!isAdmin && String(session.teacher_id || '').toLowerCase() !== req.userEmail.toLowerCase()) {
+      await auditLog(req.userEmail, req.userRole, 'PERMISSION_DENIED', { session_id, endpoint: '/attendance/mark/batch' }, req);
+      return res.status(403).json({ detail: 'Forbidden: you can only mark attendance for your own sessions.' });
+    }
+
+    const sessionStatus = getEffectiveSessionStatus(session);
+    if (['finalised', 'cancelled'].includes(sessionStatus)) {
+      return res.status(409).json({ detail: `Cannot modify attendance for a ${sessionStatus} session.` });
+    }
+
+    const actorUser = await User.findOne({ email: req.userEmail }, 'college_id').lean();
+    if (!isAdmin && session.college_id && actorUser?.college_id && session.college_id !== actorUser.college_id) {
+      return res.status(403).json({ detail: 'Forbidden: cross-institution modification denied.' });
+    }
+
+    const now = new Date();
+    const updatedResults = [];
+    const rejected = [];
+
+    for (const item of records) {
+      const normalizedStatus = normalizeManualStatus(item?.status);
+      if (!normalizedStatus) {
+        rejected.push({ item, reason: `Unsupported attendance status: ${item?.status}` });
+        continue;
+      }
+
+      let studentQuery = null;
+      if (typeof item.student_email === 'string' && item.student_email.trim()) {
+        studentQuery = { email: item.student_email.trim().toLowerCase(), role: 'student' };
+      } else if (typeof item.student_id === 'string' && mongoose.Types.ObjectId.isValid(item.student_id)) {
+        studentQuery = { _id: item.student_id, role: 'student' };
+      } else if (typeof item.usn === 'string' && item.usn.trim()) {
+        const cleanId = item.usn.trim();
+        studentQuery = { $or: [{ usn: cleanId }, { student_id: cleanId }, { roll_number: cleanId }], role: 'student' };
+      } else if (typeof item.student_id === 'string' && item.student_id.trim()) {
+        const cleanId = item.student_id.trim();
+        studentQuery = { $or: [{ student_id: cleanId }, { usn: cleanId }, { roll_number: cleanId }], role: 'student' };
+      }
+
+      if (!studentQuery) {
+        rejected.push({ item, reason: 'Missing student identifier.' });
+        continue;
+      }
+
+      const student = await User.findOne(studentQuery, 'email full_name college_id semester').lean();
+      if (!student) {
+        rejected.push({ item, reason: 'Student not found.' });
+        continue;
+      }
+      if (session.college_id && student.college_id && session.college_id !== student.college_id) {
+        rejected.push({ email: student.email, reason: 'Cross-institution student rejected.' });
+        continue;
+      }
+
+      const studentEmail = student.email.toLowerCase();
+      const existing = await Attendance.findOne({ student_email: studentEmail, session_id });
+      if (existing && existing.is_finalised) {
+        rejected.push({ email: studentEmail, reason: 'Record is already finalised.' });
+        continue;
+      }
+
+      const itemReason = (typeof item.reason === 'string' && item.reason.trim())
+        ? item.reason.trim().slice(0, 500)
+        : (typeof batchReason === 'string' && batchReason.trim() ? batchReason.trim().slice(0, 500) : 'Manual faculty entry');
+
+      const sensitiveOverride = existing && existing.status !== normalizedStatus && ['Absent', 'Excused', 'Excused absence', 'Approved leave', 'Medical leave'].includes(normalizedStatus);
+      if (sensitiveOverride && (!itemReason || itemReason === 'Manual faculty entry')) {
+        // Require explicit reason when overriding an existing recorded status to Absent/Excused/Leave
+        rejected.push({ email: studentEmail, reason: 'A reason is required when overriding an existing attendance status.' });
+        continue;
+      }
+
+      const prevStatus = existing ? existing.status : 'Unmarked';
+      const receiptId = existing?.receipt_id || `SF-MN-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+
+      await Attendance.updateOne(
+        { student_email: studentEmail, session_id },
+        {
+          $set: {
+            college_id: session.college_id || student.college_id || undefined,
+            subject: session.subject,
+            semester: student.semester || session.semester || undefined,
+            receipt_id: receiptId,
+            status: normalizedStatus,
+            verified_by: 'manual',
+            marked_by: req.userEmail,
+            previous_status: prevStatus,
+            reason: itemReason,
+            remarks: itemReason,
+            updated_at: now,
+          },
+          $setOnInsert: {
+            timestamp: now,
+          },
+          $push: {
+            edit_history: {
+              previous_status: prevStatus,
+              updated_status: normalizedStatus,
+              actor_email: req.userEmail,
+              reason: itemReason,
+              timestamp: now,
+            },
+          },
+        },
+        { upsert: true }
+      );
+
+      cache.invalidateAnalyticsForUser(studentEmail);
+      updatedResults.push({
+        student_email: studentEmail,
+        previous_status: prevStatus,
+        updated_status: normalizedStatus,
+        reason: itemReason,
+      });
+
+      trackJob(notificationService.createNotification(
+        studentEmail,
+        'Attendance Updated',
+        `${session.subject}: status recorded as ${normalizedStatus} by ${req.userEmail}.`,
+        'attendance',
+        'Info',
+        { session_id, status: normalizedStatus }
+      ).catch(() => { }));
+    }
+
+    await auditLog(req.userEmail, req.userRole, records.length > 1 ? 'BULK_ATTENDANCE' : 'MANUAL_ATTENDANCE', {
+      session_id,
+      subject: session.subject,
+      updated_count: updatedResults.length,
+      rejected_count: rejected.length,
+      changes: updatedResults.slice(0, 25),
+    }, req);
+
+    notificationService.sendPersonalMessage(String(session.teacher_id).toLowerCase(), {
+      type: 'attendance_update',
+      session_id,
+      subject: session.subject,
+      verified_by: 'manual',
+      timestamp: now.toISOString(),
+    }).catch(() => { });
+
+    return res.json({
+      success: rejected.length === 0,
+      updated_count: updatedResults.length,
+      failed_count: rejected.length,
+      updated: updatedResults,
+      rejected,
+    });
+  } catch (error) {
+    reportInternalError(res, error, 'Attendance:BatchMark');
   }
 });
 
@@ -458,10 +853,48 @@ router.get('/dashboard', authenticate, async (req, res) => {
 });
 
 // ─── GET /attendance/command-center ───────────────────────────────
-// Centralized command center dashboard for HODs & Admins
+// Centralized command center dashboard (strictly scoped to own classes for teachers)
 router.get('/command-center', authenticate, requireRole(['admin', 'teacher']), async (req, res) => {
   try {
-    // One aggregate + two counts instead of loading every analytics document.
+    const role = (req.userRole || '').toLowerCase();
+    if (role === 'teacher') {
+      const ctx = await resolveTeacherContext(req.userEmail);
+      const students = ctx ? await getAuthorisedStudentsForTeacher(ctx) : [];
+      const emails = students.map((s) => s.email.toLowerCase());
+      const sessionIds = (ctx?.teacherSessions || []).map((s) => s._id.toString());
+      const [totals] = emails.length
+        ? await AttendanceAnalytics.aggregate([
+          { $match: { student_email: { $in: emails } } },
+          {
+            $group: {
+              _id: null,
+              avgHealth: { $avg: '$health_score' },
+              criticalCount: { $sum: { $cond: [{ $lt: ['$health_score', 60] }, 1, 0] } },
+              warningCount: {
+                $sum: {
+                  $cond: [
+                    { $and: [{ $gte: ['$health_score', 60] }, { $lt: ['$health_score', 75] }] },
+                    1,
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        ])
+        : [null];
+      const activeSessionsCount = (ctx?.teacherSessions || []).filter((s) => s.is_active).length;
+      return res.json({
+        average_attendance: totals && totals.avgHealth != null ? Math.round(totals.avgHealth) : 0,
+        total_students: students.length,
+        active_sessions: activeSessionsCount,
+        total_sessions: sessionIds.length,
+        critical_students: (totals && totals.criticalCount) || 0,
+        warning_students: (totals && totals.warningCount) || 0,
+      });
+    }
+
+    // Admin view across institution
     const [[totals], totalStudents, activeSessionsCount] = await Promise.all([
       AttendanceAnalytics.aggregate([
         {
@@ -504,7 +937,12 @@ router.get('/command-center', authenticate, requireRole(['admin', 'teacher']), a
 // ─── GET /attendance/live-monitor ─────────────────────────────────
 router.get('/live-monitor', authenticate, requireRole(['admin', 'teacher']), async (req, res) => {
   try {
-    const activeSessions = await Session.find({ is_active: true }).lean();
+    const role = (req.userRole || '').toLowerCase();
+    const sessionFilter = { is_active: true };
+    if (role === 'teacher') {
+      sessionFilter.teacher_id = new RegExp(`^${req.userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+    }
+    const activeSessions = await Session.find(sessionFilter).lean();
 
     const sessionIds = activeSessions.map((session) => session._id.toString());
 
@@ -544,6 +982,7 @@ router.get('/live-monitor', authenticate, requireRole(['admin', 'teacher']), asy
         students_present: presentCount,
         face_scans: faceCount,
         duration: session.duration,
+        status: getEffectiveSessionStatus(session),
         start_time: session.start_time
       });
     }
@@ -557,6 +996,7 @@ router.get('/live-monitor', authenticate, requireRole(['admin', 'teacher']), asy
 // ─── GET /attendance/risk-analysis ────────────────────────────────
 router.get('/risk-analysis', authenticate, requireRole(['admin', 'teacher']), async (req, res) => {
   try {
+    const role = (req.userRole || '').toLowerCase();
     const riskType = req.query.type || 'below_75'; // below_75, below_60, frequent_late
     let filter = {};
 
@@ -566,6 +1006,12 @@ router.get('/risk-analysis', authenticate, requireRole(['admin', 'teacher']), as
       filter = { late_arrivals_count: { $gte: 3 } };
     } else {
       filter = { health_score: { $gte: 60, $lt: 75 } }; // default: below 75 warning
+    }
+
+    if (role === 'teacher') {
+      const ctx = await resolveTeacherContext(req.userEmail);
+      const students = ctx ? await getAuthorisedStudentsForTeacher(ctx) : [];
+      filter.student_email = { $in: students.map((s) => s.email.toLowerCase()) };
     }
 
     const analytics = await AttendanceAnalytics.find(filter)
@@ -912,12 +1358,50 @@ router.post('/disputes', authenticate, requireRole(['student', 'parent']), async
 router.get('/disputes', authenticate, async (req, res) => {
   try {
     const role = (req.userRole || '').toLowerCase();
-    const filter = role === 'student'
-      ? { student_email: req.userEmail.toLowerCase() }
-      : (req.userCollege && role !== 'super_admin' ? { college_id: req.userCollege } : {});
+    let filter = {};
+    if (role === 'student') {
+      filter = { student_email: req.userEmail.toLowerCase() };
+    } else if (role === 'teacher') {
+      const ctx = await resolveTeacherContext(req.userEmail);
+      const sessionIds = (ctx?.teacherSessions || []).map((s) => s._id.toString());
+      const subjects = ctx?.subjects || [];
+      const students = ctx ? await getAuthorisedStudentsForTeacher(ctx) : [];
+      const studentEmails = students.map((s) => s.email.toLowerCase());
+      if (ctx?.teacher?.college_id) {
+        filter.college_id = ctx.teacher.college_id;
+      }
+      const orClauses = [];
+      if (sessionIds.length) orClauses.push({ session_id: { $in: sessionIds } });
+      if (subjects.length) orClauses.push({ subject: { $in: subjects } });
+      if (studentEmails.length) orClauses.push({ student_email: { $in: studentEmails } });
+      if (orClauses.length === 0) {
+        return res.json({ disputes: [] });
+      }
+      filter.$or = orClauses;
+    } else if (req.userCollege && role !== 'super_admin') {
+      filter = { college_id: req.userCollege };
+    }
+
+    if (req.query.status && req.query.status !== 'all') {
+      filter.status = String(req.query.status);
+    }
 
     const disputes = await AttendanceDispute.find(filter).sort({ created_at: -1 }).limit(100).lean();
-    const formatted = disputes.map(d => ({ ...d, id: d._id.toString() }));
+    const emails = [...new Set(disputes.map((d) => String(d.student_email).toLowerCase()))];
+    const students = emails.length
+      ? await User.find({ email: { $in: emails } }, 'email full_name student_id roll_number usn').lean()
+      : [];
+    const stMap = new Map(students.map((s) => [s.email.toLowerCase(), s]));
+
+    const formatted = disputes.map((d) => {
+      const st = stMap.get(String(d.student_email).toLowerCase());
+      return {
+        ...d,
+        id: d._id.toString(),
+        student_name: st?.full_name || d.student_email.split('@')[0],
+        student_id: st?.student_id || st?.roll_number || st?.usn || null,
+      };
+    });
     res.json({ disputes: formatted });
   } catch (error) {
     reportInternalError(res, error, 'Attendance');
@@ -928,67 +1412,151 @@ router.get('/disputes', authenticate, async (req, res) => {
 router.post('/disputes/:id/resolve', authenticate, requireRole(['teacher', 'hod', 'principal', 'admin', 'super_admin']), async (req, res) => {
   try {
     const { id } = req.params;
-    const { action, remarks } = req.body;
-    const normalizedAction = String(action || '').toLowerCase();
-    if (!['approve', 'approved', 'reject', 'rejected', 'under_review'].includes(normalizedAction)) {
-      return res.status(400).json({ detail: 'Action must be approve, reject, or under_review.' });
-    }
-    const isApproved = normalizedAction.startsWith('approve');
-    const isUnderReview = normalizedAction === 'under_review';
-    const dispute = await AttendanceDispute.findById(id);
-    if (!dispute) {
-      return res.status(404).json({ detail: 'Dispute not found.' });
-    }
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ detail: 'Invalid dispute ID.' });
+      }
+      const { action, remarks, updated_status } = req.body || {};
+      const normalizedAction = String(action || '').toLowerCase().trim();
+      const ALLOWED_ACTIONS = ['approve', 'approved', 'reject', 'rejected', 'under_review', 'clarification', 'escalate', 'escalated', 'excused'];
+      if (!ALLOWED_ACTIONS.includes(normalizedAction)) {
+        return res.status(400).json({ detail: 'Action must be approve, reject, under_review, clarification, escalate, or excused.' });
+      }
 
-    dispute.status = isUnderReview ? 'Under Review' : (isApproved ? 'Approved' : 'Rejected');
-    dispute.resolved_by = req.userEmail;
-    dispute.remarks = remarks ? String(remarks).trim() : '';
-    dispute.updated_at = new Date();
-    if (!isUnderReview) dispute.resolved_at = new Date();
-    dispute.audit_trail = dispute.audit_trail || [];
-    dispute.audit_trail.push({
-      status: dispute.status,
-      actor: req.userEmail,
-      role: req.userRole,
-      note: dispute.remarks || `Marked as ${dispute.status}`,
-      timestamp: new Date()
-    });
-    await dispute.save();
+      const existing = await AttendanceDispute.findById(id);
+      if (!existing) {
+        return res.status(404).json({ detail: 'Dispute not found.' });
+      }
 
-    if (isApproved) {
-      await Attendance.updateOne(
-        { student_email: dispute.student_email, session_id: dispute.session_id },
+      const role = (req.userRole || '').toLowerCase();
+      const isAdmin = ['admin', 'super_admin', 'principal'].includes(role);
+      if (!isAdmin) {
+        const ctx = await resolveTeacherContext(req.userEmail);
+        if (existing.college_id && ctx?.teacher?.college_id && existing.college_id !== ctx.teacher.college_id) {
+          await auditLog(req.userEmail, req.userRole, 'PERMISSION_DENIED', { dispute_id: id, reason: 'cross_institution' }, req);
+          return res.status(403).json({ detail: 'Forbidden: cross-institution dispute resolution denied.' });
+        }
+        if (mongoose.Types.ObjectId.isValid(existing.session_id)) {
+          const sess = await Session.findById(existing.session_id, 'teacher_id college_id').lean();
+          if (sess && String(sess.teacher_id).toLowerCase() !== req.userEmail.toLowerCase() && role === 'teacher') {
+            await auditLog(req.userEmail, req.userRole, 'PERMISSION_DENIED', { dispute_id: id, reason: 'not_session_owner' }, req);
+            return res.status(403).json({ detail: 'Forbidden: you can only resolve disputes for your own classes.' });
+          }
+        }
+      }
+
+      const isApproved = normalizedAction.startsWith('approve') || normalizedAction === 'excused';
+      const isRejected = normalizedAction.startsWith('reject');
+      const isUnderReview = normalizedAction === 'under_review';
+      const isClarification = normalizedAction === 'clarification';
+      const isEscalated = normalizedAction.startsWith('escalat');
+
+      const nextStatus = isApproved
+        ? 'Approved'
+        : isRejected
+          ? 'Rejected'
+          : isClarification
+            ? 'Clarification'
+            : isEscalated
+              ? 'Escalated'
+              : 'Under Review';
+
+      const now = new Date();
+      const cleanRemarks = remarks ? String(remarks).trim().slice(0, 1000) : '';
+
+      // Atomic conditional update prevents duplicate final decisions
+      const dispute = await AttendanceDispute.findOneAndUpdate(
+        { _id: id, status: { $in: ['Pending', 'Under Review', 'Clarification'] } },
         {
           $set: {
-            status: dispute.requested_status || 'Present',
-            verified_by: 'manual',
-            subject: dispute.subject || undefined,
-            college_id: dispute.college_id || req.userCollege || undefined,
-            remarks: dispute.remarks || 'Approved via attendance correction request',
-            updated_at: new Date(),
-            timestamp: new Date()
-          }
+            status: nextStatus,
+            resolved_by: req.userEmail,
+            remarks: cleanRemarks,
+            updated_at: now,
+            ...(isApproved || isRejected ? { resolved_at: now } : {}),
+            ...(isEscalated ? { escalated_to: 'admin' } : {}),
+          },
+          $push: {
+            audit_trail: {
+              status: nextStatus,
+              actor: req.userEmail,
+              role: req.userRole,
+              note: cleanRemarks || `Marked as ${nextStatus}`,
+              timestamp: now,
+            },
+          },
+        },
+        { new: true }
+      );
+
+      if (!dispute) {
+        return res.status(409).json({ detail: `Dispute has already been finalized (${existing.status}).` });
+      }
+
+      if (isApproved) {
+        const targetAttendanceStatus = normalizedAction === 'excused'
+          ? 'Excused'
+          : (['Present', 'Excused', 'Late'].includes(updated_status) ? updated_status : (dispute.requested_status || 'Present'));
+
+          await Attendance.updateOne(
+            { student_email: dispute.student_email, session_id: dispute.session_id },
+            {
+              $set: {
+                status: targetAttendanceStatus,
+                verified_by: 'manual',
+                marked_by: req.userEmail,
+                previous_status: dispute.original_status || 'Absent',
+                reason: cleanRemarks || 'Approved via attendance correction request',
+                subject: dispute.subject || undefined,
+                college_id: dispute.college_id || req.userCollege || undefined,
+            remarks: cleanRemarks || 'Approved via attendance correction request',
+              updated_at: now,
+              timestamp: now,
+            },
+            $push: {
+            edit_history: {
+              previous_status: dispute.original_status || 'Absent',
+              updated_status: targetAttendanceStatus,
+              actor_email: req.userEmail,
+              reason: cleanRemarks || 'Dispute approved',
+              timestamp: now,
+            },
+          },
         },
         { upsert: true }
       );
-      cache.invalidateAnalyticsForUser(dispute.student_email);
-      trackJob(calculateHealthScore(dispute.student_email).catch(console.error));
+cache.invalidateAnalyticsForUser(dispute.student_email);
+trackJob(calculateHealthScore(dispute.student_email).catch(console.error));
     }
 
-    trackJob(notificationService.createNotification(
-      dispute.student_email,
-      `Attendance Correction ${dispute.status}`,
-      `Your attendance correction request for ${dispute.subject || dispute.session_id} was marked ${dispute.status.toLowerCase()}.`,
-      'attendance',
-      isApproved ? 'Info' : 'High',
-      { dispute_id: dispute._id.toString(), session_id: dispute.session_id }
-    ).catch(console.error));
+trackJob(notificationService.createNotification(
+  dispute.student_email,
+  `Attendance Correction ${dispute.status}`,
+  `Your attendance correction request for ${dispute.subject || dispute.session_id} was marked ${dispute.status.toLowerCase()}.`,
+  'attendance',
+  isApproved ? 'Info' : 'High',
+  { dispute_id: dispute._id.toString(), session_id: dispute.session_id }
+).catch(console.error));
 
-    await auditLog(req.userEmail, req.userRole, 'DISPUTE_RESOLVED', { dispute_id: id, status: dispute.status }, req);
-    res.json({ success: true, status: dispute.status, dispute });
-  } catch (error) {
-    reportInternalError(res, error, 'Attendance');
+// Notify linked parent if authorized
+trackJob((async () => {
+  const studentUser = await User.findOne({ email: dispute.student_email }, 'full_name parent_details').lean();
+  if (studentUser?.parent_details && studentUser.parent_details.includes('@')) {
+    await notificationService.createNotification(
+      studentUser.parent_details.toLowerCase(),
+      `Ward Correction ${dispute.status}`,
+      `Attendance correction for ${studentUser.full_name || dispute.student_email} (${dispute.subject || 'Class'}) was marked ${dispute.status.toLowerCase()}.`,
+      'attendance',
+      'Info',
+      { dispute_id: dispute._id.toString(), student_email: dispute.student_email }
+    );
   }
+})().catch(() => { }));
+
+await auditLog(req.userEmail, req.userRole, 'DISPUTE_RESOLVED', { dispute_id: id, status: dispute.status, remarks: cleanRemarks }, req);
+res.json({ success: true, status: dispute.status, dispute });
+  } catch (error) {
+  reportInternalError(res, error, 'Attendance');
+}
 });
 
 module.exports = router;
