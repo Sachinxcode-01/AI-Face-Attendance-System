@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, Clock, CheckCircle2, Shield, RefreshCw, Bot, Flame } from "lucide-react";
+import { Clock, CheckCircle2, Shield, RefreshCw, Bot, Flame } from "lucide-react";
 import { Reveal } from "./ui/reveal";
 import { SectionHeading } from "./ui/section-heading";
 import { SpotlightCard } from "./ui/spotlight-card";
@@ -9,38 +9,38 @@ import { SpotlightCard } from "./ui/spotlight-card";
 const DETAILS = [
   {
     icon: Clock,
-    title: "Grace windows",
-    body: "Late by 90 seconds? The bell decides, not the bureaucracy. Configurable per class, per campus.",
+    title: "Policy-configurable thresholds",
+    body: "Configure minimum attendance percentages (default 75%), late/excused/leave credit rules, and dispute deadlines per institution.",
     accent: "rgba(143, 139, 255, 0.2)",
   },
   {
     icon: CheckCircle2,
-    title: "Leave, integrated",
-    body: "Approved leave silently blanks a seat on the roster, no more chasing notes on WhatsApp.",
+    title: "Leave & disputes, integrated",
+    body: "Students and parents submit leave applications or attendance correction requests with reason categories, resolved by faculty with audit tracking.",
     accent: "rgba(111, 216, 255, 0.2)",
   },
   {
     icon: Shield,
-    title: "A record you can defend",
-    body: "Every check-in carries gate, timestamp and confidence score, written to an append-only audit trail.",
+    title: "Auditable check-in records",
+    body: "Every check-in records timestamp, verification method, receipt ID, and confidence score, with administrative actions logged to AttendanceAuditLog.",
     accent: "rgba(30, 215, 96, 0.2)",
   },
   {
     icon: RefreshCw,
-    title: "Roster self-heals",
-    body: "New enrollments appear on the right roster automatically once the timetable maps them.",
+    title: "OneRoster & CSV exports",
+    body: "Validate OneRoster 1.2 CSV files for onboarding and export student, class, or department attendance reports in CSV, Excel, JSON, or HTML.",
     accent: "rgba(243, 198, 79, 0.2)",
   },
   {
     icon: Bot,
     title: "Nexa AI assistant",
-    body: "Students ask attendance questions in plain language; Nexa answers from their own records only.",
+    body: "Uses deterministic database attendance totals (with direct PII stripped from prompts) so Groq LLM replies reflect recorded attendance figures.",
     accent: "rgba(143, 139, 255, 0.2)",
   },
   {
     icon: Flame,
-    title: "Streaks that stick",
-    body: "Bronze to Diamond Inferno: attendance becomes the habit students protect, not the chore they dodge.",
+    title: "Attendance streaks",
+    body: "Bronze to Diamond Inferno tiers reward consistent attendance habits alongside deterministic risk alerts and what-if calculators.",
     accent: "rgba(243, 198, 79, 0.2)",
   },
 ];
@@ -53,9 +53,9 @@ export function Craft() {
     >
       <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Refinements"
-          title="Everything between the bell and the break."
-          description="The invisible details that make a system feel effortless: the grace windows, the self-healing rosters, the answers a student already trusts."
+          eyebrow="Operational Details"
+          title="Everything between the lecture start and semester audit."
+          description="Practical academic workflows: configurable policies, leave and dispute resolution, deterministic exports, and PII-minimized AI assistance."
         />
 
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

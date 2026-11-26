@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { BellRing, QrCode, ScanFace, ArrowRight, type LucideIcon } from "lucide-react";
+import { ONBOARDING_WORKFLOW } from "@/lib/content";
 import { Reveal } from "./ui/reveal";
 import { SectionHeading } from "./ui/section-heading";
 import { SpotlightCard } from "./ui/spotlight-card";
@@ -15,32 +16,59 @@ const STEPS: {
   accent: string;
   gradient: string;
 }[] = [
+    {
+      number: "01",
+      icon: QrCode,
+      title: "Launch the session",
+      body: "Faculty start a class session on the Teacher Portal. An HMAC-SHA256 token bound to the session rotates every 20 seconds (+5s skew tolerance), with optional classroom geofencing.",
+      meta: "Teacher Portal · 20s HMAC QR",
+      accent: "rgba(143, 139, 255, 0.2)",
+      gradient: "from-accent to-accent2",
+    },
+    {
+      number: "02",
+      icon: ScanFace,
+      title: "Verify identity",
+      body: "Students check in via webcam, mobile camera, or campus kiosk. InsightFace ArcFace (buffalo_l, ResNet-50) compares a 512-D embedding against the enrolled vector (default ≥0.60 cosine).",
+      meta: "ArcFace 512-D · ≥0.60 cosine",
+      accent: "rgba(111, 216, 255, 0.25)",
+      gradient: "from-accent2 to-spotify",
+    },
+    {
+      number: "03",
+      icon: BellRing,
+      title: "Record, audit & notify",
+      body: "Attendance writes to MongoDB with duplicate-session protection and an audit log entry. Real-time WebSocket updates, email/in-app alerts, and configured SMS notifications trigger automatically.",
+      meta: "WebSocket + Audit Log",
+      accent: "rgba(30, 215, 96, 0.2)",
+      gradient: "from-spotify to-amber",
+    },
+  ];
+
+const HARDWARE_TIERS = [
   {
-    number: "01",
-    icon: QrCode,
-    title: "Launch the session",
-    body: "Faculty start a class session on the Teacher Portal. A signed, class-scoped QR code appears and rotates on a 30-second drift window.",
-    meta: "Teacher Portal · rotating token",
-    accent: "rgba(143, 139, 255, 0.2)",
-    gradient: "from-accent to-accent2",
+    tier: "Minimum (Pilot / Single Room)",
+    items: [
+      "Modern browser (Chrome, Edge, Safari, Firefox) or Android 6+ / iOS mobile",
+      "720p USB webcam or built-in laptop/phone camera",
+      "Backend host: 4 vCPU, 8 GB RAM, 20 GB SSD (CPU ONNX fallback)",
+    ],
   },
   {
-    number: "02",
-    icon: ScanFace,
-    title: "Verify identity & liveness",
-    body: "The ArcFace ONNX engine validates face identity and liveness against the enrolled 512-dimension embedding: under 300ms, on any camera.",
-    meta: "<300ms · on-device inference",
-    accent: "rgba(111, 216, 255, 0.25)",
-    gradient: "from-accent2 to-spotify",
+    tier: "Recommended (Campus Production)",
+    items: [
+      "1080p USB or PoE IP camera (RTSP) with balanced frontal lighting",
+      "AI service node with NVIDIA CUDA 11.8+ GPU + 16 GB RAM for fast batch/gate inference",
+      "Managed MongoDB replica set + Redis cache + campus Wi-Fi/LAN",
+    ],
   },
   {
-    number: "03",
-    icon: BellRing,
-    title: "Sync and notify",
-    body: "Attendance lands in the database instantly and push notifications go to parents and admins, stamped with gate, time and confidence score.",
-    meta: "Push + email · audit logged",
-    accent: "rgba(30, 215, 96, 0.2)",
-    gradient: "from-spotify to-amber",
+    tier: "Optional / Extended Integrations",
+    items: [
+      "IR / 3D depth camera hardware for dedicated gate PAD evaluations",
+      "Supabase PostgreSQL (pgvector HNSW) & Google Sheets sync",
+      "Twilio / MSG91 SMS gateway & Resend / Brevo transactional email",
+    ],
   },
 ];
 
@@ -50,7 +78,6 @@ export function HowItWorks() {
       id="how-it-works"
       className="relative scroll-mt-24 border-t border-[var(--hairline)] py-28 sm:py-36 lg:py-[168px]"
     >
-      {/* Background ambient lighting */}
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 h-[350px] w-[800px] rounded-full opacity-15 blur-[120px]"
@@ -63,8 +90,8 @@ export function HowItWorks() {
       <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
           eyebrow="Workflow Architecture"
-          title="Three steps from a raised hand to a parent's phone."
-          description="No turnstiles, no cards, no end-of-class roll call. One session start, one face, one instant record."
+          title="Three steps from session launch to verified record."
+          description="Supports face verification, rotating QR check-in, and faculty manual overrides—with full audit logging."
         />
 
         {/* Steps Grid */}
@@ -79,7 +106,6 @@ export function HowItWorks() {
                   className="flex h-full flex-col justify-between p-7"
                 >
                   <div>
-                    {/* Header: Icon + Number */}
                     <div className="flex items-center justify-between">
                       <motion.div
                         whileHover={{ scale: 1.1, rotate: 5 }}
@@ -102,7 +128,6 @@ export function HowItWorks() {
                     </p>
                   </div>
 
-                  {/* Footer metadata */}
                   <div className="mt-8 pt-4 border-t border-white/[0.06] flex items-center justify-between">
                     <span className="chip-bytune h-6 text-[10.5px] px-3 font-mono">
                       {step.meta}
@@ -117,6 +142,55 @@ export function HowItWorks() {
               </Reveal>
             );
           })}
+        </div>
+
+        {/* Institutional Onboarding Sequence (11 Steps) */}
+        <div className="mt-20 card-bytune rounded-[24px] p-6 sm:p-10 border border-white/10 bg-surface/90">
+          <div className="max-w-2xl mb-8">
+            <span className="font-mono text-[10.5px] uppercase tracking-wider text-accent font-semibold block">
+              Campus Deployment Lifecycle
+            </span>
+            <h3 className="mt-2 font-display text-2xl font-medium text-hi">
+              11-Stage Institutional Onboarding Workflow
+            </h3>
+            <p className="mt-2 text-[13.5px] text-mid">
+              Actual rollout timelines depend on roster readiness, camera/network infrastructure, and institutional privacy/DPIA sign-off.
+            </p>
+          </div>
+
+          <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+            {ONBOARDING_WORKFLOW.map((item) => (
+              <div
+                key={item.step}
+                className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-1.5"
+              >
+                <span className="font-mono text-[10px] uppercase tracking-wider text-spotify font-semibold">
+                  Stage {item.step}
+                </span>
+                <h4 className="font-display text-[14.5px] font-medium text-hi">{item.title}</h4>
+                <p className="text-[12.5px] text-mid leading-relaxed">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Hardware & System Requirements */}
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
+          {HARDWARE_TIERS.map((tier) => (
+            <div key={tier.tier} className="card-surface rounded-[22px] p-6 space-y-3">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-accent font-semibold block">
+                {tier.tier}
+              </span>
+              <ul className="space-y-2 text-[12.5px] text-mid leading-relaxed">
+                {tier.items.map((line) => (
+                  <li key={line} className="flex items-start gap-2">
+                    <span className="mt-2 h-1 w-1 rounded-full bg-spotify shrink-0" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
     </section>

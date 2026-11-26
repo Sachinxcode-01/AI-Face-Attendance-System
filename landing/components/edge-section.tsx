@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Activity,
   Cpu,
   HardDrive,
   MonitorSmartphone,
@@ -16,74 +15,66 @@ import { SpotlightCard } from "./ui/spotlight-card";
 const DEVICES = [
   {
     icon: MonitorSmartphone,
-    name: "IP camera",
-    body: "Existing campus cameras join as edge nodes with a browser tab and a mount.",
+    name: "USB & IP cameras",
+    body: "Connect browser webcams for web check-in, or configure RTSP/USB cameras for local OpenCV kiosk nodes.",
     accent: "rgba(143, 139, 255, 0.2)",
   },
   {
     icon: Server,
-    name: "GPU node",
-    body: "Optional parallel verification for gates that move a thousand students an hour.",
+    name: "GPU / CPU inference",
+    body: "FastAPI ONNX Runtime uses CUDA GPU acceleration when installed and falls back automatically to CPU.",
     accent: "rgba(111, 216, 255, 0.2)",
   },
   {
     icon: Cpu,
-    name: "Edge box",
-    body: "A fanless box at the gate keeps verifying through every uplink outage.",
+    name: "Campus LAN deployment",
+    body: "Self-host the Express gateway, FastAPI AI service, and MongoDB on campus servers for local network operation.",
     accent: "rgba(30, 215, 96, 0.2)",
   },
   {
     icon: HardDrive,
-    name: "Local queue",
-    body: "Check-ins persist on-device and reconcile the second the line comes back.",
+    name: "Encrypted mobile queue",
+    body: "Flutter mobile buffers up to 500 offline QR check-ins in AES-256 Hive storage and syncs on reconnect.",
     accent: "rgba(243, 198, 79, 0.2)",
   },
 ];
 
-const EDGE_NODES = [
+const SAMPLE_NODES = [
   {
-    id: "NODE_01",
-    name: "North Turnstile Kiosk",
-    type: "ArcFace ONNX v2.4",
-    status: "Active · Verifying",
-    latency: "192ms",
-    verifiedStudent: "Alex Rivera",
-    studentId: "STU-88219",
-    confidence: "99.8%",
-    isLive: true,
+    id: "DEMO_01",
+    name: "Sample Gate Kiosk (CUDA)",
+    type: "ArcFace buffalo_l",
+    status: "Simulated · Ready",
+    mode: "GPU / ONNX",
+    verifiedStudent: "Sample Student A",
+    confidence: "0.86 cosine",
   },
   {
-    id: "NODE_04",
-    name: "Science Quad Gate 2",
-    type: "Rotating QR Scanner",
-    status: "Active · Standby",
-    latency: "218ms",
-    verifiedStudent: "Elena Rostova",
-    studentId: "STU-44021",
-    confidence: "99.9%",
-    isLive: true,
+    id: "DEMO_02",
+    name: "Sample Classroom Podium",
+    type: "20s Rotating QR",
+    status: "Simulated · Active",
+    mode: "HMAC-SHA256",
+    verifiedStudent: "Sample Student B",
+    confidence: "QR Valid",
   },
   {
-    id: "NODE_12",
-    name: "Engineering Hallway",
-    type: "Edge Micro-Box",
-    status: "Local Cache Queue",
-    latency: "148ms",
-    verifiedStudent: "Marcus Chen",
-    studentId: "STU-92104",
-    confidence: "99.7%",
-    isLive: true,
+    id: "DEMO_03",
+    name: "Sample Mobile Client",
+    type: "Flutter Offline Queue",
+    status: "Simulated · Buffered",
+    mode: "Hive AES-256",
+    verifiedStudent: "Sample Student C",
+    confidence: "Queued Sync",
   },
   {
-    id: "NODE_27",
-    name: "Main Library Kiosk",
-    type: "RTSP Camera Feed",
-    status: "Active · Verifying",
-    latency: "235ms",
-    verifiedStudent: "Sophia Patel",
-    studentId: "STU-61298",
-    confidence: "99.8%",
-    isLive: true,
+    id: "DEMO_04",
+    name: "Sample RTSP Kiosk Feed",
+    type: "OpenCV Core Engine",
+    status: "Simulated · Standby",
+    mode: "CPU Fallback",
+    verifiedStudent: "Sample Student D",
+    confidence: "0.79 cosine",
   },
 ];
 
@@ -92,7 +83,7 @@ export function EdgeSection() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setPulseIndex((prev) => (prev + 1) % EDGE_NODES.length);
+      setPulseIndex((prev) => (prev + 1) % SAMPLE_NODES.length);
     }, 2400);
     return () => clearInterval(timer);
   }, []);
@@ -108,14 +99,13 @@ export function EdgeSection() {
             <Reveal direction="left">
               <p className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-accent">
                 <span className="h-px w-6 bg-accent/60" aria-hidden />
-                Decentralized Edge Fleet
+                Deployment &amp; Hardware Topology
               </p>
               <h2 className="mt-3 text-balance font-display text-[32px] font-medium leading-[1.04] tracking-[-0.028em] text-hi sm:text-[46px] lg:text-[58px]">
-                Every device is a gate. Every gate keeps running.
+                Run in the cloud, on campus LAN, or hybrid.
               </h2>
               <p className="mt-5 max-w-[560px] text-pretty text-[16px] sm:text-[19px] leading-[30.4px] tracking-[-0.015em] text-mid">
-                No single point of failure. If the campus backbone goes dark, turnstiles and cameras
-                verify against their local SQLite replica, queuing encrypted punches to sync on reconnect.
+                Offline mobile queuing keeps check-in capture resilient during short Wi-Fi drops, while campus-hosted Docker/local deployments allow full API and face recognition inside your institution&apos;s LAN.
               </p>
             </Reveal>
 
@@ -154,71 +144,71 @@ export function EdgeSection() {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-spotify opacity-80" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-spotify" />
                   </span>
-                  Live Fleet Telemetry
+                  Simulated Node Telemetry (Sample Preview)
                 </span>
-                <span>4 Nodes Polling</span>
+                <span>4 Sample Modes</span>
               </div>
             </Reveal>
 
-            {EDGE_NODES.map((node, i) => (
-              <Reveal key={node.id} delay={i * 0.08} direction="right" distance={20}>
-                <motion.div
-                  animate={{
-                    borderColor:
-                      pulseIndex === i ? "rgba(143, 139, 255, 0.45)" : "rgba(255, 255, 255, 0.08)",
-                    backgroundColor:
-                      pulseIndex === i ? "rgba(22, 22, 29, 0.95)" : "rgba(16, 16, 22, 0.6)",
-                  }}
-                  transition={{ duration: 0.4 }}
-                  className={`group relative flex flex-col justify-between gap-4 rounded-[22px] border p-5 sm:p-6 backdrop-blur-md transition-shadow duration-300 ${
-                    pulseIndex === i
-                      ? "shadow-[0_4px_30px_rgba(143,139,255,0.14)]"
-                      : "hover:border-[var(--hairline-strong)]"
-                  }`}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <span
-                        className={`h-2 w-2 rounded-full transition-all duration-300 ${
-                          pulseIndex === i ? "bg-spotify shadow-[0_0_8px_#1ed760]" : "bg-spotify/50"
+              {
+                SAMPLE_NODES.map((node, i) => (
+                  <Reveal key={node.id} delay={i * 0.08} direction="right" distance={20}>
+                    <motion.div
+                      animate={{
+                        borderColor:
+                          pulseIndex === i ? "rgba(143, 139, 255, 0.45)" : "rgba(255, 255, 255, 0.08)",
+                        backgroundColor:
+                          pulseIndex === i ? "rgba(22, 22, 29, 0.95)" : "rgba(16, 16, 22, 0.6)",
+                      }}
+                      transition={{ duration: 0.4 }}
+                      className={`group relative flex flex-col justify-between gap-4 rounded-[22px] border p-5 sm:p-6 backdrop-blur-md transition-shadow duration-300 ${pulseIndex === i
+                          ? "shadow-[0_4px_30px_rgba(143,139,255,0.14)]"
+                          : "hover:border-[var(--hairline-strong)]"
                         }`}
-                      />
-                      <span className="font-mono text-[11px] font-semibold text-hi">
-                        {node.id}
-                      </span>
-                      <span className="text-[14px] font-medium text-hi">
-                        {node.name}
-                      </span>
-                    </div>
-                    <span className="chip-bytune h-6 text-[10.5px] px-3 font-mono">
-                      {node.type}
-                    </span>
-                  </div>
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className={`h-2 w-2 rounded-full transition-all duration-300 ${pulseIndex === i ? "bg-spotify shadow-[0_0_8px_#1ed760]" : "bg-spotify/50"
+                              }`}
+                          />
+                          <span className="font-mono text-[11px] font-semibold text-hi">
+                            {node.id}
+                          </span>
+                          <span className="text-[14px] font-medium text-hi">
+                            {node.name}
+                          </span>
+                        </div>
+                        <span className="chip-bytune h-6 text-[10.5px] px-3 font-mono">
+                          {node.type}
+                        </span>
+                      </div>
 
-                  <div className="grid grid-cols-2 gap-4 border-t border-white/[0.06] pt-3 sm:grid-cols-4 font-mono text-[11px]">
-                    <div>
-                      <span className="text-faint block text-[9.5px] uppercase tracking-wider">Status</span>
-                      <span className="text-spotify font-medium">{node.status}</span>
-                    </div>
-                    <div>
-                      <span className="text-faint block text-[9.5px] uppercase tracking-wider">Latency</span>
-                      <span className="text-hi flex items-center gap-1">
-                        <Wifi className="h-3 w-3 text-spotify" />
-                        {node.latency}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-faint block text-[9.5px] uppercase tracking-wider">Last Subject</span>
-                      <span className="text-mid truncate block">{node.verifiedStudent}</span>
-                    </div>
-                    <div>
-                      <span className="text-faint block text-[9.5px] uppercase tracking-wider">Confidence</span>
-                      <span className="text-[#9fe0b6] font-semibold">{node.confidence}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              </Reveal>
-            ))}
+                      <div className="grid grid-cols-2 gap-4 border-t border-white/[0.06] pt-3 sm:grid-cols-4 font-mono text-[11px]">
+                        <div>
+                          <span className="text-faint block text-[9.5px] uppercase tracking-wider">Status</span>
+                          <span className="text-spotify font-medium">{node.status}</span>
+                        </div>
+                        <div>
+                          <span className="text-faint block text-[9.5px] uppercase tracking-wider">Runtime</span>
+                          <span className="text-hi flex items-center gap-1">
+                            <Wifi className="h-3 w-3 text-spotify" />
+                            {node.mode}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-faint block text-[9.5px] uppercase tracking-wider">Sample Subject</span>
+                          <span className="text-mid truncate block">{node.verifiedStudent}</span>
+                        </div>
+                        <div>
+                          <span className="text-faint block text-[9.5px] uppercase tracking-wider">Result</span>
+                          <span className="text-[#9fe0b6] font-semibold">{node.confidence}</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </Reveal>
+                ))
+              }
           </div>
         </div>
       </div>

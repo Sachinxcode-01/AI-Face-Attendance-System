@@ -10,8 +10,8 @@ interface GitHubButtonProps {
 }
 
 export function GitHubButton({
-  href = COMPANY_CONTACT.github ?? "https://github.com/rishiteja21/ByTune",
-  title = "Star ByTune on GitHub",
+  href = COMPANY_CONTACT.github,
+  title = "View SmartFace on GitHub",
   className = "",
 }: GitHubButtonProps) {
   const btnRef = useRef<HTMLAnchorElement>(null);

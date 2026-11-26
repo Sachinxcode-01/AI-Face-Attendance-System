@@ -60,31 +60,33 @@ export default function OgImage() {
               color: "#f5f5f8",
             }}
           >
-            <span>Every face. Every gate.</span>
+            <span>Verifiable Attendance.</span>
             <span style={{ color: "#8f8bff", fontWeight: 700 }}>
-              One campus.
+              Built for Campuses.
             </span>
           </div>
           <div style={{ display: "flex", fontSize: "22px", color: "#b6b6c2", marginTop: "22px" }}>
-            Touchless biometric attendance · sub-300ms verification · 99.8% accuracy
+            InsightFace ArcFace 512-D · 20s HMAC-SHA256 QR · 5 Role Portals
           </div>
         </div>
 
         <div style={{ display: "flex", gap: "14px", fontSize: "16px" }}>
-          {["ArcFace v2.4", "Anti-proxy QR", "Edge-first"].map((chip) => (
-            <span
-              key={chip}
-              style={{
-                border: "1px solid rgba(255,255,255,0.14)",
-                borderRadius: "6px",
-                padding: "10px 18px",
-                color: "#b6b6c2",
-                background: "rgba(255,255,255,0.04)",
-              }}
-            >
-              {chip}
-            </span>
-          ))}
+            {
+              ["SmartFace v2.0", "ArcFace buffalo_l", "MIT Open Source"].map((chip) => (
+                <span
+                  key={chip}
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    borderRadius: "6px",
+                    padding: "10px 18px",
+                    color: "#b6b6c2",
+                    background: "rgba(255,255,255,0.04)",
+                  }}
+                >
+                  {chip}
+                </span>
+              ))
+            }
         </div>
       </div>
     ),

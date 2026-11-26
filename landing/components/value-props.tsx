@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Scan, ShieldCheck, Zap, Database } from "lucide-react";
 import { Reveal } from "./ui/reveal";
 import { SectionHeading } from "./ui/section-heading";
@@ -19,33 +18,33 @@ const VALUES: Value[] = [
   {
     num: "01",
     icon: Scan,
-    title: "Recognition that never guesses",
-    body: "ArcFace v2.4 compares 512-dimension embeddings, not photos. Confidence scores ship with every record, so weak matches surface before they become disputes.",
-    meta: "99.8% · cosine 0.94",
+    title: "Calibrated vector matching",
+    body: "InsightFace ArcFace (buffalo_l, ResNet-50) compares 512-dimension normalized embeddings against a configurable cosine threshold (default 0.60) and logs confidence scores for auditability.",
+    meta: "512-D · cosine ≥0.60",
     accent: "rgba(143, 139, 255, 0.2)",
   },
   {
     num: "02",
     icon: Zap,
-    title: "Tokens that die in 30 seconds",
-    body: "Session codes rotate on a drift window and are signed to the live class. A screenshot forwarded to the group chat is already dead on arrival.",
-    meta: "Anti-proxy · class-scoped",
+    title: "20-second rotating session tokens",
+    body: "Classroom QR codes rotate every 20 seconds (+5s clock-skew tolerance) with HMAC-SHA256 signatures, duplicate-checkin locks, and optional classroom geofencing to deter forwarded screenshots.",
+    meta: "HMAC-SHA256 · 20s window",
     accent: "rgba(111, 216, 255, 0.2)",
   },
   {
     num: "03",
     icon: Database,
-    title: "Edge-first, offline-proof",
-    body: "Verification runs on the gate. If the uplink drops, check-ins queue locally and reconcile automatically: nothing lost, nothing double-counted.",
-    meta: "Local queue · auto-reconcile",
+    title: "Encrypted mobile offline queue",
+    body: "The Flutter mobile app queues up to 500 check-in records in an AES-256 encrypted Hive store signed with HMAC-SHA256 and syncs automatically when connectivity returns.",
+    meta: "Hive AES-256 · auto-sync",
     accent: "rgba(30, 215, 96, 0.2)",
   },
   {
     num: "04",
     icon: ShieldCheck,
-    title: "Privacy by default",
-    body: "Raw frames are used once, then discarded. What persists is the embedding and the record: with admin deletion and a full audit trail behind it.",
-    meta: "Embeddings only · audit logged",
+    title: "Consent & template deletion controls",
+    body: "Live API verification processes frames in memory without saving raw photos to disk. Consent timestamps, self-service template deletion, and manual/QR fallbacks are built in.",
+    meta: "Opt-in · audit logged",
     accent: "rgba(243, 198, 79, 0.2)",
   },
 ];
@@ -58,19 +57,19 @@ export function ValueProps() {
     >
       <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Biometric Guarantees"
-          title="Built for the realities of a campus, not a lab."
-          description="Four guarantees every administrator asks for on the first call, and gets in writing."
+          eyebrow="Core Engineering Guarantees"
+          title="Built for the realities of a campus, not hype."
+          description="Four verifiable architectural capabilities administrators review before piloting SmartFace."
         />
 
         <div className="mt-14 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          {/* Visual Showcase Card with Holographic HUD */}
+          {/* Visual Showcase Card */}
           <Reveal direction="left" duration={0.75}>
             <div className="group relative overflow-hidden card-bytune p-3 shadow-2xl transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
               <div className="relative overflow-hidden rounded-[16px]">
                 <img
                   src="/campus-realities.jpg"
-                  alt="SmartFace touchless campus speed gates and biometric kiosks"
+                  alt="SmartFace campus gate and classroom kiosk deployment concept"
                   className="w-full object-cover aspect-[16/10] transition-transform duration-700 group-hover:scale-105"
                 />
                 <div
@@ -78,24 +77,22 @@ export function ValueProps() {
                   className="absolute inset-0 bg-gradient-to-t from-[#0a0a0e]/90 via-transparent to-transparent pointer-events-none"
                 />
 
-                {/* Laser scan line over the campus image on hover */}
                 <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity animate-laser-scan pointer-events-none" />
 
-                {/* Live gate badge overlay */}
                 <div className="absolute top-4 left-4 flex items-center gap-2 rounded-full border border-white/10 bg-[#101016]/90 px-3 py-1 font-mono text-[10px] uppercase tracking-wider backdrop-blur-md">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-spotify opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-spotify" />
                   </span>
-                  <span className="text-hi font-medium">Turnstile Bank 03 · Online</span>
+                  <span className="text-hi font-medium">Illustrative Gate View</span>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--hairline)] px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-mid">
-                <span>SmartFace Deployment · Live Campus Gates</span>
+                <span>SmartFace v2.0 · Campus Deployment Concept</span>
                 <span className="text-[#9fe0b6] flex items-center gap-1.5 font-medium">
                   <span className="h-1.5 w-1.5 rounded-full bg-spotify animate-pulse" />
-                  ArcFace ONNX · Active Fleet
+                  InsightFace ArcFace (buffalo_l)
                 </span>
               </div>
             </div>
@@ -118,7 +115,7 @@ export function ValueProps() {
                           <Icon className="h-3.5 w-3.5" />
                         </span>
                         <span className="font-mono text-[11px] uppercase tracking-wider text-accent font-semibold">
-                          Guarantee {val.num}
+                          Capability {val.num}
                         </span>
                       </div>
                       <span className="chip-bytune h-6 text-[10.5px] px-3 font-mono">

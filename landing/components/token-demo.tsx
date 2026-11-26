@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, Copy, QrCode, ShieldCheck, Sparkles } from "lucide-react";
+import { Check, Copy, ShieldCheck } from "lucide-react";
 import { Reveal } from "./ui/reveal";
 import { SpotlightCard } from "./ui/spotlight-card";
 
-const TOKEN_WINDOW = 30; // seconds
+const TOKEN_WINDOW = 20; // seconds (matches backend/api/src/utils/attendanceQr.js VALIDITY_MS = 20_000)
 
 function useTokenClock() {
   const [seconds, setSeconds] = useState(TOKEN_WINDOW);
@@ -53,32 +53,29 @@ export function TokenDemo() {
         <Reveal direction="left" duration={0.75}>
           <p className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-accent">
             <span className="h-px w-6 bg-accent/60" aria-hidden />
-            Anti-Proxy Cryptography
+            Anti-Proxy Cryptography · Simulator
           </p>
           <h2 className="mt-3 text-balance font-display text-[32px] font-medium leading-[1.04] tracking-[-0.028em] text-hi sm:text-[46px] lg:text-[58px]">
-            Every code, right on time.
+            Short-lived tokens, verified in real time.
           </h2>
           <p className="mt-5 max-w-[560px] text-pretty text-[16px] sm:text-[19px] leading-[30.4px] tracking-[-0.015em] text-mid">
-            This is the token your campus sees. It rotates on a 30-second drift window, it is signed
-            to this exact class, and by the time a screenshot reaches a group chat, it is already
-            dead. Watch it burn.
+            This interactive demo illustrates SmartFace&apos;s session QR lifecycle: tokens carry a 20-second validity window (+5s clock-skew tolerance), timing-safe HMAC-SHA256 signature, duplicate check-in lock, and optional Haversine classroom geofence to deter screenshot sharing.
           </p>
           <div className="mt-8 flex flex-wrap gap-2.5">
             <span className="chip-bytune font-mono text-[11px]">
-              Class-scoped signature
+              Session-scoped HMAC-SHA256
             </span>
             <span className="chip-bytune font-mono text-[11px]">
-              30s drift window
+              20s validity (+5s skew)
             </span>
             <span className="chip-bytune font-mono text-[11px]">
-              HMAC-SHA256 verified
+              Unique session check-in lock
             </span>
           </div>
         </Reveal>
 
         <Reveal delay={0.15} direction="right" duration={0.8}>
           <div className="relative mx-auto w-full max-w-[440px]">
-            {/* Radial glow */}
             <div
               aria-hidden
               className="absolute inset-0 -inset-x-6 -inset-y-6 rounded-[36px] pointer-events-none opacity-80 card-glow-bg animate-glow-breathe"
@@ -95,17 +92,16 @@ export function TokenDemo() {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-spotify opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-spotify" />
                   </span>
-                  Live Token Engine
+                  Simulated Token Demo
                 </span>
                 <span className="chip-bytune h-6 text-[10px] text-accent border-accent/20 bg-accent/5 font-semibold">
-                  Rotating HMAC
+                  HMAC-SHA256
                 </span>
               </div>
 
-              {/* Central Token Display with Keyframe Transition */}
               <div className="my-8 text-center">
                 <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-faint">
-                  Active Session Token
+                  Sample Token Window
                 </span>
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -124,9 +120,8 @@ export function TokenDemo() {
                   <p className="text-xs text-mid">
                     Valid for:{" "}
                     <span
-                      className={`font-mono font-semibold tabular-nums ${
-                        seconds <= 5 ? "text-amber animate-pulse" : "text-spotify"
-                      }`}
+                      className={`font-mono font-semibold tabular-nums ${seconds <= 5 ? "text-amber animate-pulse" : "text-spotify"
+                        }`}
                     >
                       {seconds}s
                     </span>
@@ -135,7 +130,7 @@ export function TokenDemo() {
                     type="button"
                     onClick={handleCopy}
                     className="chip-bytune h-6 text-[10.5px] px-2.5 gap-1 hover:text-hi active:scale-95"
-                    title="Copy token code"
+                    title="Copy sample token"
                   >
                     {copied ? (
                       <>
@@ -152,10 +147,9 @@ export function TokenDemo() {
                 </div>
               </div>
 
-              {/* Progress Slider */}
               <div className="space-y-2">
                 <div className="flex justify-between font-mono text-[10px] text-faint">
-                  <span>Drift Window</span>
+                  <span>20s Validity Window</span>
                   <span>{Math.round(fraction * 100)}% remaining</span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-white/10 p-[1px]">
@@ -177,7 +171,7 @@ export function TokenDemo() {
                 <span>Next cycle in: {seconds}s</span>
                 <span className="text-[#9fe0b6] flex items-center gap-1">
                   <ShieldCheck className="h-3 w-3 text-spotify" />
-                  Anti-replay Armed
+                  Timing-safe check
                 </span>
               </div>
             </SpotlightCard>

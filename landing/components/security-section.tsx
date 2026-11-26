@@ -4,17 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
-  CheckCircle2,
-  Cpu,
-  Database,
   Fingerprint,
-  Lock,
   Radar,
-  Scale,
-  Shield,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
+import { PRODUCT_SPECS } from "@/lib/content";
 import { Reveal } from "./ui/reveal";
 import { SectionHeading } from "./ui/section-heading";
 import { SpotlightCard } from "./ui/spotlight-card";
@@ -42,13 +36,12 @@ export function SecuritySection({ onOpenDemo, onOpenPilot }: SecuritySectionProp
       <div className="relative mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
           eyebrow="Biometric Data Governance"
-          title="Zero Raw Photos Stored. Mathematical Vectors Only."
-          description="Face recognition without the privacy liability. SmartFace translates landmarks into irreversible 512-dimension mathematical embeddings—purging camera frames from memory within 180ms."
+          title="Embeddings for Live Verification. Explicit Controls for Everything Else."
+          description="Live verification processes uploads in memory and clears the buffer after extracting a 512-D embedding—while protecting stored biometric templates, batch datasets, and security logs with access control and audit trails."
         />
 
-        {/* ByTune Interactive Visual Matrix & Features */}
         <div className="mt-14 grid gap-6 lg:grid-cols-12 items-stretch">
-          {/* Card 1: Vector Irreversibility Engine */}
+          {/* Card 1: Vector Lifecycle */}
           <Reveal className="lg:col-span-7" direction="up" delay={0.05}>
             <SpotlightCard
               spotlightColor="rgba(143, 139, 255, 0.22)"
@@ -58,22 +51,21 @@ export function SecuritySection({ onOpenDemo, onOpenPilot }: SecuritySectionProp
                 <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
                   <span className="font-mono text-[10.5px] uppercase tracking-wider text-accent font-semibold flex items-center gap-2">
                     <Fingerprint className="h-3.5 w-3.5 text-accent" />
-                    ArcFace v2.4 ResNet100 INT8
+                    {PRODUCT_SPECS.aiEngine} · ResNet-50
                   </span>
                   <span className="font-mono text-[10px] uppercase text-spotify bg-spotify/10 border border-spotify/20 px-2.5 py-0.5 rounded-full">
-                    Irreversible Projection
+                    512-D Template Storage
                   </span>
                 </div>
 
                 <h3 className="mt-4 font-display text-2xl font-medium tracking-tight text-hi">
-                  Mathematical Embeddings Replace Physical Photos
+                  How Biometric Images &amp; Vectors Are Handled
                 </h3>
 
                 <p className="mt-2 text-[14px] leading-relaxed text-mid">
-                  During enrollment, the camera frame exists in volatile RAM for only ~180 milliseconds. Once landmark vectors are extracted, the photo is permanently purged. Reconstructing a human face from a 512-dim cosine vector is mathematically impossible.
+                  When verifying via the API (`/v1/face/verify`), uploaded frames stay in volatile memory and `image_bytes` is cleared in a `finally` block. Stored `BiometricProfile` records hold 512-D normalized float vectors—not anonymous data, and still governed as sensitive biometrics. Legacy batch training (`data/dataset/`) and local intruder snapshots (`data/Intruders/`) persist images only when an institution enables those local workflows.
                 </p>
 
-                {/* Animated 64-vector matrix visual */}
                 <div
                   aria-hidden
                   className="mt-6 grid grid-cols-[repeat(16,minmax(0,1fr))] gap-1.5 p-3 rounded-xl border border-white/[0.06] bg-black/50"
@@ -98,13 +90,13 @@ export function SecuritySection({ onOpenDemo, onOpenPilot }: SecuritySectionProp
               </div>
 
               <div className="mt-6 pt-4 border-t border-white/[0.08] flex items-center justify-between text-xs font-mono text-faint">
-                <span>Vector Dimension: 512 float32</span>
-                <span className="text-spotify">RAM Lifetime: 180ms</span>
+                <span>Vector Dimension: 512 normalized floats</span>
+                <span className="text-spotify">User Deletion: DELETE /auth/biometric</span>
               </div>
             </SpotlightCard>
           </Reveal>
 
-          {/* Card 2: Statutory Compliance & Anti-Spoofing */}
+          {/* Card 2: Governance & Known Limits */}
           <Reveal className="lg:col-span-5" direction="up" delay={0.12}>
             <div className="space-y-4 h-full flex flex-col justify-between">
                 <div className="p-6 rounded-[22px] border border-white/10 bg-surface/85 backdrop-blur-md space-y-3 transition-all duration-300 hover:border-white/20 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(30,215,96,0.08)]">
@@ -115,49 +107,49 @@ export function SecuritySection({ onOpenDemo, onOpenPilot }: SecuritySectionProp
                     </span>
                     <ShieldCheck className="h-4 w-4" />
                     <span className="font-mono text-[11px] uppercase tracking-wider font-semibold">
-                      DPDP Act 2023 & FERPA Ready
+                      Consent, Alternatives &amp; Data Export
                     </span>
                   </div>
                   <h4 className="font-display text-lg font-medium text-hi">
-                    Institutional Sovereign Data Governance
+                    Institutional Governance Controls
                   </h4>
                   <p className="text-[13px] text-mid leading-relaxed">
-                    Meets statutory requirements for student biometric privacy. Admins retain full autonomy to purge profiles with instant one-click deletion and verifiable audit timestamps.
+                    Enrollment records explicit opt-in consent. Students can withdraw consent and delete their biometric template anytime, export account records, dispute errors, or check in via non-biometric rotating QR or faculty override. Deploying institutions must complete their own legal/DPIA review (e.g., DPDP Act or FERPA) before rollout.
                   </p>
                 </div>
 
-                  <div className="p-6 rounded-[22px] border border-white/10 bg-surface/85 backdrop-blur-md space-y-3 transition-all duration-300 hover:border-white/20 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(111,216,255,0.08)]">
-                    <div className="flex items-center gap-2 text-accent2">
-                      <Radar className="h-4 w-4 animate-spin-slow" />
-                      <span className="font-mono text-[11px] uppercase tracking-wider font-semibold">
-                        Passive 3D Liveness Detection
-                      </span>
-                    </div>
-                    <h4 className="font-display text-lg font-medium text-hi">
-                      Presentation Attack Resistant
-                    </h4>
-                    <p className="text-[13px] text-mid leading-relaxed">
-                      Evaluates depth konturs and screen pixel moiré patterns. Printed paper photographs, smartphone replays, and silicone masks are instantly rejected at the gate.
-                    </p>
-                    <div className="pt-1 flex items-center justify-between font-mono text-[11px] text-faint">
-                      <span>FAR: &lt;0.001%</span>
-                      <span className="text-emerald-400 font-medium">FRR: &lt;0.2%</span>
-                    </div>
+                <div className="p-6 rounded-[22px] border border-white/10 bg-surface/85 backdrop-blur-md space-y-3 transition-all duration-300 hover:border-white/20 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(111,216,255,0.08)]">
+                  <div className="flex items-center gap-2 text-accent2">
+                    <Radar className="h-4 w-4 animate-spin-slow" />
+                    <span className="font-mono text-[11px] uppercase tracking-wider font-semibold">
+                      Anti-Spoofing &amp; Known Limitations
+                    </span>
                   </div>
-
-                  <div className="pt-2">
-                    <Link
-                      href="/security"
-                      className="w-full h-11 rounded-full border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 text-hi text-[13.5px] font-semibold flex items-center justify-center gap-2 transition cursor-pointer shadow-sm group"
-                    >
-                      <span>Explore Full Security Architecture & DPIA Docs</span>
-                      <ArrowRight className="h-4 w-4 text-accent group-hover:translate-x-1 transition-transform" />
-                    </Link>
+                  <h4 className="font-display text-lg font-medium text-hi">
+                    Defense-in-Depth Without Absolute Claims
+                  </h4>
+                  <p className="text-[13px] text-mid leading-relaxed">
+                    Core verification enforces single-face checks, cosine threshold gating (default 0.60), per-user failure cooldowns, and 20s HMAC QR tokens. Current software release is not ISO/IEC 30107-3 PAD certified; high-security gates should pair cameras with physical supervision or optional IR/depth hardware.
+                  </p>
+                  <div className="pt-1 flex items-center justify-between font-mono text-[11px] text-faint">
+                    <span>Auth: 5 req / 15m</span>
+                    <span className="text-emerald-400 font-medium">AI Verify: 15 req / min</span>
                   </div>
                 </div>
-              </Reveal>
-            </div>
+
+          <div className="pt-2">
+            <Link
+              href="/security"
+              className="w-full h-11 rounded-full border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 text-hi text-[13.5px] font-semibold flex items-center justify-center gap-2 transition cursor-pointer shadow-sm group"
+            >
+              <span>Explore Security Architecture &amp; Controls</span>
+              <ArrowRight className="h-4 w-4 text-accent group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
-    </section>
+      </Reveal>
+    </div>
+      </div >
+    </section >
   );
 }

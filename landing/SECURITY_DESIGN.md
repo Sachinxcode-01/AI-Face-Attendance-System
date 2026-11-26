@@ -78,16 +78,16 @@ A 64-node visual matrix representing mathematical float32 normalized vectors wit
 
 ---
 
-## 4. 🛡️ Statutory Copy Frameworks
+## 4. 🛡️ Verified Security & Governance Copy Frameworks
 
-1. **Zero-Photo Storage Guarantee**:
-   > *"Raw facial frames are converted into a 512-dimension mathematical vector in volatile memory (~180ms) and immediately discarded. No photograph is ever written to disk or database."*
+1. **In-Memory Verification Frame Handling**:
+   > *"Verification frames sent to `/v1/face/verify` and `/v1/face/enroll` are decoded in volatile memory to compute a 512-dimensional ArcFace vector and explicitly released (`del image_bytes`). Note that separate administrative training (`data/dataset/`), avatar uploads (`backend/data/avatars/`), and legacy intruder alerts (`data/Intruders/`) persist image files when those workflows are enabled."*
 
-2. **Irreversible Vector Mathematics**:
-   > *"A 512-dim embedding is a one-way mathematical projection. It is mathematically impossible to reconstruct a human face from a cosine vector."*
+2. **512-Dimensional Cosine Matching**:
+   > *"InsightFace ArcFace (`buffalo_l`, ResNet-50) generates L2-normalized 512-float vectors matched by cosine similarity (default threshold `0.60`, configurable per institution). Because biometric templates can carry sensitivity and inversion risks under research models, SmartFace treats embeddings as regulated biometric personal data with RBAC and explicit deletion controls."*
 
-3. **Anti-Spoofing & Liveness**:
-   > *"Passive 3D liveness detection evaluates surface specular reflection, screen pixel moiré, and depth contours to neutralize printed photos, 4K screen replays, and silicone masks."*
+3. **Multi-Factor Anti-Proxy Controls & Limits**:
+   > *"Attendance check-ins combine face matching (minimum cosine threshold), 20-second rotating HMAC-SHA256 QR tokens verified with `crypto.timingSafeEqual` (plus 5s clock-skew tolerance), optional classroom geofencing (`100m` default), rate limiting (`15/min` on AI verify, `2 min` cooldown after 3 failures), and server-side check-in cooldowns. Active liveness is client-assisted; dedicated IR/3D anti-spoofing hardware is required for high-assurance resistance against printed photos or screen replays."*
 
-4. **Regulatory Alignment**:
-   > *"Full statutory alignment with India's Digital Personal Data Protection (DPDP) Act 2023, US Family Educational Rights and Privacy Act (FERPA), and ISO/IEC 27001 security standards."*
+4. **Compliance Posture**:
+   > *"SmartFace implements technical controls designed to support institutional programs under India's DPDP Act, FERPA, and security hardening aligned with ISO/IEC 27001 controls (self-assessed). SmartFace has not completed third-party SOC 2 Type II, ISO/IEC 27001, or ISO/IEC 30107-3 PAD audits; institutions must complete legal and DPDP/FERPA reviews prior to production deployment."*

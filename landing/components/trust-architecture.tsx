@@ -1,51 +1,69 @@
 "use client";
 
-import { motion } from "framer-motion";
-import {
-  Activity,
-  ArrowRight,
-  Camera,
-  CheckCircle2,
-  Cpu,
-  Database,
-  Globe,
-  Layers,
-  Lock,
-  Network,
-  Radio,
-  Server,
-  Shield,
-  ShieldCheck,
-  Terminal,
-  Zap,
-} from "lucide-react";
+import { Camera, CheckCircle2, Cpu, Server } from "lucide-react";
+import { FEATURE_AVAILABILITY_MATRIX, PRODUCT_SPECS } from "@/lib/content";
 import { Reveal } from "./ui/reveal";
 import { SectionHeading } from "./ui/section-heading";
 import { SpotlightCard } from "./ui/spotlight-card";
 
 export function TrustArchitecture() {
-  const stats = [
-    { value: "99.8%", label: "Recognition Precision", sub: "ArcFace cosine distance >= 0.94" },
-    { value: "1.28M+", label: "Attendances Processed", sub: "Across collegiate client fleets" },
-    { value: "99.98%", label: "System Uptime SLA", sub: "Edge-resilient architecture" },
-    { value: "184ms", label: "Edge Inference Latency", sub: "INT8 on-device ONNX runtime" },
+  const specs = [
+    { value: "512-D", label: "ArcFace Vector Size", sub: `${PRODUCT_SPECS.aiEngine} · ResNet-50` },
+    { value: "0.60", label: "Default Cosine Cutoff", sub: "Configurable 0.60–0.85 policy" },
+    { value: "20s", label: "HMAC QR Token Window", sub: "SHA-256 + 5s clock-skew tolerance" },
+    { value: "5 Roles", label: "RBAC Portal Architecture", sub: "Student, Teacher, Admin, Parent, Super Admin" },
   ];
 
-  const badges = [
-    { name: "DPDP Act 2023", desc: "India Biometric Privacy Aligned" },
-    { name: "FERPA Aligned", desc: "US Educational Records Safe" },
-    { name: "ISO 27001 Aligned", desc: "Information Security Controls" },
-    { name: "Zero-Photo Storage", desc: "512-Dim Vector Math Only" },
-    { name: "AES-256 Encrypted", desc: "At Rest & TLS 1.3 In Transit" },
-    { name: "Passive 3D Liveness", desc: "Presentation Attack Resistant" },
+  const controls = [
+    { name: "Ephemeral Live Frames", desc: "Live verify uploads cleared from RAM" },
+    { name: "TLS + Bcrypt (12)", desc: "15m JWT & httpOnly refresh cookies" },
+    { name: "Rate Limited APIs", desc: "5/15m auth · 60/m API · 15/m AI verify" },
+    { name: "Consent & Erasure", desc: "Opt-in toggle & /auth/biometric delete" },
+    { name: "Audit Trail", desc: "Append-only AttendanceAuditLog & SecurityLog" },
+    { name: "MIT Open Source", desc: "Self-hostable Express + FastAPI stack" },
   ];
 
   const techStack = [
-    { category: "Biometrics & AI", items: ["ArcFace v2.4 (ResNet100)", "RetinaFace 68-Landmark Alignment", "INT8 Quantized Weights"] },
-    { category: "Edge Inference", items: ["ONNX Runtime (x86 & ARM64)", "SQLite WAL Local Queue Buffer", "Sub-300ms Execution"] },
-    { category: "Cloud & APIs", items: ["FastAPI Python Async Microservices", "PostgreSQL pgvector HNSW Index", "Next.js 15 App Router"] },
-    { category: "Security & Anti-Proxy", items: ["HMAC-SHA256 30s Token Rotation", "AES-256 Vector Encryption", "Append-Only Audit Chain"] },
+    {
+      category: "Biometrics & AI",
+      items: [
+        "InsightFace ArcFace (buffalo_l)",
+        "ResNet-50 + RetinaFace detection",
+        "ONNX Runtime (CPU or CUDA GPU)",
+      ],
+    },
+    {
+      category: "Clients & Mobile",
+      items: [
+        "Next.js 15 App Router portals",
+        "Flutter Android & iOS client",
+        "AES-256 Hive offline queue (mobile)",
+      ],
+    },
+    {
+      category: "Backend & Storage",
+      items: [
+        "Node.js Express REST & WebSockets",
+        "FastAPI Python AI microservice",
+        "MongoDB + optional Supabase pgvector",
+      ],
+    },
+    {
+      category: "Security & Controls",
+      items: [
+        "HMAC-SHA256 20s rotating QR",
+        "Haversine classroom geofencing",
+        "NoSQL key sanitizer & Helmet headers",
+      ],
+    },
   ];
+
+  const statusTone = (status: string) => {
+    if (status === "Operational") return "text-spotify border-spotify/30 bg-spotify/10";
+    if (status === "Pilot-Configured") return "text-accent2 border-accent2/30 bg-accent2/10";
+    if (status === "Beta") return "text-amber border-amber/30 bg-amber/10";
+    return "text-mid border-white/15 bg-white/[0.04]";
+  };
 
   return (
     <section
@@ -54,191 +72,236 @@ export function TrustArchitecture() {
     >
       <div className="relative mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Platform Trust & Infrastructure"
-          title="Engineered for Institutional Reliability"
-          description="High-throughput edge intelligence meets defense-grade privacy. Built to process thousands of student check-ins simultaneously without cloud latency bottlenecks."
+          eyebrow="Verified Technical Specifications"
+          title="Engineered for Verifiable Campus Attendance"
+          description="Every architecture detail below reflects the actual SmartFace v2.0 codebase—separating implemented controls, pilot integrations, and optional deployment hardware."
         />
 
-        {/* 1. Live Platform Statistics */}
+        {/* 1. Core Verified Technical Metrics */}
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat, idx) => (
-            <Reveal key={stat.label} delay={idx * 0.08} direction="up">
-              <SpotlightCard
-                spotlightColor="rgba(143, 139, 255, 0.22)"
-                className="p-6 rounded-[22px] border border-white/10 bg-surface/90"
-              >
-                <span className="font-mono text-[10.5px] uppercase tracking-wider text-faint block">
-                  {stat.label}
-                </span>
-                <div className="mt-2 font-display text-4xl font-semibold tracking-tight text-hi">
-                  {stat.value}
-                </div>
-                <p className="mt-1 font-mono text-[11px] text-mid/80">{stat.sub}</p>
-              </SpotlightCard>
-            </Reveal>
-          ))}
+            {
+              specs.map((stat, idx) => (
+                <Reveal key={stat.label} delay={idx * 0.08} direction="up">
+                  <SpotlightCard
+                    spotlightColor="rgba(143, 139, 255, 0.22)"
+                    className="p-6 rounded-[22px] border border-white/10 bg-surface/90"
+                  >
+                    <span className="font-mono text-[10.5px] uppercase tracking-wider text-faint block">
+                      {stat.label}
+                    </span>
+                    <div className="mt-2 font-display text-4xl font-semibold tracking-tight text-hi">
+                      {stat.value}
+                    </div>
+                    <p className="mt-1 font-mono text-[11px] text-mid/80">{stat.sub}</p>
+                  </SpotlightCard>
+                </Reveal>
+              ))
+            }
         </div>
 
-        {/* 2. Security Badges Strip */}
+        {/* 2. Implemented Controls Strip */}
         <div className="mt-14 card-bytune rounded-[22px] p-6 sm:p-8 border border-white/10 bg-[#0e0e14]/90 backdrop-blur-xl">
           <div className="text-center max-w-xl mx-auto mb-6">
             <span className="font-mono text-[10px] uppercase tracking-widest text-spotify font-semibold">
-              Statutory Compliance & Security Standards
+              Implemented Technical &amp; Privacy Controls
             </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {badges.map((b, i) => (
-              <div
-                key={i}
-                className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] text-center space-y-1"
-              >
-                <CheckCircle2 className="h-4 w-4 text-spotify mx-auto mb-1" />
-                <h4 className="font-display text-[12.5px] font-semibold text-hi">{b.name}</h4>
-                <p className="font-mono text-[9.5px] text-faint">{b.desc}</p>
-              </div>
-            ))}
+              {
+                controls.map((b, i) => (
+                  <div
+                    key={i}
+                    className="p-3.5 rounded-xl border border-white/[0.06] bg-white/[0.02] text-center space-y-1"
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-spotify mx-auto mb-1" />
+                    <h4 className="font-display text-[12.5px] font-semibold text-hi">{b.name}</h4>
+                    <p className="font-mono text-[9.5px] text-faint">{b.desc}</p>
+                  </div>
+                ))
+              }
           </div>
         </div>
 
-        {/* 3. Deployment Architecture Diagram (ByTune Style) */}
+        {/* 3. Deployment Architecture Diagram */}
         <div className="mt-20">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="font-mono text-[11px] uppercase tracking-widest text-accent font-semibold">
-              Edge-First Hybrid Topology
+              Distributed 3-Layer Topology
             </span>
             <h3 className="mt-2 font-display text-2xl sm:text-3xl font-medium text-hi">
-              Hardware-Agnostic Deployment Architecture
+              Flexible Client, AI Service &amp; Persistence Architecture
             </h3>
             <p className="mt-2 text-[14px] text-mid">
-              Runs smoothly on your existing campus CCTV streams, USB webcams, or tablets without turnkey hardware vendor monopolies.
+              Deploy in the cloud or on a campus LAN using standard USB webcams, supported IP/RTSP streams, web browsers, or the Flutter mobile client.
             </p>
           </div>
 
           <div className="card-bytune rounded-[24px] p-6 sm:p-10 border border-white/10 bg-surface/95 shadow-2xl relative overflow-hidden">
             <div aria-hidden className="absolute inset-0 bg-grid opacity-15 pointer-events-none" />
 
-            {/* Architecture Multi-Tier Layout */}
             <div className="relative z-10 grid gap-6 lg:grid-cols-3 items-stretch">
-              {/* Tier 1: Campus Gate Hardware */}
+              {/* Layer 1 */}
               <div className="p-6 rounded-2xl border border-white/10 bg-black/40 space-y-4 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
                     <span className="font-mono text-[11px] uppercase tracking-wider text-faint font-semibold">
-                      Layer 1 · Campus Periphery
+                      Layer 1 · Capture &amp; Portals
                     </span>
                     <Camera className="h-4 w-4 text-accent2" />
                   </div>
                   <h4 className="mt-3 font-display text-lg font-medium text-hi">
-                    Gate & Classroom Terminals
+                    Web, Mobile &amp; Kiosk Clients
                   </h4>
                   <p className="mt-1 text-[13px] text-mid leading-relaxed">
-                    Flexible capture devices operating at campus gates, department turnstiles, and lecture podiums.
+                    Role-based Next.js web portals, Flutter Android/iOS apps, and local OpenCV/Streamlit kiosks.
                   </p>
 
                   <ul className="mt-4 space-y-2 text-[12.5px] font-mono text-mid">
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-accent2" />
-                      Existing RTSP IP Cameras
+                      USB Webcams &amp; RTSP IP Feeds
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-accent2" />
-                      Touchless Tablet Kiosks
+                      Flutter Encrypted Hive Offline Queue
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-accent2" />
-                      Teacher Podium Rotating QRs
+                      Teacher 20s Rotating QR Projector
                     </li>
                   </ul>
                 </div>
 
                 <div className="pt-4 border-t border-white/[0.08] text-[11px] font-mono text-spotify">
-                  No proprietary turnstile locks
+                  Hardware-flexible capture endpoints
                 </div>
               </div>
 
-              {/* Tier 2: Local Edge Inference Node */}
+              {/* Layer 2 */}
               <div className="p-6 rounded-2xl border border-accent/40 bg-[rgba(16,16,28,0.9)] space-y-4 shadow-[0_0_24px_rgba(143,139,255,0.15)] flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
                     <span className="font-mono text-[11px] uppercase tracking-wider text-accent font-semibold">
-                      Layer 2 · Campus Local Edge
+                      Layer 2 · API &amp; AI Services
                     </span>
                     <Cpu className="h-4 w-4 text-accent" />
                   </div>
                   <h4 className="mt-3 font-display text-lg font-medium text-hi">
-                    SmartFace Edge Node Hub
+                    Express Gateway &amp; FastAPI AI
                   </h4>
                   <p className="mt-1 text-[13px] text-mid leading-relaxed">
-                    Executes INT8 ONNX ArcFace inference on local mini-PCs or GPU nodes inside your campus network.
+                    Node.js Express handles auth, RBAC, QR signing, and attendance rules; FastAPI executes InsightFace ONNX matching.
                   </p>
 
                   <ul className="mt-4 space-y-2 text-[12.5px] font-mono text-mid">
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                      Sub-300ms Vector Embedding
+                      512-D Cosine Similarity (≥0.60)
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                      Offline SQLite WAL Buffer
+                      X-Internal-Token &amp; Rate Limiting
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                      Zero Raw Photos Retained
+                      In-Memory Frame Cleanup on Verify
                     </li>
                   </ul>
                 </div>
 
                 <div className="pt-4 border-t border-white/[0.08] text-[11px] font-mono text-accent">
-                  Works 100% during internet outages
+                  Supports CUDA GPU or CPU fallback
                 </div>
               </div>
 
-              {/* Tier 3: Master Cloud or Air-Gapped Master */}
+              {/* Layer 3 */}
               <div className="p-6 rounded-2xl border border-white/10 bg-black/40 space-y-4 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
                     <span className="font-mono text-[11px] uppercase tracking-wider text-faint font-semibold">
-                      Layer 3 · Central Master
+                      Layer 3 · Persistence &amp; Audit
                     </span>
                     <Server className="h-4 w-4 text-spotify" />
                   </div>
                   <h4 className="mt-3 font-display text-lg font-medium text-hi">
-                    Cloud / Air-Gapped Sentinel
+                    MongoDB &amp; Optional Sync Targets
                   </h4>
                   <p className="mt-1 text-[13px] text-mid leading-relaxed">
-                    Central PostgreSQL pgvector database, Admin Sentinel radar, parent SMS dispatch, and ERP connectors.
+                    Primary MongoDB ledger for users, vectors, attendance, disputes, and audit logs, with optional cloud sync.
                   </p>
 
                   <ul className="mt-4 space-y-2 text-[12.5px] font-mono text-mid">
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-spotify" />
-                      pgvector Cosine HNSW Index
+                      Unique Session Duplicate Lock
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-spotify" />
-                      Real-Time Parent Alert Dispatch
+                      Optional Supabase pgvector &amp; Sheets
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-spotify" />
-                      NAAC / NBA Audit Exports
+                      CSV / Excel / JSON / HTML Exports
                     </li>
                   </ul>
                 </div>
 
                 <div className="pt-4 border-t border-white/[0.08] text-[11px] font-mono text-spotify">
-                  Sovereign regional data residency
+                  Region-selectable deployment hosting
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 4. Technology Stack Deep Dive */}
+        {/* 4. Feature Availability Matrix */}
+        <div className="mt-16 card-bytune rounded-[22px] p-6 sm:p-8 border border-white/10 bg-[#0e0e14]/90">
+          <div className="mb-6">
+            <span className="font-mono text-[10.5px] uppercase tracking-wider text-accent font-semibold block">
+              Honest Product Scope
+            </span>
+            <h4 className="mt-1 font-display text-xl sm:text-2xl font-medium text-hi">
+              Feature Availability Matrix
+            </h4>
+            <p className="mt-1 text-[13px] text-mid">
+              Clear separation of capabilities currently operational in the codebase vs. pilot-configured integrations, beta connectors, and roadmap items.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] text-left border-collapse text-[13px]">
+              <thead>
+                <tr className="border-b border-white/10 font-mono text-[10.5px] uppercase tracking-wider text-faint">
+                  <th className="py-3 pr-4">Module</th>
+                  <th className="py-3 px-4">Capability</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 pl-4">Implementation Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.06]">
+                {FEATURE_AVAILABILITY_MATRIX.map((row) => (
+                  <tr key={row.capability}>
+                    <td className="py-3 pr-4 font-mono text-[11.5px] text-hi whitespace-nowrap">{row.module}</td>
+                    <td className="py-3 px-4 text-mid">{row.capability}</td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className={`font-mono text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${statusTone(row.status)}`}>
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="py-3 pl-4 text-[12px] text-faint">{row.notes}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* 5. Technology Stack Deep Dive */}
         <div className="mt-16">
           <div className="text-center max-w-xl mx-auto mb-8">
             <span className="font-mono text-[10.5px] uppercase tracking-wider text-faint font-semibold">
-              Modern Open-Source Engine
+              Verified Open-Source Stack
             </span>
             <h4 className="mt-1 font-display text-xl font-medium text-hi">
               Full Technology Stack Breakdown

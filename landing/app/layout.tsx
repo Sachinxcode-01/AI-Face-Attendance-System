@@ -3,32 +3,34 @@ import { CookieBanner } from "@/components/cookie-banner";
 import { Analytics } from "@/components/analytics";
 import { Preloader } from "@/components/preloader";
 import { SpaceBackground } from "@/components/space-background";
+import { COMPANY_CONTACT, SITE_URL } from "@/lib/constants";
 import "./globals.css";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ai-face-attendance-beta.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: "/",
+  },
   title: {
-    default: "SmartFace — Touchless Biometric Attendance & Campus Security",
+    default: "SmartFace — Touchless Biometric Attendance & Campus Portal",
     template: "%s | SmartFace",
   },
   description:
-    "Enterprise face recognition, rotating anti-proxy QR codes, and automated campus security alerts. Verify an entire campus in under 300ms with 99.8% precision.",
+  "Open-source campus attendance platform combining InsightFace ArcFace (512-D) face verification, 20-second rotating HMAC-SHA256 QR codes, role-based portals, and encrypted mobile offline queuing.",
   applicationName: "SmartFace",
-  authors: [{ name: "SmartFace Systems Inc." }],
+  authors: [{ name: COMPANY_CONTACT.developer, url: COMPANY_CONTACT.github }],
   keywords: [
     "biometric attendance",
     "touchless attendance",
     "face recognition attendance",
     "anti-proxy QR",
     "campus security",
-    "ArcFace v2.4",
+    "InsightFace ArcFace",
     "student attendance system",
-    "university access control",
+    "campus attendance portal",
   ],
-  creator: "SmartFace Systems Inc.",
-  publisher: "SmartFace Systems Inc.",
+  creator: COMPANY_CONTACT.developer,
+  publisher: COMPANY_CONTACT.name,
   formatDetection: {
     email: false,
     address: false,
@@ -38,16 +40,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: SITE_URL,
-    title: "SmartFace — Touchless Biometric Attendance & Campus Security",
+    title: "SmartFace — Touchless Biometric Attendance & Campus Portal",
     description:
-      "Enterprise face recognition, rotating anti-proxy QR codes, and automated campus security alerts. Verify an entire campus in under 300ms.",
+    "InsightFace ArcFace 512-D face verification, 20-second rotating HMAC-SHA256 QR tokens, five role-based portals, and encrypted mobile offline queuing.",
     siteName: "SmartFace",
   },
   twitter: {
     card: "summary_large_image",
     title: "SmartFace — Touchless Biometric Attendance",
     description:
-      "Enterprise face recognition, rotating anti-proxy QR codes, and automated campus security alerts. Verify an entire campus in under 300ms.",
+    "InsightFace ArcFace 512-D face verification, 20s rotating QR tokens, and unified portals for students, teachers, admins, parents, and super admins.",
   },
   robots: {
     index: true,
@@ -87,8 +89,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Set .js before first paint so reveal animations arm without FOUC.
-            Content stays fully visible when JS is disabled. */}
         <script
           dangerouslySetInnerHTML={{
             __html: "document.documentElement.classList.add('js');",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { BellRing, CheckCircle2, QrCode, ScanFace, Users, Wifi } from "lucide-react";
+import { BellRing, CheckCircle2, ScanFace, Users, Wifi } from "lucide-react";
 import { Reveal } from "./ui/reveal";
 import { SectionHeading } from "./ui/section-heading";
 
@@ -18,27 +18,25 @@ const SCREENS: Screen[] = [
   {
     key: "kiosk",
     tab: "Gate kiosk",
-    title: "The gate, thinking for itself.",
-    body: "A camera, a browser and a rotating code. The kiosk verifies, stamps and waves students through: no phone swipe, no queue, no proxy.",
-    meta: "Edge node · <300ms",
+    title: "Touchless check-in with confidence logging.",
+    body: "A camera and browser or kiosk client extract a 512-D embedding via InsightFace ArcFace (buffalo_l) and log the match with timestamp and similarity score.",
+    meta: "Demo preview · ArcFace 512-D",
   },
   {
     key: "roster",
     tab: "Teacher roster",
-    title: "Take attendance without taking time.",
-    body: "The session opens itself, the roster fills itself, and exceptions surface as a short list instead of a 40-minute argument.",
-    meta: "Live roster · auto-sync",
+    title: "Live session roster with manual override.",
+    body: "Faculty start a session, project the 20s rotating QR, watch verified check-ins arrive via WebSockets, and resolve exceptions or disputes in one place.",
+    meta: "Demo preview · WebSocket sync",
   },
   {
     key: "parent",
     tab: "Parent alert",
-    title: "The moment they arrive, you know.",
-    body: "Timestamp, gate and confidence score, pushed to the parent's phone before their child reaches the classroom door.",
-    meta: "Push + email · instant",
+    title: "Guardian visibility without waiting for term-end.",
+    body: "Verified parent accounts inspect linked ward attendance, receive email or configured SMS/push alerts, and submit digital absence notices.",
+    meta: "Demo preview · Email / SMS / Push",
   },
 ];
-
-/* ---------- Product screen simulations with high-tech animations ---------- */
 
 function KioskScreen() {
   return (
@@ -49,23 +47,21 @@ function KioskScreen() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-spotify opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-spotify" />
           </span>
-          Gate B · Kiosk Live Feed
+          Simulated Kiosk View
         </span>
-        <span className="font-mono text-[9.5px] text-faint">07:58:12</span>
+        <span className="font-mono text-[9.5px] text-faint">Sample 09:02:14</span>
       </div>
 
       <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-bg0">
         <img
           src="/hero-verification.jpg"
-          alt="SmartFace kiosk verification"
+          alt="Simulated SmartFace kiosk verification preview"
           className="absolute inset-0 h-full w-full object-cover object-center opacity-75 filter brightness-95"
         />
         <div aria-hidden className="absolute inset-0 bg-black/40" />
 
-        {/* Live scanning line */}
         <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#6fd8ff] to-transparent shadow-[0_0_12px_#6fd8ff] animate-laser-scan pointer-events-none" />
 
-        {/* HUD Box */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -74,10 +70,10 @@ function KioskScreen() {
         >
           <div className="rounded-full border border-spotify/40 bg-bg0/90 px-4 py-1.5 font-mono text-xs text-[#9fe0b6] backdrop-blur-md shadow-lg flex items-center gap-2">
             <CheckCircle2 className="h-3.5 w-3.5 text-spotify" />
-            <span>Verification PASS · 99.8%</span>
+            <span>Demo Match · 0.86 Cosine</span>
           </div>
           <span className="font-mono text-[10px] text-white/70 bg-black/50 px-2 py-0.5 rounded">
-            Subject STU-88219 · Alex Rivera
+            Sample Subject · STU-88219
           </span>
         </motion.div>
       </div>
@@ -85,11 +81,11 @@ function KioskScreen() {
       <div className="flex items-center justify-between border-t border-[var(--hairline)] bg-[rgba(16,16,22,0.7)] px-5 py-3 font-mono text-[10.5px] text-mid">
         <span className="flex items-center gap-2">
           <ScanFace className="h-3.5 w-3.5 text-spotify" />
-          Alex Rivera · CS-301
+          Sample Student · CS-301
         </span>
         <span className="text-spotify font-medium flex items-center gap-1">
           <Wifi className="h-3 w-3" />
-          192ms
+          buffalo_l ONNX
         </span>
       </div>
     </div>
@@ -98,11 +94,11 @@ function KioskScreen() {
 
 function RosterScreen() {
   const students = [
-    { name: "Alex Rivera", roll: "CS-001", time: "07:58:12", status: "Verified" },
-    { name: "Elena Rostova", roll: "CS-002", time: "07:58:24", status: "Verified" },
-    { name: "Marcus Chen", roll: "CS-003", time: "07:59:01", status: "Verified" },
-    { name: "Sophia Patel", roll: "CS-004", time: "07:59:15", status: "Verified" },
-    { name: "Liam Vance", roll: "CS-005", time: "—", status: "Absent" },
+    { name: "Sample Student 01", roll: "CS-001", time: "09:02:12", status: "Face Verified" },
+    { name: "Sample Student 02", roll: "CS-002", time: "09:02:24", status: "QR Verified" },
+    { name: "Sample Student 03", roll: "CS-003", time: "09:03:01", status: "Face Verified" },
+    { name: "Sample Student 04", roll: "CS-004", time: "09:03:15", status: "Manual Override" },
+    { name: "Sample Student 05", roll: "CS-005", time: "—", status: "Absent" },
   ];
 
   return (
@@ -110,7 +106,7 @@ function RosterScreen() {
       <div className="flex items-center justify-between border-b border-[var(--hairline)] px-5 py-3">
         <span className="flex items-center gap-2 font-mono text-[9.5px] uppercase tracking-[0.16em] text-faint">
           <Users className="h-3.5 w-3.5 text-accent" />
-          CS-301 · Live Roster
+          CS-301 · Sample Roster
         </span>
         <span className="rounded-full bg-spotify/15 px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-spotify font-semibold">
           4 / 5 Present
@@ -133,10 +129,10 @@ function RosterScreen() {
             <div className="text-right">
               <span
                 className={`font-mono text-[11px] font-semibold flex items-center justify-end gap-1 ${
-                  s.status === "Verified" ? "text-spotify" : "text-amber"
+                  s.status !== "Absent" ? "text-spotify" : "text-amber"
                 }`}
               >
-                {s.status === "Verified" && (
+                {s.status !== "Absent" && (
                   <span className="h-1.5 w-1.5 rounded-full bg-spotify" />
                 )}
                 {s.status}
@@ -148,9 +144,9 @@ function RosterScreen() {
       </div>
 
       <div className="border-t border-[var(--hairline)] bg-[rgba(16,16,22,0.7)] px-5 py-3 text-center font-mono text-[10px] text-faint">
-        Auto-synced with Campus ERP
+        Illustrative Data · Exportable to CSV / Excel / JSON
       </div>
-    </div>
+    </div >
   );
 }
 
@@ -160,13 +156,12 @@ function ParentScreen() {
       <div className="flex items-center justify-between border-b border-[var(--hairline)] px-5 py-3">
         <span className="flex items-center gap-2 font-mono text-[9.5px] uppercase tracking-[0.16em] text-faint">
           <BellRing className="h-3.5 w-3.5 text-accent" />
-          Parent Notification
+          Simulated Parent Alert
         </span>
-        <span className="font-mono text-[9.5px] text-[#9fe0b6]">Push · Instant</span>
+        <span className="font-mono text-[9.5px] text-[#9fe0b6]">Email / SMS / Push</span>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
-        {/* Animated Pop Card */}
         <motion.div
           initial={{ scale: 0.92, y: 10, opacity: 0 }}
           animate={{ scale: 1, y: 0, opacity: 1 }}
@@ -177,20 +172,20 @@ function ParentScreen() {
             <CheckCircle2 className="h-6 w-6" />
           </div>
           <h4 className="font-display text-base font-semibold text-hi">
-            Alex Rivera checked in
+            Sample Student checked in
           </h4>
           <p className="mt-1.5 text-xs text-mid">
-            Campus Main Gate B · Stamped at 07:58 AM with 99.8% verification confidence.
+            CS-301 Lecture · Logged at 09:02 AM via Face Verification (0.86 cosine).
           </p>
           <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1 font-mono text-[10.5px] text-mid">
             <span className="h-1.5 w-1.5 rounded-full bg-spotify animate-pulse" />
-            SMS & Push dispatched in 0.8s
+            Simulated Alert Preview
           </div>
         </motion.div>
       </div>
 
       <div className="border-t border-[var(--hairline)] bg-[rgba(16,16,22,0.7)] px-5 py-3 text-center font-mono text-[10px] text-faint">
-        End-to-End Encrypted Delivery
+        Dispatched via configured TLS email/SMS providers
       </div>
     </div>
   );
@@ -215,13 +210,12 @@ export function Showcase() {
     >
       <div className="mx-auto w-full max-w-[var(--container)] px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Interactive Experience"
+          eyebrow="Interactive Screen Preview"
           title="The whole campus, one screen at a time."
-          description="Three roles, one living record. Watch the session move from gate to roster to parent's pocket without anyone lifting a finger."
+          description="Illustrative sample views showing how gate verification, teacher rosters, and parent visibility connect through one backend."
         />
 
         <div className="mt-14 grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-          {/* Screen switcher */}
           <div>
             <div className="flex flex-wrap gap-2 relative" role="tablist" aria-label="Product screens">
               {SCREENS.map((s, i) => (
@@ -231,9 +225,8 @@ export function Showcase() {
                   role="tab"
                   aria-selected={index === i}
                   onClick={() => setIndex(i)}
-                  className={`chip-bytune relative transition-all duration-300 ${
-                    index === i ? "text-hi bg-white/10 border-white/20" : "text-mid"
-                  }`}
+                  className={`chip-bytune relative transition-all duration-300 ${index === i ? "text-hi bg-white/10 border-white/20" : "text-mid"
+                    }`}
                 >
                   {index === i && (
                     <motion.span
@@ -270,10 +263,8 @@ export function Showcase() {
             </AnimatePresence>
           </div>
 
-          {/* Device frame styled with ByTune card-bytune recipe */}
           <Reveal delay={0.1} direction="right" duration={0.8}>
             <div className="relative mx-auto w-full max-w-[450px]">
-              {/* Radial glow */}
               <div
                 aria-hidden
                 className="absolute inset-0 -inset-x-6 -inset-y-6 rounded-[36px] pointer-events-none opacity-80 card-glow-bg animate-glow-breathe"

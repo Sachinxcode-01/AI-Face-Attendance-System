@@ -191,11 +191,10 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
                     key={tier.id}
                     type="button"
                     onClick={() => setFormData((p) => ({ ...p, pilotDuration: tier.id as any }))}
-                    className={`p-3 rounded-xl border text-left transition-all ${
-                      formData.pilotDuration === tier.id
+                    className={`p-3 rounded-xl border text-left transition-all ${formData.pilotDuration === tier.id
                         ? "border-spotify bg-spotify/10 text-hi shadow-[0_0_15px_rgba(30,215,96,0.2)]"
                         : "border-white/10 bg-white/[0.02] text-mid hover:border-white/20"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-display text-[13.5px] font-semibold text-hi">{tier.title}</span>
@@ -366,7 +365,7 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
                   onChange={(e) => setFormData({ ...formData, deploymentTimeline: e.target.value as any })}
                   className="mt-1 w-full rounded-lg border border-white/10 bg-bg1 px-2.5 py-2 text-[13px] text-hi"
                 >
-                  <option value="immediate">Immediate (&lt;14d)</option>
+                  <option value="immediate">Immediate (Pending Scoping)</option>
                   <option value="next_semester">Next Semester</option>
                   <option value="academic_year">Academic Year</option>
                 </select>
@@ -389,7 +388,7 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-black" />
-                    Deploying Sandbox Environment...
+                    Submitting Pilot Application...
                   </>
                 ) : (
                   <>
@@ -399,7 +398,7 @@ export function PilotModal({ isOpen, onClose }: PilotModalProps) {
                 )}
               </button>
               <p className="mt-2 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-faint">
-                Includes full cloud server instance + 512-dim ArcFace edge container license
+                Includes InsightFace ArcFace 512-D evaluation scoping &amp; deployment consultation
               </p>
             </div>
           </form>

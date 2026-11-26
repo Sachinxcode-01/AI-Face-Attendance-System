@@ -1,15 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
-  CheckCircle2,
-  ChevronRight,
-  HelpCircle,
   Minus,
   MoveRight,
   Server,
@@ -22,53 +19,53 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { DemoModal } from "@/components/demo-modal";
 import { PilotModal } from "@/components/pilot-modal";
+import { COMPANY_CONTACT } from "@/lib/constants";
 
 const COMPARISON_CATEGORIES = [
   {
     category: "Core Biometrics & Verification",
     features: [
-      { name: "ArcFace v2.4 512-dim Vector Extraction", starter: true, pro: true, enterprise: true, custom: true },
-      { name: "Sub-300ms Edge Inference", starter: true, pro: true, enterprise: true, custom: true },
-      { name: "Zero Raw Photo Storage Policy", starter: true, pro: true, enterprise: true, custom: true },
-      { name: "Passive 3D Anti-Spoofing Liveness", starter: "Standard", pro: "Advanced", enterprise: "Military-Grade", custom: "Custom Hardware PAD" },
-      { name: "Rotating Classroom HMAC-SHA256 QR", starter: true, pro: true, enterprise: true, custom: true },
-      { name: "Local SQLite Offline Queue Buffer", starter: false, pro: true, enterprise: true, custom: true },
+      { name: "InsightFace ArcFace (buffalo_l, ResNet-50) 512-D Vectors", opensource: true, starter: true, pro: true, enterprise: true },
+      { name: "Configurable Cosine Similarity Threshold (Default 0.60)", opensource: true, starter: true, pro: true, enterprise: true },
+      { name: "In-Memory Live Verification Upload Cleanup", opensource: true, starter: true, pro: true, enterprise: true },
+      { name: "20s Rotating HMAC-SHA256 QR + Optional Geofence", opensource: true, starter: true, pro: true, enterprise: true },
+      { name: "Flutter Mobile AES-256 Hive Offline Queue", opensource: true, starter: true, pro: true, enterprise: true },
+      { name: "CUDA GPU Acceleration Support (Campus Node)", opensource: "Self-configured", starter: false, pro: "Supported", enterprise: "Supported" },
     ],
   },
   {
     category: "Portal & User Experiences",
     features: [
-      { name: "Student Mobile & Web Portal", starter: true, pro: true, enterprise: true, custom: true },
-      { name: "Teacher Session Command Portal", starter: true, pro: true, enterprise: true, custom: true },
-      { name: "Parent Portal with Instant Arrival Alerts", starter: false, pro: true, enterprise: true, custom: true },
-      { name: "Automated WhatsApp & SMS Notifications", starter: false, pro: "Included", enterprise: "Unlimited", custom: "Custom Gateway" },
-      { name: "Nexa AI Student Retention Companion", starter: false, pro: true, enterprise: true, custom: true },
-      { name: "Admin Sentinel Campus Radar & Telemetry", starter: "Basic", pro: "Full", enterprise: "Multi-Gate Cluster", custom: "Custom SOC Integration" },
+      { name: "Student, Teacher, Admin, Parent & Super Admin Portals", opensource: true, starter: "4 Core Roles", pro: "All 5 Roles", enterprise: "All 5 Roles" },
+      { name: "Parent Portal & Absence Notice Workflows", opensource: true, starter: true, pro: true, enterprise: true },
+      { name: "Email Alerts (Resend / Brevo) & SMS (Twilio / MSG91)", opensource: "Bring your keys", starter: "Email included", pro: "Email + SMS passthrough", enterprise: "Custom volume" },
+      { name: "Nexa AI Assistant (Groq LLM + Deterministic DB)", opensource: "Bring your key", starter: false, pro: "Fair-use quota", enterprise: "Custom quota" },
+      { name: "Attendance Correction Disputes & Leave Approvals", opensource: true, starter: true, pro: true, enterprise: true },
     ],
   },
   {
-    category: "Compliance & Enterprise Controls",
+    category: "Governance, Exports & Integrations",
     features: [
-      { name: "DPDP Act 2023 & FERPA Alignment", starter: true, pro: true, enterprise: true, custom: true },
-      { name: "Cryptographic Tamper-Evident Audit Trail", starter: "30 Days", pro: "1 Year", enterprise: "7 Years (Statutory)", custom: "Custom Cold Archive" },
-      { name: "1-Click NAAC & NBA Accreditation Reports", starter: false, pro: true, enterprise: true, custom: true },
-      { name: "Bi-directional ERP / SIS Integration", starter: "CSV / Excel", pro: "REST API", enterprise: "Prebuilt (SAP / PeopleSoft)", custom: "Direct DB / Custom RPC" },
-      { name: "Multi-Tenant Super Admin Console", starter: false, pro: false, enterprise: true, custom: true },
+      { name: "Biometric Consent Tracking & Self-Service Deletion", opensource: true, starter: true, pro: true, enterprise: true },
+      { name: "AttendanceAuditLog & SecurityLog History", opensource: "Self-managed", starter: "90 Days", pro: "1 Year", enterprise: "Custom Retention" },
+      { name: "CSV / Excel / JSON / HTML Report Exports", opensource: true, starter: true, pro: true, enterprise: true },
+      { name: "SIS / LMS Integration", opensource: "OneRoster CSV", starter: "CSV / Excel", pro: "OneRoster CSV + GSheets", enterprise: "Beta LMS / Custom API" },
+      { name: "Optional Supabase pgvector Sync", opensource: "Self-configured", starter: false, pro: "Optional", enterprise: "Optional" },
     ],
   },
   {
-    category: "Support & Deployment SLA",
+    category: "Commercial Terms, Hosting & Support",
     features: [
-      { name: "Support Channels", starter: "Email", pro: "Phone & Email", enterprise: "Dedicated TAM & Hotline", custom: "24/7 On-Call & On-Site" },
-      { name: "Response SLA", starter: "24 business hours", pro: "4 business hours", enterprise: "1 hour priority", custom: "15-minute emergency SLA" },
-      { name: "Deployment Architecture", starter: "Cloud Hosted", pro: "Hybrid Edge + Cloud", enterprise: "Private Cloud / Hybrid", custom: "100% Air-Gapped On-Prem" },
-      { name: "Uptime Guarantee SLA", starter: "99.5%", pro: "99.8%", enterprise: "99.9%", custom: "99.99% High Availability" },
-      { name: "Hardware Flexibility", starter: "Standard Webcams", pro: "IP / USB Cameras", enterprise: "Existing Turnstiles & CCTV", custom: "Any RTSP Stream / Custom Gate" },
+      { name: "Software License / Billing Frequency", opensource: "MIT (₹0)", starter: "₹12/student/mo (Annual)", pro: "₹24/student/mo (Annual)", enterprise: "Custom Annual Contract" },
+      { name: "Student Capacity", opensource: "Self-managed", starter: "Up to 500", pro: "Up to 3,000", enterprise: "3,000–20,000+" },
+      { name: "Taxes, Hardware & Installation", opensource: "N/A", starter: "GST, HW & install extra", pro: "GST, HW & install extra", enterprise: "Scoped in contract" },
+      { name: "Support Channel & Target Response", opensource: "GitHub Issues", starter: "Email (2 bus. days)", pro: "Email & Call (1 bus. day)", enterprise: "Dedicated Onboarding" },
+      { name: "Trial, Cancellation & Data Export", opensource: "Always open", starter: "30-day pilot · CSV/JSON exit", pro: "30-day notice · CSV/JSON exit", enterprise: "Custom SLA & exit terms" },
     ],
   },
 ];
 
-type PlanFilter = "all" | "starter" | "pro" | "enterprise" | "custom";
+type PlanFilter = "all" | "opensource" | "starter" | "pro" | "enterprise";
 
 export default function PricingPage() {
   const [demoOpen, setDemoOpen] = useState(false);
@@ -94,13 +91,13 @@ export default function PricingPage() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-3.5 py-1 font-mono text-[11px] uppercase tracking-widest text-accent">
               <Sparkles className="h-3.5 w-3.5" />
-              Institutional Licensing
+              Open Source &amp; Institutional Licensing
             </div>
             <h1 className="mt-4 font-display text-4xl sm:text-5xl lg:text-6xl font-medium tracking-tight text-hi">
-              Transparent, Scalable Campus Plans
+              Clear Separation: MIT Open Source vs. Managed Services
             </h1>
             <p className="mt-6 text-[16px] sm:text-[17px] leading-relaxed text-mid">
-              Deploy touchless facial attendance without buying proprietary turnstile hardware. Select the plan tailored to your campus size, or request a custom university rollout.
+              Self-host SmartFace for free under the MIT license, or select a commercial plan for managed hosting, guided onboarding, and institutional support. Applicable GST/taxes, camera/server hardware, on-site installation, and pass-through SMS carrier fees are billed separately.
             </p>
           </div>
 
@@ -108,10 +105,21 @@ export default function PricingPage() {
           <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
+                id: "opensource",
+                name: "Open Source",
+                price: "₹0",
+                unit: "MIT codebase",
+                desc: "Self-hosted Express, FastAPI, Next.js & Flutter source on your own infra",
+                cta: "View on GitHub",
+                href: COMPANY_CONTACT.github,
+                highlight: false,
+              },
+              {
                 id: "starter",
-                name: "Starter",
+                name: "Starter Pilot",
                 price: "₹12",
-                desc: "Departments & small institutes up to 500 students",
+                unit: "/student/mo (annual)",
+                desc: "Managed cloud evaluation for departments up to 500 students (30-day trial)",
                 cta: "Start 30-Day Pilot",
                 action: () => setPilotOpen(true),
                 highlight: false,
@@ -120,7 +128,8 @@ export default function PricingPage() {
                 id: "pro",
                 name: "Professional",
                 price: "₹24",
-                desc: "Standard campuses up to 3,000 students (WhatsApp alerts included)",
+                unit: "/student/mo (annual)",
+                desc: "Managed cloud or hybrid LAN for campuses up to 3,000 students",
                 cta: "Book Campus Demo",
                 action: () => setDemoOpen(true),
                 highlight: true,
@@ -128,17 +137,9 @@ export default function PricingPage() {
               {
                 id: "enterprise",
                 name: "Enterprise",
-                price: "₹36",
-                desc: "Multi-faculty colleges up to 15,000 students with ERP integration",
-                cta: "Request Walkthrough",
-                action: () => setDemoOpen(true),
-                highlight: false,
-              },
-              {
-                id: "custom",
-                name: "Custom University",
                 price: "Custom",
-                desc: "Air-gapped on-premise deployment for 20,000+ student universities",
+                unit: "annual contract",
+                desc: "Multi-college Super Admin deployments for 3,000–20,000+ students",
                 cta: "Contact Sales",
                 action: () => setDemoOpen(true),
                 highlight: false,
@@ -164,21 +165,32 @@ export default function PricingPage() {
                   </div>
                   <div className="mt-3 flex items-baseline gap-1">
                     <span className="font-display text-3xl font-semibold text-hi">{p.price}</span>
-                    <span className="font-mono text-[11px] text-faint">/student/mo</span>
+                    <span className="font-mono text-[11px] text-faint">{p.unit}</span>
                   </div>
                   <p className="mt-2 text-[13px] text-mid leading-relaxed">{p.desc}</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={p.action}
-                  className={`mt-6 w-full h-10 rounded-full text-[13px] font-semibold flex items-center justify-center cursor-pointer transition ${
-                    p.highlight
-                      ? "btn-pill-accent shadow-[0_0_20px_rgba(143,139,255,0.35)]"
-                      : "border border-white/15 bg-white/[0.04] text-hi hover:bg-white/[0.08]"
-                  }`}
-                >
-                  {p.cta}
-                </button>
+                {p.href ? (
+                  <a
+                    href={p.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-6 w-full h-10 rounded-full text-[13px] font-semibold flex items-center justify-center cursor-pointer transition border border-white/15 bg-white/[0.04] text-hi hover:bg-white/[0.08]"
+                  >
+                    {p.cta}
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={p.action}
+                    className={`mt-6 w-full h-10 rounded-full text-[13px] font-semibold flex items-center justify-center cursor-pointer transition ${
+                      p.highlight
+                        ? "btn-pill-accent shadow-[0_0_20px_rgba(143,139,255,0.35)]"
+                        : "border border-white/15 bg-white/[0.04] text-hi hover:bg-white/[0.08]"
+                    }`}
+                  >
+                    {p.cta}
+                  </button>
+                )}
               </motion.div>
             ))}
           </div>
@@ -189,25 +201,24 @@ export default function PricingPage() {
               <div>
                 <span className="font-mono text-[11px] uppercase tracking-wider text-spotify font-semibold flex items-center gap-1.5">
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  Comprehensive Matrix
+                  Verified Plan Breakdown
                 </span>
                 <h2 className="mt-2 font-display text-2xl sm:text-3xl font-medium text-hi">
-                  Detailed Feature &amp; Capability Comparison
+                  Detailed Feature, Commercial &amp; Support Comparison
                 </h2>
                 <p className="mt-1 text-[13.5px] text-faint">
-                  Compare specifications, SLA levels, and biometric guarantees across tiers.
+                  Compare open-source self-hosting against commercial managed plans, billing terms, and data export rights.
                 </p>
               </div>
 
-              {/* Mobile Filter Selector */}
               <div className="md:hidden flex items-center gap-1.5 overflow-x-auto pb-1 text-[12px] font-mono">
                 <span className="text-faint text-[11px] mr-1">View:</span>
                 {[
-                  { id: "all", label: "All Tiers" },
+                  { id: "all", label: "All" },
+                  { id: "opensource", label: "Open Source" },
                   { id: "starter", label: "Starter" },
                   { id: "pro", label: "Professional" },
                   { id: "enterprise", label: "Enterprise" },
-                  { id: "custom", label: "Custom Univ" },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -225,26 +236,30 @@ export default function PricingPage() {
               </div>
             </div>
 
-            {/* Horizontal Scroll Prompt for Mobile/Tablet */}
             <div className="flex items-center justify-between text-[11.5px] font-mono text-faint mb-2.5 px-1 md:hidden">
               <span className="flex items-center gap-1 text-accent">
                 <MoveRight className="h-3.5 w-3.5 animate-pulse" />
                 Swipe horizontally to compare tiers
               </span>
-              <span>4 institutional plans</span>
+              <span>4 options</span>
             </div>
 
-            {/* Responsive Comparison Table Container */}
             <div className="relative overflow-x-auto rounded-[22px] border border-white/10 bg-surface/90 backdrop-blur-xl shadow-2xl">
               <table className="w-full min-w-[880px] text-left border-collapse text-[13px]">
                 <thead>
                   <tr className="border-b border-white/10 bg-white/[0.03]">
-                    {/* Sticky Capability Column Header */}
                     <th className="sticky left-0 bg-[#0c0c12]/98 backdrop-blur-md z-20 p-4 sm:p-5 font-mono text-[11px] uppercase tracking-wider text-mid w-[32%] min-w-[260px] border-r border-white/[0.08] shadow-[2px_0_8px_rgba(0,0,0,0.4)]">
                       Capability
                     </th>
 
-                    {/* Starter Header */}
+                    <th
+                      className={`p-4 sm:p-5 font-mono text-[11px] uppercase tracking-wider text-mid text-center whitespace-nowrap min-w-[140px] ${
+                        mobileFilter !== "all" && mobileFilter !== "opensource" ? "hidden md:table-cell" : ""
+                      }`}
+                    >
+                      Open Source
+                    </th>
+
                     <th
                       className={`p-4 sm:p-5 font-mono text-[11px] uppercase tracking-wider text-mid text-center whitespace-nowrap min-w-[140px] ${
                         mobileFilter !== "all" && mobileFilter !== "starter" ? "hidden md:table-cell" : ""
@@ -253,7 +268,6 @@ export default function PricingPage() {
                       Starter
                     </th>
 
-                    {/* Professional Header (Highlighted) */}
                     <th
                       className={`p-4 sm:p-5 font-mono text-[11px] uppercase tracking-wider text-accent text-center font-bold whitespace-nowrap min-w-[170px] bg-accent/[0.06] border-x border-accent/25 ${
                         mobileFilter !== "all" && mobileFilter !== "pro" ? "hidden md:table-cell" : ""
@@ -267,31 +281,20 @@ export default function PricingPage() {
                       </div>
                     </th>
 
-                    {/* Enterprise Header */}
                     <th
-                      className={`p-4 sm:p-5 font-mono text-[11px] uppercase tracking-wider text-mid text-center whitespace-nowrap min-w-[150px] ${
+                      className={`p-4 sm:p-5 font-mono text-[11px] uppercase tracking-wider text-mid text-center whitespace-nowrap min-w-[170px] pr-6 ${
                         mobileFilter !== "all" && mobileFilter !== "enterprise" ? "hidden md:table-cell" : ""
                       }`}
                     >
                       Enterprise
-                    </th>
-
-                    {/* Custom University Header */}
-                    <th
-                      className={`p-4 sm:p-5 font-mono text-[11px] uppercase tracking-wider text-mid text-center whitespace-nowrap min-w-[170px] pr-6 ${
-                        mobileFilter !== "all" && mobileFilter !== "custom" ? "hidden md:table-cell" : ""
-                      }`}
-                    >
-                      Custom University
                     </th>
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-white/[0.06]">
                   {COMPARISON_CATEGORIES.map((cat, cIdx) => (
-                    <>
-                      {/* Section Category Header */}
-                      <tr key={`cat-${cIdx}`} className="bg-white/[0.02]">
+                    <Fragment key={`cat-${cIdx}`}>
+                      <tr className="bg-white/[0.02]">
                         <td
                           colSpan={5}
                           className="px-5 py-3 font-mono text-[11px] uppercase tracking-wider text-accent font-semibold border-t border-b border-white/[0.08]"
@@ -300,20 +303,33 @@ export default function PricingPage() {
                         </td>
                       </tr>
 
-                      {/* Category Features */}
                       {cat.features.map((feat, fIdx) => (
                         <tr
                           key={`feat-${cIdx}-${fIdx}`}
                           className="hover:bg-white/[0.025] transition-colors group"
                         >
-                          {/* Sticky Capability Name */}
                           <td className="sticky left-0 bg-[#0d0d14]/95 backdrop-blur-md z-10 px-5 py-3.5 text-hi font-medium border-r border-white/[0.08] shadow-[2px_0_8px_rgba(0,0,0,0.3)]">
                             <span className="group-hover:text-accent transition-colors">
                               {feat.name}
                             </span>
                           </td>
 
-                          {/* Starter Value */}
+                          <td
+                            className={`px-4 py-3.5 text-center text-mid font-mono text-[12px] ${
+                              mobileFilter !== "all" && mobileFilter !== "opensource" ? "hidden md:table-cell" : ""
+                            }`}
+                          >
+                            {typeof feat.opensource === "boolean" ? (
+                              feat.opensource ? (
+                                <Check className="h-4 w-4 text-spotify mx-auto" />
+                              ) : (
+                                <Minus className="h-4 w-4 text-faint mx-auto opacity-50" />
+                              )
+                            ) : (
+                              <span className="font-sans text-[12.5px] text-mid">{feat.opensource}</span>
+                            )}
+                          </td>
+
                           <td
                             className={`px-4 py-3.5 text-center text-mid font-mono text-[12px] ${
                               mobileFilter !== "all" && mobileFilter !== "starter" ? "hidden md:table-cell" : ""
@@ -330,7 +346,6 @@ export default function PricingPage() {
                             )}
                           </td>
 
-                          {/* Professional Value (Highlighted Column) */}
                           <td
                             className={`px-4 py-3.5 text-center text-hi font-mono text-[12px] bg-accent/[0.035] border-x border-accent/20 ${
                               mobileFilter !== "all" && mobileFilter !== "pro" ? "hidden md:table-cell" : ""
@@ -347,9 +362,8 @@ export default function PricingPage() {
                             )}
                           </td>
 
-                          {/* Enterprise Value */}
                           <td
-                            className={`px-4 py-3.5 text-center text-mid font-mono text-[12px] ${
+                            className={`px-4 py-3.5 text-center text-mid font-mono text-[12px] pr-6 ${
                               mobileFilter !== "all" && mobileFilter !== "enterprise" ? "hidden md:table-cell" : ""
                             }`}
                           >
@@ -363,39 +377,21 @@ export default function PricingPage() {
                               <span className="font-sans text-[12.5px] text-mid">{feat.enterprise}</span>
                             )}
                           </td>
-
-                          {/* Custom University Value */}
-                          <td
-                            className={`px-4 py-3.5 text-center text-mid font-mono text-[12px] pr-6 ${
-                              mobileFilter !== "all" && mobileFilter !== "custom" ? "hidden md:table-cell" : ""
-                            }`}
-                          >
-                            {typeof feat.custom === "boolean" ? (
-                              feat.custom ? (
-                                <Check className="h-4 w-4 text-spotify mx-auto" />
-                              ) : (
-                                <Minus className="h-4 w-4 text-faint mx-auto opacity-50" />
-                              )
-                            ) : (
-                              <span className="font-sans text-[12.5px] text-mid">{feat.custom}</span>
-                            )}
-                          </td>
                         </tr>
                       ))}
-                    </>
+                    </Fragment>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Quick Action Footer for Matrix */}
             <div className="mt-8 p-6 rounded-[20px] border border-white/10 bg-surface/70 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
                 <h3 className="font-display text-[15px] font-semibold text-hi">
-                  Need custom multi-campus clustering or high-throughput turnstile hardware sizing?
+                  Need campus infrastructure sizing or custom institutional terms?
                 </h3>
                 <p className="text-[12.5px] text-faint mt-0.5">
-                  Our systems engineering team provides free architectural scoping and hardware validation for your campus.
+                  Request a technical consultation to scope cameras, GPU/CPU nodes, SMS carrier accounts, and pilot criteria.
                 </p>
               </div>
 
@@ -404,7 +400,7 @@ export default function PricingPage() {
                 onClick={() => setDemoOpen(true)}
                 className="btn-pill-accent h-10 px-5 text-[13px] font-semibold whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer shadow-[0_0_16px_rgba(143,139,255,0.3)]"
               >
-                <span>Speak with an Architect</span>
+                <span>Schedule Consultation</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -416,20 +412,20 @@ export default function PricingPage() {
               {
                 icon: Server,
                 color: "text-accent",
-                title: "1. Cloud Hosted",
-                desc: "Managed high-availability cloud infrastructure with instant updates, automatic daily backups, and zero local server maintenance required.",
+                title: "1. Managed Cloud Hosting",
+                desc: "Managed Express gateway, FastAPI AI service, and MongoDB hosting with scheduled backups and zero campus server maintenance.",
               },
               {
                 icon: Zap,
                 color: "text-spotify",
-                title: "2. Hybrid Edge Node",
-                desc: "Local inference container running on campus Raspberry Pi / mini PC / existing turnstile IPCs with automatic asynchronous cloud synchronization.",
+                title: "2. Hybrid Campus LAN + Cloud",
+                desc: "Run local OpenCV/FastAPI inference on campus workstations or GPU servers while syncing attendance and mobile apps through the cloud.",
               },
               {
                 icon: Shield,
                 color: "text-accent2",
-                title: "3. 100% Air-Gapped",
-                desc: "Complete on-premise Kubernetes or bare-metal cluster with zero external WAN connectivity, ideal for government and high-security defense institutes.",
+                title: "3. Self-Hosted MIT / Campus On-Prem",
+                desc: "Deploy the open-source stack directly inside your institution's private network with full control over MongoDB, SMTP, and data residency.",
               },
             ].map((dep, idx) => {
               const Icon = dep.icon;

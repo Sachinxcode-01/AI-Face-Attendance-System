@@ -1,7 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowUpRight, BrainCircuit, Gauge, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowUpRight, BrainCircuit, Gauge, ShieldCheck } from "lucide-react";
+import { COMPANY_CONTACT } from "@/lib/constants";
+import { PRODUCT_SPECS } from "@/lib/content";
 import { Reveal } from "./ui/reveal";
 import { SectionHeading } from "./ui/section-heading";
 import { SpotlightCard } from "./ui/spotlight-card";
@@ -10,25 +12,25 @@ const NOTES = [
   {
     icon: BrainCircuit,
     tag: "AI Biometrics",
-    title: "ArcFace v2.4 calibration flow",
-    body: "Five-angle enrollment capture with weak-enrollment flagging, so accuracy never hinges on one lucky photo.",
-    meta: "Admin · calibration",
+    title: "1:1 & 1:N InsightFace ArcFace verification",
+    body: "FastAPI microservice wraps InsightFace buffalo_l (ResNet-50) via ONNX Runtime, comparing 512-D embeddings against MongoDB BiometricProfile records or local encodings.",
+    meta: "FastAPI · port 8001",
     accent: "rgba(143, 139, 255, 0.2)",
   },
   {
     icon: Gauge,
-    tag: "Performance",
-    title: "Sub-300ms gate verification",
-    body: "Quantized ONNX runtime on the edge node now verifies a full face in under 300ms, queue-free at 8:00 AM.",
-    meta: "Edge node · ONNX",
+    tag: "Verification & Offline",
+    title: "20s rotating QR & encrypted mobile queue",
+    body: "Timing-safe HMAC-SHA256 QR tokens rotate every 20 seconds (+5s skew tolerance) with optional Haversine geofencing, while Flutter mobile buffers offline records in AES-256 Hive.",
+    meta: "Express + Flutter",
     accent: "rgba(111, 216, 255, 0.2)",
   },
   {
     icon: ShieldCheck,
-    tag: "Security",
-    title: "Sentinel intruder escalation",
-    body: "Unknown faces escalate to security with gate, timestamp and frame before anyone walks in, not after.",
-    meta: "Sentinel · alerts",
+    tag: "Governance & Disputes",
+    title: "Consent, template deletion & correction disputes",
+    body: "Includes explicit biometric opt-in, self-service DELETE /auth/biometric template removal, data export, student/parent dispute workflows, and RBAC across 5 roles.",
+    meta: "Privacy & RBAC",
     accent: "rgba(30, 215, 96, 0.2)",
   },
 ];
@@ -43,18 +45,20 @@ export function Release() {
         <div className="grid items-start gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
           <div className="lg:sticky lg:top-28">
             <SectionHeading
-              eyebrow="Release 2.4"
-              title="The biggest update since launch."
-              description="Calibration, speed and escalation: rebuilt end to end, rolled out to every campus on the same night."
+              eyebrow={`Release ${PRODUCT_SPECS.version}`}
+              title="Architecture verified across backend, portal, and mobile."
+              description="Hardened RBAC across five roles, deterministic attendance calculations, privacy deletion controls, and synchronized API documentation."
             />
             <Reveal delay={0.15}>
               <motion.a
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.98 }}
-                href="#faq"
+                href={COMPANY_CONTACT.githubReleases}
+                target="_blank"
+                rel="noreferrer"
                 className="mt-8 btn-pill-glass group"
               >
-                <span>Read the full changelog</span>
+                <span>View GitHub commit history</span>
                 <ArrowUpRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </motion.a>
             </Reveal>
@@ -97,7 +101,7 @@ export function Release() {
               );
             })}
 
-            {/* Release 2.4 Performance & Calibration Telemetry Panel */}
+            {/* Verified Specification Summary Card */}
             <Reveal delay={0.25} direction="up" distance={20}>
               <div className="relative overflow-hidden rounded-[22px] border border-[var(--hairline-strong)] bg-bg0 p-6 sm:p-7 shadow-2xl backdrop-blur-xl">
                 <div aria-hidden className="absolute inset-0 bg-grid opacity-20 pointer-events-none" />
@@ -110,11 +114,11 @@ export function Release() {
                         <span className="relative inline-flex h-2 w-2 rounded-full bg-spotify" />
                       </span>
                       <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-hi">
-                        ArcFace v2.4 Benchmark Specs
+                        SmartFace {PRODUCT_SPECS.version} Verified Specs
                       </span>
                     </div>
                     <span className="chip-bytune h-6 text-[10px] text-accent border-accent/30 bg-accent/10 font-semibold uppercase">
-                      ONNX Quantized INT8
+                      ONNX Runtime
                     </span>
                   </div>
 
@@ -124,10 +128,10 @@ export function Release() {
                       className="rounded-[14px] border border-white/5 bg-white/[0.02] p-3.5 text-left transition-colors hover:border-white/15"
                     >
                       <span className="font-mono text-[9.5px] uppercase tracking-wider text-faint">
-                        Inference Speed
+                        Model Pack
                       </span>
-                      <p className="mt-1 font-display text-lg font-semibold text-hi">192ms</p>
-                      <span className="font-mono text-[9px] text-spotify">Sub-300ms SLA</span>
+                      <p className="mt-1 font-display text-lg font-semibold text-hi">buffalo_l</p>
+                      <span className="font-mono text-[9px] text-spotify">ResNet-50 ONNX</span>
                     </motion.div>
 
                     <motion.div
@@ -135,10 +139,10 @@ export function Release() {
                       className="rounded-[14px] border border-white/5 bg-white/[0.02] p-3.5 text-left transition-colors hover:border-white/15"
                     >
                       <span className="font-mono text-[9.5px] uppercase tracking-wider text-faint">
-                        Cosine Threshold
+                        Cosine Cutoff
                       </span>
-                      <p className="mt-1 font-display text-lg font-semibold text-hi">0.94</p>
-                      <span className="font-mono text-[9px] text-mid">High Precision</span>
+                      <p className="mt-1 font-display text-lg font-semibold text-hi">0.60</p>
+                      <span className="font-mono text-[9px] text-mid">Configurable</span>
                     </motion.div>
 
                     <motion.div
@@ -146,10 +150,10 @@ export function Release() {
                       className="rounded-[14px] border border-white/5 bg-white/[0.02] p-3.5 text-left transition-colors hover:border-white/15"
                     >
                       <span className="font-mono text-[9.5px] uppercase tracking-wider text-faint">
-                        Vector Dimension
+                        Vector Size
                       </span>
                       <p className="mt-1 font-display text-lg font-semibold text-hi">512-dim</p>
-                      <span className="font-mono text-[9px] text-accent">ArcFace ResNet</span>
+                      <span className="font-mono text-[9px] text-accent">L2-Normalized</span>
                     </motion.div>
 
                     <motion.div
@@ -157,10 +161,10 @@ export function Release() {
                       className="rounded-[14px] border border-white/5 bg-white/[0.02] p-3.5 text-left transition-colors hover:border-white/15"
                     >
                       <span className="font-mono text-[9.5px] uppercase tracking-wider text-faint">
-                        Liveness Depth
+                        QR Validity
                       </span>
-                      <p className="mt-1 font-display text-lg font-semibold text-hi">RGB+IR</p>
-                      <span className="font-mono text-[9px] text-spotify">Anti-Spoof active</span>
+                      <p className="mt-1 font-display text-lg font-semibold text-hi">20s</p>
+                      <span className="font-mono text-[9px] text-spotify">HMAC-SHA256</span>
                     </motion.div>
                   </div>
                 </div>
