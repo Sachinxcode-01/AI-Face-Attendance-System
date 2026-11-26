@@ -51,6 +51,73 @@ router.post('/announcement', authenticate, requireRole(['admin']), async (req, r
   }
 });
 
+// ─── GET /notifications (current authenticated user) ───────────────
+router.get('/', authenticate, async (req, res) => {
+  try {
+    const email = req.userEmail.toLowerCase();
+    const filter = { user_id: email };
+    if (req.query.type && req.query.type !== 'all') {
+      filter.type = String(req.query.type);
+    }
+    if (req.query.unread === 'true') {
+      filter.is_read = { $ne: true };
+    }
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit || '50', 10)));
+
+    const [notifications, unreadCount, user] = await Promise.all([
+      Notification.find(filter).sort({ created_at: -1 }).limit(limit).lean(),
+      Notification.countDocuments({ user_id: email, is_read: { $ne: true } }),
+      User.findOne({ email }, 'notification_preferences').lean()
+    ]);
+
+    const result = notifications.map(n => ({
+      ...n,
+      id: n._id.toString(),
+      _id: undefined,
+    }));
+
+    res.json({
+      notifications: result,
+      unread_count: unreadCount,
+      preferences: user?.notification_preferences || { email: true, push: true, in_app: true }
+    });
+  } catch (error) {
+    reportInternalError(res, error, 'Notifications');
+  }
+});
+
+// ─── PATCH /notifications/read-all ────────────────────────────────
+router.patch('/read-all', authenticate, async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { user_id: req.userEmail.toLowerCase() },
+      { $set: { is_read: true } }
+    );
+    res.json({ success: true, message: 'All notifications marked as read' });
+  } catch (error) {
+    reportInternalError(res, error, 'Notifications');
+  }
+});
+
+// ─── PATCH /notifications/:id/read ────────────────────────────────
+router.patch('/:id/read', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ detail: 'Invalid notification ID.' });
+    }
+    const updated = await Notification.findOneAndUpdate(
+      { _id: id, user_id: req.userEmail.toLowerCase() },
+      { $set: { is_read: true } },
+      { new: true }
+    ).lean();
+    if (!updated) return res.status(404).json({ detail: 'Notification not found.' });
+    res.json({ success: true, id, is_read: true });
+  } catch (error) {
+    reportInternalError(res, error, 'Notifications');
+  }
+});
+
 // ─── GET /notifications/:email ──────────────────────────────────
 router.get('/:email', authenticate, async (req, res) => {
   try {

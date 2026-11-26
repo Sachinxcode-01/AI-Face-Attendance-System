@@ -8,7 +8,12 @@ const BiometricProfile = require('../models/BiometricProfile');
 class FaceAiService {
   constructor() {
     this.aiUrl = (process.env.AI_SERVICE_URL || 'http://127.0.0.1:8001').replace(/\/$/, '');
-    this.token = process.env.AI_SERVICE_TOKEN || 'secure_internal_ai_token_key_789';
+    const isProd = process.env.APP_ENV === 'production' || process.env.NODE_ENV === 'production';
+    const rawToken = process.env.AI_SERVICE_TOKEN || process.env.AI_INTERNAL_TOKEN || '';
+    if (isProd && !rawToken.trim()) {
+      throw new Error('CRITICAL SECURITY ERROR: AI_SERVICE_TOKEN must be set in production.');
+    }
+    this.token = rawToken || 'dev_internal_ai_token_local_only';
     this.timeoutMs = parseInt(process.env.AI_SERVICE_TIMEOUT_MS || '18000', 10);
   }
 

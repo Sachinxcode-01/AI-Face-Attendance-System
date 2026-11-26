@@ -8,32 +8,82 @@ export interface UserProfile {
   avatar: string;
   department?: string;
   rollNo?: string;
+  student_id?: string;
+  roll_number?: string;
+  usn?: string;
+  course?: string;
+  semester?: string;
+  section?: string;
+  college?: string;
+  college_id?: string;
+  academic_year?: string;
+  email_verified?: boolean;
+  biometric_registered?: boolean;
   streakDays?: number;
   streakTier?: 'Bronze Flame' | 'Silver Spark' | 'Golden Blaze' | 'Diamond Inferno';
   childName?: string;
   childRollNo?: string;
   phone?: string;
+  dob?: string;
+  gender?: string;
+  address?: string;
+  language_preference?: string;
+  theme_preference?: string;
   joinedAt?: string;
 }
 
 export interface AttendanceRecord {
   id: string;
+  receipt_id?: string;
+  session_id?: string;
   date: string;
   time: string;
+  scheduled_time?: string | null;
+  registration_time?: string;
   subject: string;
-  status: 'present' | 'absent' | 'late' | 'verified_face' | 'verified_qr';
-  confidence?: number;
+  subject_code?: string;
+  faculty_name?: string;
+  status:
+  | 'present'
+  | 'absent'
+  | 'late'
+  | 'excused'
+  | 'medical_leave'
+  | 'approved_leave'
+  | 'pending_verification'
+  | 'manually_recorded'
+  | 'cancelled_session'
+  | 'not_recorded'
+  | 'verified_face'
+  | 'verified_qr';
+  raw_status?: string;
+  verified_by?: string;
+  confidence?: number | null;
   room: string;
+  correction_status?: string | null;
+  correction_id?: string | null;
+  remarks?: string | null;
+  semester?: string;
+  updated_at?: string;
 }
 
 export interface TimetableSlot {
   id: string;
-  day: 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat';
+  day: 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
+  day_full?: string;
   time: string;
   subject: string;
+  subject_code?: string;
   professor: string;
+  substitute_faculty?: string;
   room: string;
-  status: 'upcoming' | 'live' | 'completed';
+  session_type?: 'lecture' | 'lab' | 'practical' | 'special' | 'exam';
+  semester?: string;
+  is_cancelled?: boolean;
+  cancellation_reason?: string;
+  rescheduled_to?: string;
+  minutes_until_start?: number | null;
+  status: 'upcoming' | 'live' | 'completed' | 'cancelled';
 }
 
 export interface LeaveRequest {
@@ -41,10 +91,18 @@ export interface LeaveRequest {
   studentName: string;
   rollNo: string;
   reason: string;
-  category: 'Medical' | 'Academic' | 'Personal';
+  category: 'Medical' | 'Personal' | 'Emergency' | 'Academic' | 'Sports' | 'Institutional Activity' | 'Other';
   startDate: string;
   endDate: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'draft' | 'pending' | 'under_review' | 'clarification' | 'approved' | 'rejected' | 'withdrawn' | 'cancelled';
+  rawStatus?: string;
+  remarks?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  documentUrl?: string;
+  documentName?: string;
+  statusHistory?: Array<{ status: string; actor?: string; note?: string; timestamp: string }>;
+  createdAt?: string;
 }
 
 export interface IntruderAlert {

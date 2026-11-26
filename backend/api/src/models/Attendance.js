@@ -9,7 +9,12 @@ const AttendanceSchema = new mongoose.Schema({
   verified_by: { type: String, default: "qr" }, // qr, face, manual
   confidence: { type: Number },
   lighting_quality: { type: String, default: "Good" }, // Good, Under-exposed, Over-exposed
-  face_visibility: { type: String, default: "Excellent" } // Excellent, Partially Obscured, Weak Angle
+  face_visibility: { type: String, default: "Excellent" }, // Excellent, Partially Obscured, Weak Angle
+  subject: { type: String },
+  semester: { type: String },
+  receipt_id: { type: String, index: true },
+  remarks: { type: String },
+  updated_at: { type: Date, default: Date.now }
 });
 
 AttendanceSchema.index({ student_email: 1, timestamp: -1 });

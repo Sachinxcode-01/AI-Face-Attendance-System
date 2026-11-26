@@ -44,7 +44,8 @@ async function runAttendanceIntelValidation() {
     User.deleteMany({ email: { $in: [STUDENT_EMAIL, TEACHER_EMAIL, ADMIN_EMAIL] } }),
     AttendanceAnalytics.deleteMany({ student_email: STUDENT_EMAIL }),
     AttendanceAuditLog.deleteMany({ actor_email: { $in: [STUDENT_EMAIL, TEACHER_EMAIL, ADMIN_EMAIL] } }),
-    Attendance.deleteMany({ student_email: STUDENT_EMAIL })
+    Attendance.deleteMany({ student_email: STUDENT_EMAIL }),
+    Session.deleteMany({ teacher_id: TEACHER_EMAIL })
   ]);
 
   const AuthService = require('../../src/services/authService');
@@ -129,7 +130,7 @@ async function runAttendanceIntelValidation() {
   try {
     // Authenticate users to get tokens
     console.log("\n🔑 Retrieving API authorization tokens...");
-    
+
     const loginUser = async (email) => {
       const res = await fetch(`${TEST_URL}/auth/login-password`, {
         method: 'POST',
@@ -281,10 +282,10 @@ async function runAttendanceIntelValidation() {
       Session.deleteOne({ _id: testSession._id })
     ]);
 
-     const { awaitPendingJobs } = require('../../src/utils/jobTracker');
-     await awaitPendingJobs();
-     testServer.close();
-     await mongoose.disconnect();
+    const { awaitPendingJobs } = require('../../src/utils/jobTracker');
+    await awaitPendingJobs();
+    testServer.close();
+    await mongoose.disconnect();
   }
 }
 

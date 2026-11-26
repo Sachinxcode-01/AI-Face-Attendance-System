@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { QueryProvider } from "@/providers/QueryProvider";
 import { SpaceBackground } from "@/components/layout/SpaceBackground";
 
 const inter = Inter({
@@ -59,9 +60,11 @@ export default function RootLayout({
       <body className="min-h-screen bg-bg0 font-sans text-hi antialiased selection:bg-accent/30 selection:text-white overflow-x-hidden">
         <SpaceBackground />
         <div className="relative z-10 flex min-h-screen flex-col">
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <QueryProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </QueryProvider>
         </div>
       </body>
     </html>

@@ -51,6 +51,7 @@ const NAV: Record<string, NavItem[]> = {
     { label: 'Analytics', href: '/student/analytics', icon: BarChart3 },
     { label: 'Nexa AI Chat', href: '/student/ai-chat', icon: Bot },
     { label: 'Face Check-in', href: '/student/checkin', icon: ScanFace },
+    { label: 'Notifications', href: '/student/notifications', icon: BellRing },
     { label: 'Profile', href: '/student/profile', icon: UserRound },
   ],
   teacher: [

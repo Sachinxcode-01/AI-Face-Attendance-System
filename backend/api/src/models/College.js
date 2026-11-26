@@ -89,6 +89,19 @@ const collegeSchema = new mongoose.Schema({
     last_sync_status: { type: String, enum: ['idle', 'success', 'failed', 'running'], default: 'idle' },
     auto_sync_frequency_hours: { type: Number, default: 24 }
   },
+  // Attendance & Academic Policy configuration
+  attendance_policy: {
+    min_percentage: { type: Number, default: 75, min: 0, max: 100 },
+    approved_leave_counts_as_present: { type: Boolean, default: false },
+    excused_counts_as_present: { type: Boolean, default: true },
+    late_counts_as_present: { type: Boolean, default: true },
+    dispute_deadline_days: { type: Number, default: 14 },
+    allow_leave_withdrawal: { type: Boolean, default: true },
+    timezone: { type: String, default: 'Asia/Kolkata' },
+    academic_year: { type: String, default: '2026-2027' },
+    current_semester: { type: String, default: 'Odd Semester' },
+    semester_end_date: { type: Date, default: null }
+  },
   // Customer Success & health telemetry
   health_telemetry: {
     score: { type: Number, default: 95 },

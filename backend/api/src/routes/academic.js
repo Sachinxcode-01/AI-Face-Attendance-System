@@ -1,4 +1,3 @@
-const datasetService = require('../services/datasetService');
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -8,7 +7,9 @@ const Holiday = require('../models/Holiday');
 const Leave = require('../models/Leave');
 const Session = require('../models/Session');
 const Attendance = require('../models/Attendance');
+const Notification = require('../models/Notification');
 const { authenticate, requireRole } = require('../middleware/auth');
+const { getInstitutionPolicy, buildTimetableKey, parseSlotTimes, toDateKey } = require('../services/studentAttendanceService');
 
 // GET /academic/dashboard
 router.get('/dashboard', authenticate, async (req, res) => {
@@ -36,16 +37,16 @@ router.get('/dashboard', authenticate, async (req, res) => {
 // GET /academic/timetable
 router.get('/timetable', authenticate, async (req, res) => {
   try {
-    let queryId = req.userEmail;
+    const email = req.userEmail.toLowerCase();
+    let queryIds = [email.toUpperCase()];
 
     if (req.userRole === 'student') {
-      const user = await User.findOne({ email: req.userEmail });
-      if (user && user.department && user.semester) {
-        queryId = `${user.department.toUpperCase()}_${user.semester}_${user.section || 'A'}`;
-      }
+      const user = await User.findOne({ email }).lean();
+      const key = buildTimetableKey(user);
+      if (key) queryIds = [key, email.toUpperCase()];
     }
 
-    const timetable = await Timetable.find({ user_id: queryId.toUpperCase() }).lean();
+    const timetable = await Timetable.find({ user_id: { $in: queryIds } }).lean();
 
     const formatted = timetable.map(item => {
       item.id = item._id.toString();
@@ -55,7 +56,195 @@ router.get('/timetable', authenticate, async (req, res) => {
 
     res.json(formatted);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    res.status(500).json({ detail: 'Unable to load timetable.' });
+  }
+});
+
+// GET /academic/timetable/summary
+router.get('/timetable/summary', authenticate, async (req, res) => {
+  try {
+    const email = req.userEmail.toLowerCase();
+    const user = await User.findOne({ email }).lean();
+    if (!user) return res.status(404).json({ detail: 'User not found.' });
+
+    const policy = await getInstitutionPolicy(user);
+    const key = buildTimetableKey(user);
+    const queryIds = key ? [key, email.toUpperCase()] : [email.toUpperCase()];
+
+    const [slots, holidays] = await Promise.all([
+      Timetable.find({ user_id: { $in: queryIds } }).lean(),
+      Holiday.find({}).sort({ date: 1 }).lean(),
+    ]);
+
+    const now = new Date();
+    const todayIso = toDateKey(now);
+    const todayLong = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][now.getDay()];
+    const todayShort = todayLong.slice(0, 3).toLowerCase();
+    const holidayDates = new Set(holidays.map((h) => toDateKey(h.date)).filter(Boolean));
+    const isTodayHoliday = holidayDates.has(todayIso);
+
+    const enrichedSlots = slots.map((s) => {
+      const sDay = String(s.day || '').trim();
+      const isToday = sDay.toLowerCase() === todayLong.toLowerCase() || sDay.slice(0, 3).toLowerCase() === todayShort;
+      const { start, end } = isToday ? parseSlotTimes(s.time, now) : { start: null, end: null };
+      let status = 'upcoming';
+      let minutesUntilStart = null;
+      if (s.is_cancelled) {
+        status = 'cancelled';
+      } else if (isToday && start && end) {
+        if (now >= start && now <= end) status = 'live';
+        else if (now > end) status = 'completed';
+        else minutesUntilStart = Math.max(0, Math.round((start.getTime() - now.getTime()) / 60000));
+      }
+
+      return {
+        id: s._id.toString(),
+        day: sDay.slice(0, 3),
+        day_full: sDay,
+        time: s.time,
+        subject: s.subject,
+        subject_code: s.subject_code || '',
+        professor: s.substitute_faculty || s.faculty_name || s.teacher_email || 'Faculty',
+        substitute_faculty: s.substitute_faculty || '',
+        room: s.room || 'TBA',
+        session_type: s.session_type || 'lecture',
+        semester: s.semester || policy.currentSemester,
+        is_cancelled: Boolean(s.is_cancelled),
+        cancellation_reason: s.cancellation_reason || '',
+        rescheduled_to: s.rescheduled_to || '',
+        status,
+        minutes_until_start: minutesUntilStart,
+      };
+    });
+
+    const todaySlots = enrichedSlots.filter((s) => s.day.toLowerCase() === todayShort);
+    const currentClass = todaySlots.find((s) => s.status === 'live') || null;
+    const nextClass = todaySlots
+      .filter((s) => s.status === 'upcoming' && s.minutes_until_start != null)
+      .sort((a, b) => a.minutes_until_start - b.minutes_until_start)[0] || null;
+
+    res.json({
+      slots: enrichedSlots,
+      today_slots: todaySlots,
+      current_class: currentClass,
+      next_class: nextClass,
+      is_today_holiday: isTodayHoliday,
+      holidays: holidays.map((h) => ({
+        id: h._id.toString(),
+        title: h.title,
+        date: toDateKey(h.date),
+        description: h.description || '',
+      })),
+      timezone: policy.timezone,
+      semester: policy.currentSemester,
+      academic_year: policy.academicYear,
+    });
+  } catch (error) {
+    res.status(500).json({ detail: 'Unable to load timetable summary.' });
+  }
+});
+
+// GET /academic/timetable/export.ics
+router.get('/timetable/export.ics', authenticate, async (req, res) => {
+  try {
+    const email = req.userEmail.toLowerCase();
+    const user = await User.findOne({ email }).lean();
+    const policy = await getInstitutionPolicy(user);
+    const key = buildTimetableKey(user);
+    const queryIds = key ? [key, email.toUpperCase()] : [email.toUpperCase()];
+    const slots = await Timetable.find({ user_id: { $in: queryIds } }).lean();
+
+    const dayToByDay = { sun: 'SU', mon: 'MO', tue: 'TU', wed: 'WE', thu: 'TH', fri: 'FR', sat: 'SA' };
+    const dayToDow = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+    const now = new Date();
+
+    const formatIcsDate = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const esc = (v) => String(v || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+
+    const lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//SmartFace Attendance//Student Timetable//EN',
+      `X-WR-CALNAME:${esc(policy.collegeName || 'SmartFace')} Timetable`,
+      `X-WR-TIMEZONE:${esc(policy.timezone)}`,
+    ];
+
+    for (const slot of slots) {
+      if (slot.is_cancelled) continue;
+      const dKey = String(slot.day || 'Mon').slice(0, 3).toLowerCase();
+      const targetDow = dayToDow[dKey] ?? 1;
+      const diff = (targetDow - now.getDay() + 7) % 7;
+      const base = new Date(now);
+      base.setDate(now.getDate() + diff);
+      const { start, end } = parseSlotTimes(slot.time, base);
+      const dtStart = start || base;
+      const dtEnd = end || new Date(dtStart.getTime() + 60 * 60000);
+
+      lines.push(
+        'BEGIN:VEVENT',
+        `UID:${slot._id.toString()}@smartface.pro`,
+        `DTSTAMP:${formatIcsDate(now)}`,
+        `DTSTART:${formatIcsDate(dtStart)}`,
+        `DTEND:${formatIcsDate(dtEnd)}`,
+        `RRULE:FREQ=WEEKLY;BYDAY=${dayToByDay[dKey] || 'MO'}`,
+        `SUMMARY:${esc(slot.subject)}${slot.subject_code ? ` (${esc(slot.subject_code)})` : ''}`,
+        `LOCATION:${esc(slot.room || 'Campus')}`,
+        `DESCRIPTION:${esc(`Faculty: ${slot.substitute_faculty || slot.faculty_name || slot.teacher_email || 'Faculty'} | Type: ${slot.session_type || 'lecture'}`)}`,
+        'END:VEVENT'
+      );
+    }
+    lines.push('END:VCALENDAR');
+
+    res.setHeader('Content-Disposition', 'attachment; filename="smartface_timetable.ics"');
+    res.set('Content-Type', 'text/calendar; charset=utf-8');
+    res.send(lines.join('\r\n'));
+  } catch (error) {
+    res.status(500).json({ detail: 'Unable to export ICS calendar.' });
+  }
+});
+
+// GET /academic/announcements
+router.get('/announcements', authenticate, async (req, res) => {
+  try {
+    const email = req.userEmail.toLowerCase();
+    const search = typeof req.query.search === 'string' ? req.query.search.trim().toLowerCase() : '';
+    const priority = typeof req.query.priority === 'string' ? req.query.priority : 'all';
+
+    const items = await Notification.find({
+      user_id: email,
+      type: { $in: ['announcement', 'exam', 'holiday', 'policy'] }
+    }).sort({ created_at: -1 }).limit(100).lean();
+
+    const now = new Date();
+    let announcements = items
+      .filter((a) => !a.extra_data?.expires_at || new Date(a.extra_data.expires_at) > now)
+      .map((a) => ({
+        id: a._id.toString(),
+        title: a.title,
+        message: a.message,
+        type: a.type,
+        priority: a.priority || 'Info',
+        pinned: Boolean(a.extra_data?.pinned),
+        sender: a.extra_data?.sender || 'Administration',
+        attachment_url: a.extra_data?.attachment_url || null,
+        read: Boolean(a.is_read),
+        created_at: a.created_at,
+        expires_at: a.extra_data?.expires_at || null,
+      }));
+
+    if (priority !== 'all') {
+      announcements = announcements.filter((a) => a.priority.toLowerCase() === priority.toLowerCase());
+    }
+    if (search) {
+      announcements = announcements.filter((a) =>
+        a.title.toLowerCase().includes(search) || a.message.toLowerCase().includes(search)
+      );
+    }
+
+    announcements.sort((a, b) => Number(b.pinned) - Number(a.pinned));
+    res.json({ announcements });
+  } catch (error) {
+    res.status(500).json({ detail: 'Unable to fetch announcements.' });
   }
 });
 
@@ -468,63 +657,36 @@ router.get('/calendar', authenticate, async (req, res) => {
       description: h.description
     }));
 
-    // Fetch marked attendance logs for student
+    // Fetch marked attendance logs for student (optimized single session lookup)
     let attendanceEvents = [];
     if (req.userRole === 'student') {
-      try {
-        if (require('mongoose').connection.readyState === 1) {
-          const records = await Attendance.find({ student_email: email }).lean();
-          for (const rec of records) {
-            try {
-              const session = await Session.findById(rec.session_id);
-              if (session) {
-                attendanceEvents.push({
-                  id: rec._id.toString(),
-                  title: `Attended: ${session.subject}`,
-                  type: "attendance",
-                  start_date: rec.timestamp,
-                  end_date: rec.timestamp,
-                  status: rec.status || "Present"
-                });
-              }
-            } catch (err) { }
+          if (mongoose.connection.readyState === 1) {
+            const records = await Attendance.find({ student_email: email.toLowerCase() }).lean();
+            const sessionIds = [...new Set(records.map((r) => r.session_id).filter((id) => mongoose.Types.ObjectId.isValid(id)))];
+            const sessions = sessionIds.length ? await Session.find({ _id: { $in: sessionIds } }, 'subject').lean() : [];
+            const subjectById = new Map(sessions.map((s) => [s._id.toString(), s.subject]));
+            for (const rec of records) {
+              const subjectName = rec.subject || subjectById.get(String(rec.session_id)) || 'Class Session';
+              attendanceEvents.push({
+                id: rec._id.toString(),
+                title: `${rec.status || 'Present'}: ${subjectName}`,
+                type: "attendance",
+                start_date: rec.timestamp,
+                end_date: rec.timestamp,
+                status: rec.status || "Present"
+              });
+            }
           }
         }
-      } catch (_) { }
 
-      if (attendanceEvents.length === 0) {
-        const dsLogs = datasetService.getStudentLogs(email, { limit: 500 }).logs;
-        for (const log of dsLogs) {
-          if (log.status.toLowerCase() === 'present') {
-            attendanceEvents.push({
-              id: log.id,
-              title: `Attended: ${log.subject}`,
-              type: "attendance",
-              start_date: `${log.date}T${log.time}:00Z`,
-              end_date: `${log.date}T${log.time}:00Z`,
-              status: "Present"
-            });
-          }
-        }
+        res.json({
+          leaves: leaveEvents,
+          holidays: holidayEvents,
+          attendance: attendanceEvents
+        });
+      } catch (error) {
+        res.status(500).json({ detail: error.message });
       }
-    }
-
-    // Default mock holidays if none found
-    if (holidayEvents.length === 0) {
-      holidayEvents.push(
-        { id: "mh-1", title: "Independence Day", type: "holiday", start_date: "2026-08-15T00:00:00.000Z", end_date: "2026-08-15T00:00:00.000Z" },
-        { id: "mh-2", title: "Labor Day", type: "holiday", start_date: "2026-09-07T00:00:00.000Z", end_date: "2026-09-07T00:00:00.000Z" }
-      );
-    }
-
-    res.json({
-      leaves: leaveEvents,
-      holidays: holidayEvents,
-      attendance: attendanceEvents
     });
-  } catch (error) {
-    res.status(500).json({ detail: error.message });
-  }
-});
 
 module.exports = router;

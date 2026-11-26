@@ -5,11 +5,21 @@ const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
-const profileKeys = [
+const studentProfileKeys = new Set([
   'full_name',
   'phone',
-  'department',
   'dob',
+  'gender',
+  'address',
+  'parent_details',
+  'language_preference',
+  'theme_preference',
+  'setup_completed',
+]);
+
+const staffProfileKeys = new Set([
+  ...studentProfileKeys,
+  'department',
   'college',
   'semester',
   'student_id',
@@ -18,17 +28,12 @@ const profileKeys = [
   'specialization',
   'qualification',
   'experience',
-  'gender',
-  'address',
   'usn',
   'course',
   'section',
   'roll_number',
-  'parent_details',
-  'language_preference',
   'linked_children',
-  'setup_completed',
-];
+]);
 
 router.get('/health', async (req, res) => {
   res.json({
@@ -41,19 +46,21 @@ router.get('/health', async (req, res) => {
 
 router.patch('/profile', authenticate, async (req, res) => {
   try {
+    const role = (req.userRole || '').toLowerCase();
+    const allowed = ['admin', 'super_admin'].includes(role) ? staffProfileKeys : (role === 'student' ? studentProfileKeys : staffProfileKeys);
     const updateFields = {};
-    profileKeys.forEach((key) => {
-      if (req.body[key] !== undefined && req.body[key] !== null) {
-        updateFields[key] = req.body[key];
-      }
-    });
+      allowed.forEach((key) => {
+        if (req.body[key] !== undefined && req.body[key] !== null) {
+          updateFields[key] = typeof req.body[key] === 'string' ? req.body[key].trim().slice(0, 500) : req.body[key];
+        }
+      });
 
-    await User.updateOne({ email: req.userEmail }, { $set: updateFields });
-    res.json({ success: true, message: 'Profile updated successfully' });
-  } catch (error) {
-    res.status(500).json({ detail: error.message });
-  }
-});
+      await User.updateOne({ email: req.userEmail }, { $set: updateFields });
+      res.json({ success: true, message: 'Profile updated successfully' });
+    } catch (error) {
+      res.status(500).json({ detail: 'Unable to update profile.' });
+    }
+  });
 
 router.patch('/settings', authenticate, async (req, res) => {
   try {

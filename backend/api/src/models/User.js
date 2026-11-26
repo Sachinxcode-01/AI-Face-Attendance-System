@@ -34,10 +34,26 @@ const UserSchema = new mongoose.Schema({
   parent_details: { type: String },
   children: { type: [String], default: [] }, // student emails linked to a parent account
   language_preference: { type: String, default: 'English' },
+  theme_preference: { type: String, default: 'dark' },
+  academic_year: { type: String },
   notification_preferences: {
     email: { type: Boolean, default: true },
     push: { type: Boolean, default: true },
-    in_app: { type: Boolean, default: true }
+    in_app: { type: Boolean, default: true },
+    shortage_alerts: { type: Boolean, default: true },
+    reminder_minutes_before: { type: Number, default: 15 },
+    quiet_hours: {
+      enabled: { type: Boolean, default: false },
+      start: { type: String, default: '22:00' },
+      end: { type: String, default: '07:00' }
+    }
+  },
+  privacy_preferences: {
+    biometric_consent: { type: Boolean, default: false },
+    consent_updated_at: { type: Date },
+    data_retention_ack: { type: Boolean, default: false },
+    deletion_requested_at: { type: Date },
+    deletion_reason: { type: String }
   },
   employee_id: { type: String },
   designation: { type: String },

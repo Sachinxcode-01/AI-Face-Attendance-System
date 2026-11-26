@@ -4,7 +4,8 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useRouter } from 'next/navigation';
 import { UserProfile, UserRole } from '@/lib/types';
 import { setAuthCookies, clearAuth, getStoredUser, getRole, isAuthenticated, DEMO_ACCOUNTS, getRoleRedirectPath } from '@/lib/auth';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, resolveMediaUrl } from '@/lib/api';
+import { queryClient } from '@/core/query/queryClient';
 
 interface AuthContextValue {
   user: UserProfile | null;
@@ -15,10 +16,43 @@ interface AuthContextValue {
   loginWithCredentials: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginWithToken: (data: { access_token: string; role?: string; full_name?: string; email?: string; user_id?: string; profilePhotoUrl?: string }) => void;
   register: (data: { email: string; password: string; full_name: string; role: UserRole }) => Promise<{ success: boolean; error?: string }>;
+  updateUser: (partial: Partial<UserProfile>) => void;
+  refreshProfile: () => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function mapApiUserToProfile(raw: any, fallbackRole: UserRole = 'student'): UserProfile {
+  const userRole = (raw?.role?.toLowerCase() as UserRole) || fallbackRole;
+  const photo = resolveMediaUrl(raw?.profilePhotoUrl || raw?.avatar_url || '');
+  return {
+    id: raw?.id || raw?._id || raw?.user_id || '',
+    name: raw?.full_name || raw?.name || (raw?.email ? raw.email.split('@')[0] : 'User'),
+    email: raw?.email || '',
+    role: userRole,
+    avatar: photo,
+    department: raw?.department || undefined,
+    rollNo: raw?.roll_number || raw?.student_id || raw?.usn || undefined,
+    student_id: raw?.student_id || undefined,
+    roll_number: raw?.roll_number || undefined,
+    usn: raw?.usn || undefined,
+    course: raw?.course || undefined,
+    semester: raw?.semester || undefined,
+    section: raw?.section || undefined,
+    college: raw?.college || undefined,
+    college_id: raw?.college_id || undefined,
+    academic_year: raw?.academic_year || undefined,
+    email_verified: Boolean(raw?.email_verified),
+    biometric_registered: Boolean(raw?.biometric_registered),
+    phone: raw?.phone || undefined,
+    dob: raw?.dob || undefined,
+    gender: raw?.gender || undefined,
+    address: raw?.address || undefined,
+    language_preference: raw?.language_preference || undefined,
+    theme_preference: raw?.theme_preference || undefined,
+  };
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -27,11 +61,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const refreshProfile = useCallback(async () => {
+    if (!isAuthenticated()) return;
+    try {
+      const data = await api.auth.profile();
+      if (data && data.email) {
+        const currentRole = (data.role?.toLowerCase() as UserRole) || getRole() || 'student';
+        const profile = mapApiUserToProfile(data, currentRole);
+        const token = typeof localStorage !== 'undefined' ? localStorage.getItem('sf_token') : null;
+        if (token) {
+          setAuthCookies(token, currentRole, profile);
+        }
+        setUser(profile);
+        setRole(currentRole);
+      }
+    } catch {
+      /* keep stored user when offline or transient failure */
+    }
+  }, []);
+
   useEffect(() => {
-    setUser(getStoredUser());
-    setRole(getRole());
-    setAuthed(isAuthenticated());
+    const stored = getStoredUser();
+    const r = getRole();
+    const isAuthed = isAuthenticated();
+    setUser(stored);
+    setRole(r);
+    setAuthed(isAuthed);
     setLoading(false);
+    if (isAuthed) {
+      refreshProfile();
+    }
+  }, [refreshProfile]);
+
+  const updateUser = useCallback((partial: Partial<UserProfile>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const merged = { ...prev, ...partial };
+      const token = typeof localStorage !== 'undefined' ? localStorage.getItem('sf_token') : null;
+      if (token) {
+        setAuthCookies(token, merged.role, merged);
+      }
+      return merged;
+    });
   }, []);
 
   const login = useCallback(
@@ -42,106 +113,98 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const data = await api.auth.login(acc.email, acc.password);
         if (data && data.access_token) {
           const userRole = (data.role?.toLowerCase() as UserRole) || selectedRole;
-          const profile: UserProfile = {
-            id: data.user_id || 'usr_' + Math.random().toString(36).slice(2, 9),
-            name: data.full_name || acc.name,
-            email: data.email || acc.email,
-            role: userRole,
-            avatar: data.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-          };
+          const profile = mapApiUserToProfile(
+            { ...data, email: data.email || acc.email, full_name: data.full_name || acc.name },
+            userRole
+          );
+          queryClient.clear();
           setAuthCookies(data.access_token, userRole, profile);
           setUser(profile);
           setRole(userRole);
           setAuthed(true);
+          await refreshProfile();
           router.push(getRoleRedirectPath(userRole));
         }
       } catch (err) {
         console.error('Login error:', err);
       }
     },
-    [router]
+    [router, refreshProfile]
   );
 
   const loginWithCredentials = useCallback(
-      async (email: string, password: string): Promise<{ success: boolean; role?: UserRole; error?: string }> => {
-        const normalized = email.trim().toLowerCase();
+    async (email: string, password: string): Promise<{ success: boolean; role?: UserRole; error?: string }> => {
+      const normalized = email.trim().toLowerCase();
 
-        try {
-          const data = await api.auth.login(normalized, password);
-          if (data && data.access_token) {
-            const userRole = (data.role?.toLowerCase() as UserRole) || 'student';
-            const profile: UserProfile = {
-              id: data.user_id || 'usr_' + Math.random().toString(36).slice(2, 9),
-              name: data.full_name || email.split('@')[0],
-              email: data.email || normalized,
-              role: userRole,
-              avatar: data.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-            };
-            setAuthCookies(data.access_token, userRole, profile);
-            setUser(profile);
-            setRole(userRole);
-            setAuthed(true);
-            return { success: true, role: userRole };
-          }
-          return { success: false, error: 'Authentication failed: No access token issued.' };
-        } catch (err: unknown) {
-          const msg = err instanceof ApiError ? err.message : 'Invalid credentials. Please check your email and password.';
-          return { success: false, error: msg };
+      try {
+        const data = await api.auth.login(normalized, password);
+        if (data && data.access_token) {
+          const userRole = (data.role?.toLowerCase() as UserRole) || 'student';
+          const profile = mapApiUserToProfile(
+            { ...data, email: data.email || normalized, full_name: data.full_name || email.split('@')[0] },
+            userRole
+          );
+          queryClient.clear();
+          setAuthCookies(data.access_token, userRole, profile);
+          setUser(profile);
+          setRole(userRole);
+          setAuthed(true);
+          refreshProfile();
+          return { success: true, role: userRole };
         }
-      },
-        []
+        return { success: false, error: 'Authentication failed: No access token issued.' };
+      } catch (err: unknown) {
+        const msg = err instanceof ApiError ? err.message : 'Invalid credentials. Please check your email and password.';
+        return { success: false, error: msg };
+      }
+    },
+    [refreshProfile]
   );
 
   const register = useCallback(
-      async (regData: { email: string; password: string; full_name: string; role: UserRole }): Promise<{ success: boolean; hasToken?: boolean; error?: string }> => {
-        try {
-          const data = await api.auth.register(regData);
-          if (data && data.access_token) {
-            const userRole = (data.role?.toLowerCase() as UserRole) || regData.role;
-            const profile: UserProfile = {
-              id: data.user_id || 'usr_' + Math.random().toString(36).slice(2, 9),
-              name: data.full_name || regData.full_name,
-              email: data.email || regData.email,
-              role: userRole,
-              avatar: data.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-            };
-            setAuthCookies(data.access_token, userRole, profile);
-            setUser(profile);
-            setRole(userRole);
-            setAuthed(true);
-            return { success: true, hasToken: true };
-          }
-          return { success: true, hasToken: false };
-        } catch (err: unknown) {
-          const msg = err instanceof ApiError ? err.message : 'Registration failed. Please try again.';
-          return { success: false, error: msg };
+    async (regData: { email: string; password: string; full_name: string; role: UserRole }): Promise<{ success: boolean; hasToken?: boolean; error?: string }> => {
+      try {
+        const data = await api.auth.register(regData);
+        if (data && data.access_token) {
+          const userRole = (data.role?.toLowerCase() as UserRole) || regData.role;
+          const profile = mapApiUserToProfile(
+            { ...data, email: data.email || regData.email, full_name: data.full_name || regData.full_name },
+            userRole
+          );
+          setAuthCookies(data.access_token, userRole, profile);
+          setUser(profile);
+          setRole(userRole);
+          setAuthed(true);
+          return { success: true, hasToken: true };
         }
-      },
-        []
+        return { success: true, hasToken: false };
+      } catch (err: unknown) {
+        const msg = err instanceof ApiError ? err.message : 'Registration failed. Please try again.';
+        return { success: false, error: msg };
+      }
+    },
+    []
   );
 
   const loginWithToken = useCallback(
     (tokenData: { access_token: string; role?: string; full_name?: string; email?: string; user_id?: string; profilePhotoUrl?: string }) => {
       const userRole = (tokenData.role?.toLowerCase() as UserRole) || 'student';
-      const profile: UserProfile = {
-        id: tokenData.user_id || 'usr_' + Math.random().toString(36).slice(2, 9),
-        name: tokenData.full_name || (tokenData.email ? tokenData.email.split('@')[0] : 'User'),
-        email: tokenData.email || '',
-        role: userRole,
-        avatar: tokenData.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-      };
+      const profile = mapApiUserToProfile(tokenData, userRole);
+      queryClient.clear();
       setAuthCookies(tokenData.access_token, userRole, profile);
       setUser(profile);
       setRole(userRole);
       setAuthed(true);
+      refreshProfile();
       router.push(getRoleRedirectPath(userRole));
     },
-    [router]
+    [router, refreshProfile]
   );
 
   const logout = useCallback(() => {
     api.auth.logout().catch(() => { });
     clearAuth();
+    queryClient.clear();
     setUser(null);
     setRole(null);
     setAuthed(false);
@@ -149,26 +212,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ user, role, authed, loading, login, loginWithCredentials, loginWithToken, register, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+      <AuthContext.Provider value={{ user, role, authed, loading, login, loginWithCredentials, loginWithToken, register, updateUser, refreshProfile, logout }}>
+        {children}
+      </AuthContext.Provider>
+      );
 }
 
-export function useAuth(): AuthContextValue {
+      export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
+      if (!ctx) {
     return {
-      user: null,
+        user: null,
       role: null,
       authed: false,
       loading: true,
       login: () => { },
-      loginWithCredentials: async () => ({ success: false }),
+      loginWithCredentials: async () => ({success: false }),
       loginWithToken: () => { },
-      register: async () => ({ success: false }),
+      register: async () => ({success: false }),
+      updateUser: () => { },
+      refreshProfile: async () => { },
       logout: () => { },
     };
   }
-  return ctx;
+      return ctx;
 }

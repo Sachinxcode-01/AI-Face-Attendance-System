@@ -129,20 +129,51 @@ router.get('/:sessionId/qr-token', authenticate, requireRole(['teacher', 'admin'
   }
 });
 
-// GET /sessions/active - Get currently active attendance session
+// GET /sessions/active - Get currently active attendance session scoped to student's institution
 router.get('/active', authenticate, async (req, res) => {
   try {
-    const activeSession = await Session.findOne({ is_active: true }).sort({ start_time: -1 }).lean();
-    if (!activeSession) {
-      return res.json({ is_active: false, message: "No active attendance session found" });
+    const role = (req.userRole || '').toLowerCase();
+    const user = await User.findOne({ email: req.userEmail }, 'college_id college department').lean();
+    const userCollege = user?.college_id || user?.college || null;
+
+    const filter = { is_active: true };
+    if (role === 'student' && userCollege) {
+      filter.$or = [
+        { college_id: userCollege },
+        { college_id: { $exists: false } },
+        { college_id: null },
+        { college_id: '' }
+      ];
     }
+
+    const activeSessions = await Session.find(filter).sort({ start_time: -1 }).limit(10).lean();
+    const activeSession = activeSessions[0];
+    if (!activeSession) {
+      return res.json({ is_active: false, sessions: [], message: "No active attendance session found" });
+    }
+
+    const sanitizedSessions = activeSessions.map((s) => ({
+      session_id: s._id.toString(),
+      teacher_id: s.teacher_id,
+      subject: s.subject,
+      room: s.room || null,
+      start_time: s.start_time,
+      duration: s.duration,
+      college_id: s.college_id || null,
+      geofence_enabled: s.latitude != null && s.longitude != null,
+    }));
+
     res.json({
       is_active: true,
       session_id: activeSession._id.toString(),
       teacher_id: activeSession.teacher_id,
       subject: activeSession.subject,
+      room: activeSession.room || null,
       start_time: activeSession.start_time,
-      duration: activeSession.duration
+      duration: activeSession.duration,
+      college_id: activeSession.college_id || null,
+      geofence_enabled: activeSession.latitude != null && activeSession.longitude != null,
+      sessions: sanitizedSessions
     });
   } catch (error) {
     reportInternalError(res, error, 'Sessions');

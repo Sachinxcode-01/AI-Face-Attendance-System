@@ -103,7 +103,7 @@ class NotificationService {
       delete notifObj._id;
 
       // Send real-time ws message to student
-      trackJob(this.sendPersonalMessage(userId, notifObj).catch(() => {}));
+      trackJob(this.sendPersonalMessage(userId, notifObj).catch(() => { }));
 
       // Send email if user preference allows it
       if (process.env.NODE_ENV === 'test') {
@@ -116,18 +116,26 @@ class NotificationService {
     <div>🔔 ${title}</div>
 </body>
 </html>`;
-        trackJob(EmailService.sendEmail(userId, subject, textBody, htmlBody).catch(() => {}));
+        trackJob(EmailService.sendEmail(userId, subject, textBody, htmlBody).catch(() => { }));
       } else {
         const sendEmailJob = async () => {
           try {
             if (mongoose.connection.readyState !== 1) return;
             const UserModel = require('../models/User');
             const user = await UserModel.findOne({ email: userId });
-            if (user && (!user.notification_preferences || user.notification_preferences.email !== false)) {
-              const EmailService = require('./emailService');
-              const subject = `SmartFace Alert: ${title}`;
-              const textBody = `${title}\n\n${message}\n\nPriority: ${priority}\nCategory: ${type}\n\nSmartFace Campus Platform`;
-              const htmlBody = `<!DOCTYPE html>
+              const prefs = user?.notification_preferences;
+              let inQuietHours = false;
+              if (priority !== 'Critical' && priority !== 'Urgent' && prefs?.quiet_hours?.enabled && prefs.quiet_hours.start && prefs.quiet_hours.end) {
+                const nowHHMM = new Date().toTimeString().slice(0, 5);
+                const s = prefs.quiet_hours.start;
+                const e = prefs.quiet_hours.end;
+                inQuietHours = s <= e ? (nowHHMM >= s && nowHHMM <= e) : (nowHHMM >= s || nowHHMM <= e);
+              }
+              if (user && !inQuietHours && (!prefs || prefs.email !== false)) {
+                const EmailService = require('./emailService');
+                const subject = `SmartFace Alert: ${title}`;
+                const textBody = `${title}\n\n${message}\n\nPriority: ${priority}\nCategory: ${type}\n\nSmartFace Campus Platform`;
+                const htmlBody = `<!DOCTYPE html>
 <html>
 <head>
     <style>
@@ -148,23 +156,23 @@ class NotificationService {
     </div>
 </body>
 </html>`;
-              await EmailService.sendEmail(userId, subject, textBody, htmlBody);
+                await EmailService.sendEmail(userId, subject, textBody, htmlBody);
+              }
+            } catch (err) {
+              console.error("Email notification sending error:", err);
             }
-          } catch (err) {
-            console.error("Email notification sending error:", err);
-          }
-        };
-        trackJob(sendEmailJob());
-      }
+          };
+          trackJob(sendEmailJob());
+        }
 
-      return notifObj;
-    } catch (error) {
-      if (mongoose.connection.readyState === 1) {
-        console.error("createNotification error:", error);
+        return notifObj;
+      } catch (error) {
+        if (mongoose.connection.readyState === 1) {
+          console.error("createNotification error:", error);
+        }
       }
     }
-  }
 }
 
-const notificationService = new NotificationService();
+  const notificationService = new NotificationService();
 module.exports = notificationService;
