@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
-import Link from 'next/link';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, Mail, Lock, Chrome, Github, GraduationCap, Users, ShieldCheck, HeartHandshake } from 'lucide-react';
-import { AuthScreenLayout, AuthInput } from '@/components/auth/AuthScreenLayout';
+import { GraduationCap, HeartHandshake, ShieldCheck, Users } from 'lucide-react';
+import { SplitSignInTemplate, type LoginRoleOption } from '@/components/auth/SplitSignInTemplate';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/Button';
-import { UserRole } from '@/lib/types';
-import { DEMO_ACCOUNTS, getRoleRedirectPath } from '@/lib/auth';
+import { getRoleRedirectPath } from '@/lib/auth';
+import type { UserRole } from '@/lib/types';
 
-const ROLE_BUTTONS: { role: UserRole; label: string; icon: React.ElementType; hint: string }[] = [
+const REMEMBER_EMAIL_KEY = 'sf_remember_login_email';
+
+const ROLE_BUTTONS: LoginRoleOption[] = [
   { role: 'student', label: 'Student', icon: GraduationCap, hint: 'alice@smartface.pro' },
   { role: 'teacher', label: 'Teacher', icon: Users, hint: 'marcus.vance@smartface.pro' },
   { role: 'admin', label: 'Admin', icon: ShieldCheck, hint: 'evelyn.cross@smartface.pro' },
@@ -21,11 +21,26 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { role: currentRole, login, loginWithCredentials } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPw, setShowPw] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(REMEMBER_EMAIL_KEY);
+      if (saved) setEmail(saved);
+    } catch {
+      // Ignore storage access restrictions
+    }
+    if (searchParams.get('registered') === '1') {
+      setNotice('Account created. Sign in with your campus credentials.');
+    }
+  }, [searchParams]);
 
   const redirectAfterAuth = (userRole?: UserRole) => {
     const from = searchParams.get('from');
@@ -39,9 +54,20 @@ function LoginForm() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setNotice('');
     setBusy(true);
 
     try {
+      try {
+        if (rememberMe && email.trim()) {
+          window.localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
+        } else {
+          window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
+        }
+      } catch {
+        // Ignore storage errors
+      }
+
       const res = await loginWithCredentials(email, password);
       setBusy(false);
       if (res.success) {
@@ -56,95 +82,53 @@ function LoginForm() {
   };
 
     const demoLogin = async (role: UserRole) => {
-      await login(role);
-      redirectAfterAuth(role);
-    };
+      setError('');
+      setNotice('');
+      setSelectedRole(role);
+      setBusy(true);
+      try {
+        await login(role);
+        redirectAfterAuth(role);
+    } catch {
+      setError('Unable to start demo session right now.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
-    return (
-      <AuthScreenLayout
-        title="Sign in to SmartFace"
-        subtitle="Biometric attendance access for students, faculty, admins, and parents."
-        footer={
-          <>
-            New here?{' '}
-            <Link href="/auth/register" className="font-semibold text-indigo-400 hover:text-indigo-300">
-              Create an account
-            </Link>
-          </>
-        }
-      >
-        <form onSubmit={submit} className="space-y-4">
-          <AuthInput label="Email" type="email" value={email} onChange={setEmail} placeholder="you@smartface.pro" autoComplete="email" />
-          <div>
-            <AuthInput label="Password" type={showPw ? 'text' : 'password'} value={password} onChange={setPassword} placeholder="••••••••" autoComplete="current-password" />
-            <button
-              type="button"
-              onClick={() => setShowPw((s) => !s)}
-              className="mt-1.5 text-[11px] text-gray-500 hover:text-gray-300"
-            >
-              {showPw ? 'Hide' : 'Show'} password
-            </button>
-          </div>
+  const handleSocialLogin = (provider: 'google' | 'github') => {
+          setError('');
+        setNotice(
+        provider === 'google'
+        ? 'Google SSO requires campus OAuth configuration; use your campus email or Demo Access below.'
+        : 'GitHub SSO requires OAuth configuration; use your campus email or Demo Access below.',
+        );
+  };
 
-          {error && (
-            <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>
-          )}
+        return (
+        <SplitSignInTemplate
+          email={email}
+          onEmailChange={setEmail}
+          password={password}
+          onPasswordChange={setPassword}
+          rememberMe={rememberMe}
+          onRememberMeChange={setRememberMe}
+          onSubmit={submit}
+          busy={busy}
+          error={error}
+          notice={notice}
+          roleOptions={ROLE_BUTTONS}
+          selectedRole={selectedRole}
+          onRoleSelect={demoLogin}
+          onSocialLogin={handleSocialLogin}
+        />
+        );
+}
 
-          <Button type="submit" loading={busy} className="w-full py-3">
-            <Mail className="h-4 w-4" /> Sign In Securely
-          </Button>
-        </form>
-
-        <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-wider text-gray-500">
-          <span className="h-px flex-1 bg-white/10" /> or continue with <span className="h-px flex-1 bg-white/10" />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <button className="btn-pill-glass py-2.5 text-xs font-semibold gap-2">
-            <Chrome className="h-4 w-4" /> Google
-          </button>
-          <button className="btn-pill-glass py-2.5 text-xs font-semibold gap-2">
-            <Github className="h-4 w-4" /> GitHub
-          </button>
-        </div>
-
-        <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-wider text-gray-500">
-          <span className="h-px flex-1 bg-white/10" /> demo access <span className="h-px flex-1 bg-white/10" />
-        </div>
-
-        <div className="grid grid-cols-2 gap-2.5">
-          {ROLE_BUTTONS.map(({ role, label, icon: Icon, hint }) => (
-            <button
-              key={role}
-              onClick={() => demoLogin(role)}
-              className="group flex flex-col items-start gap-1.5 rounded-[18px] border border-[var(--hairline)] bg-surface p-3.5 text-left transition-all hover:border-accent hover:bg-[#16161d]"
-            >
-              <Icon className="h-4 w-4 text-accent" />
-              <span className="text-xs font-bold text-white">{label}</span>
-              <span className="truncate font-mono text-[9px] text-faint">{hint}</span>
-            </button>
-          ))}
-        </div>
-        <p className="mt-3 text-center text-[10px] text-gray-600">
-          Demo password for all roles: <span className="font-mono text-gray-400">demo1234</span>
-        </p>
-
-        <div className="mt-4 flex items-center justify-between text-[11px]">
-          <Link href="/auth/forgot-password" className="text-gray-500 hover:text-indigo-400">
-            Forgot password?
-          </Link>
-          <Link href="/auth/verify" className="text-gray-500 hover:text-indigo-400">
-            Verify email / OTP
-          </Link>
-        </div>
-      </AuthScreenLayout>
-    );
-  }
-
-  export default function LoginPage() {
-    return (
-      <Suspense fallback={<div className="min-h-screen bg-[#050507]" />}>
-        <LoginForm />
-      </Suspense>
-    );
-  }
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-svh bg-[#070A14]" />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
