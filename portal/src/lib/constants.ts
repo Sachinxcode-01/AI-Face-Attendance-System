@@ -14,6 +14,7 @@ export const PORTAL_LINKS = {
   student: "/student",
   teacher: "/teacher",
   admin: "/admin",
+  superAdmin: "/admin/super-admin",
   parent: "/parent",
   login: "/auth/login",
   register: "/auth/register",

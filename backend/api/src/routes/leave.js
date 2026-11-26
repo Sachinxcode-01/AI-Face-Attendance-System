@@ -15,6 +15,7 @@ const { trackJob } = require('../utils/jobTracker');
 const validate = require('../middleware/validate');
 const { leaveApplySchema } = require('../schemas/validationSchemas');
 const reportInternalError = require('../utils/httpError');
+const cache = require('../utils/cache');
 const { getInstitutionPolicy } = require('../services/studentAttendanceService');
 
 const leaveReviewRoles = ['teacher', 'hod', 'principal', 'management', 'admin', 'super_admin'];
@@ -321,6 +322,7 @@ router.patch('/action', authenticate, requireRole(leaveReviewRoles), async (req,
       timestamp: new Date()
     });
     await leave.save();
+    cache.invalidateAnalyticsForUser(leave.user_id);
 
     trackJob(EmailService.sendLeaveStatusUpdate(leave.user_id, status, remarks).catch(console.error));
     trackJob(notificationService.createNotification(

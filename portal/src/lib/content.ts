@@ -1,8 +1,8 @@
-import { GraduationCap, Presentation, ShieldCheck, Users, type LucideIcon } from "lucide-react";
+import { Crown, GraduationCap, Presentation, ShieldCheck, Users, type LucideIcon } from "lucide-react";
 import { PORTAL_LINKS } from "./constants";
 
 export type Role = {
-  key: "student" | "teacher" | "admin" | "parent";
+  key: "student" | "teacher" | "admin" | "parent" | "super_admin";
   label: string;
   title: string;
   path: string;
@@ -10,7 +10,7 @@ export type Role = {
   description: string;
   capabilities: string[];
   icon: LucideIcon;
-  accent: "indigo" | "emerald" | "amber" | "sky";
+  accent: "indigo" | "emerald" | "amber" | "sky" | "violet";
 };
 
 export const ROLES: Role[] = [
@@ -61,6 +61,18 @@ export const ROLES: Role[] = [
     capabilities: ["Real-time check-ins", "Instant arrival alerts", "Leave requests in one place"],
     icon: Users,
     accent: "sky",
+  },
+  {
+    key: "super_admin",
+    label: "Super Admin",
+    title: "Super Admin Governance",
+    path: "/admin/super-admin",
+    href: PORTAL_LINKS.superAdmin,
+    description:
+      "Manage multi-campus institutions, threshold and security policies, RBAC permissions, and compliance exports.",
+    capabilities: ["Institution & role governance", "Cosine & policy configuration", "Global audit & export tools"],
+    icon: Crown,
+    accent: "violet",
   },
 ];
 

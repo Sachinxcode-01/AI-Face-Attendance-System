@@ -193,6 +193,22 @@ async function runTests() {
     assert.strictEqual(res9.status, 400);
     console.log("✅ Passed");
 
+    // 10. Verify SSE streaming chat endpoint
+    console.log("➡️ Test 10: Verify SSE /api/assistant/chat/stream...");
+    const res10 = await fetch(`${baseUrl}/api/assistant/chat/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${studentToken}`
+      },
+      body: JSON.stringify({ message: 'How do I check my attendance?', language: 'en' })
+    });
+    assert.strictEqual(res10.status, 200);
+    assert.ok((res10.headers.get('content-type') || '').includes('text/event-stream'));
+    const sseText = await res10.text();
+    assert.ok(sseText.includes('event: delta') && sseText.includes('event: done'));
+    console.log("✅ Passed");
+
     console.log("🏁 All Nexa Phase 2 unit tests passed successfully!\n");
   } finally {
     server.close();

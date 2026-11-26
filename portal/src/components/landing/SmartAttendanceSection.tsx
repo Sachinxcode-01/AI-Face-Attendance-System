@@ -7,11 +7,11 @@ import { SectionHeading } from '@/components/ui/section-heading';
 import { SpotlightCard } from '@/components/ui/spotlight-card';
 
 export function SmartAttendanceSection() {
-  const [threshold, setThreshold] = useState(0.82);
+  const [threshold, setThreshold] = useState(0.60);
 
-  const precisionPct = (99.2 + (threshold - 0.7) * 2.5).toFixed(1);
-  const farRate = Math.max(0.001, (0.01 - (threshold - 0.7) * 0.03)).toFixed(4);
-  const latencyMs = Math.round(110 + (threshold - 0.7) * 15);
+  const policyTier = threshold >= 0.85 ? "Strict" : threshold >= 0.65 ? "Elevated" : "Default";
+  const farTradeoff = threshold >= 0.85 ? "Lower FAR" : threshold >= 0.65 ? "Balanced" : "Baseline";
+  const timeoutBudget = "15.0s cap";
 
   return (
     <section id="smart-attendance" className="relative scroll-mt-24 border-t border-[var(--hairline)] py-24 sm:py-32">
@@ -19,7 +19,7 @@ export function SmartAttendanceSection() {
         <SectionHeading
           eyebrow="Comparison & Calibration"
           title="Why Smart Attendance Matters"
-          description="Paper sign-ins and manual roll calls average 15 minutes per lecture and permit proxy sign-ins. SmartFace verifies identities at the gate or classroom door in under 120ms with calibrated ArcFace embeddings."
+          description="Paper registers and manual roll calls consume instructional time and lack cryptographic audit trails. SmartFace pairs ArcFace (buffalo_l) 512-D verification with short-lived QR sessions and unified role portals."
         />
 
         {/* Side-by-Side Comparison Matrix */}
@@ -37,19 +37,19 @@ export function SmartAttendanceSection() {
               <ul className="space-y-3.5 text-xs text-mid">
                 <li className="flex items-start gap-2.5">
                   <XCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
-                  <span><strong className="text-hi">15 minutes lost per class:</strong> Calling names or passing paper sheets disrupts teaching time.</span>
+                  <span><strong className="text-hi">Instructional time overhead:</strong> Manual roll calls or passed sheets interrupt lecture cadence.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <XCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
-                  <span><strong className="text-hi">18–24% proxy rate:</strong> Students routinely sign for absent friends or hand off RFID badges.</span>
+                  <span><strong className="text-hi">Proxy & card-sharing risk:</strong> Signatures and unverified RFID swipes can be shared between peers.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <XCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
-                  <span><strong className="text-hi">Delayed parent notification:</strong> Guardians only learn of attendance issues weeks later when official reports are compiled.</span>
+                  <span><strong className="text-hi">Delayed parent notification:</strong> Guardians often learn of attendance gaps only when periodic reports are compiled.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <XCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
-                  <span><strong className="text-hi">Manual ledger entry:</strong> Office staff re-type paper tallies into academic management software.</span>
+                  <span><strong className="text-hi">Manual ledger entry:</strong> Administrative staff re-key paper tallies into student information systems.</span>
                 </li>
               </ul>
             </SpotlightCard>
@@ -68,19 +68,19 @@ export function SmartAttendanceSection() {
               <ul className="space-y-3.5 text-xs text-hi/90">
                 <li className="flex items-start gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-spotify shrink-0 mt-0.5" />
-                  <span><strong className="text-hi">Under 120ms verification:</strong> Walk-through gates handle 45 to 60 students per minute without physical contact.</span>
+                  <span><strong className="text-hi">Automated check-ins:</strong> RetinaFace + ArcFace (buffalo_l) matches enrolled 512-D embeddings against your campus threshold.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-spotify shrink-0 mt-0.5" />
-                  <span><strong className="text-hi">Single-device binding:</strong> 30-second dynamic salts and hardware tokens prevent forwarded QR screenshots.</span>
+                  <span><strong className="text-hi">20s rotating QR + geofence:</strong> Short-lived HMAC-SHA256 session tokens (+5s skew) and optional classroom perimeter checks reduce replay risk.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-spotify shrink-0 mt-0.5" />
-                  <span><strong className="text-hi">Immediate parent notifications:</strong> Parents receive an SMS and push alert the second their child passes Gate A.</span>
+                  <span><strong className="text-hi">Automated guardian alerts:</strong> Configurable Email, SMS, and mobile notifications when students check in or drop below thresholds.</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-spotify shrink-0 mt-0.5" />
-                  <span><strong className="text-hi">Automated streak calculation:</strong> Nexa AI monitors minimum 75% thresholds and computes safe-bunk buffers.</span>
+                  <span><strong className="text-hi">Deterministic eligibility math:</strong> Server-side integer basis-point arithmetic powers threshold alerts and Nexa AI study guidance.</span>
                 </li>
               </ul>
             </SpotlightCard>
@@ -94,26 +94,26 @@ export function SmartAttendanceSection() {
               <div className="max-w-xl">
                 <div className="flex items-center gap-2 mb-2">
                   <Sliders className="h-4 w-4 text-accent" />
-                  <span className="font-mono text-xs uppercase tracking-wider text-accent">Cosine Match Threshold</span>
+                  <span className="font-mono text-xs uppercase tracking-wider text-accent">Cosine Match Threshold (Interactive Simulation)</span>
                 </div>
                 <h3 className="font-display text-xl font-medium text-hi">
                   Decision Boundary Calibration
                 </h3>
                 <p className="mt-2 text-xs sm:text-sm text-mid leading-relaxed">
-                  SmartFace calibrates at <strong className="text-hi font-mono">0.82</strong> to maintain a 0.001% False Acceptance Rate while matching legitimate student faces across varied classroom illumination.
+                  SmartFace defaults to <strong className="text-hi font-mono">0.60</strong> cosine similarity in production verification (with <strong className="text-hi font-mono">0.65</strong> and <strong className="text-hi font-mono">0.85+</strong> policy buckets configurable by Super Admins based on lighting and camera quality).
                 </p>
               </div>
 
               <div className="w-full lg:w-96 rounded-2xl bg-[#050507] border border-white/[0.08] p-5 space-y-4">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-faint">Calibrated Cutoff:</span>
+                  <span className="text-faint">Selected Threshold:</span>
                   <span className="font-mono font-bold text-sm text-accent">{threshold.toFixed(2)}</span>
                 </div>
 
                 <input
                   type="range"
-                  min="0.70"
-                  max="0.95"
+                  min="0.50"
+                  max="0.90"
                   step="0.01"
                   value={threshold}
                   onChange={(e) => setThreshold(parseFloat(e.target.value))}
@@ -122,16 +122,16 @@ export function SmartAttendanceSection() {
 
                 <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/[0.06] text-center font-mono">
                   <div className="rounded-xl bg-white/[0.03] p-2">
-                    <span className="text-[10px] text-faint block">Precision</span>
-                    <span className="text-xs font-bold text-spotify">{precisionPct}%</span>
+                    <span className="text-[10px] text-faint block">Policy Tier</span>
+                    <span className="text-xs font-bold text-spotify">{policyTier}</span>
                   </div>
                   <div className="rounded-xl bg-white/[0.03] p-2">
-                    <span className="text-[10px] text-faint block">FAR Error</span>
-                    <span className="text-xs font-bold text-accent">{farRate}%</span>
+                    <span className="text-[10px] text-faint block">FAR Tradeoff</span>
+                    <span className="text-xs font-bold text-accent">{farTradeoff}</span>
                   </div>
                   <div className="rounded-xl bg-white/[0.03] p-2">
-                    <span className="text-[10px] text-faint block">Latency</span>
-                    <span className="text-xs font-bold text-hi">{latencyMs}ms</span>
+                    <span className="text-[10px] text-faint block">Timeout Cap</span>
+                    <span className="text-xs font-bold text-hi">{timeoutBudget}</span>
                   </div>
                 </div>
               </div>
@@ -142,8 +142,8 @@ export function SmartAttendanceSection() {
         {/* Technical Architecture Specification Table (Replaced 4 icon card grid) */}
         <div className="portal-card overflow-hidden">
           <div className="p-5 border-b border-white/[0.08]">
-            <h3 className="font-display text-base font-semibold text-white">System Architecture Specifications</h3>
-            <p className="text-xs text-[#8A8A97] mt-0.5">Core technical standards implemented across campus kiosks and mobile nodes.</p>
+            <h3 className="font-display text-base font-semibold text-white">Verified System Architecture Specifications</h3>
+            <p className="text-xs text-[#8A8A97] mt-0.5">Implemented configuration across FastAPI AI worker, Express API gateway, and Flutter offline client.</p>
           </div>
 
           <div className="overflow-x-auto">
@@ -152,34 +152,34 @@ export function SmartAttendanceSection() {
                 <tr>
                   <th className="py-3 px-5 font-medium">Subsystem</th>
                   <th className="py-3 px-5 font-medium">Implementation</th>
-                  <th className="py-3 px-5 font-medium">Performance / Guarantee</th>
+                  <th className="py-3 px-5 font-medium">Configured Limit / Window</th>
                   <th className="py-3 px-5 font-medium">Data Boundary</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.06] text-[#B6B6C2]">
                 <tr>
                   <td className="py-3.5 px-5 font-semibold text-white">Face Embeddings</td>
-                  <td className="py-3.5 px-5">ArcFace ONNX model (ResNet-50 backbone)</td>
-                  <td className="py-3.5 px-5 text-emerald-400">&lt;120ms on edge CPU</td>
-                  <td className="py-3.5 px-5">512-D float vectors only; no raw photos saved</td>
+                  <td className="py-3.5 px-5">InsightFace ArcFace (buffalo_l, ResNet-50) ONNX</td>
+                  <td className="py-3.5 px-5 text-emerald-400">0.60 default cosine (15s cap)</td>
+                  <td className="py-3.5 px-5">512-D vectors in MongoDB; in-memory verify frames</td>
                 </tr>
                 <tr>
-                  <td className="py-3.5 px-5 font-semibold text-white">Liveness Verification</td>
-                  <td className="py-3.5 px-5">Passive specular reflection and micro-texture analysis</td>
-                  <td className="py-3.5 px-5 text-emerald-400">99.8% photo & screen rejection</td>
-                  <td className="py-3.5 px-5">Runs locally on device camera buffer</td>
+                  <td className="py-3.5 px-5 font-semibold text-white">Liveness & Abuse Controls</td>
+                  <td className="py-3.5 px-5">Client-assisted liveness + rate limiting</td>
+                  <td className="py-3.5 px-5 text-emerald-400">15 req/min; 2m cooldown (3 fails)</td>
+                  <td className="py-3.5 px-5">Dedicated IR hardware required for strict PAD</td>
                 </tr>
                 <tr>
                   <td className="py-3.5 px-5 font-semibold text-white">Dynamic Session QR</td>
-                  <td className="py-3.5 px-5">HMAC-SHA256 timestamped cryptographic salt</td>
-                  <td className="py-3.5 px-5 text-emerald-400">30-second strict drift window</td>
-                  <td className="py-3.5 px-5">Locked to faculty classroom GPS perimeter</td>
+                  <td className="py-3.5 px-5">HMAC-SHA256 signed QR payload</td>
+                  <td className="py-3.5 px-5 text-emerald-400">20s validity (+5s clock skew)</td>
+                  <td className="py-3.5 px-5">Optional classroom geofence (100m default)</td>
                 </tr>
                 <tr>
-                  <td className="py-3.5 px-5 font-semibold text-white">Offline Edge Sync</td>
-                  <td className="py-3.5 px-5">Local encrypted SQLite queue with hardware timestamps</td>
-                  <td className="py-3.5 px-5 text-emerald-400">Zero packet loss during outages</td>
-                  <td className="py-3.5 px-5">Auto-reconciles when campus network restores</td>
+                  <td className="py-3.5 px-5 font-semibold text-white">Offline Mobile Queue</td>
+                  <td className="py-3.5 px-5">Flutter AES-256 encrypted Hive + HMAC-SHA256</td>
+                  <td className="py-3.5 px-5 text-emerald-400">Up to 500 records (7d purge)</td>
+                  <td className="py-3.5 px-5">Queued check-ins sync on reconnect</td>
                 </tr>
               </tbody>
             </table>

@@ -11,7 +11,7 @@
 # ==============================================================================
 
 SHELL := cmd.exe
-.PHONY: help dev backend api node ai frontend web admin reflex mobile preflight test stop clean
+.PHONY: help dev backend api node ai frontend portal landing mobile preflight test stop clean
 
 # Default Target
 help:
@@ -23,8 +23,8 @@ help:
 	@echo   make node       - Start Node.js API Gateway only (Port 8000)
 	@echo   make ai         - Start Python FastAPI ArcFace AI service only (Port 8001)
 	@echo   make frontend   - Start Next.js Modern Web Portal (Port 3000)
-	@echo   make admin      - Start Streamlit Live Admin Dashboard (Port 8501)
-	@echo   make reflex     - Start Reflex Python Fullstack Web App
+	@echo   make portal     - Start Next.js Web Portal (Port 3000)
+	@echo   make landing    - Start Next.js Marketing Landing (Port 3000)
 	@echo   make mobile     - Launch Flutter Mobile Client (with ADB reverse 8000/8001)
 	@echo   make preflight  - Run pre-flight health ^& diagnostics check
 	@echo   make test       - Execute Node.js and Python test suites
@@ -49,16 +49,13 @@ ai:
 	@powershell -Command "python -m uvicorn backend.ai.app.main:app --host 127.0.0.1 --port 8001 --reload"
 
 # Frontend Services
-frontend: web
+frontend: portal
 
-web:
-	@cd frontend\web && npm run dev
+portal:
+	@cd portal && npm run dev
 
-admin:
-	@powershell -Command "streamlit run frontend/admin/web_dashboard.py --server.port 8501"
-
-reflex:
-	@cd frontend\reflex && reflex run
+landing:
+	@cd landing && npm run dev
 
 # Mobile Client
 mobile:

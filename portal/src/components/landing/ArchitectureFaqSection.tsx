@@ -15,33 +15,33 @@ interface FaqItem {
 const FAQS: FaqItem[] = [
   {
     category: 'Security & Anti-Proxy',
-    question: 'How does SmartFace eliminate proxy attendance and buddy punching?',
+    question: 'How does SmartFace reduce proxy attendance and buddy punching?',
     answer:
-      'SmartFace uses a three-tier check: (1) Dynamic rotating QR tokens signed with a 30-second HMAC-SHA256 salt preventing screenshots from being forwarded; (2) Hardware enclave binding that restricts check-ins to one authenticated hardware ID per lecture; and (3) Passive facial liveness detection that analyzes specular skin reflection and micro-textures to reject photos, tablet screens, or silicone masks.',
+    'SmartFace combines multiple layers: (1) Dynamic QR tokens signed with HMAC-SHA256 (20-second validity plus 5-second clock-skew tolerance); (2) Single-check-in session deduplication, optional classroom geofencing (100m default), and API rate limiting (15 req/min with a 2-minute cooldown after 3 failures); and (3) ArcFace cosine face matching with client-assisted liveness checks. Dedicated IR/3D camera hardware is recommended where high-assurance presentation attack detection is required.',
   },
   {
     category: 'Privacy & Compliance',
-    question: 'Are actual photos of students stored in the database?',
+    question: 'Are student photos stored in the database?',
     answer:
-      'No. Facial images are processed immediately at the edge to generate a 512-dimensional normalized numerical vector (floating point array). The original image is discarded from memory. It is mathematically impossible to reconstruct a human face from a 512-D vector, ensuring compliance with FERPA and GDPR data isolation standards.',
+    'Live verification frames sent to /v1/face/verify and /v1/face/enroll are decoded in memory to compute L2-normalized 512-D embeddings and explicitly released (del image_bytes). However, optional administrative dataset training (data/dataset/), user profile avatars (backend/data/avatars/), and desktop intruder alerts (data/Intruders/) store images when enabled. Embeddings remain regulated biometric personal data with RBAC, self-service export, and consent deletion workflows.',
   },
   {
     category: 'System Reliability',
     question: 'What happens if campus Wi-Fi or internet connection drops?',
     answer:
-      'Kiosks and mobile clients feature local cryptographic edge buffering. When offline, attendance events are signed locally with a tamper-proof hardware timestamp and stored in an encrypted offline queue. The moment connectivity is restored, events sync to the central database without record loss or duplicate registrations.',
+    'The Flutter mobile app buffers queued check-ins locally in an AES-256 encrypted Hive vault (signed with HMAC-SHA256, up to 500 records and 7-day automatic purge) for synchronization once connectivity restores. Live server-side face verification still requires reachable API and FastAPI AI nodes unless a local on-campus cluster is deployed.',
   },
   {
-    category: 'Performance',
-    question: 'How fast is recognition on high-volume walk-through gates?',
+    category: 'AI & Performance',
+    question: 'Which biometric model and decision thresholds are used?',
     answer:
-      'ArcFace ONNX inference completes in under 120 milliseconds on standard edge hardware (or under 40ms on GPU-accelerated kiosks). A single turnstile or gate can process 45 to 60 students per minute without bottlenecks.',
+    'SmartFace uses InsightFace ArcFace (buffalo_l, ResNet-50 backbone) with RetinaFace (det_10g) detection to extract 512-dimensional float vectors. Production cosine similarity defaults to 0.60 and is configurable per deployment, backed by a 15-second AI inference timeout budget and an 18-second API gateway timeout.',
   },
   {
     category: 'Student Portal & AI',
     question: 'What is Nexa AI Copilot in the student dashboard?',
     answer:
-      'Nexa AI is an attendance forecasting engine. It analyzes your semester timetable, historical attendance records, and university attendance minimum thresholds (such as 75%) to calculate your exact safe-bunk buffer, predict streak trends, and warn you weeks before any risk of exam debarment.',
+    'Nexa AI combines deterministic server-side attendance math (integer basis-point arithmetic to avoid floating-point rounding drift) with a PII-minimized Groq LLM assistant. It calculates exact class buffers against institutional eligibility thresholds such as 75% and explains what-if scenarios without exposing unrelated student records.',
   },
 ];
 
@@ -58,7 +58,7 @@ export function ArchitectureFaqSection() {
         <SectionHeading
           eyebrow="Technical Architecture"
           title="Frequently Answered Questions"
-          description="Cryptographic, biometric, and zero-knowledge privacy parameters implemented across SmartFace."
+          description="Implemented AI model specifications, session token controls, and data governance parameters across SmartFace."
         />
 
         {/* Privacy Highlight Banner */}
@@ -68,13 +68,13 @@ export function ArchitectureFaqSection() {
               <EyeOff className="h-6 w-6 text-accent" />
             </div>
             <div className="flex-1 text-center sm:text-left">
-              <h4 className="font-display text-base font-semibold text-hi">Zero-Knowledge Biometric Vector Storage</h4>
+              <h4 className="font-display text-base font-semibold text-hi">Minimized Biometric Vector & RBAC Governance</h4>
               <p className="text-[13.5px] text-mid leading-[22px] mt-1">
-                Only irreversible 512-dimension vector embeddings are retained. Student images are never saved to cloud disks, adhering to FERPA, GDPR, and campus data privacy charters.
+                Verification frames are processed in memory by default while 512-D embeddings remain protected under role-based access control, consent workflows, and self-service deletion endpoints.
               </p>
             </div>
             <span className="shrink-0 chip-bytune font-mono text-[11px] font-semibold text-spotify border-spotify/30 bg-spotify/10">
-              AES-256 ENCRYPTED
+              RBAC & AUDIT LOGS
             </span>
           </div>
         </Reveal>

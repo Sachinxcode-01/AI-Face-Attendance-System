@@ -2,9 +2,9 @@ name: SmartFace Attendance CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
   flutter-client:
@@ -24,18 +24,18 @@ jobs:
           ln -sfn mobile smartface_mobile
           ln -sfn backend/api smartface_node_api
           ln -sfn backend/ai smartface_pro_api
-          ln -sfn frontend/web smartface_landing_web
+          ln -sfn landing smartface_landing_web
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: "zulu"
+          java-version: "17"
 
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: "stable"
           cache: true
 
       - name: Create placeholder env files
@@ -74,13 +74,13 @@ jobs:
           ln -sfn mobile smartface_mobile
           ln -sfn backend/api smartface_node_api
           ln -sfn backend/ai smartface_pro_api
-          ln -sfn frontend/web smartface_landing_web
+          ln -sfn landing smartface_landing_web
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Install System Build Prerequisites
         run: |
@@ -118,13 +118,13 @@ jobs:
           ln -sfn mobile smartface_mobile
           ln -sfn backend/api smartface_node_api
           ln -sfn backend/ai smartface_pro_api
-          ln -sfn frontend/web smartface_landing_web
+          ln -sfn landing smartface_landing_web
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: backend/api/package-lock.json
 
       - name: Install Node Dependencies
@@ -137,3 +137,33 @@ jobs:
           else
             echo "No lint script defined in package.json. Skipping linter."
           fi
+
+  web-portal-and-landing:
+    name: Web Portal & Landing Typecheck + Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: |
+            portal/package-lock.json
+            landing/package-lock.json
+
+      - name: Typecheck & Build Portal
+        working-directory: portal
+        run: |
+          npm ci --no-audit --no-fund
+          npm run typecheck
+          npm run build
+
+      - name: Typecheck & Build Landing
+        working-directory: landing
+        run: |
+          npm ci --no-audit --no-fund
+          npm run typecheck
+          npm run build

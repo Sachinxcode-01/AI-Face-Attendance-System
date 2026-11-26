@@ -92,8 +92,16 @@ desktop.ini
 
 # Local sensitive files - do NOT commit
 data/face_encodings_arcface.pkl
+data/*.csv
+data/attendance_history_master.json
+data/leave_docs/
 mobile/android/app/google-services.json
 mobile/ios/Runner/GoogleService-Info.plist
+mobile/android/key.properties
+*.keystore
+*.jks
+Reports/
+.freebuff/
 
 # Agent files
 .agents/

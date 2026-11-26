@@ -61,7 +61,7 @@ graph TD
 1. **Teacher Podium** initiates session at `POST /sessions/start`. Node.js generates a rotating TOTP token (15-second epoch).
 2. **Classroom Projector** displays the live QR code on smartboard (`/teacher`).
 3. **Student Device** scans the code via mobile camera or webcam (`/student`).
-4. **API Gateway** validates the token within a configurable 30-second clock-drift window before marking presence.
+4. **API Gateway** validates the HMAC-SHA256 token within its 20-second validity window (plus 5-second clock-skew tolerance) before marking presence.
 
 ### B. Live ArcFace Face Verification
 1. Client captures frame and sends multipart image to Node.js `POST /attendance/mark/face` or directly to Python AI `POST /v1/face/verify`.

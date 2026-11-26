@@ -66,8 +66,11 @@ try {
 
 # 5. Check Next.js Frontend and Flutter Mobile directories
 Write-Host "`n[5/5] Checking Source Directories..." -ForegroundColor Yellow
-if (Test-Path "$ROOT_DIR\frontend\web") {
-    Write-Host "  [PASS] Web Frontend directory exists (frontend/web)" -ForegroundColor Green
+if (Test-Path "$ROOT_DIR\portal") {
+    Write-Host "  [PASS] Web Portal directory exists (portal/)" -ForegroundColor Green
+}
+if (Test-Path "$ROOT_DIR\landing") {
+    Write-Host "  [PASS] Landing Site directory exists (landing/)" -ForegroundColor Green
 }
 if (Test-Path "$ROOT_DIR\mobile") {
     Write-Host "  [PASS] Flutter Mobile App directory exists (mobile/)" -ForegroundColor Green

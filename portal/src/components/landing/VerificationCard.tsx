@@ -44,7 +44,7 @@ export function VerificationCard() {
 
     if (reduceMotion) {
       setMatched(true);
-      setScore(99.8);
+      setScore(87.4);
       setScanning(false);
       return;
     }
@@ -57,7 +57,7 @@ export function VerificationCard() {
         setScanning(false);
       })
       .to(counter.current, {
-        value: 99.8,
+        value: 87.4,
         duration: 0.8,
         ease: "power3.out",
         onUpdate: () => setScore(Number(counter.current.value.toFixed(1))),
@@ -87,10 +87,10 @@ export function VerificationCard() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-spotify opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-spotify" />
               </span>
-              <span className="text-hi font-medium">Gate B · North Kiosk</span>
+              <span className="text-hi font-medium">Sample UI · Gate Preview</span>
             </span>
             <span className="chip-bytune h-5 text-[9px] px-2 text-accent border-accent/20 bg-accent/5">
-              ArcFace ONNX v2.4
+              ArcFace buffalo_l
             </span>
           </div>
 
@@ -123,20 +123,18 @@ export function VerificationCard() {
 
             {/* Target Reticle Frame */}
             <div
-              className={`absolute left-1/2 top-1/2 h-[60%] w-[48%] -translate-x-1/2 -translate-y-1/2 transition-all duration-500 z-10 ${
-                matched ? "text-spotify" : "text-accent"
-              }`}
+              className={`absolute left-1/2 top-1/2 h-[60%] w-[48%] -translate-x-1/2 -translate-y-1/2 transition-all duration-500 z-10 ${matched ? "text-spotify" : "text-accent"
+                }`}
             >
               {/* Reticle Tag Badge */}
               <div
                 role="status"
                 aria-live="polite"
                 aria-atomic="true"
-                className={`absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[8.5px] uppercase tracking-[0.14em] backdrop-blur-md shadow-lg transition-all duration-300 ${
-                  matched
+                className={`absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[8.5px] uppercase tracking-[0.14em] backdrop-blur-md shadow-lg transition-all duration-300 ${matched
                     ? "border-spotify/40 bg-[#101016]/95 text-[#9fe0b6]"
                     : "border-accent/40 bg-[#101016]/95 text-accent"
-                }`}
+                  }`}
               >
                 <ScanFace className="h-2.5 w-2.5 animate-pulse" />
                 <span>{matched ? "MATCH CONFIRMED" : "EXTRACTING EMBEDDING"}</span>
@@ -147,9 +145,8 @@ export function VerificationCard() {
                 <span
                   key={corner}
                   aria-hidden
-                  className={`absolute h-6 w-6 border-current transition-colors duration-500 ${corner} ${
-                    matched ? "shadow-[0_0_10px_rgba(30,215,96,0.5)]" : "shadow-[0_0_10px_rgba(143,139,255,0.4)]"
-                  }`}
+                  className={`absolute h-6 w-6 border-current transition-colors duration-500 ${corner} ${matched ? "shadow-[0_0_10px_rgba(30,215,96,0.5)]" : "shadow-[0_0_10px_rgba(143,139,255,0.4)]"
+                    }`}
                 />
               ))}
 
@@ -172,9 +169,8 @@ export function VerificationCard() {
                     className="absolute -translate-x-1/2 -translate-y-1/2"
                   >
                     <span
-                      className={`block h-1.5 w-1.5 rounded-full ${
-                        matched ? "bg-spotify shadow-[0_0_6px_#1ed760]" : "bg-accent shadow-[0_0_6px_#8f8bff]"
-                      }`}
+                      className={`block h-1.5 w-1.5 rounded-full ${matched ? "bg-spotify shadow-[0_0_6px_#1ed760]" : "bg-accent shadow-[0_0_6px_#8f8bff]"
+                        }`}
                     />
                   </motion.div>
                 ))}
@@ -185,14 +181,14 @@ export function VerificationCard() {
             <div className="absolute bottom-3 left-3 flex items-center gap-2 z-20">
               <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-[#101016]/90 px-2.5 py-1 font-mono text-[8.5px] uppercase tracking-[0.14em] text-mid backdrop-blur-md">
                 <Wifi className="h-3 w-3 text-spotify" />
-                Edge sync 192ms
+                Simulated Preview
               </span>
             </div>
 
             <div className="absolute bottom-3 right-3 z-20">
               <span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-[#101016]/90 px-2.5 py-1 font-mono text-[8.5px] uppercase tracking-[0.14em] text-[#9fe0b6] backdrop-blur-md">
                 <ShieldCheck className="h-3 w-3 text-spotify" />
-                Anti-Spoof Pass
+                Demo Match
               </span>
             </div>
           </div>
@@ -202,7 +198,7 @@ export function VerificationCard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
-                  Matched Subject
+                  Sample Subject (Demo)
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <h4 className="font-display text-[15px] font-semibold text-hi">
@@ -215,16 +211,15 @@ export function VerificationCard() {
               {/* Animated Confidence Score */}
               <div className="text-right">
                 <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
-                  ArcFace Confidence
+                  Sample Cosine Score
                 </p>
                 <div className="flex items-center justify-end gap-1.5 mt-0.5">
                   <span className="font-display text-lg font-semibold tabular-nums text-spotify">
                     {score.toFixed(1)}%
                   </span>
                   <CheckCircle2
-                    className={`h-4 w-4 text-spotify transition-transform duration-300 ${
-                      matched ? "scale-100 opacity-100" : "scale-50 opacity-0"
-                    }`}
+                    className={`h-4 w-4 text-spotify transition-transform duration-300 ${matched ? "scale-100 opacity-100" : "scale-50 opacity-0"
+                      }`}
                   />
                 </div>
               </div>
@@ -234,7 +229,7 @@ export function VerificationCard() {
             <div className="mt-3.5 flex items-center justify-between border-t border-white/[0.06] pt-3">
               <span className="font-mono text-[10.5px] text-mid flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-spotify" />
-                Cosine: 0.948 · Vector: 512
+                Threshold ≥ 0.60 · Vector: 512
               </span>
               <button
                 type="button"

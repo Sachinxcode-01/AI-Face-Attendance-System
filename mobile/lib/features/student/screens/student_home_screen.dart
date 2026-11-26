@@ -121,13 +121,20 @@ class _StudentDashboardState extends State<StudentDashboard> {
       }
     });
 
-    CacheService.get<List<dynamic>>('student_disputes').then((cached) {
-      if (cached != null && mounted) {
-        setState(() {
-          _disputes = cached.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-        });
-      }
-    });
+    final studentCacheEmail = session.email?.trim().toLowerCase();
+    if (studentCacheEmail != null && studentCacheEmail.isNotEmpty) {
+      CacheService.get<List<dynamic>>(
+        'student_disputes_$studentCacheEmail',
+      ).then((cached) {
+        if (cached != null && mounted) {
+          setState(() {
+            _disputes = cached
+                .map((e) => Map<String, dynamic>.from(e as Map))
+                .toList();
+          });
+        }
+      });
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -137,6 +144,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   void _openDisputeModal() {
+    final studentCacheEmail = context
+        .read<SessionManager>()
+        .email
+        ?.trim()
+        .toLowerCase();
     showAttendanceDisputeSheet(
       context,
       defaultSubject: _subjects.isNotEmpty ? _subjects.first.subject : null,
@@ -144,7 +156,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
         setState(() {
           _disputes.insert(0, record);
         });
-        CacheService.set('student_disputes', _disputes, persist: true);
+        if (studentCacheEmail != null && studentCacheEmail.isNotEmpty) {
+          CacheService.set(
+            'student_disputes_$studentCacheEmail',
+            _disputes,
+            persist: true,
+          );
+        }
       },
     );
   }
@@ -183,7 +201,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
       if (mounted && currentGen == _loadGeneration) {
         if (stats != null) {
-          CacheService.set('student_stats_$email', stats.toJson(), persist: true);
+          CacheService.set(
+            'student_stats_$email',
+            stats.toJson(),
+            persist: true,
+          );
         }
         setState(() {
           _isOffline = false;
@@ -213,7 +235,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
           final session = context.read<SessionManager>();
           final email = session.email;
           if (email != null) {
-            final cached = await CacheService.get<Map<String, dynamic>>('student_stats_$email');
+            final cached = await CacheService.get<Map<String, dynamic>>(
+              'student_stats_$email',
+            );
             if (cached != null && mounted) {
               final cachedStats = StudentStatsModel.fromJson(cached);
               setState(() {
@@ -775,9 +799,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: isDark
-            ? AppColors.bgDeep
-            : AppColors.bgLight,
+        backgroundColor: isDark ? AppColors.bgDeep : AppColors.bgLight,
         body: const SafeArea(child: StudentHomeShimmer()),
       );
     }
@@ -834,45 +856,74 @@ class _StudentDashboardState extends State<StudentDashboard> {
     final int streakCount = _streak ?? 5;
     final double projectedPct = (rawPct + 1.8).clamp(0.0, 100.0);
     final String subjectToWatch = _subjects.isNotEmpty
-        ? (_subjects.firstWhere((s) => s.percentage < 0.75, orElse: () => _subjects.first).subject)
+        ? (_subjects
+              .firstWhere(
+                (s) => s.percentage < 0.75,
+                orElse: () => _subjects.first,
+              )
+              .subject)
         : 'Machine Learning';
 
-    final aiCopilotCard = AiAttendanceInsightsCard(
-      currentPercentage: rawPct,
-      streakDays: streakCount,
-      criticalSubject: subjectToWatch,
-      onActionTap: () => context.push(AppRoutes.studentBunkCalculatorPath),
-    ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideY(begin: 0.08, end: 0);
+    final aiCopilotCard =
+        AiAttendanceInsightsCard(
+              currentPercentage: rawPct,
+              streakDays: streakCount,
+              criticalSubject: subjectToWatch,
+              onActionTap: () =>
+                  context.push(AppRoutes.studentBunkCalculatorPath),
+            )
+            .animate()
+            .fadeIn(delay: 100.ms, duration: 400.ms)
+            .slideY(begin: 0.08, end: 0);
 
-    final forecastCard = AttendanceForecastCard(
-      currentPercentage: rawPct,
-      projectedPercentage: projectedPct,
-      totalClassesRemaining: 38,
-    ).animate().fadeIn(delay: 150.ms, duration: 400.ms).slideY(begin: 0.08, end: 0);
+    final forecastCard =
+        AttendanceForecastCard(
+              currentPercentage: rawPct,
+              projectedPercentage: projectedPct,
+              totalClassesRemaining: 38,
+            )
+            .animate()
+            .fadeIn(delay: 150.ms, duration: 400.ms)
+            .slideY(begin: 0.08, end: 0);
 
-    final successScorecard = StudentSuccessDashboardCard(
-      score: (rawPct * 0.95).clamp(50.0, 99.0),
-      standing: _standing ?? 'Exemplary',
-      rank: _rank ?? 'Top 10%',
-      streak: streakCount,
-      onDetailsTap: () => context.push(AppRoutes.studentAttendanceHubPath),
-    ).animate().fadeIn(delay: 80.ms, duration: 400.ms).slideY(begin: 0.08, end: 0);
+    final successScorecard =
+        StudentSuccessDashboardCard(
+              score: (rawPct * 0.95).clamp(50.0, 99.0),
+              standing: _standing ?? 'Exemplary',
+              rank: _rank ?? 'Top 10%',
+              streak: streakCount,
+              onDetailsTap: () =>
+                  context.push(AppRoutes.studentAttendanceHubPath),
+            )
+            .animate()
+            .fadeIn(delay: 80.ms, duration: 400.ms)
+            .slideY(begin: 0.08, end: 0);
 
-    final deviceSecurityCard = DeviceSecurityCenterCard(
-      activeSessionsCount: max(1, _activeSessions.length),
-      primaryDeviceName: Platform.isAndroid ? 'Android Workstation' : (Platform.isIOS ? 'iPhone Device' : 'Primary Enclave'),
-      onRevokeOthers: _logoutOtherDevices,
-    ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideY(begin: 0.08, end: 0);
+    final deviceSecurityCard =
+        DeviceSecurityCenterCard(
+              activeSessionsCount: max(1, _activeSessions.length),
+              primaryDeviceName: Platform.isAndroid
+                  ? 'Android Workstation'
+                  : (Platform.isIOS ? 'iPhone Device' : 'Primary Enclave'),
+              onRevokeOthers: _logoutOtherDevices,
+            )
+            .animate()
+            .fadeIn(delay: 200.ms, duration: 400.ms)
+            .slideY(begin: 0.08, end: 0);
 
-    final disputesTimeline = AttendanceDisputeTimelineWidget(
-      disputes: _disputes,
-      onNewDispute: _openDisputeModal,
-    ).animate().fadeIn(delay: 250.ms, duration: 400.ms).slideY(begin: 0.08, end: 0);
+    final disputesTimeline =
+        AttendanceDisputeTimelineWidget(
+              disputes: _disputes,
+              onNewDispute: _openDisputeModal,
+            )
+            .animate()
+            .fadeIn(delay: 250.ms, duration: 400.ms)
+            .slideY(begin: 0.08, end: 0);
 
     final weeklyMonthlyAnalytics =
         RepaintBoundary(
-          child: TrendChart(weeklyTrends: weekly, monthlyTrends: monthly),
-        )
+              child: TrendChart(weeklyTrends: weekly, monthlyTrends: monthly),
+            )
             .animate()
             .fadeIn(delay: 80.ms, duration: 220.ms, curve: Curves.easeOutCubic)
             .slideY(
@@ -882,29 +933,29 @@ class _StudentDashboardState extends State<StudentDashboard> {
               curve: Curves.easeOutCubic,
             );
 
-    final calendarHistory = RepaintBoundary(
-      child: HeatmapCard(heatmapData: heatmap, streak: _streak),
-    )
-        .animate()
-        .fadeIn(delay: 110.ms, duration: 220.ms, curve: Curves.easeOutCubic)
-        .slideY(
-          begin: 0.05,
-          end: 0,
-          duration: 220.ms,
-          curve: Curves.easeOutCubic,
-        );
+    final calendarHistory =
+        RepaintBoundary(
+              child: HeatmapCard(heatmapData: heatmap, streak: _streak),
+            )
+            .animate()
+            .fadeIn(delay: 110.ms, duration: 220.ms, curve: Curves.easeOutCubic)
+            .slideY(
+              begin: 0.05,
+              end: 0,
+              duration: 220.ms,
+              curve: Curves.easeOutCubic,
+            );
 
-    final leaderboardCard = RepaintBoundary(
-      child: LeaderboardCard(entries: leaderboardEntries),
-    )
-        .animate()
-        .fadeIn(delay: 140.ms, duration: 220.ms, curve: Curves.easeOutCubic)
-        .slideY(
-          begin: 0.05,
-          end: 0,
-          duration: 220.ms,
-          curve: Curves.easeOutCubic,
-        );
+    final leaderboardCard =
+        RepaintBoundary(child: LeaderboardCard(entries: leaderboardEntries))
+            .animate()
+            .fadeIn(delay: 140.ms, duration: 220.ms, curve: Curves.easeOutCubic)
+            .slideY(
+              begin: 0.05,
+              end: 0,
+              duration: 220.ms,
+              curve: Curves.easeOutCubic,
+            );
 
     final activityTimeline = _buildRecentActivity(isDark)
         .animate()
@@ -937,9 +988,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     return ds.PremiumBackground(
       immersive: false,
       child: Scaffold(
-        backgroundColor: isDark
-            ? AppColors.bgDeep
-            : AppColors.bgLight,
+        backgroundColor: isDark ? AppColors.bgDeep : AppColors.bgLight,
         body: Column(
           children: [
             ds.DashboardHeader(
@@ -1188,9 +1237,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     final cardBg = isDark
         ? const Color(0xFF141D38)
         : AppColors.surfaceElevatedLight;
-    final cardBorder = isDark
-        ? AppColors.borderDark
-        : AppColors.borderLight;
+    final cardBorder = isDark ? AppColors.borderDark : AppColors.borderLight;
     final hasError = _statsError != null;
 
     return AnimatedCardWrapper(
@@ -1295,16 +1342,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
     final cardBg = isDark
         ? const Color(0xFF141D38)
         : AppColors.surfaceElevatedLight;
-    final cardBorder = isDark
-        ? AppColors.borderDark
-        : AppColors.borderLight;
-    final textHeading = isDark
-        ? AppColors.bgLight
-        : AppColors.textHeading;
+    final cardBorder = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final textHeading = isDark ? AppColors.bgLight : AppColors.textHeading;
     final textBody = isDark ? AppColors.textBodyDark : AppColors.textBody;
-    final textLabel = isDark
-        ? AppColors.textMuted
-        : AppColors.textMuted;
+    final textLabel = isDark ? AppColors.textMuted : AppColors.textMuted;
     final streakForegroundColor = isDark
         ? AppColors.goldDark
         : AppColors.goldBright;
@@ -1406,9 +1447,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                               ? Colors.white.withValues(alpha: 0.08)
                               : const Color(0xFFE8EAF6),
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            pct >= 75
-                                ? AppColors.primarySoft
-                                : AppColors.gold,
+                            pct >= 75 ? AppColors.primarySoft : AppColors.gold,
                           ),
                         ),
                       ),
@@ -1468,17 +1507,23 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     ),
                     decoration: BoxDecoration(
                       color: _streak == null
-                          ? (isDark ? AppColors.bgDeep.withValues(alpha: 0.05) : AppColors.bgLight)
+                          ? (isDark
+                                ? AppColors.bgDeep.withValues(alpha: 0.05)
+                                : AppColors.bgLight)
                           : (_streak != null && _streak! > 0)
-                              ? (isDark
-                                  ? AppColors.gold.withValues(alpha: 0.15)
-                                  : AppColors.bgLight.withValues(alpha: 0.95))
-                              : isDark ? AppColors.bgDeep.withValues(alpha: 0.08) : AppColors.bgLight.withValues(alpha: 0.15),
+                          ? (isDark
+                                ? AppColors.gold.withValues(alpha: 0.15)
+                                : AppColors.bgLight.withValues(alpha: 0.95))
+                          : isDark
+                          ? AppColors.bgDeep.withValues(alpha: 0.08)
+                          : AppColors.bgLight.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: (_streak != null && _streak! > 0)
                             ? AppColors.gold.withValues(alpha: 0.4)
-                            : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                            : (isDark
+                                  ? Colors.white12
+                                  : const Color(0xFFE2E8F0)),
                       ),
                       boxShadow: (_streak != null && _streak! > 0)
                           ? [
@@ -1509,7 +1554,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                         else
                           Icon(
                             Icons.local_fire_department_outlined,
-                            color: isDark ? const Color(0xFF7F8CA4) : const Color(0xFF94A3B8),
+                            color: isDark
+                                ? const Color(0xFF7F8CA4)
+                                : const Color(0xFF94A3B8),
                             size: 16,
                           ),
                         const SizedBox(width: 6),
@@ -1517,12 +1564,14 @@ class _StudentDashboardState extends State<StudentDashboard> {
                           _streak == null
                               ? 'Streak unavailable'
                               : _streak == 0
-                                  ? '0 Days Streak'
-                                  : '🔥 $_streak Days Streak',
+                              ? '0 Days Streak'
+                              : '🔥 $_streak Days Streak',
                           style: GoogleFonts.poppins(
                             color: (_streak != null && _streak! > 0)
                                 ? streakForegroundColor
-                                : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                                : (isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B)),
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),

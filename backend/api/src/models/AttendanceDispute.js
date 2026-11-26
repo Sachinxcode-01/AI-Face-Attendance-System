@@ -41,5 +41,7 @@ const AttendanceDisputeSchema = new mongoose.Schema({
 });
 
 AttendanceDisputeSchema.index({ student_email: 1, session_id: 1 });
+AttendanceDisputeSchema.index({ student_email: 1, created_at: -1 });
+AttendanceDisputeSchema.index({ status: 1, created_at: -1 });
 
 module.exports = mongoose.model('AttendanceDispute', AttendanceDisputeSchema, 'attendance_disputes');

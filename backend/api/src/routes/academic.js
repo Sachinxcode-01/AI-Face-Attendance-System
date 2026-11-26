@@ -9,7 +9,8 @@ const Session = require('../models/Session');
 const Attendance = require('../models/Attendance');
 const Notification = require('../models/Notification');
 const { authenticate, requireRole } = require('../middleware/auth');
-const { getInstitutionPolicy, buildTimetableKey, parseSlotTimes, toDateKey } = require('../services/studentAttendanceService');
+const { getInstitutionPolicy, buildTimetableKeys, parseSlotTimes, toDateKey } = require('../services/studentAttendanceService');
+const cache = require('../utils/cache');
 
 // GET /academic/dashboard
 router.get('/dashboard', authenticate, async (req, res) => {
@@ -41,9 +42,9 @@ router.get('/timetable', authenticate, async (req, res) => {
     let queryIds = [email.toUpperCase()];
 
     if (req.userRole === 'student') {
-      const user = await User.findOne({ email }).lean();
-      const key = buildTimetableKey(user);
-      if (key) queryIds = [key, email.toUpperCase()];
+      const user = await User.findOne({ email }).select('email department semester section').lean();
+      const keys = buildTimetableKeys(user);
+      if (keys.length > 0) queryIds = keys;
     }
 
     const timetable = await Timetable.find({ user_id: { $in: queryIds } }).lean();
@@ -68,12 +69,12 @@ router.get('/timetable/summary', authenticate, async (req, res) => {
     if (!user) return res.status(404).json({ detail: 'User not found.' });
 
     const policy = await getInstitutionPolicy(user);
-    const key = buildTimetableKey(user);
-    const queryIds = key ? [key, email.toUpperCase()] : [email.toUpperCase()];
+    const keys = buildTimetableKeys(user);
+    const queryIds = keys.length > 0 ? keys : [email.toUpperCase()];
 
     const [slots, holidays] = await Promise.all([
       Timetable.find({ user_id: { $in: queryIds } }).lean(),
-      Holiday.find({}).sort({ date: 1 }).lean(),
+      cache.getOrLoad('academic:holidays:all', () => Holiday.find().sort({ date: 1 }).lean(), 60 * 1000),
     ]);
 
     const now = new Date();
@@ -150,8 +151,8 @@ router.get('/timetable/export.ics', authenticate, async (req, res) => {
     const email = req.userEmail.toLowerCase();
     const user = await User.findOne({ email }).lean();
     const policy = await getInstitutionPolicy(user);
-    const key = buildTimetableKey(user);
-    const queryIds = key ? [key, email.toUpperCase()] : [email.toUpperCase()];
+    const keys = buildTimetableKeys(user);
+    const queryIds = keys.length > 0 ? keys : [email.toUpperCase()];
     const slots = await Timetable.find({ user_id: { $in: queryIds } }).lean();
 
     const dayToByDay = { sun: 'SU', mon: 'MO', tue: 'TU', wed: 'WE', thu: 'TH', fri: 'FR', sat: 'SA' };
@@ -534,15 +535,21 @@ router.get('/documents', authenticate, async (req, res) => {
 // GET /academic/holidays
 router.get('/holidays', authenticate, async (req, res) => {
   try {
-    const holidays = await Holiday.find().sort({ date: 1 }).lean();
-    const formatted = holidays.map(h => {
-      h.id = h._id.toString();
-      delete h._id;
-      return h;
-    });
+    const formatted = await cache.getOrLoad(
+      'academic:holidays:formatted',
+      async () => {
+        const holidays = await Holiday.find().sort({ date: 1 }).lean();
+        return holidays.map((h) => {
+          const item = { ...h, id: h._id.toString() };
+          delete item._id;
+          return item;
+        });
+      },
+      60 * 1000
+    );
     res.json(formatted);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    res.status(500).json({ detail: 'Unable to load holidays.' });
   }
 });
 
@@ -566,6 +573,7 @@ router.post('/holidays', authenticate, requireRole(['admin', 'super_admin']), as
       description: typeof description === 'string' ? description.trim() : ""
     });
     await holiday.save();
+    cache.invalidate('academic:holidays');
     const hObj = holiday.toObject();
     hObj.id = hObj._id.toString();
     delete hObj._id;
@@ -605,6 +613,7 @@ router.put('/holidays/:id', authenticate, requireRole(['admin', 'super_admin']),
     if (!updated) {
       return res.status(404).json({ detail: "Holiday not found." });
     }
+    cache.invalidate('academic:holidays');
     updated.id = updated._id.toString();
     delete updated._id;
     res.json({ success: true, holiday: updated });
@@ -624,6 +633,7 @@ router.delete('/holidays/:id', authenticate, requireRole(['admin', 'super_admin'
     if (!deleted) {
       return res.status(404).json({ detail: "Holiday not found." });
     }
+    cache.invalidate('academic:holidays');
     res.json({ success: true, message: "Holiday removed successfully.", deleted_id: id });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -660,33 +670,33 @@ router.get('/calendar', authenticate, async (req, res) => {
     // Fetch marked attendance logs for student (optimized single session lookup)
     let attendanceEvents = [];
     if (req.userRole === 'student') {
-          if (mongoose.connection.readyState === 1) {
-            const records = await Attendance.find({ student_email: email.toLowerCase() }).lean();
-            const sessionIds = [...new Set(records.map((r) => r.session_id).filter((id) => mongoose.Types.ObjectId.isValid(id)))];
-            const sessions = sessionIds.length ? await Session.find({ _id: { $in: sessionIds } }, 'subject').lean() : [];
-            const subjectById = new Map(sessions.map((s) => [s._id.toString(), s.subject]));
-            for (const rec of records) {
-              const subjectName = rec.subject || subjectById.get(String(rec.session_id)) || 'Class Session';
-              attendanceEvents.push({
-                id: rec._id.toString(),
-                title: `${rec.status || 'Present'}: ${subjectName}`,
-                type: "attendance",
-                start_date: rec.timestamp,
-                end_date: rec.timestamp,
-                status: rec.status || "Present"
-              });
-            }
-          }
+      if (mongoose.connection.readyState === 1) {
+        const records = await Attendance.find({ student_email: email.toLowerCase() }).lean();
+        const sessionIds = [...new Set(records.map((r) => r.session_id).filter((id) => mongoose.Types.ObjectId.isValid(id)))];
+        const sessions = sessionIds.length ? await Session.find({ _id: { $in: sessionIds } }, 'subject').lean() : [];
+        const subjectById = new Map(sessions.map((s) => [s._id.toString(), s.subject]));
+        for (const rec of records) {
+          const subjectName = rec.subject || subjectById.get(String(rec.session_id)) || 'Class Session';
+          attendanceEvents.push({
+            id: rec._id.toString(),
+            title: `${rec.status || 'Present'}: ${subjectName}`,
+            type: "attendance",
+            start_date: rec.timestamp,
+            end_date: rec.timestamp,
+            status: rec.status || "Present"
+          });
         }
-
-        res.json({
-          leaves: leaveEvents,
-          holidays: holidayEvents,
-          attendance: attendanceEvents
-        });
-      } catch (error) {
-        res.status(500).json({ detail: error.message });
       }
+    }
+
+    res.json({
+      leaves: leaveEvents,
+      holidays: holidayEvents,
+      attendance: attendanceEvents
     });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
 
 module.exports = router;

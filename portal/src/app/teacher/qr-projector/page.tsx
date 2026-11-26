@@ -12,7 +12,12 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import type { TeacherSession } from '@/lib/types';
 import { ChevronLeft, QrCode, RefreshCw, Radio, Link2, CheckCircle } from 'lucide-react';
-import QRCode from 'qrcode';
+
+interface QrMatrixState {
+  size: number;
+  cells: boolean[];
+  error?: boolean;
+}
 
 export default function TeacherQrProjectorPage() {
   const { user } = useAuth();
@@ -24,6 +29,7 @@ export default function TeacherQrProjectorPage() {
   const [refreshTick, setRefreshTick] = useState(0);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [qrMatrix, setQrMatrix] = useState<QrMatrixState | null>(null);
 
   const selected = sessions.find((s) => s.id === selectedId) || null;
 
@@ -97,40 +103,65 @@ export default function TeacherQrProjectorPage() {
     }
   };
 
-  // Render the token as a real standard QR code
-  const renderQrGrid = (token: string, sessionId: string) => {
-    try {
-      const payload = JSON.stringify({
-        type: 'attendance_qr',
-        session_id: sessionId,
-        token,
-      });
-      const qr = QRCode.create(payload, { errorCorrectionLevel: 'M' });
-      const size = qr.modules.size;
-      const cells: boolean[] = [];
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-          cells.push(Boolean(qr.modules.get(r, c)));
+  // Render the token as a real standard QR code via lazy-loaded qrcode library
+  useEffect(() => {
+    if (!qrToken || !selectedId) {
+      setQrMatrix(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const QRCode = (await import('qrcode')).default;
+        const payload = JSON.stringify({
+          type: 'attendance_qr',
+          session_id: selectedId,
+          token: qrToken,
+        });
+        const qr = QRCode.create(payload, { errorCorrectionLevel: 'M' });
+        const size = qr.modules.size;
+        const cells: boolean[] = [];
+        for (let r = 0; r < size; r++) {
+          for (let c = 0; c < size; c++) {
+            cells.push(Boolean(qr.modules.get(r, c)));
+          }
         }
+        if (!cancelled) setQrMatrix({ size, cells });
+      } catch {
+        if (!cancelled) setQrMatrix({ size: 0, cells: [], error: true });
       }
-      return (
-        <div
-          className="grid gap-[2px] bg-white p-4 rounded-[16px] shadow-2xl w-full max-w-[340px] mx-auto aspect-square"
-          style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}
-          aria-label="QR projection visual"
-        >
-          {cells.map((on, i) => (
-            <div key={i} className={`aspect-square ${on ? 'bg-[#050507]' : 'bg-white'}`} />
-          ))}
-        </div>
-      );
-    } catch {
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [qrToken, selectedId]);
+
+  const renderQrGrid = () => {
+    if (qrMatrix?.error) {
       return (
         <div className="p-8 text-center text-xs text-red-400">
           Failed to generate QR code symbol
         </div>
       );
     }
+    if (!qrMatrix || qrMatrix.size <= 0) {
+      return (
+        <div className="flex h-[280px] w-[280px] items-center justify-center rounded-[16px] border border-white/10 bg-white/[0.03]">
+          <RefreshCw className="h-6 w-6 animate-spin text-faint" />
+        </div>
+      );
+    }
+    return (
+      <div
+        className="grid gap-[2px] bg-white p-4 rounded-[16px] shadow-2xl w-full max-w-[340px] mx-auto aspect-square"
+        style={{ gridTemplateColumns: `repeat(${qrMatrix.size}, minmax(0, 1fr))` }}
+        aria-label="QR projection visual"
+      >
+        {qrMatrix.cells.map((on, i) => (
+          <div key={i} className={`aspect-square ${on ? 'bg-[#050507]' : 'bg-white'}`} />
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -168,7 +199,7 @@ export default function TeacherQrProjectorPage() {
             <>
               <div className="mb-6">
                 {qrToken ? (
-                  renderQrGrid(qrToken, selectedId)
+                  renderQrGrid()
                 ) : (
                   <div className="flex h-[280px] w-[280px] items-center justify-center rounded-[16px] border border-white/10 bg-white/[0.03]">
                     <RefreshCw className="h-6 w-6 animate-spin text-faint" />

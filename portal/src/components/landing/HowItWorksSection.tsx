@@ -17,59 +17,59 @@ interface StepDetail {
 const STEPS: StepDetail[] = [
   {
     number: '01',
-    title: 'Session start & cryptographic salt generation',
+    title: 'Session start & HMAC-SHA256 QR generation',
     roleBadge: 'TEACHER PORTAL',
     description:
-      'Faculty selects a scheduled lecture slot on their dashboard. The server generates an HMAC-SHA256 session token with a 30-second rotating salt, locked to the classroom GPS coordinates within a 45-meter radius.',
+    'Faculty opens a scheduled session from the teacher dashboard. The backend issues an HMAC-SHA256 signed QR payload with a 20-second validity window (plus 5-second clock-skew tolerance) and optional classroom geofencing.',
     specs: [
-      { label: 'Token drift window', value: '30 seconds' },
-      { label: 'Signing algorithm', value: 'HMAC-SHA256' },
-      { label: 'Geofence boundary', value: '45m classroom perimeter' },
-      { label: 'Access control', value: 'Teacher session host key' },
+      { label: 'Token validity window', value: '20s (+5s clock skew)' },
+      { label: 'Signing algorithm', value: 'HMAC-SHA256 (timingSafeEqual)' },
+      { label: 'Geofence boundary', value: 'Optional (100m default)' },
+      { label: 'Access control', value: 'Authenticated faculty session' },
     ],
-    codeLog: 'SESSION_ID: "cs401-20261116-0900"\nROTATING_SALT: "e3b0c44298fc1c149afbf4c8"\nEXPIRY: 00:28s remaining\nSTATUS: Active broadcast',
+    codeLog: '[SAMPLE] SESSION_ID: "cs401-20261116-0900"\nHMAC_SIG: "e3b0c44298fc1c149afbf4c8"\nWINDOW: 20s (+5s tolerance)\nSTATUS: Active session',
   },
   {
     number: '02',
-    title: 'ArcFace 512-dimension vector inference',
-    roleBadge: 'EDGE KIOSK / MOBILE',
+    title: 'ArcFace 512-dimension vector matching',
+    roleBadge: 'FASTAPI AI SERVICE',
     description:
-      'The student presents their face to the kiosk camera or mobile scanner. ArcFace localizes 106 facial fiducials and generates a 512-float embedding in under 120ms. Simultaneously, passive liveness analyzes skin micro-textures to reject photos, tablet screens, or silicone masks.',
+    'A verification frame is decoded in volatile memory, aligned via RetinaFace (det_10g), and encoded by InsightFace ArcFace (buffalo_l, ResNet-50) into an L2-normalized 512-float embedding for cosine similarity matching (0.60 default threshold).',
     specs: [
-      { label: 'Inference latency', value: '<120ms' },
-      { label: 'Vector dimensions', value: '512 floats' },
-      { label: 'Liveness method', value: 'Specular skin reflectance' },
-      { label: 'Decision cutoff', value: '0.82 Cosine similarity' },
+      { label: 'AI timeout budget', value: '15s inference / 18s gateway' },
+      { label: 'Vector dimensions', value: '512 floats (L2-normalized)' },
+      { label: 'Liveness support', value: 'Client-assisted (IR optional)' },
+      { label: 'Decision cutoff', value: '0.60 default Cosine (config.)' },
     ],
-    codeLog: 'POINTS_DETECTED: 106 landmarks\nCOSINE_SIMILARITY: 0.964\nDECISION: Match confirmed (Threshold >= 0.82)\nANTI_SPOOF: Passed (No screen glare)',
+    codeLog: '[SAMPLE] MODEL: "InsightFace buffalo_l (R50)"\nCOSINE_SIMILARITY: 0.874\nDECISION: Match confirmed (Threshold >= 0.60)\nFRAME_MEMORY: Released after extraction',
   },
   {
     number: '03',
-    title: 'Single-device enclave check',
+    title: 'Replay guards, rate limits & cooldowns',
     roleBadge: 'SECURITY SENTINEL',
     description:
-      'To prevent screenshot forwarding, the system verifies hardware UUID signatures and network BSSID data. Each hardware token is bound to one student record per lecture, eliminating duplicate punches and proxy check-ins.',
+    'To narrow proxy sharing and brute-force attempts, the backend enforces single-use session attendance records, timing-safe QR verification, strict API rate limits (15/min on face verification), and a 2-minute cooldown after 3 failures.',
     specs: [
-      { label: 'Device binding', value: '1 hardware token per student' },
-      { label: 'Replay prevention', value: 'One-time token consumption' },
-      { label: 'Network verification', value: 'Campus Wi-Fi BSSID match' },
-      { label: 'Proxy rejection rate', value: '100% on forwarded QR' },
+      { label: 'Failure backoff', value: '2 min lock after 3 failures' },
+      { label: 'Replay prevention', value: 'Duplicate check-in & token guards' },
+      { label: 'AI rate limit', value: '15 req/min (concurrency 2)' },
+      { label: 'Session check-in', value: '1 verified record per session' },
     ],
-    codeLog: 'DEVICE_UUID: "dev-89a1-43ef-992a"\nHARDWARE_ATTESTATION: Verified\nATTEMPT_COUNT_THIS_SESSION: 1\nDOUBLE_PUNCH_FILTER: Clear',
+    codeLog: '[SAMPLE] QR_VERIFICATION: "timingSafeEqual PASS"\nRBAC_SCOPE: "Student role verified"\nATTEMPT_COUNT_THIS_SESSION: 1\nDUPLICATE_FILTER: Clear',
   },
   {
     number: '04',
-    title: 'Ledger commit & automated parent alerts',
-    roleBadge: 'SYNCHRONOUS DISPATCH',
+    title: 'Ledger commit & automated guardian alerts',
+    roleBadge: 'MONGODB & NOTIFICATIONS',
     description:
-      'The attendance record is written to the central database in under 24ms. Student streaks update immediately, the teacher live roster reflects the check-in, and parents receive an SMS and push notification containing the gate name, timestamp, and verification score.',
+    'Verified check-ins commit to MongoDB (with optional PostgreSQL/pgvector analytics sync or AES-256 encrypted Hive mobile buffering when offline). Faculty rosters refresh and configured guardian notifications dispatch via Email, SMS, or push.',
     specs: [
-      { label: 'Database write latency', value: '<24ms' },
-      { label: 'Parent delivery channel', value: 'SMS & mobile push' },
-      { label: 'Student streak update', value: '+1 day Golden Blaze' },
-      { label: 'Faculty roster sync', value: 'Instant WebSocket update' },
+      { label: 'Primary persistence', value: 'MongoDB (+ optional pgvector)' },
+      { label: 'Guardian delivery channel', value: 'Email, SMS & push (config.)' },
+      { label: 'Offline mobile buffer', value: 'AES-256 Hive (500 records max)' },
+      { label: 'Deterministic tallies', value: 'Integer basis-point math' },
     ],
-    codeLog: 'COMMIT_TIMESTAMP: "09:02:14 UTC+5:30"\nGATE_LOCATION: "Main Campus Gate A"\nPARENT_SMS: "Alice Smith marked present in CS-401 at 09:02 AM"\nSTREAK: 14 days active',
+    codeLog: '[SAMPLE] COMMIT_TIMESTAMP: "09:02:14 UTC+5:30"\nGATE_LOCATION: "Sample Classroom Gate"\nNOTIFY_LOG: "Arrival update queued"\nCALC_MODE: "Deterministic percentage"',
   },
 ];
 
@@ -83,7 +83,7 @@ export function HowItWorksSection() {
         <SectionHeading
           eyebrow="Verification Pipeline"
           title="How SmartFace Works"
-          description="Faculty opens a session, the ArcFace engine verifies each student in under 120ms, and parents receive arrival timestamps directly on their phones."
+          description="Faculty opens a session, InsightFace ArcFace (buffalo_l) matches against the configured cosine threshold, and guardian alerts plus rosters update automatically."
         />
 
         {/* Structured Editorial 4-Step Layout */}

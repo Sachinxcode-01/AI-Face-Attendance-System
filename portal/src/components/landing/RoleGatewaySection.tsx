@@ -73,9 +73,9 @@ const ROLE_PORTALS: RolePortalConfig[] = [
     icon: Users,
     tagline: "Dynamic Anti-Proxy Sessions",
     description:
-      "Launch 30-second rotating QR attendance sessions, operate kiosk scanning, override rosters, and manage leave requests.",
+    "Launch 20-second rotating QR attendance sessions, operate kiosk scanning, override rosters, and manage leave requests.",
     features: [
-      "30-Second Dynamic Rotating QR",
+      "20-Second Dynamic Rotating QR",
       "Live Biometric Check-in Roster",
       "One-Click Leave Approval Inbox",
       "Lecture Attendance Analytics",
@@ -147,7 +147,7 @@ const ROLE_PORTALS: RolePortalConfig[] = [
     demoDetails: "superadmin@smartface.pro • Root Ops",
     spotlight: "rgba(143, 139, 255, 0.26)",
     badgeStyle: "border-accent/40 bg-accent/15 text-hi",
-    metric: { label: "Fleet Health", value: "100% Online", icon: Building2 },
+    metric: { label: "Governance", value: "RBAC & Audit", icon: Building2 },
   },
 ];
 

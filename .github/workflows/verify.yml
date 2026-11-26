@@ -2,9 +2,9 @@ name: SmartFace Elite — CI Verification Pipeline
 
 on:
   push:
-    branches: [ main, develop, 'feature/**', 'fix/**' ]
+    branches: [main, develop, "feature/**", "fix/**"]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 # Cancel any in-progress run for the same branch on new push
 concurrency:
@@ -12,9 +12,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20'
-  PYTHON_VERSION: '3.11'
-  FLUTTER_VERSION: '3.22.0'
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+  FLUTTER_VERSION: "3.22.0"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # JOB 1: Flutter Mobile — Analyze + Format Check
@@ -37,7 +37,7 @@ jobs:
           ln -sfn mobile smartface_mobile
           ln -sfn backend/api smartface_node_api
           ln -sfn backend/ai smartface_pro_api
-          ln -sfn frontend/web smartface_landing_web
+          ln -sfn landing smartface_landing_web
 
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
@@ -83,13 +83,13 @@ jobs:
           ln -sfn mobile smartface_mobile
           ln -sfn backend/api smartface_node_api
           ln -sfn backend/ai smartface_pro_api
-          ln -sfn frontend/web smartface_landing_web
+          ln -sfn landing smartface_landing_web
 
       - name: Set up Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: backend/api/package-lock.json
 
       - name: Install dependencies
@@ -144,13 +144,13 @@ jobs:
           ln -sfn mobile smartface_mobile
           ln -sfn backend/api smartface_node_api
           ln -sfn backend/ai smartface_pro_api
-          ln -sfn frontend/web smartface_landing_web
+          ln -sfn landing smartface_landing_web
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
+          cache: "pip"
 
       - name: Install system build prerequisites
         run: |
@@ -199,7 +199,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────
   all-checks-passed:
     name: "✅ All Checks Passed"
-    needs: [ flutter-check, node-check, python-check, secret-scan ]
+    needs: [flutter-check, node-check, python-check, secret-scan]
     runs-on: ubuntu-latest
     if: always()
 

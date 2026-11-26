@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { QrCode, CheckCircle2, Smartphone, Radio } from 'lucide-react';
 
-const TOKEN_WINDOW = 30;
+const TOKEN_WINDOW = 20;
 
 export function InteractiveTokenCraft() {
   const [seconds, setSeconds] = useState(TOKEN_WINDOW);
@@ -48,10 +48,10 @@ export function InteractiveTokenCraft() {
                 Dynamic Salt Engine
               </p>
               <h3 className="font-display text-2xl font-semibold text-hi">
-                Interactive Anti-Proxy Simulator
+                Interactive Anti-Proxy Simulator (Demo)
               </h3>
               <p className="text-xs sm:text-sm text-mid mt-1">
-                See how a 30-second cryptographic token rotation prevents attendance proxies and forwarded screenshots.
+                Simulated preview of how 20-second HMAC-SHA256 QR token rotation (+5s clock skew) narrows screenshot forwarding windows.
               </p>
             </div>
 
@@ -117,17 +117,17 @@ export function InteractiveTokenCraft() {
                   <span className="text-hi truncate max-w-[220px]">sha256:4a8b...{formattedToken.toLowerCase()}</span>
                 </div>
                 <div className="flex items-center justify-between text-mid">
-                  <span>DRIFT_TOLERANCE:</span>
-                  <span className="text-emerald-400">Strict ±30 seconds</span>
+                  <span>VALIDITY_WINDOW:</span>
+                  <span className="text-emerald-400">20s (+5s clock skew)</span>
                 </div>
                 <div className="flex items-center justify-between text-mid">
-                  <span>HARDWARE_LOCK:</span>
-                  <span className="text-accent">1 Active UUID per Student</span>
+                  <span>REPLAY_GUARD:</span>
+                  <span className="text-accent">Single-use per session</span>
                 </div>
               </div>
 
               <p className="text-xs text-mid leading-relaxed">
-                Forwarded screenshots fail because the token expires before absent students can scan it. The server verifies the cryptographic salt, device hardware UUID, and classroom geofence concurrently.
+                Short 20-second validity windows shrink the time available for forwarded screenshots. In production, the API validates the HMAC-SHA256 signature with timing-safe comparison, checks duplicate session marks, and applies optional Haversine classroom geofencing.
               </p>
 
               <div>

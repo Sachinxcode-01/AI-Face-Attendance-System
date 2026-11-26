@@ -58,39 +58,39 @@ router.get('/student/:email', authenticate, async (req, res) => {
       getStudentAttendanceHistory(email, { ...req.query, limit: 200, page: 1 }),
     ]);
 
-      if (!summary || !history) {
-        return res.status(404).json({ detail: 'Student not found' });
-      }
+    if (!summary || !history) {
+      return res.status(404).json({ detail: 'Student not found' });
+    }
 
-      const reportId = `RPT-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
-      const generatedAt = new Date().toISOString();
-      const disclaimer = 'Student-generated attendance report for informational tracking — not an institution-certified official transcript.';
+    const reportId = `RPT-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+    const generatedAt = new Date().toISOString();
+    const disclaimer = 'Student-generated attendance report for informational tracking — not an institution-certified official transcript.';
 
-      const rows = history.records.map((r) => [
-        r.date,
-        r.time,
-        r.subject,
-        r.subject_code || '-',
-        r.faculty_name || '-',
-        r.room || '-',
-        r.verified_by,
-        r.status,
-        r.correction_status || '-',
-        r.receipt_id,
-      ]);
+    const rows = history.records.map((r) => [
+      r.date,
+      r.time,
+      r.subject,
+      r.subject_code || '-',
+      r.faculty_name || '-',
+      r.room || '-',
+      r.verified_by,
+      r.status,
+      r.correction_status || '-',
+      r.receipt_id,
+    ]);
 
-      if (format === 'html') {
-        res.set('Content-Type', 'text/html; charset=utf-8');
-        const subjectRowsHtml = summary.subjects.map((s) => `
+    if (format === 'html') {
+      res.set('Content-Type', 'text/html; charset=utf-8');
+      const subjectRowsHtml = summary.subjects.map((s) => `
         <tr>
           <td>${escapeHtml(s.subject)}</td>
           <td>${s.attended}/${s.conducted}</td>
           <td>${s.percentage}%</td>
           <td>${s.eligible ? 'Eligible' : 'Shortage'}</td>
         </tr>`).join('');
-        const recordRowsHtml = rows.map((r) => `
+      const recordRowsHtml = rows.map((r) => `
         <tr>${r.map((c) => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('');
-        return res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Attendance Report ${reportId}</title>
+      return res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Attendance Report ${reportId}</title>
         <style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{margin:0 0 4px}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{border:1px solid #ddd;padding:6px 8px;font-size:12px;text-align:left}th{background:#f3f4f6}.meta{font-size:12px;color:#444;margin-bottom:12px}.note{font-size:11px;color:#666;border-top:1px solid #ddd;padding-top:8px;margin-top:20px}</style>
       </head><body>
         <h1>SmartFace Attendance Report (${escapeHtml(reportType.toUpperCase())})</h1>
@@ -103,45 +103,45 @@ router.get('/student/:email', authenticate, async (req, res) => {
         <table><thead><tr><th>Date</th><th>Time</th><th>Subject</th><th>Code</th><th>Faculty</th><th>Room</th><th>Method</th><th>Status</th><th>Correction</th><th>Ref ID</th></tr></thead><tbody>${recordRowsHtml || '<tr><td colspan="10">No records</td></tr>'}</tbody></table>
         <p class="note">${escapeHtml(disclaimer)}</p>
       </body></html>`);
-      }
-
-      return sendTabular(
-        res,
-        format,
-        `attendance_${reportType}_${summary.student.student_id || 'student'}`,
-        ['Date', 'Time', 'Subject', 'Subject Code', 'Faculty', 'Room', 'Verified By', 'Status', 'Correction Status', 'Reference ID'],
-        rows,
-      {
-          report_id: reportId,
-          report_type: reportType,
-          generated_at: generatedAt,
-          disclaimer,
-          student: summary.student,
-          period: {
-            start_date: req.query.start_date || 'All time',
-            end_date: req.query.end_date || 'Current',
-            semester: req.query.semester || summary.student.semester,
-          },
-          summary: {
-            overall_percentage: summary.overall_attendance,
-            attended: summary.total_present,
-            conducted: summary.total_conducted,
-            missed: summary.total_missed,
-            late: summary.total_late,
-            excused: summary.total_excused,
-            cancelled: summary.total_cancelled,
-            eligible: summary.eligible,
-          },
-          subjects: summary.subjects,
-          records_count: rows.length,
-          rows,
-          records: history.records,
-        }
-      );
-    } catch (error) {
-      res.status(500).json({ detail: 'Unable to generate attendance report.' });
     }
-  });
+
+    return sendTabular(
+      res,
+      format,
+      `attendance_${reportType}_${summary.student.student_id || 'student'}`,
+      ['Date', 'Time', 'Subject', 'Subject Code', 'Faculty', 'Room', 'Verified By', 'Status', 'Correction Status', 'Reference ID'],
+      rows,
+      {
+        report_id: reportId,
+        report_type: reportType,
+        generated_at: generatedAt,
+        disclaimer,
+        student: summary.student,
+        period: {
+          start_date: req.query.start_date || 'All time',
+          end_date: req.query.end_date || 'Current',
+          semester: req.query.semester || summary.student.semester,
+        },
+        summary: {
+          overall_percentage: summary.overall_attendance,
+          attended: summary.total_present,
+          conducted: summary.total_conducted,
+          missed: summary.total_missed,
+          late: summary.total_late,
+          excused: summary.total_excused,
+          cancelled: summary.total_cancelled,
+          eligible: summary.eligible,
+        },
+        subjects: summary.subjects,
+        records_count: rows.length,
+        rows,
+        records: history.records,
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ detail: 'Unable to generate attendance report.' });
+  }
+});
 
 // GET /reports/class/:sessionId - roster of a class session
 router.get('/class/:sessionId', authenticate, requireRole(['admin', 'teacher', 'hod', 'principal', 'management']), async (req, res) => {
@@ -149,33 +149,40 @@ router.get('/class/:sessionId', authenticate, requireRole(['admin', 'teacher', '
     const { sessionId } = req.params;
     const format = req.query.format || 'json';
 
-    const session = await Session.findById(sessionId).lean().catch(() => null);
-    const records = await Attendance.find({ session_id: sessionId }).lean();
+    const session = await Session.findById(sessionId).select('subject').lean().catch(() => null);
+    const records = await Attendance.find({ session_id: sessionId })
+      .select('student_email status verified_by timestamp')
+      .lean();
 
-    const rows = [];
-    for (const rec of records) {
-      const student = await User.findOne({ email: rec.student_email }).lean().catch(() => null);
-      const timeStr = new Date(rec.timestamp).toISOString().split('T')[1].substring(0, 5);
-      rows.push([
-        student ? student.full_name : rec.student_email,
-        student ? (student.student_id || '') : '',
-        rec.status,
-        rec.verified_by,
-        timeStr,
-      ]);
-    }
+    const emails = [...new Set(records.map((r) => String(r.student_email || '').toLowerCase()).filter(Boolean))];
+      const students = emails.length > 0
+        ? await User.find({ email: { $in: emails } }, 'email full_name student_id').lean()
+        : [];
+      const studentMap = new Map(students.map((s) => [s.email.toLowerCase(), s]));
 
-    return sendTabular(
-      res,
-      format,
-      `class_${sessionId}`,
-      ['Student', 'Student ID', 'Status', 'Verified By', 'Time'],
-      rows,
-      { session: session ? session.subject : sessionId, present_count: rows.length, rows }
-    );
+      const rows = records.map((rec) => {
+        const student = studentMap.get(String(rec.student_email || '').toLowerCase());
+        const timeStr = rec.timestamp ? new Date(rec.timestamp).toISOString().split('T')[1].substring(0, 5) : '--:--';
+        return [
+          student ? student.full_name : rec.student_email,
+          student ? (student.student_id || '') : '',
+          rec.status,
+          rec.verified_by,
+          timeStr,
+      ];
+  });
+
+return sendTabular(
+  res,
+  format,
+  `class_${sessionId}`,
+  ['Student', 'Student ID', 'Status', 'Verified By', 'Time'],
+  rows,
+  { session: session ? session.subject : sessionId, present_count: rows.length, rows }
+);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
-  }
+  res.status(500).json({ detail: 'Unable to generate class report.' });
+}
 });
 
 // GET /reports/department/:dept - department attendance summary
@@ -184,30 +191,40 @@ router.get('/department/:dept', authenticate, requireRole(['admin', 'hod', 'prin
     const { dept } = req.params;
     const format = req.query.format || 'json';
 
-    const students = await User.find({ role: 'student', department: dept }).lean();
-    const rows = [];
-    for (const s of students) {
-      const analytics = await AttendanceAnalytics.findOne({ student_email: s.email }).lean().catch(() => null);
-      rows.push([
-        s.full_name,
-        s.student_id || '',
-        s.semester || '',
-        analytics ? `${analytics.health_score}%` : 'N/A',
-        analytics ? analytics.standing : 'No Data',
-      ]);
-    }
+    const students = await User.find({ role: 'student', department: dept })
+        .select('email full_name student_id semester')
+        .lean();
+      const emails = students.map((s) => String(s.email || '').toLowerCase()).filter(Boolean);
+      const analyticsDocs = emails.length > 0
+        ? await AttendanceAnalytics.find(
+          { student_email: { $in: emails } },
+          'student_email health_score standing'
+        ).lean()
+        : [];
+      const analyticsMap = new Map(analyticsDocs.map((a) => [a.student_email.toLowerCase(), a]));
 
-    return sendTabular(
-      res,
-      format,
-      `department_${dept.replace(/\s+/g, '_')}`,
-      ['Student', 'Student ID', 'Semester', 'Health Score', 'Standing'],
-      rows,
-      { department: dept, student_count: rows.length, rows }
-    );
+      const rows = students.map((s) => {
+        const analytics = analyticsMap.get(String(s.email || '').toLowerCase());
+        return [
+          s.full_name,
+          s.student_id || '',
+          s.semester || '',
+          analytics ? `${analytics.health_score}%` : 'N/A',
+          analytics ? analytics.standing : 'No Data',
+      ];
+  });
+
+return sendTabular(
+  res,
+  format,
+  `department_${dept.replace(/\s+/g, '_')}`,
+  ['Student', 'Student ID', 'Semester', 'Health Score', 'Standing'],
+  rows,
+  { department: dept, student_count: rows.length, rows }
+);
   } catch (error) {
-    res.status(500).json({ detail: error.message });
-  }
+  res.status(500).json({ detail: 'Unable to generate department report.' });
+}
 });
 
 module.exports = router;

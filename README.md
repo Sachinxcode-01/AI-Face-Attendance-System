@@ -53,7 +53,7 @@ Transitioned from a single local computer Python script, the system is now a **f
 * **Secure Authentication:** Complete JSON Web Token (JWT) identity flows paired with Google OAuth2 integrations.
 * **Transaction-Safe Logins:** Multi-step transactional email OTP logins to prevent password leaks.
 * **WebSocket Broadcaster:** Built-in bi-directional connection manager delivering real-time logs, session initiations, and intruder alerts directly to administrative dashboards.
-* **Dynamic Anti-Proxy QR:** Prevents location/photo hacking by rotating dynamic server tokens at lightning speed, allowing a customizable 30-second clock-drift window for client verification.
+* **Dynamic Anti-Proxy QR:** Reduces location and screenshot-forwarding abuse using rotating HMAC-SHA256 server tokens with a 20-second validity window (plus 5-second clock-skew tolerance) and optional classroom geofencing.
 * **Leave Management Portal:** Standardized endpoint pipelines to let students submit leave applications, while giving administrators approval/rejection endpoints that trigger automatic status emails.
 * **Live GSheets Replication:** Automatic background synchronization (`gsheets_manager.py`) mapping every attendance record straight to external Google Sheets.
 * **Production-Ready Security:** Token-bucket rate limiters on critical registration and login endpoints, custom RequestID tracing middleware, JSON structured logger, and secure CORS/HTTP headers.

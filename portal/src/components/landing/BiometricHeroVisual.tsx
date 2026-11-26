@@ -32,12 +32,12 @@ export function BiometricHeroVisual() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-display font-semibold text-sm text-hi">ArcFace Sentinel v4.2</span>
+                <span className="font-display font-semibold text-sm text-hi">ArcFace buffalo_l</span>
                 <span className="rounded-full bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 text-[9.5px] font-mono text-emerald-400">
-                  LIVE INFERENCE
+                  SAMPLE PREVIEW
                 </span>
               </div>
-              <p className="text-[11px] font-mono text-faint">512-D ONNX Neural Engine · Gate 01</p>
+              <p className="text-[11px] font-mono text-faint">512-D ONNX (ResNet-50) · Simulated UI</p>
             </div>
           </div>
 
@@ -78,16 +78,16 @@ export function BiometricHeroVisual() {
         ) : (
           <div className="my-4 rounded-[16px] border border-white/[0.08] bg-[#050507] p-4 font-mono text-xs space-y-3">
             <div className="flex items-center justify-between text-mid">
-              <span>COSINE_SIMILARITY:</span>
-              <span className="text-emerald-400 font-bold">{similarityScore} (Threshold: 0.820)</span>
+              <span>COSINE_SIMILARITY (DEMO):</span>
+              <span className="text-emerald-400 font-bold">{similarityScore} (Default Cutoff: 0.600)</span>
             </div>
             <div className="flex items-center justify-between text-mid">
-              <span>LATENCY:</span>
-              <span className="text-accent">{latencyMs}ms ONNX inference</span>
+              <span>SIMULATED_SAMPLE:</span>
+              <span className="text-accent">{latencyMs}ms UI animation</span>
             </div>
             <div className="flex items-center justify-between text-mid">
-              <span>PASSIVE_LIVENESS:</span>
-              <span className="text-emerald-400">99.8% Confirmed Real</span>
+              <span>LIVENESS_MODE:</span>
+              <span className="text-emerald-400">Client-assisted (Demo)</span>
             </div>
             <div className="rounded-[12px] bg-surface p-2.5 text-[11px] text-mid break-all border border-white/[0.06]">
               [0.0841, -0.2190, 0.4328, 0.9123, -0.0542, 0.3129, 0.0094, -0.1482, ...]
@@ -112,7 +112,7 @@ export function BiometricHeroVisual() {
         {/* Action Button & Metric */}
         <div className="flex items-center justify-between pt-2 border-t border-white/[0.08]">
           <span className="text-xs text-faint font-mono">
-            1,482 verifications recorded today
+            Simulated interactive preview (threshold &ge; 0.60)
           </span>
 
           <button

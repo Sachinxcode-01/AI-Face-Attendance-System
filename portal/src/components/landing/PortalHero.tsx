@@ -8,10 +8,10 @@ import { ArrowDown, ArrowRight, LogIn, Shield, UserPlus } from "lucide-react";
 import { VerificationCard } from "./VerificationCard";
 
 const TELEMETRY = [
-  { value: "<120ms", label: "Inference", sub: "INT8 on-device ONNX" },
-  { value: "99.8%", label: "Liveness", sub: "ArcFace cosine 0.94" },
-  { value: "30s", label: "QR Salt", sub: "HMAC-SHA256 drift" },
-  { value: "0%", label: "Buddy Proxy", sub: "Hardware enclave lock" },
+  { value: "512-D", label: "Embeddings", sub: "ArcFace buffalo_l (R50)" },
+  { value: "0.60", label: "Threshold", sub: "Configurable cosine" },
+  { value: "20s", label: "QR Window", sub: "HMAC-SHA256 + 5s skew" },
+  { value: "5 Roles", label: "Unified RBAC", sub: "Web, API & mobile" },
 ];
 
 const container: Variants = {
@@ -59,7 +59,7 @@ function LiveEngineBadge() {
         ))}
       </span>
       <span className="font-mono text-[11px] tabular-nums tracking-wide text-mid">
-        <span className="text-hi font-medium">{count.toLocaleString("en-US")}</span> portal check-ins today
+        <span className="text-hi font-medium">{count.toLocaleString("en-US")}</span> simulated demo check-ins
       </span>
       <span className="hidden h-3 w-px bg-white/15 sm:block" aria-hidden />
       <span className="hidden items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-[#9fe0b6] sm:flex">
@@ -159,7 +159,7 @@ export function PortalHero() {
             variants={item}
             className="mt-6 max-w-[580px] text-pretty text-[15px] sm:text-[16px] leading-[25.6px] text-mid"
           >
-            SmartFace replaces manual paper sign-ins and proxy fraud with 512-dimension ArcFace neural embeddings, 30-second rotating cryptographic salts, and synchronized portals for students, faculty, administrators, super admins, and parents.
+            SmartFace replaces manual paper sign-ins with InsightFace ArcFace (buffalo_l, ResNet-50) 512-dimensional embeddings, 20-second rotating HMAC-SHA256 QR tokens, and synchronized portals for students, faculty, administrators, super admins, and parents.
           </motion.p>
 
           {/* Portal Actions */}

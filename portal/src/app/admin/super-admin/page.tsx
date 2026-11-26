@@ -79,7 +79,7 @@ export default function SuperAdminPage() {
     overallAccuracy: 99.42,
     estimatedFar: 0.0014,
     estimatedFrr: 0.0078,
-    biometricEngine: 'ArcFace-512 ResNet100 + Single Source Core Validator',
+    biometricEngine: 'InsightFace ArcFace (buffalo_l, ResNet-50) + Single Source Core Validator',
   });
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -207,8 +207,8 @@ export default function SuperAdminPage() {
             key={tab.key}
             onClick={() => setActiveTab(tab.key as any)}
             className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${activeTab === tab.key
-                ? 'bg-accent text-[#050507] shadow-lg shadow-accent/20'
-                : 'bg-white/[0.03] text-mid hover:bg-white/[0.06] hover:text-hi'
+              ? 'bg-accent text-[#050507] shadow-lg shadow-accent/20'
+              : 'bg-white/[0.03] text-mid hover:bg-white/[0.06] hover:text-hi'
               }`}
           >
             <tab.icon className="h-3.5 w-3.5" />
@@ -359,44 +359,44 @@ export default function SuperAdminPage() {
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
                 <h4 className="font-semibold text-hi text-sm mb-3">Verification Failure Breakdown</h4>
                 <div className="space-y-3 font-mono text-xs">
-                        {Array.isArray((accuracyData as any).failureBreakdown) && (accuracyData as any).failureBreakdown.length > 0 ? (
-                          (accuracyData as any).failureBreakdown.map((item: any, idx: number) => (
-                            <div key={idx} className="flex items-center justify-between">
-                              <span className="text-mid">{item.reason}</span>
-                              <div className="flex items-center gap-3">
-                                <span className="text-hi font-bold">{item.count}</span>
-                                <span className="text-faint text-[11px] w-10 text-right">{item.pct}</span>
-                              </div>
-                            </div>
-                      ))
-                      ) : (
-                      <p className="text-faint text-xs">No verification failure events recorded in this interval.</p>
+                  {Array.isArray((accuracyData as any).failureBreakdown) && (accuracyData as any).failureBreakdown.length > 0 ? (
+                    (accuracyData as any).failureBreakdown.map((item: any, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between">
+                        <span className="text-mid">{item.reason}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-hi font-bold">{item.count}</span>
+                          <span className="text-faint text-[11px] w-10 text-right">{item.pct}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-faint text-xs">No verification failure events recorded in this interval.</p>
                   )}
-                    </div>
+                </div>
               </div>
 
-                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                  <h4 className="font-semibold text-hi text-sm mb-3">Core Attendance Engine Integrity</h4>
-                  <div className="space-y-2.5 font-mono text-xs text-mid">
-                    <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                      <span>Single Source of Truth:</span>
-                      <span className="text-emerald-400 font-bold">core/attendance_system.py</span>
-                    </div>
-                    <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                      <span>ArcFace Embedding Dimension:</span>
-                      <span className="text-hi">512-D L2 Normalized FP16</span>
-                    </div>
-                    <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                      <span>Cosine Similarity Threshold:</span>
-                      <span className="text-accent font-bold">0.650 (Strict Enterprise)</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Liveness Detection Mode:</span>
-                      <span className="text-emerald-400">Active Texture + Blink Heuristic</span>
-                    </div>
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+                <h4 className="font-semibold text-hi text-sm mb-3">Core Attendance Engine Integrity</h4>
+                <div className="space-y-2.5 font-mono text-xs text-mid">
+                  <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                    <span>Single Source of Truth:</span>
+                    <span className="text-emerald-400 font-bold">core/attendance_system.py</span>
+                  </div>
+                  <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                    <span>ArcFace Embedding Dimension:</span>
+                    <span className="text-hi">512-D L2 Normalized FP16</span>
+                  </div>
+                  <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                    <span>Cosine Similarity Threshold:</span>
+                    <span className="text-accent font-bold">0.650 (Strict Enterprise)</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Liveness Detection Mode:</span>
+                    <span className="text-emerald-400">Active Texture + Blink Heuristic</span>
                   </div>
                 </div>
               </div>
+            </div>
           </Card>
         </div>
       )}
@@ -410,8 +410,8 @@ export default function SuperAdminPage() {
             subtitle="Endpoints exposed at /health, /readiness, and /liveness for zero-downtime orchestration."
           />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                  {healthData ? (
-                    Object.entries(healthData.services || healthData).map(([key, val]: [string, any]) => (
+            {healthData ? (
+              Object.entries(healthData.services || healthData).map(([key, val]: [string, any]) => (
                 <div key={key} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-hi text-xs capitalize">{key.replace(/_/g, ' ')}</span>
@@ -423,11 +423,11 @@ export default function SuperAdminPage() {
                     <div className="text-[11px] font-mono text-faint mb-1">Latency: <span className="text-accent">{val.latencyMs}ms</span></div>
                   )}
                 </div>
-                ))
-                ) : (
-                <p className="text-xs text-faint col-span-3">Health telemetry unavailable.</p>
+              ))
+            ) : (
+              <p className="text-xs text-faint col-span-3">Health telemetry unavailable.</p>
             )}
-              </div>
+          </div>
         </Card>
       )}
 
