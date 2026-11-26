@@ -2,6 +2,7 @@
 
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const College = require('../models/College');
 const Session = require('../models/Session');
 const Attendance = require('../models/Attendance');
 const Leave = require('../models/Leave');
@@ -83,9 +84,22 @@ function escapeRegex(val) {
   return String(val || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function buildTenantStudentFilter(teacher, extra = {}) {
-  if (!teacher?.college_id) return null;
-  const filter = { role: 'student', college_id: teacher.college_id, ...extra };
+async function resolveCanonicalCollegeId(user) {
+  if (!user) return null;
+  if (user.college_id) return String(user.college_id).trim();
+  if (!user.college) return null;
+  const raw = String(user.college).trim();
+  const college = await College.findOne(
+    { $or: [{ code: raw.toUpperCase() }, { name: new RegExp(`^${escapeRegex(raw)}$`, 'i') }] },
+    '_id code'
+  ).lean();
+  return college ? (college.code || college._id.toString()) : null;
+}
+
+function buildTenantStudentFilter(teacher, canonicalCollegeId, extra = {}) {
+  const collegeId = canonicalCollegeId || teacher?.college_id;
+  if (!collegeId) return null;
+  const filter = { role: 'student', college_id: collegeId, ...extra };
   if (teacher?.department) {
     filter.department = teacher.department;
   }
@@ -100,16 +114,16 @@ async function resolveTeacherContext(teacherEmail) {
   ).lean();
   if (!teacher) return null;
 
-  const [policy, timetableSlots, teacherSessions] = await Promise.all([
+  const [canonicalCollegeId, policy, timetableSlots, teacherSessions] = await Promise.all([
+    resolveCanonicalCollegeId(teacher),
     getInstitutionPolicy(teacher),
     Timetable.find({
       $or: [
         { teacher_email: cleanEmail },
-        { teacher_email: new RegExp(`^${escapeRegex(cleanEmail)}$`, 'i') },
         { user_id: cleanEmail.toUpperCase() },
       ],
     }).lean(),
-    Session.find({ teacher_id: new RegExp(`^${escapeRegex(cleanEmail)}$`, 'i') })
+    Session.find({ teacher_id: cleanEmail })
       .sort({ start_time: -1 })
       .lean(),
   ]);
@@ -126,6 +140,7 @@ async function resolveTeacherContext(teacherEmail) {
 
   return {
     teacher,
+    canonicalCollegeId,
     cleanEmail,
     policy,
     timetableSlots,
@@ -137,15 +152,33 @@ async function resolveTeacherContext(teacherEmail) {
 }
 
 async function getAuthorisedStudentsForTeacher(ctx, filters = {}) {
-  const { teacher, teacherSessions } = ctx;
+  const { teacher, teacherSessions, timetableSlots = [] } = ctx;
+  const canonicalCollegeId = ctx.canonicalCollegeId ?? await resolveCanonicalCollegeId(teacher);
+  if (!canonicalCollegeId) return [];
+
+  let scopedSessions = teacherSessions;
+  let subjectCohorts = null;
+  if (filters.subject) {
+    const subLower = String(filters.subject).trim().toLowerCase();
+    scopedSessions = teacherSessions.filter((s) => String(s.subject || '').trim().toLowerCase() === subLower);
+    const matchingSlots = timetableSlots.filter((s) => String(s.subject || '').trim().toLowerCase() === subLower);
+    const tuples = [];
+    for (const item of [...scopedSessions, ...matchingSlots]) {
+      const sec = item.section ? String(item.section).trim() : '';
+      const sem = item.semester ? String(item.semester).trim() : '';
+      if (sec || sem) tuples.push({ sec, sem });
+    }
+    if (tuples.length > 0) subjectCohorts = tuples;
+  }
+
   const sessionIds = filters.sessionId
     ? [String(filters.sessionId)]
     : (Array.isArray(filters.sessionIds)
       ? filters.sessionIds.map(String)
-      : teacherSessions.map((s) => s._id.toString()));
+      : scopedSessions.map((s) => s._id.toString()));
 
-  // Combine students in the teacher's college+department with any student who has checked into the scoped sessions (same college)
-  const studentFilter = buildTenantStudentFilter(teacher);
+  // Combine students in the teacher's canonical college+department with attendees in scoped sessions of the same institution
+  const studentFilter = buildTenantStudentFilter(teacher, canonicalCollegeId);
   if (studentFilter) {
     if (filters.section) studentFilter.section = String(filters.section).trim();
     if (filters.semester) studentFilter.semester = String(filters.semester).trim();
@@ -168,11 +201,18 @@ async function getAuthorisedStudentsForTeacher(ctx, filters = {}) {
     ).lean()
     : [];
 
+  const filteredDeptStudents = subjectCohorts
+    ? deptStudents.filter((st) => subjectCohorts.some((c) =>
+        (!c.sec || String(st.section || '').trim() === c.sec) &&
+        (!c.sem || String(st.semester || '').trim() === c.sem)
+      ))
+    : deptStudents;
+
   const attendeeEmails = sessionIds.length
     ? await Attendance.distinct('student_email', { session_id: { $in: sessionIds } })
     : [];
 
-  const knownEmails = new Set(deptStudents.map((s) => s.email.toLowerCase()));
+  const knownEmails = new Set(filteredDeptStudents.map((s) => s.email.toLowerCase()));
   const missingAttendeeEmails = attendeeEmails
     .map((e) => String(e).toLowerCase())
     .filter((e) => !knownEmails.has(e));
@@ -182,7 +222,7 @@ async function getAuthorisedStudentsForTeacher(ctx, filters = {}) {
     const extraFilter = {
       role: 'student',
       email: { $in: missingAttendeeEmails },
-      ...(teacher.college_id ? { college_id: teacher.college_id } : {}),
+      college_id: canonicalCollegeId,
     };
     if (filters.section) extraFilter.section = String(filters.section).trim();
     if (filters.semester) extraFilter.semester = String(filters.semester).trim();
@@ -192,7 +232,7 @@ async function getAuthorisedStudentsForTeacher(ctx, filters = {}) {
     ).lean();
   }
 
-  let combined = [...deptStudents, ...extraStudents];
+  let combined = [...filteredDeptStudents, ...extraStudents];
   if (filters.search && extraStudents.length > 0) {
     const q = filters.search.trim().toLowerCase();
     combined = combined.filter((s) =>
@@ -204,6 +244,38 @@ async function getAuthorisedStudentsForTeacher(ctx, filters = {}) {
     );
   }
   return combined;
+}
+
+async function isStudentInSessionRoster(session, studentUser) {
+  if (!session || !studentUser) return false;
+  const studentEmail = String(studentUser.email || '').trim().toLowerCase();
+  const canonicalSessionId = session._id ? session._id.toString() : String(session.id || '');
+
+  // Existing session attendance record establishes verified session membership
+  if (canonicalSessionId && studentEmail) {
+    const hasRecord = await Attendance.exists({ student_email: studentEmail, session_id: canonicalSessionId });
+    if (hasRecord) return true;
+  }
+
+  const sessionCollege = session.college_id || (session.teacher_id
+    ? await resolveCanonicalCollegeId(await User.findOne({ email: session.teacher_id.toLowerCase() }, 'college_id college').lean())
+    : null);
+  const studentCollege = await resolveCanonicalCollegeId(studentUser);
+  if (!sessionCollege || !studentCollege || sessionCollege !== studentCollege) return false;
+
+  const sessionDept = session.department || (session.teacher_id
+    ? (await User.findOne({ email: session.teacher_id.toLowerCase() }, 'department').lean())?.department
+    : null);
+  if (sessionDept && (!studentUser.department || String(studentUser.department).trim() !== String(sessionDept).trim())) {
+    return false;
+  }
+  if (session.section && String(studentUser.section || '').trim() !== String(session.section).trim()) {
+    return false;
+  }
+  if (session.semester && String(studentUser.semester || '').trim() !== String(session.semester).trim()) {
+    return false;
+  }
+  return true;
 }
 
 function getEffectiveSessionStatus(session) {
@@ -552,9 +624,10 @@ async function getSessionDetailAndRoster(teacherEmail, actorRole, sessionId) {
   }
 
   if (!isSuperAdmin && isAdmin && !isOwner) {
-    const actor = await User.findOne({ email: cleanEmail }, 'college_id').lean();
-    const targetCollege = session.college_id || ctx.teacher.college_id;
-    if (targetCollege && (!actor?.college_id || actor.college_id !== targetCollege)) {
+    const actor = await User.findOne({ email: cleanEmail }, 'college_id college').lean();
+    const actorCollege = await resolveCanonicalCollegeId(actor);
+    const targetCollege = session.college_id || ctx.canonicalCollegeId || ctx.teacher.college_id;
+    if (!targetCollege || !actorCollege || actorCollege !== targetCollege) {
       return { errorStatus: 403, detail: 'Forbidden: cross-institution access denied.' };
     }
   }
@@ -629,7 +702,7 @@ async function getSessionDetailAndRoster(teacherEmail, actorRole, sessionId) {
     };
   }).sort((a, b) => a.full_name.localeCompare(b.full_name));
 
-  const tally = tallyRecords(records, ctx.policy);
+  const tally = tallyRecords(roster, ctx.policy);
   const status = getEffectiveSessionStatus(session);
 
   return {
@@ -658,7 +731,7 @@ async function getSessionDetailAndRoster(teacherEmail, actorRole, sessionId) {
     counts: {
       enrolled: roster.length,
       present: tally.attended,
-      absent: roster.filter((r) => r.status.toLowerCase() === 'absent').length,
+      absent: tally.missed,
       late: tally.late,
       excused: tally.excused,
       leave: tally.leave,
@@ -804,13 +877,22 @@ async function transitionSessionState({ sessionId, actorEmail, actorRole, action
   }
 
   const now = new Date();
-  const sourceCondition = session.status
-    ? { _id: session._id, status: session.status }
-    : {
+  // Legacy docs missing status in MongoDB hydrate via Mongoose default, so match either stored status or legacy null+is_active state
+  const sourceCondition = !session.status
+    ? {
         _id: session._id,
         is_active: Boolean(session.is_active),
         $or: [{ status: { $exists: false } }, { status: null }],
-      };
+      }
+    : (session.status === 'closed' || session.status === 'active')
+      ? {
+          _id: session._id,
+          $or: [
+            { status: session.status },
+            { status: null, is_active: session.status === 'active' ? { $ne: false } : false },
+          ],
+        }
+      : { _id: session._id, status: session.status };
 
   const updateFields = {
     status: nextStatus,
@@ -819,9 +901,7 @@ async function transitionSessionState({ sessionId, actorEmail, actorRole, action
 
   if (nextStatus === 'active') {
     const startingFromPreLive = ['scheduled', 'ready'].includes(currentStatus);
-    const scheduledTime = session.scheduled_start ? new Date(session.scheduled_start) : null;
-    const shouldRefreshStart = !session.start_time || (startingFromPreLive && (!scheduledTime || now.getTime() >= scheduledTime.getTime()));
-    if (shouldRefreshStart) {
+    if (startingFromPreLive || !session.start_time) {
       updateFields.start_time = now;
       updateFields.expires_at = new Date(now.getTime() + (session.duration_minutes || 60) * 60000);
     } else if (!session.expires_at) {
@@ -919,11 +999,21 @@ async function transitionSessionState({ sessionId, actorEmail, actorRole, action
       return { errorStatus: 409, detail: 'Session state changed concurrently; finalisation rejected.' };
     }
   } else {
-    savedSession = await Session.findOneAndUpdate(
-      sourceCondition,
-      { $set: updateFields },
-      { new: true }
-    );
+    try {
+      savedSession = await Session.findOneAndUpdate(
+        sourceCondition,
+        { $set: updateFields },
+        { new: true }
+      );
+    } catch (err) {
+      if (err && err.code === 11000) {
+        return {
+          errorStatus: 409,
+          detail: 'An active session already exists for this subject. Please close the existing session first.',
+        };
+      }
+      throw err;
+    }
     if (!savedSession) {
       return { errorStatus: 409, detail: 'Session state changed concurrently; transition rejected.' };
     }
@@ -1096,12 +1186,25 @@ async function getTeacherStudentsRoster(teacherEmail, query = {}) {
     rows.sort((a, b) => a.full_name.localeCompare(b.full_name));
   }
 
+  const hasPagination = query.page !== undefined || query.limit !== undefined;
+  const total = rows.length;
+  let pagedRows = rows;
+  let page = 1;
+  let limit = total || 50;
+  if (hasPagination) {
+    page = Math.max(1, parseInt(query.page || '1', 10) || 1);
+    limit = Math.min(500, Math.max(1, parseInt(query.limit || '50', 10) || 50));
+    const offset = (page - 1) * limit;
+    pagedRows = rows.slice(offset, offset + limit);
+  }
+
   const sections = [...new Set(students.map((s) => s.section).filter(Boolean))];
   const semesters = [...new Set(students.map((s) => s.semester).filter(Boolean))];
 
   return {
-    students: rows,
-    total: rows.length,
+    students: pagedRows,
+    total,
+    ...(hasPagination ? { page, limit } : {}),
     subjects,
     sections,
     semesters,
@@ -1114,6 +1217,10 @@ async function getTeacherAnalyticsAndRisk(teacherEmail, filters = {}) {
   if (!ctx) return null;
 
   const { teacher, policy, teacherSessions, subjects } = ctx;
+  const parsedTarget = Number(filters.targetPercentage ?? filters.target_percentage ?? filters.target);
+  const effectiveTarget = (Number.isFinite(parsedTarget) && parsedTarget >= 1 && parsedTarget <= 100)
+    ? parsedTarget
+    : policy.minPercentage;
   const filteredSessions = filters.subject
     ? teacherSessions.filter((s) => String(s.subject).toLowerCase() === String(filters.subject).toLowerCase())
     : teacherSessions;
@@ -1289,7 +1396,7 @@ async function getTeacherAnalyticsAndRisk(teacherEmail, filters = {}) {
       const tm = calculateTargetMetrics({
         attended: stTally.attended,
         conducted: stTally.conducted,
-        target: policy.minPercentage,
+        target: effectiveTarget,
       });
       return {
         subject,
@@ -1303,12 +1410,12 @@ async function getTeacherAnalyticsAndRisk(teacherEmail, filters = {}) {
     const targetMetrics = calculateTargetMetrics({
       attended: t.attended,
       conducted: t.conducted,
-      target: policy.minPercentage,
+      target: effectiveTarget,
     });
     const risk = evaluateRisk({
       attended: t.attended,
       conducted: t.conducted,
-      target: policy.minPercentage,
+      target: effectiveTarget,
       recentRecords: recs,
       subjects: studentSubjects,
     });
@@ -1365,6 +1472,7 @@ async function getTeacherAnalyticsAndRisk(teacherEmail, filters = {}) {
     risk_students: riskStudents,
     subjects,
     policy_min_percentage: policy.minPercentage,
+    target_percentage: effectiveTarget,
   };
 }
 
@@ -1373,8 +1481,9 @@ async function generateTeacherReport(teacherEmail, query = {}) {
   if (!ctx) return null;
 
   const { teacher, policy, teacherSessions } = ctx;
-  const sessionIdsParam = typeof query.session_ids === 'string' && query.session_ids.trim()
-    ? query.session_ids.split(',').filter((id) => mongoose.Types.ObjectId.isValid(id))
+  const rawSessionIds = query.session_ids || query.session_id;
+  const sessionIdsParam = typeof rawSessionIds === 'string' && rawSessionIds.trim()
+    ? rawSessionIds.split(',').map((id) => id.trim()).filter((id) => mongoose.Types.ObjectId.isValid(id))
     : null;
   const subjectFilter = typeof query.subject === 'string' && query.subject.trim()
     ? query.subject.trim().toLowerCase()
@@ -1447,7 +1556,7 @@ async function generateTeacherReport(teacherEmail, query = {}) {
   });
 
   return {
-    report_type: String(query.type || 'attendance'),
+    report_type: String(query.report_type || query.type || 'attendance'),
     generated_at: new Date().toISOString(),
     disclaimer: 'Faculty-generated classroom attendance report — requires administrative certification for official institutional transcripts.',
     teacher: {
@@ -1485,12 +1594,100 @@ async function generateTeacherReport(teacherEmail, query = {}) {
   };
 }
 
+async function deliverAnnouncement(doc, ctx) {
+  if (!doc || !ctx) return doc;
+  const deliveries = Array.isArray(doc.recipient_deliveries) ? doc.recipient_deliveries : [];
+  if (deliveries.length === 0) {
+    const audienceFilters = {
+      section: doc.target_section || undefined,
+      semester: doc.target_semester || undefined,
+      ...(doc.target_scope === 'subject' && doc.target_subject ? { subject: doc.target_subject } : {}),
+    };
+    const students = await getAuthorisedStudentsForTeacher(ctx, audienceFilters);
+    const seen = new Set();
+    for (const st of students) {
+      const email = String(st.email || '').trim().toLowerCase();
+      if (!email || seen.has(email)) continue;
+      seen.add(email);
+      deliveries.push({ email, status: 'pending', attempts: 0 });
+    }
+    doc.recipient_deliveries = deliveries;
+    doc.delivery_stats = {
+      recipients: deliveries.length,
+      delivered: 0,
+      failed: 0,
+    };
+    // Persist announcement and per-recipient pending state before issuing notifications so retries stay idempotent
+    await doc.save();
+  }
+
+  const pendingIndices = [];
+  for (let idx = 0; idx < doc.recipient_deliveries.length; idx++) {
+    if (doc.recipient_deliveries[idx].status !== 'delivered') {
+      pendingIndices.push(idx);
+    }
+  }
+
+  const batchSize = 25;
+  const priority = ['Low', 'Normal', 'High', 'Critical'].includes(doc.priority) ? doc.priority : 'Normal';
+  for (let i = 0; i < pendingIndices.length; i += batchSize) {
+    const chunk = pendingIndices.slice(i, i + batchSize);
+    const outcomes = await Promise.allSettled(
+      chunk.map((idx) => {
+        const entry = doc.recipient_deliveries[idx];
+        return notificationService.createNotification(
+          entry.email,
+          doc.title,
+          doc.message,
+          'announcement',
+          priority,
+          {
+            sender: doc.author_email,
+            announcement_id: doc._id.toString(),
+            subject: doc.target_subject || undefined,
+            pinned: Boolean(doc.pinned),
+            expires_at: doc.expires_at ? new Date(doc.expires_at).toISOString() : undefined,
+          }
+        );
+      })
+    );
+    const now = new Date();
+    outcomes.forEach((outcome, j) => {
+      const entry = doc.recipient_deliveries[chunk[j]];
+      entry.attempts = Number(entry.attempts || 0) + 1;
+      if (outcome.status === 'fulfilled' && outcome.value?.id) {
+        entry.status = 'delivered';
+        entry.delivered_at = now;
+        entry.last_error = undefined;
+      } else {
+        entry.status = 'failed';
+        entry.last_error = outcome.status === 'rejected'
+          ? String(outcome.reason?.message || outcome.reason || 'Delivery failed').slice(0, 200)
+          : 'Notification was not persisted';
+      }
+    });
+  }
+
+  const totalRecipients = doc.recipient_deliveries.length;
+  const deliveredCount = doc.recipient_deliveries.filter((d) => d.status === 'delivered').length;
+  doc.delivery_stats = {
+    recipients: totalRecipients,
+    delivered: deliveredCount,
+    failed: Math.max(0, totalRecipients - deliveredCount),
+  };
+  doc.updated_at = new Date();
+  await doc.save();
+  return doc;
+}
+
 module.exports = {
   SESSION_TRANSITIONS,
   ALLOWED_MANUAL_STATUSES,
   normalizeManualStatus,
+  resolveCanonicalCollegeId,
   resolveTeacherContext,
   getAuthorisedStudentsForTeacher,
+  isStudentInSessionRoster,
   getEffectiveSessionStatus,
   computeRemainingSeconds,
   getTeacherDashboard,
@@ -1500,4 +1697,5 @@ module.exports = {
   getTeacherStudentsRoster,
   getTeacherAnalyticsAndRisk,
   generateTeacherReport,
+  deliverAnnouncement,
 };

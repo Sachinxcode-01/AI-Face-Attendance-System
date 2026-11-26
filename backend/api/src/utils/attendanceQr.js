@@ -75,10 +75,13 @@ const GRACE_SECONDS = 5;
     const nonce = crypto.randomBytes(6).toString('hex');
     const rotationSeconds = getRotationSeconds(session);
     const validityMs = (rotationSeconds + GRACE_SECONDS) * 1000;
+    const tokenDeadlineMs = issuedAt + validityMs;
+    const sessionExpiryMs = getSessionExpiryMs(session);
+    const effectiveExpiryMs = sessionExpiryMs !== null ? Math.min(tokenDeadlineMs, sessionExpiryMs) : tokenDeadlineMs;
     return {
       token: `${issuedAt}.${epoch}.${nonce}.${signatureForV2(session, issuedAt, epoch, nonce)}`,
       issued_at: new Date(issuedAt).toISOString(),
-      expires_at: new Date(issuedAt + validityMs).toISOString(),
+      expires_at: new Date(effectiveExpiryMs).toISOString(),
       rotation_seconds: rotationSeconds,
       qr_epoch: epoch,
     };

@@ -153,8 +153,12 @@ router.get('/timetable/export.ics', authenticate, async (req, res) => {
     const policy = await getInstitutionPolicy(user);
     const keys = buildTimetableKeys(user);
     const queryIds = keys.length > 0 ? keys : [email.toUpperCase()];
+    const callerCollege = user?.college_id || user?.college || req.userCollege || null;
+    const teacherEmailBranch = callerCollege
+      ? { teacher_email: email, college_id: callerCollege }
+      : { teacher_email: email, college_id: { $in: [null, ''] } };
     const slotQuery = (req.userRole || '').toLowerCase() === 'teacher'
-      ? { $or: [{ teacher_email: email }, { user_id: { $in: queryIds } }] }
+      ? { $or: [teacherEmailBranch, { user_id: { $in: queryIds } }] }
       : { user_id: { $in: queryIds } };
     const slots = await Timetable.find(slotQuery).lean();
 

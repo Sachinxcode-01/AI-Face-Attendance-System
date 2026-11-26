@@ -629,14 +629,18 @@ const handleChatRequest = async (req, res) => {
     // Check for real data intent queries across roles
     const msgLower = cleanMessage.toLowerCase();
     let realDataAddendum = "";
+    const localTeacherDetails = [];
 
     if (userRole === 'student') {
       const summary = await getStudentAttendanceSummary(userEmail).catch(() => null);
       if (summary) {
         const pct = summary.overall_attendance;
         const target = summary.policy?.minPercentage ?? 75;
-        const targetMatch = msgLower.match(/(\d{2,3})\s*%/);
-        const requestedTarget = targetMatch ? Math.min(100, Math.max(1, parseInt(targetMatch[1], 10))) : target;
+        const targetMatch = msgLower.match(/(\d{1,3})\s*%/);
+        const parsedTarget = targetMatch ? parseInt(targetMatch[1], 10) : NaN;
+        const requestedTarget = (Number.isInteger(parsedTarget) && parsedTarget >= 1 && parsedTarget <= 100)
+          ? parsedTarget
+          : target;
         const targetForecast = calculateTargetMetrics({
           attended: summary.total_present,
           conducted: summary.total_conducted,
@@ -695,15 +699,20 @@ const handleChatRequest = async (req, res) => {
       }
     } else if (userRole === 'teacher') {
             if (mongoose.connection.readyState === 1) {
+              const thresholdMatch = msgLower.match(/(\d{1,3})\s*%/);
+              const parsedThreshold = thresholdMatch ? parseInt(thresholdMatch[1], 10) : NaN;
+              const explicitTarget = (Number.isInteger(parsedThreshold) && parsedThreshold >= 1 && parsedThreshold <= 100)
+                ? parsedThreshold
+                : null;
               const [dash, analyticsData] = await Promise.all([
                 teacherService.getTeacherDashboard(userEmail).catch(() => null),
-                teacherService.getTeacherAnalyticsAndRisk(userEmail).catch(() => null),
+                teacherService.getTeacherAnalyticsAndRisk(
+                  userEmail,
+                  explicitTarget ? { targetPercentage: explicitTarget } : {}
+                ).catch(() => null),
               ]);
               if (dash) {
-                const thresholdMatch = msgLower.match(/(\d{2,3})\s*%/);
-                const targetThreshold = thresholdMatch
-                  ? Math.min(100, Math.max(1, parseInt(thresholdMatch[1], 10)))
-                  : (dash.academic_info?.min_percentage ?? 75);
+                const targetThreshold = explicitTarget ?? (dash.academic_info?.min_percentage ?? 75);
 
                 const parts = [];
                 parts.push(
@@ -734,17 +743,25 @@ const handleChatRequest = async (req, res) => {
 
                   const belowTarget = (analyticsData.risk_students || []).filter((s) => s.conducted > 0 && s.attendance_rate < targetThreshold);
                   if (belowTarget.length > 0) {
-                    const sample = belowTarget.slice(0, 8).map((s) =>
-                      `${s.full_name} (${s.student_id || 'ID N/A'}): ${s.attendance_rate}% [${s.attended}/${s.conducted}, needs ${s.classes_needed ?? 'N/A'} classes, ${s.risk_level}]`
-                    );
-                    parts.push(`Students below ${targetThreshold}% (${belowTarget.length}): ${sample.join('; ')}.`);
+                    parts.push(`Aggregate count below ${targetThreshold}%: ${belowTarget.length} student(s) currently below target across your sessions.`);
+                    const sample = belowTarget.slice(0, 8).map((s) => {
+                      const targetCalc = calculateTargetMetrics({
+                        attended: s.attended,
+                        conducted: s.conducted,
+                        target: targetThreshold,
+                      });
+                      const needed = explicitTarget ? targetCalc.classesNeeded : s.classes_needed;
+                      return `${s.full_name} (${s.student_id || 'ID N/A'}): ${s.attendance_rate}% [${s.attended}/${s.conducted}, needs ${needed ?? 'N/A'} classes for ${targetThreshold}%, ${s.risk_level}]`;
+                    });
+                    localTeacherDetails.push(`Students below ${targetThreshold}% (${belowTarget.length}): ${sample.join('; ')}.`);
                   } else {
                     parts.push(`0 students currently below ${targetThreshold}% across your sessions.`);
                   }
 
                   const consecutive = (analyticsData.risk_students || []).filter((s) => s.consecutive_absences >= 3);
                   if (consecutive.length > 0) {
-                    parts.push(
+                    parts.push(`Consecutive absences (>=3): ${consecutive.length} student(s).`);
+                    localTeacherDetails.push(
                       `Consecutive absences (>=3): ${consecutive.slice(0, 6).map((s) => `${s.full_name} (${s.consecutive_absences} consecutive)`).join(', ')}.`
                     );
                   }
@@ -793,12 +810,19 @@ const handleChatRequest = async (req, res) => {
               }
             }
           }
-          // Match query against knowledge base
+          // Match query against knowledge base (prioritizing role-specific & longest keyword matches)
           let matchedKnowledge = null;
+          let bestScore = -1;
           for (const item of KNOWLEDGE_BASE) {
-            if (item.keywords.some(kw => msgLower.includes(kw))) {
+            const matchedKeywords = item.keywords.filter((kw) => msgLower.includes(kw));
+            if (matchedKeywords.length === 0) continue;
+            const roleActions = filterActionsForRole(item.actions, userRole);
+            const hasRoleMatch = roleActions.length > 0 ? 1 : 0;
+            const maxKwLen = Math.max(...matchedKeywords.map((kw) => kw.length));
+            const score = hasRoleMatch * 1000 + maxKwLen;
+            if (score > bestScore) {
+              bestScore = score;
               matchedKnowledge = item;
-              break;
             }
           }
 
@@ -870,16 +894,20 @@ Keep responses concise, structured, and actionable(2 - 4 short paragraphs or bul
           // Helper to write SSE payload when /stream endpoint is requested
           const wantsStream = req.path.endsWith('/stream');
           const sendChatResult = async (replyText, actionsList) => {
+            const localSuffix = (userRole === 'teacher' && localTeacherDetails.length > 0)
+              ? `\n\n${localTeacherDetails.join('\n')}`
+              : '';
+            const fullReplyText = `${replyText}${localSuffix}`;
             const msgId = `msg_${Date.now()}`;
-            await persistMessages(conversationId, cleanMessage, replyText, actionsList);
+            await persistMessages(conversationId, cleanMessage, fullReplyText, actionsList);
             const payload = {
               success: true,
               conversationId,
-              reply: replyText,
+              reply: fullReplyText,
               message: {
                 id: msgId,
                 role: 'assistant',
-                content: replyText,
+                content: fullReplyText,
                 createdAt: new Date().toISOString(),
               },
               suggestedActions: actionsList,
@@ -893,7 +921,7 @@ Keep responses concise, structured, and actionable(2 - 4 short paragraphs or bul
               res.setHeader('Connection', 'keep-alive');
               res.flushHeaders?.();
             }
-            res.write(`event: delta\ndata: ${JSON.stringify({ text: replyText })}\n\n`);
+            res.write(`event: delta\ndata: ${JSON.stringify({ text: fullReplyText })}\n\n`);
             res.write(`event: done\ndata: ${JSON.stringify(payload)}\n\n`);
             return res.end();
           };
@@ -926,7 +954,13 @@ Keep responses concise, structured, and actionable(2 - 4 short paragraphs or bul
                       res.write(`event: delta\ndata: ${JSON.stringify({ text: delta })}\n\n`);
                     }
                   }
-                  const finalReply = fullReply.trim() || 'No response generated.';
+                  const localSuffix = (userRole === 'teacher' && localTeacherDetails.length > 0)
+                    ? `\n\n${localTeacherDetails.join('\n')}`
+                    : '';
+                  if (localSuffix) {
+                    res.write(`event: delta\ndata: ${JSON.stringify({ text: localSuffix })}\n\n`);
+                  }
+                  const finalReply = (fullReply.trim() || 'No response generated.') + localSuffix;
                   const msgId = `msg_${Date.now()}`;
                   await persistMessages(conversationId, cleanMessage, finalReply, actions);
                   res.write(`event: done\ndata: ${JSON.stringify({

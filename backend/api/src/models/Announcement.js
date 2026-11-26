@@ -44,6 +44,13 @@ const AnnouncementSchema = new mongoose.Schema({
     delivered: { type: Number, default: 0 },
     failed: { type: Number, default: 0 },
   },
+  recipient_deliveries: [{
+    email: { type: String, required: true, lowercase: true, trim: true },
+    status: { type: String, enum: ['pending', 'delivered', 'failed'], default: 'pending' },
+    attempts: { type: Number, default: 0 },
+    delivered_at: { type: Date },
+    last_error: { type: String },
+  }],
   created_at: { type: Date, default: Date.now, index: -1 },
   updated_at: { type: Date, default: Date.now },
 });

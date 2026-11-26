@@ -86,7 +86,8 @@ async function runTests() {
     });
     assert.strictEqual(scheduledWithDate.status, 'scheduled');
     assert.strictEqual(scheduledWithDate.is_active, false);
-    assert.strictEqual(scheduledWithDate.start_time.toISOString(), friday.toISOString());
+    assert.strictEqual(scheduledWithDate.start_time, undefined);
+    assert.strictEqual(scheduledWithDate.scheduled_start.toISOString(), friday.toISOString());
 
     const scheduledNoDate = new Session({
       teacher_id: 't@col.edu',
@@ -213,6 +214,18 @@ async function runTests() {
         stubs.stub(User, 'updateOne', async (filter, update) => {
           updates.push({ filter, set: update.$set });
           return { modifiedCount: 1 };
+        });
+        // Stub findOne for parent profile lookup (already-linked check) + find for student lookup
+        // Must use makeChain so .lean() works (route calls User.findOne(...).lean())
+        stubs.stub(User, 'findOne', (q) => {
+          if (q && q.email === 'parent@col.edu') return makeChain({ children: [], linked_children: [] });
+          return makeChain(null);
+        });
+        stubs.stub(User, 'find', (q) => {
+          if (q.email?.$in?.includes('kid@col.edu')) {
+            return makeChain([{ email: 'kid@col.edu', role: 'student', parent_details: 'parent@col.edu' }]);
+          }
+          return makeChain([]);
         });
 
         await fetch(`${baseUrl}/api/profile`, {
@@ -411,7 +424,8 @@ async function runTests() {
         });
         assert.strictEqual(prinCross.status, 403);
 
-        const sameColRes = await fetch(`${baseUrl}/notifications/send`, {
+        // Unlinked parent_email is now hard-blocked (403) per hardened route
+        const unlinkedParentRes = await fetch(`${baseUrl}/notifications/send`, {
           method: 'POST',
           headers: authFor('hod@col_a.edu', 'hod'),
           body: JSON.stringify({
@@ -419,6 +433,14 @@ async function runTests() {
             message: 'Alert',
             parent_email: 'unlinked@evil.com',
           }),
+        });
+        assert.strictEqual(unlinkedParentRes.status, 403);
+
+        // Without parent_email: succeeds, parent_notified=false (non-string parent_details → no registered parent)
+        const sameColRes = await fetch(`${baseUrl}/notifications/send`, {
+          method: 'POST',
+          headers: authFor('hod@col_a.edu', 'hod'),
+          body: JSON.stringify({ student_email: 'stu@col_a.edu', message: 'Alert' }),
         });
         assert.strictEqual(sameColRes.status, 201);
         const sameColBody = await sameColRes.json();
@@ -502,8 +524,9 @@ async function runTests() {
         });
         assert.strictEqual(startSchedRes.status, 200);
         assert.strictEqual(savedSessions[1].is_active, false);
-        assert.strictEqual(savedSessions[1].start_time.toISOString(), friday.toISOString());
-        assert.strictEqual(savedSessions[1].expires_at.getTime(), friday.getTime() + 45 * 60000);
+        assert.strictEqual(savedSessions[1].start_time, undefined);
+        assert.strictEqual(savedSessions[1].scheduled_start.toISOString(), friday.toISOString());
+        assert.strictEqual(savedSessions[1].expires_at, undefined);
         stubs.restoreAll();
         console.log('  ✅ 8. sessions.js /start active-vs-scheduled and expired cleanup passed');
       }
@@ -547,7 +570,7 @@ async function runTests() {
             err.code = 20;
             throw err;
           },
-          endSession: async () => {},
+          endSession: async () => { },
         }));
         let attSaved = false;
         stubs.stub(Attendance.prototype, 'save', async () => {
@@ -776,7 +799,7 @@ async function runTests() {
         createdAuditAction = doc.action;
         return doc;
       });
-      stubs.stub(notificationService, 'sendPersonalMessage', async () => {});
+      stubs.stub(notificationService, 'sendPersonalMessage', async () => { });
       const readyRes = await teacherService.transitionSessionState({
         sessionId: tSessId.toString(),
         actorEmail: 'owner@col_a.edu',

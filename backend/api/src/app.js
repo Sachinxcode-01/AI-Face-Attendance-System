@@ -463,7 +463,18 @@ server.on('upgrade', async (request, socket, head) => {
         socket.destroy();
         return;
       }
+      const User = require('./models/User');
+      const { resolveCanonicalCollegeId } = require('./services/teacherService');
+      const wsUser = await User.findOne({ email: String(payload.sub || '').toLowerCase() }, 'college_id college').lean();
+      const wsCollegeId = await resolveCanonicalCollegeId(wsUser);
+      if (userRole !== 'super_admin' && !wsCollegeId) {
+        socket.write('HTTP/1.1 403 Forbidden\r\n\r\nInstitution scope required');
+        socket.destroy();
+        return;
+      }
       wss.handleUpgrade(request, socket, head, (ws) => {
+        ws._collegeId = wsCollegeId || null;
+        ws._isSuperAdmin = userRole === 'super_admin';
         wss.emit('connection', ws, request, '__live_logs__');
       });
     } else {

@@ -31,7 +31,7 @@ const SessionSchema = new mongoose.Schema({
     type: Date,
     default: function () {
       if (this && ['scheduled', 'ready'].includes(this.status)) {
-        return this.scheduled_start || undefined;
+        return undefined;
       }
       return Date.now();
     },

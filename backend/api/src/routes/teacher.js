@@ -92,8 +92,18 @@ router.get('/students/:email/history', authenticate, requireRole(teacherOrStaff)
     const student = await User.findOne({ email: studentEmail, role: 'student' }, '-password').lean();
     if (!student) return res.status(404).json({ detail: 'Student not found.' });
 
-    if (ctx.teacher.college_id && student.college_id && ctx.teacher.college_id !== student.college_id) {
-      return res.status(403).json({ detail: 'Forbidden: cross-institution student access denied.' });
+    const roleLower = (req.userRole || '').toLowerCase();
+    if (roleLower === 'teacher') {
+      const authorised = await teacherService.getAuthorisedStudentsForTeacher(ctx);
+      if (!authorised.some((s) => s.email.toLowerCase() === studentEmail)) {
+        return res.status(403).json({ detail: 'Forbidden: student is outside your authorized class roster.' });
+      }
+    } else if (roleLower !== 'super_admin') {
+      const teacherCollege = ctx.canonicalCollegeId || ctx.teacher.college_id;
+      const studentCollege = await teacherService.resolveCanonicalCollegeId(student);
+      if (!teacherCollege || !studentCollege || teacherCollege !== studentCollege) {
+        return res.status(403).json({ detail: 'Forbidden: cross-institution student access denied.' });
+      }
     }
 
     const [history, summary, notes] = await Promise.all([
@@ -141,10 +151,23 @@ router.post('/interventions', authenticate, requireRole(teacherOrStaff), async (
     }
 
     const ctx = await teacherService.resolveTeacherContext(req.userEmail);
-    const student = await User.findOne({ email: targetEmail, role: 'student' }, 'email college_id full_name').lean();
+    if (!ctx) return res.status(404).json({ detail: 'Teacher profile not found.' });
+
+    const student = await User.findOne({ email: targetEmail, role: 'student' }, 'email college_id college department full_name').lean();
     if (!student) return res.status(404).json({ detail: 'Student not found.' });
-    if (ctx?.teacher?.college_id && student.college_id && ctx.teacher.college_id !== student.college_id) {
-      return res.status(403).json({ detail: 'Forbidden: cross-institution action denied.' });
+
+    const roleLower = (req.userRole || '').toLowerCase();
+    if (roleLower === 'teacher') {
+      const authorised = await teacherService.getAuthorisedStudentsForTeacher(ctx);
+      if (!authorised.some((s) => s.email.toLowerCase() === targetEmail)) {
+        return res.status(403).json({ detail: 'Forbidden: student is outside your authorized class roster.' });
+      }
+    } else if (roleLower !== 'super_admin') {
+      const callerCollege = ctx.canonicalCollegeId || ctx.teacher.college_id;
+      const studentCollege = await teacherService.resolveCanonicalCollegeId(student);
+      if (!callerCollege || !studentCollege || callerCollege !== studentCollege) {
+        return res.status(403).json({ detail: 'Forbidden: cross-institution action denied.' });
+      }
     }
 
     const action = ['note', 'reminder_sent', 'escalated', 'counseling_scheduled'].includes(action_taken)
@@ -366,8 +389,19 @@ router.post('/announcements', authenticate, requireRole(teacherOrStaff), async (
       ? category
       : 'class';
 
+    let scheduledDate;
+    if (resolvedStatus === 'scheduled') {
+      scheduledDate = scheduled_for ? new Date(scheduled_for) : null;
+      if (!scheduledDate || Number.isNaN(scheduledDate.getTime()) || scheduledDate.getTime() <= Date.now()) {
+        return res.status(400).json({ detail: 'Scheduled announcements require a valid future scheduled_for date.' });
+      }
+    } else if (scheduled_for) {
+      const parsed = new Date(scheduled_for);
+      if (!Number.isNaN(parsed.getTime())) scheduledDate = parsed;
+    }
+
     const doc = new Announcement({
-      college_id: ctx.teacher.college_id || undefined,
+      college_id: ctx.canonicalCollegeId || ctx.teacher.college_id || undefined,
       department: ctx.teacher.department || undefined,
       author_email: ctx.cleanEmail,
       author_name: ctx.teacher.full_name,
@@ -381,54 +415,28 @@ router.post('/announcements', authenticate, requireRole(teacherOrStaff), async (
       target_semester: typeof target_semester === 'string' ? target_semester.trim() : undefined,
       status: resolvedStatus,
       pinned: Boolean(pinned),
-      scheduled_for: scheduled_for ? new Date(scheduled_for) : undefined,
+      scheduled_for: scheduledDate,
       published_at: resolvedStatus === 'published' ? new Date() : undefined,
       expires_at: expires_at ? new Date(expires_at) : undefined,
     });
 
     if (resolvedStatus === 'published') {
-      const students = await teacherService.getAuthorisedStudentsForTeacher(ctx, {
-        section: doc.target_section || undefined,
-        semester: doc.target_semester || undefined,
-      });
-      let delivered = 0;
-      const batchSize = 25;
-      for (let i = 0; i < students.length; i += batchSize) {
-        const batch = students.slice(i, i + batchSize);
-        const outcomes = await Promise.allSettled(
-          batch.map((st) => notificationService.createNotification(
-            st.email,
-            doc.title,
-            doc.message,
-            'announcement',
-            resolvedPriority,
-            {
-              sender: ctx.cleanEmail,
-              announcement_id: doc._id.toString(),
-              subject: doc.target_subject || undefined,
-              pinned: doc.pinned,
-              expires_at: doc.expires_at ? doc.expires_at.toISOString() : undefined,
-            }
-          ))
-        );
-        delivered += outcomes.filter((o) => o.status === 'fulfilled' && o.value?.id).length;
-      }
-      doc.delivery_stats = {
-        recipients: students.length,
-        delivered,
-        failed: Math.max(0, students.length - delivered),
-      };
+      await teacherService.deliverAnnouncement(doc, ctx);
+    } else {
+      await doc.save();
     }
 
-    await doc.save();
+    const auditAction = resolvedStatus === 'draft'
+      ? 'ANNOUNCEMENT_DRAFTED'
+      : (resolvedStatus === 'scheduled' ? 'ANNOUNCEMENT_SCHEDULED' : 'ANNOUNCEMENT_PUBLISHED');
 
     await AttendanceAuditLog.create({
       actor_email: ctx.cleanEmail,
-      college_id: ctx.teacher.college_id,
+      college_id: ctx.canonicalCollegeId || ctx.teacher.college_id,
       role: req.userRole,
-      action: 'ANNOUNCEMENT_PUBLISHED',
+      action: auditAction,
       target_resource: `announcement:${doc._id.toString()}`,
-      details: { status: resolvedStatus, scope: resolvedScope, recipients: doc.delivery_stats.recipients },
+      details: { status: resolvedStatus, scope: resolvedScope, recipients: doc.delivery_stats?.recipients || 0 },
       ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1',
     }).catch(() => {});
 
@@ -438,6 +446,26 @@ router.post('/announcements', authenticate, requireRole(teacherOrStaff), async (
     });
   } catch (error) {
     reportInternalError(res, error, 'Teacher:AnnouncementsCreate');
+  }
+});
+
+router.post('/announcements/:id/retry', authenticate, requireRole(teacherOrStaff), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ detail: 'Invalid announcement ID.' });
+    }
+    const doc = await Announcement.findOne({ _id: id, author_email: req.userEmail.toLowerCase() });
+    if (!doc) return res.status(404).json({ detail: 'Announcement not found or access denied.' });
+    if (doc.status !== 'published') {
+      return res.status(409).json({ detail: 'Only published announcements can retry unfinished deliveries.' });
+    }
+    const ctx = await teacherService.resolveTeacherContext(req.userEmail);
+    if (!ctx) return res.status(404).json({ detail: 'Teacher profile not found.' });
+    await teacherService.deliverAnnouncement(doc, ctx);
+    return res.json({ success: true, announcement: { ...doc.toObject(), id: doc._id.toString() } });
+  } catch (error) {
+    reportInternalError(res, error, 'Teacher:AnnouncementsRetry');
   }
 });
 
@@ -469,7 +497,7 @@ router.delete('/announcements/:id', authenticate, requireRole(teacherOrStaff), a
 router.post('/notifications/broadcast', authenticate, requireRole(teacherOrStaff), async (req, res) => {
   try {
     const teacherEmail = req.userEmail;
-    const { title, message, priority, subject, section, semester, target_scope } = req.body || {};
+    const { title, message, priority, subject, section, semester, target_scope, session_id } = req.body || {};
 
     if (typeof message !== 'string' || !message.trim() || message.length > 1000) {
       return res.status(400).json({ detail: 'A message between 1 and 1000 characters is required.' });
@@ -482,7 +510,20 @@ router.post('/notifications/broadcast', authenticate, requireRole(teacherOrStaff
     const ctx = await teacherService.resolveTeacherContext(teacherEmail);
     if (!ctx) return res.status(404).json({ detail: 'Teacher profile not found.' });
 
-    const audience = await teacherService.getAuthorisedStudentsForTeacher(ctx, { section, semester });
+    let audience;
+    if (session_id !== undefined && session_id !== null && String(session_id).trim() !== '') {
+      const detail = await teacherService.getSessionDetailAndRoster(teacherEmail, req.userRole, String(session_id).trim());
+      if (detail.errorStatus) {
+        return res.status(detail.errorStatus).json({ detail: detail.detail });
+      }
+      audience = (detail.students || []).filter((st) => {
+        if (section && String(st.section || '').trim() !== String(section).trim()) return false;
+        if (semester && String(st.semester || '').trim() !== String(semester).trim()) return false;
+        return true;
+      });
+    } else {
+      audience = await teacherService.getAuthorisedStudentsForTeacher(ctx, { section, semester });
+    }
 
     if (audience.length === 0) {
       return res.json({ success: true, delivered: 0, message: 'No authorised students found for this broadcast.' });
@@ -671,7 +712,10 @@ router.put('/timetable/:id', authenticate, requireRole(teacherOrStaff), async (r
       updates.substitute_faculty = typeof req.body.substitute_faculty === 'string' ? req.body.substitute_faculty.trim().slice(0, 120) : '';
     }
     if (req.body.is_cancelled !== undefined) {
-      updates.is_cancelled = Boolean(req.body.is_cancelled);
+      if (typeof req.body.is_cancelled !== 'boolean') {
+        return res.status(400).json({ detail: 'is_cancelled must be a boolean.' });
+      }
+      updates.is_cancelled = req.body.is_cancelled;
     }
     if (req.body.cancellation_reason !== undefined) {
       updates.cancellation_reason = typeof req.body.cancellation_reason === 'string' ? req.body.cancellation_reason.trim().slice(0, 300) : '';
@@ -689,11 +733,21 @@ router.put('/timetable/:id', authenticate, requireRole(teacherOrStaff), async (r
       updates.class_key = typeof req.body.class_key === 'string' ? req.body.class_key.trim().slice(0, 80) : '';
     }
 
-    const updated = await Timetable.findByIdAndUpdate(id, updates, { returnDocument: 'after' }).lean();
+    const updated = await Timetable.findOneAndUpdate(
+      {
+        _id: id,
+        teacher_email: new RegExp(`^${cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+      },
+      updates,
+      { returnDocument: 'after' }
+    ).lean();
+    if (!updated) {
+      return res.status(404).json({ detail: 'Timetable slot not found or access denied.' });
+    }
 
     await AttendanceAuditLog.create({
       actor_email: req.userEmail,
-      college_id: slot.college_id,
+      college_id: updated.college_id,
       role: req.userRole,
       action: 'TIMETABLE_SLOT_UPDATED',
       target_resource: `timetable:${id}`,

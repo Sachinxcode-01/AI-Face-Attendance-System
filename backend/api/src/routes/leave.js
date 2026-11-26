@@ -50,7 +50,7 @@ async function staffLeaveScope(req) {
 
   const staff = await User.findOne({ email: req.userEmail }, 'department college_id').lean();
   if (!['teacher', 'hod'].includes(role)) {
-    return staff?.college_id ? { college_id: staff.college_id } : {};
+    return staff?.college_id ? { college_id: staff.college_id } : { user_id: { $in: [] } };
   }
   if (!staff?.department) return { user_id: { $in: [] } };
 

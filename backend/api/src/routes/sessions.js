@@ -5,6 +5,7 @@ const crypto = require('crypto');
 
 const Session = require('../models/Session');
 const User = require('../models/User');
+const College = require('../models/College');
 const UserSession = require('../models/UserSession');
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const notificationService = require('../services/notificationService');
@@ -13,6 +14,35 @@ const { trackJob } = require('../utils/jobTracker');
 const { issueAttendanceQrToken, isSessionAcceptingQr } = require('../utils/attendanceQr');
 const { transitionSessionState, computeRemainingSeconds, getEffectiveSessionStatus } = require('../services/teacherService');
 const reportInternalError = require('../utils/httpError');
+
+const isSessionExpired = (sess, nowMs = Date.now()) => {
+  if (!sess) return false;
+  const durMins = Number(sess.duration_minutes || 60) + Number(sess.extended_minutes || 0);
+  const expiryMs = sess.expires_at
+    ? new Date(sess.expires_at).getTime()
+    : (sess.start_time ? new Date(sess.start_time).getTime() + durMins * 60000 : Infinity);
+  return Number.isFinite(expiryMs) && nowMs > expiryMs;
+};
+
+async function resolveCanonicalCollegeId(user) {
+  if (!user) return null;
+  if (user.college_id) return String(user.college_id).trim();
+  if (!user.college) return null;
+  const raw = String(user.college).trim();
+  const escaped = raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const college = await College.findOne(
+    { $or: [{ code: raw.toUpperCase() }, { name: new RegExp(`^${escaped}$`, 'i') }] },
+    '_id code'
+  ).lean();
+  return college ? (college.code || college._id.toString()) : null;
+}
+
+const sessionSupportsQr = (sess) => {
+  const methods = Array.isArray(sess?.verification_methods) && sess.verification_methods.length > 0
+    ? sess.verification_methods.map((m) => String(m).trim().toLowerCase())
+    : ['qr', 'face', 'manual', 'kiosk'];
+  return methods.includes('qr');
+};
 
 router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admin']), async (req, res) => {
   try {
@@ -42,15 +72,6 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admi
         : 'active';
 
         const now = new Date();
-        const isSessionExpired = (sess) => {
-          if (!sess) return false;
-          const durMins = Number(sess.duration_minutes || 60) + Number(sess.extended_minutes || 0);
-          const expiryMs = sess.expires_at
-            ? new Date(sess.expires_at).getTime()
-            : (sess.start_time ? new Date(sess.start_time).getTime() + durMins * 60000 : Infinity);
-          return Number.isFinite(expiryMs) && now.getTime() > expiryMs;
-        };
-
         if (requestedStatus === 'active') {
           const existingSession = await Session.findOne({
             teacher_id: teacherEmail,
@@ -59,7 +80,7 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admi
           }).sort({ start_time: -1 });
 
           if (existingSession) {
-            if (!isSessionExpired(existingSession)) {
+            if (!isSessionExpired(existingSession, now.getTime())) {
               return res.json({
                 session_id: existingSession._id.toString(),
                 status: getEffectiveSessionStatus(existingSession),
@@ -83,14 +104,15 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admi
         const subjectCode = typeof req.body.subject_code === 'string' ? req.body.subject_code.trim().slice(0, 40) : undefined;
         const allowedMethods = ['qr', 'face', 'manual', 'kiosk'];
         const verificationMethods = Array.isArray(req.body.verification_methods)
-          ? req.body.verification_methods.filter((m) => allowedMethods.includes(String(m).toLowerCase()))
+          ? [...new Set(req.body.verification_methods.map((m) => String(m).trim().toLowerCase()).filter((m) => allowedMethods.includes(m)))]
           : ['qr', 'face', 'manual'];
 
-        const parsedScheduledStart = req.body.scheduled_start ? new Date(req.body.scheduled_start) : now;
-        const scheduledStart = !Number.isNaN(parsedScheduledStart.getTime()) ? parsedScheduledStart : now;
+        const parsedScheduledStart = req.body.scheduled_start ? new Date(req.body.scheduled_start) : null;
+        const scheduledStart = (parsedScheduledStart && !Number.isNaN(parsedScheduledStart.getTime())) ? parsedScheduledStart : undefined;
         const isActive = requestedStatus === 'active';
-        const effectiveStart = isActive ? now : scheduledStart;
-        const expiresAt = new Date(effectiveStart.getTime() + durationMinutes * 60000);
+        const effectiveStart = isActive ? now : undefined;
+        const expiresAt = isActive ? new Date(now.getTime() + durationMinutes * 60000) : undefined;
+        const canonicalCollegeId = await resolveCanonicalCollegeId(teacherUser);
 
         const sessionId = new mongoose.Types.ObjectId();
         const qrCode = crypto.randomBytes(32).toString('hex');
@@ -98,7 +120,7 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admi
         const newSession = new Session({
           _id: sessionId,
           teacher_id: teacherEmail,
-          college_id: teacherUser.college_id || teacherUser.college || undefined,
+          college_id: canonicalCollegeId || undefined,
           department: teacherUser.department || undefined,
           subject,
       subject_code: subjectCode,
@@ -108,7 +130,7 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admi
           room,
           duration: durationMinutes === 60 ? "1 Hour" : `${durationMinutes} min`,
           duration_minutes: durationMinutes,
-          scheduled_start: requestedStatus !== 'active' ? effectiveStart : undefined,
+          scheduled_start: requestedStatus !== 'active' ? (scheduledStart || now) : undefined,
           start_time: effectiveStart,
           expires_at: expiresAt,
           status: requestedStatus,
@@ -133,7 +155,7 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admi
                 is_active: true
               }).sort({ start_time: -1 });
               if (concurrentSession) {
-                if (!isSessionExpired(concurrentSession)) {
+                if (!isSessionExpired(concurrentSession, now.getTime())) {
                   return res.json({
                     session_id: concurrentSession._id.toString(),
                     status: getEffectiveSessionStatus(concurrentSession),
@@ -164,10 +186,9 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admi
             ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
           }).catch(() => { });
 
-          // Notify only students scoped to this institution / department / section when active
-          if (isActive) {
-            const studentFilter = { role: 'student' };
-            if (newSession.college_id) studentFilter.college_id = newSession.college_id;
+          // Notify only students scoped to this canonical institution when active
+          if (isActive && canonicalCollegeId) {
+            const studentFilter = { role: 'student', college_id: canonicalCollegeId };
             if (newSession.department) studentFilter.department = newSession.department;
             if (section) studentFilter.section = section;
             if (semester) studentFilter.semester = semester;
@@ -191,9 +212,9 @@ router.post('/start', authenticate, requireRole(['teacher', 'admin', 'super_admi
 
           res.json({
             session_id: sessionId.toString(),
-      status: requestedStatus,
+            status: requestedStatus,
             is_active: isActive,
-            expires_at: expiresAt.toISOString(),
+            expires_at: expiresAt ? expiresAt.toISOString() : null,
             qr_rotation_seconds: qrRotationSeconds,
             message: isActive ? "Attendance session started successfully" : `Session created in ${requestedStatus} state`
           });
@@ -210,6 +231,9 @@ router.post('/:sessionId/transition', authenticate, requireRole(['teacher', 'adm
     if (!action || typeof action !== 'string') {
       return res.status(400).json({ detail: 'A valid session lifecycle action is required.' });
     }
+    if (auto_mark_absent !== undefined && typeof auto_mark_absent !== 'boolean') {
+      return res.status(400).json({ detail: 'auto_mark_absent must be a boolean.' });
+    }
     const result = await transitionSessionState({
       sessionId,
       actorEmail: req.userEmail,
@@ -217,7 +241,7 @@ router.post('/:sessionId/transition', authenticate, requireRole(['teacher', 'adm
       action,
       reason,
       extendMinutes: extend_minutes,
-      autoMarkAbsent: Boolean(auto_mark_absent),
+      autoMarkAbsent: auto_mark_absent === true,
       reqIp: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1',
     });
     if (result.errorStatus) {
@@ -236,36 +260,62 @@ router.post('/:sessionId/qr-regenerate', authenticate, requireRole(['teacher', '
     if (!mongoose.Types.ObjectId.isValid(sessionId)) {
       return res.status(400).json({ detail: 'Invalid session id.' });
     }
-    const session = await Session.findById(sessionId);
+    const session = await Session.findById(sessionId).lean();
     if (!session) return res.status(404).json({ detail: 'Session not found.' });
     if (!['admin', 'super_admin'].includes(req.userRole.toLowerCase()) && session.teacher_id.toLowerCase() !== req.userEmail.toLowerCase()) {
       return res.status(403).json({ detail: 'You can only regenerate QR codes for your own session.' });
     }
+    if (!sessionSupportsQr(session)) {
+      return res.status(403).json({ detail: 'QR attendance is disabled for this session.' });
+    }
     if (!isSessionAcceptingQr(session)) {
       return res.status(409).json({ detail: 'Session must be active or resumed to regenerate QR tokens.' });
     }
-    session.qr_epoch = (session.qr_epoch || 1) + 1;
-    session.qr_code = crypto.randomBytes(32).toString('hex');
+
+    const observedEpoch = Number(session.qr_epoch || 1);
+    const nextEpoch = observedEpoch + 1;
+    const nextSecret = crypto.randomBytes(32).toString('hex');
+    const setFields = { qr_epoch: nextEpoch, qr_code: nextSecret };
     if (req.body?.rotation_seconds !== undefined) {
       const rot = parseInt(req.body.rotation_seconds, 10);
       if (Number.isFinite(rot) && rot >= 5 && rot <= 120) {
-        session.qr_rotation_seconds = rot;
+        setFields.qr_rotation_seconds = rot;
       }
     }
-    await session.save();
+
+    const updated = await Session.findOneAndUpdate(
+      {
+        _id: sessionId,
+        is_active: true,
+        ...(session.qr_epoch != null
+          ? { qr_epoch: session.qr_epoch }
+          : { $or: [{ qr_epoch: { $exists: false } }, { qr_epoch: null }, { qr_epoch: 1 }] }),
+        $or: [
+          { status: { $in: ['active', 'resumed'] } },
+          { status: { $exists: false } },
+          { status: null },
+        ],
+      },
+      { $set: setFields },
+      { new: true }
+    ).lean();
+
+    if (!updated) {
+      return res.status(409).json({ detail: 'Concurrent QR regeneration conflict or session is no longer active. Please retry.' });
+    }
 
     await AttendanceAuditLog.create({
       actor_email: req.userEmail,
-      college_id: session.college_id,
+      college_id: updated.college_id,
       role: req.userRole,
       action: 'QR_REGENERATED',
       target_resource: `session:${sessionId}`,
-      details: { qr_epoch: session.qr_epoch, rotation_seconds: session.qr_rotation_seconds },
+      details: { qr_epoch: updated.qr_epoch, rotation_seconds: updated.qr_rotation_seconds },
       ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
     }).catch(() => { });
 
     res.setHeader('Cache-Control', 'no-store');
-    return res.json(issueAttendanceQrToken(session));
+    return res.json(issueAttendanceQrToken(updated));
   } catch (error) {
     reportInternalError(res, error, 'Sessions:QRRegenerate');
   }
@@ -282,6 +332,9 @@ router.get('/:sessionId/qr-token', authenticate, requireRole(['teacher', 'admin'
     if (!session) return res.status(404).json({ detail: 'Active session not found.' });
     if (!['admin', 'super_admin'].includes(req.userRole.toLowerCase()) && session.teacher_id.toLowerCase() !== req.userEmail.toLowerCase()) {
       return res.status(403).json({ detail: 'You can only generate QR codes for your own session.' });
+    }
+    if (!sessionSupportsQr(session)) {
+      return res.status(403).json({ detail: 'QR attendance is disabled for this session.' });
     }
     if (!isSessionAcceptingQr(session)) {
       return res.status(409).json({ detail: `QR tokens cannot be issued while session is ${getEffectiveSessionStatus(session)}.` });
@@ -321,13 +374,30 @@ router.get('/active', authenticate, async (req, res) => {
         ];
       }
 
-      const activeSessions = await Session.find(filter).sort({ start_time: -1 }).limit(10).lean();
+      const rawActiveSessions = await Session.find(filter).sort({ start_time: -1 }).limit(25).lean();
+      const nowMs = Date.now();
+      const expiredIds = [];
+      const activeSessions = [];
+      for (const s of rawActiveSessions) {
+        if (isSessionExpired(s, nowMs)) {
+          expiredIds.push(s._id);
+        } else {
+          activeSessions.push(s);
+        }
+      }
+      if (expiredIds.length > 0) {
+        await Session.updateMany(
+          { _id: { $in: expiredIds }, is_active: true },
+          { $set: { is_active: false, status: 'closed', closed_at: new Date(nowMs) } }
+        ).catch(() => {});
+      }
+
       const activeSession = activeSessions[0];
       if (!activeSession) {
         return res.json({ is_active: false, sessions: [], message: "No active attendance session found" });
       }
 
-      const sanitizedSessions = activeSessions.map((s) => ({
+      const sanitizedSessions = activeSessions.slice(0, 10).map((s) => ({
         session_id: s._id.toString(),
         teacher_id: s.teacher_id,
         subject: s.subject,
@@ -367,12 +437,16 @@ router.get('/active', authenticate, async (req, res) => {
 // POST /sessions/stop - End an active attendance session
 router.post('/stop', authenticate, requireRole(['teacher', 'admin', 'super_admin']), async (req, res) => {
   try {
-    const { session_id } = req.body;
+    const { session_id } = req.body || {};
     let query = { is_active: true };
-    if (session_id && mongoose.Types.ObjectId.isValid(session_id)) {
+    if (session_id !== undefined && session_id !== null && String(session_id).trim() !== '') {
+      if (typeof session_id !== 'string' || !mongoose.Types.ObjectId.isValid(session_id)) {
+        return res.status(400).json({ detail: 'Invalid session_id.' });
+      }
       query = { _id: session_id, is_active: true };
     } else if (req.userRole.toLowerCase() === 'teacher') {
-      query = { teacher_id: req.userEmail.toLowerCase(), is_active: true };
+      const escapedEmail = String(req.userEmail || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query = { teacher_id: new RegExp(`^${escapedEmail}$`, 'i'), is_active: true };
     }
 
     const session = await Session.findOne(query).sort({ start_time: -1 });

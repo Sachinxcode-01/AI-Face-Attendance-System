@@ -68,6 +68,37 @@ router.patch('/profile', authenticate, async (req, res) => {
       }
     });
 
+    // Require confirmed parent-student links instead of unrestricted self-linking on PATCH /profile
+    if (role === 'parent' && updateFields.linked_children !== undefined) {
+      if (!Array.isArray(updateFields.linked_children)) {
+        return res.status(400).json({ detail: 'linked_children must be an array.' });
+      }
+      const requestedEmails = updateFields.linked_children
+        .map((c) => (typeof c === 'string' ? c : c?.email))
+        .map((e) => (typeof e === 'string' ? e.trim().toLowerCase() : ''))
+        .filter(Boolean);
+      if (requestedEmails.length > 0) {
+        const parentEmailLower = String(req.userEmail || '').trim().toLowerCase();
+        const existingParent = await User.findOne({ email: parentEmailLower }, 'children linked_children').lean().catch(() => null);
+        const alreadyLinked = new Set([
+          ...(Array.isArray(existingParent?.children) ? existingParent.children.map((e) => String(e).toLowerCase()) : []),
+          ...(Array.isArray(existingParent?.linked_children) ? existingParent.linked_children.map((c) => String(c?.email || '').toLowerCase()) : []),
+        ]);
+        const students = await User.find(
+          { email: { $in: requestedEmails }, role: 'student' },
+          'email full_name student_id roll_number parent_details'
+        ).lean();
+        const studentByEmail = new Map(students.map((s) => [s.email.toLowerCase(), s]));
+        for (const reqEmail of requestedEmails) {
+          const st = studentByEmail.get(reqEmail);
+          const studentConfirms = Boolean(st?.parent_details && st.parent_details.trim().toLowerCase() === parentEmailLower);
+          if (!st || (!studentConfirms && !alreadyLinked.has(reqEmail))) {
+            return res.status(403).json({ detail: 'Forbidden: Parent-student relationship must be confirmed by the student or an administrator.' });
+          }
+        }
+      }
+    }
+
     await User.updateOne({ email: req.userEmail }, { $set: updateFields });
     res.json({ success: true, message: 'Profile updated successfully' });
   } catch (error) {

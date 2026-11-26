@@ -2,6 +2,46 @@ const cron = require('node-cron');
 const Attendance = require('../models/Attendance');
 const Session = require('../models/Session');
 const Otp = require('../models/Otp');
+const Announcement = require('../models/Announcement');
+const AttendanceAuditLog = require('../models/AttendanceAuditLog');
+const teacherService = require('../services/teacherService');
+
+async function processDueScheduledAnnouncements(now = new Date()) {
+  const candidates = await Announcement.find({
+    status: 'scheduled',
+    scheduled_for: { $lte: now },
+  }).select('_id').limit(20).lean();
+
+  let processed = 0;
+  for (const cand of candidates) {
+    const claimed = await Announcement.findOneAndUpdate(
+      { _id: cand._id, status: 'scheduled', scheduled_for: { $lte: now } },
+      { $set: { status: 'published', published_at: now, updated_at: now } },
+      { new: true }
+    );
+    if (!claimed) continue;
+
+    const ctx = await teacherService.resolveTeacherContext(claimed.author_email);
+    if (ctx) {
+      await teacherService.deliverAnnouncement(claimed, ctx);
+    }
+    await AttendanceAuditLog.create({
+      actor_email: claimed.author_email,
+      college_id: claimed.college_id,
+      role: 'teacher',
+      action: 'ANNOUNCEMENT_PUBLISHED',
+      target_resource: `announcement:${claimed._id.toString()}`,
+      details: {
+        status: 'published',
+        scheduled: true,
+        scope: claimed.target_scope,
+        recipients: claimed.delivery_stats?.recipients || 0,
+      },
+    }).catch(() => {});
+    processed++;
+  }
+  return processed;
+}
 
 function initScheduledJobs() {
   console.log('[Cron] Initializing background scheduled jobs...');
@@ -33,6 +73,15 @@ function initScheduledJobs() {
       console.error('[Cron] Session cleanup error:', err);
     }
   });
+
+  // 3. Deliver due scheduled announcements every minute
+  cron.schedule('* * * * *', async () => {
+    try {
+      await processDueScheduledAnnouncements();
+    } catch (err) {
+      console.error('[Cron] Scheduled announcement delivery error:', err);
+    }
+  });
 }
 
-module.exports = { initScheduledJobs };
+module.exports = { initScheduledJobs, processDueScheduledAnnouncements };

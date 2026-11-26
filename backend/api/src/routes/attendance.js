@@ -10,12 +10,15 @@ const User = require('../models/User');
 const Leave = require('../models/Leave');
 const AttendanceAnalytics = require('../models/AttendanceAnalytics');
 const DepartmentAnalytics = require('../models/DepartmentAnalytics');
+const AttendanceDispute = require('../models/AttendanceDispute');
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 const { verifyAttendanceQrToken, isSessionAcceptingQr } = require('../utils/attendanceQr');
 const {
   normalizeManualStatus,
+  resolveCanonicalCollegeId,
   resolveTeacherContext,
   getAuthorisedStudentsForTeacher,
+  isStudentInSessionRoster,
   getEffectiveSessionStatus,
 } = require('../services/teacherService');
 const cache = require('../utils/cache');
@@ -32,7 +35,103 @@ const {
   getInstitutionPolicy,
   toDateKey,
 } = require('../services/studentAttendanceService');
-const { simulateScenario } = require('../services/attendanceCalculator');
+const { tallyRecords, simulateScenario } = require('../services/attendanceCalculator');
+
+function isMethodAllowed(session, method) {
+  const raw = session?.verification_methods;
+  if (!Array.isArray(raw) || raw.length === 0) return true;
+  const normalized = raw.map((m) => String(m || '').trim().toLowerCase()).filter(Boolean);
+  if (normalized.length === 0) return true;
+  if (method === 'kiosk') {
+    return normalized.includes('kiosk') || normalized.includes('face');
+  }
+  return normalized.includes(method);
+}
+
+function resolveCheckInStatus(session, timestamp = new Date()) {
+  const thresholdMins = Number(session?.late_threshold_minutes);
+  if (!Number.isFinite(thresholdMins) || thresholdMins <= 0 || !session?.start_time) {
+    return 'Present';
+  }
+  const startMs = new Date(session.start_time).getTime();
+  if (!Number.isFinite(startMs)) return 'Present';
+  return (timestamp.getTime() - startMs) > thresholdMins * 60000 ? 'Late' : 'Present';
+}
+
+function buildAcceptingSessionCondition(session, { requireQrToken = false } = {}) {
+  const now = new Date();
+  const expectedEpoch = Number(session.qr_epoch || 1);
+  const andClauses = [
+    { $or: [{ status: { $in: ['active', 'resumed'] } }, { status: { $exists: false } }, { status: null }] },
+    { $or: [{ expires_at: { $gt: now } }, { expires_at: null }, { expires_at: { $exists: false } }] },
+  ];
+  if (requireQrToken) {
+    andClauses.push({
+      $or: [
+        { qr_epoch: expectedEpoch },
+        ...(expectedEpoch === 1 ? [{ qr_epoch: { $exists: false } }, { qr_epoch: null }] : []),
+      ],
+    });
+  }
+  return {
+    _id: session._id,
+    is_active: true,
+    ...(requireQrToken ? { qr_code: session.qr_code } : {}),
+    $and: andClauses,
+  };
+}
+
+async function commitAtomicCheckIn({ session, newRecord, requireQrToken = false, suppliedQrToken = null }) {
+  const condition = buildAcceptingSessionCondition(session, { requireQrToken });
+  const resolveRejection = (latest) => {
+    if (requireQrToken && latest && isSessionAcceptingQr(latest, Date.now())) {
+      return { status: 400, detail: 'Invalid QR code.' };
+    }
+    return {
+      status: 409,
+      detail: `Session is currently ${getEffectiveSessionStatus(latest)} and not accepting check-ins.`,
+    };
+  };
+
+  let admissionRejection = null;
+  const dbSession = await mongoose.startSession();
+  try {
+    await dbSession.withTransaction(async () => {
+      const lockedSession = await Session.findOneAndUpdate(
+        condition,
+        { $inc: { 'telemetry.pending_verifications': 0 } },
+        { session: dbSession, new: true }
+      ).lean();
+      if (!lockedSession || !isSessionAcceptingQr(lockedSession, Date.now()) || (requireQrToken && !verifyAttendanceQrToken(lockedSession, suppliedQrToken))) {
+        const latest = await Session.findById(session._id).session(dbSession).lean();
+        admissionRejection = resolveRejection(latest);
+        return;
+      }
+      await newRecord.save({ session: dbSession });
+    });
+  } catch (txErr) {
+    if (txErr && (txErr.code === 20 || /Transaction numbers are only allowed/i.test(txErr.message))) {
+      const currentSession = await Session.findOne(condition).lean();
+      if (!currentSession || !isSessionAcceptingQr(currentSession, Date.now()) || (requireQrToken && !verifyAttendanceQrToken(currentSession, suppliedQrToken))) {
+        const latest = await Session.findById(session._id).lean();
+        admissionRejection = resolveRejection(latest);
+      } else {
+        await newRecord.save();
+        const postSession = await Session.findOne(condition).lean();
+        if (!postSession || !isSessionAcceptingQr(postSession, Date.now())) {
+          await Attendance.deleteOne({ _id: newRecord._id }).catch(() => { });
+          const latest = await Session.findById(session._id).lean();
+          admissionRejection = resolveRejection(latest);
+        }
+      }
+    } else {
+      throw txErr;
+    }
+  } finally {
+    await dbSession.endSession();
+  }
+  return admissionRejection;
+}
 const {
   attendanceSubmissionsTotal,
   faceRecognitionDuration,
@@ -273,45 +372,45 @@ router.post('/mark', authenticate, async (req, res) => {
       { session_id, subject: session.subject, receipt_id: receiptId }
     ).catch(console.error));
 
-      // Broadcast update to admin live-logs AND the session's teacher WebSocket
-      const livePayload = {
-        type: "attendance_update",
-        student_email,
-        student_name: studentUser.full_name || student_email.split('@')[0],
-        roll_number: studentUser.student_id || studentUser.roll_number || studentUser.usn || null,
-        session_id,
-        subject: session.subject,
-        status: "Present",
-        verified_by: "qr",
-        timestamp: timestamp.toISOString()
-  };
-  trackJob(notificationService.broadcastLiveLogs(livePayload).catch(console.error));
-  if (session.teacher_id) {
-    trackJob(notificationService.sendPersonalMessage(session.teacher_id.toLowerCase(), livePayload).catch(() => { }));
-  }
-
-  // Recalculate health score cache in background & invalidate analytics read cache
-  cache.invalidateAnalyticsForUser(student_email);
-  trackJob(calculateHealthScore(student_email).catch(console.error));
-
-  res.json({
-    status: "success",
-    message: "Attendance marked successfully",
-    receipt_id: receiptId,
-    attendance_id: newRecord._id.toString(),
-    subject: session.subject,
-    room: session.room || null,
-    timestamp: timestamp.toISOString(),
-  });
-} catch (error) {
-  if (error.code === 11000) {
-    if (req.body?.session_id && mongoose.Types.ObjectId.isValid(req.body.session_id)) {
-      await Session.updateOne({ _id: req.body.session_id }, { $inc: { 'telemetry.duplicate_attempts': 1 } }).catch(() => { });
+    // Broadcast update to admin live-logs AND the session's teacher WebSocket
+    const livePayload = {
+      type: "attendance_update",
+      student_email,
+      student_name: studentUser.full_name || student_email.split('@')[0],
+      roll_number: studentUser.student_id || studentUser.roll_number || studentUser.usn || null,
+      session_id,
+      subject: session.subject,
+      status: "Present",
+      verified_by: "qr",
+      timestamp: timestamp.toISOString()
+    };
+    trackJob(notificationService.broadcastLiveLogs(livePayload).catch(console.error));
+    if (session.teacher_id) {
+      trackJob(notificationService.sendPersonalMessage(session.teacher_id.toLowerCase(), livePayload).catch(() => { }));
     }
-    return res.status(409).json({ detail: "Attendance already marked for this session", message: "Attendance already marked for this session" });
+
+    // Recalculate health score cache in background & invalidate analytics read cache
+    cache.invalidateAnalyticsForUser(student_email);
+    trackJob(calculateHealthScore(student_email).catch(console.error));
+
+    res.json({
+      status: "success",
+      message: "Attendance marked successfully",
+      receipt_id: receiptId,
+      attendance_id: newRecord._id.toString(),
+      subject: session.subject,
+      room: session.room || null,
+      timestamp: timestamp.toISOString(),
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      if (req.body?.session_id && mongoose.Types.ObjectId.isValid(req.body.session_id)) {
+        await Session.updateOne({ _id: req.body.session_id }, { $inc: { 'telemetry.duplicate_attempts': 1 } }).catch(() => { });
+      }
+      return res.status(409).json({ detail: "Attendance already marked for this session", message: "Attendance already marked for this session" });
+    }
+    reportInternalError(res, error, 'Attendance');
   }
-  reportInternalError(res, error, 'Attendance');
-}
 });
 
 // In-memory rate-limiter and cooldown tracker for face verification attempts
@@ -479,48 +578,48 @@ router.post('/mark/face', authenticate, requireRole('student'), upload.single('i
         { session_id: activeSessionId, subject: session.subject, receipt_id: receiptId }
       ).catch(console.error));
 
-        // Broadcast update to admin live-logs AND teacher WebSocket
-        const faceLivePayload = {
-          type: "attendance_update",
-          student_email,
-          student_name: studentUser?.full_name || student_email.split('@')[0],
-          roll_number: studentUser?.student_id || studentUser?.roll_number || studentUser?.usn || null,
-          session_id: activeSessionId,
-          subject: session.subject,
-          status: "Present",
-          timestamp: timestamp.toISOString(),
-          verified_by: "face",
-          confidence: aiResult.confidence
-    };
-    trackJob(notificationService.broadcastLiveLogs(faceLivePayload).catch(console.error));
-    if (session.teacher_id) {
-      trackJob(notificationService.sendPersonalMessage(session.teacher_id.toLowerCase(), faceLivePayload).catch(() => { }));
+      // Broadcast update to admin live-logs AND teacher WebSocket
+      const faceLivePayload = {
+        type: "attendance_update",
+        student_email,
+        student_name: studentUser?.full_name || student_email.split('@')[0],
+        roll_number: studentUser?.student_id || studentUser?.roll_number || studentUser?.usn || null,
+        session_id: activeSessionId,
+        subject: session.subject,
+        status: "Present",
+        timestamp: timestamp.toISOString(),
+        verified_by: "face",
+        confidence: aiResult.confidence
+      };
+      trackJob(notificationService.broadcastLiveLogs(faceLivePayload).catch(console.error));
+      if (session.teacher_id) {
+        trackJob(notificationService.sendPersonalMessage(session.teacher_id.toLowerCase(), faceLivePayload).catch(() => { }));
+      }
+
+      // Recalculate health score & invalidate analytics read cache
+      cache.invalidateAnalyticsForUser(student_email);
+      trackJob(calculateHealthScore(student_email).catch(console.error));
+
+      return res.json({
+        status: "success",
+        matched: true,
+        confidence: aiResult.confidence,
+        receipt_id: receiptId,
+        attendance_id: newRecord._id.toString(),
+        subject: session.subject,
+        room: session.room || null,
+        timestamp: timestamp.toISOString(),
+        message: "Face attendance marked successfully"
+      });
     }
 
-    // Recalculate health score & invalidate analytics read cache
-    cache.invalidateAnalyticsForUser(student_email);
-    trackJob(calculateHealthScore(student_email).catch(console.error));
-
-    return res.json({
-      status: "success",
-      matched: true,
-      confidence: aiResult.confidence,
-      receipt_id: receiptId,
-      attendance_id: newRecord._id.toString(),
-      subject: session.subject,
-      room: session.room || null,
-      timestamp: timestamp.toISOString(),
-      message: "Face attendance marked successfully"
-    });
-  }
-
     return res.status(400).json({ detail: 'A verified face image is required.' });
-} catch (error) {
-  if (error.code === 11000) {
-    return res.status(409).json({ detail: "Attendance already marked for this session", message: "Attendance already marked for this session" });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ detail: "Attendance already marked for this session", message: "Attendance already marked for this session" });
+    }
+    reportInternalError(res, error, 'Attendance');
   }
-  reportInternalError(res, error, 'Attendance');
-}
 });
 
 // ─── POST /attendance/mark/face/kiosk ─────────────────────────────
@@ -1272,8 +1371,6 @@ router.post('/forecast/simulate', authenticate, async (req, res) => {
   }
 });
 
-const AttendanceDispute = require('../models/AttendanceDispute');
-
 // ─── POST /attendance/disputes ────────────────────────────────────
 router.post('/disputes', authenticate, requireRole(['student', 'parent']), async (req, res) => {
   try {
@@ -1412,107 +1509,107 @@ router.get('/disputes', authenticate, async (req, res) => {
 router.post('/disputes/:id/resolve', authenticate, requireRole(['teacher', 'hod', 'principal', 'admin', 'super_admin']), async (req, res) => {
   try {
     const { id } = req.params;
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ detail: 'Invalid dispute ID.' });
-      }
-      const { action, remarks, updated_status } = req.body || {};
-      const normalizedAction = String(action || '').toLowerCase().trim();
-      const ALLOWED_ACTIONS = ['approve', 'approved', 'reject', 'rejected', 'under_review', 'clarification', 'escalate', 'escalated', 'excused'];
-      if (!ALLOWED_ACTIONS.includes(normalizedAction)) {
-        return res.status(400).json({ detail: 'Action must be approve, reject, under_review, clarification, escalate, or excused.' });
-      }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ detail: 'Invalid dispute ID.' });
+    }
+    const { action, remarks, updated_status } = req.body || {};
+    const normalizedAction = String(action || '').toLowerCase().trim();
+    const ALLOWED_ACTIONS = ['approve', 'approved', 'reject', 'rejected', 'under_review', 'clarification', 'escalate', 'escalated', 'excused'];
+    if (!ALLOWED_ACTIONS.includes(normalizedAction)) {
+      return res.status(400).json({ detail: 'Action must be approve, reject, under_review, clarification, escalate, or excused.' });
+    }
 
-      const existing = await AttendanceDispute.findById(id);
-      if (!existing) {
-        return res.status(404).json({ detail: 'Dispute not found.' });
-      }
+    const existing = await AttendanceDispute.findById(id);
+    if (!existing) {
+      return res.status(404).json({ detail: 'Dispute not found.' });
+    }
 
-      const role = (req.userRole || '').toLowerCase();
-      const isAdmin = ['admin', 'super_admin', 'principal'].includes(role);
-      if (!isAdmin) {
-        const ctx = await resolveTeacherContext(req.userEmail);
-        if (existing.college_id && ctx?.teacher?.college_id && existing.college_id !== ctx.teacher.college_id) {
-          await auditLog(req.userEmail, req.userRole, 'PERMISSION_DENIED', { dispute_id: id, reason: 'cross_institution' }, req);
-          return res.status(403).json({ detail: 'Forbidden: cross-institution dispute resolution denied.' });
+    const role = (req.userRole || '').toLowerCase();
+    const isAdmin = ['admin', 'super_admin', 'principal'].includes(role);
+    if (!isAdmin) {
+      const ctx = await resolveTeacherContext(req.userEmail);
+      if (existing.college_id && ctx?.teacher?.college_id && existing.college_id !== ctx.teacher.college_id) {
+        await auditLog(req.userEmail, req.userRole, 'PERMISSION_DENIED', { dispute_id: id, reason: 'cross_institution' }, req);
+        return res.status(403).json({ detail: 'Forbidden: cross-institution dispute resolution denied.' });
+      }
+      if (mongoose.Types.ObjectId.isValid(existing.session_id)) {
+        const sess = await Session.findById(existing.session_id, 'teacher_id college_id').lean();
+        if (sess && String(sess.teacher_id).toLowerCase() !== req.userEmail.toLowerCase() && role === 'teacher') {
+          await auditLog(req.userEmail, req.userRole, 'PERMISSION_DENIED', { dispute_id: id, reason: 'not_session_owner' }, req);
+          return res.status(403).json({ detail: 'Forbidden: you can only resolve disputes for your own classes.' });
         }
-        if (mongoose.Types.ObjectId.isValid(existing.session_id)) {
-          const sess = await Session.findById(existing.session_id, 'teacher_id college_id').lean();
-          if (sess && String(sess.teacher_id).toLowerCase() !== req.userEmail.toLowerCase() && role === 'teacher') {
-            await auditLog(req.userEmail, req.userRole, 'PERMISSION_DENIED', { dispute_id: id, reason: 'not_session_owner' }, req);
-            return res.status(403).json({ detail: 'Forbidden: you can only resolve disputes for your own classes.' });
-          }
-        }
       }
+    }
 
-      const isApproved = normalizedAction.startsWith('approve') || normalizedAction === 'excused';
-      const isRejected = normalizedAction.startsWith('reject');
-      const isUnderReview = normalizedAction === 'under_review';
-      const isClarification = normalizedAction === 'clarification';
-      const isEscalated = normalizedAction.startsWith('escalat');
+    const isApproved = normalizedAction.startsWith('approve') || normalizedAction === 'excused';
+    const isRejected = normalizedAction.startsWith('reject');
+    const isUnderReview = normalizedAction === 'under_review';
+    const isClarification = normalizedAction === 'clarification';
+    const isEscalated = normalizedAction.startsWith('escalat');
 
-      const nextStatus = isApproved
-        ? 'Approved'
-        : isRejected
-          ? 'Rejected'
-          : isClarification
-            ? 'Clarification'
-            : isEscalated
-              ? 'Escalated'
-              : 'Under Review';
+    const nextStatus = isApproved
+      ? 'Approved'
+      : isRejected
+        ? 'Rejected'
+        : isClarification
+          ? 'Clarification'
+          : isEscalated
+            ? 'Escalated'
+            : 'Under Review';
 
-      const now = new Date();
-      const cleanRemarks = remarks ? String(remarks).trim().slice(0, 1000) : '';
+    const now = new Date();
+    const cleanRemarks = remarks ? String(remarks).trim().slice(0, 1000) : '';
 
-      // Atomic conditional update prevents duplicate final decisions
-      const dispute = await AttendanceDispute.findOneAndUpdate(
-        { _id: id, status: { $in: ['Pending', 'Under Review', 'Clarification'] } },
-        {
-          $set: {
+    // Atomic conditional update prevents duplicate final decisions
+    const dispute = await AttendanceDispute.findOneAndUpdate(
+      { _id: id, status: { $in: ['Pending', 'Under Review', 'Clarification'] } },
+      {
+        $set: {
+          status: nextStatus,
+          resolved_by: req.userEmail,
+          remarks: cleanRemarks,
+          updated_at: now,
+          ...(isApproved || isRejected ? { resolved_at: now } : {}),
+          ...(isEscalated ? { escalated_to: 'admin' } : {}),
+        },
+        $push: {
+          audit_trail: {
             status: nextStatus,
-            resolved_by: req.userEmail,
-            remarks: cleanRemarks,
-            updated_at: now,
-            ...(isApproved || isRejected ? { resolved_at: now } : {}),
-            ...(isEscalated ? { escalated_to: 'admin' } : {}),
-          },
-          $push: {
-            audit_trail: {
-              status: nextStatus,
-              actor: req.userEmail,
-              role: req.userRole,
-              note: cleanRemarks || `Marked as ${nextStatus}`,
-              timestamp: now,
-            },
+            actor: req.userEmail,
+            role: req.userRole,
+            note: cleanRemarks || `Marked as ${nextStatus}`,
+            timestamp: now,
           },
         },
-        { new: true }
-      );
+      },
+      { new: true }
+    );
 
-      if (!dispute) {
-        return res.status(409).json({ detail: `Dispute has already been finalized (${existing.status}).` });
-      }
+    if (!dispute) {
+      return res.status(409).json({ detail: `Dispute has already been finalized (${existing.status}).` });
+    }
 
-      if (isApproved) {
-        const targetAttendanceStatus = normalizedAction === 'excused'
-          ? 'Excused'
-          : (['Present', 'Excused', 'Late'].includes(updated_status) ? updated_status : (dispute.requested_status || 'Present'));
+    if (isApproved) {
+      const targetAttendanceStatus = normalizedAction === 'excused'
+        ? 'Excused'
+        : (['Present', 'Excused', 'Late'].includes(updated_status) ? updated_status : (dispute.requested_status || 'Present'));
 
-          await Attendance.updateOne(
-            { student_email: dispute.student_email, session_id: dispute.session_id },
-            {
-              $set: {
-                status: targetAttendanceStatus,
-                verified_by: 'manual',
-                marked_by: req.userEmail,
-                previous_status: dispute.original_status || 'Absent',
-                reason: cleanRemarks || 'Approved via attendance correction request',
-                subject: dispute.subject || undefined,
-                college_id: dispute.college_id || req.userCollege || undefined,
+      await Attendance.updateOne(
+        { student_email: dispute.student_email, session_id: dispute.session_id },
+        {
+          $set: {
+            status: targetAttendanceStatus,
+            verified_by: 'manual',
+            marked_by: req.userEmail,
+            previous_status: dispute.original_status || 'Absent',
+            reason: cleanRemarks || 'Approved via attendance correction request',
+            subject: dispute.subject || undefined,
+            college_id: dispute.college_id || req.userCollege || undefined,
             remarks: cleanRemarks || 'Approved via attendance correction request',
-              updated_at: now,
-              timestamp: now,
-            },
-            $push: {
+            updated_at: now,
+            timestamp: now,
+          },
+          $push: {
             edit_history: {
               previous_status: dispute.original_status || 'Absent',
               updated_status: targetAttendanceStatus,
@@ -1524,39 +1621,39 @@ router.post('/disputes/:id/resolve', authenticate, requireRole(['teacher', 'hod'
         },
         { upsert: true }
       );
-cache.invalidateAnalyticsForUser(dispute.student_email);
-trackJob(calculateHealthScore(dispute.student_email).catch(console.error));
+      cache.invalidateAnalyticsForUser(dispute.student_email);
+      trackJob(calculateHealthScore(dispute.student_email).catch(console.error));
     }
 
-trackJob(notificationService.createNotification(
-  dispute.student_email,
-  `Attendance Correction ${dispute.status}`,
-  `Your attendance correction request for ${dispute.subject || dispute.session_id} was marked ${dispute.status.toLowerCase()}.`,
-  'attendance',
-  isApproved ? 'Info' : 'High',
-  { dispute_id: dispute._id.toString(), session_id: dispute.session_id }
-).catch(console.error));
-
-// Notify linked parent if authorized
-trackJob((async () => {
-  const studentUser = await User.findOne({ email: dispute.student_email }, 'full_name parent_details').lean();
-  if (studentUser?.parent_details && studentUser.parent_details.includes('@')) {
-    await notificationService.createNotification(
-      studentUser.parent_details.toLowerCase(),
-      `Ward Correction ${dispute.status}`,
-      `Attendance correction for ${studentUser.full_name || dispute.student_email} (${dispute.subject || 'Class'}) was marked ${dispute.status.toLowerCase()}.`,
+    trackJob(notificationService.createNotification(
+      dispute.student_email,
+      `Attendance Correction ${dispute.status}`,
+      `Your attendance correction request for ${dispute.subject || dispute.session_id} was marked ${dispute.status.toLowerCase()}.`,
       'attendance',
-      'Info',
-      { dispute_id: dispute._id.toString(), student_email: dispute.student_email }
-    );
-  }
-})().catch(() => { }));
+      isApproved ? 'Info' : 'High',
+      { dispute_id: dispute._id.toString(), session_id: dispute.session_id }
+    ).catch(console.error));
 
-await auditLog(req.userEmail, req.userRole, 'DISPUTE_RESOLVED', { dispute_id: id, status: dispute.status, remarks: cleanRemarks }, req);
-res.json({ success: true, status: dispute.status, dispute });
+    // Notify linked parent if authorized
+    trackJob((async () => {
+      const studentUser = await User.findOne({ email: dispute.student_email }, 'full_name parent_details').lean();
+      if (studentUser?.parent_details && studentUser.parent_details.includes('@')) {
+        await notificationService.createNotification(
+          studentUser.parent_details.toLowerCase(),
+          `Ward Correction ${dispute.status}`,
+          `Attendance correction for ${studentUser.full_name || dispute.student_email} (${dispute.subject || 'Class'}) was marked ${dispute.status.toLowerCase()}.`,
+          'attendance',
+          'Info',
+          { dispute_id: dispute._id.toString(), student_email: dispute.student_email }
+        );
+      }
+    })().catch(() => { }));
+
+    await auditLog(req.userEmail, req.userRole, 'DISPUTE_RESOLVED', { dispute_id: id, status: dispute.status, remarks: cleanRemarks }, req);
+    res.json({ success: true, status: dispute.status, dispute });
   } catch (error) {
-  reportInternalError(res, error, 'Attendance');
-}
+    reportInternalError(res, error, 'Attendance');
+  }
 });
 
 module.exports = router;

@@ -171,7 +171,8 @@ router.get(
       const role = (req.userRole || '').toLowerCase();
       let sessionMatch = null;
       if (role === 'teacher') {
-        const teacherSessions = await Session.find({ teacher_id: req.userEmail.toLowerCase() }).select('_id').lean();
+        const escapedEmail = String(req.userEmail || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const teacherSessions = await Session.find({ teacher_id: new RegExp(`^${escapedEmail}$`, 'i') }).select('_id').lean();
         sessionMatch = { $match: { session_id: { $in: teacherSessions.map((s) => s._id.toString()) } } };
       }
 
@@ -387,7 +388,8 @@ router.get('/heatmap', authenticate, requireRole(analyticsReadRoles), async (req
     const userEmail = req.userEmail;
     let sessionFilter = {};
     if (role === 'teacher') {
-      const teacherSessions = await Session.find({ teacher_id: userEmail.toLowerCase() }).select('_id').lean();
+      const escapedEmail = String(userEmail || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const teacherSessions = await Session.find({ teacher_id: new RegExp(`^${escapedEmail}$`, 'i') }).select('_id').lean();
       sessionFilter = { session_id: { $in: teacherSessions.map((s) => s._id.toString()) } };
     }
 

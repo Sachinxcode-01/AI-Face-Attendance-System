@@ -43,8 +43,27 @@ class NotificationService {
     deadConnections.forEach(ws => this.removeConnection(email, ws));
   }
 
-  async broadcastLiveLogs(message) {
-    return this.sendPersonalMessage('__live_logs__', message);
+  async broadcastLiveLogs(message, targetCollegeId = null) {
+    const connections = this.activeConnections.get('__live_logs__');
+    if (!connections || connections.length === 0) return;
+
+    const deadConnections = [];
+    connections.forEach((ws) => {
+      if (!ws._isSuperAdmin && (!targetCollegeId || ws._collegeId !== targetCollegeId)) {
+        return;
+      }
+      try {
+        if (ws.readyState === 1) {
+          ws.send(JSON.stringify(message));
+        } else {
+          deadConnections.push(ws);
+        }
+      } catch (err) {
+        deadConnections.push(ws);
+      }
+    });
+
+    deadConnections.forEach((ws) => this.removeConnection('__live_logs__', ws));
   }
 
   async broadcast(message) {

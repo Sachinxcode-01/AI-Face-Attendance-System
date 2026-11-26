@@ -34,12 +34,16 @@ router.post('/send', authenticate, requireRole(['teacher', 'hod', 'principal', '
       }
     }
 
-    const registeredParent = (typeof targetStudent.parent_details === 'string' && targetStudent.parent_details.includes('@'))
-      ? targetStudent.parent_details.trim().toLowerCase()
-      : null;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const rawStoredParent = typeof targetStudent.parent_details === 'string' ? targetStudent.parent_details.trim().toLowerCase() : '';
+    const registeredParent = emailPattern.test(rawStoredParent) ? rawStoredParent : null;
     let resolvedParent = registeredParent;
-    if (typeof parent_email === 'string' && parent_email.includes('@')) {
-      const requestedParent = parent_email.trim().toLowerCase();
+
+    if (parent_email !== undefined && parent_email !== null && String(parent_email).trim() !== '') {
+      const requestedParent = typeof parent_email === 'string' ? parent_email.trim().toLowerCase() : '';
+      if (!emailPattern.test(requestedParent)) {
+        return res.status(400).json({ detail: 'Invalid parent_email address.' });
+      }
       if (requestedParent === registeredParent) {
         resolvedParent = requestedParent;
       } else {
@@ -51,9 +55,10 @@ router.post('/send', authenticate, requireRole(['teacher', 'hod', 'principal', '
             { 'linked_children.email': targetStudent.email.toLowerCase() },
           ],
         });
-        if (linkedParent) {
-          resolvedParent = requestedParent;
+        if (!linkedParent) {
+          return res.status(403).json({ detail: 'Forbidden: supplied parent_email is not linked to this student.' });
         }
+        resolvedParent = requestedParent;
       }
     }
 
@@ -70,22 +75,28 @@ router.post('/send', authenticate, requireRole(['teacher', 'hod', 'principal', '
       { sender: req.userEmail }
     );
 
+    let parentNotified = false;
     if (resolvedParent) {
-      notifService.createNotification(
-        resolvedParent,
-        `Ward Notice: ${resolvedTitle}`,
-        `${targetStudent.full_name || targetStudent.email}: ${message.trim()}`,
-        type || 'attendance_warning',
-        resolvedPriority,
-        { sender: req.userEmail, student_email: targetStudent.email }
-      ).catch(() => {});
+      try {
+        const parentCreated = await notifService.createNotification(
+          resolvedParent,
+          `Ward Notice: ${resolvedTitle}`,
+          `${targetStudent.full_name || targetStudent.email}: ${message.trim()}`,
+          type || 'attendance_warning',
+          resolvedPriority,
+          { sender: req.userEmail, student_email: targetStudent.email }
+        );
+        parentNotified = Boolean(parentCreated && parentCreated.id);
+      } catch (_) {
+        parentNotified = false;
+      }
     }
 
     res.status(201).json({
       success: true,
       id: created?.id || null,
       recipient: targetStudent.email,
-      parent_notified: Boolean(resolvedParent),
+      parent_notified: parentNotified,
     });
   } catch (error) {
     reportInternalError(res, error, 'Notifications:Send');
