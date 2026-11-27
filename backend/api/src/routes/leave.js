@@ -17,6 +17,7 @@ const { leaveApplySchema } = require('../schemas/validationSchemas');
 const reportInternalError = require('../utils/httpError');
 const cache = require('../utils/cache');
 const { getInstitutionPolicy } = require('../services/studentAttendanceService');
+const { authorizeWardAccess } = require('../services/guardianService');
 
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 
@@ -96,20 +97,25 @@ router.get('/document/:filename', authenticate, async (req, res) => {
     const leave = await Leave.findOne({ document_url: docUrl }).lean();
     const role = (req.userRole || '').toLowerCase();
     const isOwner = leave && leave.user_id.toLowerCase() === req.userEmail.toLowerCase();
-      let isAuthorizedReviewer = false;
-      if (leaveReviewRoles.includes(role)) {
-        if (role === 'super_admin') {
-          isAuthorizedReviewer = true;
-        } else if (leave) {
-          const scope = await staffLeaveScope(req);
-          const inUserScope = !scope.user_id || scope.user_id.$in.includes(leave.user_id.toLowerCase());
-          const inCollegeScope = !scope.college_id || !leave.college_id || scope.college_id === leave.college_id;
-          isAuthorizedReviewer = inUserScope && inCollegeScope;
-        } else {
-          isAuthorizedReviewer = ['admin', 'principal', 'management'].includes(role);
-        }
+    let isAuthorizedReviewer = false;
+    if (leaveReviewRoles.includes(role)) {
+      if (role === 'super_admin') {
+        isAuthorizedReviewer = true;
+      } else if (leave) {
+        const scope = await staffLeaveScope(req);
+        const inUserScope = !scope.user_id || scope.user_id.$in.includes(leave.user_id.toLowerCase());
+        const inCollegeScope = !scope.college_id || !leave.college_id || scope.college_id === leave.college_id;
+        isAuthorizedReviewer = inUserScope && inCollegeScope;
+      } else {
+        isAuthorizedReviewer = ['admin', 'principal', 'management'].includes(role);
       }
-      if (!isAuthorizedReviewer && !isOwner) {
+    }
+      let isAuthorizedParent = false;
+      if (!isAuthorizedReviewer && !isOwner && role === 'parent' && leave) {
+        const authz = await authorizeWardAccess(req, leave.user_id, 'view_leaves');
+        isAuthorizedParent = authz.allowed;
+      }
+      if (!isAuthorizedReviewer && !isOwner && !isAuthorizedParent) {
         return res.status(403).json({ detail: 'Forbidden: you do not have access to this attachment.' });
       }
       const filePath = path.join(leaveDocsDir, safeName);

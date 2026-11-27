@@ -518,8 +518,8 @@ const ROUTE_ALLOWLIST = {
     "/teacher/ai-chat", "/teacher/profile", "/settings"
   ],
   parent: [
-    "/parent/dashboard", "/parent/reports", "/parent/alerts",
-    "/parent/leave-status", "/parent/profile", "/settings"
+    "/parent", "/parent?tab=attendance", "/parent?tab=timetable",
+    "/parent?tab=leave", "/parent?tab=disputes", "/parent?tab=reports", "/parent?tab=profile"
   ],
   admin: [
     "/admin/dashboard", "/admin/users", "/admin/sessions",
@@ -777,14 +777,59 @@ const handleChatRequest = async (req, res) => {
         realDataAddendum = ' [Live classroom telemetry is unavailable.]';
       }
     } else if (userRole === 'parent') {
-      if (msgLower.includes('ward') || msgLower.includes('child attendance')) {
-        realDataAddendum = ' [Linked student attendance data is not available for this account.]';
-      } else if (msgLower.includes('alert') || msgLower.includes('absence alert')) {
-        realDataAddendum = ' [Linked student alert data is not available for this account.]';
-      }
-    } else if (userRole === 'hod') {
-      realDataAddendum = ' [Use the department overview for HOD-scoped analytics. Assistant analytics are not yet department-scoped.]';
-    } else if (['admin', 'super_admin', 'principal', 'management'].includes(userRole)) {
+        if (mongoose.connection.readyState === 1) {
+          const { getAuthorizedWards, authorizeWardAccess } = require('../services/guardianService');
+          const wards = await getAuthorizedWards(req.userEmail);
+          if (wards.length === 0) {
+            realDataAddendum = ' [No active linked wards found for this guardian account. Ask the student or institution admin for a single-use guardian invitation code.]';
+          } else {
+            const requestedEmail = typeof req.body?.student_email === 'string' ? req.body.student_email.trim().toLowerCase() : '';
+            let targetWard = wards[0];
+            if (requestedEmail) {
+              const authz = await authorizeWardAccess(req, requestedEmail, 'use_nexa');
+              if (!authz.allowed) {
+                return res.status(403).json({ detail: authz.reason });
+              }
+              targetWard = wards.find((w) => w.email.toLowerCase() === requestedEmail) || targetWard;
+            } else {
+              const matched = wards.find((w) =>
+                (w.full_name && msgLower.includes(w.full_name.toLowerCase())) ||
+                msgLower.includes(w.email.toLowerCase())
+              );
+              if (matched) targetWard = matched;
+            }
+
+            const [summary, recentLeaves, recentDisputes] = await Promise.all([
+              getStudentAttendanceSummary(targetWard.email).catch(() => null),
+              Leave.find({ user_id: targetWard.email }).sort({ created_at: -1 }).limit(3).lean(),
+              AttendanceDispute.find({ student_email: targetWard.email }).sort({ created_at: -1 }).limit(3).lean(),
+            ]);
+
+            if (!summary || summary.total_conducted === 0) {
+              realDataAddendum = ` [Authorized Ward: ${targetWard.full_name} (${targetWard.student_id || 'ID N/A'}, ${targetWard.department || 'Department'}). No conducted attendance sessions recorded yet.]`;
+            } else {
+              const lowSubjects = (summary.subjects || [])
+                .filter((s) => !s.eligible)
+                .slice(0, 4)
+                .map((s) => `${s.subject}: ${s.percentage}% (${s.attended}/${s.conducted}, needs ${s.classes_needed ?? 'N/A'} classes)`);
+              const leaveNote = recentLeaves.length
+                ? `Recent leaves: ${recentLeaves.map((l) => `${l.category || 'Leave'} ${l.start_date}..${l.end_date} (${l.status})`).join('; ')}.`
+                : 'No recent leave applications.';
+              const disputeNote = recentDisputes.length
+                ? `Recent corrections: ${recentDisputes.map((d) => `${d.subject || 'Session'} (${d.status})`).join('; ')}.`
+                : '';
+              const needed = summary.forecast?.classes_needed ?? 0;
+              const buffer = summary.forecast?.allowable_absences ?? 0;
+              const minPct = summary.policy?.minPercentage ?? 75;
+              realDataAddendum = ` [Authorized Ward: ${targetWard.full_name} (${targetWard.student_id || 'ID N/A'}, ${targetWard.department || 'Dept'}). Overall Attendance: ${summary.overall_attendance}% (${summary.total_present}/${summary.total_conducted} conducted, ${summary.total_missed} missed, ${summary.consecutive_absences} consecutive absences). Standing: ${summary.standing} (Risk: ${summary.risk?.level || 'Unknown'}). Policy threshold: ${minPct}%. Recovery/Buffer: ${needed > 0 ? `needs ${needed} consecutive classes to reach ${minPct}%` : `can miss up to ${buffer} upcoming classes`}. ${lowSubjects.length ? `Shortage subjects: ${lowSubjects.join('; ')}. ` : ''}${leaveNote} ${disputeNote}]`;
+            }
+          }
+        } else {
+          realDataAddendum = ' [Linked student attendance data is temporarily unavailable.]';
+        }
+      } else if (userRole === 'hod') {
+        realDataAddendum = ' [Use the department overview for HOD-scoped analytics. Assistant analytics are not yet department-scoped.]';
+      } else if (['admin', 'super_admin', 'principal', 'management'].includes(userRole)) {
         if (mongoose.connection.readyState === 1) {
           const tenant = await resolveAdminTenant({ userEmail: req.userEmail, userRole });
           const studentEmails = await User.find(buildTenantUserFilter(tenant, { role: 'student' })).distinct('email');

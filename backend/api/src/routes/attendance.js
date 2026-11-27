@@ -1378,9 +1378,18 @@ router.post('/disputes', authenticate, requireRole(['student', 'parent']), async
     if (!session_id || !reason || String(reason).trim().length < 5) {
       return res.status(400).json({ detail: 'session_id and a detailed reason (min 5 chars) are required.' });
     }
-    const studentEmail = (req.userRole === 'parent' && req.body.student_email)
-      ? String(req.body.student_email).trim().toLowerCase()
-      : req.userEmail.toLowerCase();
+    let studentEmail = req.userEmail.toLowerCase();
+    if ((req.userRole || '').toLowerCase() === 'parent') {
+      if (!req.body.student_email) {
+        return res.status(400).json({ detail: 'student_email is required when submitting as a guardian.' });
+      }
+      studentEmail = String(req.body.student_email).trim().toLowerCase();
+      const { authorizeWardAccess } = require('../services/guardianService');
+      const authz = await authorizeWardAccess(req, studentEmail, 'submit_dispute');
+      if (!authz.allowed) {
+        return res.status(403).json({ detail: authz.reason });
+      }
+    }
 
     const user = await User.findOne({ email: studentEmail }, 'college_id college').lean();
     const policy = await getInstitutionPolicy(user);
@@ -1458,6 +1467,12 @@ router.get('/disputes', authenticate, async (req, res) => {
     let filter = {};
     if (role === 'student') {
       filter = { student_email: req.userEmail.toLowerCase() };
+    } else if (role === 'parent') {
+      const { getAuthorizedWards } = require('../services/guardianService');
+      const wards = await getAuthorizedWards(req.userEmail);
+      const wardEmails = wards.map((w) => w.email.toLowerCase());
+      if (wardEmails.length === 0) return res.json({ disputes: [] });
+      filter = { student_email: { $in: wardEmails } };
     } else if (role === 'teacher') {
       const ctx = await resolveTeacherContext(req.userEmail);
       const sessionIds = (ctx?.teacherSessions || []).map((s) => s._id.toString());

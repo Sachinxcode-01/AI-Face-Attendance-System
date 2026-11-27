@@ -674,93 +674,164 @@ export const api = {
     principalSummary: () => apiFetch<any>('/management/principal/summary'),
   },
   parent: {
-    children: () => apiFetch<any[]>('/parent/children'),
-    childStats: (email: string) => apiFetch<any>(`/parent/child/stats/${encodeURIComponent(email)}`),
-    childAttendanceLogs: (email: string) =>
-      apiFetch<any[]>(`/parent/child/attendance-logs/${encodeURIComponent(email)}`),
-    childLeaves: (email: string) =>
-      apiFetch<any[]>(`/parent/child/leaves/${encodeURIComponent(email)}`),
-    submitAbsenceNotice: (data: { childEmail: string; reason: string; date?: string }) =>
-      apiFetch<{ success: boolean; message: string }>('/parent/child/absence-notice', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    linkStudent: (data: { student_email?: string; student_id?: string }) =>
-      apiFetch<{ success: boolean; message: string; student?: any }>('/parent/link-student', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-  },
-  devices: {
-    list: (signal?: AbortSignal) => apiFetch<{ success: boolean; count: number; devices: any[] }>('/sessions/devices', { signal }),
-    disconnect: (id: string) =>
-      apiFetch<{ success: boolean; message: string }>(`/sessions/devices/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      }),
-    logoutAll: () =>
-      apiFetch<{ success: boolean; message: string; revokedCount: number }>('/sessions/logout-all', {
-        method: 'POST',
-      }),
-  },
-  accuracy: {
-    metrics: (hours = 168) =>
-      apiFetch<{
-        success: boolean;
-        summary: {
-          totalAttempts: number;
-          successfulVerifications: number;
-          successRate: number;
-          overallAccuracy: number;
-          estimatedFar: number;
-          estimatedFrr: number;
-          biometricEngine: string;
-        };
-        failureBreakdown: Record<string, number>;
-        recentFailures: any[];
-      }>(`/api/v1/accuracy/metrics?hours=${hours}`),
-  },
-  superAdmin: {
-    colleges: async () => {
-      const res = await apiFetch<{ success: boolean; count: number; colleges: any[] }>('/api/v1/super-admin/colleges');
-      return {
-        ...res,
-        colleges: Array.isArray(res?.colleges)
-          ? res.colleges.map((c) => ({
-            ...c,
-            activeStudents: typeof c.activeStudents === 'number'
-              ? c.activeStudents
-              : (typeof c.studentCount === 'number' ? c.studentCount : 0),
-          }))
-          : [],
-      };
-    },
-    createCollege: (data: { name: string; code: string; plan?: string; adminEmail?: string }) =>
-      apiFetch('/api/v1/super-admin/colleges', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    admins: () => apiFetch<{ success: boolean; count: number; admins: any[] }>('/api/v1/super-admin/admins'),
-    globalAnalytics: () => apiFetch<{ success: boolean; platform: any }>('/api/v1/super-admin/global-analytics'),
-    globalAttendance: () => apiFetch<{ success: boolean; recentScans: any[] }>('/api/v1/super-admin/global-attendance'),
-    healthOverview: () => apiFetch<{ success: boolean; services: any }>('/api/v1/super-admin/health-overview'),
-    securityDashboard: () => apiFetch<{ success: boolean; recentAlerts: any[]; activeSessionsCount: number }>('/api/v1/super-admin/security-dashboard'),
-  },
-  notifications: {
-    list: (params: { type?: string; unread?: boolean; limit?: number } = {}, signal?: AbortSignal) => {
-      const qs = new URLSearchParams();
-      if (params.type && params.type !== 'all') qs.set('type', params.type);
-      if (params.unread) qs.set('unread', 'true');
-      if (params.limit) qs.set('limit', String(params.limit));
-      const str = qs.toString();
-      return apiFetch<{ notifications: any[]; unread_count: number; preferences: any }>(`/notifications${str ? `?${str}` : ''}`, { signal });
-    },
-    markRead: (id: string) =>
-      apiFetch<{ success: boolean; id: string; is_read: boolean }>(`/notifications/${encodeURIComponent(id)}/read`, {
-        method: 'PATCH',
-      }),
-    markAllRead: () =>
-      apiFetch<{ success: boolean; message: string }>('/notifications/read-all', {
-        method: 'PATCH',
-      }),
-  },
+        children: (signal?: AbortSignal) => apiFetch<any[]>('/parent/children', { signal }),
+        relationships: (signal?: AbortSignal) => apiFetch<{ relationships: any[] }>('/parent/relationships', { signal }),
+        revokeRelationship: (id: string, reason?: string) =>
+          apiFetch<{ success: boolean; status: string }>(`/parent/relationships/${encodeURIComponent(id)}/revoke`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
+          }),
+        redeemInvitation: (data: { code: string; relationship_type?: string }) =>
+          apiFetch<{ success: boolean; message: string; student?: any }>('/parent/invitations/redeem', {
+            method: 'POST',
+            body: JSON.stringify(data),
+          }),
+            childDashboard: (email: string, signal?: AbortSignal) =>
+              apiFetch<any>(`/parent/child/dashboard/${encodeURIComponent(email)}`, { signal }),
+            childStats: (email: string, signal?: AbortSignal) =>
+              apiFetch<any>(`/parent/child/stats/${encodeURIComponent(email)}`, { signal }),
+            childAttendanceLogs: (email: string, params?: Record<string, string | number>, signal?: AbortSignal) => {
+              const qs = params
+                ? '?' + new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v !== undefined).map(([k, v]) => [k, String(v)])).toString()
+                : '';
+              return apiFetch<any>(`/parent/child/attendance-logs/${encodeURIComponent(email)}${qs}`, { signal });
+            },
+            childTimetable: (email: string, signal?: AbortSignal) =>
+              apiFetch<any>(`/parent/child/timetable/${encodeURIComponent(email)}`, { signal }),
+            childLeaves: (email: string, signal?: AbortSignal) =>
+              apiFetch<any[]>(`/parent/child/leaves/${encodeURIComponent(email)}`, { signal }),
+            withdrawLeave: (leaveId: string) =>
+              apiFetch<{ success: boolean; status: string }>(`/parent/child/leaves/${encodeURIComponent(leaveId)}/withdraw`, {
+                method: 'POST',
+              }),
+            childDisputes: (email: string, signal?: AbortSignal) =>
+              apiFetch<{ disputes: any[] }>(`/parent/child/disputes/${encodeURIComponent(email)}`, { signal }),
+            submitDispute: (data: {
+              student_email: string;
+              session_id: string;
+              reason: string;
+              reason_category?: string;
+              requested_status?: string;
+              subject?: string;
+            }) =>
+              apiFetch<{ success: boolean; dispute: any }>('/attendance/disputes', {
+                method: 'POST',
+                body: JSON.stringify(data),
+              }),
+            contacts: (email: string, signal?: AbortSignal) =>
+              apiFetch<{ contacts: any[] }>(`/parent/contacts/${encodeURIComponent(email)}`, { signal }),
+            enquiries: (studentEmail?: string, signal?: AbortSignal) => {
+              const qs = studentEmail ? `?student_email=${encodeURIComponent(studentEmail)}` : '';
+              return apiFetch<{ enquiries: any[] }>(`/parent/enquiries${qs}`, { signal });
+            },
+            submitEnquiry: (data: { student_email: string; subject: string; category?: string; message: string }) =>
+              apiFetch<{ success: boolean; enquiry: any }>('/parent/enquiries', {
+                method: 'POST',
+                body: JSON.stringify(data),
+              }),
+            profile: (signal?: AbortSignal) => apiFetch<{ profile: any }>('/parent/profile', { signal }),
+            updateProfile: (data: Record<string, any>) =>
+              apiFetch<{ success: boolean; profile: any }>('/parent/profile', {
+                method: 'PATCH',
+                body: JSON.stringify(data),
+              }),
+            submitAbsenceNotice: (data: {
+              childEmail: string;
+              reason: string;
+              date?: string;
+              start_date?: string;
+              end_date?: string;
+              category?: string;
+              document_url?: string;
+              document_name?: string;
+            }) =>
+              apiFetch<{ success: boolean; message: string; leave?: any }>('/parent/child/absence-notice', {
+                method: 'POST',
+                body: JSON.stringify(data),
+              }),
+            linkStudent: (data: {
+              invitation_code?: string;
+              student_email?: string;
+              student_id?: string;
+              relationship_type?: string;
+            }) =>
+              apiFetch<{ success: boolean; status?: string; message: string; student?: any }>('/parent/link-student', {
+                method: 'POST',
+                body: JSON.stringify(data),
+              }),
+            downloadReport: (email: string, format: 'csv' | 'excel' | 'html', type = 'overall') =>
+              apiDownload(`/reports/student/${encodeURIComponent(email)}?format=${format}&type=${type}`, `ward_attendance_${type}.${format === 'excel' ? 'xls' : format}`),
+          },
+            devices: {
+            list: (signal?: AbortSignal) => apiFetch<{ success: boolean; count: number; devices: any[] }>('/sessions/devices', { signal }),
+            disconnect: (id: string) =>
+              apiFetch<{ success: boolean; message: string }>(`/sessions/devices/${encodeURIComponent(id)}`, {
+                method: 'DELETE',
+              }),
+            logoutAll: () =>
+              apiFetch<{ success: boolean; message: string; revokedCount: number }>('/sessions/logout-all', {
+                method: 'POST',
+              }),
+          },
+            accuracy: {
+            metrics: (hours = 168) =>
+              apiFetch<{
+                success: boolean;
+                summary: {
+                  totalAttempts: number;
+                  successfulVerifications: number;
+                  successRate: number;
+                  overallAccuracy: number;
+                  estimatedFar: number;
+                  estimatedFrr: number;
+                  biometricEngine: string;
+                };
+                failureBreakdown: Record<string, number>;
+                recentFailures: any[];
+              }>(`/api/v1/accuracy/metrics?hours=${hours}`),
+          },
+            superAdmin: {
+            colleges: async () => {
+              const res = await apiFetch<{ success: boolean; count: number; colleges: any[] }>('/api/v1/super-admin/colleges');
+              return {
+                ...res,
+                colleges: Array.isArray(res?.colleges)
+                  ? res.colleges.map((c) => ({
+                    ...c,
+                    activeStudents: typeof c.activeStudents === 'number'
+                      ? c.activeStudents
+                      : (typeof c.studentCount === 'number' ? c.studentCount : 0),
+                  }))
+                  : [],
+              };
+            },
+            createCollege: (data: { name: string; code: string; plan?: string; adminEmail?: string }) =>
+              apiFetch('/api/v1/super-admin/colleges', {
+                method: 'POST',
+                body: JSON.stringify(data),
+              }),
+            admins: () => apiFetch<{ success: boolean; count: number; admins: any[] }>('/api/v1/super-admin/admins'),
+            globalAnalytics: () => apiFetch<{ success: boolean; platform: any }>('/api/v1/super-admin/global-analytics'),
+            globalAttendance: () => apiFetch<{ success: boolean; recentScans: any[] }>('/api/v1/super-admin/global-attendance'),
+            healthOverview: () => apiFetch<{ success: boolean; services: any }>('/api/v1/super-admin/health-overview'),
+            securityDashboard: () => apiFetch<{ success: boolean; recentAlerts: any[]; activeSessionsCount: number }>('/api/v1/super-admin/security-dashboard'),
+          },
+            notifications: {
+            list: (params: { type?: string; unread?: boolean; limit?: number } = {}, signal?: AbortSignal) => {
+              const qs = new URLSearchParams();
+              if (params.type && params.type !== 'all') qs.set('type', params.type);
+              if (params.unread) qs.set('unread', 'true');
+              if (params.limit) qs.set('limit', String(params.limit));
+              const str = qs.toString();
+              return apiFetch<{ notifications: any[]; unread_count: number; preferences: any }>(`/notifications${str ? `?${str}` : ''}`, { signal });
+            },
+            markRead: (id: string) =>
+              apiFetch<{ success: boolean; id: string; is_read: boolean }>(`/notifications/${encodeURIComponent(id)}/read`, {
+                method: 'PATCH',
+              }),
+            markAllRead: () =>
+              apiFetch<{ success: boolean; message: string }>('/notifications/read-all', {
+                method: 'PATCH',
+              }),
+          },
 };
