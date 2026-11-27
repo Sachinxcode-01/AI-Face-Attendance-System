@@ -43,7 +43,7 @@ export default function TeacherAiChatPage() {
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
-  const [language, setLanguage] = useState('English');
+  const [language, setLanguage] = useState<'en' | 'hi' | 'kn'>('en');
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -132,13 +132,13 @@ export default function TeacherAiChatPage() {
           <div className="flex items-center gap-2">
             <select
               value={language}
-              onChange={(e) => setLanguage(e.target.value)}
+              onChange={(e) => setLanguage(e.target.value as 'en' | 'hi' | 'kn')}
               aria-label="Response language"
               className="rounded-full border border-white/10 bg-[#101016] px-3 py-2 text-xs text-hi"
             >
-              <option value="English">English</option>
-              <option value="Hindi">Hindi</option>
-              <option value="Kannada">Kannada</option>
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
+              <option value="kn">Kannada</option>
             </select>
             <Button
               variant="secondary"
@@ -172,11 +172,10 @@ export default function TeacherAiChatPage() {
               {conversations.map((c: { id: string; title?: string; updated_at?: string; messages?: Array<{ role: string; content: string }> }) => (
                 <div
                   key={c.id}
-                  className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs transition ${
-                    conversationId === c.id
+                  className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs transition ${conversationId === c.id
                       ? 'border-accent/40 bg-accent/10 text-hi'
                       : 'border-white/5 bg-white/[0.02] text-mid hover:border-white/15'
-                  }`}
+                    }`}
                 >
                   <button
                     onClick={() => loadConversation(c)}
@@ -232,11 +231,10 @@ export default function TeacherAiChatPage() {
               messages.map((m, i) => (
                 <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed whitespace-pre-wrap ${
-                      m.role === 'user'
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed whitespace-pre-wrap ${m.role === 'user'
                         ? 'bg-accent text-black font-medium'
                         : 'border border-white/10 bg-white/[0.04] text-hi'
-                    }`}
+                      }`}
                   >
                     {m.content}
                     {m.role === 'assistant' && m.responseId && (

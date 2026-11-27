@@ -334,14 +334,81 @@ export const api = {
     auditLogs: () => apiFetch('/attendance/audit-logs'),
   },
   ai: {
-    chat: (message: string, language = 'en', opts: { conversationId?: string; history?: Array<{ role: string; content: string }>; currentRoute?: string } = {}) =>
-      apiFetch<{ success: boolean; conversationId: string; reply: string; message?: any; suggestedActions?: any[] }>('/ai/chat', {
+    chat: (message: string, language = 'en', opts: { conversationId?: string; history?: Array<{ role: string; content: string }>; currentRoute?: string; student_email?: string } = {}) =>
+      apiFetch<{ success: boolean; conversationId: string; reply: string; message?: any; suggestedActions?: any[]; sources?: any[] }>('/ai/chat', {
         method: 'POST',
         body: JSON.stringify({ message, language, ...opts }),
       }),
+    streamChat: async (
+      message: string,
+      language = 'en',
+      opts: {
+        conversationId?: string;
+        history?: Array<{ role: string; content: string }>;
+        currentRoute?: string;
+        student_email?: string;
+        signal?: AbortSignal;
+        onDelta?: (text: string) => void;
+        onStatus?: (status: { stage?: string; intent?: string }) => void;
+        onDone?: (payload: any) => void;
+      } = {}
+    ) => {
+      const token = getToken();
+      const { signal, onDelta, onStatus, onDone, ...bodyOpts } = opts;
+      const res = await fetch(`${BASE_URL}/ai/chat/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        signal,
+        body: JSON.stringify({ message, language, ...bodyOpts }),
+      });
+      if (!res.ok || !res.body) {
+        const err = await res.json().catch(() => ({}));
+        throw new ApiError(err?.detail || 'Streaming request failed', res.status);
+      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      let finalPayload: any = null;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const frames = buffer.split('\n\n');
+        buffer = frames.pop() || '';
+        for (const frame of frames) {
+          const eventLine = frame.split('\n').find((l) => l.startsWith('event:'));
+          const dataLine = frame.split('\n').find((l) => l.startsWith('data:'));
+          if (!dataLine) continue;
+          const eventName = eventLine ? eventLine.slice(6).trim() : 'message';
+          const parsed = JSON.parse(dataLine.slice(5).trim());
+          if (eventName === 'delta' && parsed?.text) onDelta?.(parsed.text);
+          else if (eventName === 'status') onStatus?.(parsed);
+          else if (eventName === 'done') {
+            finalPayload = parsed;
+            onDone?.(parsed);
+          } else if (eventName === 'error') {
+            throw new ApiError(parsed?.detail || 'Stream error', 400);
+          }
+        }
+      }
+      return finalPayload;
+    },
     conversations: (signal?: AbortSignal) => apiFetch<{ conversations: any[] }>('/ai/conversations', { signal }),
+    updateConversation: (id: string, data: { title?: string; archived?: boolean }) =>
+      apiFetch<{ success: boolean; conversation: any }>(`/ai/conversations/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
     deleteConversation: (id: string) =>
       apiFetch<{ success: boolean }>(`/ai/conversations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    confirmAction: (actionId: string) =>
+      apiFetch<{ success: boolean; status: string; result?: any }>(`/ai/actions/${encodeURIComponent(actionId)}/confirm`, {
+        method: 'POST',
+      }),
     feedback: (data: { responseId: string; rating: 'helpful' | 'not_helpful'; category?: string; feedback?: string; currentRoute?: string }) =>
       apiFetch<{ success: boolean; feedbackId: string }>('/ai/feedback', {
         method: 'POST',

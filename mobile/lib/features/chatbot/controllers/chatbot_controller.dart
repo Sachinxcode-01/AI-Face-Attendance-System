@@ -20,6 +20,8 @@ class ChatbotController extends ChangeNotifier {
   bool _isLoading = false;
   int _unreadCount = 0;
   bool _hasSeenNotice = false;
+  String? _conversationId;
+  String _language = 'en';
   Future<void>? _initFuture;
 
   List<ChatMessage> _messages = [];
@@ -31,7 +33,14 @@ class ChatbotController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   int get unreadCount => _unreadCount;
   bool get hasSeenNotice => _hasSeenNotice;
+  String? get conversationId => _conversationId;
+  String get language => _language;
   List<ChatMessage> get messages => List.unmodifiable(_messages);
+
+  void setLanguage(String langCode) {
+    _language = langCode;
+    notifyListeners();
+  }
 
   ChatbotController() {
     init();
@@ -194,8 +203,14 @@ class ChatbotController extends ChangeNotifier {
         message: text.trim(),
         history: historyPayload,
         currentRoute: currentRoute,
+        conversationId: _conversationId,
+        language: _language,
         token: token,
       );
+
+      if (res['conversationId'] is String && (res['conversationId'] as String).isNotEmpty) {
+        _conversationId = res['conversationId'] as String;
+      }
 
       final String replyContent =
           (res['reply'] ??
@@ -245,6 +260,7 @@ class ChatbotController extends ChangeNotifier {
 
   Future<void> clearMessages() async {
     _messages.clear();
+    _conversationId = null;
     _unreadCount = 0;
     notifyListeners();
 

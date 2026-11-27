@@ -12,6 +12,7 @@ export default function AdminNexaAiPage() {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
     { role: 'assistant', content: 'Hello! I am Nexa AI, your institutional administration copilot. Ask me about active sessions, pending disputes, leaves, security alerts, or attendance policies.' },
   ]);
+  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -20,10 +21,16 @@ export default function AdminNexaAiPage() {
     if (!input.trim() || sending) return;
     const text = input.trim();
     setInput('');
+    const nextHistory = messages.slice(-8).map((m) => ({ role: m.role, content: m.content }));
     setMessages((prev) => [...prev, { role: 'user', content: text }]);
     setSending(true);
     try {
-      const res = await api.ai.chat(text, 'en', { currentRoute: '/admin/ai-chat' });
+      const res = await api.ai.chat(text, 'en', {
+        conversationId,
+        history: nextHistory,
+        currentRoute: '/admin/ai-chat',
+      });
+      if (res.conversationId) setConversationId(res.conversationId);
       setMessages((prev) => [...prev, { role: 'assistant', content: res.reply || 'No response received.' }]);
     } catch (err: any) {
       setMessages((prev) => [...prev, { role: 'assistant', content: err?.message || 'Unable to reach Nexa AI.' }]);

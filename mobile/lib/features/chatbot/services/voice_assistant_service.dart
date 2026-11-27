@@ -17,10 +17,42 @@ class VoiceAssistantService {
   bool _isListening = false;
   bool _isSpeaking = false;
   String? _currentlySpeakingId;
+  String _languageCode = 'en';
 
   bool get isListening => _isListening;
   bool get isSpeaking => _isSpeaking;
   String? get currentlySpeakingId => _currentlySpeakingId;
+  String get languageCode => _languageCode;
+
+  static String _toTtsLocale(String code) {
+    switch (code.toLowerCase()) {
+      case 'kn':
+        return 'kn-IN';
+      case 'hi':
+        return 'hi-IN';
+      default:
+        return 'en-IN';
+    }
+  }
+
+  /// Updates active TTS/STT language ('en', 'hi', 'kn').
+  Future<void> setLanguage(String code) async {
+    _languageCode = code;
+    try {
+      await _tts.setLanguage(_toTtsLocale(code));
+    } catch (e) {
+      debugPrint('[VoiceAssistantService] setLanguage failed: $e');
+    }
+  }
+
+  /// Adjusts TTS speech rate (0.25 to 1.0+).
+  Future<void> setSpeechRate(double rate) async {
+    try {
+      await _tts.setSpeechRate(rate.clamp(0.25, 1.5));
+    } catch (e) {
+      debugPrint('[VoiceAssistantService] setSpeechRate failed: $e');
+    }
+  }
 
   /// Initializes the on-device TTS engine with default voice attributes.
   Future<void> initTts() async {
@@ -98,6 +130,7 @@ class VoiceAssistantService {
         onResult: (result) {
           onResult(result.recognizedWords);
         },
+        localeId: _toTtsLocale(_languageCode),
         listenOptions: stt.SpeechListenOptions(
           listenFor: const Duration(seconds: 30),
           pauseFor: const Duration(seconds: 3),
