@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserProfile, UserRole } from '@/lib/types';
-import { setAuthCookies, clearAuth, getStoredUser, getRole, isAuthenticated, DEMO_ACCOUNTS, getRoleRedirectPath } from '@/lib/auth';
+import { setAuthCookies, clearAuth, getStoredUser, getRole, isAuthenticated, getRoleRedirectPath } from '@/lib/auth';
 import { api, ApiError, resolveMediaUrl } from '@/lib/api';
 import { queryClient } from '@/core/query/queryClient';
 
@@ -13,7 +13,11 @@ interface AuthContextValue {
   authed: boolean;
   loading: boolean;
   login: (role: UserRole) => void;
-  loginWithCredentials: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithCredentials: (
+    email: string,
+    password: string,
+    rememberMe?: boolean
+  ) => Promise<{ success: boolean; role?: UserRole; mfaRequired?: boolean; mfaToken?: string; error?: string }>;
   loginWithToken: (data: { access_token: string; role?: string; full_name?: string; email?: string; user_id?: string; profilePhotoUrl?: string }) => void;
   register: (data: { email: string; password: string; full_name: string; role: UserRole }) => Promise<{ success: boolean; error?: string }>;
   updateUser: (partial: Partial<UserProfile>) => void;
@@ -107,58 +111,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (selectedRole: UserRole) => {
-      const acc = DEMO_ACCOUNTS[selectedRole];
-      if (!acc) return;
       try {
-        const data = await api.auth.login(acc.email, acc.password);
-        if (data && data.access_token) {
-          const userRole = (data.role?.toLowerCase() as UserRole) || selectedRole;
-          const profile = mapApiUserToProfile(
-            { ...data, email: data.email || acc.email, full_name: data.full_name || acc.name },
-            userRole
-          );
-          queryClient.clear();
-          setAuthCookies(data.access_token, userRole, profile);
-          setUser(profile);
-          setRole(userRole);
-          setAuthed(true);
-          await refreshProfile();
-          router.push(getRoleRedirectPath(userRole));
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/demo-env/launch-session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ environmentId: 'apex_tech', role: selectedRole }),
+          });
+          const data = await res.json();
+          if (data && data.token) {
+            const userRole = (data.persona?.role?.toLowerCase() as UserRole) || selectedRole;
+            const profile = mapApiUserToProfile(
+              { email: data.persona?.email, full_name: data.persona?.name },
+              userRole
+            );
+            queryClient.clear();
+            setAuthCookies(data.token, userRole, profile);
+            setUser(profile);
+            setRole(userRole);
+            setAuthed(true);
+            router.push(getRoleRedirectPath(userRole));
+          }
+        } catch (err) {
+          console.error('Demo login unavailable:', err);
         }
-      } catch (err) {
-        console.error('Login error:', err);
-      }
-    },
-    [router, refreshProfile]
+      },
+      [router]
   );
 
   const loginWithCredentials = useCallback(
-    async (email: string, password: string): Promise<{ success: boolean; role?: UserRole; error?: string }> => {
-      const normalized = email.trim().toLowerCase();
+      async (
+        email: string,
+        password: string,
+        rememberMe = false
+      ): Promise<{ success: boolean; role?: UserRole; mfaRequired?: boolean; mfaToken?: string; error?: string }> => {
+        const normalized = email.trim().toLowerCase();
 
-      try {
-        const data = await api.auth.login(normalized, password);
-        if (data && data.access_token) {
-          const userRole = (data.role?.toLowerCase() as UserRole) || 'student';
-          const profile = mapApiUserToProfile(
-            { ...data, email: data.email || normalized, full_name: data.full_name || email.split('@')[0] },
-            userRole
-          );
-          queryClient.clear();
-          setAuthCookies(data.access_token, userRole, profile);
-          setUser(profile);
-          setRole(userRole);
-          setAuthed(true);
-          refreshProfile();
-          return { success: true, role: userRole };
+        try {
+          const data = await api.auth.login(normalized, password, rememberMe);
+          if (data && data.mfa_required && data.mfa_token) {
+            return { success: false, mfaRequired: true, mfaToken: data.mfa_token };
+          }
+          if (data && data.access_token) {
+            const userRole = (data.role?.toLowerCase() as UserRole) || 'student';
+            const profile = mapApiUserToProfile(
+              { ...data, email: data.email || normalized, full_name: data.full_name || email.split('@')[0] },
+              userRole
+            );
+            queryClient.clear();
+            setAuthCookies(data.access_token, userRole, profile);
+            setUser(profile);
+            setRole(userRole);
+            setAuthed(true);
+            refreshProfile();
+            return { success: true, role: userRole };
+          }
+          return { success: false, error: 'Unable to sign in. Check your credentials and try again.' };
+        } catch (err: unknown) {
+          const msg = err instanceof ApiError ? err.message : 'Unable to sign in. Check your credentials and try again.';
+          return { success: false, error: msg };
         }
-        return { success: false, error: 'Authentication failed: No access token issued.' };
-      } catch (err: unknown) {
-        const msg = err instanceof ApiError ? err.message : 'Invalid credentials. Please check your email and password.';
-        return { success: false, error: msg };
-      }
-    },
-    [refreshProfile]
+      },
+        [refreshProfile]
   );
 
   const register = useCallback(
@@ -212,28 +225,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   return (
-      <AuthContext.Provider value={{ user, role, authed, loading, login, loginWithCredentials, loginWithToken, register, updateUser, refreshProfile, logout }}>
-        {children}
-      </AuthContext.Provider>
-      );
+    <AuthContext.Provider value={{ user, role, authed, loading, login, loginWithCredentials, loginWithToken, register, updateUser, refreshProfile, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-      export function useAuth(): AuthContextValue {
+export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-      if (!ctx) {
+  if (!ctx) {
     return {
-        user: null,
+      user: null,
       role: null,
       authed: false,
       loading: true,
       login: () => { },
-      loginWithCredentials: async () => ({success: false }),
+      loginWithCredentials: async () => ({ success: false }),
       loginWithToken: () => { },
-      register: async () => ({success: false }),
+      register: async () => ({ success: false }),
       updateUser: () => { },
       refreshProfile: async () => { },
       logout: () => { },
     };
   }
-      return ctx;
+  return ctx;
 }

@@ -246,6 +246,12 @@ router.patch('/:id/withdraw', authenticate, requireRole(['student', 'parent']), 
 
     if (req.userRole === 'student' && leave.user_id.toLowerCase() !== req.userEmail.toLowerCase()) {
       return res.status(403).json({ detail: 'Forbidden: cannot withdraw another student\'s leave request.' });
+    } else if (req.userRole === 'parent') {
+      const { authorizeWardAccess } = require('../services/guardianService');
+      const authz = await authorizeWardAccess(req, leave.user_id, 'submit_leave');
+      if (!authz.allowed) {
+        return res.status(403).json({ detail: 'Forbidden: not authorized for this student.' });
+      }
     }
 
     const user = await User.findOne({ email: leave.user_id }, 'college_id college').lean();

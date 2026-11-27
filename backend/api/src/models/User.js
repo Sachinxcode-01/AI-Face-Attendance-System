@@ -71,11 +71,33 @@ const UserSchema = new mongoose.Schema({
   assigned_subjects: { type: [String], default: [] },
   assigned_sections: { type: [String], default: [] },
   permissions_override: { type: [String], default: [] },
+  oauth_providers: [{
+    provider: { type: String, enum: ['google', 'github'] },
+    provider_user_id: { type: String },
+    email: { type: String },
+    linked_at: { type: Date, default: Date.now }
+  }],
+  mfa: {
+    enabled: { type: Boolean, default: false },
+    totp_secret_encrypted: { type: String },
+    recovery_code_hashes: { type: [String], default: [] },
+    enrolled_at: { type: Date }
+  },
+  institutions: [{
+    college_id: { type: String },
+    college_name: { type: String },
+    role: { type: String },
+    department: { type: String },
+    status: { type: String, enum: ['active', 'revoked', 'pending'], default: 'active' }
+  }],
+  password_changed_at: { type: Date },
+  last_login_at: { type: Date },
   created_at: { type: Date, default: Date.now }
 });
 
 UserSchema.index({ email: 1, role: 1 });
 UserSchema.index({ college_id: 1, role: 1, account_status: 1 });
 UserSchema.index({ college: 1, role: 1 });
+UserSchema.index({ 'oauth_providers.provider': 1, 'oauth_providers.provider_user_id': 1 });
 
 module.exports = mongoose.model('User', UserSchema, 'users');

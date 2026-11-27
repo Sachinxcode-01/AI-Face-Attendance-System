@@ -37,7 +37,7 @@ async function processDueScheduledAnnouncements(now = new Date()) {
         scope: claimed.target_scope,
         recipients: claimed.delivery_stats?.recipients || 0,
       },
-    }).catch(() => {});
+    }).catch(() => { });
     processed++;
   }
   return processed;
@@ -49,7 +49,7 @@ function initScheduledJobs() {
   // 1. Cleanup expired OTPs every hour
   cron.schedule('0 * * * *', async () => {
     try {
-      const result = await Otp.deleteMany({ expires_at: { $lt: new Date() } });
+      const result = await Otp.deleteMany({ expiry: { $lt: new Date() } });
       if (result.deletedCount > 0) {
         console.log(`[Cron] Cleaned up ${result.deletedCount} expired OTPs`);
       }

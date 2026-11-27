@@ -19,66 +19,76 @@ const ALLOWED_INCIDENT_STATUSES = new Set([
 // ─── POST /security/intruder-alert ────────────────────────────────
 router.post('/intruder-alert', async (req, res) => {
   try {
+    const crypto = require('crypto');
     const expectedToken = process.env.FACE_SCANNER_TOKEN;
     const clientToken = req.headers['token'] || req.headers['authorization']?.split(' ')[1] || req.headers['x-face-scanner-token'];
 
     let authorized = false;
-    if (expectedToken && expectedToken.trim() !== '' && clientToken === expectedToken) {
-      authorized = true;
-    }
-
-    if (!authorized) {
-      const authHeader = req.headers['authorization'];
-      if (authHeader) {
-        const jwtToken = authHeader.split(' ')[1];
-        const AuthService = require('../services/authService');
-        const payload = AuthService.decodeToken(jwtToken);
-        if (payload && (payload.role === 'admin' || payload.role === 'teacher' || payload.role === 'hod' || payload.role === 'principal' || payload.role === 'management')) {
+      if (expectedToken && expectedToken.trim() !== '' && typeof clientToken === 'string') {
+        const a = Buffer.from(clientToken, 'utf8');
+        const b = Buffer.from(expectedToken, 'utf8');
+        if (a.length === b.length && crypto.timingSafeEqual(a, b)) {
           authorized = true;
         }
       }
-    }
 
-    if (!authorized) {
-      return res.status(401).json({ detail: "Unauthorized scanner or session key" });
-    }
+      if (!authorized) {
+        const authHeader = req.headers['authorization'];
+        if (authHeader) {
+          const jwtToken = authHeader.split(' ')[1];
+          const AuthService = require('../services/authService');
+          const UserSession = require('../models/UserSession');
+          const payload = AuthService.decodeToken(jwtToken);
+            if (payload && !payload.isDemo && !payload.mfa_pending && ['admin', 'super_admin', 'teacher', 'hod', 'principal', 'management'].includes((payload.role || '').toLowerCase())) {
+              const tokenHash = crypto.createHash('sha256').update(jwtToken).digest('hex');
+              const session = await UserSession.findOne({ tokenHash }).lean();
+              if (session && new Date() <= session.expiry) {
+                authorized = true;
+              }
+            }
+          }
+        }
 
-    const { location, camera_id, type, image_base64 } = req.body;
-    const alertLocation = location || camera_id || "Unknown Location";
-    const alertType = type || "intruder";
-    const timestamp = new Date();
+        if (!authorized) {
+          return res.status(401).json({ detail: "Unauthorized scanner or session key" });
+        }
 
-    const newLog = new SecurityLog({
-      location: alertLocation,
-      type: alertType,
-      timestamp,
-      image_base64
+        const { location, camera_id, type, image_base64 } = req.body;
+        const alertLocation = location || camera_id || "Unknown Location";
+        const alertType = type || "intruder";
+        const timestamp = new Date();
+
+        const newLog = new SecurityLog({
+          location: alertLocation,
+          type: alertType,
+          timestamp,
+          image_base64
+        });
+
+        await newLog.save();
+
+        // Create admin notification
+        trackJob(notificationService.createNotification(
+          "admin",
+          "SECURITY ALERT",
+          `Unknown person detected at ${alertLocation}`,
+          "intruder_alert",
+          "Critical",
+          { location: alertLocation }
+        ).catch(console.error));
+
+        // Send email to admin in background if configured
+        const adminEmail = process.env.ADMIN_EMAIL;
+        if (adminEmail) {
+          const formattedDate = timestamp.toISOString().replace('T', ' ').substring(0, 19);
+          trackJob(EmailService.sendIntruderAlert(adminEmail, formattedDate, alertLocation).catch(console.error));
+        }
+
+        res.json({ status: "alert_sent" });
+      } catch (error) {
+        reportInternalError(res, error, 'Security');
+      }
     });
-
-    await newLog.save();
-
-    // Create admin notification
-    trackJob(notificationService.createNotification(
-      "admin",
-      "SECURITY ALERT",
-      `Unknown person detected at ${alertLocation}`,
-      "intruder_alert",
-      "Critical",
-      { location: alertLocation }
-    ).catch(console.error));
-
-    // Send email to admin in background if configured
-    const adminEmail = process.env.ADMIN_EMAIL;
-    if (adminEmail) {
-      const formattedDate = timestamp.toISOString().replace('T', ' ').substring(0, 19);
-      trackJob(EmailService.sendIntruderAlert(adminEmail, formattedDate, alertLocation).catch(console.error));
-    }
-
-    res.json({ status: "alert_sent" });
-  } catch (error) {
-    reportInternalError(res, error, 'Security');
-  }
-});
 
 // ─── GET /security/logs ───────────────────────────────────────────
 router.get('/logs', authenticate, requireRole(['admin', 'super_admin', 'hod', 'principal']), async (req, res) => {

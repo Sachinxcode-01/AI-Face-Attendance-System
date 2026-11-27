@@ -9,11 +9,14 @@ from fastapi import HTTPException, Depends, Security
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("SECRET_KEY", "smartface_ultra_secure_secret_999")
+SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY or JWT_SECRET environment variable must be set")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 class AuthService:
     @staticmethod
@@ -46,11 +49,12 @@ class AuthService:
     @staticmethod
     async def get_current_user(auth: HTTPAuthorizationCredentials = Security(HTTPBearer())):
         from src.config.database import db
+
         # Check if token is blocklisted
         revoked = await db.revoked_tokens.find_one({"token": auth.credentials})
         if revoked:
             raise HTTPException(status_code=401, detail="Token has been revoked")
-            
+
         payload = AuthService.decode_token(auth.credentials)
         if not payload:
             raise HTTPException(status_code=401, detail="Invalid or expired token")

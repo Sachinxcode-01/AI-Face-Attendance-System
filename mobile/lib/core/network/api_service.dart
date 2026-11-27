@@ -318,38 +318,32 @@ class ApiService {
       return normalizeAuthResponse(_processResponse(response));
     } catch (e) {
       debugPrint('[ApiService] Primary login failed on $baseUrl: $e');
-      // If primary failed with timeout or socket exception, try fallback to 127.0.0.1:8000 (ADB reverse) or 10.177.216.48:8000
-      final altUrls = <String>[];
-      if (!baseUrl.contains('127.0.0.1') && !baseUrl.contains('localhost')) {
-        altUrls.add('http://127.0.0.1:8000');
-      }
-      if (!baseUrl.contains('10.177.216.48')) {
-        altUrls.add('http://10.177.216.48:8000');
-      }
+      // Only allow local cleartext fallback in non-release builds
+      if (!const bool.fromEnvironment('dart.vm.product')) {
+        final altUrls = <String>[];
+        if (!baseUrl.contains('127.0.0.1') && !baseUrl.contains('localhost')) {
+          altUrls.add('http://127.0.0.1:8000');
+        }
 
-      for (final altUrl in altUrls) {
-        try {
-          debugPrint('[ApiService] Trying fallback check on $altUrl...');
-          final healthCheck = await client
-              .get(Uri.parse('$altUrl/health'))
-              .timeout(const Duration(seconds: 3));
-          if (healthCheck.statusCode == 200) {
-            debugPrint(
-              '[ApiService] ✅ Alt URL $altUrl is online! Retrying login with $altUrl',
-            );
-            EnvConfig.updateApiUrl(altUrl);
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('saved_api_url', altUrl);
-            final response = await client
-                .post(
-                  Uri.parse('$altUrl/auth/login'),
-                  headers: {'Content-Type': 'application/json'},
-                  body: jsonEncode({'email': email, 'password': password}),
-                )
-                .timeout(const Duration(seconds: 10));
-            return normalizeAuthResponse(_processResponse(response));
-          }
-        } catch (_) {}
+        for (final altUrl in altUrls) {
+          try {
+            debugPrint('[ApiService] Trying debug fallback check on $altUrl...');
+            final healthCheck = await client
+                .get(Uri.parse('$altUrl/health'))
+                .timeout(const Duration(seconds: 3));
+            if (healthCheck.statusCode == 200) {
+              EnvConfig.updateApiUrl(altUrl);
+              final response = await client
+                  .post(
+                    Uri.parse('$altUrl/auth/login'),
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({'email': email, 'password': password}),
+                  )
+                  .timeout(const Duration(seconds: 10));
+              return normalizeAuthResponse(_processResponse(response));
+            }
+          } catch (_) {}
+        }
       }
 
       return _classifyNetworkError(e);

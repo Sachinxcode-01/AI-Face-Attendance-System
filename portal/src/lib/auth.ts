@@ -6,24 +6,36 @@ const TOKEN_KEY = 'sf_token';
 const ROLE_KEY = 'sf_role';
 const USER_KEY = 'sf_user';
 
-export const DEMO_ACCOUNTS: Record<
-  UserRole,
-  { email: string; password: string; name: string }
-> = {
-  student: { email: 'bob@smartface.pro', password: 'Student@2026', name: 'Bob Dylan' },
-  teacher: { email: 'teacher@smartface.pro', password: 'Teacher@2026', name: 'Prof. Marcus Vance' },
-  admin: { email: 'admin@smartface.pro', password: 'Admin@2026', name: 'System Administrator' },
-  parent: { email: 'parent@smartface.pro', password: 'Parent@2026', name: 'Robert Cooper' },
-  super_admin: { email: 'superadmin@smartface.pro', password: 'SuperAdmin@2026', name: 'Dr. Evelyn Cross' },
-};
+const VALID_ROLES = new Set<string>(['student', 'teacher', 'admin', 'parent', 'super_admin']);
 
 export function setAuthCookies(token: string, role: UserRole, user: UserProfile) {
-  document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=86400; SameSite=Lax`;
-  document.cookie = `${ROLE_KEY}=${role}; path=/; max-age=86400; SameSite=Lax`;
-  document.cookie = `${USER_KEY}=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=86400; SameSite=Lax`;
+  const secureFlag = typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=86400; SameSite=Lax${secureFlag}`;
+  document.cookie = `${ROLE_KEY}=${role}; path=/; max-age=86400; SameSite=Lax${secureFlag}`;
+  document.cookie = `${USER_KEY}=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=86400; SameSite=Lax${secureFlag}`;
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(ROLE_KEY, role);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+export function getSafeRedirectPath(from: string | null | undefined, fallback: string): string {
+  if (!from || typeof from !== 'string') return fallback;
+  const trimmed = from.trim();
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.startsWith('/\\')) {
+    return fallback;
+  }
+  try {
+    const base = typeof window !== 'undefined' ? window.location.origin : 'https://smartface.local';
+    const resolved = new URL(trimmed, base);
+    if (resolved.origin !== base) return fallback;
+    return `${resolved.pathname}${resolved.search}${resolved.hash}`;
+  } catch {
+    return fallback;
+  }
+}
+
+export function isValidUserRole(role: string | null | undefined): role is UserRole {
+  return Boolean(role && VALID_ROLES.has(role));
 }
 
 export function clearAuth() {

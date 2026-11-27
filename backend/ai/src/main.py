@@ -669,70 +669,10 @@ async def verify_login_otp(request: OTPVerification, req: Request, background_ta
 @app.post("/auth/google-login", response_model=Token)
 @app.post("/auth/google", response_model=Token)
 async def google_login(request: GoogleLoginRequest, req: Request):
-    user = await users_collection.find_one({"email": request.email})
-    biometric_registered = False
-    setup_completed = False
-    profile_completed = False
-    intro_completed = False
-    wizard_step = 0
-    full_name = request.name
-    avatar_url = request.avatar_url
-    
-    if not user:
-        user_dict = {
-            "email": request.email,
-            "full_name": request.name,
-            "role": request.role.lower(),
-            "avatar_url": request.avatar_url,
-            "created_at": datetime.now(timezone.utc),
-            "biometric_registered": False,
-            "setup_completed": False,
-            "profile_completed": False,
-            "intro_completed": False,
-            "wizard_step": 0
-        }
-        await users_collection.insert_one(user_dict)
-        role = request.role.lower()
-    else:
-        role = user.get("role", "student")
-        biometric_registered = user.get("biometric_registered", False)
-        setup_completed = user.get("setup_completed", False)
-        profile_completed = user.get("profile_completed", False)
-        intro_completed = user.get("intro_completed", False)
-        wizard_step = user.get("wizard_step", 0)
-        full_name = user.get("full_name", request.name)
-        avatar_url = user.get("avatar_url", request.avatar_url)
-        # Update avatar URL if it is provided and user has no avatar URL
-        if request.avatar_url and not user.get("avatar_url"):
-            await users_collection.update_one(
-                {"email": request.email},
-                {"$set": {"avatar_url": request.avatar_url}}
-            )
-            avatar_url = request.avatar_url
-        
-    token_expire = timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 1440)))
-    access_token = AuthService.create_access_token(
-        data={"sub": request.email, "role": role},
-        expires_delta=token_expire
+    raise HTTPException(
+        status_code=410,
+        detail="Legacy unverified Google login is disabled. Use the authoritative /api/v1/auth/google endpoint with a verified idToken."
     )
-    
-    # Track device & session logs
-    await record_login_attempt(request.email, "Success", req, role)
-    await create_user_session(request.email, access_token, req)
-    await log_audit_action(request.email, "Login (Google)", f"Logged in via Google Sign-In from IP {req.client.host if req.client else 'unknown'}")
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "role": role,
-        "biometric_registered": biometric_registered,
-        "setup_completed": setup_completed,
-        "profile_completed": profile_completed,
-        "intro_completed": intro_completed,
-        "wizard_step": wizard_step,
-        "full_name": full_name,
-        "avatar_url": avatar_url
-    }
 
 @app.post("/auth/login", response_model=Token)
 @app.post("/auth/login-password", response_model=Token)
@@ -967,12 +907,16 @@ async def forgot_password(email_data: dict, background_tasks: BackgroundTasks):
     return {"success": True, "message": "If the account exists, a verification code has been sent."}
 
 @app.post("/security/intruder-alert")
-async def intruder_alert(data: IntruderAlert, background_tasks: BackgroundTasks):
+async def intruder_alert(data: IntruderAlert, req: Request, background_tasks: BackgroundTasks):
+    import hmac as _hmac
+    expected_token = os.getenv("FACE_SCANNER_TOKEN", "")
+    supplied = req.headers.get("token") or req.headers.get("x-face-scanner-token") or ""
+    if not expected_token or not _hmac.compare_digest(supplied, expected_token):
+        raise HTTPException(status_code=401, detail="Unauthorized scanner token")
     location = data.location or data.camera_id or "Unknown Location"
     alert_type = data.type or "intruder"
     timestamp = datetime.now(timezone.utc)
     
-    # Save to security logs collection in db
     await db.security_logs.insert_one({
         "location": location,
         "type": alert_type,
@@ -980,7 +924,6 @@ async def intruder_alert(data: IntruderAlert, background_tasks: BackgroundTasks)
         "image_base64": data.image_base64
     })
     
-    # Save notification for admin and broadcast
     await create_notification(
         "admin",
         "SECURITY ALERT",
@@ -990,18 +933,22 @@ async def intruder_alert(data: IntruderAlert, background_tasks: BackgroundTasks)
         {"location": location}
     )
     
-    # Send email to admin
-    background_tasks.add_task(
-        EmailService.send_intruder_alert,
-        "saxhin0708@gmail.com",
-        timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-        location
-    )
+    admin_email = os.getenv("ADMIN_EMAIL")
+    if admin_email:
+        background_tasks.add_task(
+            EmailService.send_intruder_alert,
+            admin_email,
+            timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            location
+        )
     
     return {"status": "alert_sent"}
 
 @app.get("/security/logs")
-async def get_security_logs():
+async def get_security_logs(current_user: str = Depends(AuthService.get_current_user)):
+    user = await users_collection.find_one({"email": current_user})
+    if not user or str(user.get("role", "")).lower() not in ("admin", "super_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
     logs = await db.security_logs.find().sort("timestamp", -1).limit(50).to_list(50)
     for log in logs:
         log["id"] = str(log["_id"])

@@ -336,14 +336,13 @@ class _UnderlineTextFieldState extends State<UnderlineTextField> {
             errorStyle: const TextStyle(fontSize: 10, height: 0.8),
             prefixIcon: widget.prefixIcon,
             prefixIconConstraints: widget.prefixIcon != null
-                ? const BoxConstraints(
-                    minWidth: 44,
-                    minHeight: 24,
-                  )
+                ? const BoxConstraints(minWidth: 44, minHeight: 24)
                 : null,
             prefixIconColor: focused
                 ? AppColors.primary
-                : (isDark ? AppColors.textMutedDark : AppColors.textPlaceholder),
+                : (isDark
+                      ? AppColors.textMutedDark
+                      : AppColors.textPlaceholder),
             suffixIcon: widget.suffixIcon,
             suffixIconConstraints: const BoxConstraints(
               minWidth: 44,
@@ -351,7 +350,9 @@ class _UnderlineTextFieldState extends State<UnderlineTextField> {
             ),
             suffixIconColor: focused
                 ? AppColors.primary
-                : (isDark ? AppColors.textMutedDark : AppColors.textPlaceholder),
+                : (isDark
+                      ? AppColors.textMutedDark
+                      : AppColors.textPlaceholder),
           ),
         ),
       ],
@@ -569,8 +570,10 @@ class _SocialIconRowState extends State<SocialIconRow> {
           if (e.code == 'sign_in_canceled' || e.code == 'canceled') {
             return; // User dismissed sign-in prompt; no toast required
           }
-          if (e.message?.contains('10') == true || e.toString().contains('10')) {
-            errorMsg = 'Google Sign-In configuration error (ApiException: 10). Ensure your SHA-1 key is registered in Firebase Console.';
+          if (e.message?.contains('10') == true ||
+              e.toString().contains('10')) {
+            errorMsg =
+                'Google Sign-In configuration error (ApiException: 10). Ensure your SHA-1 key is registered in Firebase Console.';
           } else {
             errorMsg = e.message ?? 'Google Sign-In failed. Please try again.';
           }
@@ -599,16 +602,23 @@ class _SocialIconRowState extends State<SocialIconRow> {
     setState(() => _isGithubLoading = true);
     try {
       final callbackUrl = '${EnvConfig.apiUrl}/auth/github/callback';
+      final oauthState = DateTime.now().microsecondsSinceEpoch.toRadixString(
+        36,
+      );
       final authUrl = Uri.parse(
         'https://github.com/login/oauth/authorize'
         '?client_id=${EnvConfig.githubClientId}'
-        '&scope=user:email'
+        '&scope=read:user%20user:email'
+        '&state=$oauthState'
         '&redirect_uri=${Uri.encodeComponent(callbackUrl)}',
       );
 
       bool launched = false;
       try {
-        launched = await launchUrl(authUrl, mode: LaunchMode.externalApplication);
+        launched = await launchUrl(
+          authUrl,
+          mode: LaunchMode.externalApplication,
+        );
       } catch (_) {
         launched = false;
       }
@@ -725,7 +735,9 @@ class _SocialIconRowState extends State<SocialIconRow> {
             style: AuthDesign.fontPoppins(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.textHeadingDark : AuthDesign.textHeading,
+              color: isDark
+                  ? AppColors.textHeadingDark
+                  : AuthDesign.textHeading,
             ),
           ),
           content: Column(
@@ -737,7 +749,9 @@ class _SocialIconRowState extends State<SocialIconRow> {
                 style: AuthDesign.fontPoppins(
                   fontSize: 11,
                   fontWeight: FontWeight.w400,
-                  color: isDark ? AppColors.textMutedDark : AuthDesign.textLabel,
+                  color: isDark
+                      ? AppColors.textMutedDark
+                      : AuthDesign.textLabel,
                 ),
               ),
               const SizedBox(height: 16),
@@ -745,17 +759,23 @@ class _SocialIconRowState extends State<SocialIconRow> {
                 controller: controller,
                 autofocus: true,
                 style: TextStyle(
-                  color: isDark ? AppColors.textHeadingDark : AuthDesign.textHeading,
+                  color: isDark
+                      ? AppColors.textHeadingDark
+                      : AuthDesign.textHeading,
                 ),
                 decoration: InputDecoration(
                   hintText: 'GitHub OAuth Code',
                   hintStyle: AuthDesign.fontPoppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
-                    color: isDark ? AppColors.textMutedDark : AuthDesign.textPlaceholder,
+                    color: isDark
+                        ? AppColors.textMutedDark
+                        : AuthDesign.textPlaceholder,
                   ),
                   filled: true,
-                  fillColor: isDark ? AppColors.surfaceDark : const Color(0xFFF8FAFC),
+                  fillColor: isDark
+                      ? AppColors.surfaceDark
+                      : const Color(0xFFF8FAFC),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 14,
                     vertical: 12,
@@ -763,13 +783,17 @@ class _SocialIconRowState extends State<SocialIconRow> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide(
-                      color: isDark ? AppColors.borderDark : const Color(0xFFE2E8F0),
+                      color: isDark
+                          ? AppColors.borderDark
+                          : const Color(0xFFE2E8F0),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide(
-                      color: isDark ? AppColors.borderDark : const Color(0xFFE2E8F0),
+                      color: isDark
+                          ? AppColors.borderDark
+                          : const Color(0xFFE2E8F0),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -791,7 +815,9 @@ class _SocialIconRowState extends State<SocialIconRow> {
                 style: AuthDesign.fontPoppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? AppColors.textMutedDark : AuthDesign.textLabel,
+                  color: isDark
+                      ? AppColors.textMutedDark
+                      : AuthDesign.textLabel,
                 ),
               ),
             ),
@@ -825,21 +851,14 @@ class _SocialIconRowState extends State<SocialIconRow> {
     final dividerColor = isDark
         ? AppColors.borderDark
         : AuthDesign.underlineUnfocused;
-    final labelColor = isDark
-        ? AppColors.textMutedDark
-        : AuthDesign.textLabel;
+    final labelColor = isDark ? AppColors.textMutedDark : AuthDesign.textLabel;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           children: [
-            Expanded(
-              child: Divider(
-                color: dividerColor,
-                thickness: 1,
-              ),
-            ),
+            Expanded(child: Divider(color: dividerColor, thickness: 1)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Text(
@@ -851,12 +870,7 @@ class _SocialIconRowState extends State<SocialIconRow> {
                 ),
               ),
             ),
-            Expanded(
-              child: Divider(
-                color: dividerColor,
-                thickness: 1,
-              ),
-            ),
+            Expanded(child: Divider(color: dividerColor, thickness: 1)),
           ],
         ),
         const SizedBox(height: 16),
@@ -924,33 +938,45 @@ class _AnimatedWavingHandState extends State<AnimatedWavingHand>
     // Natural 3-pulse wave sequence pivoting at the wrist
     _waveAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: 0.28)
-            .chain(CurveTween(curve: Curves.easeOutQuad)),
+        tween: Tween<double>(
+          begin: 0.0,
+          end: 0.28,
+        ).chain(CurveTween(curve: Curves.easeOutQuad)),
         weight: 15,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.28, end: -0.20)
-            .chain(CurveTween(curve: Curves.easeInOutQuad)),
+        tween: Tween<double>(
+          begin: 0.28,
+          end: -0.20,
+        ).chain(CurveTween(curve: Curves.easeInOutQuad)),
         weight: 18,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: -0.20, end: 0.24)
-            .chain(CurveTween(curve: Curves.easeInOutQuad)),
+        tween: Tween<double>(
+          begin: -0.20,
+          end: 0.24,
+        ).chain(CurveTween(curve: Curves.easeInOutQuad)),
         weight: 18,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.24, end: -0.12)
-            .chain(CurveTween(curve: Curves.easeInOutQuad)),
+        tween: Tween<double>(
+          begin: 0.24,
+          end: -0.12,
+        ).chain(CurveTween(curve: Curves.easeInOutQuad)),
         weight: 16,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: -0.12, end: 0.14)
-            .chain(CurveTween(curve: Curves.easeInOutQuad)),
+        tween: Tween<double>(
+          begin: -0.12,
+          end: 0.14,
+        ).chain(CurveTween(curve: Curves.easeInOutQuad)),
         weight: 15,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.14, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeOutQuad)),
+        tween: Tween<double>(
+          begin: 0.14,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.easeOutQuad)),
         weight: 18,
       ),
     ]).animate(_controller);
@@ -1001,10 +1027,7 @@ class _AnimatedWavingHandState extends State<AnimatedWavingHand>
                         const Color(0xFF312E81).withValues(alpha: 0.65),
                         const Color(0xFF1E1B4B).withValues(alpha: 0.85),
                       ]
-                    : [
-                        const Color(0xFFF0F4FF),
-                        const Color(0xFFE0E7FF),
-                      ],
+                    : [const Color(0xFFF0F4FF), const Color(0xFFE0E7FF)],
               ),
               border: Border.all(
                 color: isDark
@@ -1025,10 +1048,7 @@ class _AnimatedWavingHandState extends State<AnimatedWavingHand>
             child: isReducedMotion
                 ? Text(
                     '👋',
-                    style: TextStyle(
-                      fontSize: widget.emojiSize,
-                      height: 1.0,
-                    ),
+                    style: TextStyle(fontSize: widget.emojiSize, height: 1.0),
                   )
                 : AnimatedBuilder(
                     animation: _waveAnimation,
@@ -1041,10 +1061,7 @@ class _AnimatedWavingHandState extends State<AnimatedWavingHand>
                     },
                     child: Text(
                       '👋',
-                      style: TextStyle(
-                        fontSize: widget.emojiSize,
-                        height: 1.0,
-                      ),
+                      style: TextStyle(fontSize: widget.emojiSize, height: 1.0),
                     ),
                   ),
           ),

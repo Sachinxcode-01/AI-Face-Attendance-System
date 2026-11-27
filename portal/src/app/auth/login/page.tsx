@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { GraduationCap, HeartHandshake, ShieldCheck, Users } from 'lucide-react';
 import LoginCardSection, { type LoginRoleOption } from '@/components/ui/login-signup';
 import { useAuth } from '@/contexts/AuthContext';
-import { getRoleRedirectPath } from '@/lib/auth';
+import { getRoleRedirectPath, getSafeRedirectPath } from '@/lib/auth';
+import { API_BASE_URL } from '@/lib/constants';
 import type { UserRole } from '@/lib/types';
 
 const REMEMBER_EMAIL_KEY = 'sf_remember_login_email';
@@ -43,12 +44,9 @@ function LoginForm() {
   }, [searchParams]);
 
   const redirectAfterAuth = (userRole?: UserRole) => {
-    const from = searchParams.get('from');
-    if (from && from.startsWith('/')) {
-      router.push(from);
-    } else {
-      router.push(getRoleRedirectPath(userRole || currentRole));
-    }
+    const fallback = getRoleRedirectPath(userRole || currentRole);
+    const target = getSafeRedirectPath(searchParams.get('from'), fallback);
+    router.push(target);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -59,50 +57,55 @@ function LoginForm() {
 
     try {
       try {
-          if (rememberEmail && email.trim()) {
-            window.localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
-          } else {
-            window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
-          }
-        } catch {
-          // Ignore storage errors
-        }
-
-        const res = await loginWithCredentials(email, password);
-        setBusy(false);
-        if (res.success) {
-          redirectAfterAuth((res as { role?: UserRole }).role);
+        if (rememberEmail && email.trim()) {
+          window.localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
         } else {
-          setError(res.error || 'Invalid credentials. Try a demo account below or check your email/password.');
+          window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
         }
       } catch {
-        setBusy(false);
-        setError('An unexpected error occurred. Please try again.');
+        // Ignore storage errors
       }
-    };
 
-        const demoLogin = async (role: UserRole) => {
-          setError('');
-          setNotice('');
-          setSelectedRole(role);
-          setBusy(true);
-          try {
-            await login(role);
-            redirectAfterAuth(role);
-          } catch {
-            setError('Unable to start demo session right now.');
-          } finally {
-            setBusy(false);
-          }
-        };
+    const res = await loginWithCredentials(email, password, rememberEmail);
+    setBusy(false);
+    if (res.mfaRequired && res.mfaToken) {
+      try {
+        window.sessionStorage.setItem('sf_mfa_token', res.mfaToken);
+      } catch { }
+      router.push('/auth/mfa');
+      return;
+    }
+    if (res.success) {
+      redirectAfterAuth(res.role);
+    } else {
+      setError(res.error || 'Unable to sign in. Check your credentials and try again.');
+    }
+  } catch {
+    setBusy(false);
+    setError('An unexpected error occurred. Please try again.');
+  }
+};
 
-        const handleSocialLogin = (provider: 'google' | 'github') => {
+  const demoLogin = async (role: UserRole) => {
     setError('');
-          setNotice(
-            provider === 'google'
-              ? 'Google SSO requires campus OAuth configuration; use your campus email or Demo Access below.'
-              : 'GitHub SSO requires OAuth configuration; use your campus email or Demo Access below.',
-    );
+  setNotice('');
+  setSelectedRole(role);
+  setBusy(true);
+  try {
+    await login(role);
+    redirectAfterAuth(role);
+  } catch {
+    setError('Unable to start demo session right now.');
+  } finally {
+    setBusy(false);
+  }
+};
+
+const handleSocialLogin = (provider: 'google' | 'github') => {
+  setError('');
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const target = `${API_BASE_URL}/auth/${provider}?redirect_origin=${encodeURIComponent(origin)}`;
+  window.location.assign(target);
 };
 
 return (
@@ -127,8 +130,8 @@ return (
 
 export default function LoginPage() {
   return (
-      <Suspense fallback={<div className="min-h-screen bg-[#070A14]" />}>
-        <LoginForm />
-      </Suspense>
-      );
+    <Suspense fallback={<div className="min-h-screen bg-[#070A14]" />}>
+      <LoginForm />
+    </Suspense>
+  );
 }

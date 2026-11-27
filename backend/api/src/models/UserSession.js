@@ -9,6 +9,8 @@ const UserSessionSchema = new mongoose.Schema({
   refreshTokenHash: { type: String, index: true },
   refreshTokenFamily: { type: String, index: true },
   revokedRefreshTokenHashes: [{ type: String }],
+  auth_method: { type: String, default: 'password' },
+  remember_me: { type: Boolean, default: false },
   expiry: { type: Date, required: true },
   lastActive: { type: Date, default: Date.now },
   created_at: { type: Date, default: Date.now }

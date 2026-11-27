@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { KeyRound } from 'lucide-react';
 import { AuthScreenLayout, AuthInput } from '@/components/auth/AuthScreenLayout';
+import { PasswordStrength } from '@/components/auth/PasswordStrength';
 import { Button } from '@/components/ui/Button';
 import { api } from '@/lib/api';
 
@@ -51,7 +52,10 @@ export default function ResetPasswordPage() {
       <form onSubmit={submit} className="space-y-4">
         <AuthInput label="Registered email" type="email" value={email} onChange={setEmail} placeholder="you@smartface.pro" autoComplete="email" />
         <AuthInput label="6-digit passcode" value={otp} onChange={setOtp} placeholder="000000" />
-        <AuthInput label="New password" type="password" value={password} onChange={setPassword} placeholder="Min. 8 characters" autoComplete="new-password" />
+        <div>
+          <AuthInput label="New password" type="password" value={password} onChange={setPassword} placeholder="Min. 8 chars or 12+ passphrase" autoComplete="new-password" />
+          <PasswordStrength password={password} />
+        </div>
         <AuthInput label="Confirm password" type="password" value={confirm} onChange={setConfirm} placeholder="Repeat new password" autoComplete="new-password" />
         {error && <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">{error}</p>}
         <Button type="submit" loading={busy} className="w-full py-3">

@@ -55,7 +55,7 @@ class DemoEnvironmentService {
     const targetEnv = envs.find(e => e.id === environmentId) || envs[0];
     const persona = targetEnv.personas.find(p => p.role === role) || targetEnv.personas[0];
 
-    const secret = process.env.SECRET_KEY || process.env.JWT_SECRET || 'smartface-demo-secret-key';
+    const secret = process.env.DEMO_JWT_SECRET || 'smartface-demo-secret-key';
     const payload = {
       sub: `demo_${environmentId}_${persona.role}`,
       email: persona.email,

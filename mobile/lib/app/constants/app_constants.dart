@@ -192,6 +192,7 @@ class AppRadius {
 
 /// User Security Actor Role
 enum UserRole {
+  superAdmin,
   admin,
   teacher,
   student,
@@ -209,6 +210,8 @@ extension UserRoleExt on UserRole {
   /// Localized UI label.
   String get label {
     switch (this) {
+      case UserRole.superAdmin:
+        return 'Super Admin';
       case UserRole.admin:
         return 'Admin';
       case UserRole.teacher:
@@ -231,6 +234,7 @@ extension UserRoleExt on UserRole {
   /// Unique status indicator color.
   Color get color {
     switch (this) {
+      case UserRole.superAdmin:
       case UserRole.admin:
         return AppColors.errorLight;
       case UserRole.teacher:
@@ -253,6 +257,7 @@ extension UserRoleExt on UserRole {
   /// Standard icon representation.
   IconData get icon {
     switch (this) {
+      case UserRole.superAdmin:
       case UserRole.admin:
         return Icons.shield_outlined;
       case UserRole.teacher:
@@ -275,6 +280,7 @@ extension UserRoleExt on UserRole {
   /// Initial landing page route name.
   String get dashboardRoute {
     switch (this) {
+      case UserRole.superAdmin:
       case UserRole.admin:
         return '/admin/home';
       case UserRole.teacher:
@@ -295,6 +301,8 @@ extension UserRoleExt on UserRole {
   /// Maps backend payload string to concrete UserRole enum.
   static UserRole fromString(String? s) {
     switch (s?.toLowerCase()) {
+      case 'super_admin':
+        return UserRole.superAdmin;
       case 'admin':
         return UserRole.admin;
       case 'teacher':

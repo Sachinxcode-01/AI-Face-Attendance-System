@@ -157,20 +157,74 @@ export async function apiDownload(path: string, fallbackFilename: string): Promi
 
 export const api = {
   auth: {
-    login: (email: string, password: string) =>
+    login: (email: string, password: string, remember_me = false) =>
       apiFetch<{
-        access_token: string;
-        role: string;
+        access_token?: string;
+        mfa_required?: boolean;
+        mfa_token?: string;
+        role?: string;
         full_name?: string;
         user_id?: string;
         email?: string;
         profilePhotoUrl?: string;
       }>('/auth/login-password', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, remember_me }),
       }),
     logout: () => apiFetch<{ message: string }>('/auth/logout', { method: 'POST' }),
+    logoutAll: () => apiFetch<{ message: string }>('/auth/logout-all', { method: 'POST' }),
     session: () => apiFetch<{ valid: boolean; user: Record<string, unknown> }>('/auth/session'),
+    mfaChallenge: (mfa_token: string, code: string) =>
+      apiFetch<{
+        access_token: string;
+        role: string;
+        full_name?: string;
+        email?: string;
+        profilePhotoUrl?: string;
+      }>('/auth/mfa/challenge', {
+        method: 'POST',
+        body: JSON.stringify({ mfa_token, code }),
+      }),
+    mfaSetup: () =>
+      apiFetch<{ success: boolean; secret: string; otpauth_url: string }>('/auth/mfa/setup', {
+        method: 'POST',
+      }),
+    mfaVerify: (code: string) =>
+      apiFetch<{ success: boolean; mfa_enabled: boolean; recovery_codes: string[] }>('/auth/mfa/verify', {
+        method: 'POST',
+        body: JSON.stringify({ code }),
+      }),
+    mfaDisable: (data: { current_password?: string; code?: string }) =>
+      apiFetch<{ success: boolean; mfa_enabled: boolean; message: string }>('/auth/mfa/disable', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    sendVerification: (email: string) =>
+      apiFetch<{ success: boolean; message: string }>('/auth/send-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      }),
+    verifyEmail: (email: string, otp: string) =>
+      apiFetch<{ success: boolean; email_verified: boolean; message: string }>('/auth/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp }),
+      }),
+    acceptInvitation: (data: { token: string; full_name: string; password: string }) =>
+      apiFetch<{ access_token: string; role: string; full_name?: string; email?: string }>('/auth/invitations/accept', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    providers: () =>
+      apiFetch<{ success: boolean; has_password: boolean; mfa_enabled: boolean; providers: Array<{ provider: string; email: string; linked_at: string }> }>('/auth/providers'),
+    unlinkProvider: (provider: 'google' | 'github') =>
+      apiFetch<{ success: boolean; message: string }>(`/auth/providers/${provider}`, {
+        method: 'DELETE',
+      }),
+    refreshSession: () =>
+      apiFetch<{ access_token: string }>('/auth/token/refresh', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      }),
     register: (data: {
       email: string;
       password: string;
