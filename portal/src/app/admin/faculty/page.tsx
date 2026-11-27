@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { api } from '@/lib/api';
-import { UserPlus, Link2, Unlink } from 'lucide-react';
+import { UserPlus, Link2, Unlink, Pencil } from 'lucide-react';
 
 export default function AdminFacultyParentsPage() {
   const [tab, setTab] = useState<'faculty' | 'parents'>('faculty');
@@ -20,6 +20,8 @@ export default function AdminFacultyParentsPage() {
 
   const [showAddFaculty, setShowAddFaculty] = useState(false);
   const [facForm, setFacForm] = useState({ full_name: '', email: '', department: '', designation: 'Assistant Professor', employee_id: '' });
+  const [editingFac, setEditingFac] = useState<any | null>(null);
+  const [editFacForm, setEditFacForm] = useState({ full_name: '', department: '', designation: '', employee_id: '' });
 
   const [linkParentEmail, setLinkParentEmail] = useState('');
   const [linkStudentEmail, setLinkStudentEmail] = useState('');
@@ -53,6 +55,20 @@ export default function AdminFacultyParentsPage() {
       loadData();
     } catch (err: any) {
       setError(err?.message || 'Failed to register faculty.');
+    }
+  };
+
+  const handleSaveFacEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingFac) return;
+    setError('');
+    try {
+      await api.admin.updateUser(editingFac.id, editFacForm);
+      setNotice(`Updated faculty ${editFacForm.full_name}.`);
+      setEditingFac(null);
+      loadData();
+    } catch (err: any) {
+      setError(err?.message || 'Failed to update faculty.');
     }
   };
 
@@ -125,14 +141,29 @@ export default function AdminFacultyParentsPage() {
                     <td className="py-3 px-3">{f.department || '—'}</td>
                     <td className="py-3 px-3">{f.designation || 'Faculty'}</td>
                     <td className="py-3 px-3"><Badge tone={f.account_status === 'active' ? 'success' : 'danger'}>{f.account_status || 'active'}</Badge></td>
-                    <td className="py-3 px-3 text-right">
-                      <button
-                        onClick={() => api.admin.updateUserStatus(f.id, f.account_status === 'suspended' ? 'active' : 'suspended').then(loadData)}
-                        className="rounded bg-white/5 px-2.5 py-1 text-gray-300 hover:bg-white/10"
-                      >
-                        {f.account_status === 'suspended' ? 'Activate' : 'Suspend'}
-                      </button>
-                    </td>
+                      <td className="py-3 px-3 text-right space-x-1">
+                        <button
+                          onClick={() => {
+                            setEditingFac(f);
+                            setEditFacForm({
+                              full_name: f.full_name || '',
+                              department: f.department || '',
+                              designation: f.designation || '',
+                              employee_id: f.employee_id || '',
+                            });
+                          }}
+                          className="rounded bg-white/5 px-2 py-1 text-accent hover:bg-white/10"
+                          title="Edit Faculty"
+                        >
+                          <Pencil className="h-3.5 w-3.5 inline" />
+                        </button>
+                        <button
+                          onClick={() => api.admin.updateUserStatus(f.id, f.account_status === 'suspended' ? 'active' : 'suspended').then(loadData)}
+                          className="rounded bg-white/5 px-2.5 py-1 text-gray-300 hover:bg-white/10"
+                        >
+                          {f.account_status === 'suspended' ? 'Activate' : 'Suspend'}
+                        </button>
+                      </td>
                   </tr>
                 ))}
               </tbody>
@@ -185,6 +216,18 @@ export default function AdminFacultyParentsPage() {
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={() => setShowAddFaculty(false)}>Cancel</Button>
             <Button type="submit">Register</Button>
+          </div>
+        </form>
+      </Modal>
+      <Modal open={Boolean(editingFac)} onClose={() => setEditingFac(null)} title="Edit Faculty Member">
+        <form onSubmit={handleSaveFacEdit} className="space-y-3 text-xs">
+          <input required placeholder="Full Name" value={editFacForm.full_name} onChange={(e) => setEditFacForm({ ...editFacForm, full_name: e.target.value })} className="w-full rounded-xl border border-white/10 bg-[#08080c] px-3 py-2 text-white" />
+          <input placeholder="Department" value={editFacForm.department} onChange={(e) => setEditFacForm({ ...editFacForm, department: e.target.value })} className="w-full rounded-xl border border-white/10 bg-[#08080c] px-3 py-2 text-white" />
+          <input placeholder="Designation" value={editFacForm.designation} onChange={(e) => setEditFacForm({ ...editFacForm, designation: e.target.value })} className="w-full rounded-xl border border-white/10 bg-[#08080c] px-3 py-2 text-white" />
+          <input placeholder="Employee ID" value={editFacForm.employee_id} onChange={(e) => setEditFacForm({ ...editFacForm, employee_id: e.target.value })} className="w-full rounded-xl border border-white/10 bg-[#08080c] px-3 py-2 text-white" />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setEditingFac(null)}>Cancel</Button>
+            <Button type="submit">Save Changes</Button>
           </div>
         </form>
       </Modal>

@@ -91,7 +91,8 @@ function buildTenantUserFilter(tenant, extra = {}) {
 function isSameTenant(tenant, target) {
   if (tenant.isSuperAdmin) return true;
   if (!target) return false;
-  if (!tenant.collegeId && !tenant.collegeName) return true;
+  // Fail closed: non-super_admin without an institution scope cannot access arbitrary records
+  if (!tenant.collegeId && !tenant.collegeName) return false;
   const targetCid = target.college_id ? String(target.college_id) : null;
   const targetCname = target.college ? String(target.college) : null;
   if (tenant.collegeId && targetCid && targetCid === tenant.collegeId) return true;

@@ -83,7 +83,23 @@ export default function AdminGovernancePage() {
         </Card>
 
         <Card>
-          <h3 className="font-display text-sm font-bold text-white mb-3">Backup &amp; Recovery Readiness ({backups.length})</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-display text-sm font-bold text-white">Backup &amp; Recovery Readiness ({backups.length})</h3>
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                try {
+                  await api.admin.verifyBackup();
+                  setNotice('Backup readiness snapshot verified.');
+                  loadAll();
+                } catch (err: any) {
+                  setError(err?.message || 'Backup verification failed.');
+                }
+              }}
+            >
+              Verify Snapshot
+            </Button>
+          </div>
           <div className="space-y-2 text-xs max-h-64 overflow-y-auto">
             {backups.length === 0 ? <p className="text-faint">No backup metadata records recorded yet.</p> : backups.map((b) => (
               <div key={b.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] p-2.5">

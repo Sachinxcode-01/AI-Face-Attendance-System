@@ -675,6 +675,8 @@ export const api = {
       list: () => apiFetch<any>('/management/departments'),
       create: (data: { name: string; code: string; hod_email?: string }) =>
         apiFetch<any>('/management/departments', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: { name?: string; code?: string; hod_email?: string }) =>
+        apiFetch<any>(`/management/departments/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
       remove: (id: string) => apiFetch<any>(`/management/departments/${encodeURIComponent(id)}`, { method: 'DELETE' }),
     },
     courses: {
@@ -691,6 +693,20 @@ export const api = {
       list: () => apiFetch<any>('/management/semesters'),
       create: (data: { name: string; academic_year: string; start_date?: string; end_date?: string; status?: string }) =>
         apiFetch<any>('/management/semesters', { method: 'POST', body: JSON.stringify(data) }),
+      updateStatus: (termId: string, status: 'draft' | 'active' | 'closed') =>
+        apiFetch<any>(`/management/semesters/${encodeURIComponent(termId)}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+    },
+    timetable: {
+      list: () => apiFetch<any>('/academic/timetable/institution'),
+      create: (data: { user_id: string; subject: string; day: string; time: string; room?: string; teacher_email?: string }) =>
+        apiFetch<any>('/academic/timetable', { method: 'POST', body: JSON.stringify(data) }),
+      remove: (id: string) => apiFetch<any>(`/academic/timetable/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+      conflicts: () => apiFetch<any>('/academic/timetable/conflicts'),
+    },
+    sessions: {
+      list: () => apiFetch<any>('/management/sessions'),
+      updateStatus: (id: string, is_active: boolean, reason: string) =>
+        apiFetch<any>(`/management/sessions/${encodeURIComponent(id)}/status`, { method: 'PATCH', body: JSON.stringify({ is_active, reason }) }),
     },
     holidays: {
       list: () => apiFetch<any>('/management/holidays'),
@@ -731,6 +747,9 @@ export const api = {
     },
     auditLogs: (module = 'all') => apiFetch<any>(`/management/audit-logs?module=${encodeURIComponent(module)}`),
     backups: () => apiFetch<any>('/management/backups'),
+    verifyBackup: () => apiFetch<any>('/management/backups/verify', { method: 'POST' }),
+    exportDepartmentReport: (dept: string, format: 'csv' | 'excel' = 'csv') =>
+      apiDownload(`/reports/department/${encodeURIComponent(dept)}?format=${format}`, `dept_${dept}.${format === 'excel' ? 'xls' : 'csv'}`),
     settings: {
       get: () => apiFetch<any>('/management/settings'),
       update: (data: Record<string, unknown>) =>

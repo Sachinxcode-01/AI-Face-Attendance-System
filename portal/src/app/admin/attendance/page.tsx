@@ -11,6 +11,7 @@ import { api } from '@/lib/api';
 export default function AdminAttendancePolicyPage() {
   const [disputes, setDisputes] = useState<any[]>([]);
   const [leaves, setLeaves] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [policy, setPolicy] = useState<any>({ min_percentage: 75, late_counts_as_present: true, excused_counts_as_present: true, approved_leave_counts_as_present: false, dispute_deadline_days: 14 });
   const [history, setHistory] = useState<any[]>([]);
   const [reason, setReason] = useState('');
@@ -19,13 +20,15 @@ export default function AdminAttendancePolicyPage() {
 
   const loadAll = useCallback(async () => {
     try {
-      const [dRes, lRes, pRes] = await Promise.all([
+      const [dRes, lRes, pRes, sRes] = await Promise.all([
         api.admin.disputes(),
         api.admin.leaves(),
         api.admin.policy.get(),
+        api.admin.sessions.list().catch(() => ({ sessions: [] })),
       ]);
       setDisputes(dRes?.disputes || []);
       setLeaves(lRes?.leaves || []);
+      setSessions(sRes?.sessions || []);
       if (pRes?.policy) setPolicy((prev: any) => ({ ...prev, ...pRes.policy }));
       setHistory(pRes?.history || []);
     } catch (err: any) {
@@ -117,8 +120,8 @@ export default function AdminAttendancePolicyPage() {
                     <p className="text-faint">{d.reason}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge tone={d.status === 'approved' ? 'success' : d.status === 'rejected' ? 'danger' : 'warning'}>{d.status}</Badge>
-                    {['pending', 'teacher_reviewed', 'escalated', 'Pending'].includes(d.status) && (
+                      <Badge tone={String(d.status).toLowerCase() === 'approved' ? 'success' : String(d.status).toLowerCase() === 'rejected' ? 'danger' : 'warning'}>{d.status}</Badge>
+                    {['pending', 'under review', 'clarification', 'teacher_reviewed', 'escalated'].includes(String(d.status || '').toLowerCase()) && (
                       <>
                         <button onClick={() => handleResolveDispute(d.id, 'approve')} className="rounded bg-emerald-500/15 px-2 py-1 text-emerald-300">Approve</button>
                         <button onClick={() => handleResolveDispute(d.id, 'reject')} className="rounded bg-red-500/15 px-2 py-1 text-red-300">Reject</button>
@@ -154,6 +157,37 @@ export default function AdminAttendancePolicyPage() {
           </Card>
         </div>
       </div>
+
+      <Card className="mt-6">
+        <h3 className="font-display text-sm font-bold text-white mb-3">Attendance Sessions Oversight ({sessions.length})</h3>
+        <div className="space-y-2 text-xs max-h-64 overflow-y-auto">
+          {sessions.length === 0 ? <p className="text-faint">No attendance sessions recorded yet.</p> : sessions.map((s) => (
+            <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/5 bg-white/[0.02] p-3">
+              <div>
+                <p className="font-semibold text-white">{s.subject} <span className="text-faint font-normal">• {s.teacher_name}</span></p>
+                <p className="text-[11px] text-faint">{s.attendance_count} records • {s.start_time ? new Date(s.start_time).toLocaleString() : '—'}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge tone={s.is_active ? 'success' : 'neutral'}>{s.is_active ? 'Active' : 'Completed'}</Badge>
+                <button
+                  onClick={async () => {
+                    const auditReason = window.prompt(s.is_active ? 'Reason for closing session:' : 'Reason for reopening session:');
+                    if (!auditReason?.trim()) return;
+                    try {
+                      await api.admin.sessions.updateStatus(s.id, !s.is_active, auditReason.trim());
+                      setNotice(`Session ${s.is_active ? 'closed' : 'reopened'} with audit trail.`);
+                      loadAll();
+                    } catch (err: any) { setError(err?.message || 'Failed to update session.'); }
+                  }}
+                  className="rounded bg-white/5 px-2.5 py-1 text-gray-300 hover:bg-white/10"
+                >
+                  {s.is_active ? 'Close' : 'Reopen'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
     </DashboardLayout>
   );
 }

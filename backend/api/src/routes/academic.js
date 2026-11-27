@@ -9,6 +9,7 @@ const Session = require('../models/Session');
 const Attendance = require('../models/Attendance');
 const Notification = require('../models/Notification');
 const { authenticate, requireRole } = require('../middleware/auth');
+const { resolveAdminTenant } = require('../utils/tenantScope');
 const { getInstitutionPolicy, buildTimetableKeys, parseSlotTimes, toDateKey } = require('../services/studentAttendanceService');
 const cache = require('../utils/cache');
 
@@ -256,6 +257,28 @@ router.get('/announcements', authenticate, async (req, res) => {
   }
 });
 
+// GET /academic/timetable/institution (Admin institutional timetable list)
+router.get('/timetable/institution', authenticate, requireRole(['admin', 'super_admin', 'principal', 'hod']), async (req, res) => {
+  try {
+    const tenant = await resolveAdminTenant(req);
+    const filter = {};
+    if (!tenant.isSuperAdmin || tenant.collegeId || tenant.collegeName) {
+      const orClauses = [];
+      if (tenant.collegeId) orClauses.push({ college_id: tenant.collegeId });
+      if (tenant.collegeName) orClauses.push({ college_id: tenant.collegeName });
+      if (orClauses.length > 0) filter.$or = orClauses;
+      else if (!tenant.isSuperAdmin) filter._id = null;
+    }
+    const slots = await Timetable.find(filter).sort({ day: 1, time: 1 }).limit(300).lean();
+    res.json({
+      success: true,
+      slots: slots.map((s) => ({ ...s, id: s._id.toString(), _id: undefined })),
+    });
+  } catch (error) {
+    res.status(500).json({ detail: 'Unable to load institutional timetable.' });
+  }
+});
+
 // POST /academic/timetable
 router.post('/timetable', authenticate, requireRole(['admin', 'teacher', 'super_admin']), async (req, res) => {
   try {
@@ -264,8 +287,9 @@ router.post('/timetable', authenticate, requireRole(['admin', 'teacher', 'super_
       return res.status(400).json({ detail: "Missing or invalid required fields (user_id, subject, day, time must be non-empty strings)." });
     }
 
-    const callerCollege = (req.user?.college_id || req.user?.college || "").trim();
-    const slotCollege = req.userRole === 'super_admin' ? (typeof college_id === 'string' ? college_id.trim() : "") : callerCollege;
+    const tenant = await resolveAdminTenant(req);
+    const callerCollege = tenant.collegeId || tenant.collegeName || "";
+    const slotCollege = req.userRole === 'super_admin' ? (typeof college_id === 'string' && college_id.trim() ? college_id.trim() : callerCollege) : callerCollege;
 
     const entry = new Timetable({
       user_id: user_id.trim().toUpperCase(),
@@ -301,51 +325,52 @@ router.put('/timetable/:id', authenticate, requireRole(['admin', 'teacher', 'sup
       return res.status(404).json({ detail: "Timetable slot not found." });
     }
 
-    const callerCollege = (req.user?.college_id || req.user?.college || "").trim();
+    const tenant = await resolveAdminTenant(req);
     const slotCollege = (slot.college_id || "").trim();
-    if (req.userRole !== 'super_admin' && slotCollege !== callerCollege) {
-      return res.status(403).json({ detail: "Forbidden: Cannot edit timetable slot for another college." });
-    }
+      const matchesTenant = (tenant.collegeId && slotCollege === tenant.collegeId) || (tenant.collegeName && slotCollege === tenant.collegeName);
+      if (!tenant.isSuperAdmin && !matchesTenant) {
+        return res.status(403).json({ detail: "Forbidden: Cannot edit timetable slot for another college." });
+      }
 
-    const updates = {};
-    if (req.body.user_id !== undefined) {
-      if (typeof req.body.user_id !== 'string' || !req.body.user_id.trim()) {
-        return res.status(400).json({ detail: "user_id must be a non-empty string." });
+      const updates = {};
+      if (req.body.user_id !== undefined) {
+        if (typeof req.body.user_id !== 'string' || !req.body.user_id.trim()) {
+          return res.status(400).json({ detail: "user_id must be a non-empty string." });
+        }
+        updates.user_id = req.body.user_id.trim().toUpperCase();
       }
-      updates.user_id = req.body.user_id.trim().toUpperCase();
-    }
-    if (req.body.subject !== undefined) {
-      if (typeof req.body.subject !== 'string' || !req.body.subject.trim()) {
-        return res.status(400).json({ detail: "subject must be a non-empty string." });
+      if (req.body.subject !== undefined) {
+        if (typeof req.body.subject !== 'string' || !req.body.subject.trim()) {
+          return res.status(400).json({ detail: "subject must be a non-empty string." });
+        }
+        updates.subject = req.body.subject.trim();
       }
-      updates.subject = req.body.subject.trim();
-    }
-    if (req.body.day !== undefined) {
-      if (typeof req.body.day !== 'string' || !req.body.day.trim()) {
-        return res.status(400).json({ detail: "day must be a non-empty string." });
+      if (req.body.day !== undefined) {
+        if (typeof req.body.day !== 'string' || !req.body.day.trim()) {
+          return res.status(400).json({ detail: "day must be a non-empty string." });
+        }
+        updates.day = req.body.day.trim();
       }
-      updates.day = req.body.day.trim();
-    }
-    if (req.body.time !== undefined) {
-      if (typeof req.body.time !== 'string' || !req.body.time.trim()) {
-        return res.status(400).json({ detail: "time must be a non-empty string." });
+      if (req.body.time !== undefined) {
+        if (typeof req.body.time !== 'string' || !req.body.time.trim()) {
+          return res.status(400).json({ detail: "time must be a non-empty string." });
+        }
+        updates.time = req.body.time.trim();
       }
-      updates.time = req.body.time.trim();
-    }
-    if (req.body.room !== undefined) updates.room = typeof req.body.room === 'string' ? req.body.room.trim() : "";
-    if (req.userRole === 'super_admin' && req.body.college_id !== undefined) {
-      updates.college_id = typeof req.body.college_id === 'string' ? req.body.college_id.trim() : "";
-    }
-    if (req.body.teacher_email !== undefined) updates.teacher_email = typeof req.body.teacher_email === 'string' ? req.body.teacher_email.trim() : "";
+      if (req.body.room !== undefined) updates.room = typeof req.body.room === 'string' ? req.body.room.trim() : "";
+      if (req.userRole === 'super_admin' && req.body.college_id !== undefined) {
+        updates.college_id = typeof req.body.college_id === 'string' ? req.body.college_id.trim() : "";
+      }
+      if (req.body.teacher_email !== undefined) updates.teacher_email = typeof req.body.teacher_email === 'string' ? req.body.teacher_email.trim() : "";
 
-    const updated = await Timetable.findByIdAndUpdate(id, updates, { new: true }).lean();
-    updated.id = updated._id.toString();
-    delete updated._id;
-    res.json({ success: true, slot: updated });
-  } catch (error) {
-    res.status(500).json({ detail: error.message });
-  }
-});
+      const updated = await Timetable.findByIdAndUpdate(id, updates, { new: true }).lean();
+      updated.id = updated._id.toString();
+      delete updated._id;
+      res.json({ success: true, slot: updated });
+    } catch (error) {
+      res.status(500).json({ detail: error.message });
+    }
+  });
 
 // DELETE /academic/timetable/:id
 router.delete('/timetable/:id', authenticate, requireRole(['admin', 'teacher', 'super_admin']), async (req, res) => {
@@ -360,19 +385,20 @@ router.delete('/timetable/:id', authenticate, requireRole(['admin', 'teacher', '
       return res.status(404).json({ detail: "Timetable slot not found." });
     }
 
-    const callerCollege = (req.user?.college_id || req.user?.college || "").trim();
+    const tenant = await resolveAdminTenant(req);
     const slotCollege = (slot.college_id || "").trim();
-    if (req.userRole !== 'super_admin' && slotCollege !== callerCollege) {
-      return res.status(403).json({ detail: "Forbidden: Cannot delete timetable slot for another college." });
+      const matchesTenant = (tenant.collegeId && slotCollege === tenant.collegeId) || (tenant.collegeName && slotCollege === tenant.collegeName);
+      if (!tenant.isSuperAdmin && !matchesTenant) {
+        return res.status(403).json({ detail: "Forbidden: Cannot delete timetable slot for another college." });
+      }
+
+      await Timetable.findByIdAndDelete(id).lean();
+
+      res.json({ success: true, message: "Timetable slot deleted successfully.", deleted_id: id });
+    } catch (error) {
+      res.status(500).json({ detail: error.message });
     }
-
-    await Timetable.findByIdAndDelete(id).lean();
-
-    res.json({ success: true, message: "Timetable slot deleted successfully.", deleted_id: id });
-  } catch (error) {
-    res.status(500).json({ detail: error.message });
-  }
-});
+  });
 
 // POST /academic/timetable/bulk
 router.post('/timetable/bulk', authenticate, requireRole(['admin', 'super_admin']), async (req, res) => {
@@ -385,8 +411,9 @@ router.post('/timetable/bulk', authenticate, requireRole(['admin', 'super_admin'
       return res.status(400).json({ detail: "Batch limit exceeded (maximum 500 slots per request)." });
     }
 
-    const callerCollege = (req.user?.college_id || req.user?.college || "").trim();
-    const targetCollege = req.userRole === 'super_admin' ? (typeof college_id === 'string' ? college_id.trim() : "") : callerCollege;
+    const tenant = await resolveAdminTenant(req);
+    const callerCollege = tenant.collegeId || tenant.collegeName || "";
+    const targetCollege = req.userRole === 'super_admin' ? (typeof college_id === 'string' && college_id.trim() ? college_id.trim() : callerCollege) : callerCollege;
 
     const validSlots = [];
     for (const s of slots) {
@@ -423,72 +450,77 @@ router.post('/timetable/bulk', authenticate, requireRole(['admin', 'super_admin'
 // GET /academic/timetable/conflicts (Smart AI/Heuristic Conflict Detector)
 router.get('/timetable/conflicts', authenticate, requireRole(['admin', 'teacher', 'super_admin']), async (req, res) => {
   try {
+    const tenant = await resolveAdminTenant(req);
     const { college_id, day } = req.query;
     const filter = {};
-    if (req.userRole === 'super_admin') {
-      if (typeof college_id === 'string' && college_id.trim()) {
-        filter.college_id = college_id.trim();
+      if (tenant.isSuperAdmin) {
+        if (typeof college_id === 'string' && college_id.trim()) {
+          filter.college_id = college_id.trim();
+        }
+      } else {
+        const orClauses = [];
+        if (tenant.collegeId) orClauses.push({ college_id: tenant.collegeId });
+        if (tenant.collegeName) orClauses.push({ college_id: tenant.collegeName });
+        if (orClauses.length > 0) filter.$or = orClauses;
+        else filter._id = null;
       }
-    } else {
-      filter.college_id = req.user?.college_id || req.user?.college || "";
-    }
-    if (typeof day === 'string' && day.trim()) {
-      filter.day = day.trim();
-    }
+      if (typeof day === 'string' && day.trim()) {
+        filter.day = day.trim();
+      }
 
-    const allSlots = await Timetable.find(filter).lean();
-    const roomConflicts = [];
-    const teacherConflicts = [];
+      const allSlots = await Timetable.find(filter).lean();
+      const roomConflicts = [];
+      const teacherConflicts = [];
 
-    // Group by room & day
-    const roomMap = new Map();
-    const teacherMap = new Map();
+      // Group by room & day
+      const roomMap = new Map();
+      const teacherMap = new Map();
 
-    for (const slot of allSlots) {
-      // Room conflict check
-      if (slot.room && slot.room.trim()) {
-        const roomKey = `${slot.day}_${slot.room.trim().toUpperCase()}_${slot.time.trim()}`;
-        if (roomMap.has(roomKey)) {
-          roomConflicts.push({
-            type: "room_double_booked",
-            room: slot.room,
-            day: slot.day,
-            time: slot.time,
-            slots: [roomMap.get(roomKey), { id: slot._id.toString(), subject: slot.subject, class: slot.user_id }]
-          });
-        } else {
-          roomMap.set(roomKey, { id: slot._id.toString(), subject: slot.subject, class: slot.user_id });
+      for (const slot of allSlots) {
+        // Room conflict check
+        if (slot.room && slot.room.trim()) {
+          const roomKey = `${slot.day}_${slot.room.trim().toUpperCase()}_${slot.time.trim()}`;
+          if (roomMap.has(roomKey)) {
+            roomConflicts.push({
+              type: "room_double_booked",
+              room: slot.room,
+              day: slot.day,
+              time: slot.time,
+              slots: [roomMap.get(roomKey), { id: slot._id.toString(), subject: slot.subject, class: slot.user_id }]
+            });
+          } else {
+            roomMap.set(roomKey, { id: slot._id.toString(), subject: slot.subject, class: slot.user_id });
+          }
+        }
+
+        // Teacher conflict check
+        if (slot.teacher_email && slot.teacher_email.trim()) {
+          const teacherKey = `${slot.day}_${slot.teacher_email.trim().toLowerCase()}_${slot.time.trim()}`;
+          if (teacherMap.has(teacherKey)) {
+            teacherConflicts.push({
+              type: "teacher_double_booked",
+              teacher_email: slot.teacher_email,
+              day: slot.day,
+              time: slot.time,
+              slots: [teacherMap.get(teacherKey), { id: slot._id.toString(), subject: slot.subject, class: slot.user_id }]
+            });
+          } else {
+            teacherMap.set(teacherKey, { id: slot._id.toString(), subject: slot.subject, class: slot.user_id });
+          }
         }
       }
 
-      // Teacher conflict check
-      if (slot.teacher_email && slot.teacher_email.trim()) {
-        const teacherKey = `${slot.day}_${slot.teacher_email.trim().toLowerCase()}_${slot.time.trim()}`;
-        if (teacherMap.has(teacherKey)) {
-          teacherConflicts.push({
-            type: "teacher_double_booked",
-            teacher_email: slot.teacher_email,
-            day: slot.day,
-            time: slot.time,
-            slots: [teacherMap.get(teacherKey), { id: slot._id.toString(), subject: slot.subject, class: slot.user_id }]
-          });
-        } else {
-          teacherMap.set(teacherKey, { id: slot._id.toString(), subject: slot.subject, class: slot.user_id });
-        }
-      }
+      res.json({
+        success: true,
+        total_slots_checked: allSlots.length,
+        conflicts_found: roomConflicts.length + teacherConflicts.length,
+        room_conflicts: roomConflicts,
+        teacher_conflicts: teacherConflicts
+      });
+    } catch (error) {
+      res.status(500).json({ detail: error.message });
     }
-
-    res.json({
-      success: true,
-      total_slots_checked: allSlots.length,
-      conflicts_found: roomConflicts.length + teacherConflicts.length,
-      room_conflicts: roomConflicts,
-      teacher_conflicts: teacherConflicts
-    });
-  } catch (error) {
-    res.status(500).json({ detail: error.message });
-  }
-});
+  });
 
 // GET /academic/assignments
 router.get('/assignments', authenticate, async (req, res) => {

@@ -61,16 +61,24 @@ export default function AdminAnalyticsReportsPage() {
           <div className="space-y-3 text-xs">
             {Object.entries(summary?.department_comparison || {}).map(([dept, rate]: [string, any]) => (
               <div key={dept} className="space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-white font-semibold">{dept}</span>
-                  <span className="font-mono text-accent">{rate}%</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white font-semibold">{dept}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-accent">{rate}%</span>
+                      <button
+                        onClick={() => api.admin.exportDepartmentReport(dept, 'csv')}
+                        className="rounded bg-white/5 px-2 py-0.5 text-[10px] text-gray-300 hover:bg-white/10"
+                      >
+                        CSV
+                      </button>
+                    </div>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                    <div className="h-full bg-indigo-500" style={{ width: `${Math.min(100, Number(rate) || 0)}%` }} />
+                  </div>
                 </div>
-                <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-                  <div className="h-full bg-indigo-500" style={{ width: `${Math.min(100, Number(rate) || 0)}%` }} />
-                </div>
-              </div>
             ))}
-          </div>
+              </div>
         </Card>
 
         <Card>

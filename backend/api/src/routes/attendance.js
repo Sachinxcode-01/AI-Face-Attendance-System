@@ -23,6 +23,7 @@ const {
 } = require('../services/teacherService');
 const cache = require('../utils/cache');
 const reportInternalError = require('../utils/httpError');
+const { resolveAdminTenant, buildTenantUserFilter, isSameTenant } = require('../utils/tenantScope');
 
 // Services
 const notificationService = require('../services/notificationService');
@@ -1031,9 +1032,20 @@ router.get('/command-center', authenticate, requireRole(['admin', 'teacher']), a
       });
     }
 
-    // Admin view across institution
-    const [[totals], totalStudents, activeSessionsCount] = await Promise.all([
+    // Admin view scoped to institution
+    const tenant = await resolveAdminTenant(req);
+    const [tenantStudents, tenantFaculty] = await Promise.all([
+      User.find(buildTenantUserFilter(tenant, { role: 'student' }), 'email').lean(),
+      User.find(buildTenantUserFilter(tenant, { role: { $in: ['teacher', 'faculty'] } }), 'email').lean(),
+    ]);
+    const studentEmails = tenantStudents.map((s) => s.email.toLowerCase());
+    const facultyEmails = tenantFaculty.map((f) => f.email.toLowerCase());
+    const analyticsMatch = studentEmails.length > 0 ? { student_email: { $in: studentEmails } } : (tenant.isSuperAdmin && !tenant.collegeId ? {} : { _id: null });
+    const sessionMatch = facultyEmails.length > 0 ? { is_active: true, teacher_id: { $in: facultyEmails } } : (tenant.isSuperAdmin && !tenant.collegeId ? { is_active: true } : { _id: null });
+
+    const [[totals], activeSessionsCount] = await Promise.all([
       AttendanceAnalytics.aggregate([
+        { $match: analyticsMatch },
         {
           $group: {
             _id: null,
@@ -1051,9 +1063,9 @@ router.get('/command-center', authenticate, requireRole(['admin', 'teacher']), a
           }
         }
       ]),
-      User.countDocuments({ role: 'student' }),
-      Session.countDocuments({ is_active: true })
+      Session.countDocuments(sessionMatch)
     ]);
+    const totalStudents = tenantStudents.length;
 
     const criticalCount = (totals && totals.criticalCount) || 0;
     const warningCount = (totals && totals.warningCount) || 0;
@@ -1579,132 +1591,138 @@ router.post('/disputes/:id/resolve', authenticate, requireRole(['teacher', 'hod'
 
     const role = (req.userRole || '').toLowerCase();
     const isAdmin = ['admin', 'super_admin', 'principal'].includes(role);
-    if (!isAdmin) {
-      const ctx = await resolveTeacherContext(req.userEmail);
-      if (existing.college_id && ctx?.teacher?.college_id && existing.college_id !== ctx.teacher.college_id) {
-        await auditLog(req.userEmail, req.userRole, 'PERMISSION_DENIED', { dispute_id: id, reason: 'cross_institution' }, req);
-        return res.status(403).json({ detail: 'Forbidden: cross-institution dispute resolution denied.' });
-      }
-      if (mongoose.Types.ObjectId.isValid(existing.session_id)) {
-        const sess = await Session.findById(existing.session_id, 'teacher_id college_id').lean();
-        if (sess && String(sess.teacher_id).toLowerCase() !== req.userEmail.toLowerCase() && role === 'teacher') {
-          await auditLog(req.userEmail, req.userRole, 'PERMISSION_DENIED', { dispute_id: id, reason: 'not_session_owner' }, req);
-          return res.status(403).json({ detail: 'Forbidden: you can only resolve disputes for your own classes.' });
+      if (isAdmin) {
+        const tenant = await resolveAdminTenant(req);
+        if (!isSameTenant(tenant, { college_id: existing.college_id })) {
+          await auditLog(req.userEmail, req.userRole, 'PERMISSION_DENIED', { dispute_id: id, reason: 'cross_institution' }, req);
+          return res.status(403).json({ detail: 'Forbidden: cross-institution dispute resolution denied.' });
+        }
+      } else {
+        const ctx = await resolveTeacherContext(req.userEmail);
+        if (existing.college_id && ctx?.teacher?.college_id && existing.college_id !== ctx.teacher.college_id) {
+          await auditLog(req.userEmail, req.userRole, 'PERMISSION_DENIED', { dispute_id: id, reason: 'cross_institution' }, req);
+          return res.status(403).json({ detail: 'Forbidden: cross-institution dispute resolution denied.' });
+        }
+        if (mongoose.Types.ObjectId.isValid(existing.session_id)) {
+          const sess = await Session.findById(existing.session_id, 'teacher_id college_id').lean();
+          if (sess && String(sess.teacher_id).toLowerCase() !== req.userEmail.toLowerCase() && role === 'teacher') {
+            await auditLog(req.userEmail, req.userRole, 'PERMISSION_DENIED', { dispute_id: id, reason: 'not_session_owner' }, req);
+            return res.status(403).json({ detail: 'Forbidden: you can only resolve disputes for your own classes.' });
+          }
         }
       }
-    }
 
-    const isApproved = normalizedAction.startsWith('approve') || normalizedAction === 'excused';
-    const isRejected = normalizedAction.startsWith('reject');
-    const isUnderReview = normalizedAction === 'under_review';
-    const isClarification = normalizedAction === 'clarification';
-    const isEscalated = normalizedAction.startsWith('escalat');
+      const isApproved = normalizedAction.startsWith('approve') || normalizedAction === 'excused';
+      const isRejected = normalizedAction.startsWith('reject');
+      const isUnderReview = normalizedAction === 'under_review';
+      const isClarification = normalizedAction === 'clarification';
+      const isEscalated = normalizedAction.startsWith('escalat');
 
-    const nextStatus = isApproved
-      ? 'Approved'
-      : isRejected
-        ? 'Rejected'
-        : isClarification
-          ? 'Clarification'
-          : isEscalated
-            ? 'Escalated'
-            : 'Under Review';
+      const nextStatus = isApproved
+        ? 'Approved'
+        : isRejected
+          ? 'Rejected'
+          : isClarification
+            ? 'Clarification'
+            : isEscalated
+              ? 'Escalated'
+              : 'Under Review';
 
-    const now = new Date();
-    const cleanRemarks = remarks ? String(remarks).trim().slice(0, 1000) : '';
+      const now = new Date();
+      const cleanRemarks = remarks ? String(remarks).trim().slice(0, 1000) : '';
 
-    // Atomic conditional update prevents duplicate final decisions
-    const dispute = await AttendanceDispute.findOneAndUpdate(
-      { _id: id, status: { $in: ['Pending', 'Under Review', 'Clarification'] } },
-      {
-        $set: {
-          status: nextStatus,
-          resolved_by: req.userEmail,
-          remarks: cleanRemarks,
-          updated_at: now,
-          ...(isApproved || isRejected ? { resolved_at: now } : {}),
-          ...(isEscalated ? { escalated_to: 'admin' } : {}),
-        },
-        $push: {
-          audit_trail: {
-            status: nextStatus,
-            actor: req.userEmail,
-            role: req.userRole,
-            note: cleanRemarks || `Marked as ${nextStatus}`,
-            timestamp: now,
-          },
-        },
-      },
-      { new: true }
-    );
-
-    if (!dispute) {
-      return res.status(409).json({ detail: `Dispute has already been finalized (${existing.status}).` });
-    }
-
-    if (isApproved) {
-      const targetAttendanceStatus = normalizedAction === 'excused'
-        ? 'Excused'
-        : (['Present', 'Excused', 'Late'].includes(updated_status) ? updated_status : (dispute.requested_status || 'Present'));
-
-      await Attendance.updateOne(
-        { student_email: dispute.student_email, session_id: dispute.session_id },
+      // Atomic conditional update prevents duplicate final decisions
+      const dispute = await AttendanceDispute.findOneAndUpdate(
+        { _id: id, status: { $in: ['Pending', 'Under Review', 'Clarification', 'Escalated'] } },
         {
           $set: {
-            status: targetAttendanceStatus,
-            verified_by: 'manual',
-            marked_by: req.userEmail,
-            previous_status: dispute.original_status || 'Absent',
-            reason: cleanRemarks || 'Approved via attendance correction request',
-            subject: dispute.subject || undefined,
-            college_id: dispute.college_id || req.userCollege || undefined,
-            remarks: cleanRemarks || 'Approved via attendance correction request',
+            status: nextStatus,
+            resolved_by: req.userEmail,
+            remarks: cleanRemarks,
             updated_at: now,
-            timestamp: now,
+            ...(isApproved || isRejected ? { resolved_at: now } : {}),
+            ...(isEscalated ? { escalated_to: 'admin' } : {}),
           },
           $push: {
-            edit_history: {
-              previous_status: dispute.original_status || 'Absent',
-              updated_status: targetAttendanceStatus,
-              actor_email: req.userEmail,
-              reason: cleanRemarks || 'Dispute approved',
+            audit_trail: {
+              status: nextStatus,
+              actor: req.userEmail,
+              role: req.userRole,
+              note: cleanRemarks || `Marked as ${nextStatus}`,
               timestamp: now,
             },
           },
         },
-        { upsert: true }
+        { new: true }
       );
-      cache.invalidateAnalyticsForUser(dispute.student_email);
-      trackJob(calculateHealthScore(dispute.student_email).catch(console.error));
+
+      if (!dispute) {
+        return res.status(409).json({ detail: `Dispute has already been finalized (${existing.status}).` });
+      }
+
+      if (isApproved) {
+        const targetAttendanceStatus = normalizedAction === 'excused'
+          ? 'Excused'
+          : (['Present', 'Excused', 'Late'].includes(updated_status) ? updated_status : (dispute.requested_status || 'Present'));
+
+        await Attendance.updateOne(
+          { student_email: dispute.student_email, session_id: dispute.session_id },
+          {
+            $set: {
+              status: targetAttendanceStatus,
+              verified_by: 'manual',
+              marked_by: req.userEmail,
+              previous_status: dispute.original_status || 'Absent',
+              reason: cleanRemarks || 'Approved via attendance correction request',
+              subject: dispute.subject || undefined,
+              college_id: dispute.college_id || req.userCollege || undefined,
+              remarks: cleanRemarks || 'Approved via attendance correction request',
+              updated_at: now,
+              timestamp: now,
+            },
+            $push: {
+              edit_history: {
+                previous_status: dispute.original_status || 'Absent',
+                updated_status: targetAttendanceStatus,
+                actor_email: req.userEmail,
+                reason: cleanRemarks || 'Dispute approved',
+                timestamp: now,
+              },
+            },
+          },
+          { upsert: true }
+        );
+        cache.invalidateAnalyticsForUser(dispute.student_email);
+        trackJob(calculateHealthScore(dispute.student_email).catch(console.error));
+      }
+
+      trackJob(notificationService.createNotification(
+        dispute.student_email,
+        `Attendance Correction ${dispute.status}`,
+        `Your attendance correction request for ${dispute.subject || dispute.session_id} was marked ${dispute.status.toLowerCase()}.`,
+        'attendance',
+        isApproved ? 'Info' : 'High',
+        { dispute_id: dispute._id.toString(), session_id: dispute.session_id }
+      ).catch(console.error));
+
+      // Notify all active authorized guardians
+      const { notifyAuthorizedGuardians } = require('../services/guardianService');
+      trackJob((async () => {
+        const studentUser = await User.findOne({ email: dispute.student_email }, 'full_name').lean();
+        await notifyAuthorizedGuardians(dispute.student_email, {
+          title: `Ward Correction ${dispute.status}`,
+          message: `Attendance correction for ${studentUser?.full_name || 'your ward'} (${dispute.subject || 'Class'}) was marked ${dispute.status.toLowerCase()}.`,
+          type: 'attendance',
+          priority: 'Info',
+          extraData: { dispute_id: dispute._id.toString() },
+        });
+      })().catch(() => { }));
+
+      await auditLog(req.userEmail, req.userRole, 'DISPUTE_RESOLVED', { dispute_id: id, status: dispute.status, remarks: cleanRemarks }, req);
+      res.json({ success: true, status: dispute.status, dispute });
+    } catch (error) {
+      reportInternalError(res, error, 'Attendance');
     }
-
-    trackJob(notificationService.createNotification(
-      dispute.student_email,
-      `Attendance Correction ${dispute.status}`,
-      `Your attendance correction request for ${dispute.subject || dispute.session_id} was marked ${dispute.status.toLowerCase()}.`,
-      'attendance',
-      isApproved ? 'Info' : 'High',
-      { dispute_id: dispute._id.toString(), session_id: dispute.session_id }
-    ).catch(console.error));
-
-    // Notify all active authorized guardians
-    const { notifyAuthorizedGuardians } = require('../services/guardianService');
-    trackJob((async () => {
-      const studentUser = await User.findOne({ email: dispute.student_email }, 'full_name').lean();
-      await notifyAuthorizedGuardians(dispute.student_email, {
-        title: `Ward Correction ${dispute.status}`,
-        message: `Attendance correction for ${studentUser?.full_name || 'your ward'} (${dispute.subject || 'Class'}) was marked ${dispute.status.toLowerCase()}.`,
-        type: 'attendance',
-        priority: 'Info',
-        extraData: { dispute_id: dispute._id.toString() },
-      });
-    })().catch(() => { }));
-
-    await auditLog(req.userEmail, req.userRole, 'DISPUTE_RESOLVED', { dispute_id: id, status: dispute.status, remarks: cleanRemarks }, req);
-    res.json({ success: true, status: dispute.status, dispute });
-  } catch (error) {
-    reportInternalError(res, error, 'Attendance');
-  }
-});
+  });
 
 module.exports = router;

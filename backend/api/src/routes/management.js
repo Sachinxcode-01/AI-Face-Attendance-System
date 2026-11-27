@@ -43,9 +43,9 @@ router.get('/hod/summary', authenticate, requireRole(['hod', 'principal', 'manag
       return res.status(400).json({ detail: "Department could not be resolved." });
     }
 
-    // Dynamic CSE/ECE database aggregation:
-    // Get students in this department
-    const students = await User.find({ department: departmentName, role: 'student' }).select('email');
+    // Dynamic CSE/ECE database aggregation scoped to caller's institution
+    const tenant = await resolveAdminTenant(req);
+    const students = await User.find(buildTenantUserFilter(tenant, { department: departmentName, role: 'student' })).select('email');
     const studentEmails = students.map(s => s.email);
 
     let dbAttendanceRate = 0;
@@ -94,7 +94,7 @@ router.get('/hod/summary', authenticate, requireRole(['hod', 'principal', 'manag
       }
     }
 
-    const teachers = await User.find({ department: departmentName, role: 'teacher' }).lean();
+    const teachers = await User.find(buildTenantUserFilter(tenant, { department: departmentName, role: { $in: ['teacher', 'faculty'] } })).lean();
     const teacherEmails = teachers.map((teacher) => teacher.email);
     const [activeClasses, teacherSessionCounts] = await Promise.all([
       Session.countDocuments({ is_active: true, teacher_id: { $in: teacherEmails } }),
@@ -159,13 +159,27 @@ router.get('/hod/summary', authenticate, requireRole(['hod', 'principal', 'manag
 // ─── GET /management/principal/summary ─────────────────────────────
 router.get('/principal/summary', authenticate, requireRole(['principal', 'management', 'admin', 'super_admin']), async (req, res) => {
   try {
-    const totalStudents = await User.countDocuments({ role: 'student' });
-    const totalFaculty = await User.countDocuments({ role: 'teacher' });
-    const activeClasses = await Session.countDocuments({ is_active: true });
+    const tenant = await resolveAdminTenant(req);
+    const studentFilter = buildTenantUserFilter(tenant, { role: 'student' });
+    const facultyFilter = buildTenantUserFilter(tenant, { role: { $in: ['teacher', 'faculty'] } });
+
+    const [tenantStudents, tenantFaculty] = await Promise.all([
+      User.find(studentFilter, 'email department').lean(),
+      User.find(facultyFilter, 'email').lean(),
+    ]);
+    const totalStudents = tenantStudents.length;
+    const totalFaculty = tenantFaculty.length;
+    const studentEmails = tenantStudents.map((s) => s.email);
+    const facultyEmails = tenantFaculty.map((f) => f.email);
+
+    const attMatch = studentEmails.length > 0 ? { student_email: { $in: studentEmails } } : (tenant.isSuperAdmin && !tenant.collegeId ? {} : { _id: null });
+    const sessMatch = facultyEmails.length > 0 ? { is_active: true, teacher_id: { $in: facultyEmails } } : (tenant.isSuperAdmin && !tenant.collegeId ? { is_active: true } : { _id: null });
+    const activeClasses = await Session.countDocuments(sessMatch);
 
     // Overall check-in rate
     let institutionAttendance = 0;
     const allAttendance = await Attendance.aggregate([
+      { $match: attMatch },
       {
         $group: {
           _id: null,
@@ -178,110 +192,117 @@ router.get('/principal/summary', authenticate, requireRole(['principal', 'manage
       institutionAttendance = Math.round((allAttendance[0].present / allAttendance[0].total) * 1000) / 10;
     }
 
-    const studentDepartments = await User.distinct('department', {
-      role: 'student',
-      department: { $exists: true, $nin: ['', null] },
-    });
-    const studentsByDepartment = await User.find(
-      { role: 'student', department: { $in: studentDepartments } },
-      'email department'
-    ).lean();
     const departmentEmails = new Map();
-    for (const student of studentsByDepartment) {
-      const emails = departmentEmails.get(student.department) || [];
-      emails.push(student.email);
-      departmentEmails.set(student.department, emails);
-    }
-    const deptComparison = {};
-    for (const [department, emails] of departmentEmails) {
-      const [summary] = await Attendance.aggregate([
-        { $match: { student_email: { $in: emails } } },
+      for (const student of tenantStudents) {
+        if (!student.department) continue;
+        const emails = departmentEmails.get(student.department) || [];
+        emails.push(student.email);
+        departmentEmails.set(student.department, emails);
+      }
+      const deptComparison = {};
+      for (const [department, emails] of departmentEmails) {
+        const [summary] = await Attendance.aggregate([
+          { $match: { student_email: { $in: emails } } },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: 1 },
+              present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
+            },
+          },
+        ]);
+        deptComparison[department] = summary?.total
+          ? Math.round((summary.present / summary.total) * 1000) / 10
+          : 0;
+      }
+
+      const monthStart = new Date();
+      monthStart.setUTCDate(1);
+      monthStart.setUTCHours(0, 0, 0, 0);
+      monthStart.setUTCMonth(monthStart.getUTCMonth() - 4);
+      const monthlyRows = await Attendance.aggregate([
+        { $match: { ...attMatch, timestamp: { $gte: monthStart } } },
         {
           $group: {
-            _id: null,
+            _id: { $dateToString: { format: '%Y-%m', date: '$timestamp' } },
             total: { $sum: 1 },
             present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
           },
         },
       ]);
-      deptComparison[department] = summary?.total
-        ? Math.round((summary.present / summary.total) * 1000) / 10
-        : 0;
-    }
-
-    const monthStart = new Date();
-    monthStart.setUTCDate(1);
-    monthStart.setUTCHours(0, 0, 0, 0);
-    monthStart.setUTCMonth(monthStart.getUTCMonth() - 4);
-    const monthlyRows = await Attendance.aggregate([
-      { $match: { timestamp: { $gte: monthStart } } },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m', date: '$timestamp' } },
-          total: { $sum: 1 },
-          present: { $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] } },
-        },
-      },
-    ]);
-    const monthlyById = new Map(monthlyRows.map((row) => [row._id, row]));
-    const monthlyGrowth = Array.from({ length: 5 }, (_, index) => {
-      const month = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + index, 1));
-      const key = month.toISOString().slice(0, 7);
-      const row = monthlyById.get(key);
-      return {
-        month: month.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }),
-        rate: row ? Math.round((row.present / row.total) * 1000) / 10 : 0,
-        total: row?.total || 0,
-      };
-    });
-
-    // Critical Alerts
-    const [securityLogs, pendingLeaves] = await Promise.all([
-      SecurityLog.find({ status: 'Active' }).sort({ timestamp: -1 }).limit(5).lean(),
-      Leave.find({ status: 'Pending' }).sort({ created_at: -1 }).limit(5).lean(),
-    ]);
-    const criticalAlerts = [];
-    for (const log of securityLogs) {
-      criticalAlerts.push({
-        id: log._id.toString(),
-        level: 'Critical',
-        title: 'Security alert',
-        detail: log.location,
-        time: log.timestamp?.toISOString() || null,
+      const monthlyById = new Map(monthlyRows.map((row) => [row._id, row]));
+      const monthlyGrowth = Array.from({ length: 5 }, (_, index) => {
+        const month = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + index, 1));
+        const key = month.toISOString().slice(0, 7);
+        const row = monthlyById.get(key);
+        return {
+          month: month.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }),
+          rate: row ? Math.round((row.present / row.total) * 1000) / 10 : 0,
+          total: row?.total || 0,
+        };
       });
-    }
-    for (const leave of pendingLeaves) {
-      criticalAlerts.push({
-        id: leave._id.toString(),
-        level: 'Warning',
-        title: 'Pending leave request',
-        detail: leave.user_id,
-        time: leave.created_at?.toISOString() || null,
+
+      // Critical Alerts scoped to institution
+      const secFilter = tenant.collegeId && !tenant.isSuperAdmin ? { college_id: tenant.collegeId, status: 'Active' } : { status: 'Active' };
+      const leaveFilter = studentEmails.length > 0 ? { user_id: { $in: studentEmails }, status: 'Pending' } : (tenant.isSuperAdmin && !tenant.collegeId ? { status: 'Pending' } : { _id: null });
+      const [securityLogs, pendingLeaves] = await Promise.all([
+        SecurityLog.find(secFilter).sort({ timestamp: -1 }).limit(5).lean(),
+        Leave.find(leaveFilter).sort({ created_at: -1 }).limit(5).lean(),
+      ]);
+      const criticalAlerts = [];
+      for (const log of securityLogs) {
+        criticalAlerts.push({
+          id: log._id.toString(),
+          level: 'Critical',
+          title: 'Security alert',
+          detail: log.location,
+          time: log.timestamp?.toISOString() || null,
+        });
+      }
+      for (const leave of pendingLeaves) {
+        criticalAlerts.push({
+          id: leave._id.toString(),
+          level: 'Warning',
+          title: 'Pending leave request',
+          detail: leave.user_id,
+          time: leave.created_at?.toISOString() || null,
+        });
+      }
+
+      res.json({
+        total_students: totalStudents,
+        total_faculty: totalFaculty,
+        active_classes: activeClasses,
+        institution_attendance: institutionAttendance,
+        monthly_growth: monthlyGrowth,
+        department_comparison: deptComparison,
+        critical_alerts: criticalAlerts
       });
+
+    } catch (error) {
+      reportInternalError(res, error, 'Management');
     }
-
-    res.json({
-      total_students: totalStudents,
-      total_faculty: totalFaculty,
-      active_classes: activeClasses,
-      institution_attendance: institutionAttendance,
-      monthly_growth: monthlyGrowth,
-      department_comparison: deptComparison,
-      critical_alerts: criticalAlerts
-    });
-
-  } catch (error) {
-    reportInternalError(res, error, 'Management');
-  }
-});
+  });
 
 // ─── GET /management/health-score ─────────────────────────────────
 router.get('/health-score', authenticate, requireRole(['principal', 'management', 'admin', 'super_admin']), async (req, res) => {
   try {
+    const tenant = await resolveAdminTenant(req);
+    const [students, teachers] = await Promise.all([
+      User.find(buildTenantUserFilter(tenant, { role: 'student' }), 'email department').lean(),
+      User.find(buildTenantUserFilter(tenant, { role: { $in: ['teacher', 'faculty'] } }), 'email').lean(),
+    ]);
+    const studentEmails = students.map((s) => s.email);
+    const teacherEmails = teachers.map((t) => t.email);
+    const attMatch = studentEmails.length > 0 ? { student_email: { $in: studentEmails } } : (tenant.isSuperAdmin && !tenant.collegeId ? {} : { _id: null });
+    const leaveScope = studentEmails.length > 0 ? { user_id: { $in: studentEmails } } : (tenant.isSuperAdmin && !tenant.collegeId ? {} : { _id: null });
+    const secScope = tenant.collegeId && !tenant.isSuperAdmin ? { college_id: tenant.collegeId, status: 'Active' } : { status: 'Active' };
+
     // Aggregated Health Score
     // Attendance rate (50%)
     let attScore = 0;
     const allAttendance = await Attendance.aggregate([
+      { $match: attMatch },
       {
         $group: {
           _id: null,
@@ -295,16 +316,14 @@ router.get('/health-score', authenticate, requireRole(['principal', 'management'
     }
 
     // Security (20%) - derived from absence of security alerts (e.g. 100 - intruder count)
-    const securityLogsCount = await SecurityLog.countDocuments({ status: 'Active' });
+    const securityLogsCount = await SecurityLog.countDocuments(secScope);
     const securityScore = Math.max(100 - (securityLogsCount * 2), 60);
 
     // Leave compliance counts only requests that have reached a decision.
-    const leavesTotal = await Leave.countDocuments({});
-    const leavesResolved = await Leave.countDocuments({ status: { $in: ['Approved', 'Rejected'] } });
+    const leavesTotal = await Leave.countDocuments(leaveScope);
+    const leavesResolved = await Leave.countDocuments({ ...leaveScope, status: { $in: ['Approved', 'Rejected'] } });
     const leaveComplianceScore = leavesTotal > 0 ? (leavesResolved / leavesTotal) * 100 : 0;
 
-    const teachers = await User.find({ role: 'teacher' }, 'email').lean();
-    const teacherEmails = teachers.map((teacher) => teacher.email);
     const engagedTeachers = teacherEmails.length
       ? await Session.distinct('teacher_id', { teacher_id: { $in: teacherEmails } })
       : [];
@@ -320,16 +339,9 @@ router.get('/health-score', authenticate, requireRole(['principal', 'management'
       (facultyEngagementScore * 0.15)
     ) * 10) / 10 : 0;
 
-    const departments = await User.distinct('department', {
-      role: 'student',
-      department: { $exists: true, $nin: ['', null] },
-    });
-    const students = await User.find(
-      { role: 'student', department: { $in: departments } },
-      'email department'
-    ).lean();
     const emailsByDepartment = new Map();
     for (const student of students) {
+      if (!student.department) continue;
       const emails = emailsByDepartment.get(student.department) || [];
       emails.push(student.email);
       emailsByDepartment.set(student.department, emails);
@@ -381,13 +393,14 @@ router.get('/risk/critical', authenticate, requireRole(['hod', 'principal', 'man
       return res.status(400).json({ detail: 'Department could not be resolved.' });
     }
 
-    // Fetch department students
-    const query = { role: 'student' };
+    // Fetch department students scoped to caller's institution
+    const tenant = await resolveAdminTenant(req);
+    const extraFilter = { role: 'student' };
     if (departmentName && req.userRole && req.userRole.toLowerCase() === 'hod') {
-      query.department = departmentName;
+      extraFilter.department = departmentName;
     }
 
-    const students = await User.find(query, 'email full_name student_id usn').lean();
+    const students = await User.find(buildTenantUserFilter(tenant, extraFilter), 'email full_name student_id usn').lean();
     const studentEmails = students.map(s => s.email);
 
     const below_75 = [];
@@ -514,77 +527,77 @@ router.get('/users', authenticate, requireRole(['admin', 'super_admin', 'hod', '
       query.department = req.query.department;
     }
 
-      if (req.query.college !== undefined && tenant.isSuperAdmin) {
-        if (typeof req.query.college !== 'string') {
-          return res.status(400).json({ detail: 'Invalid college filter.' });
-        }
-        query.college = req.query.college.trim();
+    if (req.query.college !== undefined && tenant.isSuperAdmin) {
+      if (typeof req.query.college !== 'string') {
+        return res.status(400).json({ detail: 'Invalid college filter.' });
       }
+      query.college = req.query.college.trim();
+    }
 
-          const searchParam = req.query.q !== undefined ? req.query.q : req.query.search;
-          if (searchParam !== undefined) {
-            if (typeof searchParam !== 'string') {
-              return res.status(400).json({ detail: 'Invalid search query.' });
-            }
-            const trimmedQ = searchParam.trim();
-            if (trimmedQ) {
-              const escapedQ = trimmedQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              const searchRegex = new RegExp(escapedQ, 'i');
-              query.$and = query.$and || [];
-              query.$and.push({
-                $or: [
-                  { full_name: searchRegex },
-                  { email: searchRegex },
-                  { student_id: searchRegex },
-                  { usn: searchRegex },
-                  { roll_number: searchRegex }
-                ]
-              });
-            }
-          }
+    const searchParam = req.query.q !== undefined ? req.query.q : req.query.search;
+    if (searchParam !== undefined) {
+      if (typeof searchParam !== 'string') {
+        return res.status(400).json({ detail: 'Invalid search query.' });
+      }
+      const trimmedQ = searchParam.trim();
+      if (trimmedQ) {
+        const escapedQ = trimmedQ.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const searchRegex = new RegExp(escapedQ, 'i');
+        query.$and = query.$and || [];
+        query.$and.push({
+          $or: [
+            { full_name: searchRegex },
+            { email: searchRegex },
+            { student_id: searchRegex },
+            { usn: searchRegex },
+            { roll_number: searchRegex }
+          ]
+        });
+      }
+    }
 
-          const total = await User.countDocuments(query);
-          const users = await User.find(query)
-            .select('email full_name role department semester section course academic_year college college_id student_id usn roll_number employee_id designation phone account_status biometric_registered assigned_subjects assigned_sections created_at')
-            .skip(skip)
-            .limit(limit)
-            .sort({ created_at: -1 })
-            .lean();
+    const total = await User.countDocuments(query);
+    const users = await User.find(query)
+      .select('email full_name role department semester section course academic_year college college_id student_id usn roll_number employee_id designation phone account_status biometric_registered assigned_subjects assigned_sections created_at')
+      .skip(skip)
+      .limit(limit)
+      .sort({ created_at: -1 })
+      .lean();
 
-          const formattedUsers = users.map((user) => ({
-            id: user._id.toString(),
-            email: user.email,
-            full_name: user.full_name,
-            role: user.role,
-            department: user.department || null,
-            semester: user.semester || null,
-            section: user.section || null,
-            course: user.course || null,
-            academic_year: user.academic_year || null,
-            college: user.college || null,
-            college_id: user.college_id || null,
-            student_id: user.student_id || user.usn || user.roll_number || null,
-            employee_id: user.employee_id || null,
-            designation: user.designation || null,
-            phone: user.phone || null,
-            account_status: user.account_status || 'active',
-            biometric_registered: Boolean(user.biometric_registered),
-            assigned_subjects: user.assigned_subjects || [],
-            assigned_sections: user.assigned_sections || [],
-            created_at: user.created_at,
-          }));
+    const formattedUsers = users.map((user) => ({
+      id: user._id.toString(),
+      email: user.email,
+      full_name: user.full_name,
+      role: user.role,
+      department: user.department || null,
+      semester: user.semester || null,
+      section: user.section || null,
+      course: user.course || null,
+      academic_year: user.academic_year || null,
+      college: user.college || null,
+      college_id: user.college_id || null,
+      student_id: user.student_id || user.usn || user.roll_number || null,
+      employee_id: user.employee_id || null,
+      designation: user.designation || null,
+      phone: user.phone || null,
+      account_status: user.account_status || 'active',
+      biometric_registered: Boolean(user.biometric_registered),
+      assigned_subjects: user.assigned_subjects || [],
+      assigned_sections: user.assigned_sections || [],
+      created_at: user.created_at,
+    }));
 
-          res.json({
-            success: true,
-            total,
-            page,
-            limit,
-            users: formattedUsers
-          });
-        } catch (error) {
-          reportInternalError(res, error, 'Management');
-        }
-      });
+    res.json({
+      success: true,
+      total,
+      page,
+      limit,
+      users: formattedUsers
+    });
+  } catch (error) {
+    reportInternalError(res, error, 'Management');
+  }
+});
 
 // ─── POST /management/users (Create Student / Faculty / Admin) ─────
 router.post('/users', authenticate, requireRole(['admin', 'super_admin', 'principal', 'hod']), async (req, res) => {
@@ -745,8 +758,8 @@ router.put('/users/:id', authenticate, requireRole(['admin', 'super_admin', 'pri
     }
 
     const allowedStringFields = [
-      'full_name', 'department', 'section', 'college',
-      'student_id', 'usn', 'roll_number', 'designation', 'phone'
+      'full_name', 'department', 'course', 'section', 'academic_year', 'college',
+      'student_id', 'usn', 'roll_number', 'employee_id', 'designation', 'phone'
     ];
 
     for (const field of allowedStringFields) {
@@ -880,6 +893,7 @@ router.post('/users/bulk', authenticate, requireRole(['admin', 'super_admin', 'p
       return res.status(400).json({ detail: "Batch limit exceeded (maximum 1000 records per upload)." });
     }
 
+    const tenant = await resolveAdminTenant(req);
     const incomingEmails = users
       .filter(u => u && typeof u.email === 'string')
       .map(u => u.email.trim().toLowerCase())
@@ -902,6 +916,10 @@ router.post('/users/bulk', authenticate, requireRole(['admin', 'super_admin', 'p
         skipped.push({ email, reason: 'Forbidden to create administrative role' });
         continue;
       }
+      if (!tenant.isSuperAdmin && u.college && tenant.collegeName && String(u.college).trim().toLowerCase() !== tenant.collegeName.toLowerCase()) {
+        skipped.push({ email, reason: 'Cross-institution import blocked' });
+        continue;
+      }
       if (existingEmailSet.has(email)) {
         skipped.push({ email, reason: 'User already exists' });
         continue;
@@ -909,21 +927,31 @@ router.post('/users/bulk', authenticate, requireRole(['admin', 'super_admin', 'p
 
       const individualPass = `Welcome@${crypto.randomBytes(6).toString('hex')}`;
       const passHash = await authService.hashPassword(individualPass);
+      const resolvedCollege = (!tenant.isSuperAdmin && tenant.collegeName)
+        ? tenant.collegeName
+        : (typeof u.college === 'string' ? u.college.trim() : (typeof default_college === 'string' ? default_college.trim() : (tenant.collegeName || '')));
+      const resolvedCollegeId = (!tenant.isSuperAdmin && tenant.collegeId)
+        ? tenant.collegeId
+        : (tenant.collegeId || undefined);
 
       recordsToInsert.push({
         email,
         full_name: u.full_name.trim(),
         role: userRole,
         password: passHash,
-        college: typeof u.college === 'string' ? u.college.trim() : (typeof default_college === 'string' ? default_college.trim() : ''),
+        college: resolvedCollege,
+        college_id: resolvedCollegeId,
         department: typeof u.department === 'string' ? u.department.trim() : '',
+        course: typeof u.course === 'string' ? u.course.trim() : '',
         semester: u.semester ? String(u.semester).trim() : '',
         section: typeof u.section === 'string' ? u.section.trim() : '',
         student_id: typeof u.student_id === 'string' ? u.student_id.trim() : (typeof u.usn === 'string' ? u.usn.trim() : ''),
         usn: typeof u.usn === 'string' ? u.usn.trim() : (typeof u.student_id === 'string' ? u.student_id.trim() : ''),
         roll_number: typeof u.roll_number === 'string' ? u.roll_number.trim() : '',
+        employee_id: typeof u.employee_id === 'string' ? u.employee_id.trim() : '',
         designation: typeof u.designation === 'string' ? u.designation.trim() : '',
         phone: typeof u.phone === 'string' ? u.phone.trim() : '',
+        account_status: 'active',
         setup_completed: false
       });
       existingEmailSet.add(email);
