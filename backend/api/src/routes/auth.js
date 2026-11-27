@@ -118,8 +118,6 @@ const OAUTH_STATE_COOKIE = 'smartface_oauth_state';
       httpOnly: true,
       secure,
       sameSite: secure ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: '/auth/token/refresh',
       maxAge: days * 24 * 60 * 60 * 1000,
       path: '/',
     };
@@ -146,7 +144,6 @@ const OAUTH_STATE_COOKIE = 'smartface_oauth_state';
         httpOnly: true,
         secure,
         sameSite: secure ? 'none' : 'lax',
-        path: '/auth/token/refresh',
         path: '/',
       });
     }
@@ -485,7 +482,6 @@ const OAUTH_STATE_COOKIE = 'smartface_oauth_state';
             }
 
             if (new Date() > record.expiry) {
-              await Otp.deleteOne({ email });
               await Otp.deleteOne({ _id: record._id });
               return res.status(401).json({ detail: "OTP expired" });
             }
@@ -1083,70 +1079,6 @@ const OAUTH_STATE_COOKIE = 'smartface_oauth_state';
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>GitHub Authentication - SmartFace</title>
       <style>
-        body {
-          background-color: #0F172A;
-          color: #F8FAFC;
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 100vh;
-          margin: 0;
-          padding: 20px;
-          box-sizing: border-box;
-        }
-        .card {
-          background-color: #1E293B;
-          border: 1px solid #334155;
-          padding: 30px;
-          border-radius: 16px;
-          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-          max-width: 400px;
-          width: 100%;
-          text-align: center;
-        }
-        h2 {
-          color: #38BDF8;
-          margin-top: 0;
-        }
-        p {
-          color: #94A3B8;
-          font-size: 14px;
-          line-height: 1.6;
-        }
-        .code-box {
-          background-color: #020617;
-          border: 1px solid #475569;
-          padding: 14px;
-          font-size: 18px;
-          font-family: monospace;
-          border-radius: 8px;
-          margin: 20px 0;
-          letter-spacing: 1.5px;
-          color: #38BDF8;
-          user-select: all;
-          font-weight: bold;
-        }
-        .btn {
-          background-color: #3B82F6;
-          color: white;
-          border: none;
-          padding: 12px 24px;
-          font-size: 14px;
-          font-weight: 600;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: background-color 0.2s;
-        }
-        .btn:hover {
-          background-color: #2563EB;
-        }
-        .copied-msg {
-          color: #10B981;
-          font-size: 12px;
-          margin-top: 10px;
-          display: none;
-        }
         body { background-color: #0F172A; color: #F8FAFC; font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
         .card { background-color: #1E293B; border: 1px solid #334155; padding: 30px; border-radius: 16px; max-width: 400px; width: 100%; text-align: center; }
         h2 { color: #38BDF8; margin-top: 0; }
@@ -1157,24 +1089,9 @@ const OAUTH_STATE_COOKIE = 'smartface_oauth_state';
     <body>
       <div class="card">
         <h2>Authentication Successful</h2>
-        <p>SmartFace Attendance successfully connected with GitHub. Copy the verification code below and paste it back in the app to sign in.</p>
-        <div class="code-box" id="authCode">${code}</div>
-        <button class="btn" onclick="copyCode()">Copy Verification Code</button>
-        <div class="copied-msg" id="copiedMsg">Code copied to clipboard!</div>
         <p>Copy the verification code below and paste it back in the SmartFace app to sign in.</p>
         <div class="code-box" id="authCode">${safeCode}</div>
       </div>
-      <script>
-        function copyCode() {
-          const codeEl = document.getElementById('authCode');
-          navigator.clipboard.writeText(codeEl.innerText);
-          const msg = document.getElementById('copiedMsg');
-          msg.style.display = 'block';
-          setTimeout(() => {
-            msg.style.display = 'none';
-          }, 3000);
-        }
-      </script>
     </body>
     </html>
   `);
@@ -1540,10 +1457,6 @@ const OAUTH_STATE_COOKIE = 'smartface_oauth_state';
                   } else {
                     updateFields[key] = val;
                   }
-                }
-
-                if (!isAdmin && role === 'parent' && req.body.linked_children !== undefined) {
-                  updateFields.linked_children = req.body.linked_children;
                 }
 
                 if (updateFields.profilePhotoUrl && !updateFields.avatar_url) {
