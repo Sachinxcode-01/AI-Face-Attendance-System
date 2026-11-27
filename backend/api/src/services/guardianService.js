@@ -356,9 +356,72 @@ async function syncLegacyUserLinks(parentEmail, student, add = true) {
 function invalidateParentCaches(parentEmail, studentEmail) {
   const p = String(parentEmail || '').trim().toLowerCase();
   const s = String(studentEmail || '').trim().toLowerCase();
-  cache.del(`parent:children:${p}`);
-  cache.del(`parent:dashboard:${p}:${s}`);
-  cache.del(`student:summary:${s}`);
+  if (p) cache.invalidate(`parent:children:${p}`);
+  if (p && s) cache.invalidate(`parent:dashboard:${p}:${s}`);
+  if (s) {
+    cache.invalidate(`student:summary:${s}`);
+    if (typeof cache.invalidateAnalyticsForUser === 'function') {
+      cache.invalidateAnalyticsForUser(s);
+    }
+  }
+}
+
+/**
+ * Returns all active, non-expired guardian relationships for a given student.
+ */
+async function getActiveGuardiansForStudent(studentEmail) {
+  const cleanStudent = String(studentEmail || '').trim().toLowerCase();
+  if (!cleanStudent || mongoose.connection.readyState !== 1) return [];
+  const now = new Date();
+  return GuardianRelationship.find({
+    student_email: cleanStudent,
+    status: 'active',
+    $or: [{ expires_at: { $exists: false } }, { expires_at: null }, { expires_at: { $gt: now } }],
+  }).lean();
+}
+
+/**
+ * Notifies all active, authorized guardians of a student while respecting
+ * relationship permissions and guardian notification preferences.
+ */
+async function notifyAuthorizedGuardians(studentEmail, {
+  title,
+  message,
+  type = 'attendance',
+  priority = 'Info',
+  extraData = {},
+  permissionKey = 'view_attendance',
+  preferenceKey = null,
+}) {
+  if (mongoose.connection.readyState !== 1) return;
+  const rels = await getActiveGuardiansForStudent(studentEmail);
+  if (rels.length === 0) return;
+
+  const notificationService = require('./notificationService');
+  const parentEmails = rels
+    .filter((r) => !permissionKey || !r.permissions || r.permissions[permissionKey] !== false)
+    .map((r) => r.parent_email);
+
+  if (parentEmails.length === 0) return;
+
+  const parents = await User.find(
+    { email: { $in: parentEmails }, role: 'parent', account_status: { $ne: 'archived' } },
+    'email notification_preferences'
+  ).lean();
+
+  for (const parent of parents) {
+    if (preferenceKey && parent.notification_preferences?.[preferenceKey] === false) {
+      continue;
+    }
+    await notificationService.createNotification(
+      parent.email.toLowerCase(),
+      title,
+      message,
+      type,
+      priority,
+      { ...extraData, student_email: String(studentEmail).trim().toLowerCase() }
+    ).catch(() => { });
+  }
 }
 
 module.exports = {
@@ -372,4 +435,6 @@ module.exports = {
   redeemInvitation,
   syncLegacyUserLinks,
   invalidateParentCaches,
+  getActiveGuardiansForStudent,
+  notifyAuthorizedGuardians,
 };

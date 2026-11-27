@@ -58,9 +58,15 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
     final session = context.read<SessionManager>();
     final token = session.token;
     final usn = _usnController.text.trim();
-    final studentEmail = usn.contains('@')
-        ? usn.toLowerCase()
-        : '${usn.toLowerCase()}@smartface.edu';
+    final isEmail = usn.contains('@');
+    const relMap = {
+      'Father': 'father',
+      'Mother': 'mother',
+      'Legal Guardian': 'legal_guardian',
+      'Parent': 'authorized_guardian',
+    };
+    final relType = relMap[_relationship] ?? 'legal_guardian';
+    final invCode = _codeController.text.trim();
 
     try {
       final res = await ApiService.client.post(
@@ -70,25 +76,35 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
           if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
-          'student_email': studentEmail,
-          'usn': usn.toUpperCase(),
-          'full_name': _nameController.text.trim(),
-          'relationship': _relationship,
-          'verification_code': _codeController.text.trim(),
+          if (isEmail) 'student_email': usn.toLowerCase() else 'student_id': usn.toUpperCase(),
+          'relationship_type': relType,
+          if (invCode.isNotEmpty) 'invitation_code': invCode,
         }),
       );
 
       if (!mounted) return;
+      final body = jsonDecode(res.body);
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        final body = jsonDecode(res.body);
+        final status = body is Map ? body['status']?.toString() : null;
+        if (res.statusCode == 202 || (status != null && status != 'active')) {
+          setState(() => _isLoading = false);
+          AppToast.show(
+            context,
+            message: (body is Map ? body['message']?.toString() : null) ??
+                'Guardian link request submitted for institutional verification.',
+            type: ToastType.info,
+          );
+          Navigator.of(context).maybePop(false);
+          return;
+        }
         final linkedWard = (body is Map && body['student'] is Map)
             ? Map<String, dynamic>.from(body['student'] as Map)
             : {
                 'full_name': _nameController.text.trim(),
                 'name': _nameController.text.trim(),
-                'email': studentEmail,
-                'usn': usn.toUpperCase(),
-                'relationship': _relationship,
+                'email': isEmail ? usn.toLowerCase() : '',
+                'student_id': usn.toUpperCase(),
+                'relationship_type': relType,
               };
         session.setSelectedWard(linkedWard);
         setState(() => _isLoading = false);
@@ -100,7 +116,6 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
         Navigator.of(context).maybePop(true);
       } else {
         setState(() => _isLoading = false);
-        final body = jsonDecode(res.body);
         AppToast.show(
           context,
           message: (body is Map ? body['detail']?.toString() : null) ?? 'Failed to link student ward.',
@@ -276,12 +291,12 @@ class _ParentLinkWardScreenState extends State<ParentLinkWardScreen> {
               const SizedBox(height: 6),
               _buildTextField(
                 controller: _codeController,
-                hintText: '6-digit code or student PIN',
+                hintText: 'e.g. SF-A1B2C3D4',
                 icon: Icons.lock_outline_rounded,
                 isDark: isDark,
-                keyboardType: TextInputType.number,
-                validator: (v) => (v == null || v.trim().length < 4)
-                    ? 'Enter 4 to 6 digit security code'
+                keyboardType: TextInputType.text,
+                validator: (v) => (v == null || v.trim().length < 6)
+                    ? 'Enter guardian invitation code'
                     : null,
               ),
               const SizedBox(height: 28),

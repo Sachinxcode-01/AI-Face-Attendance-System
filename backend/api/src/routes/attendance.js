@@ -372,6 +372,16 @@ router.post('/mark', authenticate, async (req, res) => {
       { session_id, subject: session.subject, receipt_id: receiptId }
     ).catch(console.error));
 
+    // Notify active authorized guardians (classroom attendance only)
+    const { notifyAuthorizedGuardians } = require('../services/guardianService');
+    trackJob(notifyAuthorizedGuardians(student_email, {
+      title: 'Ward Classroom Attendance Recorded',
+      message: `${studentUser.full_name || 'Your ward'} was marked Present for ${session.subject} (classroom session).`,
+      type: 'attendance',
+      priority: 'Info',
+      extraData: { session_id, subject: session.subject, status: 'Present', receipt_id: receiptId },
+    }).catch(() => { }));
+
     // Broadcast update to admin live-logs AND the session's teacher WebSocket
     const livePayload = {
       type: "attendance_update",
@@ -578,6 +588,15 @@ router.post('/mark/face', authenticate, requireRole('student'), upload.single('i
         { session_id: activeSessionId, subject: session.subject, receipt_id: receiptId }
       ).catch(console.error));
 
+      const { notifyAuthorizedGuardians } = require('../services/guardianService');
+      trackJob(notifyAuthorizedGuardians(student_email, {
+        title: 'Ward Classroom Attendance Recorded',
+        message: `${studentUser?.full_name || 'Your ward'} was marked Present for ${session.subject} (classroom session).`,
+        type: 'attendance',
+        priority: 'Info',
+        extraData: { session_id: activeSessionId, subject: session.subject, status: 'Present', receipt_id: receiptId },
+      }).catch(() => { }));
+
       // Broadcast update to admin live-logs AND teacher WebSocket
       const faceLivePayload = {
         type: "attendance_update",
@@ -728,6 +747,15 @@ router.post('/mark/face/kiosk', authenticate, requireRole(['teacher', 'admin', '
       'Info',
       { session_id, subject: session.subject, receipt_id: receiptId }
     ).catch(() => { }));
+
+    const { notifyAuthorizedGuardians } = require('../services/guardianService');
+    trackJob(notifyAuthorizedGuardians(student_email, {
+      title: 'Ward Classroom Attendance Recorded',
+      message: `${studentUser.full_name || 'Your ward'} was marked Present for ${session.subject} (classroom session).`,
+      type: 'attendance',
+      priority: 'Info',
+      extraData: { session_id, subject: session.subject, status: 'Present', receipt_id: receiptId },
+    }).catch(() => { }));
 
     cache.invalidateAnalyticsForUser(student_email);
 
@@ -893,6 +921,16 @@ router.post('/mark/batch', authenticate, requireRole(['teacher', 'hod', 'princip
         'Info',
         { session_id, status: normalizedStatus }
       ).catch(() => { }));
+
+      const { notifyAuthorizedGuardians } = require('../services/guardianService');
+      const isAlertStatus = ['Absent', 'Late'].includes(normalizedStatus);
+      trackJob(notifyAuthorizedGuardians(studentEmail, {
+        title: isAlertStatus ? `Ward Marked ${normalizedStatus}` : 'Ward Attendance Updated',
+        message: `${student.full_name || 'Your ward'}: ${session.subject} classroom session recorded as ${normalizedStatus}.`,
+        type: 'attendance',
+        priority: isAlertStatus ? 'High' : 'Info',
+        extraData: { session_id, subject: session.subject, status: normalizedStatus },
+      }).catch(() => { }));
     }
 
     await auditLog(req.userEmail, req.userRole, records.length > 1 ? 'BULK_ATTENDANCE' : 'MANUAL_ATTENDANCE', {
@@ -1649,19 +1687,17 @@ router.post('/disputes/:id/resolve', authenticate, requireRole(['teacher', 'hod'
       { dispute_id: dispute._id.toString(), session_id: dispute.session_id }
     ).catch(console.error));
 
-    // Notify linked parent if authorized
+    // Notify all active authorized guardians
+    const { notifyAuthorizedGuardians } = require('../services/guardianService');
     trackJob((async () => {
-      const studentUser = await User.findOne({ email: dispute.student_email }, 'full_name parent_details').lean();
-      if (studentUser?.parent_details && studentUser.parent_details.includes('@')) {
-        await notificationService.createNotification(
-          studentUser.parent_details.toLowerCase(),
-          `Ward Correction ${dispute.status}`,
-          `Attendance correction for ${studentUser.full_name || dispute.student_email} (${dispute.subject || 'Class'}) was marked ${dispute.status.toLowerCase()}.`,
-          'attendance',
-          'Info',
-          { dispute_id: dispute._id.toString(), student_email: dispute.student_email }
-        );
-      }
+      const studentUser = await User.findOne({ email: dispute.student_email }, 'full_name').lean();
+      await notifyAuthorizedGuardians(dispute.student_email, {
+        title: `Ward Correction ${dispute.status}`,
+        message: `Attendance correction for ${studentUser?.full_name || 'your ward'} (${dispute.subject || 'Class'}) was marked ${dispute.status.toLowerCase()}.`,
+        type: 'attendance',
+        priority: 'Info',
+        extraData: { dispute_id: dispute._id.toString() },
+      });
     })().catch(() => { }));
 
     await auditLog(req.userEmail, req.userRole, 'DISPUTE_RESOLVED', { dispute_id: id, status: dispute.status, remarks: cleanRemarks }, req);

@@ -24,7 +24,8 @@ class NotificationService {
   }
 
   async sendPersonalMessage(email, message) {
-    const connections = this.activeConnections.get(email);
+    const key = String(email || '').trim().toLowerCase();
+    const connections = this.activeConnections.get(key) || this.activeConnections.get(email);
     if (!connections || connections.length === 0) return;
 
     const deadConnections = [];
@@ -40,7 +41,11 @@ class NotificationService {
       }
     });
 
-    deadConnections.forEach(ws => this.removeConnection(email, ws));
+    deadConnections.forEach(ws => this.removeConnection(key, ws));
+  }
+
+  async sendRealTime(email, payload) {
+    return this.sendPersonalMessage(email, payload);
   }
 
   async broadcastLiveLogs(message, targetCollegeId = null) {
@@ -142,19 +147,19 @@ class NotificationService {
             if (mongoose.connection.readyState !== 1) return;
             const UserModel = require('../models/User');
             const user = await UserModel.findOne({ email: userId });
-              const prefs = user?.notification_preferences;
-              let inQuietHours = false;
-              if (priority !== 'Critical' && priority !== 'Urgent' && prefs?.quiet_hours?.enabled && prefs.quiet_hours.start && prefs.quiet_hours.end) {
-                const nowHHMM = new Date().toTimeString().slice(0, 5);
-                const s = prefs.quiet_hours.start;
-                const e = prefs.quiet_hours.end;
-                inQuietHours = s <= e ? (nowHHMM >= s && nowHHMM <= e) : (nowHHMM >= s || nowHHMM <= e);
-              }
-              if (user && !inQuietHours && (!prefs || prefs.email !== false)) {
-                const EmailService = require('./emailService');
-                const subject = `SmartFace Alert: ${title}`;
-                const textBody = `${title}\n\n${message}\n\nPriority: ${priority}\nCategory: ${type}\n\nSmartFace Campus Platform`;
-                const htmlBody = `<!DOCTYPE html>
+            const prefs = user?.notification_preferences;
+            let inQuietHours = false;
+            if (priority !== 'Critical' && priority !== 'Urgent' && prefs?.quiet_hours?.enabled && prefs.quiet_hours.start && prefs.quiet_hours.end) {
+              const nowHHMM = new Date().toTimeString().slice(0, 5);
+              const s = prefs.quiet_hours.start;
+              const e = prefs.quiet_hours.end;
+              inQuietHours = s <= e ? (nowHHMM >= s && nowHHMM <= e) : (nowHHMM >= s || nowHHMM <= e);
+            }
+            if (user && !inQuietHours && (!prefs || prefs.email !== false)) {
+              const EmailService = require('./emailService');
+              const subject = `SmartFace Alert: ${title}`;
+              const textBody = `${title}\n\n${message}\n\nPriority: ${priority}\nCategory: ${type}\n\nSmartFace Campus Platform`;
+              const htmlBody = `<!DOCTYPE html>
 <html>
 <head>
     <style>
@@ -175,23 +180,23 @@ class NotificationService {
     </div>
 </body>
 </html>`;
-                await EmailService.sendEmail(userId, subject, textBody, htmlBody);
-              }
-            } catch (err) {
-              console.error("Email notification sending error:", err);
+              await EmailService.sendEmail(userId, subject, textBody, htmlBody);
             }
-          };
-          trackJob(sendEmailJob());
-        }
+          } catch (err) {
+            console.error("Email notification sending error:", err);
+          }
+        };
+        trackJob(sendEmailJob());
+      }
 
-        return notifObj;
-      } catch (error) {
-        if (mongoose.connection.readyState === 1) {
-          console.error("createNotification error:", error);
-        }
+      return notifObj;
+    } catch (error) {
+      if (mongoose.connection.readyState === 1) {
+        console.error("createNotification error:", error);
       }
     }
+  }
 }
 
-  const notificationService = new NotificationService();
+const notificationService = new NotificationService();
 module.exports = notificationService;

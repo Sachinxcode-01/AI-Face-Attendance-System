@@ -28,6 +28,8 @@ const AttendanceDispute = require('../../src/models/AttendanceDispute');
 const GuardianRelationship = require('../../src/models/GuardianRelationship');
 const GuardianInvitation = require('../../src/models/GuardianInvitation');
 const ParentEnquiry = require('../../src/models/ParentEnquiry');
+const crypto = require('crypto');
+const UserSession = require('../../src/models/UserSession');
 const AuthService = require('../../src/services/authService');
 
 const BASE_PORT = 8019;
@@ -107,6 +109,25 @@ async function run() {
 
     const parentToken = AuthService.createAccessToken({ sub: parentEmail, role: 'parent' });
     const wardToken = AuthService.createAccessToken({ sub: wardEmail, role: 'student' });
+
+    await UserSession.insertMany([
+      {
+        userId: parentEmail,
+        userEmail: parentEmail,
+        tokenHash: crypto.createHash('sha256').update(parentToken).digest('hex'),
+        device: 'parent-validation-suite',
+        ip: '127.0.0.1',
+        expiry: new Date(Date.now() + 3600000),
+      },
+      {
+        userId: wardEmail,
+        userEmail: wardEmail,
+        tokenHash: crypto.createHash('sha256').update(wardToken).digest('hex'),
+        device: 'parent-validation-suite',
+        ip: '127.0.0.1',
+        expiry: new Date(Date.now() + 3600000),
+      },
+    ]);
 
     console.log('1. Testing anti-enumeration & unverified linking...');
     const enumRes = await request('POST', '/parent/link-student', parentToken, { student_email: 'nonexistent_999@smartface.pro' });
@@ -188,7 +209,31 @@ async function run() {
     const withdrawRes = await request('POST', `/parent/child/leaves/${leaveOk.data.leaveId}/withdraw`, parentToken);
     assert.strictEqual(withdrawRes.status, 200);
 
-    console.log('8. Testing institutional enquiry...');
+    const legacyLeaveForbid = await request('POST', '/leave/apply', parentToken, {
+      student_email: otherStudentEmail,
+      category: 'Personal',
+      start_date: '2026-12-05',
+      end_date: '2026-12-05',
+      reason: 'IDOR test on /leave/apply',
+    });
+    assert.strictEqual(legacyLeaveForbid.status, 403, '/leave/apply must enforce GuardianRelationship');
+
+    console.log('8. Testing institutional enquiry & guardian notifications...');
+    const notificationService = require('../../src/services/notificationService');
+    assert.strictEqual(typeof notificationService.sendRealTime, 'function', 'notificationService.sendRealTime must exist');
+    const { notifyAuthorizedGuardians } = require('../../src/services/guardianService');
+    await notifyAuthorizedGuardians(wardEmail, {
+      title: 'Test Classroom Attendance',
+      message: 'Test Ward was marked Present for Algorithms (classroom session).',
+      type: 'attendance',
+    });
+    const parentNotifs = await request('GET', '/notifications', parentToken);
+    assert.strictEqual(parentNotifs.status, 200);
+    assert(
+      (parentNotifs.data.notifications || []).some((n) => n.title === 'Test Classroom Attendance'),
+      'Active guardian must receive attendance notification'
+    );
+
     const enqRes = await request('POST', '/parent/enquiries', parentToken, {
       student_email: wardEmail,
       subject: 'Attendance policy question',
@@ -207,6 +252,15 @@ async function run() {
     const afterRevokeDash = await request('GET', `/parent/child/dashboard/${encodeURIComponent(wardEmail)}`, parentToken);
     assert.strictEqual(afterRevokeDash.status, 403, 'Access must be revoked immediately after relationship termination');
 
+    const afterRevokeLeave = await request('POST', '/leave/apply', parentToken, {
+      student_email: wardEmail,
+      category: 'Personal',
+      start_date: '2026-12-06',
+      end_date: '2026-12-06',
+      reason: 'Post-revocation leave attempt',
+    });
+    assert.strictEqual(afterRevokeLeave.status, 403, '/leave/apply must reject revoked guardian');
+
     console.log('✅ ALL PARENT PORTAL INTEGRATION & SECURITY CHECKS PASSED!');
   } finally {
     if (dbConnected) {
@@ -218,9 +272,10 @@ async function run() {
         Leave.deleteMany({ user_id: wardEmail }),
         AttendanceDispute.deleteMany({ student_email: { $in: [wardEmail, otherStudentEmail] } }),
         ParentEnquiry.deleteMany({ parent_email: parentEmail }),
+        UserSession.deleteMany({ userEmail: { $in: [parentEmail, wardEmail] } }),
         Session.deleteMany({ teacher_id: `teacher_${ts}@smartface.pro` }),
       ]);
-      await mongoose.disconnect().catch(() => {});
+      await mongoose.disconnect().catch(() => { });
     }
     if (server && server.listening) {
       await new Promise((resolve) => server.close(resolve));

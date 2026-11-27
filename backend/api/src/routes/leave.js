@@ -17,7 +17,7 @@ const { leaveApplySchema } = require('../schemas/validationSchemas');
 const reportInternalError = require('../utils/httpError');
 const cache = require('../utils/cache');
 const { getInstitutionPolicy } = require('../services/studentAttendanceService');
-const { authorizeWardAccess } = require('../services/guardianService');
+const { authorizeWardAccess, notifyAuthorizedGuardians } = require('../services/guardianService');
 
 const AttendanceAuditLog = require('../models/AttendanceAuditLog');
 
@@ -110,23 +110,23 @@ router.get('/document/:filename', authenticate, async (req, res) => {
         isAuthorizedReviewer = ['admin', 'principal', 'management'].includes(role);
       }
     }
-      let isAuthorizedParent = false;
-      if (!isAuthorizedReviewer && !isOwner && role === 'parent' && leave) {
-        const authz = await authorizeWardAccess(req, leave.user_id, 'view_leaves');
-        isAuthorizedParent = authz.allowed;
-      }
-      if (!isAuthorizedReviewer && !isOwner && !isAuthorizedParent) {
-        return res.status(403).json({ detail: 'Forbidden: you do not have access to this attachment.' });
-      }
-      const filePath = path.join(leaveDocsDir, safeName);
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ detail: 'Document not found.' });
-      }
-      res.sendFile(filePath);
-    } catch (error) {
-      reportInternalError(res, error, 'Leave:Document');
+    let isAuthorizedParent = false;
+    if (!isAuthorizedReviewer && !isOwner && role === 'parent' && leave) {
+      const authz = await authorizeWardAccess(req, leave.user_id, 'view_leaves');
+      isAuthorizedParent = authz.allowed;
     }
-  });
+    if (!isAuthorizedReviewer && !isOwner && !isAuthorizedParent) {
+      return res.status(403).json({ detail: 'Forbidden: you do not have access to this attachment.' });
+    }
+    const filePath = path.join(leaveDocsDir, safeName);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ detail: 'Document not found.' });
+    }
+    res.sendFile(filePath);
+  } catch (error) {
+    reportInternalError(res, error, 'Leave:Document');
+  }
+});
 
 // ─── POST /leave/apply ──────────────────────────────────────────
 router.post('/apply', authenticate, requireRole(['student', 'parent']), validate(leaveApplySchema), async (req, res) => {
@@ -140,100 +140,99 @@ router.post('/apply', authenticate, requireRole(['student', 'parent']), validate
     }
 
     if (actorRole === 'parent') {
-      const parent = await User.findOne({ email: req.userEmail.toLowerCase() }, 'children linked_children').lean();
-      const wardEmails = new Set([
-        ...(parent?.children || []).map(e => String(e).toLowerCase()),
-        ...(parent?.linked_children || []).map(c => String(c.email || '').toLowerCase())
-      ]);
-      if (!targetUserId || !wardEmails.has(targetUserId)) {
-        return res.status(403).json({ detail: "Forbidden: Student is not linked to your parent account." });
+        if (!targetUserId || targetUserId === req.userEmail.toLowerCase()) {
+          return res.status(400).json({ detail: "student_email is required when submitting leave as a guardian." });
+        }
+        const authz = await authorizeWardAccess(req, targetUserId, 'submit_leave');
+        if (!authz.allowed) {
+          return res.status(403).json({ detail: authz.reason });
+        }
       }
-    }
 
-    // Validate date range
-    const startDt = new Date(`${String(start_date).slice(0, 10)}T00:00:00.000Z`);
-    const endDt = new Date(`${String(end_date).slice(0, 10)}T00:00:00.000Z`);
-    if (Number.isNaN(startDt.getTime()) || Number.isNaN(endDt.getTime())) {
-      return res.status(400).json({ detail: 'Invalid start_date or end_date format (expected YYYY-MM-DD).' });
-    }
-    if (endDt < startDt) {
-      return res.status(400).json({ detail: 'End date must be on or after the start date.' });
-    }
-    const durationDays = Math.ceil((endDt - startDt) / 86400000) + 1;
-    if (durationDays > 90) {
-      return res.status(400).json({ detail: 'Single leave application cannot exceed 90 days.' });
-    }
+      // Validate date range
+      const startDt = new Date(`${String(start_date).slice(0, 10)}T00:00:00.000Z`);
+      const endDt = new Date(`${String(end_date).slice(0, 10)}T00:00:00.000Z`);
+      if (Number.isNaN(startDt.getTime()) || Number.isNaN(endDt.getTime())) {
+        return res.status(400).json({ detail: 'Invalid start_date or end_date format (expected YYYY-MM-DD).' });
+      }
+      if (endDt < startDt) {
+        return res.status(400).json({ detail: 'End date must be on or after the start date.' });
+      }
+      const durationDays = Math.ceil((endDt - startDt) / 86400000) + 1;
+      if (durationDays > 90) {
+        return res.status(400).json({ detail: 'Single leave application cannot exceed 90 days.' });
+      }
 
-    const startStr = startDt.toISOString().slice(0, 10);
-    const endStr = endDt.toISOString().slice(0, 10);
+      const startStr = startDt.toISOString().slice(0, 10);
+      const endStr = endDt.toISOString().slice(0, 10);
 
-    // Detect overlapping active leave applications
-    const overlapping = await Leave.findOne({
-      user_id: targetUserId,
-      status: { $in: ['Pending', 'Under Review', 'Clarification', 'Approved'] },
-      start_date: { $lte: endStr },
-      end_date: { $gte: startStr }
-    }).lean();
+      // Detect overlapping active leave applications
+      const overlapping = await Leave.findOne({
+        user_id: targetUserId,
+        status: { $in: ['Pending', 'Under Review', 'Clarification', 'Approved'] },
+        start_date: { $lte: endStr },
+        end_date: { $gte: startStr }
+      }).lean();
 
-    if (overlapping) {
-      return res.status(409).json({
-        detail: `Overlapping ${overlapping.status.toLowerCase()} leave exists (${overlapping.start_date} to ${overlapping.end_date}).`
+      if (overlapping) {
+        return res.status(409).json({
+          detail: `Overlapping ${overlapping.status.toLowerCase()} leave exists (${overlapping.start_date} to ${overlapping.end_date}).`
+        });
+      }
+
+      const studentUser = await User.findOne({ email: targetUserId }, 'college_id college').lean();
+      const resolvedCategory = ALLOWED_CATEGORIES.includes(category) ? category : (ALLOWED_CATEGORIES.includes(leave_type) ? leave_type : 'Academic');
+      const safeDocUrl = typeof document_url === 'string' && document_url.startsWith('/leave/document/') ? document_url : undefined;
+
+      const newLeave = new Leave({
+        user_id: targetUserId,
+        college_id: studentUser?.college_id || req.userCollege || undefined,
+        reason: String(reason).trim().slice(0, 1000),
+        category: resolvedCategory,
+        start_date: startStr,
+        end_date: endStr,
+        document_url: safeDocUrl,
+        document_name: typeof document_name === 'string' ? document_name.slice(0, 120) : undefined,
+        status: "Pending",
+        status_history: [{
+          status: 'Pending',
+          actor: req.userEmail,
+          note: 'Application submitted',
+          timestamp: new Date()
+        }]
       });
+
+      await newLeave.save();
+
+      // Notify student & admin
+      trackJob(notificationService.createNotification(
+        targetUserId,
+        'Leave Application Submitted',
+        `Your ${resolvedCategory} leave (${startStr} to ${endStr}) has been submitted for review.`,
+        'leave_status',
+        'Info',
+        { leave_id: newLeave._id.toString() }
+      ).catch(console.error));
+
+      trackJob(notificationService.createNotification(
+        "admin",
+        "New Leave Request",
+        `${targetUserId} has requested ${resolvedCategory} leave from ${startStr} to ${endStr}`,
+        "leave_request",
+        "High",
+        { leave_id: newLeave._id.toString(), user_id: targetUserId }
+      ).catch(console.error));
+
+      res.json({
+        success: true,
+        message: "Leave application submitted",
+        id: newLeave._id.toString(),
+        leave: { ...newLeave.toObject(), id: newLeave._id.toString() }
+      });
+    } catch (error) {
+      reportInternalError(res, error, 'Leave');
     }
-
-    const studentUser = await User.findOne({ email: targetUserId }, 'college_id college').lean();
-    const resolvedCategory = ALLOWED_CATEGORIES.includes(category) ? category : (ALLOWED_CATEGORIES.includes(leave_type) ? leave_type : 'Academic');
-    const safeDocUrl = typeof document_url === 'string' && document_url.startsWith('/leave/document/') ? document_url : undefined;
-
-    const newLeave = new Leave({
-      user_id: targetUserId,
-      college_id: studentUser?.college_id || req.userCollege || undefined,
-      reason: String(reason).trim().slice(0, 1000),
-      category: resolvedCategory,
-      start_date: startStr,
-      end_date: endStr,
-      document_url: safeDocUrl,
-      document_name: typeof document_name === 'string' ? document_name.slice(0, 120) : undefined,
-      status: "Pending",
-      status_history: [{
-        status: 'Pending',
-        actor: req.userEmail,
-        note: 'Application submitted',
-        timestamp: new Date()
-      }]
-    });
-
-    await newLeave.save();
-
-    // Notify student & admin
-    trackJob(notificationService.createNotification(
-      targetUserId,
-      'Leave Application Submitted',
-      `Your ${resolvedCategory} leave (${startStr} to ${endStr}) has been submitted for review.`,
-      'leave_status',
-      'Info',
-      { leave_id: newLeave._id.toString() }
-    ).catch(console.error));
-
-    trackJob(notificationService.createNotification(
-      "admin",
-      "New Leave Request",
-      `${targetUserId} has requested ${resolvedCategory} leave from ${startStr} to ${endStr}`,
-      "leave_request",
-      "High",
-      { leave_id: newLeave._id.toString(), user_id: targetUserId }
-    ).catch(console.error));
-
-    res.json({
-      success: true,
-      message: "Leave application submitted",
-      id: newLeave._id.toString(),
-      leave: { ...newLeave.toObject(), id: newLeave._id.toString() }
-    });
-  } catch (error) {
-    reportInternalError(res, error, 'Leave');
-  }
-});
+  });
 
 // ─── PATCH /leave/:id/withdraw ──────────────────────────────────
 router.patch('/:id/withdraw', authenticate, requireRole(['student', 'parent']), async (req, res) => {
@@ -508,21 +507,18 @@ router.patch('/action', authenticate, requireRole(leaveReviewRoles), async (req,
       { leave_id, status }
     ).catch(console.error));
 
-    // Also notify linked parent of student
+    // Also notify all active authorized guardians of the student
     trackJob((async () => {
       try {
-        const studentUser = await User.findOne({ email: leave.user_id }).lean();
-        const parentEmail = studentUser?.parent_details;
-        if (parentEmail && parentEmail.includes('@')) {
-          await notificationService.createNotification(
-            parentEmail,
-            'Ward Leave Status Update',
-            `Leave request for ${studentUser.full_name || leave.user_id} (${leave.start_date} to ${leave.end_date}) has been ${status.toLowerCase()}.`,
-            'leave_status',
-            'High',
-            { leave_id, status, student_email: leave.user_id }
-          );
-        }
+        const studentUser = await User.findOne({ email: leave.user_id }, 'full_name').lean();
+        await notifyAuthorizedGuardians(leave.user_id, {
+          title: 'Ward Leave Status Update',
+          message: `Leave request for ${studentUser?.full_name || leave.user_id} (${leave.start_date} to ${leave.end_date}) has been ${status.toLowerCase()}.`,
+          type: 'leave_status',
+          priority: 'High',
+          extraData: { leave_id, status },
+          permissionKey: 'view_leaves',
+        });
       } catch (err) {
         console.error('Parent leave notification error:', err);
       }

@@ -22,8 +22,14 @@ export function ParentReportsNexaTab({ wardEmail, wardName }: Props) {
   const [reportErr, setReportErr] = useState('');
 
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([]);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [asking, setAsking] = useState(false);
+
+  React.useEffect(() => {
+    setMessages([]);
+    setConversationId(null);
+  }, [wardEmail]);
 
   const handleDownload = async (format: 'csv' | 'excel' | 'html', type: string) => {
     setReportErr('');
@@ -55,10 +61,12 @@ export function ParentReportsNexaTab({ wardEmail, wardName }: Props) {
         body: JSON.stringify({
           message: q,
           student_email: wardEmail,
+          conversationId,
           currentRoute: '/parent',
         }),
       });
       const data = await res.json();
+      if (data?.conversationId) setConversationId(data.conversationId);
       const reply = data?.reply || data?.answer || data?.detail || 'Nexa AI could not generate a response right now.';
       setMessages((prev) => [...prev, { role: 'assistant', text: reply }]);
     } catch {
