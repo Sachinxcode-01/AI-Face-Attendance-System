@@ -48,13 +48,19 @@ router.get('/timetable', authenticate, async (req, res) => {
       if (keys.length > 0) queryIds = keys;
     }
 
-    const timetable = await Timetable.find({ user_id: { $in: queryIds } }).lean();
-
-    const formatted = timetable.map(item => {
-      item.id = item._id.toString();
-      delete item._id;
-      return item;
-    });
+    const cacheKey = cache.tenantKey(req.userCollegeId || 'global', 'timetable', queryIds.join(','));
+    const formatted = await cache.getOrLoad(
+      cacheKey,
+      async () => {
+        const timetable = await Timetable.find({ user_id: { $in: queryIds } }).lean();
+        return timetable.map(item => {
+          const out = { ...item, id: item._id.toString() };
+          delete out._id;
+          return out;
+        });
+      },
+      30 * 1000
+    );
 
     res.json(formatted);
   } catch (error) {
@@ -73,9 +79,17 @@ router.get('/timetable/summary', authenticate, async (req, res) => {
     const keys = buildTimetableKeys(user);
     const queryIds = keys.length > 0 ? keys : [email.toUpperCase()];
 
+    const holidayFilter = user.college_id
+      ? { $or: [{ college_id: user.college_id }, { college_id: null }, { college_id: { $exists: false } }] }
+      : { $or: [{ college_id: null }, { college_id: { $exists: false } }] };
+
     const [slots, holidays] = await Promise.all([
       Timetable.find({ user_id: { $in: queryIds } }).lean(),
-      cache.getOrLoad('academic:holidays:all', () => Holiday.find().sort({ date: 1 }).lean(), 60 * 1000),
+      cache.getOrLoad(
+        cache.tenantKey(user.college_id || 'global', 'holidays_all'),
+        () => Holiday.find(holidayFilter).sort({ date: 1 }).lean(),
+        60 * 1000
+      ),
     ]);
 
     const now = new Date();
@@ -305,6 +319,7 @@ router.post('/timetable', authenticate, requireRole(['admin', 'teacher', 'super_
     const entryObj = entry.toObject();
     entryObj.id = entryObj._id.toString();
     delete entryObj._id;
+    cache.invalidate('t:');
 
     res.status(201).json(entryObj);
   } catch (error) {
@@ -327,50 +342,51 @@ router.put('/timetable/:id', authenticate, requireRole(['admin', 'teacher', 'sup
 
     const tenant = await resolveAdminTenant(req);
     const slotCollege = (slot.college_id || "").trim();
-      const matchesTenant = (tenant.collegeId && slotCollege === tenant.collegeId) || (tenant.collegeName && slotCollege === tenant.collegeName);
-      if (!tenant.isSuperAdmin && !matchesTenant) {
-        return res.status(403).json({ detail: "Forbidden: Cannot edit timetable slot for another college." });
-      }
-
-      const updates = {};
-      if (req.body.user_id !== undefined) {
-        if (typeof req.body.user_id !== 'string' || !req.body.user_id.trim()) {
-          return res.status(400).json({ detail: "user_id must be a non-empty string." });
-        }
-        updates.user_id = req.body.user_id.trim().toUpperCase();
-      }
-      if (req.body.subject !== undefined) {
-        if (typeof req.body.subject !== 'string' || !req.body.subject.trim()) {
-          return res.status(400).json({ detail: "subject must be a non-empty string." });
-        }
-        updates.subject = req.body.subject.trim();
-      }
-      if (req.body.day !== undefined) {
-        if (typeof req.body.day !== 'string' || !req.body.day.trim()) {
-          return res.status(400).json({ detail: "day must be a non-empty string." });
-        }
-        updates.day = req.body.day.trim();
-      }
-      if (req.body.time !== undefined) {
-        if (typeof req.body.time !== 'string' || !req.body.time.trim()) {
-          return res.status(400).json({ detail: "time must be a non-empty string." });
-        }
-        updates.time = req.body.time.trim();
-      }
-      if (req.body.room !== undefined) updates.room = typeof req.body.room === 'string' ? req.body.room.trim() : "";
-      if (req.userRole === 'super_admin' && req.body.college_id !== undefined) {
-        updates.college_id = typeof req.body.college_id === 'string' ? req.body.college_id.trim() : "";
-      }
-      if (req.body.teacher_email !== undefined) updates.teacher_email = typeof req.body.teacher_email === 'string' ? req.body.teacher_email.trim() : "";
-
-      const updated = await Timetable.findByIdAndUpdate(id, updates, { new: true }).lean();
-      updated.id = updated._id.toString();
-      delete updated._id;
-      res.json({ success: true, slot: updated });
-    } catch (error) {
-      res.status(500).json({ detail: error.message });
+    const matchesTenant = (tenant.collegeId && slotCollege === tenant.collegeId) || (tenant.collegeName && slotCollege === tenant.collegeName);
+    if (!tenant.isSuperAdmin && !matchesTenant) {
+      return res.status(403).json({ detail: "Forbidden: Cannot edit timetable slot for another college." });
     }
-  });
+
+    const updates = {};
+    if (req.body.user_id !== undefined) {
+      if (typeof req.body.user_id !== 'string' || !req.body.user_id.trim()) {
+        return res.status(400).json({ detail: "user_id must be a non-empty string." });
+      }
+      updates.user_id = req.body.user_id.trim().toUpperCase();
+    }
+    if (req.body.subject !== undefined) {
+      if (typeof req.body.subject !== 'string' || !req.body.subject.trim()) {
+        return res.status(400).json({ detail: "subject must be a non-empty string." });
+      }
+      updates.subject = req.body.subject.trim();
+    }
+    if (req.body.day !== undefined) {
+      if (typeof req.body.day !== 'string' || !req.body.day.trim()) {
+        return res.status(400).json({ detail: "day must be a non-empty string." });
+      }
+      updates.day = req.body.day.trim();
+    }
+    if (req.body.time !== undefined) {
+      if (typeof req.body.time !== 'string' || !req.body.time.trim()) {
+        return res.status(400).json({ detail: "time must be a non-empty string." });
+      }
+      updates.time = req.body.time.trim();
+    }
+    if (req.body.room !== undefined) updates.room = typeof req.body.room === 'string' ? req.body.room.trim() : "";
+    if (req.userRole === 'super_admin' && req.body.college_id !== undefined) {
+      updates.college_id = typeof req.body.college_id === 'string' ? req.body.college_id.trim() : "";
+    }
+    if (req.body.teacher_email !== undefined) updates.teacher_email = typeof req.body.teacher_email === 'string' ? req.body.teacher_email.trim() : "";
+
+    const updated = await Timetable.findByIdAndUpdate(id, updates, { new: true }).lean();
+    cache.invalidate('t:');
+    updated.id = updated._id.toString();
+    delete updated._id;
+    res.json({ success: true, slot: updated });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
 
 // DELETE /academic/timetable/:id
 router.delete('/timetable/:id', authenticate, requireRole(['admin', 'teacher', 'super_admin']), async (req, res) => {
@@ -387,18 +403,19 @@ router.delete('/timetable/:id', authenticate, requireRole(['admin', 'teacher', '
 
     const tenant = await resolveAdminTenant(req);
     const slotCollege = (slot.college_id || "").trim();
-      const matchesTenant = (tenant.collegeId && slotCollege === tenant.collegeId) || (tenant.collegeName && slotCollege === tenant.collegeName);
-      if (!tenant.isSuperAdmin && !matchesTenant) {
-        return res.status(403).json({ detail: "Forbidden: Cannot delete timetable slot for another college." });
-      }
-
-      await Timetable.findByIdAndDelete(id).lean();
-
-      res.json({ success: true, message: "Timetable slot deleted successfully.", deleted_id: id });
-    } catch (error) {
-      res.status(500).json({ detail: error.message });
+    const matchesTenant = (tenant.collegeId && slotCollege === tenant.collegeId) || (tenant.collegeName && slotCollege === tenant.collegeName);
+    if (!tenant.isSuperAdmin && !matchesTenant) {
+      return res.status(403).json({ detail: "Forbidden: Cannot delete timetable slot for another college." });
     }
-  });
+
+    await Timetable.findByIdAndDelete(id).lean();
+    cache.invalidate('t:');
+
+    res.json({ success: true, message: "Timetable slot deleted successfully.", deleted_id: id });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
 
 // POST /academic/timetable/bulk
 router.post('/timetable/bulk', authenticate, requireRole(['admin', 'super_admin']), async (req, res) => {
@@ -453,74 +470,74 @@ router.get('/timetable/conflicts', authenticate, requireRole(['admin', 'teacher'
     const tenant = await resolveAdminTenant(req);
     const { college_id, day } = req.query;
     const filter = {};
-      if (tenant.isSuperAdmin) {
-        if (typeof college_id === 'string' && college_id.trim()) {
-          filter.college_id = college_id.trim();
-        }
-      } else {
-        const orClauses = [];
-        if (tenant.collegeId) orClauses.push({ college_id: tenant.collegeId });
-        if (tenant.collegeName) orClauses.push({ college_id: tenant.collegeName });
-        if (orClauses.length > 0) filter.$or = orClauses;
-        else filter._id = null;
+    if (tenant.isSuperAdmin) {
+      if (typeof college_id === 'string' && college_id.trim()) {
+        filter.college_id = college_id.trim();
       }
-      if (typeof day === 'string' && day.trim()) {
-        filter.day = day.trim();
-      }
-
-      const allSlots = await Timetable.find(filter).lean();
-      const roomConflicts = [];
-      const teacherConflicts = [];
-
-      // Group by room & day
-      const roomMap = new Map();
-      const teacherMap = new Map();
-
-      for (const slot of allSlots) {
-        // Room conflict check
-        if (slot.room && slot.room.trim()) {
-          const roomKey = `${slot.day}_${slot.room.trim().toUpperCase()}_${slot.time.trim()}`;
-          if (roomMap.has(roomKey)) {
-            roomConflicts.push({
-              type: "room_double_booked",
-              room: slot.room,
-              day: slot.day,
-              time: slot.time,
-              slots: [roomMap.get(roomKey), { id: slot._id.toString(), subject: slot.subject, class: slot.user_id }]
-            });
-          } else {
-            roomMap.set(roomKey, { id: slot._id.toString(), subject: slot.subject, class: slot.user_id });
-          }
-        }
-
-        // Teacher conflict check
-        if (slot.teacher_email && slot.teacher_email.trim()) {
-          const teacherKey = `${slot.day}_${slot.teacher_email.trim().toLowerCase()}_${slot.time.trim()}`;
-          if (teacherMap.has(teacherKey)) {
-            teacherConflicts.push({
-              type: "teacher_double_booked",
-              teacher_email: slot.teacher_email,
-              day: slot.day,
-              time: slot.time,
-              slots: [teacherMap.get(teacherKey), { id: slot._id.toString(), subject: slot.subject, class: slot.user_id }]
-            });
-          } else {
-            teacherMap.set(teacherKey, { id: slot._id.toString(), subject: slot.subject, class: slot.user_id });
-          }
-        }
-      }
-
-      res.json({
-        success: true,
-        total_slots_checked: allSlots.length,
-        conflicts_found: roomConflicts.length + teacherConflicts.length,
-        room_conflicts: roomConflicts,
-        teacher_conflicts: teacherConflicts
-      });
-    } catch (error) {
-      res.status(500).json({ detail: error.message });
+    } else {
+      const orClauses = [];
+      if (tenant.collegeId) orClauses.push({ college_id: tenant.collegeId });
+      if (tenant.collegeName) orClauses.push({ college_id: tenant.collegeName });
+      if (orClauses.length > 0) filter.$or = orClauses;
+      else filter._id = null;
     }
-  });
+    if (typeof day === 'string' && day.trim()) {
+      filter.day = day.trim();
+    }
+
+    const allSlots = await Timetable.find(filter).lean();
+    const roomConflicts = [];
+    const teacherConflicts = [];
+
+    // Group by room & day
+    const roomMap = new Map();
+    const teacherMap = new Map();
+
+    for (const slot of allSlots) {
+      // Room conflict check
+      if (slot.room && slot.room.trim()) {
+        const roomKey = `${slot.day}_${slot.room.trim().toUpperCase()}_${slot.time.trim()}`;
+        if (roomMap.has(roomKey)) {
+          roomConflicts.push({
+            type: "room_double_booked",
+            room: slot.room,
+            day: slot.day,
+            time: slot.time,
+            slots: [roomMap.get(roomKey), { id: slot._id.toString(), subject: slot.subject, class: slot.user_id }]
+          });
+        } else {
+          roomMap.set(roomKey, { id: slot._id.toString(), subject: slot.subject, class: slot.user_id });
+        }
+      }
+
+      // Teacher conflict check
+      if (slot.teacher_email && slot.teacher_email.trim()) {
+        const teacherKey = `${slot.day}_${slot.teacher_email.trim().toLowerCase()}_${slot.time.trim()}`;
+        if (teacherMap.has(teacherKey)) {
+          teacherConflicts.push({
+            type: "teacher_double_booked",
+            teacher_email: slot.teacher_email,
+            day: slot.day,
+            time: slot.time,
+            slots: [teacherMap.get(teacherKey), { id: slot._id.toString(), subject: slot.subject, class: slot.user_id }]
+          });
+        } else {
+          teacherMap.set(teacherKey, { id: slot._id.toString(), subject: slot.subject, class: slot.user_id });
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      total_slots_checked: allSlots.length,
+      conflicts_found: roomConflicts.length + teacherConflicts.length,
+      room_conflicts: roomConflicts,
+      teacher_conflicts: teacherConflicts
+    });
+  } catch (error) {
+    res.status(500).json({ detail: error.message });
+  }
+});
 
 // GET /academic/assignments
 router.get('/assignments', authenticate, async (req, res) => {
@@ -574,10 +591,15 @@ router.get('/documents', authenticate, async (req, res) => {
 // GET /academic/holidays
 router.get('/holidays', authenticate, async (req, res) => {
   try {
+    const collegeId = req.userCollegeId || null;
+    const holidayFilter = collegeId
+      ? { $or: [{ college_id: collegeId }, { college_id: null }, { college_id: { $exists: false } }] }
+      : { $or: [{ college_id: null }, { college_id: { $exists: false } }] };
+
     const formatted = await cache.getOrLoad(
-      'academic:holidays:formatted',
+      cache.tenantKey(collegeId || 'global', 'holidays_formatted'),
       async () => {
-        const holidays = await Holiday.find().sort({ date: 1 }).lean();
+        const holidays = await Holiday.find(holidayFilter).sort({ date: 1 }).lean();
         return holidays.map((h) => {
           const item = { ...h, id: h._id.toString() };
           delete item._id;
@@ -606,13 +628,15 @@ router.post('/holidays', authenticate, requireRole(['admin', 'super_admin']), as
     if (isNaN(parsedDate.getTime())) {
       return res.status(400).json({ detail: "Invalid date format." });
     }
+    const tenant = await resolveAdminTenant(req);
     const holiday = new Holiday({
       title: title.trim(),
       date: parsedDate,
+      college_id: tenant.collegeId || null,
       description: typeof description === 'string' ? description.trim() : ""
     });
     await holiday.save();
-    cache.invalidate('academic:holidays');
+    cache.invalidate('t:');
     const hObj = holiday.toObject();
     hObj.id = hObj._id.toString();
     delete hObj._id;

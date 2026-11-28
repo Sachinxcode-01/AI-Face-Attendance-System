@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const AttendanceAnalyticsSchema = new mongoose.Schema({
   student_email: { type: String, required: true, unique: true, index: true },
+  college_id: { type: String, index: true },
   health_score: { type: Number, required: true }, // 0 - 100
   standing: { type: String, enum: ['Excellent', 'Good', 'Warning', 'Critical'], required: true },
   consecutive_absences: { type: Number, default: 0 },
@@ -17,5 +18,6 @@ const AttendanceAnalyticsSchema = new mongoose.Schema({
 
 // Command center counts and risk-analysis range filters.
 AttendanceAnalyticsSchema.index({ health_score: 1 });
+AttendanceAnalyticsSchema.index({ college_id: 1, health_score: 1 });
 
 module.exports = mongoose.model('AttendanceAnalytics', AttendanceAnalyticsSchema, 'attendance_analytics');

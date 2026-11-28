@@ -5,6 +5,7 @@ const faceAiService = require('../services/faceAiService');
 const datasetService = require('../services/datasetService');
 const { verifyAttendanceQrToken } = require('../utils/attendanceQr');
 const reportInternalError = require('../utils/httpError');
+const { resolveAdminTenant, isSameTenant } = require('../utils/tenantScope');
 const mongoose = require('mongoose');
 
 class AttendanceController {
@@ -19,9 +20,16 @@ class AttendanceController {
         return res.status(400).json({ detail: 'Image file is required.' });
       }
 
-      const activeSession = await sessionRepository.findActive();
+      const studentUser = await userRepository.findByEmail(studentEmail);
+      const sessionFilter = studentUser?.college_id
+        ? { is_active: true, college_id: studentUser.college_id }
+        : { is_active: true };
+      const activeSession = (await sessionRepository.find(sessionFilter, null, { sort: { start_time: -1 }, limit: 1 }))[0];
       if (!activeSession) {
         return res.status(400).json({ detail: 'No active attendance session found.' });
+      }
+      if (activeSession.college_id && studentUser?.college_id && activeSession.college_id !== studentUser.college_id) {
+        return res.status(403).json({ detail: 'Cross-institution attendance registration is not permitted.' });
       }
 
       // Check if already marked
@@ -42,6 +50,7 @@ class AttendanceController {
       const newRecord = await attendanceRepository.create({
         student_email: studentEmail,
         session_id: activeSession._id,
+        college_id: activeSession.college_id || studentUser?.college_id || undefined,
         timestamp: new Date(),
         status: 'Present',
         verified_by: 'face',
@@ -83,6 +92,11 @@ class AttendanceController {
         return res.status(400).json({ detail: 'Invalid QR code.' });
       }
 
+      const studentUser = await userRepository.findByEmail(studentEmail);
+      if (session.college_id && studentUser?.college_id && session.college_id !== studentUser.college_id) {
+        return res.status(403).json({ detail: 'Cross-institution attendance registration is not permitted.' });
+      }
+
       const existing = await attendanceRepository.findByStudentAndSession(studentEmail, session_id);
       if (existing) {
         return res.status(409).json({ detail: 'Attendance already marked for this session' });
@@ -91,6 +105,7 @@ class AttendanceController {
       const newRecord = await attendanceRepository.create({
         student_email: studentEmail,
         session_id: session._id,
+        college_id: session.college_id || studentUser?.college_id || undefined,
         timestamp: new Date(),
         status: 'Present',
         verified_by: 'qr'
@@ -111,9 +126,22 @@ class AttendanceController {
 
   async getLogs(req, res) {
     try {
-      const email = req.params.email || req.userEmail;
+      const email = String(req.params.email || req.userEmail || '').toLowerCase().trim();
+      const role = String(req.userRole || '').toLowerCase();
+      if (role === 'student' && email !== String(req.userEmail || '').toLowerCase()) {
+        return res.status(403).json({ detail: 'Forbidden: cannot access another student attendance logs.' });
+      }
+      if (role !== 'student' && role !== 'super_admin') {
+        const [tenant, targetUser] = await Promise.all([
+          resolveAdminTenant(req),
+          userRepository.findByEmail(email),
+        ]);
+        if (targetUser && !isSameTenant(tenant, targetUser)) {
+          return res.status(403).json({ detail: 'Forbidden: cross-institution attendance logs denied.' });
+        }
+      }
       const records = await attendanceRepository.find(
-        { student_email: String(email).toLowerCase().trim() },
+        { student_email: email },
         null,
         { sort: { timestamp: -1 }, limit: 50 }
       );

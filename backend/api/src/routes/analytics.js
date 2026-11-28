@@ -28,8 +28,41 @@ const Session = require('../models/Session');
 const User = require('../models/User');
 
 const { authenticate, requireRole } = require('../middleware/auth');
+const { resolveAdminTenant, buildTenantUserFilter, isSameTenant } = require('../utils/tenantScope');
 
 const analyticsReadRoles = ['student', 'teacher', 'admin', 'super_admin', 'hod', 'principal', 'management'];
+
+function csvCell(val) {
+  let s = (val === null || val === undefined) ? '' : String(val);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
+/**
+ * Resolve tenant-scoped Attendance $match criteria for analytics endpoints.
+ * Ensures admin/hod/principal/management never aggregate across unrelated institutions.
+ */
+async function resolveStaffAnalyticsMatch(req) {
+  const role = (req.userRole || '').toLowerCase();
+  if (role === 'teacher') {
+    const sessionIds = await getTeacherSessionIds(req.userEmail);
+    return { session_id: { $in: sessionIds }, tenant: null, studentEmails: null };
+  }
+  if (role === 'super_admin' && !req.query?.college_id) {
+    return { tenant: { isSuperAdmin: true, collegeId: null, collegeName: null }, studentEmails: null };
+  }
+  const tenant = await resolveAdminTenant(req);
+  if (tenant.isSuperAdmin && !tenant.collegeId && !tenant.collegeName) {
+    return { tenant, studentEmails: null };
+  }
+  const students = await User.find(buildTenantUserFilter(tenant, { role: 'student' }), 'email').lean();
+  const studentEmails = students.map((s) => s.email.toLowerCase());
+  return {
+    tenant,
+    studentEmails,
+    student_email: { $in: studentEmails },
+  };
+}
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
@@ -80,17 +113,17 @@ router.get('/trends', authenticate, requireRole(analyticsReadRoles), async (req,
     const role = (req.userRole || '').toLowerCase();
     const userEmail = req.userEmail;
 
-    // Match clause: students see only their own records
+    // Match clause: students see only their own records; teachers see their sessions; admins see their tenant
     const matchStage = {
       $match: {
         timestamp: { $gte: since },
         ...(role === 'student' ? { student_email: userEmail } : {}),
       },
     };
-    if (role === 'teacher') {
-      const escapedEmail = String(userEmail || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const teacherSessions = await Session.find({ teacher_id: new RegExp(`^${escapedEmail}$`, 'i') }).select('_id').lean();
-      matchStage.$match.session_id = { $in: teacherSessions.map((s) => s._id.toString()) };
+    if (role !== 'student') {
+      const scope = await resolveStaffAnalyticsMatch(req);
+      if (scope.session_id) matchStage.$match.session_id = scope.session_id;
+      else if (scope.student_email) matchStage.$match.student_email = scope.student_email;
     }
 
     const pipeline = [
@@ -168,16 +201,13 @@ router.get(
         Math.max(0, parseFloat(req.query.threshold) || 0.75)
       );
       const department = req.query.department;
-      const role = (req.userRole || '').toLowerCase();
-      let sessionMatch = null;
-      if (role === 'teacher') {
-        const escapedEmail = String(req.userEmail || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const teacherSessions = await Session.find({ teacher_id: new RegExp(`^${escapedEmail}$`, 'i') }).select('_id').lean();
-        sessionMatch = { $match: { session_id: { $in: teacherSessions.map((s) => s._id.toString()) } } };
-      }
+      const scope = await resolveStaffAnalyticsMatch(req);
+      const scopeMatch = scope.session_id
+        ? [{ $match: { session_id: scope.session_id } }]
+        : (scope.student_email ? [{ $match: { student_email: scope.student_email } }] : []);
 
       const pipeline = [
-        ...(sessionMatch ? [sessionMatch] : []),
+        ...scopeMatch,
         {
           $group: {
             _id: '$student_email',
@@ -248,10 +278,10 @@ router.get(
   requireRole(['admin', 'teacher']),
   async (req, res) => {
     try {
-      const role = (req.userRole || '').toLowerCase();
-      const matchStage = role === 'teacher'
-        ? [{ $match: { session_id: { $in: await getTeacherSessionIds(req.userEmail) } } }]
-        : [];
+      const scope = await resolveStaffAnalyticsMatch(req);
+      const matchStage = scope.session_id
+        ? [{ $match: { session_id: scope.session_id } }]
+        : (scope.student_email ? [{ $match: { student_email: scope.student_email } }] : []);
       // Aggregate per student first, then group by department
       const studentRates = await Attendance.aggregate([
         ...matchStage,
@@ -314,10 +344,10 @@ router.get(
   requireRole(['admin', 'teacher']),
   async (req, res) => {
     try {
-      const role = (req.userRole || '').toLowerCase();
-      const teacherMatch = role === 'teacher'
-        ? [{ $match: { session_id: { $in: await getTeacherSessionIds(req.userEmail) } } }]
-        : [];
+      const scope = await resolveStaffAnalyticsMatch(req);
+      const teacherMatch = scope.session_id
+        ? [{ $match: { session_id: scope.session_id } }]
+        : (scope.student_email ? [{ $match: { student_email: scope.student_email } }] : []);
       // Join Attendance → Session via session_id to get subject
       const pipeline = [
         ...teacherMatch,
@@ -386,18 +416,18 @@ router.get('/heatmap', authenticate, requireRole(analyticsReadRoles), async (req
 
     const role = (req.userRole || '').toLowerCase();
     const userEmail = req.userEmail;
-    let sessionFilter = {};
-    if (role === 'teacher') {
-      const escapedEmail = String(userEmail || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const teacherSessions = await Session.find({ teacher_id: new RegExp(`^${escapedEmail}$`, 'i') }).select('_id').lean();
-      sessionFilter = { session_id: { $in: teacherSessions.map((s) => s._id.toString()) } };
+    let staffFilter = {};
+    if (role !== 'student') {
+      const scope = await resolveStaffAnalyticsMatch(req);
+      if (scope.session_id) staffFilter = { session_id: scope.session_id };
+      else if (scope.student_email) staffFilter = { student_email: scope.student_email };
     }
 
     const matchStage = {
       $match: {
         timestamp: { $gte: since },
         status: 'Present',
-        ...(role === 'student' ? { student_email: userEmail } : sessionFilter),
+        ...(role === 'student' ? { student_email: userEmail } : staffFilter),
       },
     };
 
@@ -453,11 +483,15 @@ router.get('/heatmap', authenticate, requireRole(analyticsReadRoles), async (req
 router.get(
   '/export',
   authenticate,
-  requireRole(['admin']),
+  requireRole(['admin', 'super_admin']),
   async (req, res) => {
     try {
+      const scope = await resolveStaffAnalyticsMatch(req);
+      const matchStage = scope.student_email ? [{ $match: { student_email: scope.student_email } }] : [];
+
       // Aggregate per student
       const rows = await Attendance.aggregate([
+        ...matchStage,
         {
           $group: {
             _id: '$student_email',
@@ -486,13 +520,19 @@ router.get(
       const userMap = {};
       for (const u of users) userMap[u.email] = u;
 
-      // Build CSV in-memory (analytics export — not expected to exceed a few MBs)
+      // Build CSV in-memory with formula injection neutralization
       const header = 'email,name,department,totalSessions,present,absent,attendanceRate\n';
       const csvRows = rows.map((r) => {
         const u = userMap[r.email] || {};
-        const name = (u.full_name || '').replace(/,/g, ' ');
-        const dept = (u.department || 'N/A').replace(/,/g, ' ');
-        return `${r.email},${name},${dept},${r.total},${r.present},${r.absent},${r.rate.toFixed(4)}`;
+        return [
+          r.email,
+          u.full_name || '',
+          u.department || 'N/A',
+          r.total,
+          r.present,
+          r.absent,
+          r.rate.toFixed(4),
+        ].map(csvCell).join(',');
       });
 
       const csv = header + csvRows.join('\n');
@@ -538,11 +578,14 @@ router.get('/predictive-risk', authenticate, requireRole(analyticsReadRoles), as
     const estimatedRemainingSessions = 30; // Standard remaining curriculum sessions baseline
 
     const isStudent = role === 'student';
-    const matchFilter = isStudent
-      ? { student_email: userEmail }
-      : role === 'teacher'
-        ? { session_id: { $in: await getTeacherSessionIds(userEmail) } }
-        : {};
+    let matchFilter = {};
+    if (isStudent) {
+      matchFilter = { student_email: userEmail };
+    } else {
+      const scope = await resolveStaffAnalyticsMatch(req);
+      if (scope.session_id) matchFilter = { session_id: scope.session_id };
+      else if (scope.student_email) matchFilter = { student_email: scope.student_email };
+    }
 
     // 1. Fetch cumulative attendance per student
     const cumulativeStats = await Attendance.aggregate([
@@ -727,12 +770,14 @@ router.get('/timetable-insights', authenticate, requireRole(analyticsReadRoles),
     const role = (req.userRole || '').toLowerCase();
     const userEmail = req.userEmail;
     const isStudent = role === 'student';
-    const teacherSessionIds = role === 'teacher' ? await getTeacherSessionIds(userEmail) : null;
-    const matchClause = {
-      status: { $in: ['Present', 'Absent'] },
-      ...(isStudent ? { student_email: userEmail } : {}),
-      ...(teacherSessionIds ? { session_id: { $in: teacherSessionIds } } : {}),
-    };
+    let matchClause = { status: { $in: ['Present', 'Absent'] } };
+    if (isStudent) {
+      matchClause.student_email = userEmail;
+    } else {
+      const scope = await resolveStaffAnalyticsMatch(req);
+      if (scope.session_id) matchClause.session_id = scope.session_id;
+      else if (scope.student_email) matchClause.student_email = scope.student_email;
+    }
 
     const records = await Attendance.aggregate([
       { $match: matchClause },
@@ -894,12 +939,14 @@ router.get('/student-velocity/:email', authenticate, async (req, res) => {
     }
 
     let teacherSessionIds = null;
-    if (role === 'teacher') {
-      const teacherDoc = await User.findOne({ email: String(userEmail || '').toLowerCase() }, 'college_id').lean();
-      if (teacherDoc?.college_id && student.college_id && teacherDoc.college_id !== student.college_id) {
+    if (!isSelf && role !== 'super_admin') {
+      const tenant = await resolveAdminTenant(req);
+      if (!isSameTenant(tenant, student)) {
         return res.status(403).json({ detail: 'Forbidden: cross-institution student access denied.' });
       }
-      teacherSessionIds = await getTeacherSessionIds(userEmail);
+      if (role === 'teacher') {
+        teacherSessionIds = await getTeacherSessionIds(userEmail);
+      }
     }
 
     // Weekly attendance breakdown over the last 4 weeks
